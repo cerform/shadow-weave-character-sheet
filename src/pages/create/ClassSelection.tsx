@@ -1,5 +1,4 @@
-// pages/create/ClassSelection.tsx
-import { useState } from "react";
+// src/pages/create/ClassSelection.tsx
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,134 +7,104 @@ import { useCharacter } from "@/context/CharacterContext";
 const classes = [
   {
     name: "Варвар",
-    description: "Сильные воины, полагающиеся на ярость.",
-    hitDice: "d12",
-    image: "/images/classes/barbarian.jpg",
+    description: "Дикий воин, полагающийся на ярость и силу.",
+    image: "https://images.unsplash.com/photo-1573399168010-3e2b55f7f03b?fit=crop&w=600&q=80",
   },
   {
     name: "Бард",
-    description: "Мастера вдохновения и магии.",
-    hitDice: "d8",
-    image: "/images/classes/bard.jpg",
+    description: "Музыкант и заклинатель, вдохновляющий союзников.",
+    image: "https://images.unsplash.com/photo-1549833074-1739f5c8d1b7?fit=crop&w=600&q=80",
   },
   {
     name: "Клирик",
-    description: "Священные заклинатели, служащие богам.",
-    hitDice: "d8",
-    image: "/images/classes/cleric.jpg",
+    description: "Священный воин, черпающий силы у божества.",
+    image: "https://images.unsplash.com/photo-1604430350700-560578ebd2a3?fit=crop&w=600&q=80",
   },
   {
     name: "Друид",
-    description: "Мудрые стражи природы.",
-    hitDice: "d8",
-    image: "/images/classes/druid.jpg",
+    description: "Хранитель природы и маг дикой природы.",
+    image: "https://images.unsplash.com/photo-1616123602461-21eaf4c2b5d3?fit=crop&w=600&q=80",
   },
   {
     name: "Боец",
-    description: "Мастера оружия и тактики.",
-    hitDice: "d10",
-    image: "/images/classes/fighter.jpg",
+    description: "Мастер тактики и владения оружием.",
+    image: "https://images.unsplash.com/photo-1579613832129-6c3c89e3d780?fit=crop&w=600&q=80",
   },
   {
     name: "Монах",
-    description: "Боевые мастера духа и тела.",
-    hitDice: "d8",
-    image: "/images/classes/monk.jpg",
+    description: "Воин духа и тела, сражающийся без оружия.",
+    image: "https://images.unsplash.com/photo-1589055309334-3ab5c188e41e?fit=crop&w=600&q=80",
   },
   {
     name: "Паладин",
-    description: "Священные воины, держащие клятву.",
-    hitDice: "d10",
-    image: "/images/classes/paladin.jpg",
+    description: "Рыцарь с священной миссией, борец со злом.",
+    image: "https://images.unsplash.com/photo-1549921296-3a2c5c3fbc57?fit=crop&w=600&q=80",
   },
   {
     name: "Следопыт",
-    description: "Охотники, исследователи и защитники дикой природы.",
-    hitDice: "d10",
-    image: "/images/classes/ranger.jpg",
+    description: "Мастер выслеживания и стрельбы из лука.",
+    image: "https://images.unsplash.com/photo-1578332991875-beb07b3048a5?fit=crop&w=600&q=80",
   },
   {
     name: "Плут",
-    description: "Мастера скрытности и ловушек.",
-    hitDice: "d8",
-    image: "/images/classes/rogue.jpg",
+    description: "Ловкач, мастер скрытности и ловушек.",
+    image: "https://images.unsplash.com/photo-1589254065923-79a6b0a6fb0c?fit=crop&w=600&q=80",
+  },
+  {
+    name: "Чародей",
+    description: "Заклинатель, черпающий магию из внутренней силы.",
+    image: "https://images.unsplash.com/photo-1613685147034-cdf5b9c153bb?fit=crop&w=600&q=80",
   },
   {
     name: "Колдун",
-    description: "Заклинатели, обладающие врождённой магией.",
-    hitDice: "d6",
-    image: "/images/classes/sorcerer.jpg",
-  },
-  {
-    name: "Чернокнижник",
-    description: "Пользователи магии, заключившие пакт.",
-    hitDice: "d8",
-    image: "/images/classes/warlock.jpg",
+    description: "Заключивший сделку с могущественным существом.",
+    image: "https://images.unsplash.com/photo-1595231760053-1d0bba01a4ef?fit=crop&w=600&q=80",
   },
   {
     name: "Волшебник",
-    description: "Учёные маги и мастера заклинаний.",
-    hitDice: "d6",
-    image: "/images/classes/wizard.jpg",
+    description: "Учёный маг, владеющий тайнами магии.",
+    image: "https://images.unsplash.com/photo-1618496194757-83c7f6a626d7?fit=crop&w=600&q=80",
   },
 ];
 
 const ClassSelection = () => {
   const navigate = useNavigate();
   const { setCharacter } = useCharacter();
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-  const handleClassSelect = (cls: string) => {
-    setSelectedClass(cls);
-  };
-
-  const handleContinue = () => {
-    if (selectedClass) {
-      setCharacter({ class: selectedClass });
-      navigate("/create/attributes");
-    }
+  const handleClassSelect = (selectedClass: string) => {
+    setCharacter((prev) => ({ ...prev, class: selectedClass }));
+    navigate("/create/attributes");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6">
+    <div className="min-h-screen flex flex-col items-center p-6 bg-background text-foreground">
       <h1 className="text-4xl font-bold mb-8">Выберите класс</h1>
 
-      <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
+      <div className="grid md:grid-cols-2 gap-6 w-full max-w-5xl">
         {classes.map((cls) => (
           <Card
             key={cls.name}
-            className={`p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 ${
-              selectedClass === cls.name ? "border-primary" : "border-transparent"
-            }`}
+            className="bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => handleClassSelect(cls.name)}
           >
-            {/* Картинка */}
-            {cls.image && (
-              <img
-                src={cls.image}
-                alt={cls.name}
-                className="rounded mb-4 object-cover h-40 w-full"
-              />
-            )}
+            <img
+              src={cls.image}
+              alt={cls.name}
+              className="rounded mb-4 object-cover h-48 w-full"
+            />
             <h2 className="text-2xl font-semibold mb-2">{cls.name}</h2>
-            <p className="text-muted-foreground mb-2">{cls.description}</p>
-            <p className="text-sm text-primary">Кость хитов: {cls.hitDice}</p>
+            <p className="text-muted-foreground">{cls.description}</p>
           </Card>
         ))}
       </div>
 
-      <div className="flex gap-4 mt-10">
-        <Button variant="secondary" onClick={() => navigate("/create/race")}>
-          Назад
-        </Button>
-        <Button
-          onClick={handleContinue}
-          disabled={!selectedClass}
-          className="font-semibold"
-        >
-          Продолжить
-        </Button>
-      </div>
+      <Button
+        variant="secondary"
+        className="mt-8"
+        onClick={() => navigate("/create/race")}
+      >
+        Назад
+      </Button>
     </div>
   );
 };
