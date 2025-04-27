@@ -13,11 +13,30 @@ import { DicePanel } from '@/components/character-sheet/DicePanel';
 import { Save, Printer, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface Character {
+  name?: string;
+  class?: string;
+  race?: string;
+  subrace?: string;
+  level?: number;
+  background?: string;
+  alignment?: string;
+  abilities?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  [key: string]: any;
+}
+
 const CharacterSheetPage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const character = state?.character || {};
+  const character: Character = state?.character || {};
 
   const [currentHp, setCurrentHp] = React.useState(20);
   const [maxHp, setMaxHp] = React.useState(20);
@@ -154,7 +173,7 @@ const CharacterSheetPage = () => {
                       ability === 'intelligence' ? 'Интеллект' :
                       ability === 'wisdom' ? 'Мудрость' : 'Харизма'
                     }</span>
-                    <span>{value} ({getAbilityModifier(value as number)})</span>
+                    <span>{value} ({getAbilityModifier(Number(value))})</span>
                   </div>
                 ))}
               </div>

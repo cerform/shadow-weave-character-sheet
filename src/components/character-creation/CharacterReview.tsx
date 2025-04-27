@@ -66,7 +66,7 @@ export const CharacterReview = ({ character, onFinish }: CharacterReviewProps) =
             уровень {character.level}
           </p>
           <p className="text-muted-foreground">
-            {findLabel(backgrounds, character.background)} | {findLabel(alignments, character.alignment)}
+            {findLabel(backgrounds, character.background || '', 'value', 'label')} | {findLabel(alignments, character.alignment || '', 'value', 'label')}
           </p>
         </CardContent>
       </Card>
@@ -75,7 +75,7 @@ export const CharacterReview = ({ character, onFinish }: CharacterReviewProps) =
         <div>
           <h3 className="font-semibold mb-3">Характеристики</h3>
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries(character.abilities).map(([ability, value]) => (
+            {Object.entries(character.abilities || {}).map(([ability, value]) => (
               <div key={ability} className="p-2 border rounded flex justify-between items-center">
                 <span className="font-medium capitalize">
                   {ability === 'strength' ? 'Сила' : 
@@ -87,7 +87,7 @@ export const CharacterReview = ({ character, onFinish }: CharacterReviewProps) =
                 <div className="text-right">
                   <span className="text-lg">{value}</span>
                   <span className="text-sm text-muted-foreground ml-1">
-                    ({getAbilityModifier(value as number)})
+                    ({getAbilityModifier(Number(value))})
                   </span>
                 </div>
               </div>
