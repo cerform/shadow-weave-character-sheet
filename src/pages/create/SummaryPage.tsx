@@ -1,62 +1,61 @@
 // src/pages/create/SummaryPage.tsx
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
-const dummyCharacter = {
-  race: "Человек",
-  class: "Воин",
-  attributes: {
-    strength: 15,
-    dexterity: 14,
-    constitution: 13,
-    intelligence: 12,
-    wisdom: 10,
-    charisma: 8,
-  },
-};
-
-const calculateModifier = (value: number) => {
-  return Math.floor((value - 10) / 2);
-};
+import { Card } from "@/components/ui/card";
+import { useCharacter } from "@/context/CharacterContext";
 
 const SummaryPage = () => {
   const navigate = useNavigate();
+  const { character } = useCharacter();
+
+  if (!character) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-foreground">
+        <h1 className="text-3xl font-bold mb-6">Персонаж не найден</h1>
+        <Button onClick={() => navigate("/create")}>Создать нового персонажа</Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6">
-      <h1 className="text-4xl font-bold mb-6">Итоговый персонаж</h1>
+    <div className="min-h-screen flex flex-col items-center p-6 bg-background text-foreground">
+      <h1 className="text-4xl font-bold mb-8">Ваш персонаж готов!</h1>
 
-      <div className="bg-card rounded shadow p-8 w-full max-w-2xl">
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">Раса: {dummyCharacter.race}</h2>
-          <h2 className="text-2xl font-semibold">Класс: {dummyCharacter.class}</h2>
-        </div>
+      <div className="grid md:grid-cols-2 gap-8 w-full max-w-5xl mb-8">
+        {/* Раса */}
+        <Card className="p-6 bg-card text-card-foreground">
+          <h2 className="text-2xl font-semibold mb-4">Раса</h2>
+          <p className="text-xl">{character.race ?? "-"}</p>
+        </Card>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="font-bold text-center">Характеристика</div>
-          <div className="font-bold text-center">Значение</div>
-          <div className="font-bold text-center">Модификатор</div>
+        {/* Класс */}
+        <Card className="p-6 bg-card text-card-foreground">
+          <h2 className="text-2xl font-semibold mb-4">Класс</h2>
+          <p className="text-xl">{character.class ?? "-"}</p>
+        </Card>
 
-          {Object.entries(dummyCharacter.attributes).map(([key, value]) => (
-            <div className="contents" key={key}>
-              <div className="text-center capitalize">{key}</div>
-              <div className="text-center">{value}</div>
-              <div className="text-center">
-                {calculateModifier(value) >= 0 ? "+" : ""}
-                {calculateModifier(value)}
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Характеристики */}
+        <Card className="p-6 bg-card text-card-foreground md:col-span-2">
+          <h2 className="text-2xl font-semibold mb-4">Характеристики</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {character.attributes &&
+              Object.entries(character.attributes).map(([attr, value]) => (
+                <div key={attr} className="flex justify-between">
+                  <span>{attr}</span>
+                  <span className="font-semibold">{value} ({Math.floor((value - 10) / 2) >= 0 ? "+" : ""}{Math.floor((value - 10) / 2)})</span>
+                </div>
+              ))}
+          </div>
+        </Card>
+      </div>
 
-        <div className="flex gap-4 justify-center">
-          <Button variant="secondary" onClick={() => navigate("/create/attributes")}>
-            Назад к характеристикам
-          </Button>
-          <Button onClick={() => alert("Скоро будет экспорт в PDF! 🚀")}>
-            Завершить
-          </Button>
-        </div>
+      <div className="flex gap-4">
+        <Button variant="secondary" onClick={() => navigate("/create/attributes")}>
+          Назад
+        </Button>
+        <Button onClick={() => navigate("/")}>
+          На главную
+        </Button>
       </div>
     </div>
   );

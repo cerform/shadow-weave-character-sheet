@@ -1,5 +1,6 @@
 // src/components/ThemeSelector.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const themes = [
   { name: "Shadow Sorcerer", file: "shadow-sorcerer.css" },
@@ -10,35 +11,30 @@ const themes = [
 ];
 
 const ThemeSelector = () => {
-  const [theme, setTheme] = useState<string>(themes[0].file);
+  const [selectedTheme, setSelectedTheme] = useState<string>("nature-druid.css");
 
-  useEffect(() => {
-    const link = document.getElementById("theme-stylesheet") as HTMLLinkElement;
-
-    if (link) {
-      link.href = `/css/themes/${theme}`;
-    } else {
-      const newLink = document.createElement("link");
-      newLink.id = "theme-stylesheet";
-      newLink.rel = "stylesheet";
-      newLink.href = `/css/themes/${theme}`;
-      document.head.appendChild(newLink);
+  const changeTheme = (themeFile: string) => {
+    const themeLink = document.getElementById("theme-stylesheet") as HTMLLinkElement | null;
+    if (themeLink) {
+      themeLink.href = `/css/themes/${themeFile}`;
     }
-  }, [theme]);
+    setSelectedTheme(themeFile);
+  };
 
   return (
-    <div className="flex justify-center mt-4">
-      <select
-        className="border p-2 rounded-md"
-        value={theme}
-        onChange={(e) => setTheme(e.target.value)}
-      >
-        {themes.map((t) => (
-          <option key={t.file} value={t.file}>
-            {t.name}
-          </option>
+    <div className="flex flex-col items-center gap-4 mb-8">
+      <h3 className="text-lg font-semibold text-muted-foreground">Выберите тему оформления:</h3>
+      <div className="flex flex-wrap gap-4 justify-center">
+        {themes.map((theme) => (
+          <Button
+            key={theme.name}
+            variant={selectedTheme === theme.file ? "default" : "secondary"}
+            onClick={() => changeTheme(theme.file)}
+          >
+            {theme.name}
+          </Button>
         ))}
-      </select>
+      </div>
     </div>
   );
 };

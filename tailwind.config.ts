@@ -1,4 +1,4 @@
-
+// tailwind.config.ts
 import type { Config } from "tailwindcss";
 
 export default {
@@ -6,8 +6,8 @@ export default {
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -52,24 +52,6 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-        },
-        theme: {
-          shadow: {
-            primary: "#7f00ff",
-            secondary: "#ff00ff",
-          },
-          fire: {
-            primary: "#ff4400",
-            secondary: "#ff8800",
-          },
-          nature: {
-            primary: "#00ff44",
-            secondary: "#44ff88",
-          },
-          arcane: {
-            primary: "#00ffff",
-            secondary: "#00ccff",
-          },
         },
       },
       borderRadius: {
