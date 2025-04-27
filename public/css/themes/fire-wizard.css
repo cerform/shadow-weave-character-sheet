@@ -1,0 +1,15 @@
+:root {
+  --background: #330000;
+  --foreground: #ffe6e6;
+  --primary: #ff4400;
+  --primary-foreground: #ffffff;
+  --secondary: #ff7744;
+  --secondary-foreground: #330000;
+  --accent: #cc2900;
+  --accent-foreground: #ffe6e6;
+  --card: #661a1a;
+  --card-foreground: #ffe6e6;
+  --border: #ff4400;
+  --input: #ff4400;
+  --ring: #ff4400;
+}
