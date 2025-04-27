@@ -1,22 +1,19 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Создай персонажа D&D 5e быстро и красиво" />
     <title>D&D 5e Character Creator</title>
 
-    <!-- СТИЛЬ ДЛЯ ТЕМЫ -->
-    <link id="theme-stylesheet" rel="stylesheet" href="/css/themes/nature-druid.css" />
+    <!-- Подключение темы по умолчанию -->
+    <link id="theme-stylesheet" rel="stylesheet" href="/src/assets/css/themes/tavern-theme.css" />
 
-    <!-- Tailwind уже встроен через Vite -->
+    <!-- Главный стиль проекта -->
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
 
   <body class="bg-background text-foreground min-h-screen">
     <div id="root"></div>
-
-    <!-- Основной скрипт приложения -->
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

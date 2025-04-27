@@ -1,15 +1,17 @@
 :root {
-  --background: #001a33;
-  --foreground: #e6f7ff;
-  --primary: #0099cc;
-  --primary-foreground: #ffffff;
-  --secondary: #66ccff;
-  --secondary-foreground: #001a33;
-  --accent: #0077b3;
-  --accent-foreground: #e6f7ff;
-  --card: #003366;
-  --card-foreground: #e6f7ff;
-  --border: #0099cc;
-  --input: #0099cc;
-  --ring: #0099cc;
+  --background: 200 80% 8%;
+  --foreground: 200 90% 97%;
+  --primary: 200 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 200 80% 30%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 200 90% 60%;
+  --accent-foreground: 0 0% 0%;
+  --card: 200 70% 12%;
+  --card-foreground: 200 90% 95%;
+  --border: 200 70% 30%;
+  --input: 200 70% 20%;
+  --ring: 200 100% 50%;
+
+  --glow-color: 200 100% 60%;
 }
