@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CharacterSheet from "./components/character-sheet/CharacterSheet";
+import CharacterCreationPage from "./pages/CharacterCreationPage";
+import CharacterSheetPage from "./pages/CharacterSheetPage";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +21,8 @@ const App = () => {
           <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/create" element={<CharacterSheet />} />
+            <Route path="/create" element={<CharacterCreationPage />} />
+            <Route path="/sheet" element={<CharacterSheetPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
