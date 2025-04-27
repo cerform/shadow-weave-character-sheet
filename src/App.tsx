@@ -6,10 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import CharacterSheet from "./components/character-sheet/CharacterSheet";
 
 const queryClient = new QueryClient();
 
-// Fix the App component to avoid the React hook usage error with TooltipProvider
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -19,7 +19,7 @@ const App = () => {
           <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/create" element={<CharacterSheet />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
