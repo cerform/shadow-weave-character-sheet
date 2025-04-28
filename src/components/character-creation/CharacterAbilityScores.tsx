@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dices } from "lucide-react";
+import { toast } from 'sonner';
 
 interface CharacterAbilityScoresProps {
   character: any;
@@ -20,7 +20,7 @@ export const CharacterAbilityScores = ({ character, onUpdateCharacter }: Charact
     wisdom: character.abilities.wisdom || 8,
     charisma: character.abilities.charisma || 8
   });
-  
+
   const abilityLabels = {
     strength: "Сила",
     dexterity: "Ловкость",
@@ -29,7 +29,7 @@ export const CharacterAbilityScores = ({ character, onUpdateCharacter }: Charact
     wisdom: "Мудрость",
     charisma: "Харизма"
   };
-  
+
   const abilityDescriptions = {
     strength: "Физическая мощь, атлетические способности",
     dexterity: "Ловкость, проворство, рефлексы",
@@ -38,27 +38,27 @@ export const CharacterAbilityScores = ({ character, onUpdateCharacter }: Charact
     wisdom: "Интуиция, восприятие, проницательность",
     charisma: "Сила личности, лидерство, убеждение"
   };
-  
+
   const calculatePointCost = (value: number): number => {
     if (value <= 13) return value - 8;
     if (value === 14) return 7;
     if (value === 15) return 9;
     return 0;
   };
-  
+
   const calculateModifier = (value: number): string => {
     const modifier = Math.floor((value - 10) / 2);
     if (modifier >= 0) return `+${modifier}`;
     return `${modifier}`;
   };
-  
+
   const getUsedPoints = (): number => {
     return Object.values(abilities).reduce(
       (total, value) => total + calculatePointCost(value), 
       0
     );
   };
-  
+
   const handleIncrease = (ability: keyof typeof abilities) => {
     if (abilities[ability] < 15 && getUsedPoints() < initialPoints) {
       const newValue = abilities[ability] + 1;
@@ -73,7 +73,7 @@ export const CharacterAbilityScores = ({ character, onUpdateCharacter }: Charact
       }
     }
   };
-  
+
   const handleDecrease = (ability: keyof typeof abilities) => {
     if (abilities[ability] > 8) {
       const newValue = abilities[ability] - 1;
@@ -87,18 +87,46 @@ export const CharacterAbilityScores = ({ character, onUpdateCharacter }: Charact
     }
   };
 
+  const rollAbilityScore = () => {
+    const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+    rolls.sort((a, b) => b - a);
+    return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
+  };
+
+  const rollAllAbilities = () => {
+    const newAbilities = {
+      strength: rollAbilityScore(),
+      dexterity: rollAbilityScore(),
+      constitution: rollAbilityScore(),
+      intelligence: rollAbilityScore(),
+      wisdom: rollAbilityScore(),
+      charisma: rollAbilityScore()
+    };
+    
+    setAbilities(newAbilities);
+    onUpdateCharacter({ abilities: newAbilities });
+    toast.success('Характеристики сгенерированны');
+  };
+
   const totalPoints = getUsedPoints();
-  
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Характеристики персонажа</h2>
-      <p className="mb-2 text-muted-foreground">
-        Распределите очки между шестью базовыми характеристиками вашего персонажа.
-      </p>
-      <p className="mb-4 text-muted-foreground">
-        У вас есть {initialPoints} очков. Характеристики от 8 до 13 стоят столько, сколько их значение минус 8.
-        14 стоит 7 очков, а 15 стоит 9 очков.
-      </p>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Характеристики персонажа</h2>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-muted-foreground">
+            Распределите очки между шестью базовыми характеристиками вашего персонажа.
+          </p>
+          <Button 
+            onClick={rollAllAbilities}
+            className="gap-2"
+          >
+            <Dices className="w-4 h-4" />
+            Бросить кубики
+          </Button>
+        </div>
+      </div>
       
       <div className="mb-6 p-3 bg-primary/10 rounded-md flex items-center justify-between">
         <span>Использовано очков: <strong>{totalPoints} из {initialPoints}</strong></span>

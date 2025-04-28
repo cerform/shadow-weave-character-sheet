@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/use-theme';
+import { ArrowLeft } from 'lucide-react';
 import { CharacterRaceSelection } from '@/components/character-creation/CharacterRaceSelection';
 import { CharacterClassSelection } from '@/components/character-creation/CharacterClassSelection';
 import { CharacterBasicInfo } from '@/components/character-creation/CharacterBasicInfo';
@@ -69,12 +69,10 @@ const CharacterCreationPage = () => {
   };
 
   const handleFinishCreation = () => {
-    // Save the character data to local storage
     const savedCharacters = JSON.parse(localStorage.getItem('dnd-characters') || '[]');
     const updatedCharacters = [...savedCharacters, { ...character, id: Date.now(), createdAt: new Date().toISOString() }];
     localStorage.setItem('dnd-characters', JSON.stringify(updatedCharacters));
     
-    // Navigate to the character sheet
     toast.success('Персонаж успешно создан!');
     navigate('/sheet', { state: { character } });
   };
@@ -117,10 +115,19 @@ const CharacterCreationPage = () => {
   };
 
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="max-w-5xl mx-auto">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">Создание персонажа D&D 5e</h1>
+        <header className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-3xl font-bold">Создание персонажа D&D 5e</h1>
+          </div>
           <p className="text-muted-foreground">Шаг {currentStep + 1} из {steps.length}: {steps[currentStep].title}</p>
         </header>
 
