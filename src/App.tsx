@@ -1,18 +1,33 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import CharacterCreation from "./components/CharacterCreation"; // Путь к компоненту создания персонажа
-import DMWorkspace from "./components/DMWorkspace"; // Путь к компоненту для Данжен Мастера
-import HomePage from "./pages/HomePage"; // Главная страница с интерфейсом выбора
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import CharacterSheet from "./components/character-sheet/CharacterSheet";
+import CharacterCreationPage from "./pages/CharacterCreationPage";
+import CharacterSheetPage from "./pages/CharacterSheetPage";
+
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/create-character" element={<CharacterCreation />} />
-        <Route path="/dm" element={<DMWorkspace />} />
-      </Routes>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/create" element={<CharacterCreationPage />} />
+            <Route path="/sheet" element={<CharacterSheetPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
