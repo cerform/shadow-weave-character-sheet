@@ -11,12 +11,16 @@ import { ThemeSelector } from './ThemeSelector';
 import { DicePanel } from './DicePanel';
 import { Save, Printer } from 'lucide-react';
 
-const CharacterSheet = () => {
+interface CharacterSheetProps {
+  character?: any;
+}
+
+const CharacterSheet = ({ character }: CharacterSheetProps) => {
   const { theme, setTheme } = useTheme();
-  const [currentHp, setCurrentHp] = useState(20);
-  const [maxHp, setMaxHp] = useState(20);
-  const [characterName, setCharacterName] = useState('Новый персонаж');
-  const [characterClass, setCharacterClass] = useState('Выберите класс');
+  const [currentHp, setCurrentHp] = useState(character?.hp || 20);
+  const [maxHp, setMaxHp] = useState(character?.maxHp || 20);
+  const [characterName, setCharacterName] = useState(character?.name || 'Новый персонаж');
+  const [characterClass, setCharacterClass] = useState(character?.class || 'Выберите класс');
   const [activeTab, setActiveTab] = useState('abilities');
 
   const handleSaveCharacter = () => {
