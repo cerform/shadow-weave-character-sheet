@@ -1,101 +1,69 @@
+import React, { useState } from "react";
+import NavigationButtons from "@/components/character-creation/NavigationButtons";
 
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { classes } from '@/data/classes';
+const classes = [
+  { name: "Варвар", description: "Воин ярости и силы." },
+  { name: "Бард", description: "Мастер магии и вдохновения." },
+  { name: "Жрец", description: "Служитель божественной магии." },
+  { name: "Друид", description: "Мастер природы и превращений." },
+  { name: "Боец", description: "Опытный воин любого оружия." },
+  { name: "Монах", description: "Воин тела и духа." },
+  { name: "Паладин", description: "Святой рыцарь в служении." },
+  { name: "Следопыт", description: "Мастер выживания и охоты." },
+  { name: "Плут", description: "Ловкий вор и скрытный мастер." },
+  { name: "Чародей", description: "Маг врожденной силы." },
+  { name: "Чернокнижник", description: "Заключивший пакт с сущностью маг." },
+  { name: "Волшебник", description: "Мастер изученной магии." },
+];
 
 interface CharacterClassSelectionProps {
   character: any;
-  onUpdateCharacter: (updates: any) => void;
+  updateCharacter: (updates: any) => void;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
-export const CharacterClassSelection = ({ character, onUpdateCharacter }: CharacterClassSelectionProps) => {
-  const [selectedClass, setSelectedClass] = useState<string>(character.class || '');
-  const [selectedSubclass, setSelectedSubclass] = useState<string>(character.subclass || '');
-  
-  const handleClassChange = (value: string) => {
-    setSelectedClass(value);
-    setSelectedSubclass('');
-    onUpdateCharacter({ 
-      class: value,
-      subclass: '' 
-    });
+const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep,
+}) => {
+  const [selectedClass, setSelectedClass] = useState<string>(character.class || "");
+
+  const handleNext = () => {
+    if (selectedClass) {
+      updateCharacter({ class: selectedClass });
+      nextStep();
+    }
   };
-  
-  const currentClass = classes.find(c => c.name === selectedClass);
-  
+
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Выберите класс</h2>
-        <p className="mb-4 text-muted-foreground">
-          Класс определяет основной архетип вашего персонажа, его способности, 
-          навыки и роль в приключении.
-        </p>
-        
-        <RadioGroup
-          value={selectedClass}
-          onValueChange={handleClassChange}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          {classes.map(classItem => (
-            <div key={classItem.name} className="relative">
-              <RadioGroupItem
-                value={classItem.name}
-                id={classItem.name}
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor={classItem.name}
-                className="flex flex-col p-4 rounded-md border-2 border-muted bg-primary/5 hover:bg-primary/10 cursor-pointer peer-data-[state=checked]:border-primary transition-colors"
-              >
-                <span className="font-semibold text-lg">{classItem.name}</span>
-                <span className="text-sm text-muted-foreground">{classItem.description}</span>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-muted-foreground">Кость хитов: </span>
-                    <span>{classItem.hitDie}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Основная хар-ка: </span>
-                    <span>{classItem.primaryAbility}</span>
-                  </div>
-                </div>
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+      <h2 className="text-2xl font-bold mb-4">Выберите класс</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {classes.map((cls) => (
+          <button
+            key={cls.name}
+            onClick={() => setSelectedClass(cls.name)}
+            className={`p-4 border rounded ${
+              selectedClass === cls.name ? "bg-green-500 text-white" : "bg-background"
+            }`}
+          >
+            <div className="font-semibold">{cls.name}</div>
+            <div className="text-sm text-muted-foreground">{cls.description}</div>
+          </button>
+        ))}
       </div>
-      
-      {selectedClass && (
-        <Card className="mt-8 bg-primary/5">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-2">Особенности класса: {selectedClass}</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">Владение оружием и доспехами</h4>
-                <p className="text-sm text-muted-foreground">{currentClass?.proficiencies}</p>
-              </div>
-              <div>
-                <h4 className="font-medium">Спасброски</h4>
-                <p className="text-sm text-muted-foreground">{currentClass?.savingThrows}</p>
-              </div>
-              <div>
-                <h4 className="font-medium">Классовые особенности 1 уровня</h4>
-                <div className="space-y-2 mt-1">
-                  {currentClass?.features.map((feature, index) => (
-                    <div key={index}>
-                      <h5 className="text-sm font-medium">{feature.name}</h5>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
+      <NavigationButtons
+        allowNext={!!selectedClass}
+        nextStep={handleNext}
+        prevStep={prevStep}
+        isFirstStep={false}
+      />
     </div>
   );
 };
+
+export default CharacterClassSelection;

@@ -1,182 +1,140 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Dices } from "lucide-react";
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import NavigationButtons from "@/components/character-creation/NavigationButtons";
 
 interface CharacterAbilityScoresProps {
   character: any;
-  onUpdateCharacter: (updates: any) => void;
+  updateCharacter: (updates: any) => void;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
-export const CharacterAbilityScores = ({ character, onUpdateCharacter }: CharacterAbilityScoresProps) => {
-  const initialPoints = 27;
-  const [pointsRemaining, setPointsRemaining] = useState(initialPoints);
-  const [abilities, setAbilities] = useState({
-    strength: character.abilities.strength || 8,
-    dexterity: character.abilities.dexterity || 8,
-    constitution: character.abilities.constitution || 8,
-    intelligence: character.abilities.intelligence || 8,
-    wisdom: character.abilities.wisdom || 8,
-    charisma: character.abilities.charisma || 8
-  });
+const defaultStats = {
+  strength: 8,
+  dexterity: 8,
+  constitution: 8,
+  intelligence: 8,
+  wisdom: 8,
+  charisma: 8,
+};
 
-  const abilityLabels = {
+const costTable = {
+  8: 0,
+  9: 1,
+  10: 2,
+  11: 3,
+  12: 4,
+  13: 5,
+  14: 7,
+  15: 9,
+};
+
+const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep,
+}) => {
+  const [stats, setStats] = useState(character.stats || defaultStats);
+  const [points, setPoints] = useState(calculatePoints(stats));
+
+  function calculatePoints(currentStats: any) {
+    let total = 27;
+    for (const key in currentStats) {
+      total -= costTable[currentStats[key] as keyof typeof costTable];
+    }
+    return total;
+  }
+
+  const handleIncrease = (stat: string) => {
+    const currentValue = stats[stat];
+    if (currentValue >= 15) return;
+
+    const newCost = costTable[currentValue + 1];
+    const oldCost = costTable[currentValue];
+    const diff = newCost - oldCost;
+
+    if (points - diff < 0) return;
+
+    const newStats = {
+      ...stats,
+      [stat]: currentValue + 1,
+    };
+
+    setStats(newStats);
+    setPoints(calculatePoints(newStats));
+  };
+
+  const handleDecrease = (stat: string) => {
+    const currentValue = stats[stat];
+    if (currentValue <= 8) return;
+
+    const newCost = costTable[currentValue - 1];
+    const oldCost = costTable[currentValue];
+    const diff = oldCost - newCost;
+
+    const newStats = {
+      ...stats,
+      [stat]: currentValue - 1,
+    };
+
+    setStats(newStats);
+    setPoints(calculatePoints(newStats));
+  };
+
+  const handleNext = () => {
+    updateCharacter({ stats });
+    nextStep();
+  };
+
+  const abilityNames = {
     strength: "Сила",
     dexterity: "Ловкость",
     constitution: "Телосложение",
     intelligence: "Интеллект",
     wisdom: "Мудрость",
-    charisma: "Харизма"
+    charisma: "Харизма",
   };
-
-  const abilityDescriptions = {
-    strength: "Физическая мощь, атлетические способности",
-    dexterity: "Ловкость, проворство, рефлексы",
-    constitution: "Выносливость, здоровье, жизненная сила",
-    intelligence: "Память, рассудительность, логика",
-    wisdom: "Интуиция, восприятие, проницательность",
-    charisma: "Сила личности, лидерство, убеждение"
-  };
-
-  const calculatePointCost = (value: number): number => {
-    if (value <= 13) return value - 8;
-    if (value === 14) return 7;
-    if (value === 15) return 9;
-    return 0;
-  };
-
-  const calculateModifier = (value: number): string => {
-    const modifier = Math.floor((value - 10) / 2);
-    if (modifier >= 0) return `+${modifier}`;
-    return `${modifier}`;
-  };
-
-  const getUsedPoints = (): number => {
-    return Object.values(abilities).reduce(
-      (total, value) => total + calculatePointCost(value), 
-      0
-    );
-  };
-
-  const handleIncrease = (ability: keyof typeof abilities) => {
-    if (abilities[ability] < 15 && getUsedPoints() < initialPoints) {
-      const newValue = abilities[ability] + 1;
-      const newCost = calculatePointCost(newValue);
-      const oldCost = calculatePointCost(abilities[ability]);
-      
-      if (getUsedPoints() - oldCost + newCost <= initialPoints) {
-        const newAbilities = { ...abilities, [ability]: newValue };
-        setAbilities(newAbilities);
-        onUpdateCharacter({ abilities: newAbilities });
-        setPointsRemaining(initialPoints - getUsedPoints() + oldCost - newCost);
-      }
-    }
-  };
-
-  const handleDecrease = (ability: keyof typeof abilities) => {
-    if (abilities[ability] > 8) {
-      const newValue = abilities[ability] - 1;
-      const newCost = calculatePointCost(newValue);
-      const oldCost = calculatePointCost(abilities[ability]);
-      
-      const newAbilities = { ...abilities, [ability]: newValue };
-      setAbilities(newAbilities);
-      onUpdateCharacter({ abilities: newAbilities });
-      setPointsRemaining(initialPoints - getUsedPoints() - oldCost + newCost);
-    }
-  };
-
-  const rollAbilityScore = () => {
-    const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-    rolls.sort((a, b) => b - a);
-    return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
-  };
-
-  const rollAllAbilities = () => {
-    const newAbilities = {
-      strength: rollAbilityScore(),
-      dexterity: rollAbilityScore(),
-      constitution: rollAbilityScore(),
-      intelligence: rollAbilityScore(),
-      wisdom: rollAbilityScore(),
-      charisma: rollAbilityScore()
-    };
-    
-    setAbilities(newAbilities);
-    onUpdateCharacter({ abilities: newAbilities });
-    toast.success('Характеристики сгенерированны');
-  };
-
-  const totalPoints = getUsedPoints();
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Характеристики персонажа</h2>
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-muted-foreground">
-            Распределите очки между шестью базовыми характеристиками вашего персонажа.
-          </p>
-          <Button 
-            onClick={rollAllAbilities}
-            className="gap-2"
-          >
-            <Dices className="w-4 h-4" />
-            Бросить кубики
-          </Button>
-        </div>
-      </div>
-      
-      <div className="mb-6 p-3 bg-primary/10 rounded-md flex items-center justify-between">
-        <span>Использовано очков: <strong>{totalPoints} из {initialPoints}</strong></span>
-        <span>Осталось: <strong>{initialPoints - totalPoints}</strong></span>
-      </div>
-      
-      <div className="space-y-4">
-        {Object.entries(abilities).map(([ability, value]) => (
-          <div key={ability} className="p-4 border rounded-md bg-card/30">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-lg font-semibold">
-                {abilityLabels[ability as keyof typeof abilityLabels]}
-              </Label>
-              <span className="text-sm text-muted-foreground">
-                Модификатор: {calculateModifier(value)}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleDecrease(ability as keyof typeof abilities)}
-                disabled={value <= 8}
+      <h2 className="text-2xl font-bold mb-4">Распределение характеристик (Point Buy)</h2>
+      <p className="mb-6 text-muted-foreground">
+        Используйте свои 27 очков для распределения характеристик. Осталось:{" "}
+        <span className="font-bold">{points}</span> очков.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {Object.keys(stats).map((stat) => (
+          <div key={stat} className="flex flex-col items-center space-y-2 p-4 border rounded bg-primary/5">
+            <span className="text-lg font-semibold">{abilityNames[stat as keyof typeof abilityNames]}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDecrease(stat)}
+                className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded"
               >
                 -
-              </Button>
-              
-              <div className="w-20 text-center font-bold text-xl">
-                {value}
-              </div>
-              
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleIncrease(ability as keyof typeof abilities)}
-                disabled={value >= 15 || totalPoints >= initialPoints}
+              </button>
+              <span className="text-2xl font-bold">{stats[stat]}</span>
+              <button
+                onClick={() => handleIncrease(stat)}
+                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded"
               >
                 +
-              </Button>
-              
-              <div className="text-sm text-muted-foreground ml-2">
-                {abilityDescriptions[ability as keyof typeof abilityDescriptions]}
-              </div>
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* КНОПКИ НАВИГАЦИИ */}
+      <NavigationButtons
+        allowNext={points === 0}
+        nextStep={handleNext}
+        prevStep={prevStep}
+        isFirstStep={false}
+      />
     </div>
   );
 };
+
+export default CharacterAbilityScores;

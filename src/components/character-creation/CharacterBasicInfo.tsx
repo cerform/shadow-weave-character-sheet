@@ -1,101 +1,95 @@
-
-import React from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState } from "react";
+import NavigationButtons from "@/components/character-creation/NavigationButtons";
 
 interface CharacterBasicInfoProps {
   character: any;
-  onUpdateCharacter: (updates: any) => void;
+  updateCharacter: (updates: any) => void;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
-export const CharacterBasicInfo = ({ character, onUpdateCharacter }: CharacterBasicInfoProps) => {
-  const alignments = [
-    { value: 'lawful-good', label: 'Законопослушный добрый' },
-    { value: 'neutral-good', label: 'Нейтральный добрый' },
-    { value: 'chaotic-good', label: 'Хаотичный добрый' },
-    { value: 'lawful-neutral', label: 'Законопослушный нейтральный' },
-    { value: 'true-neutral', label: 'Истинно нейтральный' },
-    { value: 'chaotic-neutral', label: 'Хаотичный нейтральный' },
-    { value: 'lawful-evil', label: 'Законопослушный злой' },
-    { value: 'neutral-evil', label: 'Нейтральный злой' },
-    { value: 'chaotic-evil', label: 'Хаотичный злой' },
-  ];
+const CharacterBasicInfo: React.FC<CharacterBasicInfoProps> = ({
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep,
+}) => {
+  const [name, setName] = useState<string>(character.name || "");
+  const [gender, setGender] = useState<string>(character.gender || "");
+  const [alignment, setAlignment] = useState<string>(character.alignment || "");
 
-  const backgrounds = [
-    { value: 'acolyte', label: 'Послушник' },
-    { value: 'charlatan', label: 'Шарлатан' },
-    { value: 'criminal', label: 'Преступник' },
-    { value: 'entertainer', label: 'Артист' },
-    { value: 'folk-hero', label: 'Народный герой' },
-    { value: 'guild-artisan', label: 'Гильдейский ремесленник' },
-    { value: 'hermit', label: 'Отшельник' },
-    { value: 'noble', label: 'Благородный' },
-    { value: 'outlander', label: 'Чужеземец' },
-    { value: 'sage', label: 'Мудрец' },
-    { value: 'sailor', label: 'Моряк' },
-    { value: 'soldier', label: 'Солдат' },
-    { value: 'urchin', label: 'Беспризорник' },
-  ];
+  const handleNext = () => {
+    updateCharacter({ name, gender, alignment });
+    nextStep();
+  };
+
+  const allowContinue = name.trim() !== "" && gender.trim() !== "" && alignment.trim() !== "";
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Основная информация</h2>
       <p className="mb-6 text-muted-foreground">
-        Заполните основную информацию о вашем персонаже, включая имя, мировоззрение и предысторию.
+        Введите имя персонажа, выберите пол и мировоззрение.
       </p>
-      
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="character-name">Имя персонажа</Label>
-          <Input 
-            id="character-name"
-            placeholder="Введите имя персонажа"
-            value={character.name}
-            onChange={(e) => onUpdateCharacter({ name: e.target.value })}
+
+      <div className="space-y-6 mb-8">
+        {/* Имя */}
+        <div>
+          <label className="block mb-2 font-semibold">Имя персонажа</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-2 border rounded bg-background text-foreground"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="alignment">Мировоззрение</Label>
-            <Select 
-              value={character.alignment} 
-              onValueChange={(value) => onUpdateCharacter({ alignment: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите мировоззрение" />
-              </SelectTrigger>
-              <SelectContent>
-                {alignments.map(alignment => (
-                  <SelectItem key={alignment.value} value={alignment.value}>
-                    {alignment.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="background">Предыстория</Label>
-            <Select 
-              value={character.background} 
-              onValueChange={(value) => onUpdateCharacter({ background: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите предысторию" />
-              </SelectTrigger>
-              <SelectContent>
-                {backgrounds.map(background => (
-                  <SelectItem key={background.value} value={background.value}>
-                    {background.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Пол */}
+        <div>
+          <label className="block mb-2 font-semibold">Пол</label>
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            className="w-full p-2 border rounded bg-background text-foreground"
+          >
+            <option value="">Выберите пол</option>
+            <option value="Мужской">Мужской</option>
+            <option value="Женский">Женский</option>
+            <option value="Другое">Другое</option>
+          </select>
+        </div>
+
+        {/* Мировоззрение */}
+        <div>
+          <label className="block mb-2 font-semibold">Мировоззрение</label>
+          <select
+            value={alignment}
+            onChange={(e) => setAlignment(e.target.value)}
+            className="w-full p-2 border rounded bg-background text-foreground"
+          >
+            <option value="">Выберите мировоззрение</option>
+            <option value="Законопослушный Добрый">Законопослушный Добрый</option>
+            <option value="Нейтральный Добрый">Нейтральный Добрый</option>
+            <option value="Хаотичный Добрый">Хаотичный Добрый</option>
+            <option value="Законопослушный Нейтральный">Законопослушный Нейтральный</option>
+            <option value="Истинно Нейтральный">Истинно Нейтральный</option>
+            <option value="Хаотичный Нейтральный">Хаотичный Нейтральный</option>
+            <option value="Законопослушный Злой">Законопослушный Злой</option>
+            <option value="Нейтральный Злой">Нейтральный Злой</option>
+            <option value="Хаотичный Злой">Хаотичный Злой</option>
+          </select>
         </div>
       </div>
+
+      {/* КНОПКИ НАВИГАЦИИ */}
+      <NavigationButtons
+        allowNext={allowContinue}
+        nextStep={handleNext}
+        prevStep={prevStep}
+        isFirstStep={false}
+      />
     </div>
   );
 };
+
+export default CharacterBasicInfo;
