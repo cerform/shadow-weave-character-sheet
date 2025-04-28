@@ -1,3 +1,4 @@
+
 :root {
   --background: 30 20% 10%;
   --foreground: 30 30% 90%;
@@ -14,4 +15,38 @@
   --ring: 40 80% 60%;
 
   --glow-color: 45 90% 50%;
+}
+
+.tavern-theme {
+  background-image: 
+    linear-gradient(
+      to bottom right,
+      hsl(var(--background)),
+      hsl(25 25% 15%)
+    );
+  
+  /* Стилизация для элементов интерфейса */
+  & .card {
+    border-color: hsl(var(--primary) / 0.2);
+    box-shadow: 0 4px 12px -2px hsl(var(--secondary) / 0.2);
+  }
+  
+  & input, & select, & textarea {
+    background-color: hsl(var(--input));
+    border-color: hsl(var(--border));
+  }
+  
+  & button[data-variant="default"] {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    &:hover {
+      background-color: hsl(var(--primary) / 0.9);
+    }
+  }
+  
+  /* Свечение для важных элементов */
+  & .primary-glow {
+    box-shadow: 0 0 15px 2px hsl(var(--glow-color) / 0.6);
+    border-color: hsl(var(--primary));
+  }
 }
