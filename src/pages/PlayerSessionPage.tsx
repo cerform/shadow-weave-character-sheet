@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useTheme } from '@/hooks/use-theme';
 import { useSession } from '@/contexts/SessionContext';
-import { CharacterSheet } from '@/components/character-sheet/CharacterSheet';
+import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { ThemeSelector } from '@/components/character-sheet/ThemeSelector';
-import { ArrowLeft, DiceSix, Users, MessageSquare, Swords } from 'lucide-react';
+import { ArrowLeft, Dices, Users, MessageSquare, Swords } from 'lucide-react';
 import { DicePanel } from '@/components/character-sheet/DicePanel';
 
 const PlayerSessionPage = () => {
@@ -48,7 +49,7 @@ const PlayerSessionPage = () => {
             <div>
               <h1 className="text-2xl font-bold">{currentSession.name}</h1>
               <p className="text-sm text-muted-foreground">
-                Мастер: {currentSession.createdBy || 'Неизвестно'}
+                Мастер: {currentSession.name || 'Неизвестно'}
               </p>
             </div>
           </div>
@@ -66,7 +67,7 @@ const PlayerSessionPage = () => {
               Бой
             </TabsTrigger>
             <TabsTrigger value="dice" className="gap-2">
-              <DiceSix className="size-4" />
+              <Dices className="size-4" />
               Кубики
             </TabsTrigger>
             <TabsTrigger value="group" className="gap-2">
