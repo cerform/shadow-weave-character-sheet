@@ -20,7 +20,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="container px-4 py-8 mx-auto">
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>

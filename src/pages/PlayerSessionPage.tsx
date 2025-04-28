@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +21,7 @@ const PlayerSessionPage = () => {
   
   if (!currentSession || !player) {
     return (
-      <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+      <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
         <div className="max-w-md mx-auto mt-24">
           <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
             <CardContent className="p-6 text-center">
@@ -39,7 +38,7 @@ const PlayerSessionPage = () => {
   }
 
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="max-w-7xl mx-auto">
         <header className="mb-6 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center">

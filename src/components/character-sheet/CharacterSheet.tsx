@@ -33,7 +33,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
   };
 
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="max-w-7xl mx-auto">
         <header className="mb-4 flex flex-col md:flex-row justify-between items-center bg-card/30 backdrop-blur-sm border-primary/20 rounded-lg p-4">
           <h1 className="text-2xl font-bold">{characterName} — {characterClass}</h1>
