@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTheme, Theme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <Select value={theme} onValueChange={(value: Theme) => setTheme(value)}>
+    <Select value={theme} onValueChange={setTheme}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Выберите тему" />
       </SelectTrigger>

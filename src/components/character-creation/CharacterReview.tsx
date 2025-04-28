@@ -5,8 +5,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { races } from '@/data/races';
 import { classes } from '@/data/classes';
 
+interface Character {
+  name?: string;
+  race?: string;
+  subrace?: string;
+  class?: string;
+  level?: number;
+  background?: string;
+  alignment?: string;
+  abilities?: {
+    [key: string]: number;
+  };
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  appearance?: string;
+  backstory?: string;
+}
+
 interface CharacterReviewProps {
-  character: any;
+  character: Character;
   onFinish: () => void;
 }
 

@@ -24,16 +24,4 @@ export const themes = {
     accent: '#00ffff',
     glow: '0 0 15px #00ffff',
   },
-  barbarian: {
-    primary: 'from-red-700 to-red-900',
-    secondary: 'from-red-600/20 to-red-800/20',
-    accent: '#ff2200',
-    glow: '0 0 15px #ff2200',
-  },
-  bard: {
-    primary: 'from-yellow-600 to-yellow-800',
-    secondary: 'from-yellow-500/20 to-yellow-700/20',
-    accent: '#ffd700',
-    glow: '0 0 15px #ffd700',
-  },
 };
