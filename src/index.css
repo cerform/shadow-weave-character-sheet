@@ -48,6 +48,26 @@
   --primary: 190 100% 50%;
 }
 
+.theme-warrior {
+  --background: 35 50% 5%;
+  --primary: 35 100% 50%;
+}
+
+.theme-bard {
+  --background: 330 50% 5%;
+  --primary: 330 100% 50%;
+}
+
+.theme-paladin {
+  --background: 60 50% 5%;
+  --primary: 60 100% 50%;
+}
+
+.theme-rogue {
+  --background: 220 20% 5%;
+  --primary: 220 20% 50%;
+}
+
 @layer base {
   * {
     @apply border-border;

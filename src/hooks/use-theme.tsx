@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 
-type Theme = 'shadow' | 'fire' | 'nature' | 'arcane' | 'barbarian' | 'bard';
+export type Theme = 'shadow' | 'fire' | 'nature' | 'arcane' | 'warrior' | 'bard' | 'paladin' | 'rogue';
 
 interface ThemeState {
   theme: Theme;
