@@ -1,78 +1,114 @@
-import React from "react";
-import NavigationButtons from "@/components/character-creation/NavigationButtons";
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { CharacterContext, Character } from "@/contexts/CharacterContext";
 
-interface CharacterReviewProps {
-  character: any;
+type Props = {
+  character: {
+    race: string;
+    class: string;
+    spells: string[];
+    name: string;
+    gender: string;
+    alignment: string;
+    stats: {
+      strength: number;
+      dexterity: number;
+      constitution: number;
+      intelligence: number;
+      wisdom: number;
+      charisma: number;
+    };
+    background: string;
+  };
   prevStep: () => void;
-}
+};
 
-const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep }) => {
+export default function CharacterReview({ character, prevStep }: Props) {
+  const navigate = useNavigate();
+  const { setCharacter } = useContext(CharacterContext);
+
   const handleFinish = () => {
-    localStorage.setItem("character", JSON.stringify(character));
-    alert("Персонаж успешно сохранён!");
-    window.location.href = "/sheet"; // После сохранения переход на страницу листа персонажа
+    const abilities = {
+      STR: character.stats.strength,
+      DEX: character.stats.dexterity,
+      CON: character.stats.constitution,
+      INT: character.stats.intelligence,
+      WIS: character.stats.wisdom,
+      CHA: character.stats.charisma,
+    };
+    const spellsKnown = character.spells.map((s, idx) => ({ id: String(idx), name: s, level: 0 }));
+    const spellSlots: Record<number, { max: number; used: number }> = {};
+
+    const charObj: Character = {
+      name: character.name,
+      race: character.race,
+      className: character.class,
+      level: 1,
+      abilities,
+      spellsKnown,
+      spellSlots,
+    };
+
+    setCharacter(charObj);
+    navigate("/sheet");
   };
 
   return (
-    <div>
-      <h2 className="text-3xl font-bold mb-8 text-center">Ваш персонаж готов!</h2>
+    <div className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl mb-4">Проверка персонажа</h1>
 
-      <div className="space-y-6 mb-8">
-        {/* Базовая информация */}
-        <div className="p-4 border rounded shadow">
-          <h3 className="text-xl font-semibold mb-2">Базовая информация</h3>
-          <p><strong>Имя:</strong> {character.name || "Не указано"}</p>
-          <p><strong>Раса:</strong> {character.race || "Не выбрана"}</p>
-          <p><strong>Класс:</strong> {character.class || "Не выбран"}</p>
-          <p><strong>Пол:</strong> {character.gender || "Не указан"}</p>
-          <p><strong>Мировоззрение:</strong> {character.alignment || "Не выбрано"}</p>
-          <p><strong>Предыстория:</strong> {character.background || "Не выбрана"}</p>
-        </div>
+      <section className="mb-4">
+        <h2 className="font-semibold">Основное</h2>
+        <p>Имя: {character.name}</p>
+        <p>Раса: {character.race}</p>
+        <p>Класс: {character.class}</p>
+        <p>Пол: {character.gender}</p>
+        <p>Мировоззрение: {character.alignment}</p>
+      </section>
 
-        {/* Характеристики */}
-        <div className="p-4 border rounded shadow">
-          <h3 className="text-xl font-semibold mb-2">Характеристики</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(character.stats).map(([stat, value]) => (
-              <div key={stat} className="flex justify-between">
-                <span className="capitalize">{stat}</span>
-                <span className="font-bold">{value}</span>
-              </div>
+      <section className="mb-4">
+        <h2 className="font-semibold">Способности</h2>
+        <ul className="grid grid-cols-3 gap-2">
+          {Object.entries(character.stats).map(([key, value]) => (
+            <li key={key}>
+              <strong>{key}</strong>: {value} ({Math.floor((value - 10) / 2) >= 0 ? "+" : ""}{Math.floor((value - 10) / 2)})
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mb-4">
+        <h2 className="font-semibold">Заклинания</h2>
+        {character.spells.length > 0 ? (
+          <ul className="list-disc ml-5">
+            {character.spells.map((s, idx) => (
+              <li key={idx}>{s}</li>
             ))}
-          </div>
-        </div>
-
-        {/* Заклинания */}
-        {character.spells && character.spells.length > 0 && (
-          <div className="p-4 border rounded shadow">
-            <h3 className="text-xl font-semibold mb-2">Выбранные заклинания</h3>
-            <ul className="list-disc list-inside">
-              {character.spells.map((spell: string, idx: number) => (
-                <li key={idx}>{spell}</li>
-              ))}
-            </ul>
-          </div>
+          </ul>
+        ) : (
+          <p>Нет известных заклинаний</p>
         )}
-      </div>
+      </section>
 
-      {/* КНОПКИ */}
-      <div className="flex flex-wrap justify-center gap-4">
+      <section className="mb-6">
+        <h2 className="font-semibold">Предыстория</h2>
+        <p>{character.background || "–"}</p>
+      </section>
+
+      <div className="flex gap-4">
         <button
           onClick={prevStep}
-          className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded"
+          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
         >
           Назад
         </button>
-
         <button
           onClick={handleFinish}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
         >
-          Завершить создание
+          Завершить и сохранить
         </button>
       </div>
     </div>
   );
-};
-
-export default CharacterReview;
+}

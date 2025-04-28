@@ -3,24 +3,30 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Старые страницы
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CharacterSheet from "./components/character-sheet/CharacterSheet";
 import CharacterCreationPage from "./pages/CharacterCreationPage";
 import CharacterSheetPage from "./pages/CharacterSheetPage";
-import { SessionProvider } from "./contexts/SessionContext";
 import DMDashboardPage from "./pages/DMDashboardPage";
 import DMSessionPage from "./pages/DMSessionPage";
 import JoinSessionPage from "./pages/JoinSessionPage";
 import PlayerSessionPage from "./pages/PlayerSessionPage";
 
-// Новые подключения:
+// Новые страницы
 import Home from "./pages/Home";
 import GameRoomPage from "./pages/GameRoomPage";
 
+// 🎯 Наша новая страница битвы
+import PlayBattlePage from "./pages/PlayBattlePage";
+
+// Контекст сессий
+import { SessionProvider } from "./contexts/SessionContext";
+
 const queryClient = new QueryClient();
 
-// Обёртка для передачи roomCode из URL в GameRoomPage
 const RoomWrapper = () => {
   const roomCode = window.location.pathname.split("/room/")[1];
   return <GameRoomPage roomCode={roomCode} />;
@@ -35,16 +41,24 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
-              {/* Твои старые роуты */}
+              {/* Главная */}
               <Route path="/" element={<Index />} />
+
+              {/* Создание персонажа */}
               <Route path="/create" element={<CharacterCreationPage />} />
               <Route path="/sheet" element={<CharacterSheetPage />} />
+
+              {/* Панель мастера */}
               <Route path="/dm" element={<DMDashboardPage />} />
               <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
-              <Route path="/join" element={<JoinSessionPage />} />
-              <Route path="/play" element={<PlayerSessionPage />} />
 
-              {/* Новые роуты для игровых сессий */}
+              {/* Присоединение игрока */}
+              <Route path="/join" element={<JoinSessionPage />} />
+
+              {/* НОВАЯ страница боя */}
+              <Route path="/play" element={<PlayBattlePage />} />
+
+              {/* Комнаты по WebSocket */}
               <Route path="/session" element={<Home />} />
               <Route path="/room/:roomCode" element={<RoomWrapper />} />
 
