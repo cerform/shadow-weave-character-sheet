@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { races } from "@/data/races";
+import { Character } from "@/contexts/CharacterContext";
 
 interface CharacterRaceSelectionProps {
-  character: any;
-  updateCharacter: (updates: any) => void;
+  character: Character;
+  updateCharacter: (updates: Partial<Character>) => void;
   nextStep: () => void;
   prevStep: () => void;
 }
@@ -35,10 +36,11 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
         }
       }
     }
-  }, [selectedRace]);
+  }, [selectedRace, selectedSubrace]);
 
   const handleNext = () => {
     if (selectedRace) {
+      // Используем updateCharacter вместо прямого обновления объекта
       updateCharacter({ 
         race: selectedRace, 
         subrace: selectedSubrace 

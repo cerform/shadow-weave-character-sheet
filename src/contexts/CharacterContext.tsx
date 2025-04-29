@@ -1,6 +1,4 @@
 
-// src/contexts/CharacterContext.tsx
-
 import React, {
   createContext,
   useState,
@@ -37,6 +35,7 @@ export interface Character {
   id?: string;
   name: string;
   race: string;
+  subrace?: string; // Добавлено поле подрасы
   className: string;
   level: number;
   abilities: AbilityScores;
@@ -48,6 +47,8 @@ export interface Character {
   equipment?: string[];
   languages?: string[];
   proficiencies?: string[];
+  // Добавлено поле для отслеживания темы персонажа
+  theme?: string;
 }
 
 // Контекст и его тип
@@ -55,12 +56,14 @@ export interface CharacterContextType {
   character: Character | null;
   setCharacter: (char: Character) => void;
   clearCharacter: () => void;
+  updateCharacter: (updates: Partial<Character>) => void; // Добавлен метод для частичного обновления
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
   clearCharacter: () => {},
+  updateCharacter: () => {},
 });
 
 interface Props {
@@ -99,6 +102,16 @@ export function CharacterProvider({ children }: Props) {
     setCharacterState(char);
   }, []);
 
+  // Добавлен метод для частичного обновления персонажа
+  const updateCharacter = useCallback((updates: Partial<Character>) => {
+    setCharacterState((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updates };
+      console.log("Обновление персонажа:", updated.name, updates);
+      return updated;
+    });
+  }, []);
+
   const clearCharacter = useCallback(() => {
     console.log("Удаление персонажа");
     setCharacterState(null);
@@ -106,7 +119,7 @@ export function CharacterProvider({ children }: Props) {
 
   return (
     <CharacterContext.Provider
-      value={{ character, setCharacter, clearCharacter }}
+      value={{ character, setCharacter, clearCharacter, updateCharacter }}
     >
       {children}
     </CharacterContext.Provider>
