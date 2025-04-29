@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import CharacterBackground from "@/components/character-creation/CharacterBackgr
 import CharacterReview from "@/components/character-creation/CharacterReview";
 import CharacterEquipmentSelection from "@/components/character-creation/CharacterEquipmentSelection";
 import CharacterLanguagesSelection from "@/components/character-creation/CharacterLanguagesSelection";
+import { Character } from "@/contexts/CharacterContext";
 
 const steps = [
   { id: "race", title: "Выбор расы" },
