@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import OBSLayout from "@/components/OBSLayout";
@@ -49,11 +50,8 @@ const BattleScenePage = () => {
     setTokens((prev) => [...prev, newToken]);
   };
 
-  const handleDrag = (e: React.MouseEvent, id: number) => {
-    if (!sceneRef.current) return;
-    const rect = sceneRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  // Updated to handle position directly instead of using a MouseEvent
+  const updateTokenPosition = (id: number, x: number, y: number) => {
     setTokens((prev) =>
       prev.map((t) => (t.id === id ? { ...t, x, y } : t))
     );
@@ -130,9 +128,12 @@ const BattleScenePage = () => {
               drag
               dragMomentum={false}
               onDragStart={() => setDraggingTokenId(token.id)}
-              onDragEnd={(e) => {
-                if (draggingTokenId !== null) {
-                  handleDrag(e, draggingTokenId);
+              onDragEnd={(_, info) => {
+                if (draggingTokenId !== null && sceneRef.current) {
+                  const rect = sceneRef.current.getBoundingClientRect();
+                  const x = info.point.x - rect.left;
+                  const y = info.point.y - rect.top;
+                  updateTokenPosition(draggingTokenId, x, y);
                   setDraggingTokenId(null);
                 }
               }}
