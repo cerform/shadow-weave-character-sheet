@@ -92,6 +92,12 @@ export function CharacterProvider({ children }: Props) {
     if (character) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(character));
       console.log("Персонаж сохранен:", character.name);
+      
+      // Если у персонажа есть тема, применяем её
+      if (character.theme) {
+        localStorage.setItem('theme', character.theme);
+        document.body.className = `theme-${character.theme}`;
+      }
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }

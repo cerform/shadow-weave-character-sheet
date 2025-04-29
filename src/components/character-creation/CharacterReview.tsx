@@ -1,4 +1,3 @@
-
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
@@ -50,6 +49,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       return;
     }
 
+    // Convert character stats to the abilities format expected by the Character interface
     const abilities = {
       STR: character.stats.strength,
       DEX: character.stats.dexterity,
@@ -59,7 +59,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       CHA: character.stats.charisma,
     };
     
-    // Создание слотов заклинаний в зависимости от класса
+    // Create spell slots based on class
     const spellSlots: Record<number, { max: number; used: number }> = {};
     
     if (["Волшебник", "Чародей", "Чернокнижник", "Бард", "Жрец", "Друид"].includes(character.class)) {
@@ -70,22 +70,26 @@ export default function CharacterReview({ character, prevStep }: Props) {
       spellSlots[1] = { max: 1, used: 0 };
     }
     
+    // Convert spell names to Spell objects
     const spellsKnown = character.spells.map((s, idx) => ({ id: String(idx), name: s, level: 0 }));
 
+    // Create the character object with the correct format for the Character interface
     const charObj: Character = {
       name: character.name,
       race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
       level: 1,
-      abilities,
-      spellsKnown,
-      spellSlots,
+      abilities: abilities,
+      spellsKnown: spellsKnown,
+      spellSlots: spellSlots,
       gender: character.gender,
       alignment: character.alignment,
       background: character.background,
       equipment: character.equipment,
       languages: character.languages,
-      proficiencies: character.proficiencies
+      proficiencies: character.proficiencies,
+      // Optional theme property from character selection
+      theme: localStorage.getItem('theme') || undefined
     };
 
     // Сохраняем персонажа в контексте
