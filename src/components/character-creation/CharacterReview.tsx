@@ -88,7 +88,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       equipment: character.equipment,
       languages: character.languages,
       proficiencies: character.proficiencies,
-      // Optional theme property from character selection
+      // Get theme from localStorage to save with character
       theme: localStorage.getItem('theme') || undefined
     };
 

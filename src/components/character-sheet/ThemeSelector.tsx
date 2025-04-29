@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/use-theme';
 import { Button } from "@/components/ui/button";
 
 export const ThemeSelector = () => {
@@ -16,7 +16,7 @@ export const ThemeSelector = () => {
   ];
   
   const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
+    setTheme(newTheme as any);
     localStorage.setItem('theme', newTheme);
   };
   

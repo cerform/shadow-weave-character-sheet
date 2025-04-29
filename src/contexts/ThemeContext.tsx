@@ -2,17 +2,17 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { themes } from "@/lib/themes";
 
-export type Theme = 'shadow' | 'fire' | 'nature' | 'arcane' | 'warrior' | 'bard' | 'paladin' | 'rogue';
+export type Theme = 'default' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard' | 'paladin' | 'rogue';
 
 interface ThemeContextType {
   theme: Theme;
-  switchTheme: (newTheme: Theme) => void;
+  setTheme: (newTheme: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>("shadow");
+  const [theme, setTheme] = useState<Theme>("default");
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme") as Theme;
@@ -39,14 +39,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.setAttribute('data-theme', themeName);
   };
 
-  const switchTheme = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    applyTheme(newTheme);
-  };
-
   return (
-    <ThemeContext.Provider value={{ theme, switchTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
