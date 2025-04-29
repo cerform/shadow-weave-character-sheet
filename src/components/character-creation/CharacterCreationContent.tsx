@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CharacterRaceSelection from "./CharacterRaceSelection";
 import CharacterClassSelection from "./CharacterClassSelection";
 import CharacterSpellSelection from "./CharacterSpellSelection";
@@ -45,6 +45,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     }
     return baseIndex;
   };
+
+  // useEffect to skip spell selection step for non-magic classes
+  useEffect(() => {
+    if (currentStep === 3 && character.class && !isMagicClass(character.class)) {
+      nextStep();
+    }
+  }, [currentStep, character.class, isMagicClass, nextStep]);
 
   switch (currentStep) {
     case 0:
@@ -135,6 +142,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         </div>
       );
     case 3:
+      // Return spell selection for magic classes, or a loading placeholder for non-magic classes
+      // that will be redirected by the useEffect
       return isMagicClass(character.class) ? (
         <CharacterSpellSelection
           character={character}
@@ -142,9 +151,10 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           nextStep={nextStep}
           prevStep={prevStep}
         />
-      ) : nextStep(); // Skip this step for non-magic classes
+      ) : (
+        <div className="text-center py-4">Переход...</div>
+      );
     case 4:
-    case 3 /* Non-magic class */: 
       return (
         <CharacterEquipmentSelection
           character={character}
@@ -154,7 +164,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     case 5:
-    case 4 /* Non-magic class */: 
       return (
         <CharacterLanguagesSelection
           character={character}
@@ -164,7 +173,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     case 6:
-    case 5 /* Non-magic class */: 
       return (
         <CharacterBasicInfo
           character={character}
@@ -174,7 +182,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     case 7:
-    case 6 /* Non-magic class */: 
       return (
         <CharacterBackground
           character={character}
@@ -184,7 +191,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     case 8:
-    case 7 /* Non-magic class */: 
       return (
         <CharacterReview
           character={character}
@@ -192,7 +198,12 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     default:
-      return null;
+      // Return a placeholder for any unsupported steps
+      return (
+        <div className="text-center py-4">
+          Неизвестный шаг создания персонажа
+        </div>
+      );
   }
 };
 

@@ -1,26 +1,32 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export const useCreationStep = (isMagicClass: (className: string) => boolean, characterClass: string) => {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const nextStep = () => {
-    // Skip spell selection step if class is not a magic user
-    if (currentStep === 1 && !isMagicClass(characterClass)) {
-      setCurrentStep((prev) => Math.min(prev + 2, 8));
-    } else {
-      setCurrentStep((prev) => Math.min(prev + 1, 8));
-    }
-  };
+  const nextStep = useCallback(() => {
+    setCurrentStep((prev) => {
+      // For non-magic classes, skip from step 2 (abilities) to step 4 (equipment),
+      // effectively skipping the spell selection step (step 3)
+      if (prev === 2 && characterClass && !isMagicClass(characterClass)) {
+        return 4;
+      }
+      // Normal progression with limit at step 8
+      return Math.min(prev + 1, 8);
+    });
+  }, [characterClass, isMagicClass]);
 
-  const prevStep = () => {
-    // Skip spell selection step if class is not a magic user when going back
-    if (currentStep === 3 && !isMagicClass(characterClass)) {
-      setCurrentStep((prev) => Math.max(prev - 2, 0));
-    } else {
-      setCurrentStep((prev) => Math.max(prev - 1, 0));
-    }
-  };
+  const prevStep = useCallback(() => {
+    setCurrentStep((prev) => {
+      // For non-magic classes, when going back from step 4 (equipment), 
+      // go to step 2 (abilities), skipping the spell selection step (step 3)
+      if (prev === 4 && characterClass && !isMagicClass(characterClass)) {
+        return 2;
+      }
+      // Normal backward progression with limit at step 0
+      return Math.max(prev - 1, 0);
+    });
+  }, [characterClass, isMagicClass]);
 
   return {
     currentStep,
