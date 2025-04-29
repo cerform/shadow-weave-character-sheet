@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import CharacterBackground from "@/components/character-creation/CharacterBackgr
 import CharacterReview from "@/components/character-creation/CharacterReview";
 import CharacterEquipmentSelection from "@/components/character-creation/CharacterEquipmentSelection";
 import CharacterLanguagesSelection from "@/components/character-creation/CharacterLanguagesSelection";
-import { Character } from "@/contexts/CharacterContext";
+import { Character, AbilityScores, SpellSlots, Spell } from "@/contexts/CharacterContext";
 
 const steps = [
   { id: "race", title: "Выбор расы" },
@@ -35,6 +34,7 @@ const CharacterCreationPage = () => {
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll">("standard");
   const [diceResults, setDiceResults] = useState<number[][]>([]);
 
+  // Updated character state with all required properties from Character interface
   const [character, setCharacter] = useState({
     race: "",
     subrace: "",
@@ -56,6 +56,19 @@ const CharacterCreationPage = () => {
       charisma: 8,
     },
     background: "",
+    // Adding the missing properties required by Character interface
+    className: "",
+    level: 1,
+    abilities: {
+      STR: 8,
+      DEX: 8,
+      CON: 8, 
+      INT: 8,
+      WIS: 8,
+      CHA: 8
+    } as AbilityScores,
+    spellsKnown: [] as Spell[],
+    spellSlots: {} as SpellSlots
   });
 
   useEffect(() => {
@@ -64,6 +77,33 @@ const CharacterCreationPage = () => {
       rollAllAbilities();
     }
   }, [abilitiesMethod]);
+
+  // When stats change, update the abilities property to match
+  useEffect(() => {
+    if (character.stats) {
+      setCharacter(prev => ({
+        ...prev,
+        abilities: {
+          STR: prev.stats.strength,
+          DEX: prev.stats.dexterity,
+          CON: prev.stats.constitution,
+          INT: prev.stats.intelligence,
+          WIS: prev.stats.wisdom,
+          CHA: prev.stats.charisma
+        },
+        // Set className based on class and subclass
+        className: `${prev.class}${prev.subclass ? ` (${prev.subclass})` : ''}`,
+        // Convert raw spell names to Spell objects
+        spellsKnown: prev.spells.map((name, index) => ({
+          id: String(index),
+          name: name,
+          level: 0
+        })),
+        // Create basic spell slots based on class
+        spellSlots: isMagicClass(prev.class) ? { 1: { max: 2, used: 0 } } : {}
+      }));
+    }
+  }, [character.stats, character.class, character.subclass, character.spells]);
 
   const rollAllAbilities = () => {
     // Генерируем 6 наборов бросков (по 4d6 для каждой характеристики)
