@@ -1,13 +1,13 @@
 
 import React from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
 const ThemeSelector = () => {
-  const { theme, switchTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    switchTheme(e.target.value as any);
+    setTheme(e.target.value as any);
   };
 
   return (
