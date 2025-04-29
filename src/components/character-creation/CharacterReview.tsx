@@ -1,12 +1,19 @@
+
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
+import { useToast } from "@/components/ui/use-toast";
 
 type Props = {
   character: {
     race: string;
+    subrace: string;
     class: string;
+    subclass: string;
     spells: string[];
+    equipment: string[];
+    languages: string[];
+    proficiencies: string[];
     name: string;
     gender: string;
     alignment: string;
@@ -26,8 +33,23 @@ type Props = {
 export default function CharacterReview({ character, prevStep }: Props) {
   const navigate = useNavigate();
   const { setCharacter } = useContext(CharacterContext);
+  const { toast } = useToast();
+
+  const getModifier = (score: number) => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
 
   const handleFinish = () => {
+    if (!character.name) {
+      toast({
+        title: "Ошибка",
+        description: "Персонаж должен иметь имя",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const abilities = {
       STR: character.stats.strength,
       DEX: character.stats.dexterity,
@@ -36,79 +58,173 @@ export default function CharacterReview({ character, prevStep }: Props) {
       WIS: character.stats.wisdom,
       CHA: character.stats.charisma,
     };
-    const spellsKnown = character.spells.map((s, idx) => ({ id: String(idx), name: s, level: 0 }));
+    
+    // Создание слотов заклинаний в зависимости от класса
     const spellSlots: Record<number, { max: number; used: number }> = {};
+    
+    if (["Волшебник", "Чародей", "Чернокнижник", "Бард", "Жрец", "Друид"].includes(character.class)) {
+      spellSlots[1] = { max: 2, used: 0 };
+    }
+    
+    if (["Паладин", "Следопыт"].includes(character.class)) {
+      spellSlots[1] = { max: 1, used: 0 };
+    }
+    
+    const spellsKnown = character.spells.map((s, idx) => ({ id: String(idx), name: s, level: 0 }));
 
     const charObj: Character = {
       name: character.name,
-      race: character.race,
-      className: character.class,
+      race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
+      className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
       level: 1,
       abilities,
       spellsKnown,
       spellSlots,
+      gender: character.gender,
+      alignment: character.alignment,
+      background: character.background,
+      equipment: character.equipment,
+      languages: character.languages,
+      proficiencies: character.proficiencies
     };
 
+    // Сохраняем персонажа в контексте
     setCharacter(charObj);
+    
+    // Показываем уведомление об успешном сохранении
+    toast({
+      title: "Персонаж сохранен",
+      description: `${character.name} успешно создан!`
+    });
+    
+    // Переходим к листу персонажа
     navigate("/sheet");
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl mb-4">Проверка персонажа</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-6">Проверка персонажа</h1>
 
-      <section className="mb-4">
-        <h2 className="font-semibold">Основное</h2>
-        <p>Имя: {character.name}</p>
-        <p>Раса: {character.race}</p>
-        <p>Класс: {character.class}</p>
-        <p>Пол: {character.gender}</p>
-        <p>Мировоззрение: {character.alignment}</p>
-      </section>
-
-      <section className="mb-4">
-        <h2 className="font-semibold">Способности</h2>
-        <ul className="grid grid-cols-3 gap-2">
-          {Object.entries(character.stats).map(([key, value]) => (
-            <li key={key}>
-              <strong>{key}</strong>: {value} ({Math.floor((value - 10) / 2) >= 0 ? "+" : ""}{Math.floor((value - 10) / 2)})
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mb-4">
-        <h2 className="font-semibold">Заклинания</h2>
-        {character.spells.length > 0 ? (
-          <ul className="list-disc ml-5">
-            {character.spells.map((s, idx) => (
-              <li key={idx}>{s}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>Нет известных заклинаний</p>
-        )}
+      <section className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Основная информация</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-lg">
+          <div><span className="font-medium">Имя:</span> {character.name || "—"}</div>
+          <div><span className="font-medium">Пол:</span> {character.gender || "—"}</div>
+          <div><span className="font-medium">Раса:</span> {character.race} {character.subrace ? `(${character.subrace})` : ""}</div>
+          <div><span className="font-medium">Класс:</span> {character.class} {character.subclass ? `(${character.subclass})` : ""}</div>
+          <div><span className="font-medium">Мировоззрение:</span> {character.alignment || "—"}</div>
+        </div>
       </section>
 
       <section className="mb-6">
-        <h2 className="font-semibold">Предыстория</h2>
-        <p>{character.background || "–"}</p>
+        <h2 className="text-xl font-semibold mb-2">Характеристики</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {Object.entries(character.stats).map(([key, value]) => (
+            <div key={key} className="text-center border rounded p-3 bg-muted/20">
+              <div className="font-medium">{getStatName(key)}</div>
+              <div className="text-2xl">{value}</div>
+              <div className="text-sm">{getModifier(value)}</div>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <div className="flex gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Заклинания</h2>
+          <div className="border rounded p-3 bg-muted/20 h-full">
+            {character.spells.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {character.spells.map((spell, idx) => (
+                  <li key={idx}>{spell}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="italic text-muted-foreground">Нет известных заклинаний</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Снаряжение</h2>
+          <div className="border rounded p-3 bg-muted/20 h-full">
+            {character.equipment?.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {character.equipment.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="italic text-muted-foreground">Нет снаряжения</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Языки</h2>
+          <div className="border rounded p-3 bg-muted/20">
+            {character.languages?.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {character.languages.map((lang, idx) => (
+                  <li key={idx}>{lang}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="italic text-muted-foreground">Общий</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Навыки</h2>
+          <div className="border rounded p-3 bg-muted/20">
+            {character.proficiencies?.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {character.proficiencies.map((prof, idx) => (
+                  <li key={idx}>{prof}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="italic text-muted-foreground">Нет профессиональных навыков</p>
+            )}
+          </div>
+        </section>
+      </div>
+
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Предыстория</h2>
+        <div className="border rounded p-4 bg-muted/20">
+          <p>{character.background || "—"}</p>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-4">
         <button
           onClick={prevStep}
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
+          className="px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded"
         >
           Назад
         </button>
         <button
           onClick={handleFinish}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+          className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/80 rounded"
         >
           Завершить и сохранить
         </button>
       </div>
     </div>
   );
+}
+
+// Вспомогательные функции
+function getStatName(stat: string): string {
+  const names: {[key: string]: string} = {
+    'strength': 'Сила',
+    'dexterity': 'Ловкость',
+    'constitution': 'Телосложение',
+    'intelligence': 'Интеллект',
+    'wisdom': 'Мудрость',
+    'charisma': 'Харизма'
+  };
+  return names[stat] || stat;
 }

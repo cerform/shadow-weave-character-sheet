@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import CharacterRaceSelection from "@/components/character-creation/CharacterRaceSelection";
 import CharacterClassSelection from "@/components/character-creation/CharacterClassSelection";
@@ -7,24 +12,37 @@ import CharacterBasicInfo from "@/components/character-creation/CharacterBasicIn
 import CharacterAbilityScores from "@/components/character-creation/CharacterAbilityScores";
 import CharacterBackground from "@/components/character-creation/CharacterBackground";
 import CharacterReview from "@/components/character-creation/CharacterReview";
+import CharacterEquipmentSelection from "@/components/character-creation/CharacterEquipmentSelection";
+import CharacterLanguagesSelection from "@/components/character-creation/CharacterLanguagesSelection";
 
 const steps = [
   { id: "race", title: "Выбор расы" },
   { id: "class", title: "Выбор класса" },
-  { id: "spells", title: "Выбор заклинаний" }, // 🆕 новый шаг
-  { id: "info", title: "Основная информация" },
   { id: "stats", title: "Распределение характеристик" },
+  { id: "spells", title: "Выбор заклинаний" },
+  { id: "equipment", title: "Снаряжение" },
+  { id: "languages", title: "Языки и навыки" },
+  { id: "info", title: "Основная информация" },
   { id: "background", title: "Предыстория" },
   { id: "review", title: "Обзор персонажа" },
 ];
 
 const CharacterCreationPage = () => {
+  const navigate = useNavigate();
+  const { theme } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
+  const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll">("standard");
+  const [diceResults, setDiceResults] = useState<number[][]>([]);
 
   const [character, setCharacter] = useState({
     race: "",
+    subrace: "",
     class: "",
+    subclass: "",
     spells: [] as string[],
+    equipment: [] as string[],
+    languages: [] as string[],
+    proficiencies: [] as string[],
     name: "",
     gender: "",
     alignment: "",
@@ -39,12 +57,52 @@ const CharacterCreationPage = () => {
     background: "",
   });
 
+  useEffect(() => {
+    // Если выбран способ распределения характеристик через броски, генерируем результаты
+    if (abilitiesMethod === "roll" && diceResults.length === 0) {
+      rollAllAbilities();
+    }
+  }, [abilitiesMethod]);
+
+  const rollAllAbilities = () => {
+    // Генерируем 6 наборов бросков (по 4d6 для каждой характеристики)
+    const rolls = [];
+    for (let i = 0; i < 6; i++) {
+      const diceRolls = [];
+      for (let j = 0; j < 4; j++) {
+        diceRolls.push(Math.floor(Math.random() * 6) + 1);
+      }
+      rolls.push(diceRolls);
+    }
+    setDiceResults(rolls);
+  };
+
+  const getModifier = (score: number) => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
+
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    // При переходе с выбора класса сразу к характеристикам, если класс не магический
+    if (currentStep === 1 && !isMagicClass(character.class)) {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    } else {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    }
   };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    // При переходе назад от характеристик к классу, если класс не магический
+    if (currentStep === 3 && !isMagicClass(character.class)) {
+      setCurrentStep((prev) => Math.max(prev - 1, 0));
+    } else {
+      setCurrentStep((prev) => Math.max(prev - 1, 0));
+    }
+  };
+
+  const isMagicClass = (className: string) => {
+    const magicClasses = ['Волшебник', 'Чародей', 'Чернокнижник', 'Бард', 'Жрец', 'Друид', 'Паладин', 'Следопыт'];
+    return magicClasses.includes(className);
   };
 
   const updateCharacter = (updates: any) => {
@@ -54,28 +112,48 @@ const CharacterCreationPage = () => {
     }));
   };
 
+  const goToHomePage = () => {
+    navigate('/');
+  };
+
   return (
-    <div className="p-6">
+    <div className={`p-6 min-h-screen bg-background text-foreground ${theme.replace('theme-', '')}`}>
+      <Button 
+        onClick={goToHomePage} 
+        variant="outline" 
+        className="mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        На главную
+      </Button>
+
       <h1 className="text-3xl font-bold mb-8 text-center">Создание персонажа</h1>
 
       {/* Прогресс шагов */}
-      <div className="flex space-x-4 justify-center mb-8">
-        {steps.map((step, index) => (
-          <div
-            key={index}
-            className={`p-2 rounded font-semibold ${
-              currentStep === index
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {step.title}
-          </div>
-        ))}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {steps.map((step, index) => {
+          // Пропускаем шаг заклинаний для не-магических классов
+          if (step.id === "spells" && character.class && !isMagicClass(character.class)) {
+            return null;
+          }
+          
+          return (
+            <div
+              key={index}
+              className={`p-2 rounded-md font-semibold text-sm ${
+                currentStep === index
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {step.title}
+            </div>
+          );
+        })}
       </div>
 
       {/* Контент шага */}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto bg-card p-6 rounded-lg shadow-lg">
         {currentStep === 0 && (
           <CharacterRaceSelection
             character={character}
@@ -95,6 +173,70 @@ const CharacterCreationPage = () => {
         )}
 
         {currentStep === 2 && (
+          <div>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">Выберите способ распределения характеристик</h3>
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                <Button
+                  onClick={() => setAbilitiesMethod("standard")}
+                  variant={abilitiesMethod === "standard" ? "default" : "outline"}
+                >
+                  Стандартный набор
+                </Button>
+                <Button
+                  onClick={() => setAbilitiesMethod("pointbuy")}
+                  variant={abilitiesMethod === "pointbuy" ? "default" : "outline"}
+                >
+                  Покупка очков
+                </Button>
+                <Button
+                  onClick={() => {
+                    setAbilitiesMethod("roll");
+                    rollAllAbilities();
+                  }}
+                  variant={abilitiesMethod === "roll" ? "default" : "outline"}
+                >
+                  Бросок кубиков
+                </Button>
+              </div>
+              
+              {abilitiesMethod === "roll" && (
+                <div className="bg-muted/30 p-4 rounded-md mb-4">
+                  <h4 className="font-semibold mb-2">Результаты бросков (4d6, отбрасывая наименьшее):</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {diceResults.map((roll, idx) => {
+                      // Сортировка и удаление наименьшего значения
+                      const sorted = [...roll].sort((a, b) => b - a);
+                      const total = sorted.slice(0, 3).reduce((a, b) => a + b, 0);
+                      
+                      return (
+                        <div key={idx} className="p-2 bg-background rounded-md text-center">
+                          <div className="font-semibold">{total}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {roll.join(', ')} → {sorted.slice(0, 3).join(' + ')}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button onClick={rollAllAbilities} className="mt-2">Перебросить все</Button>
+                </div>
+              )}
+            </div>
+            
+            <CharacterAbilityScores
+              character={character}
+              updateCharacter={updateCharacter}
+              nextStep={nextStep}
+              prevStep={prevStep}
+              abilitiesMethod={abilitiesMethod}
+              diceResults={diceResults}
+              getModifier={getModifier}
+            />
+          </div>
+        )}
+
+        {currentStep === 3 && isMagicClass(character.class) && (
           <CharacterSpellSelection
             character={character}
             updateCharacter={updateCharacter}
@@ -103,7 +245,25 @@ const CharacterCreationPage = () => {
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === (isMagicClass(character.class) ? 4 : 3) && (
+          <CharacterEquipmentSelection
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        )}
+
+        {currentStep === (isMagicClass(character.class) ? 5 : 4) && (
+          <CharacterLanguagesSelection
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        )}
+
+        {currentStep === (isMagicClass(character.class) ? 6 : 5) && (
           <CharacterBasicInfo
             character={character}
             updateCharacter={updateCharacter}
@@ -112,16 +272,7 @@ const CharacterCreationPage = () => {
           />
         )}
 
-        {currentStep === 4 && (
-          <CharacterAbilityScores
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        )}
-
-        {currentStep === 5 && (
+        {currentStep === (isMagicClass(character.class) ? 7 : 6) && (
           <CharacterBackground
             character={character}
             updateCharacter={updateCharacter}
@@ -130,7 +281,7 @@ const CharacterCreationPage = () => {
           />
         )}
 
-        {currentStep === 6 && (
+        {currentStep === (isMagicClass(character.class) ? 8 : 7) && (
           <CharacterReview
             character={character}
             prevStep={prevStep}

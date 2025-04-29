@@ -1,3 +1,4 @@
+
 // src/contexts/CharacterContext.tsx
 
 import React, {
@@ -41,7 +42,12 @@ export interface Character {
   abilities: AbilityScores;
   spellsKnown: Spell[];
   spellSlots: SpellSlots;
-  // добавь по необходимости background, features, inventory...
+  gender?: string;
+  alignment?: string;
+  background?: string;
+  equipment?: string[];
+  languages?: string[];
+  proficiencies?: string[];
 }
 
 // Контекст и его тип
@@ -72,7 +78,9 @@ export function CharacterProvider({ children }: Props) {
     if (saved) {
       try {
         setCharacterState(JSON.parse(saved));
-      } catch {}
+      } catch (e) {
+        console.error("Ошибка при чтении персонажа из localStorage:", e);
+      }
     }
   }, []);
 
@@ -80,16 +88,19 @@ export function CharacterProvider({ children }: Props) {
   useEffect(() => {
     if (character) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(character));
+      console.log("Персонаж сохранен:", character.name);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [character]);
 
   const setCharacter = useCallback((char: Character) => {
+    console.log("Установка персонажа:", char.name);
     setCharacterState(char);
   }, []);
 
   const clearCharacter = useCallback(() => {
+    console.log("Удаление персонажа");
     setCharacterState(null);
   }, []);
 

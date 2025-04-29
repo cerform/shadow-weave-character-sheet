@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -54,3 +55,42 @@
 .obs-left   { grid-column: 1; }
 .obs-center { grid-column: 2; }
 .obs-right  { grid-column: 3; }
+
+/* Глобальные стили для переключения тем */
+[data-theme="shadow"] .bg-themed {
+  background-color: rgba(127, 0, 255, 0.1);
+}
+[data-theme="fire"] .bg-themed {
+  background-color: rgba(255, 68, 0, 0.1);
+}
+[data-theme="nature"] .bg-themed {
+  background-color: rgba(0, 255, 68, 0.1);
+}
+[data-theme="arcane"] .bg-themed {
+  background-color: rgba(0, 255, 255, 0.1);
+}
+[data-theme="warrior"] .bg-themed {
+  background-color: rgba(255, 170, 0, 0.1);
+}
+[data-theme="bard"] .bg-themed {
+  background-color: rgba(255, 105, 180, 0.1);
+}
+[data-theme="paladin"] .bg-themed {
+  background-color: rgba(255, 255, 0, 0.1);
+}
+[data-theme="rogue"] .bg-themed {
+  background-color: rgba(51, 51, 51, 0.1);
+}
+
+/* Цвета текста для темной темы */
+[data-theme] .text-themed {
+  color: var(--primary-color, #fff);
+}
+
+/* Улучшаем контрастность для предысторий и других элементов */
+.bg-card, .bg-background {
+  background-color: rgba(40, 40, 40, 0.8);
+}
+.text-foreground {
+  color: rgba(255, 255, 255, 0.9);
+}

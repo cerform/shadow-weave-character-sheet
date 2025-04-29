@@ -1,5 +1,6 @@
+
 import React from "react";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const ThemeSelector = () => {
   const { theme, switchTheme } = useTheme();

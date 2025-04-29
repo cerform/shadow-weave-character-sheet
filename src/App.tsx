@@ -1,8 +1,13 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Наши контексты
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { CharacterProvider } from "@/contexts/CharacterContext";
 
 // Старые страницы
 import Index from "./pages/Index";
@@ -35,39 +40,43 @@ const RoomWrapper = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <BrowserRouter>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              {/* Главная */}
-              <Route path="/" element={<Index />} />
+      <ThemeProvider>
+        <CharacterProvider>
+          <SessionProvider>
+            <BrowserRouter>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  {/* Главная */}
+                  <Route path="/" element={<Index />} />
 
-              {/* Создание персонажа */}
-              <Route path="/create" element={<CharacterCreationPage />} />
-              <Route path="/sheet" element={<CharacterSheetPage />} />
+                  {/* Создание персонажа */}
+                  <Route path="/create" element={<CharacterCreationPage />} />
+                  <Route path="/sheet" element={<CharacterSheetPage />} />
 
-              {/* Панель мастера */}
-              <Route path="/dm" element={<DMDashboardPage />} />
-              <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
+                  {/* Панель мастера */}
+                  <Route path="/dm" element={<DMDashboardPage />} />
+                  <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
 
-              {/* Присоединение игрока */}
-              <Route path="/join" element={<JoinSessionPage />} />
+                  {/* Присоединение игрока */}
+                  <Route path="/join" element={<JoinSessionPage />} />
 
-              {/* НОВАЯ страница боя */}
-              <Route path="/play" element={<PlayBattlePage />} />
+                  {/* НОВАЯ страница боя */}
+                  <Route path="/play" element={<PlayBattlePage />} />
 
-              {/* Комнаты по WebSocket */}
-              <Route path="/session" element={<Home />} />
-              <Route path="/room/:roomCode" element={<RoomWrapper />} />
+                  {/* Комнаты по WebSocket */}
+                  <Route path="/session" element={<Home />} />
+                  <Route path="/room/:roomCode" element={<RoomWrapper />} />
 
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </SessionProvider>
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </TooltipProvider>
+            </BrowserRouter>
+          </SessionProvider>
+        </CharacterProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

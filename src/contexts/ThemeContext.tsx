@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme =
@@ -28,7 +29,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       applyTheme(theme);
     }
-  }, []);
+
+    // Добавляем глобальную переменную темы для всего приложения
+    document.documentElement.setAttribute('data-theme', theme.replace('theme-', ''));
+  }, [theme]);
 
   const applyTheme = (themeName: Theme) => {
     const body = document.body;
@@ -43,6 +47,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       "theme-rogue"
     );
     body.classList.add(themeName);
+    
+    // Обновляем глобальную переменную темы
+    document.documentElement.setAttribute('data-theme', themeName.replace('theme-', ''));
   };
 
   const switchTheme = (newTheme: Theme) => {
