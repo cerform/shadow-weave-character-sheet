@@ -87,6 +87,47 @@
   color: var(--primary-color, #fff);
 }
 
+/* Стили для классов тем */
+.theme-shadow {
+  --background: 270 50% 5%;
+  --primary: 270 100% 50%;
+}
+
+.theme-fire {
+  --background: 0 50% 5%;
+  --primary: 20 100% 50%;
+}
+
+.theme-nature {
+  --background: 120 50% 5%;
+  --primary: 140 100% 50%;
+}
+
+.theme-arcane {
+  --background: 180 50% 5%;
+  --primary: 190 100% 50%;
+}
+
+.theme-warrior {
+  --background: 35 50% 5%;
+  --primary: 35 100% 50%;
+}
+
+.theme-bard {
+  --background: 330 50% 5%;
+  --primary: 330 100% 50%;
+}
+
+.theme-paladin {
+  --background: 60 50% 5%;
+  --primary: 60 100% 50%;
+}
+
+.theme-rogue {
+  --background: 220 20% 5%;
+  --primary: 220 20% 50%;
+}
+
 /* Улучшаем контрастность для предысторий и других элементов */
 .bg-card, .bg-background {
   background-color: rgba(40, 40, 40, 0.8);

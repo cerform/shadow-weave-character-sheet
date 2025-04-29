@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -117,7 +116,7 @@ const CharacterCreationPage = () => {
   };
 
   return (
-    <div className={`p-6 min-h-screen bg-background text-foreground ${theme.replace('theme-', '')}`}>
+    <div className={`p-6 min-h-screen bg-background text-foreground theme-${theme}`}>
       <Button 
         onClick={goToHomePage} 
         variant="outline" 

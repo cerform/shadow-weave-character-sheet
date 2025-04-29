@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, User, Swords, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeSelector } from "@/components/character-sheet/ThemeSelector";
-import { useTheme } from "@/hooks/use-theme";
+import ThemeSelector from "@/components/ThemeSelector";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Index = () => {
   const navigate = useNavigate();

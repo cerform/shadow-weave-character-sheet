@@ -6,7 +6,7 @@ import { CharacterHeader } from './CharacterHeader';
 import { StatsPanel } from './StatsPanel';
 import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
 import { DicePanel } from './DicePanel';
 import { Save, Printer } from 'lucide-react';
@@ -16,7 +16,7 @@ interface CharacterSheetProps {
 }
 
 const CharacterSheet = ({ character }: CharacterSheetProps) => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [currentHp, setCurrentHp] = useState(character?.hp || 20);
   const [maxHp, setMaxHp] = useState(character?.maxHp || 20);
   const [characterName, setCharacterName] = useState(character?.name || 'Новый персонаж');

@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { themes } from "@/lib/themes";
 
 const ThemeSelector = () => {
   const { theme, switchTheme } = useTheme();
@@ -17,14 +18,9 @@ const ThemeSelector = () => {
         onChange={handleChange}
         className="p-2 border rounded bg-background text-foreground"
       >
-        <option value="theme-shadow">Теневой маг</option>
-        <option value="theme-fire">Огненный маг</option>
-        <option value="theme-nature">Друид природы</option>
-        <option value="theme-arcane">Волшебник</option>
-        <option value="theme-warrior">Воин</option>
-        <option value="theme-bard">Бард</option>
-        <option value="theme-paladin">Паладин</option>
-        <option value="theme-rogue">Вор</option>
+        {Object.entries(themes).map(([key, value]) => (
+          <option key={key} value={key}>{value.name}</option>
+        ))}
       </select>
     </div>
   );

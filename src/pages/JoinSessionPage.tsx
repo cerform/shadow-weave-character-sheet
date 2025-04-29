@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useSession } from '@/contexts/SessionContext';
 import { ArrowLeft } from 'lucide-react';
 
@@ -69,7 +68,7 @@ const JoinSessionPage = () => {
   };
 
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="max-w-md mx-auto">
         <header className="mb-6 flex items-center">
           <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">

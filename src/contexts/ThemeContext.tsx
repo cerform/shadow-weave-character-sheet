@@ -1,15 +1,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { themes } from "@/lib/themes";
 
-type Theme =
-  | "theme-shadow"
-  | "theme-fire"
-  | "theme-nature"
-  | "theme-arcane"
-  | "theme-warrior"
-  | "theme-bard"
-  | "theme-paladin"
-  | "theme-rogue";
+export type Theme = 'shadow' | 'fire' | 'nature' | 'arcane' | 'warrior' | 'bard' | 'paladin' | 'rogue';
 
 interface ThemeContextType {
   theme: Theme;
@@ -19,7 +12,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>("theme-shadow");
+  const [theme, setTheme] = useState<Theme>("shadow");
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme") as Theme;
@@ -29,27 +22,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       applyTheme(theme);
     }
-
-    // Добавляем глобальную переменную темы для всего приложения
-    document.documentElement.setAttribute('data-theme', theme.replace('theme-', ''));
   }, [theme]);
 
   const applyTheme = (themeName: Theme) => {
     const body = document.body;
-    body.classList.remove(
-      "theme-shadow",
-      "theme-fire",
-      "theme-nature",
-      "theme-arcane",
-      "theme-warrior",
-      "theme-bard",
-      "theme-paladin",
-      "theme-rogue"
-    );
-    body.classList.add(themeName);
+    
+    // Удаляем все предыдущие классы тем
+    Object.keys(themes).forEach(key => {
+      body.classList.remove(`theme-${key}`);
+    });
+    
+    // Добавляем новый класс темы
+    body.classList.add(`theme-${themeName}`);
     
     // Обновляем глобальную переменную темы
-    document.documentElement.setAttribute('data-theme', themeName.replace('theme-', ''));
+    document.documentElement.setAttribute('data-theme', themeName);
   };
 
   const switchTheme = (newTheme: Theme) => {
