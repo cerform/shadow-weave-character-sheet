@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext'; // Updated import
 import { useSession, DMSession } from '@/contexts/SessionContext';
 import { Copy, Users, ArrowLeft, Plus, RefreshCw } from 'lucide-react';
 

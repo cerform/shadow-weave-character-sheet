@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext'; // Updated import
 import { useSession } from '@/contexts/SessionContext';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { ThemeSelector } from '@/components/character-sheet/ThemeSelector';
