@@ -1,3 +1,4 @@
+
 export const SPELLS = {
   Wizard: [
     "Mage Armor",
@@ -114,4 +115,33 @@ export const SPELLS = {
   Rogue: [],
   Barbarian: [],
   Monk: [],
+};
+
+// Информация о заклинаниях для отображения
+export const SPELL_DETAILS = {
+  "Magic Missile": {
+    level: 1,
+    school: "Evocation",
+    castingTime: "1 action",
+    range: "120 feet",
+    duration: "Instantaneous",
+    description: "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.",
+  },
+  "Mage Armor": {
+    level: 1,
+    school: "Abjuration",
+    castingTime: "1 action",
+    range: "Touch",
+    duration: "8 hours",
+    description: "You touch a willing creature who isn't wearing armor, and a protective magical force surrounds it until the spell ends.",
+  },
+  "Shield": {
+    level: 1,
+    school: "Abjuration",
+    castingTime: "1 reaction",
+    range: "Self",
+    duration: "1 round",
+    description: "An invisible barrier of magical force appears and protects you.",
+  },
+  // Можно добавить больше заклинаний по мере необходимости
 };

@@ -65,15 +65,35 @@ export default function CharacterReview({ character, prevStep }: Props) {
     
     if (["Волшебник", "Чародей", "Чернокнижник", "Бард", "Жрец", "Друид"].includes(character.class)) {
       spellSlots[1] = { max: 2, used: 0 };
+      spellSlots[2] = { max: 0, used: 0 };
+      spellSlots[3] = { max: 0, used: 0 };
     }
     
     if (["Паладин", "Следопыт"].includes(character.class)) {
       spellSlots[1] = { max: 1, used: 0 };
     }
-    
-    // Convert spell names to Spell objects
-    const spellsKnown = character.spells.map((s, idx) => ({ id: String(idx), name: s, level: 0 }));
 
+    // Calculate HP based on class and Constitution
+    const conModifier = Math.floor((character.stats.constitution - 10) / 2);
+    let baseHp = 0;
+    
+    // Base HP by class
+    switch(character.class) {
+      case "Варвар": baseHp = 12; break;
+      case "Воин": 
+      case "Паладин":
+      case "Следопыт": baseHp = 10; break;
+      case "Жрец":
+      case "Друид":
+      case "Монах":
+      case "Плут": baseHp = 8; break;
+      case "Волшебник":
+      case "Чародей": baseHp = 6; break;
+      default: baseHp = 8;
+    }
+    
+    const maxHp = baseHp + conModifier;
+    
     // Create the character object with the correct format for the Character interface
     const charObj: Character = {
       name: character.name,
@@ -81,15 +101,16 @@ export default function CharacterReview({ character, prevStep }: Props) {
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
       level: 1,
       abilities: abilities,
-      spellsKnown: spellsKnown,
+      spells: character.spells || [],
       spellSlots: spellSlots,
+      maxHp: maxHp,
+      currentHp: maxHp,
       gender: character.gender,
       alignment: character.alignment,
       background: character.background,
       equipment: character.equipment,
       languages: character.languages,
       proficiencies: character.proficiencies,
-      // Get theme from localStorage to save with character
       theme: localStorage.getItem('theme') || undefined
     };
 
@@ -124,13 +145,20 @@ export default function CharacterReview({ character, prevStep }: Props) {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Характеристики</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {Object.entries(character.stats).map(([key, value]) => (
-            <div key={key} className="text-center border rounded p-3 bg-muted/20">
-              <div className="font-medium">{getStatName(key)}</div>
-              <div className="text-2xl">{value}</div>
-              <div className="text-sm">{getModifier(value)}</div>
-            </div>
-          ))}
+          {Object.entries(character.stats).map(([key, value]) => {
+            const modifier = getModifier(value);
+            const isPositiveModifier = !modifier.includes('-');
+            
+            return (
+              <div key={key} className="text-center border rounded p-3 bg-muted/20">
+                <div className="font-medium">{getStatName(key)}</div>
+                <div className="text-2xl">{value}</div>
+                <div className={`text-sm ${isPositiveModifier ? "text-green-500" : "text-red-500"}`}>
+                  {modifier}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -138,7 +166,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Заклинания</h2>
           <div className="border rounded p-3 bg-muted/20 h-full">
-            {character.spells.length > 0 ? (
+            {character.spells?.length > 0 ? (
               <ul className="list-disc ml-5">
                 {character.spells.map((spell, idx) => (
                   <li key={idx}>{spell}</li>

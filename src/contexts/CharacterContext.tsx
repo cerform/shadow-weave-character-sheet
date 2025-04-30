@@ -35,11 +35,12 @@ export interface Character {
   id?: string;
   name: string;
   race: string;
-  subrace?: string; // Добавлено поле подрасы
+  subrace?: string; 
   className: string;
   level: number;
   abilities: AbilityScores;
-  spellsKnown: Spell[];
+  spellsKnown?: Spell[];
+  spells?: string[];
   spellSlots: SpellSlots;
   gender?: string;
   alignment?: string;
@@ -47,6 +48,8 @@ export interface Character {
   equipment?: string[];
   languages?: string[];
   proficiencies?: string[];
+  maxHp?: number;
+  currentHp?: number;
   // Добавлено поле для отслеживания темы персонажа
   theme?: string;
 }
