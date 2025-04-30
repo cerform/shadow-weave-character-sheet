@@ -96,7 +96,11 @@ export default function CharacterBackground({ character, updateCharacter, nextSt
         ></textarea>
       </div>
 
-      <NavigationButtons nextStep={nextStep} prevStep={prevStep} />
+      <NavigationButtons 
+        allowNext={true} 
+        nextStep={nextStep} 
+        prevStep={prevStep} 
+      />
     </div>
   );
 }

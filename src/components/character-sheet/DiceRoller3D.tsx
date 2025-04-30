@@ -103,7 +103,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     <mesh ref={meshRef} castShadow onClick={roll}>
       {getGeometry()}
       <meshStandardMaterial 
-        color={type === 'd20' ? "#7f00ff" : "#6c5ce7"} 
+        color={type === 'd20' ? new THREE.Color("#7f00ff") : new THREE.Color("#6c5ce7")} 
         metalness={0.8}
         roughness={0.2}
       />
