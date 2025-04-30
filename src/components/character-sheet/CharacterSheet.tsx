@@ -8,8 +8,9 @@ import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
-import { DicePanel } from './DicePanel';
 import { Save, Printer } from 'lucide-react';
+import { DiceRoller3D } from './DiceRoller3D';
+import { SpellPanel } from './SpellPanel';
 
 interface CharacterSheetProps {
   character?: any;
@@ -34,7 +35,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
 
   return (
     <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         <header className="mb-4 flex flex-col md:flex-row justify-between items-center bg-card/30 backdrop-blur-sm border-primary/20 rounded-lg p-4">
           <h1 className="text-2xl font-bold">{characterName} — {characterClass}</h1>
           <div className="flex items-center gap-2 mt-2 md:mt-0">
@@ -51,6 +52,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
         </header>
         
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-4">
+          {/* Left sidebar */}
           <div className="space-y-4">
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <div className="aspect-square bg-muted rounded-lg mb-4"></div>
@@ -63,7 +65,28 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
               onHpChange={setCurrentHp}
             />
             
-            <DicePanel />
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 h-[250px]">
+              <h3 className="text-lg font-semibold mb-2">Кубики</h3>
+              <DiceRoller3D />
+            </Card>
+            
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+              <h3 className="text-lg font-semibold mb-2">Ресурсы</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Ячейки заклинаний 1 уровня</span>
+                  <span>3/4</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Ячейки заклинаний 2 уровня</span>
+                  <span>2/3</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Sorcery Points</span>
+                  <span>3/5</span>
+                </div>
+              </div>
+            </Card>
             
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <h3 className="text-lg font-semibold mb-2">Инвентарь</h3>
@@ -82,10 +105,28 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
             </Card>
           </div>
           
+          {/* Center content */}
           <div className="flex flex-col space-y-4">
             <CharacterTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            {activeTab === 'spells' && (
+              <SpellPanel />
+            )}
+            
+            {activeTab === 'abilities' && (
+              <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="text-4xl font-bold text-primary mb-4">Магия Теней</div>
+                  <p className="text-center max-w-md">
+                    Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
+                    В этой области будут происходить интерактивные события во время игры.
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
           
+          {/* Right sidebar */}
           <div className="space-y-4">
             <StatsPanel />
             
@@ -94,7 +135,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Акробатика</span>
-                  <span>+2</span>
+                  <span className="text-green-400">+3</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Атлетика</span>
@@ -102,11 +143,11 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
                 </div>
                 <div className="flex justify-between">
                   <span>Магия</span>
-                  <span>+3</span>
+                  <span className="text-green-400">+3</span>
                 </div>
                 <div className="flex justify-between">
                   <span>История</span>
-                  <span>+3</span>
+                  <span>+1</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Восприятие</span>
@@ -114,7 +155,37 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
                 </div>
                 <div className="flex justify-between">
                   <span>Скрытность</span>
-                  <span>+2</span>
+                  <span className="text-green-400">+2</span>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+              <h3 className="text-lg font-semibold mb-2">Характеристики</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">СИЛ</div>
+                  <div className="text-xl">10 <span className="text-xs opacity-60">(+0)</span></div>
+                </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">ЛОВ</div>
+                  <div className="text-xl">16 <span className="text-xs text-green-400">(+3)</span></div>
+                </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">ТЕЛ</div>
+                  <div className="text-xl">14 <span className="text-xs text-green-400">(+2)</span></div>
+                </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">ИНТ</div>
+                  <div className="text-xl">12 <span className="text-xs text-green-400">(+1)</span></div>
+                </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">МДР</div>
+                  <div className="text-xl">10 <span className="text-xs opacity-60">(+0)</span></div>
+                </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="text-sm opacity-70 mb-1">ХАР</div>
+                  <div className="text-xl">17 <span className="text-xs text-green-400">(+3)</span></div>
                 </div>
               </div>
             </Card>
@@ -129,6 +200,32 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
                 <div className="p-2 rounded-md bg-primary/5 hover:bg-primary/10">
                   <h4 className="font-medium">Экспертиза</h4>
                   <p className="text-sm text-muted-foreground">Удваивает бонус мастерства для двух навыков.</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+              <h3 className="text-lg font-semibold mb-2">Информация</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Раса:</span>
+                  <span>Человек (Вариант)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Класс:</span>
+                  <span>Колдун (Сделка с Тенью)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Уровень:</span>
+                  <span>3</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Опыт:</span>
+                  <span>900 XP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Мировоззрение:</span>
+                  <span>Хаотично-нейтральный</span>
                 </div>
               </div>
             </Card>
