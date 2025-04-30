@@ -87,6 +87,26 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
         return <icosahedronGeometry args={[1.2, 0]} />;
     }
   };
+
+  // Get color based on dice type
+  const getDiceColor = () => {
+    switch(type) {
+      case 'd4':
+        return new THREE.Color("#33C3F0"); // Bright blue
+      case 'd6':
+        return new THREE.Color("#8B5CF6"); // Vivid purple
+      case 'd8':
+        return new THREE.Color("#10B981"); // Emerald green
+      case 'd10':
+        return new THREE.Color("#F59E0B"); // Amber
+      case 'd12':
+        return new THREE.Color("#EC4899"); // Pink
+      case 'd20':
+        return new THREE.Color("#9b87f5"); // Primary purple
+      default:
+        return new THREE.Color("#8B5CF6"); // Vivid purple
+    }
+  };
   
   // Roll the die with random force
   const roll = () => {
@@ -103,9 +123,11 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     <mesh ref={meshRef} castShadow onClick={roll}>
       {getGeometry()}
       <meshStandardMaterial 
-        color={type === 'd20' ? new THREE.Color("#7f00ff") : new THREE.Color("#6c5ce7")} 
-        metalness={0.8}
-        roughness={0.2}
+        color={getDiceColor()} 
+        metalness={0.5} // Reduced metalness for better visibility
+        roughness={0.3} // Adjusted roughness for better light reflection
+        emissive={getDiceColor()}
+        emissiveIntensity={0.2} // Slight glow effect
       />
     </mesh>
   );
@@ -122,8 +144,9 @@ function DiceScene({ diceType, onRollComplete }: { diceType: DieType, onRollComp
   
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+      <ambientLight intensity={0.8} /> {/* Increased ambient light */}
+      <directionalLight position={[10, 10, 10]} intensity={1.5} castShadow /> {/* Increased intensity */}
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ffffff" /> {/* Added point light for more illumination */}
       <Die type={diceType} onRollComplete={onRollComplete} />
       <OrbitControls enablePan={false} />
     </>
@@ -135,9 +158,18 @@ export const DiceRoller3D = () => {
   const [activeDice, setActiveDice] = useState<DieType>('d20');
   const [results, setResults] = useState<{dice: DieType, value: number}[]>([]);
   const [rolling, setRolling] = useState(false);
+  const [resultHistory, setResultHistory] = useState<{dice: DieType, value: number, timestamp: number}[]>([]);
   
   const handleRollComplete = (value: number) => {
-    setResults(prev => [...prev, { dice: activeDice, value }]);
+    const newResult = { dice: activeDice, value };
+    setResults(prev => [...prev, newResult]);
+    
+    // Add to history with timestamp
+    setResultHistory(prev => [
+      { ...newResult, timestamp: Date.now() },
+      ...prev.slice(0, 9) // Keep only 10 most recent rolls
+    ]);
+    
     setRolling(false);
   };
   
@@ -161,13 +193,36 @@ export const DiceRoller3D = () => {
           </Suspense>
         </Canvas>
         
-        {/* Overlay with results when finished rolling */}
-        {results.length > 0 && !rolling && (
-          <div className="absolute bottom-2 right-2 bg-primary/20 backdrop-blur-sm p-2 rounded-md">
-            <span className="font-bold text-lg">{totalResult}</span>
-          </div>
-        )}
+        {/* Improved results display - always visible */}
+        <div className="absolute bottom-2 right-2 bg-primary/30 backdrop-blur-sm p-2 rounded-md">
+          {rolling ? (
+            <span className="font-bold text-lg animate-pulse">Бросок...</span>
+          ) : results.length > 0 ? (
+            <div className="text-center">
+              <span className="font-bold text-xl">{totalResult}</span>
+              {results.length > 1 && (
+                <div className="text-xs mt-0.5 opacity-80">
+                  {results.map((r, i) => r.value).join(' + ')}
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="font-bold text-lg opacity-50">Кликните для броска</span>
+          )}
+        </div>
       </div>
+      
+      {/* History display */}
+      {resultHistory.length > 0 && (
+        <div className="h-10 mb-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
+          {resultHistory.map((item, index) => (
+            <div key={item.timestamp} className="px-2 py-0.5 text-xs bg-primary/10 rounded-md flex items-center gap-1 whitespace-nowrap">
+              <span className="font-medium">{item.dice}:</span>
+              <span className="font-bold text-primary">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
       
       <div className="mb-2">
         <Tabs defaultValue="d20" className="w-full" onValueChange={(val) => rollDice(val as DieType)}>
@@ -195,8 +250,9 @@ export const DiceRoller3D = () => {
           onClick={() => rollDice(activeDice)} 
           variant="default" 
           className="flex-1"
+          disabled={rolling}
         >
-          Бросить {diceCount}d{activeDice.substring(1)}
+          {rolling ? 'Бросаем...' : `Бросить ${diceCount}d${activeDice.substring(1)}`}
         </Button>
       </div>
     </div>
