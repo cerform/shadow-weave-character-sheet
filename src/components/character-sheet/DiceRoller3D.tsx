@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
+import { useTheme } from '@/hooks/use-theme'
 
 // Dice face textures definition for each dice type
 const diceConfigs = {
@@ -30,6 +31,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     Math.random() * 0.2 - 0.1
   ));
   const [initialRoll, setInitialRoll] = useState(true);
+  const { theme } = useTheme();
   
   // Animation logic
   useFrame((state) => {
@@ -49,9 +51,9 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       meshRef.current.rotation.z += rotationSpeed.current.z;
       
       // Slow down rotation gradually
-      rotationSpeed.current.x *= 0.98;
-      rotationSpeed.current.y *= 0.98;
-      rotationSpeed.current.z *= 0.98;
+      rotationSpeed.current.x *= 0.97; // Slightly faster slow down
+      rotationSpeed.current.y *= 0.97;
+      rotationSpeed.current.z *= 0.97;
       
       // Stop rolling when slow enough
       if (
@@ -88,7 +90,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     }
   };
 
-  // Get color based on dice type
+  // Get color based on dice type and current theme
   const getDiceColor = () => {
     switch(type) {
       case 'd4':
@@ -102,7 +104,15 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       case 'd12':
         return new THREE.Color("#EC4899"); // Pink
       case 'd20':
-        return new THREE.Color("#9b87f5"); // Primary purple
+        // Use theme-specific color for d20
+        switch(theme) {
+          case 'warlock': return new THREE.Color("#8B5CF6"); // Purple
+          case 'wizard': return new THREE.Color("#33C3F0"); // Blue
+          case 'druid': return new THREE.Color("#10B981"); // Green
+          case 'warrior': return new THREE.Color("#EA384D"); // Red
+          case 'bard': return new THREE.Color("#FCD34D"); // Yellow
+          default: return new THREE.Color("#8B5CF6"); // Default purple
+        }
       default:
         return new THREE.Color("#8B5CF6"); // Vivid purple
     }
@@ -124,10 +134,10 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       {getGeometry()}
       <meshStandardMaterial 
         color={getDiceColor()} 
-        metalness={0.5} // Reduced metalness for better visibility
-        roughness={0.3} // Adjusted roughness for better light reflection
+        metalness={0.2} // Reduced metalness for better visibility
+        roughness={0.1} // Smoother for better light reflection
         emissive={getDiceColor()}
-        emissiveIntensity={0.2} // Slight glow effect
+        emissiveIntensity={0.4} // Increased glow for better visibility
       />
     </mesh>
   );
@@ -144,9 +154,9 @@ function DiceScene({ diceType, onRollComplete }: { diceType: DieType, onRollComp
   
   return (
     <>
-      <ambientLight intensity={0.8} /> {/* Increased ambient light */}
-      <directionalLight position={[10, 10, 10]} intensity={1.5} castShadow /> {/* Increased intensity */}
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ffffff" /> {/* Added point light for more illumination */}
+      <ambientLight intensity={1.2} /> {/* Increased ambient light */}
+      <directionalLight position={[10, 10, 10]} intensity={2.0} castShadow /> {/* Increased intensity */}
+      <pointLight position={[-10, -10, -10]} intensity={1.0} color="#ffffff" /> {/* Brighter point light */}
       <Die type={diceType} onRollComplete={onRollComplete} />
       <OrbitControls enablePan={false} />
     </>
@@ -186,37 +196,37 @@ export const DiceRoller3D = () => {
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 mb-3 bg-black/20 rounded-lg overflow-hidden relative">
+      <div className="flex-1 mb-3 bg-black/10 rounded-lg overflow-hidden relative">
         <Canvas shadows>
           <Suspense fallback={null}>
             <DiceScene diceType={activeDice} onRollComplete={handleRollComplete} />
           </Suspense>
         </Canvas>
         
-        {/* Improved results display - always visible */}
-        <div className="absolute bottom-2 right-2 bg-primary/30 backdrop-blur-sm p-2 rounded-md">
+        {/* Improved results display - always visible with better contrast */}
+        <div className="absolute bottom-2 right-2 bg-primary/40 backdrop-blur-md p-3 rounded-md shadow-lg">
           {rolling ? (
-            <span className="font-bold text-lg animate-pulse">Бросок...</span>
+            <span className="font-bold text-lg text-white animate-pulse">Бросок...</span>
           ) : results.length > 0 ? (
             <div className="text-center">
-              <span className="font-bold text-xl">{totalResult}</span>
+              <span className="font-bold text-2xl text-white">{totalResult}</span>
               {results.length > 1 && (
-                <div className="text-xs mt-0.5 opacity-80">
+                <div className="text-xs mt-0.5 text-white opacity-90">
                   {results.map((r, i) => r.value).join(' + ')}
                 </div>
               )}
             </div>
           ) : (
-            <span className="font-bold text-lg opacity-50">Кликните для броска</span>
+            <span className="font-bold text-lg text-white/70">Кликните для броска</span>
           )}
         </div>
       </div>
       
-      {/* History display */}
+      {/* History display - improved visibility */}
       {resultHistory.length > 0 && (
         <div className="h-10 mb-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
           {resultHistory.map((item, index) => (
-            <div key={item.timestamp} className="px-2 py-0.5 text-xs bg-primary/10 rounded-md flex items-center gap-1 whitespace-nowrap">
+            <div key={item.timestamp} className="px-2 py-1 text-xs bg-primary/20 rounded-md flex items-center gap-1 whitespace-nowrap border border-primary/20">
               <span className="font-medium">{item.dice}:</span>
               <span className="font-bold text-primary">{item.value}</span>
             </div>

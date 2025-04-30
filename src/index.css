@@ -28,44 +28,35 @@
   }
 }
 
-.theme-shadow {
+/* Theme-specific color variables */
+.theme-default {
+  --background: 30 20% 5%;
+  --primary: 30 30% 50%;
+}
+
+.theme-warlock {
   --background: 270 50% 5%;
   --primary: 270 100% 50%;
 }
 
-.theme-fire {
-  --background: 0 50% 5%;
-  --primary: 20 100% 50%;
+.theme-wizard {
+  --background: 195 50% 5%;
+  --primary: 195 100% 50%;
 }
 
-.theme-nature {
+.theme-druid {
   --background: 120 50% 5%;
   --primary: 140 100% 50%;
 }
 
-.theme-arcane {
-  --background: 180 50% 5%;
-  --primary: 190 100% 50%;
-}
-
 .theme-warrior {
-  --background: 35 50% 5%;
-  --primary: 35 100% 50%;
+  --background: 0 50% 5%;
+  --primary: 0 100% 50%;
 }
 
 .theme-bard {
-  --background: 330 50% 5%;
-  --primary: 330 100% 50%;
-}
-
-.theme-paladin {
-  --background: 60 50% 5%;
-  --primary: 60 100% 50%;
-}
-
-.theme-rogue {
-  --background: 220 20% 5%;
-  --primary: 220 20% 50%;
+  --background: 45 50% 5%;
+  --primary: 45 100% 50%;
 }
 
 /* Racial and class bonus styling */
@@ -142,29 +133,23 @@
 .obs-right  { grid-column: 3; }
 
 /* Глобальные стили для переключения тем */
-[data-theme="shadow"] .bg-themed {
-  background-color: rgba(127, 0, 255, 0.1);
+[data-theme="default"] .bg-themed {
+  background-color: rgba(120, 113, 108, 0.1);
 }
-[data-theme="fire"] .bg-themed {
-  background-color: rgba(255, 68, 0, 0.1);
+[data-theme="warlock"] .bg-themed {
+  background-color: rgba(139, 92, 246, 0.1);
 }
-[data-theme="nature"] .bg-themed {
-  background-color: rgba(0, 255, 68, 0.1);
+[data-theme="wizard"] .bg-themed {
+  background-color: rgba(51, 195, 240, 0.1);
 }
-[data-theme="arcane"] .bg-themed {
-  background-color: rgba(0, 255, 255, 0.1);
+[data-theme="druid"] .bg-themed {
+  background-color: rgba(16, 185, 129, 0.1);
 }
 [data-theme="warrior"] .bg-themed {
-  background-color: rgba(255, 170, 0, 0.1);
+  background-color: rgba(234, 56, 77, 0.1);
 }
 [data-theme="bard"] .bg-themed {
-  background-color: rgba(255, 105, 180, 0.1);
-}
-[data-theme="paladin"] .bg-themed {
-  background-color: rgba(255, 255, 0, 0.1);
-}
-[data-theme="rogue"] .bg-themed {
-  background-color: rgba(51, 51, 51, 0.1);
+  background-color: rgba(252, 211, 77, 0.1);
 }
 
 /* Цвета текста для темной темы */
@@ -178,4 +163,9 @@
 }
 .text-foreground {
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Улучшенная подсветка для кубиков */
+.dice-result-display {
+  @apply bg-primary/30 backdrop-blur-md p-3 rounded-md shadow-lg text-white font-bold;
 }

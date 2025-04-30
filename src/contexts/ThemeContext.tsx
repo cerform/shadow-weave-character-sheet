@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { themes } from "@/lib/themes";
 
-export type Theme = 'default' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard' | 'paladin' | 'rogue';
+export type Theme = 'default' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
 
 interface ThemeContextType {
   theme: Theme;

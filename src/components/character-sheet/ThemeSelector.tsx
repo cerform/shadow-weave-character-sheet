@@ -2,17 +2,18 @@
 import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { Button } from "@/components/ui/button";
+import { Leaf, Sword, Wand } from "lucide-react";
 
 export const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
   
   const themes = [
-    { id: 'default', name: 'Стандартная' },
-    { id: 'warlock', name: 'Чернокнижник' },
-    { id: 'wizard', name: 'Волшебник' },
-    { id: 'druid', name: 'Друид' },
-    { id: 'warrior', name: 'Воин' },
-    { id: 'bard', name: 'Бард' }
+    { id: 'default', name: 'Стандартная', icon: null },
+    { id: 'warlock', name: 'Чернокнижник', icon: null },
+    { id: 'wizard', name: 'Волшебник', icon: <Wand className="h-4 w-4 mr-1" /> },
+    { id: 'druid', name: 'Друид', icon: <Leaf className="h-4 w-4 mr-1" /> },
+    { id: 'warrior', name: 'Воин', icon: <Sword className="h-4 w-4 mr-1" /> },
+    { id: 'bard', name: 'Бард', icon: null }
   ];
   
   const handleThemeChange = (newTheme: string) => {
@@ -30,7 +31,9 @@ export const ThemeSelector = () => {
             variant={theme === t.id ? "default" : "outline"} 
             size="sm"
             onClick={() => handleThemeChange(t.id)}
+            className="flex items-center"
           >
+            {t.icon}
             {t.name}
           </Button>
         ))}
