@@ -24,6 +24,20 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
   const [characterClass, setCharacterClass] = useState(character?.class || 'Выберите класс');
   const [activeTab, setActiveTab] = useState('abilities');
 
+  // Use default values for character if it's not provided
+  const characterData = character || {
+    name: characterName,
+    class: characterClass,
+    abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10
+    }
+  };
+
   const handleSaveCharacter = () => {
     // TODO: Implement save functionality
     console.log('Saving character...');
@@ -128,7 +142,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
           
           {/* Right sidebar */}
           <div className="space-y-4">
-            <StatsPanel />
+            <StatsPanel character={characterData} />
             
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <h3 className="text-lg font-semibold mb-2">Навыки</h3>
