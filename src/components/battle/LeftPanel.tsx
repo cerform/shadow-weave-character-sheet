@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +58,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: type === "boss" ? 100 : type === "monster" ? 20 : 30,
       maxHp: type === "boss" ? 100 : type === "monster" ? 20 : 30,
       ac: type === "boss" ? 17 : type === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5),
+      initiative: Math.floor(Math.random() * 5), // This is correctly a number
       conditions: [],
       resources: {},
       visible: true
@@ -81,6 +80,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: monster.hp,
       maxHp: monster.hp,
       ac: monster.ac,
+      // Fix here - we need to make sure initiative is a number
       initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},

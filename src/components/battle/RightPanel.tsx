@@ -14,7 +14,8 @@ import {
   EyeOff,
   Feather,
   Swords,
-  BookOpen
+  BookOpen,
+  Plus // Added missing Plus icon import here
 } from "lucide-react";
 import { Token } from "@/pages/PlayBattlePage";
 
