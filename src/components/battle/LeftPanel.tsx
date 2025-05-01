@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,9 +14,13 @@ import {
   ArrowUp, 
   ArrowDown,
   Shield,
-  Settings
+  Settings,
+  Image,
+  Link
 } from "lucide-react";
 import { Token, Initiative, BattleState } from "@/pages/PlayBattlePage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs as DialogTabs, TabsContent as DialogTabsContent, TabsList as DialogTabsList, TabsTrigger as DialogTabsTrigger } from "@/components/ui/tabs";
 
 interface LeftPanelProps {
   tokens: Token[];
@@ -26,12 +31,16 @@ interface LeftPanelProps {
   battleState: BattleState;
 }
 
-// Примеры монстров
+// Примеры монстров с фэнтези-изображениями
 const monsterTemplates = [
-  { name: "Гоблин", hp: 7, ac: 15, img: "https://picsum.photos/id/250/200/200", type: "monster" },
-  { name: "Орк", hp: 15, ac: 13, img: "https://picsum.photos/id/252/200/200", type: "monster" },
-  { name: "Тролль", hp: 84, ac: 15, img: "https://picsum.photos/id/254/200/200", type: "boss" },
-  { name: "Дракон", hp: 178, ac: 19, img: "https://picsum.photos/id/255/200/200", type: "boss" },
+  { name: "Гоблин", hp: 7, ac: 15, img: "https://i.pinimg.com/564x/45/4c/4a/454c4a7d28b104e60940d3d0dcf8f45f.jpg", type: "monster" },
+  { name: "Орк", hp: 15, ac: 13, img: "https://i.pinimg.com/564x/c2/8e/13/c28e130ac110eb3fdd474d13af700cea.jpg", type: "monster" },
+  { name: "Тролль", hp: 84, ac: 15, img: "https://i.pinimg.com/564x/7d/b3/40/7db340b2c75dd7e0aab841045e9d2c1b.jpg", type: "boss" },
+  { name: "Дракон", hp: 178, ac: 19, img: "https://i.pinimg.com/564x/bf/8a/69/bf8a69fe5eb10ded5c6f3920a757baa9.jpg", type: "boss" },
+  { name: "Скелет", hp: 13, ac: 13, img: "https://i.pinimg.com/564x/e2/f2/12/e2f212e09a97a4def5714cb8ac7726db.jpg", type: "monster" },
+  { name: "Слайм", hp: 22, ac: 11, img: "https://i.pinimg.com/564x/84/ee/80/84ee80563c7f3921f8a803a7d44a1d00.jpg", type: "monster" },
+  { name: "Вампир", hp: 144, ac: 16, img: "https://i.pinimg.com/564x/16/52/f3/1652f3e0521e34a64f42b6b88fd241e4.jpg", type: "boss" },
+  { name: "Минотавр", hp: 76, ac: 14, img: "https://i.pinimg.com/564x/42/04/24/420424a4643b532794fd0bd8baf9cd9d.jpg", type: "boss" }
 ];
 
 const LeftPanel: React.FC<LeftPanelProps> = ({ 
@@ -44,21 +53,30 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
 }) => {
   const [newTokenName, setNewTokenName] = useState("");
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [newTokenType, setNewTokenType] = useState<Token["type"]>("player");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleAddToken = (type: Token["type"]) => {
-    if (!newTokenName) return;
+    setNewTokenType(type);
+    setImageDialogOpen(true);
+  };
+  
+  const createToken = (imageUrl: string) => {
+    if (!newTokenName || !imageUrl) return;
     
     const newToken: Token = {
       id: Date.now(),
       name: newTokenName,
-      type,
-      img: `https://picsum.photos/id/${Math.floor(Math.random() * 30) + 230}/200/200`,
+      type: newTokenType,
+      img: imageUrl,
       x: 100 + Math.random() * 300,
       y: 100 + Math.random() * 300,
-      hp: type === "boss" ? 100 : type === "monster" ? 20 : 30,
-      maxHp: type === "boss" ? 100 : type === "monster" ? 20 : 30,
-      ac: type === "boss" ? 17 : type === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5), // This is correctly a number
+      hp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
+      maxHp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
+      ac: newTokenType === "boss" ? 17 : newTokenType === "monster" ? 13 : 15,
+      initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},
       visible: true
@@ -66,7 +84,9 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
     
     setTokens(prev => [...prev, newToken]);
     setNewTokenName("");
+    setImageUrl("");
     setShowAddMenu(false);
+    setImageDialogOpen(false);
   };
   
   const handleAddMonsterTemplate = (monster: typeof monsterTemplates[0]) => {
@@ -80,7 +100,6 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: monster.hp,
       maxHp: monster.hp,
       ac: monster.ac,
-      // Fix here - we need to make sure initiative is a number
       initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},
@@ -100,6 +119,18 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   
   const handleRemoveToken = (id: number) => {
     setTokens(tokens.filter(token => token.id !== id));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImageUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -318,6 +349,110 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           <Settings className="w-3 h-3 mr-1" /> Настройки сцены
         </Button>
       </div>
+
+      {/* Модальное окно для выбора изображения */}
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Выбор изображения для {newTokenName || "токена"}</DialogTitle>
+          </DialogHeader>
+          
+          <DialogTabs defaultValue="upload" className="w-full">
+            <DialogTabsList className="grid grid-cols-2 w-full">
+              <DialogTabsTrigger value="upload">Загрузить</DialogTabsTrigger>
+              <DialogTabsTrigger value="url">По ссылке</DialogTabsTrigger>
+            </DialogTabsList>
+            
+            <DialogTabsContent value="upload" className="space-y-4 py-4">
+              <div className="flex flex-col items-center gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full"
+                >
+                  <Image className="mr-2 h-4 w-4" />
+                  Выбрать файл
+                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  ref={fileInputRef}
+                />
+                
+                {imageUrl && (
+                  <div className="relative w-32 h-32 border rounded">
+                    <img 
+                      src={imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                )}
+                
+                <Button 
+                  disabled={!imageUrl || !newTokenName} 
+                  onClick={() => createToken(imageUrl)}
+                  className="w-full"
+                >
+                  Создать
+                </Button>
+              </div>
+            </DialogTabsContent>
+            
+            <DialogTabsContent value="url" className="space-y-4 py-4">
+              <div className="flex flex-col gap-4">
+                <div className="grid gap-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Имя
+                  </label>
+                  <Input
+                    id="name"
+                    value={newTokenName}
+                    onChange={(e) => setNewTokenName(e.target.value)}
+                    placeholder="Имя существа"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label htmlFor="imageUrl" className="text-sm font-medium">
+                    URL изображения
+                  </label>
+                  <Input
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                
+                {imageUrl && (
+                  <div className="relative w-32 h-32 mx-auto border rounded">
+                    <img 
+                      src={imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://placehold.co/100x100?text=Ошибка";
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <Button 
+                  disabled={!imageUrl || !newTokenName} 
+                  onClick={() => createToken(imageUrl)}
+                  className="w-full"
+                >
+                  <Link className="mr-2 h-4 w-4" />
+                  Создать
+                </Button>
+              </div>
+            </DialogTabsContent>
+          </DialogTabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
