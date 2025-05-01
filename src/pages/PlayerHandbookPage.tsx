@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { NextPage } from 'next';
 import {
   Card,
   CardContent,
@@ -29,10 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { ModeToggle } from "@/components/ModeToggle"
 import { Switch } from "@/components/ui/switch"
-import { Slider } from "@/components/ui/slider"
-import { Calendar } from "@/components/ui/calendar"
 import {
   Drawer,
   DrawerClose,
@@ -43,49 +40,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "@radix-ui/react-icons"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 import {
   Select,
   SelectContent,
@@ -97,29 +55,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
-  CardArrowRight,
+  ArrowRight,
   Github,
   Heart,
-  LucideIcon,
   MessageSquare,
   Plus,
   Settings,
   Twitter,
   User,
+  Search,
 } from "lucide-react"
-import { InputWithButton } from "@/components/forms/input-with-button"
-import { Icons } from "@/components/icons"
-import { siteConfig } from "@/config/site"
-import Link from "next/link"
-import { DashboardHeader } from "@/components/header"
-import { MainNav } from "@/components/main-nav"
-import { Overview } from "@/components/overview"
-import { RecentSales } from "@/components/recent-sales"
-import { Search } from "lucide-react"
 import { CharacterSpell } from '@/types/character';
-import { spells } from '@/data/spells';
+import { spells, getSpellDetails } from '@/data/spells';
 
-const PlayerHandbookPage: NextPage = () => {
+const PlayerHandbookPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -203,245 +152,238 @@ const PlayerHandbookPage: NextPage = () => {
   const spellSchools = [...new Set(spells ? spells.map(spell => spell.school) : [])];
 
   return (
-    <>
-      <div className="md:hidden">
-        <DashboardHeader
-          heading="Player Handbook"
-          text="Spells, Items, Monsters and more"
-        />
+    <div className="container relative pb-10 pt-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Книга заклинаний</h1>
+        <p className="text-muted-foreground">
+          Справочник по заклинаниям мира D&D 5e
+        </p>
       </div>
-      <div className="hidden md:block">
-        <DashboardHeader
-          heading="Player Handbook"
-          text="Spells, Items, Monsters and more"
-        />
-      </div>
-      <div className="container relative pb-10">
-        <div className="lg:grid grid-cols-5 gap-4">
-          <div className="col-span-4">
-            <Card className="mb-4">
-              <CardHeader>
-                <CardTitle>Поиск</CardTitle>
-                <CardDescription>Поиск заклинаний</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="search" className="text-right">
-                      Поиск:
-                    </Label>
-                    <Input
-                      type="search"
-                      id="search"
-                      placeholder="Поиск..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="col-span-2"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">
-                      Категория:
-                    </Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Все" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все</SelectItem>
-                        <SelectItem value="name">Название</SelectItem>
-                        <SelectItem value="description">Описание</SelectItem>
-                        <SelectItem value="components">Компоненты</SelectItem>
-                        <SelectItem value="castingTime">Время накладывания</SelectItem>
-                        <SelectItem value="range">Дистанция</SelectItem>
-                        <SelectItem value="duration">Длительность</SelectItem>
-                        <SelectItem value="classes">Классы</SelectItem>
-                        <SelectItem value="higherLevels">На более высоких уровнях</SelectItem>
-                        <SelectItem value="school">Школа</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="level" className="text-right">
-                      Уровень:
-                    </Label>
-                    <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Все" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все</SelectItem>
-                        {spellLevels.map(level => (
-                          <SelectItem key={level} value={level}>{level}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="class" className="text-right">
-                      Класс:
-                    </Label>
-                    <Select value={selectedClass} onValueChange={setSelectedClass}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Все" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все</SelectItem>
-                        {spellClasses.map(className => (
-                          <SelectItem key={className} value={className}>{className}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="school" className="text-right">
-                      Школа:
-                    </Label>
-                    <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Все" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все</SelectItem>
-                        {spellSchools.map(school => (
-                          <SelectItem key={school} value={school}>{school}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="sort" className="text-right">
-                      Сортировать по:
-                    </Label>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Название" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="name">Название</SelectItem>
-                        <SelectItem value="level">Уровень</SelectItem>
-                        <SelectItem value="school">Школа</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="order" className="text-right">
-                      Порядок:
-                    </Label>
-                    <Select value={sortOrder} onValueChange={setSortOrder}>
-                      <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="По возрастанию" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="asc">По возрастанию</SelectItem>
-                        <SelectItem value="desc">По убыванию</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+      <div className="lg:grid grid-cols-5 gap-4">
+        <div className="col-span-4">
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Поиск заклинаний</CardTitle>
+              <CardDescription>Фильтрация и сортировка</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="search" className="text-right">
+                    Поиск:
+                  </Label>
+                  <Input
+                    type="search"
+                    id="search"
+                    placeholder="Поиск..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="col-span-2"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Заклинания</CardTitle>
-                <CardDescription>Список заклинаний</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch id="description" checked={showDescription} onCheckedChange={toggleDescription} />
-                    <Label htmlFor="description">Описание</Label>
-                    <Switch id="components" checked={showComponents} onCheckedChange={toggleComponents} />
-                    <Label htmlFor="components">Компоненты</Label>
-                    <Switch id="castingTime" checked={showCastingTime} onCheckedChange={toggleCastingTime} />
-                    <Label htmlFor="castingTime">Время накладывания</Label>
-                    <Switch id="range" checked={showRange} onCheckedChange={toggleRange} />
-                    <Label htmlFor="range">Дистанция</Label>
-                    <Switch id="duration" checked={showDuration} onCheckedChange={toggleDuration} />
-                    <Label htmlFor="duration">Длительность</Label>
-                    <Switch id="classes" checked={showClasses} onCheckedChange={toggleClasses} />
-                    <Label htmlFor="classes">Классы</Label>
-                    <Switch id="higherLevels" checked={showHigherLevels} onCheckedChange={toggleHigherLevels} />
-                    <Label htmlFor="higherLevels">На более высоких уровнях</Label>
-                    <Switch id="school" checked={showSchool} onCheckedChange={toggleSchool} />
-                    <Label htmlFor="school">Школа</Label>
-                  </div>
-                  <div className="relative">
-                    {spells && spells.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Название</TableHead>
-                            <TableHead>Уровень</TableHead>
-                            <TableHead className="hidden md:table-cell">Школа</TableHead>
-                            <TableHead className="hidden md:table-cell">Классы</TableHead>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Категория:
+                  </Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Все" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Все">Все</SelectItem>
+                      <SelectItem value="name">Название</SelectItem>
+                      <SelectItem value="description">Описание</SelectItem>
+                      <SelectItem value="components">Компоненты</SelectItem>
+                      <SelectItem value="castingTime">Время накладывания</SelectItem>
+                      <SelectItem value="range">Дистанция</SelectItem>
+                      <SelectItem value="duration">Длительность</SelectItem>
+                      <SelectItem value="classes">Классы</SelectItem>
+                      <SelectItem value="higherLevels">На более высоких уровнях</SelectItem>
+                      <SelectItem value="school">Школа</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="level" className="text-right">
+                    Уровень:
+                  </Label>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Все" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Все">Все</SelectItem>
+                      {spellLevels.map(level => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="class" className="text-right">
+                    Класс:
+                  </Label>
+                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Все" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Все">Все</SelectItem>
+                      {spellClasses.map(className => (
+                        <SelectItem key={className} value={className}>{className}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="school" className="text-right">
+                    Школа:
+                  </Label>
+                  <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Все" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Все">Все</SelectItem>
+                      {spellSchools.map(school => (
+                        <SelectItem key={school} value={school}>{school}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="sort" className="text-right">
+                    Сортировать по:
+                  </Label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Название" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Название</SelectItem>
+                      <SelectItem value="level">Уровень</SelectItem>
+                      <SelectItem value="school">Школа</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="order" className="text-right">
+                    Порядок:
+                  </Label>
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="По возрастанию" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asc">По возрастанию</SelectItem>
+                      <SelectItem value="desc">По убыванию</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Заклинания</CardTitle>
+              <CardDescription>Список заклинаний</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="flex flex-wrap items-center space-x-2">
+                  <Switch id="description" checked={showDescription} onCheckedChange={toggleDescription} />
+                  <Label htmlFor="description">Описание</Label>
+                  <Switch id="components" checked={showComponents} onCheckedChange={toggleComponents} />
+                  <Label htmlFor="components">Компоненты</Label>
+                  <Switch id="castingTime" checked={showCastingTime} onCheckedChange={toggleCastingTime} />
+                  <Label htmlFor="castingTime">Время накладывания</Label>
+                  <Switch id="range" checked={showRange} onCheckedChange={toggleRange} />
+                  <Label htmlFor="range">Дистанция</Label>
+                  <Switch id="duration" checked={showDuration} onCheckedChange={toggleDuration} />
+                  <Label htmlFor="duration">Длительность</Label>
+                  <Switch id="classes" checked={showClasses} onCheckedChange={toggleClasses} />
+                  <Label htmlFor="classes">Классы</Label>
+                  <Switch id="higherLevels" checked={showHigherLevels} onCheckedChange={toggleHigherLevels} />
+                  <Label htmlFor="higherLevels">На более высоких уровнях</Label>
+                  <Switch id="school" checked={showSchool} onCheckedChange={toggleSchool} />
+                  <Label htmlFor="school">Школа</Label>
+                </div>
+                <div className="relative">
+                  {sortedSpells && sortedSpells.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Название</TableHead>
+                          <TableHead>Уровень</TableHead>
+                          <TableHead className="hidden md:table-cell">Школа</TableHead>
+                          <TableHead className="hidden md:table-cell">Классы</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedSpells.map((spell) => (
+                          <TableRow key={spell.name} onClick={() => handleSpellClick(spell)} className="cursor-pointer hover:bg-secondary">
+                            <TableCell>{spell.name}</TableCell>
+                            <TableCell>{spell.level}</TableCell>
+                            <TableCell className="hidden md:table-cell">{spell.school}</TableCell>
+                            <TableCell className="hidden md:table-cell">{spell.classes.join(', ')}</TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {spells && spells.map((spell) => (
-                            <TableRow key={spell.name} onClick={() => handleSpellClick(spell)} className="cursor-pointer hover:bg-secondary">
-                              <TableCell>{spell.name}</TableCell>
-                              <TableCell>{spell.level}</TableCell>
-                              <TableCell className="hidden md:table-cell">{spell.school}</TableCell>
-                              <TableCell className="hidden md:table-cell">{spell.classes.join(', ')}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="py-4 text-center text-muted-foreground">
-                        Нет заклинаний
-                      </div>
-                    )}
-                  </div>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="py-4 text-center text-muted-foreground">
+                      Нет заклинаний, соответствующих запросу
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Настройки</CardTitle>
-                <CardDescription>Настройки отображения</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch id="description" checked={showDescription} onCheckedChange={toggleDescription} />
-                    <Label htmlFor="description">Описание</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="components" checked={showComponents} onCheckedChange={toggleComponents} />
-                    <Label htmlFor="components">Компоненты</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="castingTime" checked={showCastingTime} onCheckedChange={toggleCastingTime} />
-                    <Label htmlFor="castingTime">Время накладывания</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="range" checked={showRange} onCheckedChange={toggleRange} />
-                    <Label htmlFor="range">Дистанция</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="duration" checked={showDuration} onCheckedChange={toggleDuration} />
-                    <Label htmlFor="duration">Длительность</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="classes" checked={showClasses} onCheckedChange={toggleClasses} />
-                    <Label htmlFor="classes">Классы</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="higherLevels" checked={showHigherLevels} onCheckedChange={toggleHigherLevels} />
-                    <Label htmlFor="higherLevels">На более высоких уровнях</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="school" checked={showSchool} onCheckedChange={toggleSchool} />
-                    <Label htmlFor="school">Школа</Label>
-                  </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройки</CardTitle>
+              <CardDescription>Настройки отображения</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch id="description" checked={showDescription} onCheckedChange={toggleDescription} />
+                  <Label htmlFor="description">Описание</Label>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="components" checked={showComponents} onCheckedChange={toggleComponents} />
+                  <Label htmlFor="components">Компоненты</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="castingTime" checked={showCastingTime} onCheckedChange={toggleCastingTime} />
+                  <Label htmlFor="castingTime">Время накладывания</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="range" checked={showRange} onCheckedChange={toggleRange} />
+                  <Label htmlFor="range">Дистанция</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="duration" checked={showDuration} onCheckedChange={toggleDuration} />
+                  <Label htmlFor="duration">Длительность</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="classes" checked={showClasses} onCheckedChange={toggleClasses} />
+                  <Label htmlFor="classes">Классы</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="higherLevels" checked={showHigherLevels} onCheckedChange={toggleHigherLevels} />
+                  <Label htmlFor="higherLevels">На более высоких уровнях</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="school" checked={showSchool} onCheckedChange={toggleSchool} />
+                  <Label htmlFor="school">Школа</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -512,7 +454,7 @@ const PlayerHandbookPage: NextPage = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-    </>
+    </div>
   );
 };
 

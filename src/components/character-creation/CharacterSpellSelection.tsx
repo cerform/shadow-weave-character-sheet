@@ -1,15 +1,17 @@
-import React, { useContext, useState } from 'react';
+
+import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
-import { getSpellsByClass } from '@/data/spells'; // Исправлено с getSpellsForClass на getSpellsByClass
+import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
 import { CharacterContext } from '@/contexts/CharacterContext';
-import { NavigationButtons } from './NavigationButtons';
+import NavigationButtons from './NavigationButtons';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Search, Info } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -77,15 +79,18 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     
     // Фильтр по поиску
     if (searchQuery) {
-      filtered = filtered.filter((spell) => 
-        spell.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter((spell) => {
+        if (typeof spell === 'string') {
+          return spell.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+      });
     }
     
     // Фильтр по уровню
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
-        const details = getSpellDetails(spell);
+        const details = typeof spell === 'string' ? getSpellDetails(spell) : spell;
         return details && details.level === levelFilter;
       });
     }
@@ -171,10 +176,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const spellsByLevel = useMemo(() => {
     const spellsByLvl: { [key: number]: string[] } = {};
     filteredSpells.forEach(spell => {
-      const details = getSpellDetails(spell);
+      const spellName = typeof spell === 'string' ? spell : spell.name;
+      const details = typeof spell === 'string' ? getSpellDetails(spell) : spell;
       if (details) {
         if (!spellsByLvl[details.level]) spellsByLvl[details.level] = [];
-        spellsByLvl[details.level].push(spell);
+        spellsByLvl[details.level].push(spellName);
       }
     });
     return spellsByLvl;
