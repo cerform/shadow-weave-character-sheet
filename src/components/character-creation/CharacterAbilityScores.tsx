@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Dices } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface CharacterAbilityScoresProps {
   character: any;
@@ -49,6 +51,10 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     wisdom: null,
     charisma: null,
   });
+  
+  // Получаем текущую тему для динамического стилизования
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
   
   // Константы для расчета Point Buy
   const POINT_COSTS: {[key: number]: number} = {
@@ -169,11 +175,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
               return (
                 <div 
                   key={index}
-                  className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-white'}`}
+                  className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-card'}`}
                 >
                   <div className="text-sm">Бросок {index + 1}</div>
                   <div className="font-bold text-lg">{total}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs" style={{ color: currentTheme.accent }}>
                     {sortedRolls.slice(0, 3).join(' + ')} {roll.length > 3 && <span className="line-through">+ {sortedRolls[3]}</span>}
                   </div>
                 </div>
@@ -206,7 +212,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
             <div key={key} className="p-4 border rounded text-center">
               <h3 className="font-bold text-lg mb-1">{getStatName(stat)}</h3>
               <div className="text-3xl font-bold mb-1">{value}</div>
-              <div className="text-xl mb-3">{modifier}</div>
+              <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
               
               {abilitiesMethod === "pointbuy" && (
                 <div className="flex justify-center gap-2">
