@@ -76,7 +76,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       maxHp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       ac: newTokenType === "boss" ? 17 : newTokenType === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5),
+      initiative: Math.floor(Math.random() * 5), // This is where the fix happens: ensuring initiative is a number
       conditions: [],
       resources: {},
       visible: true

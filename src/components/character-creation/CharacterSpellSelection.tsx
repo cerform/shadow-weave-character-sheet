@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -107,13 +108,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const filteredSpells = useMemo(() => {
     let filtered = [...classSpells];
     
-    // Filer by search query
+    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Check if spell is an object with a name property
+        // Type guard to ensure spell has the right properties
         if (typeof spell === 'object' && spell !== null && 'name' in spell) {
           const spellName = spell.name;
-          // Explicitly check that spellName is a string before using toLowerCase
+          // Make sure spellName is a string before using toLowerCase
           if (typeof spellName === 'string') {
             return spellName.toLowerCase().includes(searchQuery.toLowerCase());
           }
