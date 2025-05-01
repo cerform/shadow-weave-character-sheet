@@ -31,6 +31,11 @@ export interface SpellSlots {
   };
 }
 
+export interface SorceryPoints {
+  current: number;
+  max: number;
+}
+
 export interface Character {
   id?: string;
   name: string;
@@ -50,6 +55,8 @@ export interface Character {
   proficiencies?: string[];
   maxHp?: number;
   currentHp?: number;
+  // Добавляем поле для отслеживания очков чародея и метамагии
+  sorceryPoints?: SorceryPoints;
   // Добавлено поле для отслеживания темы персонажа
   theme?: string;
 }
@@ -108,6 +115,15 @@ export function CharacterProvider({ children }: Props) {
 
   const setCharacter = useCallback((char: Character) => {
     console.log("Установка персонажа:", char.name);
+    
+    // Если персонаж - чародей, добавляем очки чародея
+    if (char.className?.includes('Чародей') && !char.sorceryPoints) {
+      char.sorceryPoints = {
+        current: char.level,
+        max: char.level
+      };
+    }
+    
     setCharacterState(char);
   }, []);
 
@@ -115,9 +131,20 @@ export function CharacterProvider({ children }: Props) {
   const updateCharacter = useCallback((updates: Partial<Character>) => {
     setCharacterState((prev) => {
       if (!prev) return null;
-      const updated = { ...prev, ...updates };
-      console.log("Обновление персонажа:", updated.name, updates);
-      return updated;
+      
+      // Проверяем, есть ли обновление для класса
+      const updatedChar = { ...prev, ...updates };
+      
+      // Добавляем очки чародея, если персонаж стал чародеем
+      if (updates.className?.includes('Чародей') && !prev.className?.includes('Чародей')) {
+        updatedChar.sorceryPoints = {
+          current: updatedChar.level,
+          max: updatedChar.level
+        };
+      }
+      
+      console.log("Обновление персонажа:", updatedChar.name, updates);
+      return updatedChar;
     });
   }, []);
 

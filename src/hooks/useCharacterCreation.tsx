@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Character, AbilityScores, SpellSlots, Spell } from "@/contexts/CharacterContext";
+import { Character, AbilityScores, SpellSlots, Spell, SorceryPoints } from "@/contexts/CharacterContext";
 
 export const useCharacterCreation = () => {
   const [character, setCharacterState] = useState({
@@ -37,7 +37,8 @@ export const useCharacterCreation = () => {
     spellsKnown: [] as Spell[],
     spellSlots: {} as SpellSlots,
     maxHp: 0,
-    currentHp: 0
+    currentHp: 0,
+    sorceryPoints: { current: 0, max: 0 } as SorceryPoints
   });
 
   // Обновляем свойства персонажа при изменении статов
@@ -67,6 +68,14 @@ export const useCharacterCreation = () => {
         // Создаем ячейки заклинаний на основе класса и уровня
         spellSlots: calculateSpellSlots(character.class, characterLevel)
       };
+      
+      // Создаем очки чародея, если персонаж - чародей
+      if (character.class === "Чародей") {
+        updatedCharacter.sorceryPoints = {
+          current: characterLevel,
+          max: characterLevel
+        };
+      }
       
       // Рассчитываем максимальные HP на основе класса, уровня и телосложения
       if (character.class) {
@@ -167,7 +176,10 @@ export const useCharacterCreation = () => {
       "Чудотворство": 0,
       "Обнаружение магии": 1,
       "Маскировка": 1,
-      "Понимание языков": 1
+      "Понимание языков": 1,
+      "Огненный Снаряд": 0,
+      "Рука Магнуса": 0,
+      "Ядовитое Облако": 3
     };
     
     return knownSpells[spellName] || 1; // По умолчанию предполагаем 1 уровень

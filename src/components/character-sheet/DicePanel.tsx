@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dices } from "lucide-react";
+import { Dices, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
+import { Separator } from '@/components/ui/separator';
 
 export const DicePanel = () => {
   const [diceCount, setDiceCount] = useState(1);
@@ -11,6 +12,20 @@ export const DicePanel = () => {
   const [diceType, setDiceType] = useState('d20');
   const [rollsHistory, setRollsHistory] = useState<{type: string, rolls: number[], total: number}[]>([]);
   const [isRolling, setIsRolling] = useState(false);
+  
+  // Компонент дайса для отображения в результате
+  const DiceIcon = ({ value, size = 24 }: { value: number, size?: number }) => {
+    const icons = {
+      1: <Dice1 size={size} className="text-primary" />,
+      2: <Dice2 size={size} className="text-primary" />,
+      3: <Dice3 size={size} className="text-primary" />,
+      4: <Dice4 size={size} className="text-primary" />,
+      5: <Dice5 size={size} className="text-primary" />,
+      6: <Dice6 size={size} className="text-primary" />
+    };
+    
+    return icons[value as keyof typeof icons] || <span className="text-primary font-bold">{value}</span>;
+  };
   
   const rollDice = (type: string) => {
     setDiceType(type);
@@ -34,7 +49,7 @@ export const DicePanel = () => {
       const newRoll = { type, rolls, total };
       setRollsHistory(prev => [newRoll, ...prev.slice(0, 9)]);
       
-      setDiceResult(`${type}: ${rolls.join(', ')} = ${total}`);
+      setDiceResult(`${total}`);
       setIsRolling(false);
     }, 500);
   };
@@ -78,14 +93,24 @@ export const DicePanel = () => {
       )}
       
       {diceResult && !isRolling && (
-        <div className="p-2 mb-4 bg-primary/10 rounded-md text-center font-medium">
-          <span className="text-primary">{diceResult}</span>
+        <div className="p-2 mb-4 bg-primary/10 rounded-md text-center">
+          <div className="mb-2">
+            <span className="text-primary font-medium">Результат: </span>
+            <span className="text-2xl font-bold text-primary">{diceResult}</span>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 mb-2">
+            {rollsHistory[0]?.rolls.map((roll, idx) => (
+              <div key={idx} className="inline-flex items-center justify-center">
+                <DiceIcon value={roll} />
+              </div>
+            ))}
+          </div>
           <div className="mt-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={resetRoll} 
-              className="w-full"
+              className="w-full text-primary"
             >
               Бросить снова
             </Button>
@@ -93,19 +118,21 @@ export const DicePanel = () => {
         </div>
       )}
       
-      {rollsHistory.length > 0 && (
-        <div className="mt-4">
-          <h4 className="text-sm font-medium mb-1 text-primary/90">История бросков</h4>
-          <div className="max-h-32 overflow-y-auto">
-            {rollsHistory.map((roll, index) => (
-              <div key={index} className="text-sm p-1 border-b border-primary/10 flex justify-between">
-                <span className="text-primary/80">{roll.type} ({roll.rolls.length})</span>
-                <span className="font-medium text-primary">{roll.total}</span>
-              </div>
-            ))}
-          </div>
+      <Separator className="my-2" />
+      
+      <div className="mt-2">
+        <h4 className="text-sm font-medium mb-1 text-primary">История бросков</h4>
+        <div className="max-h-32 overflow-y-auto">
+          {rollsHistory.map((roll, index) => (
+            <div key={index} className="text-sm p-1 border-b border-primary/10 flex justify-between">
+              <span className="text-primary/80">
+                {roll.rolls.length}× {roll.type} [{roll.rolls.join(', ')}]
+              </span>
+              <span className="font-medium text-primary">{roll.total}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </Card>
   );
 };
