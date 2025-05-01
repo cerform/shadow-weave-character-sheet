@@ -22,6 +22,8 @@ interface CharacterCreationContentProps {
   diceResults: number[][];
   getModifier: (score: number) => string;
   rollAllAbilities: () => void;
+  rollSingleAbility?: () => { rolls: number[]; total: number };
+  abilityScorePoints?: number;
   isMagicClass: (className: string) => boolean;
 }
 
@@ -36,6 +38,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   diceResults,
   getModifier,
   rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints,
   isMagicClass
 }) => {
   
@@ -102,34 +106,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                 Бросок кубиков
               </button>
             </div>
-            
-            {abilitiesMethod === "roll" && (
-              <div className="bg-muted/30 p-4 rounded-md mb-4">
-                <h4 className="font-semibold mb-2">Результаты бросков (4d6, отбрасывая наименьшее):</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {diceResults.map((roll, idx) => {
-                    // Sort and drop lowest
-                    const sorted = [...roll].sort((a, b) => b - a);
-                    const total = sorted.slice(0, 3).reduce((a, b) => a + b, 0);
-                    
-                    return (
-                      <div key={idx} className="p-2 bg-background rounded-md text-center">
-                        <div className="font-semibold">{total}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {roll.join(', ')} → {sorted.slice(0, 3).join(' + ')}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button 
-                  onClick={rollAllAbilities}
-                  className="mt-2 px-3 py-1 bg-primary text-primary-foreground rounded"
-                >
-                  Перебросить все
-                </button>
-              </div>
-            )}
           </div>
           
           <CharacterAbilityScores
@@ -140,6 +116,9 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             abilitiesMethod={abilitiesMethod}
             diceResults={diceResults}
             getModifier={getModifier}
+            rollAllAbilities={rollAllAbilities}
+            rollSingleAbility={rollSingleAbility}
+            abilityScorePoints={abilityScorePoints}
           />
         </div>
       );

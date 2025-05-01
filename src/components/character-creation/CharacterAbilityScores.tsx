@@ -2,9 +2,8 @@
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
-import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
 import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
+import { Dices } from "lucide-react";
 
 interface CharacterAbilityScoresProps {
   character: any;
@@ -14,6 +13,9 @@ interface CharacterAbilityScoresProps {
   abilitiesMethod: "pointbuy" | "standard" | "roll";
   diceResults: number[][];
   getModifier: (score: number) => string;
+  rollAllAbilities: () => void;
+  rollSingleAbility?: () => { rolls: number[]; total: number };
+  abilityScorePoints?: number;
 }
 
 const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
@@ -23,7 +25,10 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   prevStep,
   abilitiesMethod,
   diceResults,
-  getModifier
+  getModifier,
+  rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints = 27
 }) => {
   const [stats, setStats] = useState({
     strength: character.stats.strength,
@@ -34,7 +39,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     charisma: character.stats.charisma,
   });
 
-  const [pointsLeft, setPointsLeft] = useState(27); // Для метода Point Buy
+  const [pointsLeft, setPointsLeft] = useState(abilityScorePoints); // Для метода Point Buy
   const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
     strength: null,
     dexterity: null,
@@ -46,6 +51,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [activeAbility, setActiveAbility] = useState<string | null>(null);
+  const [diceRollResult, setDiceRollResult] = useState<number | null>(null);
 
   // Константы для расчета Point Buy
   const POINT_COSTS: {[key: number]: number} = {
@@ -64,7 +70,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: 8,
       });
     } else if (abilitiesMethod === "pointbuy") {
-      // Сбрасываем все до 8 и даем 27 очков для распределения
+      // Сбрасываем все до 8 и даем очки для распределения
       setStats({
         strength: 8,
         dexterity: 8,
@@ -73,7 +79,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         wisdom: 8,
         charisma: 8,
       });
-      setPointsLeft(27);
+      setPointsLeft(abilityScorePoints);
     } else if (abilitiesMethod === "roll") {
       // При выборе метода бросков сбрасываем назначенные кости
       setAssignedDice({
@@ -85,7 +91,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: null,
       });
     }
-  }, [abilitiesMethod]);
+  }, [abilitiesMethod, abilityScorePoints]);
 
   // Обработчики для Point Buy
   const incrementStat = (stat: keyof typeof stats) => {
@@ -134,9 +140,15 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   
   const handleDiceResult = (result: number) => {
     if (activeAbility) {
+      setDiceRollResult(result);
       setStats({ ...stats, [activeAbility]: result });
-      setShowDiceRoller(false);
-      setActiveAbility(null);
+      
+      // Задержка перед закрытием, чтобы пользователь увидел результат
+      setTimeout(() => {
+        setShowDiceRoller(false);
+        setActiveAbility(null);
+        setDiceRollResult(null);
+      }, 2000);
     }
   };
 
@@ -153,11 +165,16 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       {showDiceRoller && (
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">Бросок для {getStatName(activeAbility || '')}</h3>
-          <div className="h-80">
-            <DiceRoller3D />
-          </div>
-          <div className="flex justify-end mt-2">
-            <Button onClick={() => setShowDiceRoller(false)}>Закрыть</Button>
+          <div className="h-80 relative">
+            <DiceRoller3D onRollComplete={handleDiceResult} />
+            
+            {diceRollResult && (
+              <div className="absolute bottom-4 left-0 right-0 text-center">
+                <div className="bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg inline-block">
+                  <span className="font-bold text-2xl">{diceRollResult}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -168,7 +185,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
             Осталось очков: <span className="font-bold">{pointsLeft}</span>
           </p>
           <p className="text-sm text-muted-foreground mb-4">
-            Распределите 27 очков между характеристиками. Значение от 8 до 15.
+            Распределите {abilityScorePoints} очков между характеристиками. Значение от 8 до 15.
           </p>
         </div>
       )}
@@ -205,48 +222,14 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
               )}
               
               {abilitiesMethod === "roll" && (
-                <div>
-                  <Button
-                    onClick={() => handleRollAbility(stat)}
-                    size="sm"
-                    variant="outline"
-                    className="mb-2"
-                  >
-                    Бросить 3D кубики
-                  </Button>
-                  
-                  {assignedDice[stat] !== null ? (
-                    <Button
-                      onClick={() => setAssignedDice({...assignedDice, [stat]: null})}
-                      size="sm"
-                      variant="outline"
-                    >
-                      Сбросить
-                    </Button>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-1 mt-2">
-                      {diceResults.map((dice, idx) => {
-                        // Проверяем, что эта кость еще не назначена
-                        const isAssigned = Object.values(assignedDice).includes(idx);
-                        const sorted = [...dice].sort((a, b) => b - a);
-                        const total = sorted.slice(0, 3).reduce((a, b) => a + b, 0);
-                        
-                        return (
-                          <Button
-                            key={idx}
-                            onClick={() => assignDiceToStat(stat, idx)}
-                            disabled={isAssigned}
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs"
-                          >
-                            {total}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <Button
+                  onClick={() => handleRollAbility(stat)}
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Dices className="h-4 w-4" />
+                  <span>Бросить 3D кубик</span>
+                </Button>
               )}
             </div>
           );
@@ -257,7 +240,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         allowNext={
           abilitiesMethod === "standard" ||
           (abilitiesMethod === "pointbuy" && pointsLeft >= 0) ||
-          (abilitiesMethod === "roll" && !Object.values(assignedDice).includes(null))
+          (abilitiesMethod === "roll" && Object.values(stats).every(val => val >= 3))
         }
         nextStep={handleNext}
         prevStep={prevStep}

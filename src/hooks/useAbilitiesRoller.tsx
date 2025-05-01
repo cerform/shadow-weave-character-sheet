@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 
-export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "roll") => {
+export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "roll", characterLevel: number) => {
   const [diceResults, setDiceResults] = useState<number[][]>([]);
+  const [abilityScorePoints, setAbilityScorePoints] = useState<number>(27);
 
   // Initialize dice results when method changes to roll
   useEffect(() => {
@@ -10,6 +11,24 @@ export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "r
       rollAllAbilities();
     }
   }, [abilitiesMethod]);
+
+  // Calculate point buy points based on character level
+  useEffect(() => {
+    if (abilitiesMethod === "pointbuy") {
+      // Base points is 27 for level 1
+      let points = 27;
+      
+      // Add additional points for higher levels
+      // This is a simplified approach - adjust based on your game rules
+      if (characterLevel >= 4) points += 2;
+      if (characterLevel >= 8) points += 2;
+      if (characterLevel >= 12) points += 2;
+      if (characterLevel >= 16) points += 2;
+      if (characterLevel >= 19) points += 2;
+      
+      setAbilityScorePoints(points);
+    }
+  }, [abilitiesMethod, characterLevel]);
 
   const rollAllAbilities = () => {
     // Generate 6 sets of rolls (4d6 for each ability)
@@ -24,8 +43,25 @@ export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "r
     setDiceResults(rolls);
   };
 
+  const rollSingleAbility = () => {
+    // Roll 4d6 for a single ability
+    const diceRolls = [];
+    for (let i = 0; i < 4; i++) {
+      diceRolls.push(Math.floor(Math.random() * 6) + 1);
+    }
+    
+    // Sort and drop lowest
+    const sorted = [...diceRolls].sort((a, b) => b - a);
+    return {
+      rolls: diceRolls,
+      total: sorted.slice(0, 3).reduce((a, b) => a + b, 0)
+    };
+  };
+
   return {
     diceResults,
-    rollAllAbilities
+    rollAllAbilities,
+    rollSingleAbility,
+    abilityScorePoints
   };
 };

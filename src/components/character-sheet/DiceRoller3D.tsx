@@ -1,3 +1,4 @@
+
 import { useState, useRef, Suspense, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
@@ -166,9 +167,19 @@ function DiceScene({ diceType, onRollComplete }: { diceType: DieType, onRollComp
   );
 }
 
-export const DiceRoller3D = () => {
+interface DiceRoller3DProps {
+  initialDice?: DieType;
+  onRollComplete?: (value: number) => void;
+  hideControls?: boolean;
+}
+
+export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({ 
+  initialDice = 'd20', 
+  onRollComplete = () => {}, 
+  hideControls = false 
+}) => {
   const [diceCount, setDiceCount] = useState(1);
-  const [activeDice, setActiveDice] = useState<DieType>('d20');
+  const [activeDice, setActiveDice] = useState<DieType>(initialDice);
   const [results, setResults] = useState<{dice: DieType, value: number}[]>([]);
   const [rolling, setRolling] = useState(false);
   const [resultHistory, setResultHistory] = useState<{dice: DieType, value: number, timestamp: number}[]>([]);
@@ -184,6 +195,9 @@ export const DiceRoller3D = () => {
     ]);
     
     setRolling(false);
+    
+    // Call external handler if provided
+    onRollComplete(value);
   };
   
   const rollDice = (type: DieType) => {
@@ -199,34 +213,30 @@ export const DiceRoller3D = () => {
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 mb-6 bg-black/10 rounded-lg overflow-hidden relative">
+      <div className="flex-1 mb-2 bg-black/10 rounded-lg overflow-hidden relative">
         <Canvas shadows>
           <Suspense fallback={null}>
             <DiceScene diceType={activeDice} onRollComplete={handleRollComplete} />
           </Suspense>
         </Canvas>
-      </div>
-      
-      {/* Results display - moved below the dice */}
-      <div className="mb-4 bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
-        {rolling ? (
-          <span className="font-bold text-lg animate-pulse">Бросок...</span>
-        ) : results.length > 0 ? (
-          <div>
-            <span className="font-bold text-2xl">{totalResult}</span>
-            {results.length > 1 && (
-              <div className="text-xs mt-0.5 opacity-90">
-                {results.map((r, i) => r.value).join(' + ')}
-              </div>
-            )}
+        
+        {/* Results display - moved below the dice */}
+        {(results.length > 0) && (
+          <div className="absolute bottom-4 left-0 right-0 mx-auto w-max bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
+            <div>
+              <span className="font-bold text-2xl">{totalResult}</span>
+              {results.length > 1 && (
+                <div className="text-xs mt-0.5 opacity-90">
+                  {results.map((r, i) => r.value).join(' + ')}
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <span className="font-bold text-lg opacity-70">Нажмите на кубик выше для броска</span>
         )}
       </div>
       
       {/* History display - improved visibility */}
-      {resultHistory.length > 0 && (
+      {!hideControls && resultHistory.length > 0 && (
         <div className="h-10 mb-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
           {resultHistory.map((item, index) => (
             <div key={item.timestamp} className="px-2 py-1 text-xs bg-primary/20 rounded-md flex items-center gap-1 whitespace-nowrap border border-primary/20">
@@ -237,37 +247,41 @@ export const DiceRoller3D = () => {
         </div>
       )}
       
-      <div className="mb-2">
-        <Tabs defaultValue="d20" className="w-full" onValueChange={(val) => rollDice(val as DieType)}>
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 h-auto">
-            <TabsTrigger value="d4" className="text-sm py-1 px-2">d4</TabsTrigger>
-            <TabsTrigger value="d6" className="text-sm py-1 px-2">d6</TabsTrigger>
-            <TabsTrigger value="d8" className="text-sm py-1 px-2">d8</TabsTrigger>
-            <TabsTrigger value="d10" className="text-sm py-1 px-2">d10</TabsTrigger>
-            <TabsTrigger value="d12" className="text-sm py-1 px-2">d12</TabsTrigger>
-            <TabsTrigger value="d20" className="text-sm py-1 px-2">d20</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-      
-      <div className="flex gap-2">
-        <Input 
-          type="number" 
-          value={diceCount} 
-          onChange={(e) => setDiceCount(Number(e.target.value))}
-          className="w-20 text-center"
-          min={1}
-          max={10}
-        />
-        <Button 
-          onClick={() => rollDice(activeDice)} 
-          variant="default" 
-          className="flex-1"
-          disabled={rolling}
-        >
-          {rolling ? 'Бросаем...' : `Бросить ${diceCount}d${activeDice.substring(1)}`}
-        </Button>
-      </div>
+      {!hideControls && (
+        <>
+          <div className="mb-2">
+            <Tabs defaultValue={activeDice} value={activeDice} className="w-full" onValueChange={(val) => rollDice(val as DieType)}>
+              <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 h-auto">
+                <TabsTrigger value="d4" className="text-sm py-1 px-2">d4</TabsTrigger>
+                <TabsTrigger value="d6" className="text-sm py-1 px-2">d6</TabsTrigger>
+                <TabsTrigger value="d8" className="text-sm py-1 px-2">d8</TabsTrigger>
+                <TabsTrigger value="d10" className="text-sm py-1 px-2">d10</TabsTrigger>
+                <TabsTrigger value="d12" className="text-sm py-1 px-2">d12</TabsTrigger>
+                <TabsTrigger value="d20" className="text-sm py-1 px-2">d20</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          <div className="flex gap-2">
+            <Input 
+              type="number" 
+              value={diceCount} 
+              onChange={(e) => setDiceCount(Number(e.target.value))}
+              className="w-20 text-center"
+              min={1}
+              max={10}
+            />
+            <Button 
+              onClick={() => rollDice(activeDice)} 
+              variant="default" 
+              className="flex-1"
+              disabled={rolling}
+            >
+              {`Бросить ${diceCount}d${activeDice.substring(1)}`}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

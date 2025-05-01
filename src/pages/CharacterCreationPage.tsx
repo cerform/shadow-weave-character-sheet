@@ -24,7 +24,7 @@ const CharacterCreationPage = () => {
   
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
-  const { diceResults, rollAllAbilities } = useAbilitiesRoller(abilitiesMethod);
+  const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints } = useAbilitiesRoller(abilitiesMethod, character.level);
   const { currentStep, nextStep, prevStep } = useCreationStep(isMagicClass, character.class);
 
   const goToHomePage = () => {
@@ -65,6 +65,8 @@ const CharacterCreationPage = () => {
           diceResults={diceResults}
           getModifier={getModifier}
           rollAllAbilities={rollAllAbilities}
+          rollSingleAbility={rollSingleAbility}
+          abilityScorePoints={abilityScorePoints}
           isMagicClass={isMagicClass}
         />
       </div>
