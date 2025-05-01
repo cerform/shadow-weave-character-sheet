@@ -1,4 +1,3 @@
-
 import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from "@/components/ui/use-toast";
-import { Magic, ZapOff } from "lucide-react";
+import { Wand, ZapOff } from "lucide-react"; 
 import { DicePanel } from './DicePanel';
 
 export const SpellPanel = () => {
@@ -318,14 +317,14 @@ export const SpellPanel = () => {
             <h5 className="font-medium text-primary">{spellName}</h5>
             {level === 0 ? (
               <Button size="sm" variant="outline" onClick={() => castSpell(spellName, level)}>
-                <Magic className="h-4 w-4 mr-1" />
+                <Wand className="h-4 w-4 mr-1" />
                 Использовать
               </Button>
             ) : (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline">
-                    <Magic className="h-4 w-4 mr-1" />
+                    <Wand className="h-4 w-4 mr-1" />
                     Произнести
                   </Button>
                 </DialogTrigger>
@@ -436,7 +435,7 @@ export const SpellPanel = () => {
                           disabled={character.sorceryPoints.current < level + 1}
                           onClick={() => convertSorceryPoints(level)}
                         >
-                          <Magic className="h-4 w-4 mr-1" />
+                          <Wand className="h-4 w-4 mr-1" />
                           {level} уровень ({level + 1} очков)
                         </Button>
                       ))}
