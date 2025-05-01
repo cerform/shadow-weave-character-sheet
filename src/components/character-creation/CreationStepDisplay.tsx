@@ -2,7 +2,7 @@
 import React from "react";
 
 interface StepDisplayProps {
-  steps: { id: string; title: string }[];
+  steps: { id: number; name: string; description: string }[];
   currentStep: number;
   isMagicClass: (className: string) => boolean;
   characterClass: string;
@@ -18,7 +18,7 @@ const CreationStepDisplay: React.FC<StepDisplayProps> = ({
     <div className="flex flex-wrap justify-center gap-2 mb-8">
       {steps.map((step, index) => {
         // Skip spell step for non-magic classes
-        if (step.id === "spells" && characterClass && !isMagicClass(characterClass)) {
+        if (step.id === 4 && characterClass && !isMagicClass(characterClass)) {
           return null;
         }
         
@@ -31,7 +31,7 @@ const CreationStepDisplay: React.FC<StepDisplayProps> = ({
                 : "bg-muted text-muted-foreground"
             }`}
           >
-            {step.title}
+            {step.name}
           </div>
         );
       })}

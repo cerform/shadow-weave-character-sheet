@@ -39,14 +39,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   isMagicClass
 }) => {
   
-  // Determine the actual step index based on character class (magic vs non-magic)
-  const getAdjustedStepIndex = (baseIndex: number) => {
-    if (!isMagicClass(character.class) && baseIndex > 4) {
-      return baseIndex - 1;
-    }
-    return baseIndex;
-  };
-
   // useEffect to skip spell selection step for non-magic classes
   useEffect(() => {
     if (currentStep === 4 && character.class && !isMagicClass(character.class)) {
