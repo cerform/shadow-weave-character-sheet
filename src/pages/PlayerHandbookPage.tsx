@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search } from "lucide-react";
@@ -313,23 +312,23 @@ const PlayerHandbookPage = () => {
                     <CardContent className="space-y-4">
                       <div>
                         <p className="font-medium">Кость хитов:</p>
-                        <p>{classItem.hitDice}</p>
+                        <p>{classItem.hitDie}</p>
                       </div>
                       <div>
                         <p className="font-medium">Источник заклинаний:</p>
-                        <p>{classItem.spellcastingAbility || "Нет"}</p>
+                        <p>{classItem.primaryAbility || "Нет"}</p>
                       </div>
                       <div>
                         <p className="font-medium">Владения доспехами:</p>
-                        <p>{classItem.armorProficiencies?.join(", ") || "Нет"}</p>
+                        <p>{classItem.proficiencies || "Нет"}</p>
                       </div>
                       <div>
                         <p className="font-medium">Владения оружием:</p>
-                        <p>{classItem.weaponProficiencies?.join(", ") || "Нет"}</p>
+                        <p>{classItem.proficiencies || "Нет"}</p>
                       </div>
                       <div>
                         <p className="font-medium">Спасброски:</p>
-                        <p>{classItem.savingThrows?.join(", ")}</p>
+                        <p>{classItem.savingThrows}</p>
                       </div>
                     </CardContent>
                   </Card>
