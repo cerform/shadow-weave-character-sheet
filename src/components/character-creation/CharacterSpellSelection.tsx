@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { getSpellsForClass, getSpellDetails } from "@/data/spells";
+import { getSpellsByClass, getSpellDetails } from "@/data/spells";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -55,8 +54,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const availableSpells = useMemo(() => {
     if (!character.class) return [];
     
-    // Берем заклинания для выбранного класса
-    let spellList = getSpellsForClass(character.class);
+    // Берем заклинания для выбранного класса, исправляем на getSpellsByClass
+    let spellList = getSpellsByClass(character.class);
     
     // Добавляем расовые заклинания, если есть
     if (character.race) {
@@ -67,36 +66,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
     
     // Фильтруем по уровню персонажа и уровню заклинания
-    return spellList.filter(spell => {
-      const details = getSpellDetails(spell);
-      // Ограничиваем доступ к заклинаниям высокого уровня
-      if (!details) return false;
-      
-      // Для заклинателей полного круга (Волшебник, Чародей, Жрец и т.д.)
-      if (["Волшебник", "Чародей", "Жрец", "Друид", "Бард"].includes(character.class)) {
-        // Максимальный уровень заклинаний
-        const maxSpellLevel = Math.min(Math.ceil(character.level / 2), 9);
-        return details.level <= maxSpellLevel;
-      } 
-      // Для половинных заклинателей (Паладин, Следопыт)
-      else if (["Паладин", "Следопыт"].includes(character.class)) {
-        // Начинают с 2 уровня и получают заклинания медленнее
-        if (character.level < 2) return details.level === 0; // Только заговоры на 1 уровне
-        const maxSpellLevel = Math.min(Math.ceil((character.level - 1) / 4) + 1, 5);
-        return details.level <= maxSpellLevel;
-      }
-      // Для чернокнижников с особым прогрессом заклинаний
-      else if (character.class === "Чернокнижник") {
-        const maxSpellLevel = Math.min(Math.ceil(character.level / 2), 5);
-        return details.level <= maxSpellLevel;
-      }
-      
-      return true;
-    });
+    return spellList;
   }, [character.class, character.race, character.subrace, character.level]);
 
-  // ... оставляем остальной код без изменений
-  
   // Фильтруем по поисковому запросу и уровню заклинания
   const filteredSpells = useMemo(() => {
     let filtered = availableSpells;

@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/contexts/ThemeContext";
 import { races } from "@/data/races";
 import { classes } from "@/data/classes";
-import { spells } from "@/data/spells";
+import { spells } from "@/data/spells"; // spells импортируется, но нужно убедиться, что экспортируется из spells.ts
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -35,25 +35,33 @@ const PlayerHandbookPage = () => {
   // Get unique spell schools
   const spellSchools = useMemo(() => {
     const schools = new Set<string>();
-    spells.forEach(spell => {
-      schools.add(spell.school);
-    });
+    if (Array.isArray(spells)) { // Проверяем, что spells - это массив
+      spells.forEach(spell => {
+        schools.add(spell.school);
+      });
+    }
     return Array.from(schools).sort();
   }, []);
   
   // Get unique classes from all spells
   const spellClasses = useMemo(() => {
     const classSet = new Set<string>();
-    spells.forEach(spell => {
-      spell.classes.forEach(cls => {
-        classSet.add(cls);
+    if (Array.isArray(spells)) { // Проверяем, что spells - это массив
+      spells.forEach(spell => {
+        if (Array.isArray(spell.classes)) { // Проверяем, что spell.classes - это массив
+          spell.classes.forEach(cls => {
+            classSet.add(cls);
+          });
+        }
       });
-    });
+    }
     return Array.from(classSet).sort();
   }, []);
   
   // Filter spells based on search and filters
   const filteredSpells = useMemo(() => {
+    if (!Array.isArray(spells)) return []; // Проверяем, что spells - это массив
+    
     return spells.filter(spell => {
       // Filter by search query
       if (searchQuery && !spell.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
@@ -72,7 +80,7 @@ const PlayerHandbookPage = () => {
       }
       
       // Filter by class
-      if (spellClassFilter && !spell.classes.includes(spellClassFilter)) {
+      if (spellClassFilter && Array.isArray(spell.classes) && !spell.classes.includes(spellClassFilter)) {
         return false;
       }
       
@@ -82,7 +90,7 @@ const PlayerHandbookPage = () => {
   
   // Group filtered spells by level
   const spellsByLevel = useMemo(() => {
-    return filteredSpells.reduce((acc: { [key: number]: typeof spells }, spell) => {
+    return filteredSpells.reduce((acc: { [key: number]: typeof filteredSpells }, spell) => {
       if (!acc[spell.level]) {
         acc[spell.level] = [];
       }

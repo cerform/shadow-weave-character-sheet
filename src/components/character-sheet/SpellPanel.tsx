@@ -1,4 +1,3 @@
-
 import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -6,13 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CharacterContext } from '@/contexts/CharacterContext';
-import { useToast } from "@/components/ui/use-toast";
-import { Wand, ZapOff, Book, Info } from "lucide-react"; 
+import { useToast } from "@/hooks/use-toast"; // Исправляем импорт на правильный путь
+import { Wand, ZapOff, Book, Info, Search } from "lucide-react"; // Добавляем импорт Search из lucide-react
 import { DicePanel } from './DicePanel';
 import { getSpellDetails, getAllSpellNames } from '@/data/spells';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input"; // Добавляем импорт Input
 
 export const SpellPanel = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -666,7 +666,7 @@ export const SpellPanel = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="relative flex-1">
-                <input
+                <Input
                   type="text"
                   placeholder="Поиск заклинаний..."
                   className="w-full py-2 px-4 pl-9 bg-background border border-input rounded-md"
