@@ -19,6 +19,7 @@ import DMDashboardPage from "./pages/DMDashboardPage";
 import DMSessionPage from "./pages/DMSessionPage";
 import JoinSessionPage from "./pages/JoinSessionPage";
 import PlayerSessionPage from "./pages/PlayerSessionPage";
+import PlayerHandbookPage from "./pages/PlayerHandbookPage";
 
 // Новые страницы
 import Home from "./pages/Home";
@@ -55,6 +56,9 @@ const App = () => {
                   {/* Создание персонажа */}
                   <Route path="/create" element={<CharacterCreationPage />} />
                   <Route path="/sheet" element={<CharacterSheetPage />} />
+
+                  {/* Руководство игрока */}
+                  <Route path="/handbook" element={<PlayerHandbookPage />} />
 
                   {/* Панель мастера */}
                   <Route path="/dm" element={<DMDashboardPage />} />

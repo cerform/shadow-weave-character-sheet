@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, Book, User, Swords } from "lucide-react";
+import { FileUp, Plus, Users, Book, BookOpen, User, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ThemeSelector from "@/components/character-sheet/ThemeSelector";
@@ -98,6 +98,23 @@ const Index = () => {
                 <CardContent>
                   <Button onClick={() => navigate("/join")} className="w-full">
                     Присоединиться к сессии
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="size-5" />
+                    Руководство игрока
+                  </CardTitle>
+                  <CardDescription>
+                    Полное руководство по игре D&D 5e
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate("/handbook")} className="w-full">
+                    Открыть руководство
                   </Button>
                 </CardContent>
               </Card>

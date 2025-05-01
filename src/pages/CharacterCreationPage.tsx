@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Custom hooks
@@ -31,16 +31,31 @@ const CharacterCreationPage = () => {
     navigate('/');
   };
 
+  const goToHandbook = () => {
+    navigate('/handbook');
+  };
+
   return (
     <div className={`p-6 min-h-screen bg-background text-foreground theme-${theme}`}>
-      <Button 
-        onClick={goToHomePage} 
-        variant="outline" 
-        className="mb-4 flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        На главную
-      </Button>
+      <div className="flex justify-between items-center mb-4">
+        <Button 
+          onClick={goToHomePage} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          На главную
+        </Button>
+
+        <Button 
+          onClick={goToHandbook} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
+          <BookOpen className="h-4 w-4" />
+          Руководство игрока
+        </Button>
+      </div>
 
       <h1 className="text-3xl font-bold mb-8 text-center">Создание персонажа</h1>
 
