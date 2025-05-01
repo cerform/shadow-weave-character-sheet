@@ -4,10 +4,11 @@ import { getSpellsForClass, getSpellDetails } from "@/data/spells";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Search } from "lucide-react";
+import { Search, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useMemo } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -24,6 +25,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 }) => {
   const [selectedSpells, setSelectedSpells] = useState<string[]>(character.spells || []);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [levelFilter, setLevelFilter] = useState<number | null>(null);
   
   // Получаем доступные заклинания, учитывая класс, расу и уровень персонажа
   const availableSpells = useMemo(() => {
@@ -69,13 +71,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     });
   }, [character.class, character.race, character.subrace, character.level]);
 
-  // Фильтруем по поисковому запросу
+  // Фильтруем по поисковому запросу и уровню заклинания
   const filteredSpells = useMemo(() => {
-    if (!searchQuery) return availableSpells;
-    return availableSpells.filter((spell) =>
-      spell.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, availableSpells]);
+    let filtered = availableSpells;
+    
+    // Фильтр по поиску
+    if (searchQuery) {
+      filtered = filtered.filter((spell) => 
+        spell.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Фильтр по уровню
+    if (levelFilter !== null) {
+      filtered = filtered.filter((spell) => {
+        const details = getSpellDetails(spell);
+        return details && details.level === levelFilter;
+      });
+    }
+    
+    return filtered;
+  }, [searchQuery, levelFilter, availableSpells]);
 
   const toggleSpell = (spell: string) => {
     if (selectedSpells.includes(spell)) {
@@ -95,7 +111,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       "Эльф": ["Танцующие огоньки"],
       "Тифлинг": ["Чудотворство", "Адское возмездие"],
       "Гном": ["Малая иллюзия"],
-      // Можно добавить подрасы
+      // Подрасы
       "Высший эльф": ["Волшебная рука", "Фокусы"],
       "Лесной эльф": ["Маскировка"],
       "Тёмный эльф": ["Пляшущий свет", "Волшебная рука"]
@@ -174,6 +190,19 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return schoolColors[school] || "bg-primary/20";
   };
 
+  // Группировка заклинаний по уровню
+  const spellsByLevel = useMemo(() => {
+    const spellsByLvl: { [key: number]: string[] } = {};
+    filteredSpells.forEach(spell => {
+      const details = getSpellDetails(spell);
+      if (details) {
+        if (!spellsByLvl[details.level]) spellsByLvl[details.level] = [];
+        spellsByLvl[details.level].push(spell);
+      }
+    });
+    return spellsByLvl;
+  }, [filteredSpells]);
+
   // Пропускаем шаг для не-магических классов
   const isMagicClass = ["Волшебник", "Чародей", "Жрец", "Друид", "Бард", "Паладин", "Следопыт", "Чернокнижник"].includes(character.class || "");
   if (!isMagicClass) {
@@ -196,81 +225,120 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           Осталось выбрать: <span className="font-medium text-green-500">{getSpellsRemaining()}</span>
         </p>
       </div>
-      
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Поиск заклинаний..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge 
+            variant={levelFilter === null ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => setLevelFilter(null)}
+          >
+            Все уровни
+          </Badge>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+            <Badge 
+              key={level}
+              variant={levelFilter === level ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setLevelFilter(level)}
+            >
+              {level === 0 ? "Заговоры" : `${level} уровень`}
+            </Badge>
+          ))}
+        </div>
+        
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск заклинаний..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="flex-1">
           <h3 className="font-semibold mb-2">Доступные заклинания ({filteredSpells.length})</h3>
           <ScrollArea className="h-72 border rounded-md p-2">
-            <div className="space-y-1">
-              {filteredSpells.map((spell) => {
-                const details = getSpellDetails(spell);
-                
-                return (
-                  <HoverCard key={spell}>
-                    <HoverCardTrigger asChild>
-                      <button
-                        onClick={() => toggleSpell(spell)}
-                        disabled={!selectedSpells.includes(spell) && getSpellsRemaining() <= 0}
-                        className={`w-full p-2 text-left text-sm rounded transition-colors ${
-                          selectedSpells.includes(spell) 
-                            ? "bg-green-500 text-white" 
-                            : getSpellsRemaining() <= 0 
-                              ? "bg-gray-300 dark:bg-gray-700 opacity-50 cursor-not-allowed" 
-                              : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <span>{spell}</span>
-                          <Badge variant="outline" className={details?.school ? getSchoolColor(details.school) : ''}>
-                            {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
-                          </Badge>
-                        </div>
-                      </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-96">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <h4 className="font-semibold">{spell}</h4>
-                          <Badge className={details?.school ? getSchoolColor(details.school) : ''}>
-                            {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{details?.school}</p>
-                        
-                        <div className="py-2 text-xs space-y-1">
-                          <div><span className="font-medium">Время накладывания:</span> {details?.castingTime}</div>
-                          <div><span className="font-medium">Дистанция:</span> {details?.range}</div>
-                          <div><span className="font-medium">Компоненты:</span> {details?.components}</div>
-                          <div><span className="font-medium">Длительность:</span> {details?.duration}</div>
-                        </div>
-                        
-                        <p className="text-sm">{details?.description}</p>
-                        
-                        <div className="text-xs text-muted-foreground pt-2 border-t">
-                          Классы: {details?.classes?.join(", ")}
-                        </div>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                );
-              })}
+            {Object.entries(spellsByLevel)
+              .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
+              .map(([level, spells]) => (
+                <div key={level} className="mb-4">
+                  <h4 className="text-sm font-medium mb-1">
+                    {Number(level) === 0 ? "Заговоры" : `${level} уровень`}
+                  </h4>
+                  <div className="space-y-1">
+                    {spells.map(spell => {
+                      const details = getSpellDetails(spell);
+                      const isSelected = selectedSpells.includes(spell);
+                      
+                      return (
+                        <HoverCard key={spell}>
+                          <HoverCardTrigger asChild>
+                            <button
+                              onClick={() => toggleSpell(spell)}
+                              disabled={!isSelected && getSpellsRemaining() <= 0}
+                              className={`w-full p-2 text-left text-sm rounded transition-colors ${
+                                isSelected 
+                                  ? "bg-green-500 text-white" 
+                                  : getSpellsRemaining() <= 0 
+                                    ? "bg-gray-300 dark:bg-gray-700 opacity-50 cursor-not-allowed" 
+                                    : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span>{spell}</span>
+                                <Badge variant="outline" className={details?.school ? getSchoolColor(details.school) : ''}>
+                                  {details?.level === 0 ? "Зг" : `${details?.level}`}
+                                </Badge>
+                              </div>
+                            </button>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-96">
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <h4 className="font-semibold">{spell}</h4>
+                                <Badge className={details?.school ? getSchoolColor(details.school) : ''}>
+                                  {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{details?.school}</p>
+                              
+                              <div className="py-2 text-xs space-y-1">
+                                <div><span className="font-medium">Время накладывания:</span> {details?.castingTime}</div>
+                                <div><span className="font-medium">Дистанция:</span> {details?.range}</div>
+                                <div><span className="font-medium">Компоненты:</span> {details?.components}</div>
+                                <div><span className="font-medium">Длительность:</span> {details?.duration}</div>
+                              </div>
+                              
+                              <p className="text-sm">{details?.description}</p>
+                              
+                              {details?.higherLevels && (
+                                <div className="text-sm pt-2">
+                                  <span className="font-medium">На более высоких уровнях: </span>
+                                  {details.higherLevels}
+                                </div>
+                              )}
+                              
+                              <div className="text-xs text-muted-foreground pt-2 border-t">
+                                Классы: {details?.classes?.join(", ")}
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
               
               {filteredSpells.length === 0 && (
                 <div className="py-4 text-center text-muted-foreground">
                   Нет заклинаний, соответствующих запросу
                 </div>
               )}
-            </div>
           </ScrollArea>
         </div>
         
@@ -309,10 +377,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
       {/* Предупреждение при отсутствии заклинаний */}
       {selectedSpells.length === 0 && isMagicClass && (
-        <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md">
-          <p className="font-medium">Внимание!</p>
-          <p className="text-sm">Вы не выбрали ни одного заклинания для вашего заклинателя. Вы уверены, что хотите продолжить?</p>
-        </div>
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Внимание!</AlertTitle>
+          <AlertDescription>
+            Вы не выбрали ни одного заклинания для вашего заклинателя. Вы уверены, что хотите продолжить?
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Навигационные кнопки */}

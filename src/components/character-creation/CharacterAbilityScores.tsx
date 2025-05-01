@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
-import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
 import { Dices } from "lucide-react";
 
 interface CharacterAbilityScoresProps {
@@ -50,10 +50,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     charisma: null,
   });
   
-  const [showDiceRoller, setShowDiceRoller] = useState(false);
-  const [activeAbility, setActiveAbility] = useState<string | null>(null);
-  const [diceRollResult, setDiceRollResult] = useState<number | null>(null);
-
   // Константы для расчета Point Buy
   const POINT_COSTS: {[key: number]: number} = {
     8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
@@ -132,24 +128,13 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       setAssignedDice({ ...assignedDice, [stat]: diceIndex });
     }
   };
-  
-  // Обработчик для 3D кубиков
+
+  // Функция для броска одиночной характеристики
   const handleRollAbility = (stat: keyof typeof stats) => {
-    setActiveAbility(stat);
-    setShowDiceRoller(true);
-  };
-  
-  const handleDiceResult = (result: number) => {
-    if (activeAbility) {
-      setDiceRollResult(result);
-      setStats({ ...stats, [activeAbility]: result });
-      
-      // Задержка перед закрытием, чтобы пользователь увидел результат
-      setTimeout(() => {
-        setShowDiceRoller(false);
-        setActiveAbility(null);
-        setDiceRollResult(null);
-      }, 2000);
+    if (rollSingleAbility) {
+      const result = rollSingleAbility(0); // Используем индекс 0, т.к. бросаем одну характеристику
+      setStats({ ...stats, [stat]: result.total });
+      console.log(`Бросок для ${getStatName(stat)}: ${result.rolls.join(', ')} = ${result.total}`);
     }
   };
 
@@ -162,24 +147,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     <div>
       <h2 className="text-2xl font-bold mb-4">Распределение характеристик</h2>
       
-      {/* 3D Dice Roller */}
-      {showDiceRoller && (
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-2">Бросок для {getStatName(activeAbility || '')}</h3>
-          <div className="h-80 relative">
-            <DiceRoller3D onRollComplete={handleDiceResult} />
-            
-            {diceRollResult && (
-              <div className="absolute bottom-4 left-0 right-0 text-center">
-                <div className="bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg inline-block">
-                  <span className="font-bold text-2xl">{diceRollResult}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      
       {abilitiesMethod === "pointbuy" && (
         <div className="mb-4">
           <p className="mb-2">
@@ -187,6 +154,44 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
           </p>
           <p className="text-sm text-muted-foreground mb-4">
             Распределите {abilityScorePoints} очков между характеристиками. Значение от 8 до 15.
+          </p>
+        </div>
+      )}
+      
+      {abilitiesMethod === "roll" && (
+        <div className="mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+            {diceResults.map((roll, index) => {
+              const sortedRolls = [...roll].sort((a, b) => b - a);
+              const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
+              const isAssigned = Object.values(assignedDice).includes(index);
+              
+              return (
+                <div 
+                  key={index}
+                  className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-white'}`}
+                >
+                  <div className="text-sm">Бросок {index + 1}</div>
+                  <div className="font-bold text-lg">{total}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {sortedRolls.slice(0, 3).join(' + ')} {roll.length > 3 && <span className="line-through">+ {sortedRolls[3]}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <Button 
+            onClick={rollAllAbilities}
+            className="w-full mb-4"
+            variant="outline"
+          >
+            <Dices className="mr-2 h-4 w-4" />
+            Перебросить все кубики
+          </Button>
+          
+          <p className="text-sm text-muted-foreground mb-2">
+            Выберите результат броска для каждой характеристики, кликнув по характеристике, а затем по значению броска.
           </p>
         </div>
       )}
@@ -223,13 +228,36 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
               )}
               
               {abilitiesMethod === "roll" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {diceResults.map((roll, index) => {
+                    const sortedRolls = [...roll].sort((a, b) => b - a);
+                    const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
+                    const isAssigned = Object.values(assignedDice).includes(index);
+                    const isAssignedToThisStat = assignedDice[stat] === index;
+                    
+                    return (
+                      <Button
+                        key={index}
+                        size="sm"
+                        variant={isAssignedToThisStat ? "default" : "outline"}
+                        disabled={isAssigned && !isAssignedToThisStat}
+                        onClick={() => assignDiceToStat(stat, index)}
+                      >
+                        {total}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {abilitiesMethod === "roll" && rollSingleAbility && (
                 <Button
                   onClick={() => handleRollAbility(stat)}
                   size="sm"
-                  className="flex items-center gap-1"
+                  className="mt-2 w-full"
                 >
-                  <Dices className="h-4 w-4" />
-                  <span>Бросить 3D кубик</span>
+                  <Dices className="mr-1 h-4 w-4" />
+                  Отдельный бросок
                 </Button>
               )}
             </div>
