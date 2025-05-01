@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Search, Info } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { CharacterSpell } from '@/types/character';
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -59,13 +60,30 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (!character.class) return [];
     
     // Берем заклинания для выбранного класса, исправляем на getSpellsByClass
-    let spellList = getSpellsByClass(character.class);
+    const classSpells = getSpellsByClass(character.class);
     
     // Добавляем расовые заклинания, если есть
+    let spellList: (CharacterSpell | string)[] = [...classSpells];
+    
     if (character.race) {
       const raceSpells = getRacialSpells(character.race, character.subrace);
       if (raceSpells.length > 0) {
-        spellList = [...spellList, ...raceSpells];
+        // Преобразуем строковые названия заклинаний в объекты CharacterSpell при объединении
+        const raceSpellObjects = raceSpells.map(spellName => {
+          const details = getSpellDetails(spellName);
+          return details || { 
+            name: spellName, 
+            level: 0, 
+            school: "Неизвестная",
+            castingTime: "Неизвестно",
+            range: "Неизвестно",
+            components: "Неизвестно",
+            duration: "Неизвестно",
+            description: "Нет описания",
+            classes: []
+          };
+        });
+        spellList = [...spellList, ...raceSpellObjects];
       }
     }
     
