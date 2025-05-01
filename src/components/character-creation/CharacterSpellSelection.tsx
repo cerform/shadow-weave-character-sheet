@@ -1,14 +1,15 @@
-
-import React, { useState, useEffect } from "react";
-import { getSpellsByClass, getSpellDetails } from "@/data/spells"; // Исправили getSpellsForClass на getSpellsByClass
-import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useContext, useState } from 'react';
+import { useCreationStep } from '@/hooks/useCreationStep';
+import { getSpellsByClass } from '@/data/spells'; // Исправлено с getSpellsForClass на getSpellsByClass
+import { CharacterContext } from '@/contexts/CharacterContext';
+import { NavigationButtons } from './NavigationButtons';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Search, Info } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMemo } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Search, Filter } from "lucide-react";
 
 interface CharacterSpellSelectionProps {
   character: any;

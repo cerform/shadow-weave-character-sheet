@@ -3,9 +3,9 @@ import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails } from "@/data/spells";
+import { getSpellDetails, getSpellsByLevel } from "@/data/spells"; // Обновленный импорт функций
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Book, Plus, Search, Filter } from "lucide-react"; // Добавили импорт Search
+import { Book, Plus, Search, Filter } from "lucide-react"; 
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

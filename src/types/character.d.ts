@@ -10,4 +10,6 @@ export interface CharacterSpell {
   description: string;
   higherLevels?: string;
   classes: string[];
+  ritual?: boolean;
+  concentration?: boolean;
 }
