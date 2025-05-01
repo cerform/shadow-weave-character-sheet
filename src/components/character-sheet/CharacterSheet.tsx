@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -184,7 +185,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <h3 className="text-lg font-semibold mb-2 text-primary">Навыки</h3>
               <div className="space-y-2">
-                {character.abilities && Object.entries(character.abilities).map(([ability, score]) => {
+                {character.abilities && Object.entries(character.abilities).map(([ability, score]: [string, any]) => {
                   const mod = Math.floor((Number(score) - 10) / 2);
                   const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
                   
