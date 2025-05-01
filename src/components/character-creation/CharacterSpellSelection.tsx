@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -45,6 +44,55 @@ const getRacialSpells = (race: string, subrace?: string): string[] => {
   return spells;
 };
 
+// Функция для определения максимального уровня заклинания доступного персонажу
+const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
+  // В D&D 5e для большинства полных заклинателей:
+  // Уровень 1-2: заклинания 1 круга
+  // Уровень 3-4: заклинания до 2 круга
+  // Уровень 5-6: заклинания до 3 круга
+  // Уровень 7-8: заклинания до 4 круга
+  // Уровень 9-10: заклинания до 5 круга
+  // и так далее...
+  
+  // Полные заклинатели (Волшебник, Жрец, Друид, Бард, Чародей)
+  if (["Волшебник", "Чародей", "Жрец", "Друид", "Бард"].includes(characterClass)) {
+    if (characterLevel >= 17) return 9;
+    if (characterLevel >= 15) return 8;
+    if (characterLevel >= 13) return 7;
+    if (characterLevel >= 11) return 6;
+    if (characterLevel >= 9) return 5;
+    if (characterLevel >= 7) return 4;
+    if (characterLevel >= 5) return 3;
+    if (characterLevel >= 3) return 2;
+    return 1;
+  }
+  
+  // Полу-заклинатели (Паладин, Следопыт)
+  if (["Паладин", "Следопыт"].includes(characterClass)) {
+    if (characterLevel >= 17) return 5;
+    if (characterLevel >= 13) return 4;
+    if (characterLevel >= 9) return 3;
+    if (characterLevel >= 5) return 2;
+    if (characterLevel >= 2) return 1;
+    return 0;
+  }
+  
+  // Чернокнижник (особая прогрессия)
+  if (characterClass === "Чернокнижник") {
+    if (characterLevel >= 17) return 9;
+    if (characterLevel >= 15) return 8;
+    if (characterLevel >= 13) return 7;
+    if (characterLevel >= 11) return 6;
+    if (characterLevel >= 9) return 5;
+    if (characterLevel >= 7) return 4;
+    if (characterLevel >= 5) return 3;
+    if (characterLevel >= 3) return 2;
+    return 1;
+  }
+  
+  return 0;
+};
+
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   character,
   updateCharacter,
@@ -55,15 +103,25 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<number | null>(null);
   
-  // Получаем доступные заклинания, учитывая класс, расу и уровень персонажа
+  // Максимальный уровень заклинаний, доступный персонажу
+  const maxSpellLevel = useMemo(() => {
+    return getMaxSpellLevel(character.class, character.level || 1);
+  }, [character.class, character.level]);
+  
+  // Получаем доступные заклинания, учитывая класс, расу, уровень персонажа и максимальный уровень заклинаний
   const availableSpells = useMemo(() => {
     if (!character.class) return [];
     
-    // Берем заклинания для выбранного класса, исправляем на getSpellsByClass
+    // Берем заклинания для выбранного класса
     const classSpells = getSpellsByClass(character.class);
     
+    // Фильтруем заклинания по максимальному уровню
+    const filteredClassSpells = classSpells.filter(spell => 
+      spell.level === 0 || spell.level <= maxSpellLevel
+    );
+    
     // Добавляем расовые заклинания, если есть
-    let spellList: (CharacterSpell | string)[] = [...classSpells];
+    let spellList: CharacterSpell[] = [...filteredClassSpells];
     
     if (character.race) {
       const raceSpells = getRacialSpells(character.race, character.subrace);
@@ -87,9 +145,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       }
     }
     
-    // Фильтруем по уровню персонажа и уровню заклинания
     return spellList;
-  }, [character.class, character.race, character.subrace, character.level]);
+  }, [character.class, character.race, character.subrace, character.level, maxSpellLevel]);
 
   // Фильтруем по поисковому запросу и уровню заклинания
   const filteredSpells = useMemo(() => {
@@ -108,8 +165,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Фильтр по уровню
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
-        const details = typeof spell === 'string' ? getSpellDetails(spell) : spell;
-        return details && details.level === levelFilter;
+        return spell.level === levelFilter;
       });
     }
     
@@ -195,11 +251,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     const spellsByLvl: { [key: number]: string[] } = {};
     filteredSpells.forEach(spell => {
       const spellName = typeof spell === 'string' ? spell : spell.name;
-      const details = typeof spell === 'string' ? getSpellDetails(spell) : spell;
-      if (details) {
-        if (!spellsByLvl[details.level]) spellsByLvl[details.level] = [];
-        spellsByLvl[details.level].push(spellName);
-      }
+      const level = typeof spell === 'string' ? (getSpellDetails(spell)?.level || 0) : spell.level;
+      if (!spellsByLvl[level]) spellsByLvl[level] = [];
+      spellsByLvl[level].push(spellName);
     });
     return spellsByLvl;
   }, [filteredSpells]);
@@ -225,6 +279,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <p className="text-muted-foreground">
           Осталось выбрать: <span className="font-medium text-green-500">{getSpellsRemaining()}</span>
         </p>
+        <p className="text-muted-foreground">
+          Максимальный уровень доступных заклинаний: <span className="font-medium text-primary">{maxSpellLevel > 0 ? maxSpellLevel : 'только заговоры'}</span>
+        </p>
       </div>
 
       <div className="mb-4">
@@ -236,7 +293,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           >
             Все уровни
           </Badge>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+          {/* Показываем фильтры только для доступных уровней заклинаний */}
+          {[0, ...Array.from({length: maxSpellLevel}, (_, i) => i + 1)].map(level => (
             <Badge 
               key={level}
               variant={levelFilter === level ? "default" : "outline"}
