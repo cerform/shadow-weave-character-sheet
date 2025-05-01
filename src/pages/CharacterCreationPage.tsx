@@ -32,7 +32,7 @@ const CharacterCreationPage = () => {
   };
 
   const goToHandbook = () => {
-    navigate('/handbook');
+    navigate('/library');
   };
 
   return (
