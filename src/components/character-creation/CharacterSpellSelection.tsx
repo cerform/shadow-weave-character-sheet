@@ -66,7 +66,7 @@ const matchesFilters = (
 };
 
 // Получаем доступные уровни заклинаний для класса и уровня
-const getAvailableSpellLevels = (characterClass: string, level: number = 1) => {
+const getAvailableSpellLevels = (characterClass: string, level: number = 1): number[] => {
   // Для первого уровня у большинства заклинателей доступны заговоры (0) и заклинания 1 уровня
   if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(characterClass)) {
     if (level >= 3) return [0, 1, 2]; // С 3 уровня - доступ к заклинаниям 2 уровня
@@ -86,7 +86,7 @@ const getAvailableSpellLevels = (characterClass: string, level: number = 1) => {
     return [];
   }
   
-  return 1;
+  return [0, 1]; // По умолчанию возвращаем массив с заговорами и 1 уровнем
 };
 
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
@@ -143,9 +143,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   
   // Получаем доступные уровни заклинаний для текущего класса
   const availableSpellLevels = useMemo(() => {
-    return Array.isArray(getAvailableSpellLevels(character.class)) 
-      ? getAvailableSpellLevels(character.class) 
-      : [0, 1]; // По умолчанию заговоры и 1 уровень
+    return getAvailableSpellLevels(character.class);
   }, [character.class]);
   
   // Обработчик добавления заклинания
@@ -279,10 +277,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       
       {/* Кнопки навигации */}
       <NavigationButtons 
-        nextLabel="Далее" 
+        allowNext={true}
+        nextStep={nextStep} 
+        prevStep={prevStep}
+        nextLabel="Далее"
         prevLabel="Назад"
-        onPrev={prevStep} 
-        onNext={nextStep}
       />
     </div>
   );
