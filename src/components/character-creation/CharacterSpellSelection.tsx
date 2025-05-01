@@ -218,7 +218,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Выберите заклинания</h2>
+      <h2 className="text-2xl font-bold mb-4 text-primary">Выберите заклинания</h2>
       
       <div className="mb-4 space-y-2">
         <p className="text-muted-foreground">
@@ -263,13 +263,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="flex-1">
-          <h3 className="font-semibold mb-2">Доступные заклинания ({filteredSpells.length})</h3>
+          <h3 className="font-semibold mb-2 text-primary">Доступные заклинания ({filteredSpells.length})</h3>
           <ScrollArea className="h-72 border rounded-md p-2">
             {Object.entries(spellsByLevel)
               .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
               .map(([level, spells]) => (
                 <div key={level} className="mb-4">
-                  <h4 className="text-sm font-medium mb-1">
+                  <h4 className="text-sm font-medium mb-1 text-primary/90">
                     {Number(level) === 0 ? "Заговоры" : `${level} уровень`}
                   </h4>
                   <div className="space-y-1">
@@ -285,10 +285,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                               disabled={!isSelected && getSpellsRemaining() <= 0}
                               className={`w-full p-2 text-left text-sm rounded transition-colors ${
                                 isSelected 
-                                  ? "bg-green-500 text-white" 
+                                  ? "bg-primary text-primary-foreground" 
                                   : getSpellsRemaining() <= 0 
                                     ? "bg-gray-300 dark:bg-gray-700 opacity-50 cursor-not-allowed" 
-                                    : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    : "bg-card hover:bg-primary/10 text-primary"
                               }`}
                             >
                               <div className="flex justify-between items-center">
@@ -302,30 +302,30 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                           <HoverCardContent className="w-96">
                             <div className="space-y-2">
                               <div className="flex justify-between">
-                                <h4 className="font-semibold">{spell}</h4>
+                                <h4 className="font-semibold text-primary">{spell}</h4>
                                 <Badge className={details?.school ? getSchoolColor(details.school) : ''}>
                                   {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">{details?.school}</p>
                               
-                              <div className="py-2 text-xs space-y-1">
-                                <div><span className="font-medium">Время накладывания:</span> {details?.castingTime}</div>
-                                <div><span className="font-medium">Дистанция:</span> {details?.range}</div>
-                                <div><span className="font-medium">Компоненты:</span> {details?.components}</div>
-                                <div><span className="font-medium">Длительность:</span> {details?.duration}</div>
+                              <div className="py-2 text-xs space-y-1 text-primary/80">
+                                <div><span className="font-medium text-primary">Время накладывания:</span> {details?.castingTime}</div>
+                                <div><span className="font-medium text-primary">Дистанция:</span> {details?.range}</div>
+                                <div><span className="font-medium text-primary">Компоненты:</span> {details?.components}</div>
+                                <div><span className="font-medium text-primary">Длительность:</span> {details?.duration}</div>
                               </div>
                               
-                              <p className="text-sm">{details?.description}</p>
+                              <p className="text-sm text-primary/90">{details?.description}</p>
                               
                               {details?.higherLevels && (
-                                <div className="text-sm pt-2">
-                                  <span className="font-medium">На более высоких уровнях: </span>
+                                <div className="text-sm pt-2 text-primary/90">
+                                  <span className="font-medium text-primary">На более высоких уровнях: </span>
                                   {details.higherLevels}
                                 </div>
                               )}
                               
-                              <div className="text-xs text-muted-foreground pt-2 border-t">
+                              <div className="text-xs text-muted-foreground pt-2 border-t border-primary/10">
                                 Классы: {details?.classes?.join(", ")}
                               </div>
                             </div>
@@ -346,7 +346,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </div>
         
         <div className="flex-1">
-          <h3 className="font-semibold mb-2">Выбранные заклинания ({selectedSpells.length})</h3>
+          <h3 className="font-semibold mb-2 text-primary">Выбранные заклинания ({selectedSpells.length})</h3>
           <ScrollArea className="h-72 border rounded-md p-2">
             <div className="space-y-1">
               {selectedSpells.length > 0 ? (
@@ -357,11 +357,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     <button
                       key={spell}
                       onClick={() => toggleSpell(spell)}
-                      className="w-full p-2 text-left text-sm rounded bg-green-500 text-white hover:bg-green-600"
+                      className="w-full p-2 text-left text-sm rounded bg-primary text-primary-foreground hover:bg-primary/80"
                     >
                       <div className="flex justify-between items-center">
                         <span>{spell}</span>
-                        <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+                        <Badge variant="outline" className="bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">
                           {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
                         </Badge>
                       </div>
