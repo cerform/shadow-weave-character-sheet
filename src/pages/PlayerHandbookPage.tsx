@@ -64,9 +64,10 @@ import {
   Twitter,
   User,
   Search,
+  Book,
 } from "lucide-react"
 import { CharacterSpell } from '@/types/character';
-import { spells, getSpellDetails } from '@/data/spells';
+import { spells } from '@/data/spells';
 
 const PlayerHandbookPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,9 +155,12 @@ const PlayerHandbookPage: React.FC = () => {
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Книга заклинаний</h1>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+          <Book className="size-6" />
+          Книга заклинаний D&D 5e
+        </h1>
         <p className="text-muted-foreground">
-          Справочник по заклинаниям мира D&D 5e
+          Полная библиотека заклинаний мира D&D 5e
         </p>
       </div>
 

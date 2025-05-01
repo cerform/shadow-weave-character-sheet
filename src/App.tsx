@@ -20,6 +20,7 @@ import DMSessionPage from "./pages/DMSessionPage";
 import JoinSessionPage from "./pages/JoinSessionPage";
 import PlayerSessionPage from "./pages/PlayerSessionPage";
 import PlayerHandbookPage from "./pages/PlayerHandbookPage";
+import HandbookPage from "./pages/HandbookPage";
 
 // Новые страницы
 import Home from "./pages/Home";
@@ -57,9 +58,10 @@ const App = () => {
                   <Route path="/create" element={<CharacterCreationPage />} />
                   <Route path="/sheet" element={<CharacterSheetPage />} />
 
-                  {/* Руководство игрока - исправлено, чтобы работали оба маршрута */}
-                  <Route path="/handbook" element={<PlayerHandbookPage />} />
-                  <Route path="/library" element={<PlayerHandbookPage />} />
+                  {/* Руководство игрока и книга заклинаний - разделены на два маршрута */}
+                  <Route path="/handbook" element={<HandbookPage />} />
+                  <Route path="/spellbook" element={<PlayerHandbookPage />} />
+                  <Route path="/library" element={<HandbookPage />} />
 
                   {/* Панель мастера */}
                   <Route path="/dm" element={<DMDashboardPage />} />

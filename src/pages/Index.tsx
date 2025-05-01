@@ -128,7 +128,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              {/* Руководство игрока перемещено сюда, в колонку мастера */}
+              {/* Две отдельные карточки для Руководства и Книги заклинаний */}
               <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -136,12 +136,29 @@ const Index = () => {
                     Руководство игрока
                   </CardTitle>
                   <CardDescription>
-                    Полное руководство по игре D&D 5e
+                    Правила и описание мира D&D 5e
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => navigate("/handbook")} className="w-full">
                     Открыть руководство
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Book className="size-5" />
+                    Книга заклинаний
+                  </CardTitle>
+                  <CardDescription>
+                    Полный список заклинаний D&D 5e
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate("/spellbook")} className="w-full">
+                    Открыть книгу заклинаний
                   </Button>
                 </CardContent>
               </Card>
