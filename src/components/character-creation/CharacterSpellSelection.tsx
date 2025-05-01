@@ -17,6 +17,30 @@ interface CharacterSpellSelectionProps {
   prevStep: () => void;
 }
 
+// Перемещаем функцию getRacialSpells выше для предотвращения ошибки
+const getRacialSpells = (race: string, subrace?: string): string[] => {
+  // Расовые заклинания для разных рас
+  const racialSpells: Record<string, string[]> = {
+    "Эльф": ["Танцующие огоньки"],
+    "Тифлинг": ["Чудотворство", "Адское возмездие"],
+    "Гном": ["Малая иллюзия"],
+    // Подрасы
+    "Высший эльф": ["Волшебная рука", "Фокусы"],
+    "Лесной эльф": ["Маскировка"],
+    "Тёмный эльф": ["Пляшущий свет", "Волшебная рука"]
+  };
+  
+  let spells: string[] = [];
+  if (race && racialSpells[race]) {
+    spells = [...spells, ...racialSpells[race]];
+  }
+  if (subrace && racialSpells[subrace]) {
+    spells = [...spells, ...racialSpells[subrace]];
+  }
+  
+  return spells;
+};
+
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   character,
   updateCharacter,
@@ -71,6 +95,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     });
   }, [character.class, character.race, character.subrace, character.level]);
 
+  // ... оставляем остальной код без изменений
+  
   // Фильтруем по поисковому запросу и уровню заклинания
   const filteredSpells = useMemo(() => {
     let filtered = availableSpells;
@@ -103,29 +129,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         setSelectedSpells([...selectedSpells, spell]);
       }
     }
-  };
-
-  const getRacialSpells = (race: string, subrace?: string): string[] => {
-    // Расовые заклинания для разных рас
-    const racialSpells: Record<string, string[]> = {
-      "Эльф": ["Танцующие огоньки"],
-      "Тифлинг": ["Чудотворство", "Адское возмездие"],
-      "Гном": ["Малая иллюзия"],
-      // Подрасы
-      "Высший эльф": ["Волшебная рука", "Фокусы"],
-      "Лесной эльф": ["Маскировка"],
-      "Тёмный эльф": ["Пляшущий свет", "Волшебная рука"]
-    };
-    
-    let spells: string[] = [];
-    if (race && racialSpells[race]) {
-      spells = [...spells, ...racialSpells[race]];
-    }
-    if (subrace && racialSpells[subrace]) {
-      spells = [...spells, ...racialSpells[subrace]];
-    }
-    
-    return spells;
   };
 
   const getMaxSpells = () => {

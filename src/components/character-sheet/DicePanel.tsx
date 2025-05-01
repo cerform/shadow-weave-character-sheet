@@ -39,6 +39,12 @@ export const DicePanel = () => {
     }, 500);
   };
   
+  // Сброс состояния броска, чтобы кнопку можно было нажать снова
+  const resetRoll = () => {
+    setDiceResult(null);
+    setIsRolling(false);
+  };
+  
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <h3 className="text-lg font-semibold mb-2">Кубики</h3>
@@ -72,8 +78,18 @@ export const DicePanel = () => {
       )}
       
       {diceResult && !isRolling && (
-        <div className="p-2 mb-2 bg-primary/10 rounded-md text-center font-medium">
+        <div className="p-2 mb-4 bg-primary/10 rounded-md text-center font-medium">
           {diceResult}
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetRoll} 
+              className="w-full"
+            >
+              Бросить снова
+            </Button>
+          </div>
         </div>
       )}
       
