@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
@@ -14,8 +13,9 @@ interface CharacterAbilityScoresProps {
   diceResults: number[][];
   getModifier: (score: number) => string;
   rollAllAbilities: () => void;
-  rollSingleAbility?: () => { rolls: number[]; total: number };
+  rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
   abilityScorePoints?: number;
+  rollsHistory?: { ability: string, rolls: number[], total: number }[];
 }
 
 const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
@@ -28,7 +28,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   getModifier,
   rollAllAbilities,
   rollSingleAbility,
-  abilityScorePoints = 27
+  abilityScorePoints = 27,
+  rollsHistory = []
 }) => {
   const [stats, setStats] = useState({
     strength: character.stats.strength,
