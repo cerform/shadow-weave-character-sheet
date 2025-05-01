@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import CharacterRaceSelection from "./CharacterRaceSelection";
 import CharacterClassSelection from "./CharacterClassSelection";
+import CharacterLevelSelection from "./CharacterLevelSelection";
 import CharacterSpellSelection from "./CharacterSpellSelection";
 import CharacterBasicInfo from "./CharacterBasicInfo";
 import CharacterAbilityScores from "./CharacterAbilityScores";
@@ -40,7 +41,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   
   // Determine the actual step index based on character class (magic vs non-magic)
   const getAdjustedStepIndex = (baseIndex: number) => {
-    if (!isMagicClass(character.class) && baseIndex > 3) {
+    if (!isMagicClass(character.class) && baseIndex > 4) {
       return baseIndex - 1;
     }
     return baseIndex;
@@ -48,7 +49,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
 
   // useEffect to skip spell selection step for non-magic classes
   useEffect(() => {
-    if (currentStep === 3 && character.class && !isMagicClass(character.class)) {
+    if (currentStep === 4 && character.class && !isMagicClass(character.class)) {
       nextStep();
     }
   }, [currentStep, character.class, isMagicClass, nextStep]);
@@ -73,6 +74,15 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         />
       );
     case 2:
+      return (
+        <CharacterLevelSelection
+          character={character}
+          updateCharacter={updateCharacter}
+          nextStep={nextStep}
+          prevStep={prevStep}
+        />
+      );
+    case 3:
       return (
         <div>
           <div className="mb-6">
@@ -141,7 +151,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         </div>
       );
-    case 3:
+    case 4:
       // Return spell selection for magic classes, or a loading placeholder for non-magic classes
       // that will be redirected by the useEffect
       return isMagicClass(character.class) ? (
@@ -154,7 +164,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       ) : (
         <div className="text-center py-4">Переход...</div>
       );
-    case 4:
+    case 5:
       return (
         <CharacterEquipmentSelection
           character={character}
@@ -163,7 +173,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           prevStep={prevStep}
         />
       );
-    case 5:
+    case 6:
       return (
         <CharacterLanguagesSelection
           character={character}
@@ -172,7 +182,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           prevStep={prevStep}
         />
       );
-    case 6:
+    case 7:
       return (
         <CharacterBasicInfo
           character={character}
@@ -181,7 +191,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           prevStep={prevStep}
         />
       );
-    case 7:
+    case 8:
       return (
         <CharacterBackground
           character={character}
@@ -190,7 +200,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           prevStep={prevStep}
         />
       );
-    case 8:
+    case 9:
       return (
         <CharacterReview
           character={character}

@@ -1,10 +1,10 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, Book, User, Swords, Palette } from "lucide-react";
+import { FileUp, Plus, Users, Book, User, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ThemeSelector from "@/components/ThemeSelector";
+import ThemeSelector from "@/components/character-sheet/ThemeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Index = () => {
@@ -16,6 +16,14 @@ const Index = () => {
     if (file) {
       // TODO: Implement character loading logic
       console.log("Loading character from file:", file.name);
+    }
+  };
+
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      // TODO: Implement PDF character import
+      console.log("Loading character from PDF:", file.name);
     }
   };
 
@@ -53,7 +61,7 @@ const Index = () => {
                   
                   <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
                     <FileUp className="size-4" />
-                    Загрузить персонажа
+                    Загрузить персонажа (JSON)
                   </Button>
                   <input
                     type="file"
@@ -61,6 +69,18 @@ const Index = () => {
                     accept=".json"
                     className="hidden"
                     onChange={handleFileUpload}
+                  />
+                  
+                  <Button variant="outline" onClick={() => document.getElementById("pdf-file")?.click()} className="w-full gap-2">
+                    <FileUp className="size-4" />
+                    Импорт из PDF
+                  </Button>
+                  <input
+                    type="file"
+                    id="pdf-file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handlePdfUpload}
                   />
                 </CardContent>
               </Card>
@@ -117,21 +137,6 @@ const Index = () => {
                   <Button onClick={() => navigate("/library")} className="w-full">
                     Открыть справочник
                   </Button>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="size-5" />
-                    Настройка темы
-                  </CardTitle>
-                  <CardDescription>
-                    Выберите внешний вид приложения
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ThemeSelector />
                 </CardContent>
               </Card>
             </div>

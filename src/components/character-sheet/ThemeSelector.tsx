@@ -2,19 +2,20 @@
 import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { Button } from "@/components/ui/button";
-import { Leaf, Sword, Wand } from "lucide-react";
+import { Leaf, Sword, Wand, Feather, Sparkles, Dices } from "lucide-react";
+import { themes } from "@/lib/themes";
 
 export const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
   
-  const themes = [
-    { id: 'default', name: 'Стандартная', icon: null },
-    { id: 'warlock', name: 'Чернокнижник', icon: null },
-    { id: 'wizard', name: 'Волшебник', icon: <Wand className="h-4 w-4 mr-1" /> },
-    { id: 'druid', name: 'Друид', icon: <Leaf className="h-4 w-4 mr-1" /> },
-    { id: 'warrior', name: 'Воин', icon: <Sword className="h-4 w-4 mr-1" /> },
-    { id: 'bard', name: 'Бард', icon: null }
-  ];
+  const themeIcons = {
+    'default': <Dices className="h-4 w-4 mr-1" />,
+    'warlock': <Sparkles className="h-4 w-4 mr-1" />,
+    'wizard': <Wand className="h-4 w-4 mr-1" />,
+    'druid': <Leaf className="h-4 w-4 mr-1" />,
+    'warrior': <Sword className="h-4 w-4 mr-1" />,
+    'bard': <Feather className="h-4 w-4 mr-1" />
+  };
   
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme as any);
@@ -24,17 +25,17 @@ export const ThemeSelector = () => {
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium">Тема оформления</p>
-      <div className="flex flex-wrap gap-2">
-        {themes.map((t) => (
+      <div className="flex flex-wrap gap-2 justify-center">
+        {Object.keys(themes).map((themeId) => (
           <Button 
-            key={t.id}
-            variant={theme === t.id ? "default" : "outline"} 
+            key={themeId}
+            variant={theme === themeId ? "default" : "outline"} 
             size="sm"
-            onClick={() => handleThemeChange(t.id)}
+            onClick={() => handleThemeChange(themeId)}
             className="flex items-center"
           >
-            {t.icon}
-            {t.name}
+            {themeIcons[themeId as keyof typeof themeIcons]}
+            {themes[themeId as keyof typeof themes].name}
           </Button>
         ))}
       </div>

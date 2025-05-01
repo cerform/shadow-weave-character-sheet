@@ -23,6 +23,7 @@ import PlayerSessionPage from "./pages/PlayerSessionPage";
 // Новые страницы
 import Home from "./pages/Home";
 import GameRoomPage from "./pages/GameRoomPage";
+import BattleScenePage from "./pages/BattleScenePage";
 
 // 🎯 Наша новая страница битвы
 import PlayBattlePage from "./pages/PlayBattlePage";
@@ -58,6 +59,7 @@ const App = () => {
                   {/* Панель мастера */}
                   <Route path="/dm" element={<DMDashboardPage />} />
                   <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
+                  <Route path="/dm/battle" element={<BattleScenePage />} />
 
                   {/* Присоединение игрока */}
                   <Route path="/join" element={<JoinSessionPage />} />
