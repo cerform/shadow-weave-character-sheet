@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { SPELLS, SPELL_DETAILS } from "@/data/spells";
+import { getSpellsForClass, getSpellDetails } from "@/data/spells";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -26,8 +27,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [filteredSpells, setFilteredSpells] = useState<string[]>([]);
 
   useEffect(() => {
-    if (character.class && SPELLS[character.class]) {
-      const spellList = SPELLS[character.class];
+    if (character.class) {
+      const spellList = getSpellsForClass(character.class);
       setAvailableSpells(spellList);
       setFilteredSpells(spellList);
     } else {
@@ -107,19 +108,20 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return null;
   }
 
-  // Create a placeholder spell details if not available in our data
-  const getSpellDetails = (spellName: string) => {
-    if (SPELL_DETAILS[spellName]) {
-      return SPELL_DETAILS[spellName];
-    }
-    return {
-      level: 1,
-      school: "Неизвестная",
-      castingTime: "1 действие",
-      range: "30 футов",
-      duration: "Мгновенная",
-      description: "Подробное описание заклинания недоступно."
+  const getSchoolColor = (school: string): string => {
+    const schoolColors: {[key: string]: string} = {
+      "Воплощение": "bg-red-500/20 text-red-700 dark:text-red-300",
+      "Ограждение": "bg-blue-500/20 text-blue-700 dark:text-blue-300",
+      "Иллюзия": "bg-purple-500/20 text-purple-700 dark:text-purple-300",
+      "Некромантия": "bg-green-500/20 text-green-700 dark:text-green-300",
+      "Призывание": "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+      "Прорицание": "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300",
+      "Очарование": "bg-pink-500/20 text-pink-700 dark:text-pink-300",
+      "Трансмутация": "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+      "Зачарование": "bg-violet-500/20 text-violet-700 dark:text-violet-300"
     };
+    
+    return schoolColors[school] || "bg-primary/20";
   };
 
   return (
@@ -150,48 +152,48 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           <h3 className="font-semibold mb-2">Доступные заклинания ({filteredSpells.length})</h3>
           <ScrollArea className="h-72 border rounded-md p-2">
             <div className="space-y-1">
-              {filteredSpells.map((spell) => (
-                <HoverCard key={spell}>
-                  <HoverCardTrigger asChild>
-                    <button
-                      onClick={() => toggleSpell(spell)}
-                      disabled={!selectedSpells.includes(spell) && getSpellsRemaining() <= 0}
-                      className={`w-full p-2 text-left text-sm rounded transition-colors ${
-                        selectedSpells.includes(spell) 
-                          ? "bg-green-500 text-white" 
-                          : getSpellsRemaining() <= 0 
-                            ? "bg-gray-300 dark:bg-gray-700 opacity-50 cursor-not-allowed" 
-                            : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                      }`}
-                    >
-                      {spell}
-                    </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <h4 className="font-semibold">{spell}</h4>
-                        <span className="text-xs bg-primary/20 px-2 py-1 rounded">
-                          {getSpellDetails(spell).level === 0 ? "Заговор" : `${getSpellDetails(spell).level} уровень`}
-                        </span>
+              {filteredSpells.map((spell) => {
+                const details = getSpellDetails(spell);
+                
+                return (
+                  <HoverCard key={spell}>
+                    <HoverCardTrigger asChild>
+                      <button
+                        onClick={() => toggleSpell(spell)}
+                        disabled={!selectedSpells.includes(spell) && getSpellsRemaining() <= 0}
+                        className={`w-full p-2 text-left text-sm rounded transition-colors ${
+                          selectedSpells.includes(spell) 
+                            ? "bg-green-500 text-white" 
+                            : getSpellsRemaining() <= 0 
+                              ? "bg-gray-300 dark:bg-gray-700 opacity-50 cursor-not-allowed" 
+                              : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span>{spell}</span>
+                          <Badge variant="outline" className={details?.school ? getSchoolColor(details.school) : ''}>
+                            {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
+                          </Badge>
+                        </div>
+                      </button>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <h4 className="font-semibold">{spell}</h4>
+                          <Badge className={details?.school ? getSchoolColor(details.school) : ''}>
+                            {details?.school}
+                          </Badge>
+                        </div>
+                        <p className="text-sm mt-2">{details?.description}</p>
+                        <div className="text-xs text-muted-foreground pt-2 border-t">
+                          Классы: {details?.classes.join(", ")}
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">{getSpellDetails(spell).school}</p>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div>
-                          <span className="font-medium">Время накладывания:</span> {getSpellDetails(spell).castingTime}
-                        </div>
-                        <div>
-                          <span className="font-medium">Дистанция:</span> {getSpellDetails(spell).range}
-                        </div>
-                        <div>
-                          <span className="font-medium">Длительность:</span> {getSpellDetails(spell).duration}
-                        </div>
-                      </div>
-                      <p className="text-sm mt-2">{getSpellDetails(spell).description}</p>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              ))}
+                    </HoverCardContent>
+                  </HoverCard>
+                );
+              })}
               
               {filteredSpells.length === 0 && (
                 <div className="py-4 text-center text-muted-foreground">
@@ -207,15 +209,24 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           <ScrollArea className="h-72 border rounded-md p-2">
             <div className="space-y-1">
               {selectedSpells.length > 0 ? (
-                selectedSpells.map((spell) => (
-                  <button
-                    key={spell}
-                    onClick={() => toggleSpell(spell)}
-                    className="w-full p-2 text-left text-sm rounded bg-green-500 text-white hover:bg-green-600"
-                  >
-                    {spell}
-                  </button>
-                ))
+                selectedSpells.map((spell) => {
+                  const details = getSpellDetails(spell);
+                  
+                  return (
+                    <button
+                      key={spell}
+                      onClick={() => toggleSpell(spell)}
+                      className="w-full p-2 text-left text-sm rounded bg-green-500 text-white hover:bg-green-600"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{spell}</span>
+                        <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+                          {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })
               ) : (
                 <div className="py-4 text-center text-muted-foreground">
                   Вы еще не выбрали ни одного заклинания

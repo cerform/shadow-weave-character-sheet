@@ -57,8 +57,9 @@ const App = () => {
                   <Route path="/create" element={<CharacterCreationPage />} />
                   <Route path="/sheet" element={<CharacterSheetPage />} />
 
-                  {/* Руководство игрока */}
+                  {/* Руководство игрока - исправлено, чтобы работали оба маршрута */}
                   <Route path="/handbook" element={<PlayerHandbookPage />} />
+                  <Route path="/library" element={<PlayerHandbookPage />} />
 
                   {/* Панель мастера */}
                   <Route path="/dm" element={<DMDashboardPage />} />

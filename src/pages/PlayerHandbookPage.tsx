@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,93 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/contexts/ThemeContext";
 import { races } from "@/data/races";
 import { classes } from "@/data/classes";
+import { spells } from "@/data/spells";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 const PlayerHandbookPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
+  const [spellLevelFilter, setSpellLevelFilter] = useState<number | null>(null);
+  const [spellSchoolFilter, setSpellSchoolFilter] = useState<string | null>(null);
+  const [spellClassFilter, setSpellClassFilter] = useState<string | null>(null);
+  
+  // Get unique spell schools
+  const spellSchools = useMemo(() => {
+    const schools = new Set<string>();
+    spells.forEach(spell => {
+      schools.add(spell.school);
+    });
+    return Array.from(schools).sort();
+  }, []);
+  
+  // Get unique classes from all spells
+  const spellClasses = useMemo(() => {
+    const classSet = new Set<string>();
+    spells.forEach(spell => {
+      spell.classes.forEach(cls => {
+        classSet.add(cls);
+      });
+    });
+    return Array.from(classSet).sort();
+  }, []);
+  
+  // Filter spells based on search and filters
+  const filteredSpells = useMemo(() => {
+    return spells.filter(spell => {
+      // Filter by search query
+      if (searchQuery && !spell.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+          !spell.description.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by spell level
+      if (spellLevelFilter !== null && spell.level !== spellLevelFilter) {
+        return false;
+      }
+      
+      // Filter by spell school
+      if (spellSchoolFilter && spell.school !== spellSchoolFilter) {
+        return false;
+      }
+      
+      // Filter by class
+      if (spellClassFilter && !spell.classes.includes(spellClassFilter)) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [searchQuery, spellLevelFilter, spellSchoolFilter, spellClassFilter]);
+  
+  // Group filtered spells by level
+  const spellsByLevel = useMemo(() => {
+    return filteredSpells.reduce((acc: { [key: number]: typeof spells }, spell) => {
+      if (!acc[spell.level]) {
+        acc[spell.level] = [];
+      }
+      acc[spell.level].push(spell);
+      return acc;
+    }, {});
+  }, [filteredSpells]);
+  
+  const getSchoolColor = (school: string): string => {
+    const schoolColors: {[key: string]: string} = {
+      "Воплощение": "bg-red-500/20 text-red-700 dark:text-red-300",
+      "Ограждение": "bg-blue-500/20 text-blue-700 dark:text-blue-300",
+      "Иллюзия": "bg-purple-500/20 text-purple-700 dark:text-purple-300",
+      "Некромантия": "bg-green-500/20 text-green-700 dark:text-green-300",
+      "Призывание": "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+      "Прорицание": "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300",
+      "Очарование": "bg-pink-500/20 text-pink-700 dark:text-pink-300",
+      "Трансмутация": "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+      "Зачарование": "bg-violet-500/20 text-violet-700 dark:text-violet-300"
+    };
+    
+    return schoolColors[school] || "bg-primary/20";
+  };
   
   return (
     <div className={`min-h-screen bg-background text-foreground theme-${theme} p-6`}>
@@ -251,7 +334,7 @@ const PlayerHandbookPage = () => {
             </NavigationMenuList>
           </NavigationMenu>
 
-          <Tabs defaultValue="races" className="w-full">
+          <Tabs defaultValue="spells" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="races">Расы</TabsTrigger>
               <TabsTrigger value="classes">Классы</TabsTrigger>
@@ -437,16 +520,148 @@ const PlayerHandbookPage = () => {
                     Разные классы готовят и используют заклинания по-разному:
                   </p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li><span className="font-medium">Волшебники:</span> Записывают заклинания в книгу и готовят их после отдыха.</li>
-                    <li><span className="font-medium">Жрецы и Друиды:</span> Имеют доступ ко всем заклинаниям своего класса, выбирая, какие подготовить после отдыха.</li>
-                    <li><span className="font-medium">Колдуны и Барды:</span> Знают ограниченное количество заклинаний, которые всегда готовы к использованию.</li>
+                    <li><span className="font-medium">Маг:</span> Записывает заклинания в книгу и готовит их после отдыха.</li>
+                    <li><span className="font-medium">Клирик и Друид:</span> Имеют доступ ко всем заклинаниям своего класса, выбирая, какие подготовить после отдыха.</li>
+                    <li><span className="font-medium">Колдун и Бард:</span> Знают ограниченное количество заклинаний, которые всегда готовы к использованию.</li>
                   </ul>
                 </CardContent>
               </Card>
               
-              <p className="text-lg font-semibold mb-4">
-                Скоро здесь появится полный список заклинаний D&D 5e с описаниями, компонентами и требованиями к классам.
-              </p>
+              {/* Фильтры для заклинаний */}
+              <div className="flex flex-wrap gap-4 mb-6">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Уровень</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge 
+                      variant={spellLevelFilter === null ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setSpellLevelFilter(null)}
+                    >
+                      Все
+                    </Badge>
+                    {Array.from(Array(10).keys()).map(level => (
+                      <Badge
+                        key={level}
+                        variant={spellLevelFilter === level ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setSpellLevelFilter(level)}
+                      >
+                        {level === 0 ? "Заговор" : `${level} круг`}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Школа магии</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge 
+                      variant={spellSchoolFilter === null ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setSpellSchoolFilter(null)}
+                    >
+                      Все
+                    </Badge>
+                    {spellSchools.map(school => (
+                      <Badge
+                        key={school}
+                        variant={spellSchoolFilter === school ? "default" : "outline"}
+                        className={`cursor-pointer ${spellSchoolFilter === school ? "" : getSchoolColor(school)}`}
+                        onClick={() => setSpellSchoolFilter(school)}
+                      >
+                        {school}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Класс</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge 
+                      variant={spellClassFilter === null ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setSpellClassFilter(null)}
+                    >
+                      Все
+                    </Badge>
+                    {spellClasses.map(cls => (
+                      <Badge
+                        key={cls}
+                        variant={spellClassFilter === cls ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setSpellClassFilter(cls)}
+                      >
+                        {cls}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Список заклинаний */}
+              <ScrollArea className="h-[600px]">
+                {Object.entries(spellsByLevel)
+                  .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
+                  .map(([level, levelSpells]) => (
+                    <div key={level} className="mb-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center">
+                        <Badge variant="outline" className="mr-2">
+                          {level === "0" ? "Заговоры" : `Заклинания ${level} круга`}
+                        </Badge>
+                        <span className="text-muted-foreground text-sm">({levelSpells.length})</span>
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {levelSpells.map(spell => (
+                          <HoverCard key={spell.name}>
+                            <HoverCardTrigger asChild>
+                              <Card className="cursor-pointer hover:bg-accent/5">
+                                <CardHeader className="py-3 px-4">
+                                  <div className="flex justify-between items-center">
+                                    <CardTitle className="text-base">{spell.name}</CardTitle>
+                                    <Badge className={getSchoolColor(spell.school)}>
+                                      {spell.school}
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                              </Card>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-96">
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <h3 className="font-semibold text-lg">{spell.name}</h3>
+                                  <Badge className={getSchoolColor(spell.school)}>
+                                    {spell.school}
+                                  </Badge>
+                                </div>
+                                <p>{spell.description}</p>
+                                <div className="text-xs text-muted-foreground pt-2 border-t">
+                                  <p><span className="font-medium">Уровень:</span> {spell.level === 0 ? "Заговор" : `${spell.level} круг`}</p>
+                                  <p><span className="font-medium">Классы:</span> {spell.classes.join(", ")}</p>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                
+                {Object.keys(spellsByLevel).length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-64">
+                    <p className="text-muted-foreground">Не найдено заклинаний, соответствующих вашим фильтрам</p>
+                    <Button variant="outline" className="mt-4" onClick={() => {
+                      setSpellLevelFilter(null);
+                      setSpellSchoolFilter(null);
+                      setSpellClassFilter(null);
+                      setSearchQuery("");
+                    }}>
+                      Сбросить все фильтры
+                    </Button>
+                  </div>
+                )}
+              </ScrollArea>
             </TabsContent>
           </Tabs>
         </div>
