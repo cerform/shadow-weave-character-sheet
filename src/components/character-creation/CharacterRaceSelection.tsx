@@ -46,7 +46,8 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   // Find the selected race from data
   const selectedRaceData = races.find((race) => race.name === selectedRace);
   const hasSubraces = selectedRaceData?.subRaces && selectedRaceData.subRaces.length > 0;
-  const canProceed = selectedRace && (!hasSubraces || selectedSubrace);
+  // Ensure canProceed is strictly a boolean value
+  const canProceed = Boolean(selectedRace && (!hasSubraces || selectedSubrace));
 
   // Get subrace details if available
   const getSubraceDetails = () => {
