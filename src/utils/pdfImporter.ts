@@ -1,8 +1,8 @@
-
 import * as pdfjs from 'pdfjs-dist';
 
-// Загружаем worker для pdf.js
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Загружаем локальный worker для pdf.js вместо удаленного CDN
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs';
+pdfjs.GlobalWorkerOptions.workerPort = new Worker(pdfWorker);
 
 interface PDFField {
   name: string;

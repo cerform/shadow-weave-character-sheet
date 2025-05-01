@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileUp, Loader2 } from 'lucide-react';
+import { FileUp, Loader2, AlertCircle } from 'lucide-react';
 import { extractCharacterDataFromPdf, convertExtractedDataToCharacter } from '@/utils/pdfImporter';
 import { useToast } from '@/components/ui/use-toast';
 import { CharacterContext } from '@/contexts/CharacterContext';
@@ -12,6 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 const PdfCharacterImport: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { setCharacter } = React.useContext(CharacterContext);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,6 +21,9 @@ const PdfCharacterImport: React.FC = () => {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Сбрасываем ошибку при новой попытке
+    setErrorMessage(null);
 
     if (file.type !== 'application/pdf') {
       toast({
@@ -59,7 +63,7 @@ const PdfCharacterImport: React.FC = () => {
       // Показываем уведомление об успешной загрузке
       toast({
         title: 'Персонаж импортирован',
-        description: `${characterData.name} успешно импортирован из PDF!`,
+        description: `${characterData.name || 'Персонаж'} успешно импортирован из PDF!`,
       });
       
       // Переходим к листу персонажа
@@ -67,9 +71,11 @@ const PdfCharacterImport: React.FC = () => {
 
     } catch (error) {
       console.error('Ошибка загрузки PDF:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setErrorMessage(errorMsg);
       toast({
         title: 'Ошибка импорта',
-        description: `Не удалось импортировать персонажа из PDF: ${error}`,
+        description: `Не удалось импортировать персонажа из PDF`,
         variant: 'destructive'
       });
     } finally {
@@ -122,6 +128,18 @@ const PdfCharacterImport: React.FC = () => {
               <p className="text-xs text-right mt-1 text-muted-foreground">
                 {Math.round(uploadProgress)}%
               </p>
+            </div>
+          )}
+          
+          {errorMessage && (
+            <div className="w-full p-3 my-2 bg-destructive/10 border border-destructive rounded-md">
+              <div className="flex items-start gap-2 text-destructive">
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <div>
+                  <h4 className="font-medium">Ошибка импорта</h4>
+                  <p className="text-sm">{errorMessage}</p>
+                </div>
+              </div>
             </div>
           )}
           
