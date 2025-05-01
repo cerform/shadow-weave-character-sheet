@@ -7,6 +7,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -22,38 +23,65 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   prevStep,
 }) => {
   const [selectedSpells, setSelectedSpells] = useState<string[]>(character.spells || []);
-  const [availableSpells, setAvailableSpells] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filteredSpells, setFilteredSpells] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (character.class) {
-      const spellList = getSpellsForClass(character.class);
-      setAvailableSpells(spellList);
-      setFilteredSpells(spellList);
-    } else {
-      setAvailableSpells([]);
-      setFilteredSpells([]);
+  
+  // Получаем доступные заклинания, учитывая класс, расу и уровень персонажа
+  const availableSpells = useMemo(() => {
+    if (!character.class) return [];
+    
+    // Берем заклинания для выбранного класса
+    let spellList = getSpellsForClass(character.class);
+    
+    // Добавляем расовые заклинания, если есть
+    if (character.race) {
+      const raceSpells = getRacialSpells(character.race, character.subrace);
+      if (raceSpells.length > 0) {
+        spellList = [...spellList, ...raceSpells];
+      }
     }
-  }, [character.class]);
+    
+    // Фильтруем по уровню персонажа и уровню заклинания
+    return spellList.filter(spell => {
+      const details = getSpellDetails(spell);
+      // Ограничиваем доступ к заклинаниям высокого уровня
+      if (!details) return false;
+      
+      // Для заклинателей полного круга (Волшебник, Чародей, Жрец и т.д.)
+      if (["Волшебник", "Чародей", "Жрец", "Друид", "Бард"].includes(character.class)) {
+        // Максимальный уровень заклинаний
+        const maxSpellLevel = Math.min(Math.ceil(character.level / 2), 9);
+        return details.level <= maxSpellLevel;
+      } 
+      // Для половинных заклинателей (Паладин, Следопыт)
+      else if (["Паладин", "Следопыт"].includes(character.class)) {
+        // Начинают с 2 уровня и получают заклинания медленнее
+        if (character.level < 2) return details.level === 0; // Только заговоры на 1 уровне
+        const maxSpellLevel = Math.min(Math.ceil((character.level - 1) / 4) + 1, 5);
+        return details.level <= maxSpellLevel;
+      }
+      // Для чернокнижников с особым прогрессом заклинаний
+      else if (character.class === "Чернокнижник") {
+        const maxSpellLevel = Math.min(Math.ceil(character.level / 2), 5);
+        return details.level <= maxSpellLevel;
+      }
+      
+      return true;
+    });
+  }, [character.class, character.race, character.subrace, character.level]);
 
-  useEffect(() => {
-    if (searchQuery) {
-      setFilteredSpells(
-        availableSpells.filter((spell) =>
-          spell.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredSpells(availableSpells);
-    }
+  // Фильтруем по поисковому запросу
+  const filteredSpells = useMemo(() => {
+    if (!searchQuery) return availableSpells;
+    return availableSpells.filter((spell) =>
+      spell.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   }, [searchQuery, availableSpells]);
 
   const toggleSpell = (spell: string) => {
     if (selectedSpells.includes(spell)) {
       setSelectedSpells(selectedSpells.filter((s) => s !== spell));
     } else {
-      // Check if we're at the maximum spells limit
+      // Проверяем лимит заклинаний
       const maxSpells = getMaxSpells();
       if (selectedSpells.length < maxSpells) {
         setSelectedSpells([...selectedSpells, spell]);
@@ -61,22 +89,57 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
   };
 
+  const getRacialSpells = (race: string, subrace?: string): string[] => {
+    // Расовые заклинания для разных рас
+    const racialSpells: Record<string, string[]> = {
+      "Эльф": ["Танцующие огоньки"],
+      "Тифлинг": ["Чудотворство", "Адское возмездие"],
+      "Гном": ["Малая иллюзия"],
+      // Можно добавить подрасы
+      "Высший эльф": ["Волшебная рука", "Фокусы"],
+      "Лесной эльф": ["Маскировка"],
+      "Тёмный эльф": ["Пляшущий свет", "Волшебная рука"]
+    };
+    
+    let spells: string[] = [];
+    if (race && racialSpells[race]) {
+      spells = [...spells, ...racialSpells[race]];
+    }
+    if (subrace && racialSpells[subrace]) {
+      spells = [...spells, ...racialSpells[subrace]];
+    }
+    
+    return spells;
+  };
+
   const getMaxSpells = () => {
     const level = character.level || 1;
 
-    if (character.class === "Волшебник" || character.class === "Чародей") {
-      return Math.min(6 + Math.floor(level / 2), 15);
+    // Количество заклинаний по классу
+    if (character.class === "Волшебник") {
+      // 6 + уровень + мод интеллекта
+      const intMod = Math.floor((character.stats?.intelligence - 10) / 2) || 0;
+      return 6 + level + intMod;
+    }
+    if (character.class === "Чародей" || character.class === "Бард") {
+      // Известные заклинания - уровень + 1 для чародея
+      return level + 1 + 4;
     }
     if (character.class === "Чернокнижник") {
-      return Math.min(2 + Math.floor(level / 2), 8);
+      // Меньше заклинаний, но они всегда максимального уровня
+      return Math.min(2 + Math.floor((level - 1) / 2), 15);
     }
-    if (character.class === "Жрец" || character.class === "Друид" || character.class === "Бард") {
-      return Math.min(4 + Math.floor(level / 3), 12);
+    if (character.class === "Жрец" || character.class === "Друид") {
+      // Уровень + мод мудрости
+      const wisMod = Math.floor((character.stats?.wisdom - 10) / 2) || 0;
+      return level + wisMod + 2;
     }
     if (character.class === "Паладин" || character.class === "Следопыт") {
-      return Math.min(2 + Math.floor(level / 3), 8);
+      // Половина уровня + мод базовой характеристики
+      const mainStatMod = Math.floor((character.stats?.wisdom - 10) / 2) || 0;
+      return Math.floor(level / 2) + mainStatMod + 1;
     }
-    return 0; // Non-magic classes
+    return 0; // Не-заклинательные классы
   };
 
   const getSpellsRemaining = () => {
@@ -85,28 +148,15 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   };
 
   const canContinue = () => {
-    // Magic classes must select at least 1 spell to continue
-    if (character.class === "Волшебник" || character.class === "Чародей" || 
-        character.class === "Жрец" || character.class === "Друид" || 
-        character.class === "Бард" || character.class === "Паладин" || 
-        character.class === "Следопыт" || character.class === "Чернокнижник") {
-      return selectedSpells.length > 0;
-    }
-    return true; // Non-magical classes can skip
+    // Мы разрешаем продолжить даже без заклинаний для магических классов,
+    // но показываем предупреждение
+    return true;
   };
 
   const handleNext = () => {
     updateCharacter({ spells: selectedSpells });
     nextStep();
   };
-
-  // Skip this step for non-magical classes
-  if (availableSpells.length === 0) {
-    useEffect(() => {
-      nextStep();
-    }, []);
-    return null;
-  }
 
   const getSchoolColor = (school: string): string => {
     const schoolColors: {[key: string]: string} = {
@@ -123,6 +173,16 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     
     return schoolColors[school] || "bg-primary/20";
   };
+
+  // Пропускаем шаг для не-магических классов
+  const isMagicClass = ["Волшебник", "Чародей", "Жрец", "Друид", "Бард", "Паладин", "Следопыт", "Чернокнижник"].includes(character.class || "");
+  if (!isMagicClass) {
+    // Перенаправляем на следующий шаг
+    React.useEffect(() => {
+      nextStep();
+    }, []);
+    return null;
+  }
 
   return (
     <div>
@@ -147,7 +207,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         />
       </div>
 
-      <div className="flex gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="flex-1">
           <h3 className="font-semibold mb-2">Доступные заклинания ({filteredSpells.length})</h3>
           <ScrollArea className="h-72 border rounded-md p-2">
@@ -177,17 +237,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                         </div>
                       </button>
                     </HoverCardTrigger>
-                    <HoverCardContent className="w-80">
+                    <HoverCardContent className="w-96">
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <h4 className="font-semibold">{spell}</h4>
                           <Badge className={details?.school ? getSchoolColor(details.school) : ''}>
-                            {details?.school}
+                            {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
                           </Badge>
                         </div>
-                        <p className="text-sm mt-2">{details?.description}</p>
+                        <p className="text-xs text-muted-foreground">{details?.school}</p>
+                        
+                        <div className="py-2 text-xs space-y-1">
+                          <div><span className="font-medium">Время накладывания:</span> {details?.castingTime}</div>
+                          <div><span className="font-medium">Дистанция:</span> {details?.range}</div>
+                          <div><span className="font-medium">Компоненты:</span> {details?.components}</div>
+                          <div><span className="font-medium">Длительность:</span> {details?.duration}</div>
+                        </div>
+                        
+                        <p className="text-sm">{details?.description}</p>
+                        
                         <div className="text-xs text-muted-foreground pt-2 border-t">
-                          Классы: {details?.classes.join(", ")}
+                          Классы: {details?.classes?.join(", ")}
                         </div>
                       </div>
                     </HoverCardContent>
@@ -237,7 +307,15 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </div>
       </div>
 
-      {/* Navigation buttons */}
+      {/* Предупреждение при отсутствии заклинаний */}
+      {selectedSpells.length === 0 && isMagicClass && (
+        <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-md">
+          <p className="font-medium">Внимание!</p>
+          <p className="text-sm">Вы не выбрали ни одного заклинания для вашего заклинателя. Вы уверены, что хотите продолжить?</p>
+        </div>
+      )}
+
+      {/* Навигационные кнопки */}
       <NavigationButtons
         allowNext={canContinue()}
         nextStep={handleNext}

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ interface CharacterLevelSelectionProps {
   updateCharacter: (updates: any) => void;
   nextStep: () => void;
   prevStep: () => void;
+  onLevelChange?: (level: number) => void;
 }
 
 const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
@@ -16,12 +17,21 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   updateCharacter,
   nextStep,
   prevStep,
+  onLevelChange = () => {}
 }) => {
   const [selectedLevel, setSelectedLevel] = useState<number>(character.level || 1);
+  
+  // При монтировании компонента устанавливаем текущий уровень
+  useEffect(() => {
+    if (character.level) {
+      setSelectedLevel(character.level);
+    }
+  }, [character.level]);
   
   const handleLevelChange = (level: number) => {
     if (level >= 1 && level <= 20) {
       setSelectedLevel(level);
+      onLevelChange(level);
     }
   };
 

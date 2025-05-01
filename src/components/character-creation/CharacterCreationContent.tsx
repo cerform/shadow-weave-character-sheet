@@ -22,9 +22,11 @@ interface CharacterCreationContentProps {
   diceResults: number[][];
   getModifier: (score: number) => string;
   rollAllAbilities: () => void;
-  rollSingleAbility?: () => { rolls: number[]; total: number };
+  rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
   abilityScorePoints?: number;
   isMagicClass: (className: string) => boolean;
+  rollsHistory?: { ability: string, rolls: number[], total: number }[];
+  onLevelChange?: (level: number) => void;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
@@ -40,7 +42,9 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   rollAllAbilities,
   rollSingleAbility,
   abilityScorePoints,
-  isMagicClass
+  isMagicClass,
+  rollsHistory = [],
+  onLevelChange = () => {}
 }) => {
   
   // useEffect to skip spell selection step for non-magic classes
@@ -76,6 +80,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           updateCharacter={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
+          onLevelChange={onLevelChange}
         />
       );
     case 3:
@@ -119,6 +124,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             rollAllAbilities={rollAllAbilities}
             rollSingleAbility={rollSingleAbility}
             abilityScorePoints={abilityScorePoints}
+            rollsHistory={rollsHistory}
           />
         </div>
       );

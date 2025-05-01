@@ -152,9 +152,11 @@ function DiceScene({ diceType, onRollComplete }: { diceType: DieType, onRollComp
   const { camera } = useThree();
   
   // Set camera position on init
-  if(camera instanceof THREE.PerspectiveCamera) {
-    camera.position.z = 5;
-  }
+  useEffect(() => {
+    if(camera instanceof THREE.PerspectiveCamera) {
+      camera.position.z = 5;
+    }
+  }, []);
   
   return (
     <>
@@ -220,9 +222,9 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
           </Suspense>
         </Canvas>
         
-        {/* Results display - moved below the dice */}
+        {/* Результаты смещены ниже */}
         {(results.length > 0) && (
-          <div className="absolute bottom-4 left-0 right-0 mx-auto w-max bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
+          <div className="absolute bottom-2 left-0 right-0 mx-auto w-max bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
             <div>
               <span className="font-bold text-2xl">{totalResult}</span>
               {results.length > 1 && (
@@ -235,7 +237,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
         )}
       </div>
       
-      {/* History display - improved visibility */}
+      {/* История бросков - улучшенная видимость */}
       {!hideControls && resultHistory.length > 0 && (
         <div className="h-10 mb-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
           {resultHistory.map((item, index) => (
@@ -250,7 +252,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
       {!hideControls && (
         <>
           <div className="mb-2">
-            <Tabs defaultValue={activeDice} value={activeDice} className="w-full" onValueChange={(val) => rollDice(val as DieType)}>
+            <Tabs defaultValue={activeDice} value={activeDice} className="w-full" onValueChange={(val) => setActiveDice(val as DieType)}>
               <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 h-auto">
                 <TabsTrigger value="d4" className="text-sm py-1 px-2">d4</TabsTrigger>
                 <TabsTrigger value="d6" className="text-sm py-1 px-2">d6</TabsTrigger>

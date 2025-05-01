@@ -4,6 +4,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 // Custom hooks
 import { useCharacterCreation } from "@/hooks/useCharacterCreation";
@@ -20,19 +21,35 @@ import { steps } from "@/config/characterCreationSteps";
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll">("standard");
   
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
-  const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints } = useAbilitiesRoller(abilitiesMethod, character.level);
+  const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
   const { currentStep, nextStep, prevStep } = useCreationStep(isMagicClass, character.class);
 
+  // Навигация на главную
   const goToHomePage = () => {
+    // Показываем предупреждение, если процесс создания не завершен
+    if (currentStep < 9) {
+      const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
+      if (!confirmed) return;
+    }
     navigate('/');
   };
 
+  // Навигация в руководство игрока
   const goToHandbook = () => {
     navigate('/library');
+  };
+  
+  // Сохраняем уровень персонажа при изменении
+  const handleLevelChange = (level: number) => {
+    if (level >= 1 && level <= 20) {
+      console.log("Уровень персонажа изменен на:", level);
+      updateCharacter({ level });
+    }
   };
 
   return (
@@ -59,7 +76,7 @@ const CharacterCreationPage = () => {
 
       <h1 className="text-3xl font-bold mb-8 text-center">Создание персонажа</h1>
 
-      {/* Step progression display */}
+      {/* Отображение прогресса по шагам */}
       <CreationStepDisplay 
         steps={steps} 
         currentStep={currentStep}
@@ -67,7 +84,7 @@ const CharacterCreationPage = () => {
         characterClass={character.class}
       />
 
-      {/* Content area */}
+      {/* Основная область контента */}
       <div className="max-w-4xl mx-auto bg-card p-6 rounded-lg shadow-lg">
         <CharacterCreationContent 
           currentStep={currentStep}
@@ -83,6 +100,8 @@ const CharacterCreationPage = () => {
           rollSingleAbility={rollSingleAbility}
           abilityScorePoints={abilityScorePoints}
           isMagicClass={isMagicClass}
+          rollsHistory={rollsHistory}
+          onLevelChange={handleLevelChange}
         />
       </div>
     </div>

@@ -35,42 +35,89 @@ export const useCharacterCreation = () => {
       CHA: 8
     } as AbilityScores,
     spellsKnown: [] as Spell[],
-    spellSlots: {} as SpellSlots
+    spellSlots: {} as SpellSlots,
+    maxHp: 0,
+    currentHp: 0
   });
 
-  // When stats change, update the abilities property to match
+  // Обновляем свойства персонажа при изменении статов
   useEffect(() => {
     if (character.stats) {
-      setCharacterState(prev => ({
-        ...prev,
+      const characterLevel = character.level || 1;
+      
+      // Обновляем характеристики
+      const updatedCharacter = {
+        ...character,
         abilities: {
-          STR: prev.stats.strength,
-          DEX: prev.stats.dexterity,
-          CON: prev.stats.constitution,
-          INT: prev.stats.intelligence,
-          WIS: prev.stats.wisdom,
-          CHA: prev.stats.charisma
+          STR: character.stats.strength,
+          DEX: character.stats.dexterity,
+          CON: character.stats.constitution,
+          INT: character.stats.intelligence,
+          WIS: character.stats.wisdom,
+          CHA: character.stats.charisma
         },
-        // Set className based on class and subclass
-        className: `${prev.class}${prev.subclass ? ` (${prev.subclass})` : ''}`,
-        // Convert raw spell names to Spell objects
-        spellsKnown: prev.spells.map((name, index) => ({
+        // Устанавливаем имя класса на основе класса и подкласса
+        className: `${character.class}${character.subclass ? ` (${character.subclass})` : ''}`,
+        // Конвертируем имена заклинаний в объекты Spell
+        spellsKnown: character.spells.map((name, index) => ({
           id: String(index),
           name: name,
           level: getSpellLevel(name)
         })),
-        // Create spell slots based on class and level
-        spellSlots: calculateSpellSlots(prev.class, prev.level)
-      }));
+        // Создаем ячейки заклинаний на основе класса и уровня
+        spellSlots: calculateSpellSlots(character.class, characterLevel)
+      };
+      
+      // Рассчитываем максимальные HP на основе класса, уровня и телосложения
+      if (character.class) {
+        const conModifier = Math.floor((character.stats.constitution - 10) / 2);
+        const hpByClass = getHitDieByClass(character.class);
+        
+        // Первый уровень - максимальное значение Hit Die + конституция
+        let maxHp = hpByClass + conModifier;
+        
+        // Для каждого дополнительного уровня - среднее значение Hit Die + конституция
+        if (characterLevel > 1) {
+          const averageHitPoints = Math.floor((hpByClass + 1) / 2) + 1; // Среднее значение для кубика
+          maxHp += (averageHitPoints + conModifier) * (characterLevel - 1);
+        }
+        
+        updatedCharacter.maxHp = maxHp;
+        updatedCharacter.currentHp = maxHp;
+      }
+      
+      // Обновляем состояние персонажа
+      setCharacterState(updatedCharacter);
     }
   }, [character.stats, character.class, character.subclass, character.spells, character.level]);
 
-  // Calculate spell slots based on class and level
+  // Получаем Hit Die для класса
+  const getHitDieByClass = (characterClass: string): number => {
+    const hitDice: Record<string, number> = {
+      "Варвар": 12,
+      "Воин": 10,
+      "Паладин": 10,
+      "Следопыт": 10,
+      "Жрец": 8,
+      "Друид": 8,
+      "Монах": 8,
+      "Плут": 8,
+      "Бард": 8,
+      "Колдун": 8,
+      "Чернокнижник": 8,
+      "Волшебник": 6,
+      "Чародей": 6
+    };
+    
+    return hitDice[characterClass] || 8; // По умолчанию d8
+  };
+
+  // Рассчитываем ячейки заклинаний на основе класса и уровня
   const calculateSpellSlots = (className: string, level: number) => {
     if (!isMagicClass(className) || level < 1) return {};
     
     const slots: SpellSlots = {};
-    // Simple spell slot calculation (simplified D&D 5e rules)
+    // Полные заклинатели (Волшебник, Жрец, Друид, Бард, Чародей)
     if (["Волшебник", "Чародей", "Жрец", "Друид", "Бард"].includes(className)) {
       if (level >= 1) slots[1] = { max: Math.min(level + 1, 4), used: 0 };
       if (level >= 3) slots[2] = { max: Math.min(level - 1, 3), used: 0 };
@@ -82,9 +129,9 @@ export const useCharacterCreation = () => {
       if (level >= 15) slots[8] = { max: 1, used: 0 };
       if (level >= 17) slots[9] = { max: 1, used: 0 };
     }
-    // Half-casters get fewer slots
+    // Полу-заклинатели (Паладин, Следопыт)
     else if (["Паладин", "Следопыт"].includes(className)) {
-      // Half casters use half their level (rounded up) to determine spell slots
+      // Полу-заклинатели используют половину своего уровня (округленную вверх) для расчета ячеек заклинаний
       const effectiveLevel = Math.ceil(level / 2);
       if (level >= 2) slots[1] = { max: Math.min(effectiveLevel + 1, 4), used: 0 };
       if (level >= 5) slots[2] = { max: Math.min(effectiveLevel - 1, 3), used: 0 };
@@ -92,7 +139,7 @@ export const useCharacterCreation = () => {
       if (level >= 13) slots[4] = { max: Math.min(effectiveLevel - 6, 2), used: 0 };
       if (level >= 17) slots[5] = { max: Math.min(effectiveLevel - 8, 1), used: 0 };
     }
-    // Warlocks have their own spell slot progression
+    // Чернокнижники имеют свою собственную прогрессию ячеек заклинаний
     else if (className === "Чернокнижник") {
       const slotLevel = Math.min(Math.ceil(level / 2), 5);
       const numSlots = level === 1 ? 1 : Math.min(Math.floor((level + 1) / 2) + 1, 4);
@@ -102,26 +149,46 @@ export const useCharacterCreation = () => {
     return slots;
   };
 
-  // Get spell level (simplified - would need a real database)
+  // Определяем уровень заклинания (для реального приложения здесь был бы запрос к базе данных)
   const getSpellLevel = (spellName: string) => {
-    // This is just a placeholder - in a real app, you'd look this up in a database
-    return 1; // Default to level 1 for now
+    // Это просто заглушка - в реальном приложении вы бы использовали базу данных заклинаний
+    const knownSpells: Record<string, number> = {
+      "Волшебная рука": 0,
+      "Огненный снаряд": 0,
+      "Свет": 0,
+      "Малая иллюзия": 0,
+      "Танцующие огоньки": 0,
+      "Волшебный замок": 2,
+      "Огненный шар": 3,
+      "Щит": 1,
+      "Мистический заряд": 0,
+      "Лечение ран": 1,
+      "Благословение": 1,
+      "Чудотворство": 0,
+      "Обнаружение магии": 1,
+      "Маскировка": 1,
+      "Понимание языков": 1
+    };
+    
+    return knownSpells[spellName] || 1; // По умолчанию предполагаем 1 уровень
   };
 
+  // Обновление персонажа
   const updateCharacter = (updates: any) => {
+    console.log("Обновление персонажа с данными:", updates);
     setCharacterState((prev) => ({
       ...prev,
       ...updates,
     }));
   };
 
-  // Helper function to determine if a class is a magic user
+  // Определение, является ли класс заклинательным
   const isMagicClass = (className: string) => {
     const magicClasses = ['Волшебник', 'Чародей', 'Чернокнижник', 'Бард', 'Жрец', 'Друид', 'Паладин', 'Следопыт'];
     return magicClasses.includes(className);
   };
 
-  // Get modifier for ability score
+  // Получение модификатора характеристики
   const getModifier = (score: number) => {
     const mod = Math.floor((score - 10) / 2);
     return mod >= 0 ? `+${mod}` : `${mod}`;
