@@ -111,14 +111,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Фильтр по поиску
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Исправляем ошибку TypeScript здесь - добавляем проверки типов
-        if (typeof spell === 'object' && spell !== null) {
-          if ('name' in spell && typeof spell.name === 'string') {
-            return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+        // Проверка типа spell и безопасное приведение
+        if (typeof spell === 'object' && spell !== null && 'name' in spell) {
+          const spellName = spell.name;
+          if (typeof spellName === 'string') {
+            return spellName.toLowerCase().includes(searchQuery.toLowerCase());
           }
-        }
-        // Для случая, если spell это строка
-        if (typeof spell === 'string') {
+        } else if (typeof spell === 'string') {
           return spell.toLowerCase().includes(searchQuery.toLowerCase());
         }
         return false;
@@ -129,9 +128,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
         // Добавляем проверки типов здесь тоже
-        if (typeof spell === 'object' && spell !== null) {
-          if ('level' in spell && typeof spell.level === 'number') {
-            return spell.level === levelFilter;
+        if (typeof spell === 'object' && spell !== null && 'level' in spell) {
+          const level = spell.level;
+          if (typeof level === 'number') {
+            return level === levelFilter;
           }
         }
         return false;
