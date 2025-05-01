@@ -3,16 +3,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileUp, Loader2, AlertCircle } from 'lucide-react';
+import { FileUp, Loader2, AlertCircle, Info } from 'lucide-react';
 import { extractCharacterDataFromPdf, convertExtractedDataToCharacter } from '@/utils/pdfImporter';
 import { useToast } from '@/components/ui/use-toast';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PdfCharacterImport: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [importedData, setImportedData] = useState<any>(null);
   const { setCharacter } = React.useContext(CharacterContext);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -24,6 +26,7 @@ const PdfCharacterImport: React.FC = () => {
 
     // Сбрасываем ошибку при новой попытке
     setErrorMessage(null);
+    setImportedData(null);
 
     if (file.type !== 'application/pdf') {
       toast({
@@ -55,20 +58,17 @@ const PdfCharacterImport: React.FC = () => {
       // Преобразуем извлеченные данные в формат для нашего приложения
       const characterData = convertExtractedDataToCharacter(extractedData);
       
-      // Сохраняем персонажа в контексте
-      setCharacter(characterData);
+      // Сохраняем данные для проверки
+      setImportedData(characterData);
       
       setUploadProgress(100);
       
       // Показываем уведомление об успешной загрузке
       toast({
-        title: 'Персонаж импортирован',
-        description: `${characterData.name || 'Персонаж'} успешно импортирован из PDF!`,
+        title: 'Персонаж проанализирован',
+        description: `${characterData.name || 'Персонаж'} успешно импортирован. Проверьте данные перед продолжением.`,
       });
       
-      // Переходим к листу персонажа
-      navigate('/sheet');
-
     } catch (error) {
       console.error('Ошибка загрузки PDF:', error);
       const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -84,6 +84,13 @@ const PdfCharacterImport: React.FC = () => {
     }
   };
   
+  const handleConfirmImport = () => {
+    if (importedData) {
+      setCharacter(importedData);
+      navigate('/sheet');
+    }
+  };
+  
   return (
     <Card className={`bg-card/30 backdrop-blur-sm border-primary/20 theme-${theme}`}>
       <CardContent className="pt-6 pb-6">
@@ -94,19 +101,21 @@ const PdfCharacterImport: React.FC = () => {
             Загрузите официальный лист персонажа D&D 5 редакции в формате PDF
           </p>
           
-          <Button 
-            onClick={() => document.getElementById("pdf-char-import")?.click()} 
-            variant="outline" 
-            className="gap-2 mb-4"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FileUp className="h-4 w-4" /> 
-            )}
-            {isLoading ? "Импортируем..." : "Выбрать PDF файл"}
-          </Button>
+          {!importedData && (
+            <Button 
+              onClick={() => document.getElementById("pdf-char-import")?.click()} 
+              variant="outline" 
+              className="gap-2 mb-4"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileUp className="h-4 w-4" /> 
+              )}
+              {isLoading ? "Импортируем..." : "Выбрать PDF файл"}
+            </Button>
+          )}
           
           <input
             type="file"
@@ -143,10 +152,71 @@ const PdfCharacterImport: React.FC = () => {
             </div>
           )}
           
-          <div className="text-xs text-center text-muted-foreground mt-4">
-            <p>Поддерживаются официальные листы персонажа D&D 5e</p>
-            <p>Некоторые поля могут быть не распознаны автоматически</p>
-          </div>
+          {importedData && (
+            <div className="w-full mt-4">
+              <Alert className="mb-4">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Проверьте данные персонажа перед импортом. Некоторые поля могли быть определены неточно.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="mb-4 p-4 border rounded-md space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="font-semibold">Имя:</div>
+                  <div>{importedData.name}</div>
+                  
+                  <div className="font-semibold">Раса:</div>
+                  <div>{importedData.race}</div>
+                  
+                  <div className="font-semibold">Класс:</div>
+                  <div>{importedData.className}</div>
+                  
+                  <div className="font-semibold">Уровень:</div>
+                  <div>{importedData.level}</div>
+                  
+                  <div className="font-semibold">Здоровье:</div>
+                  <div>{importedData.maxHp}</div>
+                  
+                  <div className="font-semibold">Мировоззрение:</div>
+                  <div>{importedData.alignment}</div>
+                </div>
+                
+                <div className="font-semibold mt-2">Характеристики:</div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {Object.entries(importedData.abilities).map(([key, value]: [string, any]) => (
+                    <div key={key} className="text-center p-1 border rounded">
+                      <div className="text-xs text-muted-foreground">{key}</div>
+                      <div className="font-medium">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-between mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setImportedData(null);
+                  }}
+                >
+                  Выбрать другой файл
+                </Button>
+                <Button 
+                  onClick={handleConfirmImport}
+                >
+                  Продолжить с этим персонажем
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {!importedData && (
+            <div className="text-xs text-center text-muted-foreground mt-4">
+              <p>Поддерживаются официальные листы персонажа D&D 5e</p>
+              <p>После импорта вы сможете проверить и отредактировать данные</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

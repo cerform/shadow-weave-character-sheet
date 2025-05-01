@@ -1,12 +1,8 @@
 
 import * as pdfjs from 'pdfjs-dist';
 
-// Загружаем локальный worker для pdf.js вместо удаленного CDN
-import { PDFWorker } from 'pdfjs-dist';
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+// Настраиваем worker для pdf.js
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PDFField {
   name: string;
@@ -71,156 +67,185 @@ export async function extractCharacterDataFromPdf(file: File): Promise<Extracted
     // Получаем массив всех строк текста из PDF документа
     const numPages = pdf.numPages;
     let fullText = '';
+    let textBlocks: Array<{text: string, x: number, y: number}> = [];
     
     for (let i = 1; i <= numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .filter(item => 'str' in item)
-        .map(item => (item as any).str)
-        .join(' ');
       
-      fullText += pageText + ' ';
+      // Собираем текст со страницы с сохранением координат
+      textContent.items
+        .filter(item => 'str' in item)
+        .forEach(item => {
+          const textItem = item as any;
+          if (textItem.str.trim()) {
+            textBlocks.push({
+              text: textItem.str,
+              x: textItem.transform[4],
+              y: textItem.transform[5]
+            });
+            fullText += textItem.str + ' ';
+          }
+        });
     }
 
-    // Парсим имя персонажа (обычно находится рядом с "CHARACTER NAME")
-    const nameMatch = fullText.match(/CHARACTER NAME\s*([A-Za-zА-Яа-я\s]+)/i);
-    if (nameMatch && nameMatch[1]) {
-      characterData.name = nameMatch[1].trim();
+    console.log("Извлеченные текстовые блоки:", textBlocks.slice(0, 10));
+
+    // Ищем текст по шаблонам и соседству с ключевыми словами
+    
+    // Парсим имя персонажа
+    const nameMatch = findTextNearKeyword(textBlocks, ['CHARACTER NAME', 'имя персонажа'], 200, 20);
+    if (nameMatch && nameMatch !== 'CHARACTER NAME') {
+      characterData.name = nameMatch.trim();
     }
 
     // Парсим расу персонажа
-    const raceMatch = fullText.match(/RACE\s*([A-Za-zА-Яа-я\s]+)/i);
-    if (raceMatch && raceMatch[1]) {
-      characterData.race = raceMatch[1].trim();
+    const raceMatch = findTextNearKeyword(textBlocks, ['RACE', 'раса'], 200, 20);
+    if (raceMatch && !['RACE', 'раса'].includes(raceMatch.toLowerCase())) {
+      characterData.race = mapRaceToRussian(raceMatch.trim());
     }
 
     // Парсим класс персонажа
-    const classMatch = fullText.match(/CLASS[^A-Za-z0-9]*([A-Za-zА-Яа-я\s]+)/i);
-    if (classMatch && classMatch[1]) {
-      characterData.class = mapEnglishClassToRussian(classMatch[1].trim());
+    const classMatch = findTextNearKeyword(textBlocks, ['CLASS', 'класс'], 200, 20);
+    if (classMatch && !['CLASS', 'класс'].includes(classMatch.toLowerCase())) {
+      characterData.class = mapEnglishClassToRussian(classMatch.trim());
     }
 
     // Парсим уровень персонажа
-    const levelMatch = fullText.match(/LEVEL[^A-Za-z0-9]*(\d+)/i);
-    if (levelMatch && levelMatch[1]) {
-      characterData.level = parseInt(levelMatch[1], 10);
+    const levelMatch = findTextNearKeyword(textBlocks, ['LEVEL', 'уровень'], 200, 20);
+    if (levelMatch) {
+      const levelNumber = parseInt(levelMatch.replace(/\D/g, ''));
+      if (!isNaN(levelNumber)) {
+        characterData.level = levelNumber;
+      }
     }
 
     // Парсим характеристики персонажа
-    const strMatch = fullText.match(/Strength\s*(\d+)/i);
-    if (strMatch && strMatch[1]) {
-      characterData.abilities.STR = parseInt(strMatch[1], 10);
+    const strMatch = findTextNearKeyword(textBlocks, ['STRENGTH', 'сила'], 100, 50);
+    if (strMatch) {
+      const strNum = parseInt(strMatch.replace(/\D/g, ''));
+      if (!isNaN(strNum) && strNum > 0 && strNum < 30) {
+        characterData.abilities.STR = strNum;
+      }
     }
 
-    const dexMatch = fullText.match(/Dexterity\s*(\d+)/i);
-    if (dexMatch && dexMatch[1]) {
-      characterData.abilities.DEX = parseInt(dexMatch[1], 10);
+    const dexMatch = findTextNearKeyword(textBlocks, ['DEXTERITY', 'ловкость'], 100, 50);
+    if (dexMatch) {
+      const dexNum = parseInt(dexMatch.replace(/\D/g, ''));
+      if (!isNaN(dexNum) && dexNum > 0 && dexNum < 30) {
+        characterData.abilities.DEX = dexNum;
+      }
     }
 
-    const conMatch = fullText.match(/Constitution\s*(\d+)/i);
-    if (conMatch && conMatch[1]) {
-      characterData.abilities.CON = parseInt(conMatch[1], 10);
+    const conMatch = findTextNearKeyword(textBlocks, ['CONSTITUTION', 'телосложение'], 100, 50);
+    if (conMatch) {
+      const conNum = parseInt(conMatch.replace(/\D/g, ''));
+      if (!isNaN(conNum) && conNum > 0 && conNum < 30) {
+        characterData.abilities.CON = conNum;
+      }
     }
 
-    const intMatch = fullText.match(/Intelligence\s*(\d+)/i);
-    if (intMatch && intMatch[1]) {
-      characterData.abilities.INT = parseInt(intMatch[1], 10);
+    const intMatch = findTextNearKeyword(textBlocks, ['INTELLIGENCE', 'интеллект'], 100, 50);
+    if (intMatch) {
+      const intNum = parseInt(intMatch.replace(/\D/g, ''));
+      if (!isNaN(intNum) && intNum > 0 && intNum < 30) {
+        characterData.abilities.INT = intNum;
+      }
     }
 
-    const wisMatch = fullText.match(/Wisdom\s*(\d+)/i);
-    if (wisMatch && wisMatch[1]) {
-      characterData.abilities.WIS = parseInt(wisMatch[1], 10);
+    const wisMatch = findTextNearKeyword(textBlocks, ['WISDOM', 'мудрость'], 100, 50);
+    if (wisMatch) {
+      const wisNum = parseInt(wisMatch.replace(/\D/g, ''));
+      if (!isNaN(wisNum) && wisNum > 0 && wisNum < 30) {
+        characterData.abilities.WIS = wisNum;
+      }
     }
 
-    const chaMatch = fullText.match(/Charisma\s*(\d+)/i);
-    if (chaMatch && chaMatch[1]) {
-      characterData.abilities.CHA = parseInt(chaMatch[1], 10);
+    const chaMatch = findTextNearKeyword(textBlocks, ['CHARISMA', 'харизма'], 100, 50);
+    if (chaMatch) {
+      const chaNum = parseInt(chaMatch.replace(/\D/g, ''));
+      if (!isNaN(chaNum) && chaNum > 0 && chaNum < 30) {
+        characterData.abilities.CHA = chaNum;
+      }
     }
 
     // Парсим HP персонажа
-    const hpMatch = fullText.match(/Hit Point Maximum\s*(\d+)/i);
-    if (hpMatch && hpMatch[1]) {
-      const hp = parseInt(hpMatch[1], 10);
-      characterData.maxHp = hp;
-      characterData.currentHp = hp;
+    const hpMatch = findTextNearKeyword(textBlocks, ['HIT POINT MAXIMUM', 'максимум хитов'], 150, 20);
+    if (hpMatch) {
+      const hp = parseInt(hpMatch.replace(/\D/g, ''));
+      if (!isNaN(hp) && hp > 0) {
+        characterData.maxHp = hp;
+        characterData.currentHp = hp;
+      }
     }
 
     // Парсим мировоззрение персонажа
-    const alignmentMatch = fullText.match(/ALIGNMENT\s*([A-Za-zА-Яа-я\s]+)/i);
-    if (alignmentMatch && alignmentMatch[1]) {
-      characterData.alignment = mapAlignmentToRussian(alignmentMatch[1].trim());
+    const alignmentMatch = findTextNearKeyword(textBlocks, ['ALIGNMENT', 'мировоззрение'], 200, 20);
+    if (alignmentMatch && !['ALIGNMENT', 'мировоззрение'].includes(alignmentMatch.toLowerCase())) {
+      characterData.alignment = mapAlignmentToRussian(alignmentMatch.trim());
     }
 
     // Парсим языки
-    const languagesSection = extractSection(fullText, /OTHER PROFICIENCIES & LANGUAGES/i, 200);
+    const languagesSection = extractSectionFromText(fullText, /OTHER PROFICIENCIES & LANGUAGES|LANGUAGES/i, 500);
     if (languagesSection) {
-      // Извлекаем потенциальные языки из секции
-      const languageMatches = languagesSection.match(/Languages?:([^.]+)/i);
-      if (languageMatches && languageMatches[1]) {
-        const languagesList = languageMatches[1].split(',').map(lang => 
-          mapLanguageToRussian(lang.trim())
-        ).filter(Boolean);
-        
-        if (languagesList.length > 0) {
-          characterData.languages = languagesList;
-        }
+      const languagesFound = extractLanguagesFromText(languagesSection);
+      if (languagesFound.length > 0) {
+        characterData.languages = languagesFound.map(mapLanguageToRussian);
       }
     }
 
     // Парсим снаряжение
-    const equipmentSection = extractSection(fullText, /EQUIPMENT/i, 500);
+    const equipmentSection = extractSectionFromText(fullText, /EQUIPMENT|СНАРЯЖЕНИЕ/i, 500);
     if (equipmentSection) {
-      // Разделяем снаряжение по запятым и точкам
-      const equipItems = equipmentSection
-        .replace(/EQUIPMENT/ig, '')
-        .split(/[,.]/)
+      const equipment = equipmentSection
+        .replace(/EQUIPMENT|СНАРЯЖЕНИЕ/ig, '')
+        .split(/[,.;]/)
         .map(item => item.trim())
-        .filter(item => item.length > 2); // Фильтруем короткие строки
+        .filter(item => item.length > 2 && !/^(CP|SP|EP|GP|PP|\d+$)/.test(item));
       
-      if (equipItems.length > 0) {
-        characterData.equipment = equipItems;
+      if (equipment.length > 0) {
+        characterData.equipment = equipment;
       }
     }
 
-    // Парсим навыки (профессии)
-    const proficienciesSection = extractSection(fullText, /PROFICIENCIES/i, 300);
+    // Парсим навыки и владения
+    const proficienciesSection = extractSectionFromText(fullText, /PROFICIENCIES|ВЛАДЕНИЯ И ЯЗЫКИ|FEATURES & TRAITS|ОСОБЕННОСТИ И УМЕНИЯ/i, 500);
     if (proficienciesSection) {
-      // Разделяем навыки по запятым
-      const profItems = proficienciesSection
-        .replace(/PROFICIENCIES/ig, '')
-        .split(',')
+      const proficiencies = proficienciesSection
+        .replace(/PROFICIENCIES|ВЛАДЕНИЯ И ЯЗЫКИ|FEATURES & TRAITS|ОСОБЕННОСТИ И УМЕНИЯ/ig, '')
+        .split(/[,.;]/)
         .map(item => item.trim())
-        .filter(item => item.length > 2); // Фильтруем короткие строки
+        .filter(item => item.length > 2 && !/^(LANGUAGES|ЯЗЫКИ)/.test(item));
       
-      if (profItems.length > 0) {
-        characterData.proficiencies = profItems;
+      if (proficiencies.length > 0) {
+        characterData.proficiencies = proficiencies;
       }
     }
 
     // Парсим заклинания
-    const spellsSection = extractSection(fullText, /SPELLS/i, 500);
+    const spellsSection = extractSectionFromText(fullText, /SPELLS|ЗАКЛИНАНИЯ/i, 800);
     if (spellsSection) {
-      // Пытаемся найти список заклинаний
-      const spellsList = spellsSection
-        .replace(/SPELLS|CANTRIPS|LEVEL \d|SPELL SLOTS/ig, '')
-        .split(/[,.\n]/)
-        .map(spell => spell.trim())
-        .filter(spell => spell.length > 3 && !spell.match(/^\d+$/)); // Фильтруем короткие строки и чисто цифры
-      
-      if (spellsList.length > 0) {
-        characterData.spells = spellsList;
+      const spellNames = extractSpellsFromText(spellsSection);
+      if (spellNames.length > 0) {
+        characterData.spells = spellNames;
       }
     }
 
-    // Парсим предысторию персонажа (может быть в секции BACKGROUND)
-    const backgroundSection = extractSection(fullText, /CHARACTER BACKGROUND/i, 1000);
+    // Парсим предысторию персонажа
+    const backgroundSection = extractSectionFromText(fullText, /CHARACTER BACKGROUND|ПРЕДЫСТОРИЯ ПЕРСОНАЖА|BACKGROUND|ПРЕДЫСТОРИЯ/i, 1000);
     if (backgroundSection) {
       characterData.background = backgroundSection
-        .replace(/CHARACTER BACKGROUND/ig, '')
+        .replace(/CHARACTER BACKGROUND|ПРЕДЫСТОРИЯ ПЕРСОНАЖА|BACKGROUND|ПРЕДЫСТОРИЯ/ig, '')
         .trim();
     }
 
+    // Импорт дополнительных данных из Книги Игрока
+    characterData.gender = determinePossibleGender(characterData.name);
+
+    // Добавление из Книги игрока расовых особенностей, если они не были импортированы
+    addRacialTraits(characterData);
+
+    console.log("Извлеченные данные персонажа:", characterData);
     return characterData;
   } catch (error) {
     console.error('Ошибка при извлечении данных из PDF:', error);
@@ -229,9 +254,54 @@ export async function extractCharacterDataFromPdf(file: File): Promise<Extracted
 }
 
 /**
- * Вспомогательная функция для извлечения секции текста вокруг ключевого слова
+ * Функция для поиска текста рядом с ключевым словом
  */
-function extractSection(text: string, pattern: RegExp, charLimit: number): string | null {
+function findTextNearKeyword(textBlocks: Array<{text: string, x: number, y: number}>, keywords: string[], maxDistance: number, yTolerance: number): string | null {
+  // Находим блоки с ключевыми словами
+  const keywordBlocks = textBlocks.filter(block => 
+    keywords.some(keyword => block.text.toLowerCase().includes(keyword.toLowerCase()))
+  );
+  
+  if (keywordBlocks.length === 0) return null;
+  
+  // Для каждого найденного ключевого слова ищем ближайший текст справа или снизу
+  for (const keywordBlock of keywordBlocks) {
+    // Ищем текст справа (на той же высоте)
+    const rightBlocks = textBlocks.filter(block => 
+      Math.abs(block.y - keywordBlock.y) < yTolerance && 
+      block.x > keywordBlock.x && 
+      block.x - keywordBlock.x < maxDistance &&
+      !keywords.some(keyword => block.text.toLowerCase().includes(keyword.toLowerCase()))
+    );
+    
+    if (rightBlocks.length > 0) {
+      // Сортируем блоки по возрастанию X-координаты (от ближайших к дальним)
+      const sortedByX = [...rightBlocks].sort((a, b) => a.x - b.x);
+      return sortedByX[0].text;
+    }
+    
+    // Если справа ничего не нашли, ищем текст снизу (примерно на той же X-координате)
+    const belowBlocks = textBlocks.filter(block => 
+      Math.abs(block.x - keywordBlock.x) < maxDistance && 
+      block.y < keywordBlock.y && 
+      keywordBlock.y - block.y < maxDistance &&
+      !keywords.some(keyword => block.text.toLowerCase().includes(keyword.toLowerCase()))
+    );
+    
+    if (belowBlocks.length > 0) {
+      // Сортируем блоки по убыванию Y-координаты (от ближайших к дальним)
+      const sortedByY = [...belowBlocks].sort((a, b) => b.y - a.y);
+      return sortedByY[0].text;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Извлекает секцию текста вокруг ключевого слова/фразы
+ */
+function extractSectionFromText(text: string, pattern: RegExp, charLimit: number): string | null {
   const match = text.match(pattern);
   if (!match) return null;
 
@@ -243,7 +313,149 @@ function extractSection(text: string, pattern: RegExp, charLimit: number): strin
 }
 
 /**
- * Вспомогательные функции для перевода английских названий на русский
+ * Извлекает языки из текста
+ */
+function extractLanguagesFromText(text: string): string[] {
+  // Ищем фразы, которые могут указывать на языки
+  const languagePatterns = [
+    /Languages?:([^.;]+)/i,
+    /Языки:([^.;]+)/i,
+    /speaks?([^.;]+)/i,
+    /владеет([^.;]+)язык/i
+  ];
+  
+  for (const pattern of languagePatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      return match[1]
+        .split(/[,&]/)
+        .map(lang => lang.trim())
+        .filter(lang => lang.length > 0 && !lang.includes('и') && !lang.includes('and'));
+    }
+  }
+  
+  // Если специальных маркеров не нашли, ищем известные названия языков
+  const knownLanguages = [
+    'Common', 'Общий', 'Dwarvish', 'Дварфийский', 'Elvish', 'Эльфийский', 
+    'Giant', 'Великаний', 'Gnomish', 'Гномий', 'Goblin', 'Гоблинский', 
+    'Halfling', 'Полуросликов', 'Orc', 'Орочий', 'Abyssal', 'Бездны', 
+    'Celestial', 'Небесный', 'Draconic', 'Драконий', 'Deep Speech', 'Глубинная речь', 
+    'Infernal', 'Инфернальный', 'Primordial', 'Первичный', 'Sylvan', 'Сильван', 
+    'Undercommon', 'Подземный'
+  ];
+  
+  const foundLanguages = [];
+  for (const lang of knownLanguages) {
+    if (text.toLowerCase().includes(lang.toLowerCase())) {
+      foundLanguages.push(lang);
+    }
+  }
+  
+  return foundLanguages.length > 0 ? foundLanguages : ['Common'];
+}
+
+/**
+ * Извлекает названия заклинаний из текста
+ */
+function extractSpellsFromText(text: string): string[] {
+  // Импортируем известные заклинания
+  const knownSpells = [
+    "Волшебная рука", "Огненный снаряд", "Свет", "Малая иллюзия", 
+    "Танцующие огоньки", "Волшебный замок", "Огненный шар", "Щит", 
+    "Мистический заряд", "Лечение ран", "Благословение", "Чудотворство", 
+    "Обнаружение магии", "Маскировка", "Понимание языков", "Ядовитое Облако",
+    "Mage Hand", "Fire Bolt", "Light", "Minor Illusion", 
+    "Dancing Lights", "Arcane Lock", "Fireball", "Shield", 
+    "Eldritch Blast", "Cure Wounds", "Bless", "Thaumaturgy", 
+    "Detect Magic", "Disguise Self", "Comprehend Languages", "Poison Spray"
+  ];
+  
+  const spellsFound = [];
+  for (const spell of knownSpells) {
+    if (text.includes(spell)) {
+      spellsFound.push(mapSpellNameToRussian(spell));
+    }
+  }
+  
+  return spellsFound;
+}
+
+/**
+ * Определяет возможный пол персонажа по имени (с использованием базовых эвристик)
+ */
+function determinePossibleGender(name: string): string {
+  // Это очень простая эвристика, которую можно улучшить
+  if (!name || name.length < 2) return '';
+  
+  // Русские имена
+  if (/[А-Яа-я]/.test(name)) {
+    if (name.endsWith('а') || name.endsWith('я')) return 'Женский';
+    return 'Мужской';
+  }
+  
+  // Английские имена - очень приблизительно
+  if (name.endsWith('a') || name.endsWith('e') || 
+      name.includes('elle') || name.includes('ina') || 
+      name.includes('ette')) {
+    return 'Женский';
+  }
+  
+  return 'Мужской'; // По умолчанию
+}
+
+/**
+ * Добавляет расовые особенности на основе расы персонажа из Книги игрока
+ */
+function addRacialTraits(character: ExtractedCharacterData): void {
+  if (!character.race) return;
+  
+  const raceLower = character.race.toLowerCase();
+  
+  // Добавляем языки по умолчанию
+  if (character.languages.length <= 1) {
+    if (raceLower.includes('эльф') || raceLower.includes('elf')) {
+      character.languages = ['Общий', 'Эльфийский'];
+    } else if (raceLower.includes('дварф') || raceLower.includes('dwarf')) {
+      character.languages = ['Общий', 'Дварфийский'];
+    } else if (raceLower.includes('гном') || raceLower.includes('gnome')) {
+      character.languages = ['Общий', 'Гномий'];
+    } else if (raceLower.includes('драконорожд') || raceLower.includes('dragonborn')) {
+      character.languages = ['Общий', 'Драконий'];
+    } else if (raceLower.includes('тифлинг') || raceLower.includes('tiefling')) {
+      character.languages = ['Общий', 'Инфернальный'];
+    } else if (raceLower.includes('полурослик') || raceLower.includes('halfling')) {
+      character.languages = ['Общий', 'Полуросликов'];
+    } else if (raceLower.includes('полуорк') || raceLower.includes('half-orc')) {
+      character.languages = ['Общий', 'Орочий'];
+    } else if (raceLower.includes('полуэльф') || raceLower.includes('half-elf')) {
+      character.languages = ['Общий', 'Эльфийский'];
+    }
+  }
+  
+  // Добавляем расовые особенности, если список профессий пуст
+  if (character.proficiencies.length === 0) {
+    if (raceLower.includes('эльф') || raceLower.includes('elf')) {
+      character.proficiencies = ['Темное зрение', 'Наследие фей', 'Транс'];
+    } else if (raceLower.includes('дварф') || raceLower.includes('dwarf')) {
+      character.proficiencies = ['Темное зрение', 'Дварфская устойчивость', 'Владение оружием дварфов'];
+    } else if (raceLower.includes('гном') || raceLower.includes('gnome')) {
+      character.proficiencies = ['Темное зрение', 'Гномья хитрость'];
+    } else if (raceLower.includes('драконорожд') || raceLower.includes('dragonborn')) {
+      character.proficiencies = ['Драконье происхождение', 'Дыхание дракона', 'Сопротивление урону'];
+    } else if (raceLower.includes('тифлинг') || raceLower.includes('tiefling')) {
+      character.proficiencies = ['Темное зрение', 'Адское сопротивление', 'Дьявольское наследие'];
+    } else if (raceLower.includes('полурослик') || raceLower.includes('halfling')) {
+      character.proficiencies = ['Везучий', 'Храбрый', 'Проворство полуросликов'];
+    } else if (raceLower.includes('полуорк') || raceLower.includes('half-orc')) {
+      character.proficiencies = ['Темное зрение', 'Угрожающий', 'Дикий натиск'];
+    } else if (raceLower.includes('полуэльф') || raceLower.includes('half-elf')) {
+      character.proficiencies = ['Темное зрение', 'Наследие фей', 'Универсальность навыков'];
+    }
+  }
+}
+
+/**
+ * Функции перевода на русский
  */
 function mapEnglishClassToRussian(englishClass: string): string {
   const classMap: Record<string, string> = {
@@ -261,15 +473,44 @@ function mapEnglishClassToRussian(englishClass: string): string {
     'Wizard': 'Волшебник',
   };
 
-  // Проверяем, есть ли прямое соответствие
   for (const [eng, rus] of Object.entries(classMap)) {
     if (englishClass.toLowerCase().includes(eng.toLowerCase())) {
       return rus;
     }
   }
 
-  // Если нет соответствия, возвращаем оригинал
   return englishClass;
+}
+
+function mapRaceToRussian(race: string): string {
+  const raceMap: Record<string, string> = {
+    'Human': 'Человек',
+    'Elf': 'Эльф',
+    'High Elf': 'Высший эльф',
+    'Wood Elf': 'Лесной эльф',
+    'Drow': 'Дроу',
+    'Dwarf': 'Дварф',
+    'Hill Dwarf': 'Холмовой дварф',
+    'Mountain Dwarf': 'Горный дварф',
+    'Halfling': 'Полурослик',
+    'Lightfoot Halfling': 'Легконогий полурослик',
+    'Stout Halfling': 'Коренастый полурослик',
+    'Gnome': 'Гном',
+    'Rock Gnome': 'Скальный гном',
+    'Forest Gnome': 'Лесной гном',
+    'Half-Elf': 'Полуэльф',
+    'Half-Orc': 'Полуорк',
+    'Tiefling': 'Тифлинг',
+    'Dragonborn': 'Драконорожденный',
+  };
+
+  for (const [eng, rus] of Object.entries(raceMap)) {
+    if (race.toLowerCase().includes(eng.toLowerCase())) {
+      return rus;
+    }
+  }
+
+  return race;
 }
 
 function mapAlignmentToRussian(alignment: string): string {
@@ -279,6 +520,7 @@ function mapAlignmentToRussian(alignment: string): string {
     'Chaotic Good': 'Хаотично-добрый',
     'Lawful Neutral': 'Законно-нейтральный',
     'True Neutral': 'Истинно нейтральный',
+    'Neutral': 'Нейтральный',
     'Chaotic Neutral': 'Хаотично-нейтральный',
     'Lawful Evil': 'Законно-злой',
     'Neutral Evil': 'Нейтрально-злой',
@@ -321,6 +563,45 @@ function mapLanguageToRussian(language: string): string {
   }
 
   return language;
+}
+
+function mapSpellNameToRussian(spellName: string): string {
+  const spellMap: Record<string, string> = {
+    'Mage Hand': 'Волшебная рука',
+    'Fire Bolt': 'Огненный снаряд',
+    'Light': 'Свет',
+    'Minor Illusion': 'Малая иллюзия',
+    'Dancing Lights': 'Танцующие огоньки',
+    'Arcane Lock': 'Волшебный замок',
+    'Fireball': 'Огненный шар',
+    'Shield': 'Щит',
+    'Eldritch Blast': 'Мистический заряд',
+    'Cure Wounds': 'Лечение ран',
+    'Bless': 'Благословение',
+    'Thaumaturgy': 'Чудотворство',
+    'Detect Magic': 'Обнаружение магии',
+    'Disguise Self': 'Маскировка',
+    'Comprehend Languages': 'Понимание языков',
+    'Poison Spray': 'Ядовитое облако'
+  };
+
+  // Проверяем, нужно ли переводить
+  if (Object.keys(spellMap).includes(spellName)) {
+    return spellMap[spellName];
+  } else if (Object.values(spellMap).includes(spellName)) {
+    return spellName;
+  }
+
+  // Если точного соответствия нет, пытаемся найти частичное
+  for (const [eng, rus] of Object.entries(spellMap)) {
+    if (spellName.toLowerCase().includes(eng.toLowerCase())) {
+      return rus;
+    } else if (spellName.toLowerCase().includes(rus.toLowerCase())) {
+      return rus;
+    }
+  }
+
+  return spellName;
 }
 
 /**
