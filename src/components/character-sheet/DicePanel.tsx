@@ -47,10 +47,10 @@ export const DicePanel = () => {
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h3 className="text-lg font-semibold mb-2">Кубики</h3>
+      <h3 className="text-lg font-semibold mb-2 text-primary">Кубики</h3>
       
       <div className="mb-2">
-        <label className="text-sm">Количество кубиков:</label>
+        <label className="text-sm text-primary/80">Количество кубиков:</label>
         <Input 
           type="number" 
           value={diceCount} 
@@ -72,14 +72,14 @@ export const DicePanel = () => {
       
       {isRolling && (
         <div className="p-2 mb-2 bg-primary/10 rounded-md text-center">
-          <Dices className="inline-block animate-spin" />
-          <span className="ml-2">Бросок...</span>
+          <Dices className="inline-block animate-spin text-primary" />
+          <span className="ml-2 text-primary">Бросок...</span>
         </div>
       )}
       
       {diceResult && !isRolling && (
         <div className="p-2 mb-4 bg-primary/10 rounded-md text-center font-medium">
-          {diceResult}
+          <span className="text-primary">{diceResult}</span>
           <div className="mt-2">
             <Button 
               variant="outline" 
@@ -95,12 +95,12 @@ export const DicePanel = () => {
       
       {rollsHistory.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-medium mb-1">История бросков</h4>
+          <h4 className="text-sm font-medium mb-1 text-primary/90">История бросков</h4>
           <div className="max-h-32 overflow-y-auto">
             {rollsHistory.map((roll, index) => (
-              <div key={index} className="text-sm p-1 border-b flex justify-between">
-                <span>{roll.type} ({roll.rolls.length})</span>
-                <span className="font-medium">{roll.total}</span>
+              <div key={index} className="text-sm p-1 border-b border-primary/10 flex justify-between">
+                <span className="text-primary/80">{roll.type} ({roll.rolls.length})</span>
+                <span className="font-medium text-primary">{roll.total}</span>
               </div>
             ))}
           </div>
