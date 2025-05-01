@@ -1,8 +1,12 @@
+
 import * as pdfjs from 'pdfjs-dist';
 
 // Загружаем локальный worker для pdf.js вместо удаленного CDN
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs';
-pdfjs.GlobalWorkerOptions.workerPort = new Worker(pdfWorker);
+import { PDFWorker } from 'pdfjs-dist';
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).toString();
 
 interface PDFField {
   name: string;
