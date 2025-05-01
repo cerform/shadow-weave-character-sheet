@@ -1,8 +1,9 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, ArrowLeft, ArrowRight } from "lucide-react";
+import { Home, ArrowLeft, ArrowRight, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 
 interface NavigationButtonsProps {
   allowNext: boolean;
@@ -14,6 +15,10 @@ interface NavigationButtonsProps {
   nextLabel?: string;
   prevLabel?: string;
   homeLabel?: string;
+  showHomeButton?: boolean;
+  showBookButton?: boolean;
+  bookPath?: string;
+  bookLabel?: string;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -26,24 +31,47 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = "Далее",
   prevLabel = "Назад",
   homeLabel = "На главную",
+  showHomeButton = true,
+  showBookButton = false,
+  bookPath = "/handbook",
+  bookLabel = "Справочник"
 }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const goHome = () => {
     navigate(homePath);
+  };
+  
+  const goToBook = () => {
+    navigate(bookPath);
   };
 
   return (
     <div className="flex flex-wrap justify-center gap-4 mt-8">
       {/* Кнопка на главную */}
-      <Button
-        onClick={goHome}
-        variant="outline"
-        className="flex items-center gap-2"
-      >
-        <Home className="size-4" />
-        {homeLabel}
-      </Button>
+      {showHomeButton && (
+        <Button
+          onClick={goHome}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Home className="size-4" />
+          {homeLabel}
+        </Button>
+      )}
+      
+      {/* Кнопка справочника */}
+      {showBookButton && (
+        <Button
+          onClick={goToBook}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Book className="size-4" />
+          {bookLabel}
+        </Button>
+      )}
 
       {/* Кнопка назад */}
       <Button
