@@ -140,22 +140,7 @@ const Index = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Book className="size-5" />
-                    Справочник D&D 5e
-                  </CardTitle>
-                  <CardDescription>
-                    Правила, монстры, заклинания и предметы
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => navigate("/library")} className="w-full">
-                    Открыть справочник
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Карточка "Справочник D&D 5e" удалена, так как руководство игрока уже содержит эту информацию */}
             </div>
           </div>
 
