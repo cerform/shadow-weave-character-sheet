@@ -1,29 +1,24 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ThemeSelector from "@/components/character-sheet/ThemeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
+import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
 
 const Index = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // TODO: Implement character loading logic
       console.log("Loading character from file:", file.name);
-    }
-  };
-
-  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      // TODO: Implement PDF character import
-      console.log("Loading character from PDF:", file.name);
     }
   };
 
@@ -77,17 +72,14 @@ const Index = () => {
                     onChange={handleFileUpload}
                   />
                   
-                  <Button variant="outline" onClick={() => document.getElementById("pdf-file")?.click()} className="w-full gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setPdfImportDialogOpen(true)}
+                    className="w-full gap-2"
+                  >
                     <FileUp className="size-4" />
                     Импорт из PDF
                   </Button>
-                  <input
-                    type="file"
-                    id="pdf-file"
-                    accept=".pdf"
-                    className="hidden"
-                    onChange={handlePdfUpload}
-                  />
                 </CardContent>
               </Card>
               
@@ -177,6 +169,16 @@ const Index = () => {
           <p>D&D 5e Character Sheet Creator © 2025</p>
         </footer>
       </div>
+
+      {/* Диалоговое окно для импорта PDF */}
+      <Dialog open={pdfImportDialogOpen} onOpenChange={setPdfImportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Импорт персонажа из PDF</DialogTitle>
+          </DialogHeader>
+          <PdfCharacterImport />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

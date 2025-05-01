@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, ArrowLeft, ArrowRight, Book } from "lucide-react";
+import { Home, ArrowLeft, ArrowRight, Book, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -19,6 +19,8 @@ interface NavigationButtonsProps {
   showBookButton?: boolean;
   bookPath?: string;
   bookLabel?: string;
+  showPdfImportButton?: boolean;
+  onPdfImportClick?: () => void;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -34,7 +36,9 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   showHomeButton = true,
   showBookButton = false,
   bookPath = "/handbook",
-  bookLabel = "Справочник"
+  bookLabel = "Справочник",
+  showPdfImportButton = false,
+  onPdfImportClick
 }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -70,6 +74,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         >
           <Book className="size-4" />
           {bookLabel}
+        </Button>
+      )}
+      
+      {/* Кнопка импорта из PDF */}
+      {showPdfImportButton && onPdfImportClick && (
+        <Button
+          onClick={onPdfImportClick}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <FileUp className="size-4" />
+          Импорт из PDF
         </Button>
       )}
 
