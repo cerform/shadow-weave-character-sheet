@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -111,10 +110,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Type guard to ensure spell has the right properties
+        // Properly type guard the spell object and its properties
         if (typeof spell === 'object' && spell !== null && 'name' in spell) {
           const spellName = spell.name;
-          // Make sure spellName is a string before using toLowerCase
           if (typeof spellName === 'string') {
             return spellName.toLowerCase().includes(searchQuery.toLowerCase());
           }
@@ -128,7 +126,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Фильтр по уровню
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
-        // Тщательно проверяем тип spell и его свойства
         if (typeof spell === 'object' && spell !== null && 'level' in spell) {
           const level = spell.level;
           if (typeof level === 'number') {
@@ -271,7 +268,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </div>
         ) : (
           <p className="text-muted-foreground">
-            У вас пока нет выбранных заклинаний
+            У вас пока нет выб��анных заклинаний
           </p>
         )}
       </div>
