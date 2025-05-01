@@ -39,10 +39,16 @@ const Index = () => {
         </header>
 
         <main className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold">Игрок</h3>
-              
+          {/* Заголовки разделов в одну строку с отступами */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mb-6">
+            <h3 className="text-2xl font-bold">Игрок</h3>
+            <h3 className="text-2xl font-bold mt-6 md:mt-0">Мастер Подземелий</h3>
+          </div>
+          
+          {/* Основная сетка карточек */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* Колонка игрока */}
+            <div className="grid grid-cols-1 gap-4">
               <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -120,10 +126,9 @@ const Index = () => {
               </Card>
             </div>
             
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold">Мастер Подземелий</h3>
-              
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+            {/* Колонка мастера */}
+            <div className="grid grid-cols-1 gap-4">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="size-5" />
