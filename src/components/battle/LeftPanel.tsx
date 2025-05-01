@@ -31,16 +31,16 @@ interface LeftPanelProps {
   battleState: BattleState;
 }
 
-// Примеры монстров с фэнтези-изображениями
+// Фэнтези монстры с тематическими изображениями
 const monsterTemplates = [
-  { name: "Гоблин", hp: 7, ac: 15, img: "https://i.pinimg.com/564x/45/4c/4a/454c4a7d28b104e60940d3d0dcf8f45f.jpg", type: "monster" },
-  { name: "Орк", hp: 15, ac: 13, img: "https://i.pinimg.com/564x/c2/8e/13/c28e130ac110eb3fdd474d13af700cea.jpg", type: "monster" },
-  { name: "Тролль", hp: 84, ac: 15, img: "https://i.pinimg.com/564x/7d/b3/40/7db340b2c75dd7e0aab841045e9d2c1b.jpg", type: "boss" },
-  { name: "Дракон", hp: 178, ac: 19, img: "https://i.pinimg.com/564x/bf/8a/69/bf8a69fe5eb10ded5c6f3920a757baa9.jpg", type: "boss" },
-  { name: "Скелет", hp: 13, ac: 13, img: "https://i.pinimg.com/564x/e2/f2/12/e2f212e09a97a4def5714cb8ac7726db.jpg", type: "monster" },
-  { name: "Слайм", hp: 22, ac: 11, img: "https://i.pinimg.com/564x/84/ee/80/84ee80563c7f3921f8a803a7d44a1d00.jpg", type: "monster" },
-  { name: "Вампир", hp: 144, ac: 16, img: "https://i.pinimg.com/564x/16/52/f3/1652f3e0521e34a64f42b6b88fd241e4.jpg", type: "boss" },
-  { name: "Минотавр", hp: 76, ac: 14, img: "https://i.pinimg.com/564x/42/04/24/420424a4643b532794fd0bd8baf9cd9d.jpg", type: "boss" }
+  { name: "Гоблин", hp: 7, ac: 15, img: "https://i.pinimg.com/564x/28/fc/99/28fc99a02d54689d8ef6e89bb530e3e3.jpg", type: "monster" },
+  { name: "Орк", hp: 15, ac: 13, img: "https://i.pinimg.com/564x/02/88/e5/0288e5bd8af3b8591591544c9330a9c5.jpg", type: "monster" },
+  { name: "Тролль", hp: 84, ac: 15, img: "https://i.pinimg.com/564x/33/87/aa/3387aa658b4c2b407041e60459c5500f.jpg", type: "boss" },
+  { name: "Дракон", hp: 178, ac: 19, img: "https://i.pinimg.com/564x/a3/aa/c7/a3aac7acf9b0217b2bf8d98a0b17e4ac.jpg", type: "boss" },
+  { name: "Скелет", hp: 13, ac: 13, img: "https://i.pinimg.com/564x/5b/2e/07/5b2e07e8c4ded603b7364753d7b52126.jpg", type: "monster" },
+  { name: "Слайм", hp: 22, ac: 11, img: "https://i.pinimg.com/564x/d5/21/b8/d521b828da5ca7be029c67300ebb3919.jpg", type: "monster" },
+  { name: "Вампир", hp: 144, ac: 16, img: "https://i.pinimg.com/564x/be/e4/d0/bee4d0d3fc9f816feff453754bcdab0a.jpg", type: "boss" },
+  { name: "Минотавр", hp: 76, ac: 14, img: "https://i.pinimg.com/564x/88/6e/a2/886ea2e87a346e23c75231d12fef5feb.jpg", type: "boss" }
 ];
 
 const LeftPanel: React.FC<LeftPanelProps> = ({ 
@@ -76,7 +76,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       maxHp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       ac: newTokenType === "boss" ? 17 : newTokenType === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5), // This is where the fix happens: ensuring initiative is a number
+      initiative: Math.floor(Math.random() * 5), // Убедимся, что initiative всегда число
       conditions: [],
       resources: {},
       visible: true
@@ -100,7 +100,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: monster.hp,
       maxHp: monster.hp,
       ac: monster.ac,
-      initiative: Math.floor(Math.random() * 5),
+      initiative: Math.floor(Math.random() * 5), // Убедимся, что initiative всегда число
       conditions: [],
       resources: {},
       visible: true
