@@ -27,7 +27,7 @@ const CharacterCreationPage = () => {
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
-  const { currentStep, nextStep, prevStep } = useCreationStep(isMagicClass, character.class);
+  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep(isMagicClass, character.class);
 
   // Навигация на главную
   const goToHomePage = () => {
@@ -50,6 +50,11 @@ const CharacterCreationPage = () => {
       console.log("Уровень персонажа изменен на:", level);
       updateCharacter({ level });
     }
+  };
+
+  // Переход к последнему шагу (обзор персонажа)
+  const goToFinalReview = () => {
+    setCurrentStep(9);
   };
 
   return (

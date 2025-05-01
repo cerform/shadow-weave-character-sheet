@@ -3,6 +3,9 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Check, Download, FileText } from "lucide-react";
+import { downloadCharacterPDF } from "@/utils/characterPdfGenerator";
 
 type Props = {
   character: {
@@ -127,6 +130,72 @@ export default function CharacterReview({ character, prevStep }: Props) {
     navigate("/sheet");
   };
 
+  const handleDownloadPdf = () => {
+    if (!character.name) {
+      toast({
+        title: "Ошибка",
+        description: "Персонаж должен иметь имя",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Преобразуем character в формат Character для PDF
+    const abilities = {
+      STR: character.stats.strength,
+      DEX: character.stats.dexterity,
+      CON: character.stats.constitution,
+      INT: character.stats.intelligence,
+      WIS: character.stats.wisdom,
+      CHA: character.stats.charisma,
+    };
+    
+    const conModifier = Math.floor((character.stats.constitution - 10) / 2);
+    let baseHp = 0;
+    
+    switch(character.class) {
+      case "Варвар": baseHp = 12; break;
+      case "Воин": 
+      case "Паладин":
+      case "Следопыт": baseHp = 10; break;
+      case "Жрец":
+      case "Друид":
+      case "Монах":
+      case "Плут": baseHp = 8; break;
+      case "Волшебник":
+      case "Чародей": baseHp = 6; break;
+      default: baseHp = 8;
+    }
+    
+    const maxHp = baseHp + conModifier;
+    
+    const charForPdf: Character = {
+      name: character.name,
+      race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
+      className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
+      level: 1,
+      abilities: abilities,
+      spells: character.spells || [],
+      spellSlots: {},
+      maxHp: maxHp,
+      currentHp: maxHp,
+      gender: character.gender,
+      alignment: character.alignment,
+      background: character.background,
+      equipment: character.equipment,
+      languages: character.languages,
+      proficiencies: character.proficiencies,
+    };
+    
+    // Скачиваем PDF
+    downloadCharacterPDF(charForPdf);
+    
+    toast({
+      title: "PDF создан",
+      description: "Лист персонажа успешно скачан!"
+    });
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Проверка персонажа</h1>
@@ -231,19 +300,30 @@ export default function CharacterReview({ character, prevStep }: Props) {
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-4">
-        <button
+      <div className="flex flex-wrap gap-4 justify-center">
+        <Button
           onClick={prevStep}
-          className="px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded"
+          variant="outline"
+          className="flex items-center gap-2"
         >
           Назад
-        </button>
-        <button
-          onClick={handleFinish}
-          className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/80 rounded"
+        </Button>
+        <Button
+          onClick={handleDownloadPdf}
+          variant="outline"
+          className="flex items-center gap-2"
         >
+          <FileText className="h-4 w-4" />
+          Скачать PDF
+        </Button>
+        <Button
+          onClick={handleFinish}
+          variant="default"
+          className="flex items-center gap-2"
+        >
+          <Check className="h-4 w-4" />
           Завершить и сохранить
-        </button>
+        </Button>
       </div>
     </div>
   );
