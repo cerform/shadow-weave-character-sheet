@@ -6,6 +6,8 @@ import { CharacterContext } from "@/contexts/CharacterContext";
 import { getSpellDetails } from "@/data/spells";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Book } from "lucide-react";
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 export const SpellsTab = () => {
   const { character } = useContext(CharacterContext);
@@ -40,6 +42,42 @@ export const SpellsTab = () => {
     };
     
     return schoolColors[school] || "bg-primary/20";
+  };
+
+  const renderComponents = (components?: string) => {
+    if (!components) return null;
+    return (
+      <div className="text-xs text-muted-foreground mt-1">
+        <span className="font-medium">Компоненты: </span>{components}
+      </div>
+    );
+  };
+
+  const renderCastingTime = (castingTime?: string) => {
+    if (!castingTime) return null;
+    return (
+      <div className="text-xs text-muted-foreground mt-1">
+        <span className="font-medium">Время накладывания: </span>{castingTime}
+      </div>
+    );
+  };
+
+  const renderRange = (range?: string) => {
+    if (!range) return null;
+    return (
+      <div className="text-xs text-muted-foreground mt-1">
+        <span className="font-medium">Дистанция: </span>{range}
+      </div>
+    );
+  };
+
+  const renderDuration = (duration?: string) => {
+    if (!duration) return null;
+    return (
+      <div className="text-xs text-muted-foreground mt-1">
+        <span className="font-medium">Длительность: </span>{duration}
+      </div>
+    );
   };
 
   if (!character?.spells || character?.spells.length === 0) {
@@ -94,17 +132,37 @@ export const SpellsTab = () => {
                           </div>
                         </div>
                       </HoverCardTrigger>
-                      <HoverCardContent className="w-80">
+                      <HoverCardContent className="w-96 max-h-[80vh] overflow-auto">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-semibold">{spell}</h4>
-                            <span className={`text-xs px-2 py-1 rounded ${details?.school ? getSchoolColor(details.school) : ''}`}>
+                            <h4 className="font-semibold text-lg">{spell}</h4>
+                            <Badge className={`${details?.school ? getSchoolColor(details.school) : ''}`}>
                               {Number(level) === 0 ? "Заговор" : `${level} круг`}
-                            </span>
+                            </Badge>
                           </div>
+                          
                           <p className="text-xs text-muted-foreground">{details?.school}</p>
-                          <p className="text-sm mt-2">{details?.description}</p>
-                          <div className="text-xs text-muted-foreground pt-2 border-t">
+                          
+                          <div className="py-2">
+                            {renderCastingTime(details?.castingTime)}
+                            {renderRange(details?.range)}
+                            {renderComponents(details?.components)}
+                            {renderDuration(details?.duration)}
+                          </div>
+                          
+                          <Separator className="my-2" />
+                          
+                          <div className="space-y-2">
+                            <p className="text-sm">{details?.description}</p>
+                            {details?.higherLevels && (
+                              <div className="pt-2 text-sm">
+                                <p className="font-medium">На более высоком уровне:</p>
+                                <p>{details.higherLevels}</p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
                             Классы: {details?.classes.join(", ")}
                           </div>
                         </div>
