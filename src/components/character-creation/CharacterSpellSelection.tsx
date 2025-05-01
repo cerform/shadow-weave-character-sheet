@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { getSpellsByClass, getSpellDetails } from "@/data/spells";
+import { getSpellsByClass, getSpellDetails } from "@/data/spells"; // Исправили getSpellsForClass на getSpellsByClass
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
 import { getSpellDetails } from "@/data/spells";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Book, Plus, Search, Filter } from "lucide-react";
+import { Book, Plus, Search, Filter } from "lucide-react"; // Добавили импорт Search
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
