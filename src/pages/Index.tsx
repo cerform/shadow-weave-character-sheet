@@ -107,7 +107,28 @@ const Index = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* Колонка мастера */}
+            <div className="grid grid-cols-1 gap-4">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="size-5" />
+                    Управление сессиями
+                  </CardTitle>
+                  <CardDescription>
+                    Создавайте и управляйте игровыми сессиями
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate("/dm")} className="w-full">
+                    Панель мастера
+                  </Button>
+                </CardContent>
+              </Card>
 
+              {/* Руководство игрока перемещено сюда, в колонку мастера */}
               <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -124,28 +145,6 @@ const Index = () => {
                   </Button>
                 </CardContent>
               </Card>
-            </div>
-            
-            {/* Колонка мастера */}
-            <div className="grid grid-cols-1 gap-4">
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="size-5" />
-                    Управление сессиями
-                  </CardTitle>
-                  <CardDescription>
-                    Создавайте и управляйте игровыми сессиями
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => navigate("/dm")} className="w-full">
-                    Панель мастера
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              {/* Карточка "Справочник D&D 5e" удалена, так как руководство игрока уже содержит эту информацию */}
             </div>
           </div>
 
