@@ -30,19 +30,20 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     Math.random() * 0.2 - 0.1,
     Math.random() * 0.2 - 0.1
   ));
-  const [initialRoll, setInitialRoll] = useState(true);
   const { theme } = useTheme();
+  
+  // Auto-roll on first render
+  useEffect(() => {
+    // Small delay for initial rendering
+    const timer = setTimeout(() => {
+      roll();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
   
   // Animation logic
   useFrame((state) => {
     if (!meshRef.current) return;
-    
-    if (initialRoll) {
-      // Initial gentle rotation
-      meshRef.current.rotation.x += 0.005;
-      meshRef.current.rotation.y += 0.005;
-      return;
-    }
     
     if (rolling) {
       // Active roll animation
@@ -66,6 +67,10 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
         setResult(diceResult);
         onRollComplete(diceResult);
       }
+    } else {
+      // Gentle idle rotation when not rolling
+      meshRef.current.rotation.x += 0.005;
+      meshRef.current.rotation.y += 0.005;
     }
   });
   
@@ -120,7 +125,6 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
   
   // Roll the die with random force
   const roll = () => {
-    setInitialRoll(false);
     setRolling(true);
     rotationSpeed.current = new THREE.Vector3(
       Math.random() * 0.3 - 0.15,
@@ -196,30 +200,30 @@ export const DiceRoller3D = () => {
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 mb-3 bg-black/10 rounded-lg overflow-hidden relative">
+      <div className="flex-1 mb-6 bg-black/10 rounded-lg overflow-hidden relative">
         <Canvas shadows>
           <Suspense fallback={null}>
             <DiceScene diceType={activeDice} onRollComplete={handleRollComplete} />
           </Suspense>
         </Canvas>
-        
-        {/* Improved results display - always visible with better contrast */}
-        <div className="absolute bottom-2 right-2 bg-primary/40 backdrop-blur-md p-3 rounded-md shadow-lg">
-          {rolling ? (
-            <span className="font-bold text-lg text-white animate-pulse">Бросок...</span>
-          ) : results.length > 0 ? (
-            <div className="text-center">
-              <span className="font-bold text-2xl text-white">{totalResult}</span>
-              {results.length > 1 && (
-                <div className="text-xs mt-0.5 text-white opacity-90">
-                  {results.map((r, i) => r.value).join(' + ')}
-                </div>
-              )}
-            </div>
-          ) : (
-            <span className="font-bold text-lg text-white/70">Кликните для броска</span>
-          )}
-        </div>
+      </div>
+      
+      {/* Results display - moved below the dice */}
+      <div className="mb-4 bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
+        {rolling ? (
+          <span className="font-bold text-lg animate-pulse">Бросок...</span>
+        ) : results.length > 0 ? (
+          <div>
+            <span className="font-bold text-2xl">{totalResult}</span>
+            {results.length > 1 && (
+              <div className="text-xs mt-0.5 opacity-90">
+                {results.map((r, i) => r.value).join(' + ')}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="font-bold text-lg opacity-70">Нажмите на кубик выше для броска</span>
+        )}
       </div>
       
       {/* History display - improved visibility */}

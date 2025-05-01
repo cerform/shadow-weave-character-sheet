@@ -69,7 +69,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (character.class === "Чернокнижник") {
       return Math.min(2 + Math.floor(level / 2), 8);
     }
-    if (character.class === "Клерик" || character.class === "Друид" || character.class === "Бард") {
+    if (character.class === "Жрец" || character.class === "Друид" || character.class === "Бард") {
       return Math.min(4 + Math.floor(level / 3), 12);
     }
     if (character.class === "Паладин" || character.class === "Следопыт") {
@@ -86,7 +86,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const canContinue = () => {
     // Magic classes must select at least 1 spell to continue
     if (character.class === "Волшебник" || character.class === "Чародей" || 
-        character.class === "Клерик" || character.class === "Друид" || 
+        character.class === "Жрец" || character.class === "Друид" || 
         character.class === "Бард" || character.class === "Паладин" || 
         character.class === "Следопыт" || character.class === "Чернокнижник") {
       return selectedSpells.length > 0;
@@ -106,6 +106,21 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }, []);
     return null;
   }
+
+  // Create a placeholder spell details if not available in our data
+  const getSpellDetails = (spellName: string) => {
+    if (SPELL_DETAILS[spellName]) {
+      return SPELL_DETAILS[spellName];
+    }
+    return {
+      level: 1,
+      school: "Неизвестная",
+      castingTime: "1 действие",
+      range: "30 футов",
+      duration: "Мгновенная",
+      description: "Подробное описание заклинания недоступно."
+    };
+  };
 
   return (
     <div>
@@ -153,31 +168,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     </button>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80">
-                    {SPELL_DETAILS[spell] ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <h4 className="font-semibold">{spell}</h4>
-                          <span className="text-xs bg-primary/20 px-2 py-1 rounded">
-                            {SPELL_DETAILS[spell].level === 0 ? "Заговор" : `${SPELL_DETAILS[spell].level} уровень`}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{SPELL_DETAILS[spell].school}</p>
-                        <div className="grid grid-cols-2 gap-1 text-xs">
-                          <div>
-                            <span className="font-medium">Время накладывания:</span> {SPELL_DETAILS[spell].castingTime}
-                          </div>
-                          <div>
-                            <span className="font-medium">Дистанция:</span> {SPELL_DETAILS[spell].range}
-                          </div>
-                          <div>
-                            <span className="font-medium">Длительность:</span> {SPELL_DETAILS[spell].duration}
-                          </div>
-                        </div>
-                        <p className="text-sm mt-2">{SPELL_DETAILS[spell].description}</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <h4 className="font-semibold">{spell}</h4>
+                        <span className="text-xs bg-primary/20 px-2 py-1 rounded">
+                          {getSpellDetails(spell).level === 0 ? "Заговор" : `${getSpellDetails(spell).level} уровень`}
+                        </span>
                       </div>
-                    ) : (
-                      <p>Детали заклинания недоступны</p>
-                    )}
+                      <p className="text-xs text-muted-foreground">{getSpellDetails(spell).school}</p>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div>
+                          <span className="font-medium">Время накладывания:</span> {getSpellDetails(spell).castingTime}
+                        </div>
+                        <div>
+                          <span className="font-medium">Дистанция:</span> {getSpellDetails(spell).range}
+                        </div>
+                        <div>
+                          <span className="font-medium">Длительность:</span> {getSpellDetails(spell).duration}
+                        </div>
+                      </div>
+                      <p className="text-sm mt-2">{getSpellDetails(spell).description}</p>
+                    </div>
                   </HoverCardContent>
                 </HoverCard>
               ))}

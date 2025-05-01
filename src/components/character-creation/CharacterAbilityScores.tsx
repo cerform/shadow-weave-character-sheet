@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
+import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
+import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
 
 interface CharacterAbilityScoresProps {
   character: any;
@@ -40,6 +43,9 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     wisdom: null,
     charisma: null,
   });
+  
+  const [showDiceRoller, setShowDiceRoller] = useState(false);
+  const [activeAbility, setActiveAbility] = useState<string | null>(null);
 
   // Константы для расчета Point Buy
   const POINT_COSTS: {[key: number]: number} = {
@@ -119,6 +125,20 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       setAssignedDice({ ...assignedDice, [stat]: diceIndex });
     }
   };
+  
+  // Обработчик для 3D кубиков
+  const handleRollAbility = (stat: keyof typeof stats) => {
+    setActiveAbility(stat);
+    setShowDiceRoller(true);
+  };
+  
+  const handleDiceResult = (result: number) => {
+    if (activeAbility) {
+      setStats({ ...stats, [activeAbility]: result });
+      setShowDiceRoller(false);
+      setActiveAbility(null);
+    }
+  };
 
   const handleNext = () => {
     updateCharacter({ stats });
@@ -128,6 +148,19 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Распределение характеристик</h2>
+      
+      {/* 3D Dice Roller */}
+      {showDiceRoller && (
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold mb-2">Бросок для {getStatName(activeAbility || '')}</h3>
+          <div className="h-80">
+            <DiceRoller3D />
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button onClick={() => setShowDiceRoller(false)}>Закрыть</Button>
+          </div>
+        </div>
+      )}
       
       {abilitiesMethod === "pointbuy" && (
         <div className="mb-4">
@@ -173,6 +206,15 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
               
               {abilitiesMethod === "roll" && (
                 <div>
+                  <Button
+                    onClick={() => handleRollAbility(stat)}
+                    size="sm"
+                    variant="outline"
+                    className="mb-2"
+                  >
+                    Бросить 3D кубики
+                  </Button>
+                  
                   {assignedDice[stat] !== null ? (
                     <Button
                       onClick={() => setAssignedDice({...assignedDice, [stat]: null})}

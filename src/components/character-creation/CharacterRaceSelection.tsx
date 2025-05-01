@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { races } from "@/data/races";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +22,20 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   const [selectedSubrace, setSelectedSubrace] = useState<string>(character.subrace || "");
   const [activeTab, setActiveTab] = useState<string>("overview");
 
+  // Reset selected subrace when race changes
+  useEffect(() => {
+    setSelectedSubrace("");
+  }, [selectedRace]);
+  
   const handleNext = () => {
+    const selectedRaceData = races.find((race) => race.name === selectedRace);
+    const needsSubrace = selectedRaceData?.subRaces && selectedRaceData.subRaces.length > 0;
+    
+    // Can't proceed if subrace is needed but not selected
+    if (needsSubrace && !selectedSubrace) {
+      return;
+    }
+    
     updateCharacter({
       race: selectedRace,
       subrace: selectedSubrace,
@@ -32,6 +45,18 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
 
   // Find the selected race from data
   const selectedRaceData = races.find((race) => race.name === selectedRace);
+  const hasSubraces = selectedRaceData?.subRaces && selectedRaceData.subRaces.length > 0;
+  const canProceed = selectedRace && (!hasSubraces || selectedSubrace);
+
+  // Get subrace details if available
+  const getSubraceDetails = () => {
+    if (selectedRaceData?.subRaceDetails && selectedSubrace) {
+      return selectedRaceData.subRaceDetails[selectedSubrace];
+    }
+    return null;
+  };
+
+  const subraceDetails = getSubraceDetails();
 
   return (
     <div>
@@ -65,7 +90,9 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
             <TabsList className="grid grid-cols-3 mb-4">
               <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="traits">Особенности</TabsTrigger>
-              <TabsTrigger value="subraces">Подрасы</TabsTrigger>
+              {hasSubraces && (
+                <TabsTrigger value="subraces">Подрасы</TabsTrigger>
+              )}
             </TabsList>
             
             <ScrollArea className="h-64 rounded-md border p-4">
@@ -74,7 +101,9 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <h4 className="font-medium text-sm">Бонусы к характеристикам</h4>
-                    <p className="text-sm">{selectedRaceData.abilityBonuses}</p>
+                    <p className="text-sm">
+                      {selectedSubrace && subraceDetails ? subraceDetails.abilityBonuses : selectedRaceData.abilityBonuses}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm">Продолжительность жизни</h4>
@@ -101,42 +130,68 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               
               <TabsContent value="traits" className="mt-0">
                 <div className="space-y-4">
+                  {/* Display base race traits */}
                   {selectedRaceData.traits.map((trait, index) => (
                     <div key={index}>
                       <h4 className="font-medium">{trait.name}</h4>
                       <p className="text-sm text-muted-foreground">{trait.description}</p>
                     </div>
                   ))}
+                  
+                  {/* Display subrace traits if available */}
+                  {selectedSubrace && subraceDetails && subraceDetails.traits && (
+                    <div className="mt-4 pt-4 border-t">
+                      <h4 className="font-medium text-lg mb-2">Особенности подрасы: {selectedSubrace}</h4>
+                      {subraceDetails.traits.map((trait: any, index: number) => (
+                        <div key={`subrace-${index}`} className="mt-2">
+                          <h5 className="font-medium">{trait.name}</h5>
+                          <p className="text-sm text-muted-foreground">{trait.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
               
-              <TabsContent value="subraces" className="mt-0">
-                {selectedRaceData.subRaces && selectedRaceData.subRaces.length > 0 ? (
+              {hasSubraces && (
+                <TabsContent value="subraces" className="mt-0">
                   <div className="space-y-4">
                     <p className="mb-4">Выберите подрасу:</p>
-                    {selectedRaceData.subRaces.map((subrace, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedSubrace(subrace)}
-                        className={`block w-full text-left p-3 border rounded ${
-                          selectedSubrace === subrace ? "bg-primary/20 border-primary" : ""
-                        }`}
-                      >
-                        {subrace}
-                      </button>
-                    ))}
+                    
+                    {selectedRaceData.subRaces.map((subrace, index) => {
+                      const subraceDetail = selectedRaceData.subRaceDetails?.[subrace];
+                      
+                      return (
+                        <div key={index} 
+                          className={`block w-full text-left p-4 border rounded transition-colors ${
+                            selectedSubrace === subrace ? "bg-primary/20 border-primary" : "hover:bg-muted/30"
+                          }`}
+                          onClick={() => setSelectedSubrace(subrace)}
+                        >
+                          <h4 className="font-medium text-base">{subrace}</h4>
+                          
+                          {subraceDetail && (
+                            <>
+                              <p className="text-sm mt-1 text-muted-foreground">{subraceDetail.description}</p>
+                              <p className="text-sm mt-1">
+                                <span className="font-medium">Бонусы к характеристикам: </span>
+                                {subraceDetail.abilityBonuses}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <p>У этой расы нет подрас.</p>
-                )}
-              </TabsContent>
+                </TabsContent>
+              )}
             </ScrollArea>
           </Tabs>
         </div>
       )}
 
       <NavigationButtons
-        allowNext={!!selectedRace}
+        allowNext={canProceed}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={true}
