@@ -155,17 +155,25 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Фильтр по поиску
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
+        // Проверяем, что spell это объект с полем name
+        if (typeof spell === 'object' && spell !== null && 'name' in spell) {
+          return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        // Для случая, если spell это строка
         if (typeof spell === 'string') {
           return spell.toLowerCase().includes(searchQuery.toLowerCase());
         }
-        return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return false;
       });
     }
     
     // Фильтр по уровню
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
-        return spell.level === levelFilter;
+        if (typeof spell === 'object' && spell !== null && 'level' in spell) {
+          return spell.level === levelFilter;
+        }
+        return false;
       });
     }
     
