@@ -1,10 +1,19 @@
+
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Home, ArrowLeft, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface NavigationButtonsProps {
   allowNext: boolean;
   nextStep: () => void;
   prevStep: () => void;
   isFirstStep?: boolean;
+  isLastStep?: boolean;
+  homePath?: string;
+  nextLabel?: string;
+  prevLabel?: string;
+  homeLabel?: string;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -12,34 +21,50 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextStep,
   prevStep,
   isFirstStep = false,
+  isLastStep = false,
+  homePath = "/",
+  nextLabel = "Далее",
+  prevLabel = "Назад",
+  homeLabel = "На главную",
 }) => {
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate(homePath);
+  };
+
   return (
     <div className="flex flex-wrap justify-center gap-4 mt-8">
       {/* Кнопка на главную */}
-      <button
-        onClick={() => (window.location.href = "/")}
-        className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 rounded"
+      <Button
+        onClick={goHome}
+        variant="outline"
+        className="flex items-center gap-2"
       >
-        На главную
-      </button>
+        <Home className="size-4" />
+        {homeLabel}
+      </Button>
 
       {/* Кнопка назад */}
-      <button
+      <Button
         onClick={prevStep}
         disabled={isFirstStep}
-        className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white dark:bg-gray-600 dark:hover:bg-gray-700 rounded disabled:opacity-50"
+        variant="outline"
+        className="flex items-center gap-2"
       >
-        Назад
-      </button>
+        <ArrowLeft className="size-4" />
+        {prevLabel}
+      </Button>
 
       {/* Кнопка далее */}
-      <button
+      <Button
         onClick={nextStep}
         disabled={!allowNext}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 rounded disabled:opacity-50"
+        className="flex items-center gap-2"
       >
-        Далее
-      </button>
+        <ArrowRight className="size-4" />
+        {nextLabel}
+      </Button>
     </div>
   );
 };

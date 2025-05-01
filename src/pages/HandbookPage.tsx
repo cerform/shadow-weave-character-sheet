@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -10,9 +11,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Home, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import NavigationButtons from "@/components/character-creation/NavigationButtons";
 
 const HandbookPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">
@@ -23,6 +28,17 @@ const HandbookPage: React.FC = () => {
         <p className="text-muted-foreground">
           Основная информация для игроков Dungeons & Dragons 5-й редакции
         </p>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
+          <Home className="size-4" />
+          На главную
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/spellbook')} className="flex items-center gap-2">
+          <BookOpen className="size-4" />
+          Книга заклинаний
+        </Button>
       </div>
 
       <Tabs defaultValue="races" className="space-y-4">

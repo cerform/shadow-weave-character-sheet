@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -65,11 +65,16 @@ import {
   User,
   Search,
   Book,
+  Home,
+  ArrowLeft,
+  BookOpen
 } from "lucide-react"
 import { CharacterSpell } from '@/types/character';
 import { spells } from '@/data/spells';
 
 const PlayerHandbookPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -162,6 +167,17 @@ const PlayerHandbookPage: React.FC = () => {
         <p className="text-muted-foreground">
           Полная библиотека заклинаний мира D&D 5e
         </p>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
+          <Home className="size-4" />
+          На главную
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/handbook')} className="flex items-center gap-2">
+          <BookOpen className="size-4" />
+          Руководство игрока
+        </Button>
       </div>
 
       <div className="lg:grid grid-cols-5 gap-4">
