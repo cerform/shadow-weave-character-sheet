@@ -27,7 +27,13 @@ const CharacterCreationPage = () => {
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
-  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep(isMagicClass(), character.class);
+  
+  // Fix: Update the hook call to match the expected parameters
+  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep({
+    isMagicClass: isMagicClass(),
+    characterClass: character.class,
+    character: character
+  });
 
   // Навигация на главную
   const goToHomePage = () => {
