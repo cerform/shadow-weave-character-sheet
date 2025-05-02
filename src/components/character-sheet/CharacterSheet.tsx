@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { StatsPanel } from './StatsPanel';
 import { CharacterTabs } from './CharacterTabs';
 import { ResourcePanel } from './ResourcePanel';
 import { RestPanel } from './RestPanel';
+import { ThemeSelector } from './ThemeSelector';
 
 interface CharacterSheetProps {
   character: Character | null;
@@ -123,6 +125,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
     
         {/* Добавляем навигационные кнопки вверху страницы */}
         <NavigationButtons className="mb-4" />
+        
+        {/* Добавляем селектор тем */}
+        <div className="flex justify-end mb-4">
+          <ThemeSelector />
+        </div>
       
         {/* Остальной контент */}
         <CharacterHeader 
