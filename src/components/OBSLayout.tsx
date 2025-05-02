@@ -1,5 +1,6 @@
 
-import React, { PropsWithChildren } from "react";
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface OBSLayoutProps {
   children: React.ReactNode;
@@ -8,6 +9,8 @@ interface OBSLayoutProps {
   topPanelContent?: React.ReactNode;
   bottomPanelContent?: React.ReactNode;
   className?: string;
+  leftPanelWidth?: string;
+  rightPanelWidth?: string;
 }
 
 export default function OBSLayout({ 
@@ -16,20 +19,37 @@ export default function OBSLayout({
   rightPanelContent,
   topPanelContent,
   bottomPanelContent,
-  className = ""
+  className = "",
+  leftPanelWidth = "250px",
+  rightPanelWidth = "300px"
 }: OBSLayoutProps) {
+  const hasTopPanel = !!topPanelContent;
+  const hasBottomPanel = !!bottomPanelContent;
+  const hasLeftPanel = !!leftPanelContent;
+  const hasRightPanel = !!rightPanelContent;
+  
+  // Определяем grid-template-rows и grid-template-columns динамически
+  const gridTemplateRows = hasTopPanel || hasBottomPanel 
+    ? "auto 1fr auto" 
+    : "1fr";
+    
+  const gridTemplateColumns = `${hasLeftPanel ? leftPanelWidth : '0'} 1fr ${hasRightPanel ? rightPanelWidth : '0'}`;
+  
   return (
-    <div className={`grid h-full w-full ${className}`} style={{
-      gridTemplateRows: topPanelContent || bottomPanelContent ? "auto 1fr auto" : "1fr",
-      gridTemplateColumns: "auto 1fr auto"
-    }}>
+    <div 
+      className={cn("grid h-full w-full overflow-hidden", className)} 
+      style={{
+        gridTemplateRows,
+        gridTemplateColumns
+      }}
+    >
       {topPanelContent && (
         <div className="col-span-3 border-b bg-muted/10">
           {topPanelContent}
         </div>
       )}
       
-      {leftPanelContent && (
+      {hasLeftPanel && (
         <div className="row-span-1 border-r bg-muted/10 h-full overflow-y-auto">
           {leftPanelContent}
         </div>
@@ -39,7 +59,7 @@ export default function OBSLayout({
         {children}
       </div>
       
-      {rightPanelContent && (
+      {hasRightPanel && (
         <div className="border-l bg-muted/10 h-full overflow-y-auto">
           {rightPanelContent}
         </div>

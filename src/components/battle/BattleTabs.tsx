@@ -5,8 +5,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, Book, Settings } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { Token, Initiative } from "@/pages/PlayBattlePage";
 import { BestiaryPanel } from "./BestiaryPanel";
+
+interface Token {
+  id: number;
+  name: string;
+  type: "player" | "monster" | "npc" | "boss";
+  img: string;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  ac: number;
+  initiative: number;
+  conditions: string[];
+  resources: { [key: string]: number };
+  visible: boolean;
+  size: number;
+}
+
+interface Initiative {
+  id: number;
+  tokenId: number;
+  name: string;
+  roll: number;
+  isActive: boolean;
+}
 
 interface BattleTabsProps {
   tokens: Token[];
@@ -21,7 +45,8 @@ interface BattleTabsProps {
   setFogOfWar?: (value: boolean) => void;
   gridSize?: { rows: number; cols: number };
   setGridSize?: (size: { rows: number; cols: number }) => void;
-  onAddToken?: (type: Token["type"]) => void; // Добавляем проп onAddToken
+  onAddToken?: (type: Token["type"]) => void;
+  isDM?: boolean; // Добавляем проп isDM
 }
 
 const BattleTabs: React.FC<BattleTabsProps> = ({
@@ -34,6 +59,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   removeToken,
   controlsPanel,
   onAddToken,
+  isDM = true, // По умолчанию - режим DM
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>("tokens");
   const { theme } = useTheme();
@@ -52,10 +78,12 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             <Users size={16} />
             <span className="text-xs mt-1">Токены</span>
           </TabsTrigger>
-          <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
-            <Book size={16} />
-            <span className="text-xs mt-1">Бестиарий</span>
-          </TabsTrigger>
+          {isDM && (
+            <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
+              <Book size={16} />
+              <span className="text-xs mt-1">Бестиарий</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="controls" className="flex flex-col items-center py-1">
             <Settings size={16} />
             <span className="text-xs mt-1">Настройки</span>
@@ -92,32 +120,34 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
                     <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {updateTokenHP && (
-                    <>
+                {isDM && (
+                  <div className="flex items-center gap-1">
+                    {updateTokenHP && (
+                      <>
+                        <button 
+                          className="h-6 w-6 flex items-center justify-center rounded border text-xs"
+                          onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}
+                        >
+                          -
+                        </button>
+                        <button 
+                          className="h-6 w-6 flex items-center justify-center rounded border text-xs"
+                          onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}
+                        >
+                          +
+                        </button>
+                      </>
+                    )}
+                    {removeToken && (
                       <button 
-                        className="h-6 w-6 flex items-center justify-center rounded border text-xs"
-                        onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}
+                        className="h-6 w-6 flex items-center justify-center rounded text-destructive"
+                        onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}
                       >
-                        -
+                        ✕
                       </button>
-                      <button 
-                        className="h-6 w-6 flex items-center justify-center rounded border text-xs"
-                        onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}
-                      >
-                        +
-                      </button>
-                    </>
-                  )}
-                  {removeToken && (
-                    <button 
-                      className="h-6 w-6 flex items-center justify-center rounded text-destructive"
-                      onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             
@@ -128,29 +158,31 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             )}
           </TabsContent>
           
-          <TabsContent value="bestiary" className="m-0 p-3 h-full">
-            <BestiaryPanel addToMap={(monster) => {
-              if (setTokens) {
-                const newToken = {
-                  id: Date.now(),
-                  name: monster.name,
-                  type: monster.challenge >= 5 ? "boss" : "monster" as "player" | "monster" | "boss" | "npc",
-                  img: monster.img || `/assets/tokens/${monster.type.toLowerCase()}.png`,
-                  x: 100 + Math.random() * 300,
-                  y: 100 + Math.random() * 300,
-                  hp: monster.hp,
-                  maxHp: monster.hp,
-                  ac: monster.ac,
-                  initiative: monster.dexMod || 0,
-                  conditions: [],
-                  resources: {},
-                  visible: true,
-                  size: monster.size === 'Large' ? 1.5 : monster.size === 'Huge' ? 2 : monster.size === 'Gargantuan' ? 2.5 : 1
-                };
-                setTokens(prev => [...prev, newToken]);
-              }
-            }} />
-          </TabsContent>
+          {isDM && (
+            <TabsContent value="bestiary" className="m-0 p-3 h-full">
+              <BestiaryPanel addToMap={(monster) => {
+                if (setTokens && isDM) {
+                  const newToken = {
+                    id: Date.now(),
+                    name: monster.name,
+                    type: monster.challenge >= 5 ? "boss" : "monster" as "player" | "monster" | "boss" | "npc",
+                    img: monster.img || `/assets/tokens/${monster.type.toLowerCase()}.png`,
+                    x: 100 + Math.random() * 300,
+                    y: 100 + Math.random() * 300,
+                    hp: monster.hp,
+                    maxHp: monster.hp,
+                    ac: monster.ac,
+                    initiative: monster.dexMod || 0,
+                    conditions: [],
+                    resources: {},
+                    visible: true,
+                    size: monster.size === 'Large' ? 1.5 : monster.size === 'Huge' ? 2 : monster.size === 'Gargantuan' ? 2.5 : 1
+                  };
+                  setTokens(prev => [...prev, newToken]);
+                }
+              }} />
+            </TabsContent>
+          )}
           
           <TabsContent value="controls" className="m-0 p-3 h-full">
             {controlsPanel}

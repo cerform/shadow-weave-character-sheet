@@ -2,9 +2,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, SkipForward, Image, Home, ArrowLeft } from "lucide-react";
-import { BattleState } from "@/pages/PlayBattlePage";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
+
+interface BattleState {
+  isActive: boolean;
+  round: number;
+  currentInitiativeIndex: number;
+}
 
 interface TopPanelProps {
   battleState: BattleState;
@@ -12,6 +17,7 @@ interface TopPanelProps {
   onPauseBattle: () => void;
   onNextTurn: () => void;
   onUploadBackground?: () => void;
+  isDM?: boolean; // Добавляем проп isDM
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -20,6 +26,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onPauseBattle,
   onNextTurn,
   onUploadBackground,
+  isDM = true, // По умолчанию - режим DM
 }) => {
   const navigate = useNavigate();
 
@@ -47,41 +54,46 @@ const TopPanel: React.FC<TopPanelProps> = ({
       </div>
 
       <div className="flex gap-2">
-        {!battleState.isActive && battleState.round === 0 ? (
-          <Button 
-            onClick={onStartBattle}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Play size={16} className="mr-1" />
-            Начать бой
-          </Button>
-        ) : (
+        {/* Только DM может управлять боем */}
+        {isDM && (
           <>
-            <Button onClick={onPauseBattle}>
-              {battleState.isActive ? (
-                <>
-                  <Pause size={16} className="mr-1" />
-                  Пауза
-                </>
-              ) : (
-                <>
-                  <Play size={16} className="mr-1" />
-                  Продолжить
-                </>
-              )}
-            </Button>
-            <Button 
-              onClick={onNextTurn}
-              disabled={!battleState.isActive}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <SkipForward size={16} className="mr-1" />
-              Следующий ход
-            </Button>
+            {!battleState.isActive && battleState.round === 0 ? (
+              <Button 
+                onClick={onStartBattle}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Play size={16} className="mr-1" />
+                Начать бой
+              </Button>
+            ) : (
+              <>
+                <Button onClick={onPauseBattle}>
+                  {battleState.isActive ? (
+                    <>
+                      <Pause size={16} className="mr-1" />
+                      Пауза
+                    </>
+                  ) : (
+                    <>
+                      <Play size={16} className="mr-1" />
+                      Продолжить
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={onNextTurn}
+                  disabled={!battleState.isActive}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <SkipForward size={16} className="mr-1" />
+                  Следующий ход
+                </Button>
+              </>
+            )}
           </>
         )}
 
-        {onUploadBackground && (
+        {isDM && onUploadBackground && (
           <Button 
             variant="outline" 
             size="sm"
