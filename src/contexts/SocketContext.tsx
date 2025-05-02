@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { socketService, ChatMessage } from '@/services/socket';
+import socketService, { ChatMessage } from '@/services/socket';
 import { SessionData, Token } from '@/types/socket';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -13,6 +13,7 @@ interface SocketContextType {
   sendChatMessage: (message: string) => void;
   sendRoll: (formula: string, reason?: string) => void;
   updateToken: (token: Partial<Token> & { id: string }) => void;
+  socketService: typeof socketService; // Добавляем экспорт socketService для прямого доступа
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -94,6 +95,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         sendChatMessage,
         sendRoll,
         updateToken,
+        socketService, // Предоставляем доступ к сервису сокетов
       }}
     >
       {children}

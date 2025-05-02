@@ -74,20 +74,22 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   };
   
   useEffect(() => {
-    // Используем правильные методы из объекта socket
-    if (socket) {
-      const handleRoll = (data: any) => {
-        setRollHistory((prev) => [...prev, data]);
-      };
-      
-      // Подписываемся на события через контекст
-      socket.on && socket.on('receive-roll', handleRoll);
+    // Создаем обработчик бросков кубиков
+    const handleRoll = (data: any) => {
+      setRollHistory((prev) => [...prev, data]);
+    };
+    
+    // Подключаемся к событиям получения бросков через socketService
+    const socketService = socket?.socketService;
+    if (socketService && socketService.on) {
+      socketService.on('receive-roll', handleRoll);
       
       return () => {
-        // Отписываемся при размонтировании
-        socket.off && socket.off('receive-roll', handleRoll);
+        socketService.off('receive-roll', handleRoll);
       };
     }
+    
+    return () => {};
   }, [socket]);
   
   const handleRoll = async () => {
@@ -112,7 +114,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     setRollHistory((prev) => [...prev, rollData]);
     
     if (socket && socket.sendRoll) {
-      // Используем правильный метод отправки через контекст
+      // Используем метод sendRoll из контекста для отправки броска
       const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
       socket.sendRoll(formula, reason);
     }
