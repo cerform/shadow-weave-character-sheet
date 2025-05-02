@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -10,7 +11,7 @@ import {
   SelectItem 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus, X, Check } from "lucide-react";
 import { CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 
@@ -159,6 +160,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return hasSpells(character.class);
   }, [character.class]);
   
+  // Проверяет, выбрано ли заклинание
+  const isSpellSelected = (spellName: string) => {
+    return character.spells.includes(spellName);
+  };
+  
   // Обработчик добавления заклинания
   const handleAddSpell = (spellName: string) => {
     if (!character.spells.includes(spellName)) {
@@ -247,28 +253,42 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             // Если пустое имя, пропускаем
             if (!spellName) return null;
             
+            // Проверяем, выбрано ли заклинание
+            const isSelected = isSpellSelected(spellName);
+            
             return (
               <div 
                 key={index} 
-                className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-md cursor-pointer"
+                className={`flex justify-between items-center p-2 hover:bg-muted/50 rounded-md cursor-pointer ${
+                  isSelected ? "bg-purple-100 dark:bg-purple-900/30" : ""
+                }`}
                 onClick={() => setSelectedSpell(spellName)}
               >
-                <div>
-                  <div>{spellName}</div>
+                <div className="flex-1">
+                  <div className={isSelected ? "text-purple-700 dark:text-purple-300 font-medium" : ""}>
+                    {spellName}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {spellLevel === 0 ? "Заговор" : `Уровень ${spellLevel}`}
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddSpell(spellName);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+                {isSelected ? (
+                  <div className="flex items-center text-purple-600 dark:text-purple-400 px-2">
+                    <Check className="h-4 w-4 mr-1" />
+                    <span className="text-sm">Выбрано</span>
+                  </div>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddSpell(spellName);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             );
           })
@@ -287,7 +307,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             {character.spells.map((spell, index) => (
               <div 
                 key={index} 
-                className="flex justify-between items-center p-2 border rounded-md"
+                className="flex justify-between items-center p-2 border rounded-md bg-purple-50 dark:bg-purple-900/20"
               >
                 <div>{spell}</div>
                 <Button 
