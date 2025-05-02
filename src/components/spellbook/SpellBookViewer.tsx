@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -119,7 +118,7 @@ const SpellBookViewer = () => {
           (spell.description && spell.description.toLowerCase().includes(term)) ||
           (spell.classes && (
             (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term)) ||
-            (Array.isArray(spell.classes) && spell.classes.some(cls => cls.toLowerCase().includes(term)))
+            (Array.isArray(spell.classes) && spell.classes.some(cls => typeof cls === 'string' && cls.toLowerCase().includes(term)))
           ))
       );
     }
@@ -158,7 +157,7 @@ const SpellBookViewer = () => {
   const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
 
   // Преобразовываем классы из массива в строку для отображения
-  const formatClasses = (classes: string[] | string): string => {
+  const formatClasses = (classes: string[] | string | undefined): string => {
     if (Array.isArray(classes)) {
       return classes.join(', ');
     }
