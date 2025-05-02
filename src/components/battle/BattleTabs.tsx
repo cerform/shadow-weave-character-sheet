@@ -21,6 +21,7 @@ interface BattleTabsProps {
   setFogOfWar?: (value: boolean) => void;
   gridSize?: { rows: number; cols: number };
   setGridSize?: (size: { rows: number; cols: number }) => void;
+  onAddToken?: (type: Token["type"]) => void; // Добавляем проп onAddToken
 }
 
 const BattleTabs: React.FC<BattleTabsProps> = ({
@@ -32,6 +33,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   updateTokenHP,
   removeToken,
   controlsPanel,
+  onAddToken,
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>("tokens");
   const { theme } = useTheme();

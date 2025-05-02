@@ -5,6 +5,7 @@ import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import BattleTabs from "@/components/battle/BattleTabs";
+import MapControls from "@/components/battle/MapControls"; // Добавляем импорт MapControls
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
@@ -203,7 +204,7 @@ const PlayBattlePage = () => {
     // Сортируем по результату инициатив (от большег к меньшему)
     const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
     
-    // Устанавливаем первого участника активным
+    // Устанавливаем первого у��астника активным
     if (sortedInitiative.length > 0) {
       sortedInitiative[0].isActive = true;
     }
@@ -694,8 +695,7 @@ const PlayBattlePage = () => {
               updateTokenHP={updateTokenHP}
               removeToken={removeToken}
               controlsPanel={mapControlPanel}
-              onAddToken={handleAddToken}
-              onAddPresetMonster={handleAddPresetMonster}
+              onAddToken={handleAddToken} // Добавляем пропс onAddToken
             />
           )}
         </ScrollArea>
