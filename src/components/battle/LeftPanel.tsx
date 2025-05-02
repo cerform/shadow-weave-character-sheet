@@ -1,5 +1,4 @@
 
-// В LeftPanel.tsx нужно исправить ошибку с типом initiative, чтобы оно всегда было числом
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -424,4 +423,3 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     </Card>
   );
 };
-
