@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookOpen, Home, Search, X, Filter, BookMarked, ArrowUp, ArrowDown } from "lucide-react";
+import { 
+  BookOpen, 
+  Home, 
+  Search, 
+  X, 
+  Filter, 
+  BookMarked, 
+  ArrowUp, 
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  Info
+} from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useDeviceType } from "@/hooks/use-mobile";
 import { getAllSpells, getSpellsByLevels, getSpellsBySchool } from "@/data/spells";
@@ -32,6 +45,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const schoolColors: Record<string, string> = {
   "Воплощение": "bg-red-500/20 text-red-800 dark:text-red-300",
@@ -57,6 +78,9 @@ const SpellbookPage: React.FC = () => {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [expandedSpellId, setExpandedSpellId] = useState<string | null>(null);
+  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
+  const [isSpellDialogOpen, setIsSpellDialogOpen] = useState(false);
 
   const allSpells = useMemo(() => getAllSpells(), []);
 
@@ -126,99 +150,195 @@ const SpellbookPage: React.FC = () => {
     if (level === 0) return "Загов.";
     return `${level} ур.`;
   };
+  
+  // Обработчик клика по заклинанию на мобильном устройстве
+  const handleSpellClick = (spell: CharacterSpell) => {
+    if (isMobile) {
+      setSelectedSpell(spell);
+      setIsSpellDialogOpen(true);
+    }
+  };
+
+  // Переключение раскрытия карточки заклинания
+  const toggleExpandSpell = (spellName: string) => {
+    if (expandedSpellId === spellName) {
+      setExpandedSpellId(null);
+    } else {
+      setExpandedSpellId(spellName);
+    }
+  };
 
   const spellCard = (spell: CharacterSpell) => {
     const schoolColor = schoolColors[spell.school] || "bg-primary/20";
+    const isExpanded = expandedSpellId === spell.name;
 
     return (
-      <HoverCard key={spell.name}>
-        <div className="bg-card/50 border border-border/50 rounded-md p-3 hover:border-primary/30 transition-colors">
-          <div className="flex justify-between items-start">
+      <div key={spell.name} className="bg-card/50 border border-border/50 rounded-md p-3 hover:border-primary/30 transition-colors">
+        {/* Десктопная версия */}
+        {!isMobile && (
+          <HoverCard>
             <div>
-              <HoverCardTrigger asChild>
-                <h3 className="font-medium text-lg text-primary cursor-pointer hover:underline">
-                  {spell.name}
-                </h3>
-              </HoverCardTrigger>
-              <div className="flex gap-2 flex-wrap mt-1">
-                <Badge variant="outline" className={schoolColor}>
-                  {spell.school}
-                </Badge>
-                <Badge variant="secondary">
-                  {formatSpellLevel(spell.level)}
-                </Badge>
-                {spell.ritual && (
-                  <Badge variant="outline" className="bg-indigo-500/20 text-indigo-800 dark:text-indigo-300">
-                    Ритуал
+              <div className="flex justify-between items-start">
+                <div>
+                  <HoverCardTrigger asChild>
+                    <h3 className="font-medium text-lg text-primary cursor-pointer hover:underline">
+                      {spell.name}
+                    </h3>
+                  </HoverCardTrigger>
+                  <div className="flex gap-2 flex-wrap mt-1">
+                    <Badge variant="outline" className={schoolColor}>
+                      {spell.school}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {formatSpellLevel(spell.level)}
+                    </Badge>
+                    {spell.ritual && (
+                      <Badge variant="outline" className="bg-indigo-500/20 text-indigo-800 dark:text-indigo-300">
+                        Ритуал
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-muted-foreground line-clamp-2 text-sm">
+                {spell.description?.substring(0, 120)}
+                {spell.description && spell.description.length > 120 && "..."}
+              </p>
+              <div className="text-xs text-muted-foreground mt-3">
+                {spell.components && <span>Компоненты: {spell.components} • </span>}
+                {spell.castingTime && <span>Время: {spell.castingTime} • </span>}
+                {spell.duration && <span>Длительность: {spell.duration}</span>}
+              </div>
+            </div>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-lg">{spell.name}</h3>
+                  <Badge className={schoolColor}>
+                    {spell.level === 0 ? "Заговор" : `${spell.level} уровень`}
                   </Badge>
+                </div>
+                
+                <p className="text-xs text-muted-foreground">{spell.school}</p>
+                
+                {spell.castingTime && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span className="font-medium">Время накладывания: </span>{spell.castingTime}
+                  </div>
+                )}
+                
+                {spell.range && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span className="font-medium">Дистанция: </span>{spell.range}
+                  </div>
+                )}
+                
+                {spell.components && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span className="font-medium">Компоненты: </span>{spell.components}
+                  </div>
+                )}
+                
+                {spell.duration && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span className="font-medium">Длительность: </span>{spell.duration}
+                  </div>
+                )}
+                
+                <Separator className="my-2" />
+                
+                <p className="text-sm">{spell.description}</p>
+                
+                {spell.higherLevels && (
+                  <div className="pt-2 text-sm">
+                    <span className="font-medium">На более высоком уровне: </span>
+                    {spell.higherLevels}
+                  </div>
+                )}
+                
+                {spell.classes && (
+                  <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
+                    Классы: {spell.classes.join(", ")}
+                  </div>
                 )}
               </div>
+            </HoverCardContent>
+          </HoverCard>
+        )}
+
+        {/* Мобильная версия */}
+        {isMobile && (
+          <div>
+            <div className="flex justify-between items-start" onClick={() => handleSpellClick(spell)}>
+              <div>
+                <h3 className="font-medium text-lg text-primary">
+                  {spell.name}
+                </h3>
+                <div className="flex gap-2 flex-wrap mt-1">
+                  <Badge variant="outline" className={schoolColor}>
+                    {spell.school}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {formatSpellLevelShort(spell.level)}
+                  </Badge>
+                  {spell.ritual && (
+                    <Badge variant="outline" className="bg-indigo-500/20 text-indigo-800 dark:text-indigo-300">
+                      Р
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => {
+                e.stopPropagation();
+                toggleExpandSpell(spell.name);
+              }}>
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
             </div>
-          </div>
-          <p className="mt-2 text-muted-foreground line-clamp-2 text-sm">
-            {spell.description?.substring(0, 120)}
-            {spell.description && spell.description.length > 120 && "..."}
-          </p>
-          <div className="text-xs text-muted-foreground mt-3">
-            {spell.components && <span>Компоненты: {spell.components} • </span>}
-            {spell.castingTime && <span>Время: {spell.castingTime} • </span>}
-            {spell.duration && <span>Длительность: {spell.duration}</span>}
-          </div>
-        </div>
-        <HoverCardContent className="w-80">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-lg">{spell.name}</h3>
-              <Badge className={schoolColor}>
-                {spell.level === 0 ? "Заговор" : `${spell.level} уровень`}
-              </Badge>
-            </div>
-            
-            <p className="text-xs text-muted-foreground">{spell.school}</p>
-            
-            {spell.castingTime && (
-              <div className="text-xs text-muted-foreground mt-1">
-                <span className="font-medium">Время накладывания: </span>{spell.castingTime}
-              </div>
-            )}
-            
-            {spell.range && (
-              <div className="text-xs text-muted-foreground mt-1">
-                <span className="font-medium">Дистанция: </span>{spell.range}
-              </div>
-            )}
-            
-            {spell.components && (
-              <div className="text-xs text-muted-foreground mt-1">
-                <span className="font-medium">Компоненты: </span>{spell.components}
-              </div>
-            )}
-            
-            {spell.duration && (
-              <div className="text-xs text-muted-foreground mt-1">
-                <span className="font-medium">Длительность: </span>{spell.duration}
-              </div>
-            )}
-            
-            <Separator className="my-2" />
-            
-            <p className="text-sm">{spell.description}</p>
-            
-            {spell.higherLevels && (
-              <div className="pt-2 text-sm">
-                <span className="font-medium">На более высоком уровне: </span>
-                {spell.higherLevels}
-              </div>
-            )}
-            
-            {spell.classes && (
-              <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                Классы: {spell.classes.join(", ")}
+
+            {/* Раскрывающаяся часть карточки */}
+            {isExpanded && (
+              <div className="mt-3 pt-3 border-t border-border/30">
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-2 gap-1">
+                    {spell.castingTime && (
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Время: </span>{spell.castingTime}
+                      </div>
+                    )}
+                    {spell.range && (
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Дистанция: </span>{spell.range}
+                      </div>
+                    )}
+                    {spell.components && (
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Компоненты: </span>{spell.components}
+                      </div>
+                    )}
+                    {spell.duration && (
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Длительность: </span>{spell.duration}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm line-clamp-3">{spell.description?.substring(0, 150)}...</p>
+                  
+                  <Button variant="outline" size="sm" className="w-full flex gap-2" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSpellClick(spell);
+                    }}>
+                    <Info className="h-4 w-4" />
+                    Подробнее
+                  </Button>
+                </div>
               </div>
             )}
           </div>
-        </HoverCardContent>
-      </HoverCard>
+        )}
+      </div>
     );
   };
 
@@ -482,6 +602,82 @@ const SpellbookPage: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* Диалог с деталями заклинания для мобильных устройств */}
+      <Dialog open={isSpellDialogOpen} onOpenChange={setIsSpellDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedSpell && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle>{selectedSpell.name}</DialogTitle>
+                  <Badge className={selectedSpell.school ? schoolColors[selectedSpell.school] : ""}>
+                    {selectedSpell.level === 0 ? "Заговор" : `${selectedSpell.level} уровень`}
+                  </Badge>
+                </div>
+                <DialogDescription>{selectedSpell.school}</DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {selectedSpell.castingTime && (
+                  <div>
+                    <span className="font-medium">Время накладывания:</span>
+                    <p className="text-muted-foreground">{selectedSpell.castingTime}</p>
+                  </div>
+                )}
+                
+                {selectedSpell.range && (
+                  <div>
+                    <span className="font-medium">Дистанция:</span>
+                    <p className="text-muted-foreground">{selectedSpell.range}</p>
+                  </div>
+                )}
+                
+                {selectedSpell.components && (
+                  <div>
+                    <span className="font-medium">Компоненты:</span>
+                    <p className="text-muted-foreground">{selectedSpell.components}</p>
+                  </div>
+                )}
+                
+                {selectedSpell.duration && (
+                  <div>
+                    <span className="font-medium">Длительность:</span>
+                    <p className="text-muted-foreground">{selectedSpell.duration}</p>
+                  </div>
+                )}
+              </div>
+              
+              <Separator />
+              
+              <ScrollArea className="h-56 mt-2">
+                <div className="space-y-4">
+                  <p>{selectedSpell.description}</p>
+                  
+                  {selectedSpell.higherLevels && (
+                    <div>
+                      <h4 className="font-semibold">На более высоком уровне:</h4>
+                      <p>{selectedSpell.higherLevels}</p>
+                    </div>
+                  )}
+                  
+                  {selectedSpell.classes && (
+                    <div className="pt-2 text-sm text-muted-foreground">
+                      <p><span className="font-medium">Доступно классам:</span> {selectedSpell.classes.join(", ")}</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              
+              <div className="flex justify-end">
+                <DialogClose asChild>
+                  <Button variant="outline">Закрыть</Button>
+                </DialogClose>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

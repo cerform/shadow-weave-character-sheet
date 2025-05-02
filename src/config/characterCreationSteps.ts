@@ -26,36 +26,42 @@ export const steps = [
   },
   {
     id: 4,
+    name: "Специализация",
+    description: "Выберите специализацию класса",
+    isOptional: false
+  },
+  {
+    id: 5,
     name: "Заклинания",
     description: "Выберите заклинания",
     isMagicOnly: true
   },
   {
-    id: 5,
+    id: 6,
     name: "Снаряжение",
     description: "Выберите снаряжение",
     isOptional: false
   },
   {
-    id: 6,
+    id: 7,
     name: "Языки",
     description: "Выберите языки",
     isOptional: false
   },
   {
-    id: 7,
+    id: 8,
     name: "Личность",
     description: "Укажите имя и внешность",
     isOptional: false
   },
   {
-    id: 8,
+    id: 9,
     name: "Предыстория",
     description: "Выберите предысторию",
     isOptional: false
   },
   {
-    id: 9,
+    id: 10,
     name: "Обзор",
     description: "Просмотр и сохранение",
     isOptional: false

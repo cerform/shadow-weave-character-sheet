@@ -1,37 +1,33 @@
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 
-export const useCreationStep = (isMagicClass: (className: string) => boolean, characterClass: string) => {
-  const [currentStep, setCurrentStep] = useState(0);
+export const useCreationStep = (isMagicClass: boolean, characterClass: string) => {
+  const [currentStep, setCurrentStep] = useState<number>(0);
 
-  const nextStep = useCallback(() => {
-    setCurrentStep((prev) => {
-      // For non-magic classes, skip from step 3 (abilities) to step 5 (equipment),
-      // effectively skipping the spell selection step (step 4)
-      if (prev === 3 && characterClass && !isMagicClass(characterClass)) {
-        return 5;
-      }
-      // Normal progression with limit at step 9
-      return Math.min(prev + 1, 9);
-    });
-  }, [characterClass, isMagicClass]);
-
-  const prevStep = useCallback(() => {
-    setCurrentStep((prev) => {
-      // For non-magic classes, when going back from step 5 (equipment), 
-      // go to step 3 (abilities), skipping the spell selection step (step 4)
-      if (prev === 5 && characterClass && !isMagicClass(characterClass)) {
-        return 3;
-      }
-      // Normal backward progression with limit at step 0
-      return Math.max(prev - 1, 0);
-    });
-  }, [characterClass, isMagicClass]);
-
-  return {
-    currentStep,
-    setCurrentStep,
-    nextStep,
-    prevStep
+  const nextStep = () => {
+    // Шаг 4 - выбор специализации
+    // Шаг 5 - выбор заклинаний (только для магических классов)
+    
+    // Если мы на шаге 4 (специализация) и класс не магический, то пропускаем шаг 5
+    if (currentStep === 4 && !isMagicClass) {
+      setCurrentStep(6); // Переходим к снаряжению
+    } 
+    // В остальных случаях просто переходим к следующему шагу
+    else {
+      setCurrentStep(currentStep + 1);
+    }
   };
+
+  const prevStep = () => {
+    // Если мы на шаге 6 (снаряжение) и класс не магический, то возвращаемся к шагу 4
+    if (currentStep === 6 && !isMagicClass) {
+      setCurrentStep(4); // Возвращаемся к специализации
+    }
+    // В остальных случаях просто возвращаемся на предыдущий шаг
+    else if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  return { currentStep, nextStep, prevStep, setCurrentStep };
 };
