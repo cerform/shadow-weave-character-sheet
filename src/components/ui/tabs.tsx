@@ -33,7 +33,15 @@ const TabsTrigger = React.forwardRef<
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
         "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-        "data-[state=inactive]:text-foreground/70 hover:text-foreground",
+        // Улучшаем контрастность для неактивных вкладок
+        "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground",
+        // Гарантируем, что текст всегда виден
+        theme === 'warlock' ? "data-[state=inactive]:text-purple-200" : 
+        theme === 'wizard' ? "data-[state=inactive]:text-blue-200" : 
+        theme === 'druid' ? "data-[state=inactive]:text-green-200" : 
+        theme === 'warrior' ? "data-[state=inactive]:text-red-200" : 
+        theme === 'bard' ? "data-[state=inactive]:text-amber-200" : 
+        "data-[state=inactive]:text-stone-200",
         className
       )}
       {...props}

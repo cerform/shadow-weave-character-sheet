@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse } from "lucide-react";
+import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse, Eye, EyeOff } from "lucide-react";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
 
 interface BattleMapProps {
@@ -40,6 +40,13 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const [startDragPos, setStartDragPos] = useState({ x: 0, y: 0 });
   const [dragPath, setDragPath] = useState<{ x: number, y: number }[]>([]);
   const [dragConstraints, setDragConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
+  
+  // Новые состояния для тумана войны
+  const [fogOfWar, setFogOfWar] = useState<boolean>(false);
+  const [showPlayerView, setShowPlayerView] = useState<boolean>(false);
+  const [visibleAreas, setVisibleAreas] = useState<{x: number, y: number, radius: number}[]>([]);
+  const fogCanvasRef = useRef<HTMLCanvasElement>(null);
+  const playerViewRef = useRef<HTMLDivElement>(null);
 
   // Обновление размеров поля для ограничения перетаскивания
   useEffect(() => {
@@ -69,6 +76,29 @@ const BattleMap: React.FC<BattleMapProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [mapRef.current]);
+
+  // Обработчик для drag-n-drop изображений напрямую в карту
+  const handleMapDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setBackground(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else if (e.dataTransfer.getData('text').includes('data:image')) {
+      // Поддержка drag-n-drop изображений из других источников
+      setBackground(e.dataTransfer.getData('text'));
+    }
+  };
+
+  // Предотвращаем стандартное поведение для drag-n-drop
+  const handleMapDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
   // Обработчик загрузки фона карты
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,6 +160,76 @@ const BattleMap: React.FC<BattleMapProps> = ({
     onUpdateTokenPosition(id, constrainedX, constrainedY);
     setDraggingTokenId(null);
     setDragPath([]);
+    
+    // Добавляем видимую область вокруг игровых токенов
+    if (fogOfWar && tokens.find(t => t.id === id)?.type === 'player') {
+      updateVisibleArea(constrainedX, constrainedY, id);
+    }
+  };
+
+  // Обновление видимых областей для тумана войны
+  const updateVisibleArea = (x: number, y: number, tokenId: number) => {
+    // Удаляем старую область для этого токена, если она есть
+    const newVisibleAreas = visibleAreas.filter(area => area.tokenId !== tokenId);
+    
+    // Добавляем новую область видимости
+    newVisibleAreas.push({
+      x, 
+      y, 
+      radius: 150, // Радиус видимости, можно настроить
+      tokenId
+    });
+    
+    setVisibleAreas(newVisibleAreas);
+    redrawFogOfWar();
+  };
+  
+  // Обновление тумана войны при перемещении токенов
+  useEffect(() => {
+    if (fogOfWar) {
+      redrawFogOfWar();
+    }
+  }, [tokens, fogOfWar, visibleAreas]);
+  
+  // Отрисовка тумана войны на холсте
+  const redrawFogOfWar = () => {
+    if (!fogCanvasRef.current || !mapRef.current) return;
+    
+    const ctx = fogCanvasRef.current.getContext('2d');
+    if (!ctx) return;
+    
+    const mapRect = mapRef.current.getBoundingClientRect();
+    fogCanvasRef.current.width = mapRect.width;
+    fogCanvasRef.current.height = mapRect.height;
+    
+    // Заполняем всю карту туманом
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, mapRect.width, mapRect.height);
+    
+    // Очищаем области видимости
+    ctx.globalCompositeOperation = 'destination-out';
+    visibleAreas.forEach(area => {
+      const scaledX = area.x * zoom + mapOffset.x;
+      const scaledY = area.y * zoom + mapOffset.y;
+      const scaledRadius = area.radius * zoom;
+      
+      // Создаем градиентную видимую область
+      const gradient = ctx.createRadialGradient(
+        scaledX, scaledY, 0,
+        scaledX, scaledY, scaledRadius
+      );
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.5)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(scaledX, scaledY, scaledRadius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    // Возвращаем обратно режим отрисовки
+    ctx.globalCompositeOperation = 'source-over';
   };
 
   // Изменение зума колесом мыши
@@ -176,6 +276,33 @@ const BattleMap: React.FC<BattleMapProps> = ({
     window.addEventListener("mouseup", handleMapDragEnd);
     return () => {
       window.removeEventListener("mouseup", handleMapDragEnd);
+    };
+  }, []);
+
+  // Вставка изображения из буфера обмена
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setBackground(reader.result as string);
+            };
+            reader.readAsDataURL(blob);
+            break;
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
     };
   }, []);
 
@@ -333,6 +460,15 @@ const BattleMap: React.FC<BattleMapProps> = ({
           >
             <Grid className="h-4 w-4" />
           </Button>
+          <Button
+            variant={fogOfWar ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setFogOfWar(!fogOfWar)}
+            title="Туман войны"
+          >
+            {fogOfWar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
         </div>
 
         <div className="flex items-center gap-1">
@@ -375,163 +511,262 @@ const BattleMap: React.FC<BattleMapProps> = ({
               className="hidden"
             />
           </label>
+          
+          <Button
+            variant={showPlayerView ? "default" : "outline"}
+            size="sm"
+            className="h-8 ml-1"
+            onClick={() => setShowPlayerView(!showPlayerView)}
+            title="Показать вид игрока"
+          >
+            <Eye className="h-4 w-4 mr-1" /> Вид игрока
+          </Button>
         </div>
       </div>
 
-      {/* Карта */}
-      <div
-        ref={mapRef}
-        className="flex-1 relative overflow-hidden bg-muted"
-        onWheel={handleWheel}
-        onMouseDown={handleMapDragStart}
-        onMouseMove={handleMapDrag}
-        style={{ cursor: isDraggingMap ? "grabbing" : mapTool === "select" ? "grab" : "default" }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            transform: `translate(${mapOffset.x}px, ${mapOffset.y}px)`,
-          }}
-        >
-          {background ? (
+      {/* Основная карта */}
+      <div className="flex-1 flex">
+        {/* Главная карта */}
+        <div className={`${showPlayerView ? "w-3/4" : "w-full"} relative`}>
+          <div
+            ref={mapRef}
+            className="w-full h-full relative overflow-hidden bg-muted"
+            onWheel={handleWheel}
+            onMouseDown={handleMapDragStart}
+            onMouseMove={handleMapDrag}
+            onDrop={handleMapDrop}
+            onDragOver={handleMapDragOver}
+            style={{ cursor: isDraggingMap ? "grabbing" : mapTool === "select" ? "grab" : "default" }}
+          >
             <div
-              className="absolute inset-0 bg-center bg-cover"
+              className="absolute inset-0"
               style={{
-                backgroundImage: `url(${background})`,
-                transform: `scale(${zoom})`,
-                transformOrigin: "top left",
-              }}
-            />
-          ) : (
-            <div
-              className="absolute inset-0 bg-black flex items-center justify-center"
-              style={{
-                transform: `scale(${zoom})`,
-                transformOrigin: "top left",
+                transform: `translate(${mapOffset.x}px, ${mapOffset.y}px)`,
               }}
             >
-              <div className="text-gray-500">Загрузите карту сражения</div>
-            </div>
-          )}
-
-          {/* Сетка */}
-          {renderGrid()}
-
-          {/* Токены */}
-          {tokens.map((token) => {
-            const isActive = initiative.some(
-              (init) => init.tokenId === token.id && init.isActive
-            );
-            
-            return (
-              <motion.div
-                key={token.id}
-                className={`absolute cursor-pointer select-none ${
-                  selectedTokenId === token.id ? "z-10" : "z-0"
-                }`}
-                style={{
-                  left: token.x,
-                  top: token.y,
-                  transform: `scale(${zoom})`,
-                  transformOrigin: "top left",
-                }}
-                drag={mapTool === "select"}
-                dragMomentum={false}
-                dragSnapToOrigin={false}
-                dragElastic={0.1} // Небольшая эластичность для более плавного перетаскивания
-                onDragStart={() => handleDragStart(token.id)}
-                onDrag={(e, info) => handleDragUpdate(info, token.id)}
-                onDragEnd={(e, info) => handleDragEnd(e, info, token.id)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectToken(token.id);
-                }}
-                whileDrag={{ scale: 1.1 * zoom, opacity: 0.8 }} // Слабый эффект при перетаскивании
-              >
+              {background ? (
                 <div
-                  className={`relative ${
-                    isActive
-                      ? "ring-2 ring-primary ring-offset-2 ring-offset-black/50"
-                      : ""
-                  } ${
-                    selectedTokenId === token.id
-                      ? "outline outline-2 outline-white/60"
-                      : ""
-                  }`}
-                >
-                  {/* Изображение токена */}
-                  <img
-                    src={token.img}
-                    alt={token.name}
-                    className={`w-12 h-12 object-cover rounded-full border-2 token-image-container ${
-                      token.type === "boss"
-                        ? "token-boss"
-                        : token.type === "monster"
-                        ? "token-monster"
-                        : "token-player"
-                    }`}
-                  />
-
-                  {/* HP Bar */}
-                  <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
-                    <div
-                      className={`h-1 rounded-full ${
-                        token.hp > token.maxHp * 0.6
-                          ? "bg-green-500"
-                          : token.hp > token.maxHp * 0.3
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                      style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Имя токена */}
-                  <div className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate max-w-[90px]">
-                    {token.name}
-                  </div>
-                  
-                  {/* Индикаторы состояний */}
-                  {token.conditions.length > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                      {token.conditions.length}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-          
-          {/* Путь перетаскивания */}
-          {renderDragPath()}
-        </div>
-
-        {/* Если карта не загружена, показываем подсказку */}
-        {!background && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/30 p-4 rounded-md">
-              <label
-                htmlFor="upload-bg-center"
-                className="flex flex-col items-center cursor-pointer"
-              >
-                <Upload className="h-8 w-8 mb-2 text-gray-300" />
-                <span className="text-gray-300">Загрузить карту</span>
-                <input
-                  id="upload-bg-center"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBackgroundUpload}
-                  className="hidden"
+                  className="absolute inset-0 bg-center bg-cover"
+                  style={{
+                    backgroundImage: `url(${background})`,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "top left",
+                  }}
                 />
-              </label>
-            </div>
-          </div>
-        )}
+              ) : (
+                <div
+                  className="absolute inset-0 bg-black flex items-center justify-center"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "top left",
+                  }}
+                >
+                  <div className="text-gray-500">
+                    Загрузите карту сражения (перетащите изображение или нажмите "Карта")
+                  </div>
+                </div>
+              )}
 
-        {/* Вывод информации о текущем ходе */}
-        {battleActive && initiative.length > 0 && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-1 rounded-full text-sm font-medium">
-            {initiative.find(i => i.isActive)?.name || "Ход не начат"}
+              {/* Сетка */}
+              {renderGrid()}
+
+              {/* Токены */}
+              {tokens.map((token) => {
+                const isActive = initiative.some(
+                  (init) => init.tokenId === token.id && init.isActive
+                );
+                
+                return (
+                  <motion.div
+                    key={token.id}
+                    className={`absolute cursor-pointer select-none ${
+                      selectedTokenId === token.id ? "z-10" : "z-0"
+                    }`}
+                    style={{
+                      left: token.x,
+                      top: token.y,
+                      transform: `scale(${zoom})`,
+                      transformOrigin: "top left",
+                    }}
+                    drag={mapTool === "select"}
+                    dragMomentum={false}
+                    dragSnapToOrigin={false}
+                    dragElastic={0.1}
+                    onDragStart={() => handleDragStart(token.id)}
+                    onDrag={(e, info) => handleDragUpdate(info, token.id)}
+                    onDragEnd={(e, info) => handleDragEnd(e, info, token.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectToken(token.id);
+                    }}
+                    whileDrag={{ scale: 1.1 * zoom, opacity: 0.8 }}
+                  >
+                    <div
+                      className={`relative ${
+                        isActive
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-black/50"
+                          : ""
+                      } ${
+                        selectedTokenId === token.id
+                          ? "outline outline-2 outline-white/60"
+                          : ""
+                      }`}
+                    >
+                      {/* Изображение токена */}
+                      <img
+                        src={token.img}
+                        alt={token.name}
+                        className={`w-12 h-12 object-cover rounded-full border-2 token-image-container ${
+                          token.type === "boss"
+                            ? "token-boss"
+                            : token.type === "monster"
+                            ? "token-monster"
+                            : "token-player"
+                        }`}
+                      />
+
+                      {/* HP Bar */}
+                      <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
+                        <div
+                          className={`h-1 rounded-full ${
+                            token.hp > token.maxHp * 0.6
+                              ? "bg-green-500"
+                              : token.hp > token.maxHp * 0.3
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                          }`}
+                          style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
+                        ></div>
+                      </div>
+
+                      {/* Имя токена */}
+                      <div className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate max-w-[90px]">
+                        {token.name}
+                      </div>
+                      
+                      {/* Индикаторы состояний */}
+                      {token.conditions && token.conditions.length > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          {token.conditions.length}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+              
+              {/* Путь перетаскивания */}
+              {renderDragPath()}
+            </div>
+
+            {/* Если карта не загружена, показываем подсказку */}
+            {!background && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-black/30 p-4 rounded-md">
+                  <label
+                    htmlFor="upload-bg-center"
+                    className="flex flex-col items-center cursor-pointer"
+                  >
+                    <Upload className="h-8 w-8 mb-2 text-gray-300" />
+                    <span className="text-gray-300">Загрузить карту</span>
+                    <input
+                      id="upload-bg-center"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBackgroundUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Вывод информации о текущем ходе */}
+            {battleActive && initiative.length > 0 && (
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-1 rounded-full text-sm font-medium">
+                {initiative.find(i => i.isActive)?.name || "Ход не начат"}
+              </div>
+            )}
+            
+            {/* Туман войны */}
+            {fogOfWar && (
+              <canvas 
+                ref={fogCanvasRef} 
+                className="absolute inset-0 pointer-events-none z-20"
+              />
+            )}
+          </div>
+        </div>
+        
+        {/* Вид игрока (превью) */}
+        {showPlayerView && (
+          <div className="w-1/4 border-l border-border bg-background/50 p-2">
+            <h3 className="text-sm font-medium mb-2 text-foreground">Вид игроков</h3>
+            <div 
+              ref={playerViewRef}
+              className="relative w-full h-[calc(100%-30px)] rounded overflow-hidden bg-black/50"
+            >
+              <div 
+                className="absolute inset-0 bg-center bg-cover"
+                style={{
+                  backgroundImage: background ? `url(${background})` : 'none',
+                  transform: 'scale(1)',
+                }}
+              />
+              
+              {/* Токены в режиме игрока */}
+              <div className="absolute inset-0 overflow-hidden">
+                {tokens
+                  // Фильтруем только токены, которые должны быть видны игрокам
+                  .filter(token => token.type === 'player' || visibleAreas.some(area => {
+                    // Проверяем, находится ли токен в зоне видимости игрока
+                    const dx = token.x - area.x;
+                    const dy = token.y - area.y;
+                    return Math.sqrt(dx*dx + dy*dy) <= area.radius;
+                  }))
+                  .map(token => (
+                    <div 
+                      key={`player-view-${token.id}`}
+                      className="absolute"
+                      style={{
+                        left: `${token.x / 5}px`,
+                        top: `${token.y / 5}px`,
+                        width: '10px',
+                        height: '10px',
+                      }}
+                    >
+                      <div className={`
+                        w-full h-full rounded-full border 
+                        ${token.type === 'player' ? 'bg-green-500 border-green-300' : 
+                          token.type === 'boss' ? 'bg-red-500 border-red-300' : 
+                          'bg-yellow-500 border-yellow-300'}
+                      `}></div>
+                    </div>
+                  ))}
+              </div>
+              
+              {/* Туман войны для режима игрока */}
+              <div className="absolute inset-0 bg-black/70">
+                {visibleAreas.map((area, index) => (
+                  <div 
+                    key={`visible-area-${index}`}
+                    className="absolute rounded-full bg-radial-gradient"
+                    style={{
+                      left: `${area.x / 5 - area.radius / 5}px`,
+                      top: `${area.y / 5 - area.radius / 5}px`,
+                      width: `${area.radius / 2.5}px`,
+                      height: `${area.radius / 2.5}px`,
+                      background: 'radial-gradient(circle, transparent 0%, rgba(0,0,0,0.7) 100%)',
+                      mixBlendMode: 'destination-out',
+                    }}
+                  ></div>
+                ))}
+              </div>
+              
+              <div className="absolute bottom-2 left-2 text-xs text-white/70">
+                Масштаб: 1:5
+              </div>
+            </div>
           </div>
         )}
       </div>

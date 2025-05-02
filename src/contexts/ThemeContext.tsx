@@ -50,6 +50,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
       document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
       document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
+      document.documentElement.style.setProperty('--contrast-color', selectedTheme.contrastColor);
+      document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
       
       // Дополнительно применяем цвета для фона и текста
       document.documentElement.style.setProperty('--theme-bg', selectedTheme.primary);

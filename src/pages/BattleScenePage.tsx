@@ -1,19 +1,20 @@
 
 import React, { useRef, useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import OBSLayout from "@/components/OBSLayout";
 import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, X, Save, User, Skull, Crown } from "lucide-react";
+import { Plus, X, User, Skull, Crown } from "lucide-react";
+import TokenSelector from "@/components/battle/TokenSelector";
+import BattleMap from "@/components/battle/BattleMap";
 
 // Типы токенов: игрок, моб или босс
 interface Token {
   id: number;
   name: string;
-  type: "player" | "mob" | "boss";
+  type: "player" | "monster" | "boss";
   img: string;
   x: number;
   y: number;
@@ -21,6 +22,7 @@ interface Token {
   maxHp: number;
   ac: number;
   initiative: number;
+  conditions: string[];
 }
 
 interface Initiative {
@@ -31,79 +33,42 @@ interface Initiative {
   isActive: boolean;
 }
 
-// Предустановленные аватары для каждого класса
-const classAvatars = {
-  warrior: [
-    "/avatars/warrior1.jpg",
-    "/avatars/warrior2.jpg",
-    "/avatars/warrior3.jpg",
-    // и т.д. до 10 аватаров
-  ],
-  wizard: [
-    "/avatars/wizard1.jpg",
-    "/avatars/wizard2.jpg",
-    "/avatars/wizard3.jpg",
-    // и т.д. до 10 аватаров
-  ],
-  // Заглушки для тестирования
-  placeholder: [
-    "https://picsum.photos/id/237/200/200",
-    "https://picsum.photos/id/238/200/200",
-    "https://picsum.photos/id/239/200/200",
-    "https://picsum.photos/id/240/200/200",
-    "https://picsum.photos/id/241/200/200",
-    "https://picsum.photos/id/242/200/200",
-    "https://picsum.photos/id/243/200/200",
-    "https://picsum.photos/id/244/200/200",
-  ]
-};
-
-// Предустановленные мобы и боссы
+// Предустановленные мобы и боссы с готовыми аватарами
 const monsterTokens = [
-  { name: "Гоблин", hp: 7, ac: 15, img: "https://picsum.photos/id/250/200/200" },
-  { name: "Хобгоблин", hp: 11, ac: 18, img: "https://picsum.photos/id/251/200/200" },
-  { name: "Орк", hp: 15, ac: 13, img: "https://picsum.photos/id/252/200/200" },
-  { name: "Огр", hp: 59, ac: 11, img: "https://picsum.photos/id/253/200/200" },
-  { name: "Тролль", hp: 84, ac: 15, img: "https://picsum.photos/id/254/200/200" },
-  { name: "Дракон", hp: 178, ac: 19, img: "https://picsum.photos/id/255/200/200" },
+  { name: "Гоблин", hp: 7, ac: 15, img: "/lovable-uploads/7a062655-27cc-43a9-bc21-fb65a1c04538.png", type: "monster" },
+  { name: "Хобгоблин", hp: 11, ac: 18, img: "/lovable-uploads/181e96b3-24be-423e-b0cb-5814a8f72172.png", type: "monster" },
+  { name: "Орк", hp: 15, ac: 13, img: "/lovable-uploads/7a062655-27cc-43a9-bc21-fb65a1c04538.png", type: "monster" },
+  { name: "Огр", hp: 59, ac: 11, img: "/lovable-uploads/181e96b3-24be-423e-b0cb-5814a8f72172.png", type: "boss" },
+  { name: "Тролль", hp: 84, ac: 15, img: "/lovable-uploads/7a062655-27cc-43a9-bc21-fb65a1c04538.png", type: "boss" },
+  { name: "Дракон", hp: 178, ac: 19, img: "/lovable-uploads/181e96b3-24be-423e-b0cb-5814a8f72172.png", type: "boss" },
 ];
 
 const BattleScenePage = () => {
   const [background, setBackground] = useState<string | null>(null);
   const [tokens, setTokens] = useState<Token[]>([]);
-  const [draggingTokenId, setDraggingTokenId] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [initiative, setInitiative] = useState<Initiative[]>([]);
   const [currentTurn, setCurrentTurn] = useState<number>(0);
-  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [tokenType, setTokenType] = useState<"player" | "mob" | "boss">("player");
-  const [tokenName, setTokenName] = useState("");
-
+  const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
+  const [tokenType, setTokenType] = useState<"player" | "monster" | "boss">("player");
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [battleActive, setBattleActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
 
-  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setBackground(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleTokenSelect = (img: string) => {
-    if (!tokenName) return;
-
+  // Обработчик выбора токена из селектора
+  const handleTokenSelect = (tokenData: {name: string; type: string; img: string}) => {
     const newToken: Token = {
       id: Date.now(),
-      name: tokenName,
-      type: tokenType,
-      img,
+      name: tokenData.name,
+      type: tokenData.type as "player" | "monster" | "boss",
+      img: tokenData.img,
       x: 100 + Math.random() * 300,
       y: 100 + Math.random() * 300,
-      hp: tokenType === "boss" ? 100 : tokenType === "mob" ? 20 : 30,
-      maxHp: tokenType === "boss" ? 100 : tokenType === "mob" ? 20 : 30,
-      ac: tokenType === "boss" ? 17 : tokenType === "mob" ? 13 : 15,
+      hp: tokenData.type === "boss" ? 100 : tokenData.type === "monster" ? 20 : 30,
+      maxHp: tokenData.type === "boss" ? 100 : tokenData.type === "monster" ? 20 : 30,
+      ac: tokenData.type === "boss" ? 17 : tokenData.type === "monster" ? 13 : 15,
       initiative: Math.floor(Math.random() * 20) + 1,
+      conditions: []
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -121,15 +86,14 @@ const BattleScenePage = () => {
       [...prev, newInitiative].sort((a, b) => b.roll - a.roll)
     );
     
-    setShowAvatarSelector(false);
-    setTokenName("");
+    setTokenSelectorOpen(false);
   };
 
-  const handleAddPresetMonster = (monster: typeof monsterTokens[0], type: "mob" | "boss") => {
+  const handleAddPresetMonster = (monster: typeof monsterTokens[0]) => {
     const newToken: Token = {
       id: Date.now(),
       name: monster.name,
-      type,
+      type: monster.type as "monster" | "boss",
       img: monster.img,
       x: 100 + Math.random() * 300,
       y: 100 + Math.random() * 300,
@@ -137,6 +101,7 @@ const BattleScenePage = () => {
       maxHp: monster.hp,
       ac: monster.ac,
       initiative: Math.floor(Math.random() * 20) + 1,
+      conditions: []
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -157,10 +122,9 @@ const BattleScenePage = () => {
 
   const handleAddToken = (type: Token["type"]) => {
     setTokenType(type);
-    setShowAvatarSelector(true);
+    setTokenSelectorOpen(true);
   };
 
-  // Updated to handle position directly instead of using a MouseEvent
   const updateTokenPosition = (id: number, x: number, y: number) => {
     setTokens((prev) =>
       prev.map((t) => (t.id === id ? { ...t, x, y } : t))
@@ -176,6 +140,9 @@ const BattleScenePage = () => {
   const removeToken = (id: number) => {
     setTokens((prev) => prev.filter((t) => t.id !== id));
     setInitiative((prev) => prev.filter((i) => i.tokenId !== id));
+    if (selectedTokenId === id) {
+      setSelectedTokenId(null);
+    }
   };
 
   const rollInitiative = () => {
@@ -198,10 +165,13 @@ const BattleScenePage = () => {
         init.isActive = index === 0;
       });
       setInitiative(newInitiative);
+      setBattleActive(true);
     }
   };
 
   const nextTurn = () => {
+    if (initiative.length === 0) return;
+    
     const nextTurnIndex = (currentTurn + 1) % initiative.length;
     setCurrentTurn(nextTurnIndex);
     
@@ -213,15 +183,35 @@ const BattleScenePage = () => {
     setInitiative(newInitiative);
   };
 
-  const handleZoom = (e: React.WheelEvent) => {
-    if (e.deltaY < 0) setZoom((z) => Math.min(z + 0.1, 2));
-    else setZoom((z) => Math.max(z - 0.1, 0.5));
+  const addCondition = (tokenId: number, condition: string) => {
+    setTokens(prev => prev.map(token => {
+      if (token.id === tokenId) {
+        const updatedConditions = [...(token.conditions || [])];
+        if (!updatedConditions.includes(condition)) {
+          updatedConditions.push(condition);
+        }
+        return {...token, conditions: updatedConditions};
+      }
+      return token;
+    }));
+  };
+  
+  const removeCondition = (tokenId: number, condition: string) => {
+    setTokens(prev => prev.map(token => {
+      if (token.id === tokenId) {
+        return {
+          ...token, 
+          conditions: (token.conditions || []).filter(c => c !== condition)
+        };
+      }
+      return token;
+    }));
   };
 
   return (
     <OBSLayout>
       {/* Левая панель */}
-      <div className="obs-left p-4 bg-background text-foreground overflow-y-auto">
+      <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto">
         <Tabs defaultValue="tokens">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="tokens">Токены</TabsTrigger>
@@ -231,12 +221,6 @@ const BattleScenePage = () => {
           
           <TabsContent value="tokens" className="space-y-4">
             <div className="flex flex-col gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleBackgroundUpload}
-                className="p-2 border rounded bg-primary/10"
-              />
               <Button
                 onClick={() => handleAddToken("player")}
                 className="flex justify-center items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
@@ -245,7 +229,7 @@ const BattleScenePage = () => {
                 Добавить Игрока
               </Button>
               <Button
-                onClick={() => handleAddToken("mob")}
+                onClick={() => handleAddToken("monster")}
                 className="flex justify-center items-center gap-2 bg-red-500 hover:bg-red-600 text-white"
               >
                 <Skull size={16} />
@@ -264,13 +248,28 @@ const BattleScenePage = () => {
               >
                 Бросить Инициативу
               </Button>
+              
+              {battleActive && (
+                <Button
+                  onClick={nextTurn}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Следующий ход
+                </Button>
+              )}
             </div>
 
             {/* Список токенов */}
             <div className="space-y-2">
               <h3 className="font-medium">Токены на поле ({tokens.length})</h3>
               {tokens.map(token => (
-                <div key={token.id} className="flex items-center justify-between p-2 bg-card rounded">
+                <div 
+                  key={token.id} 
+                  className={`flex items-center justify-between p-2 rounded ${
+                    selectedTokenId === token.id ? 'bg-primary/20 border border-primary' : 'bg-card'
+                  }`}
+                  onClick={() => setSelectedTokenId(token.id)}
+                >
                   <div className="flex items-center gap-2">
                     <img src={token.img} alt={token.name} className="w-8 h-8 rounded-full object-cover" />
                     <div className="text-sm">
@@ -279,14 +278,20 @@ const BattleScenePage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, -1)}>-</Button>
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, 1)}>+</Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeToken(token.id)}>
+                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}>-</Button>
+                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}>+</Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}>
                       <X size={14} />
                     </Button>
                   </div>
                 </div>
               ))}
+              
+              {tokens.length === 0 && (
+                <div className="text-center p-4 text-muted-foreground">
+                  Добавьте токены на игровое поле, используя кнопки выше
+                </div>
+              )}
             </div>
           </TabsContent>
           
@@ -299,14 +304,14 @@ const BattleScenePage = () => {
                     <img src={monster.img} alt={monster.name} className="w-full h-20 object-cover rounded mb-2" />
                     <div className="text-center text-sm font-medium mb-1">{monster.name}</div>
                     <div className="text-xs text-center mb-2">HP: {monster.hp} | AC: {monster.ac}</div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <Button size="sm" variant="outline" onClick={() => handleAddPresetMonster(monster, "mob")}>
-                        Моб
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleAddPresetMonster(monster, "boss")}>
-                        Босс
-                      </Button>
-                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleAddPresetMonster(monster)}
+                      className="w-full"
+                    >
+                      Добавить
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -363,78 +368,21 @@ const BattleScenePage = () => {
 
       {/* Центральная пустая зона (сцена боя) */}
       <div className="obs-center">
-        <div
-          ref={sceneRef}
-          className="relative w-full h-full border border-border rounded-lg overflow-hidden bg-primary/5"
-          style={{
-            backgroundImage: background ? `url(${background})` : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            transform: `scale(${zoom})`,
-            transformOrigin: "center",
-          }}
-          onWheel={handleZoom}
-        >
-          {tokens.map((token) => (
-            <motion.div
-              key={token.id}
-              className="absolute cursor-pointer select-none"
-              style={{ left: token.x, top: token.y, width: 64, height: 80 }}
-              drag
-              dragMomentum={false}
-              onDragStart={() => setDraggingTokenId(token.id)}
-              onDragEnd={(_, info) => {
-                if (draggingTokenId !== null && sceneRef.current) {
-                  const rect = sceneRef.current.getBoundingClientRect();
-                  const x = info.point.x - rect.left;
-                  const y = info.point.y - rect.top;
-                  updateTokenPosition(draggingTokenId, x, y);
-                  setDraggingTokenId(null);
-                }
-              }}
-            >
-              <div className={`relative ${
-                initiative.find(i => i.tokenId === token.id && i.isActive) 
-                  ? "ring-2 ring-primary ring-offset-2 ring-offset-black/50" 
-                  : ""
-              }`}>
-                <img
-                  src={token.img}
-                  alt={token.name}
-                  className={`w-full h-16 object-cover rounded-full border-2 ${
-                    token.type === "boss"
-                      ? "border-red-500"
-                      : token.type === "mob"
-                      ? "border-yellow-500"
-                      : "border-green-500"
-                  }`}
-                />
-                
-                {/* HP Bar */}
-                <div className="w-full bg-gray-700 rounded-full h-2 mt-1">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      token.hp > token.maxHp * 0.6 
-                        ? "bg-green-500" 
-                        : token.hp > token.maxHp * 0.3 
-                          ? "bg-yellow-500" 
-                          : "bg-red-500"
-                    }`} 
-                    style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
-                  ></div>
-                </div>
-                
-                <div className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate">
-                  {token.name}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <BattleMap
+          tokens={tokens}
+          setTokens={setTokens}
+          background={background}
+          setBackground={setBackground}
+          onUpdateTokenPosition={updateTokenPosition}
+          onSelectToken={setSelectedTokenId}
+          selectedTokenId={selectedTokenId}
+          initiative={initiative}
+          battleActive={battleActive}
+        />
       </div>
 
       {/* Правая панель */}
-      <div className="obs-right p-4 bg-background text-foreground overflow-y-auto">
+      <div className="obs-right p-4 bg-background/95 text-foreground overflow-y-auto">
         <h3 className="font-medium mb-4">Кубики</h3>
         <div className="h-96">
           <DiceRoller3D />
@@ -456,48 +404,19 @@ const BattleScenePage = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Сообщение..." />
+            <Input placeholder="Сообщение..." className="text-foreground" />
             <Button>Отправить</Button>
           </div>
         </div>
       </div>
-
-      {/* Модальное окно выбора аватара */}
-      {showAvatarSelector && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Выберите аватар</h3>
-              <Button size="icon" variant="ghost" onClick={() => setShowAvatarSelector(false)}>
-                <X />
-              </Button>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Имя токена</label>
-              <Input
-                value={tokenName}
-                onChange={(e) => setTokenName(e.target.value)}
-                placeholder="Введите имя"
-                className="mb-4"
-              />
-            </div>
-            
-            <h4 className="font-medium mb-2">Выберите аватар:</h4>
-            <div className="grid grid-cols-4 gap-2">
-              {classAvatars.placeholder.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleTokenSelect(img)}
-                  className="p-1 border rounded hover:bg-muted transition-colors"
-                >
-                  <img src={img} alt={`Avatar ${idx + 1}`} className="w-full aspect-square object-cover rounded" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      
+      {/* Модальное окно выбора токена */}
+      <TokenSelector 
+        open={tokenSelectorOpen}
+        onClose={() => setTokenSelectorOpen(false)}
+        onTokenSelect={handleTokenSelect}
+        tokenType={tokenType}
+      />
     </OBSLayout>
   );
 };
