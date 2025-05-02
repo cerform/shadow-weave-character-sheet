@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeProvider as CustomThemeProvider } from "@/contexts/ThemeContext";
+import Index from './pages/Index';
 import Home from './pages/Home';
 import HandbookPage from './pages/HandbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
@@ -28,7 +29,8 @@ function App() {
       <CustomThemeProvider>
         <CharacterProvider>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/handbook" element={<HandbookPage />} />
             <Route path="/character-creation" element={<CharacterCreationPage />} />
             <Route path="/character-sheet" element={<CharacterSheetPage />} />
