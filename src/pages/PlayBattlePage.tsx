@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { LeftPanel } from "@/components/battle/LeftPanel";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
@@ -492,7 +491,7 @@ const PlayBattlePage = () => {
         
         {/* Центральная карта */}
         <div className="flex-1 relative overflow-hidden">
-          <BattleMap 
+          <EnhancedBattleMap 
             tokens={tokens}
             setTokens={setTokens}
             background={mapBackground}
