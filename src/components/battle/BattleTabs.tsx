@@ -42,17 +42,6 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
   
-  // Состояния для размера сетки
-  const [rows, setRows] = useState(gridSize?.rows || 30);
-  const [cols, setCols] = useState(gridSize?.cols || 40);
-  
-  // Обработчик изменения размера сетки
-  const handleGridSizeChange = () => {
-    if (setGridSize) {
-      setGridSize({ rows, cols });
-    }
-  };
-  
   return (
     <div className="h-full">
       <Tabs 
@@ -217,62 +206,6 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
           
           <TabsContent value="controls" className="m-0 p-3 h-full">
             {controlsPanel}
-            
-            {/* Контроль тумана войны */}
-            {setFogOfWar && (
-              <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md mb-3">
-                <h3 className="font-medium mb-2">Туман войны</h3>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="fog-toggle"
-                    checked={fogOfWar}
-                    onChange={() => setFogOfWar(!fogOfWar)}
-                    className="mr-2"
-                  />
-                  <label htmlFor="fog-toggle">Включить</label>
-                </div>
-              </div>
-            )}
-            
-            {/* Контроль размера сетки */}
-            {setGridSize && (
-              <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
-                <h3 className="font-medium mb-2">Размер сетки</h3>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div>
-                    <label htmlFor="grid-rows" className="block text-sm mb-1">Строки</label>
-                    <input
-                      id="grid-rows"
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={rows}
-                      onChange={(e) => setRows(parseInt(e.target.value) || 30)}
-                      className="w-full p-1 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="grid-cols" className="block text-sm mb-1">Столбцы</label>
-                    <input
-                      id="grid-cols"
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={cols}
-                      onChange={(e) => setCols(parseInt(e.target.value) || 40)}
-                      className="w-full p-1 border rounded"
-                    />
-                  </div>
-                </div>
-                <button 
-                  onClick={handleGridSizeChange}
-                  className="w-full bg-primary text-primary-foreground py-1 px-3 rounded"
-                >
-                  Применить
-                </button>
-              </div>
-            )}
           </TabsContent>
           
           <TabsContent value="chat" className="m-0 p-3 h-full">
