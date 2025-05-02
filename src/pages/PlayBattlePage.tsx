@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3DFixed";
+import DiceRoller3DFixed from "@/components/character-sheet/DiceRoller3DFixed";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ThemeSelector from "@/components/ThemeSelector";

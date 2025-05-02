@@ -1,55 +1,51 @@
-
-import React from 'react';
-import { Card } from "@/components/ui/card";
-import { DicePanel } from '@/components/character-sheet/DicePanel';
+import React, { useState } from 'react';
+import DiceRoller3DFixed from '@/components/character-sheet/DiceRoller3DFixed';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useSocket } from '@/contexts/SocketContext';
-
-interface Token {
-  id: number;
-  name: string;
-  type: "player" | "monster" | "boss";
-  img: string;
-  x: number;
-  y: number;
-  hp: number;
-  maxHp: number;
-  ac: number;
-  initiative: number;
-  conditions: string[];
-  resources: { [key: string]: number };
-}
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface LeftPanelDiceRollerProps {
-  tokens?: Token[];
-  selectedTokenId?: number | null;
-  setSelectedTokenId?: (id: number | null) => void;
+  playerName?: string;
 }
 
-const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ 
-  tokens = [],
-  selectedTokenId = null,
-  setSelectedTokenId = () => {}
-}) => {
+const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName }) => {
+  const [modifier, setModifier] = useState<number>(0);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  
   return (
-    <ScrollArea className="h-full pr-2">
-      <div className="p-3">
-        <Card className="bg-background/40 backdrop-blur-md border-primary/20 shadow-xl z-50 relative">
-          <div className="p-3">
-            <h3 className="font-bold mb-3 text-lg text-center">Бросок кубиков</h3>
-            <DicePanel 
-              useDmMode={true} 
-              tokens={tokens} 
-              selectedTokenId={selectedTokenId}
-              setSelectedTokenId={setSelectedTokenId}
-              compactMode={true}
-              fixedPosition={true}
+    <Card className="w-full h-full bg-background/90 backdrop-blur-sm">
+      <ScrollArea className="h-[calc(100vh-120px)] px-2">
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="modifier" className="text-sm font-medium">
+              Модификатор:
+            </Label>
+            <Input
+              type="number"
+              id="modifier"
+              value={modifier.toString()}
+              onChange={(e) => setModifier(parseInt(e.target.value))}
+              className="w-20 text-sm"
             />
           </div>
-        </Card>
-      </div>
-    </ScrollArea>
+          
+          <div className="h-[200px] w-full">
+            <DiceRoller3DFixed 
+              modifier={modifier} 
+              themeColor={currentTheme.accent}
+              playerName={playerName}
+            />
+          </div>
+        </div>
+      </ScrollArea>
+    </Card>
   );
 };
 
 export default LeftPanelDiceRoller;
+
