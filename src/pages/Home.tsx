@@ -5,7 +5,7 @@ import JoinSession from "../components/session/JoinSession";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Home as HomeIcon } from "lucide-react";
 import { NavigationButtons } from "@/components/ui/NavigationButtons";
 
 const Home: React.FC = () => {
