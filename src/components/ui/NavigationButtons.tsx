@@ -15,6 +15,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
   
+  console.log("NavigationButtons rendering, theme:", theme);
+  
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       <Button 

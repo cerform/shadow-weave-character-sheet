@@ -25,6 +25,8 @@ const LightingSystem: React.FC<LightingSystemProps> = ({
   // Если включено дневное освещение, уровень глобального света выше
   const ambientLightLevel = isDaytime ? 0.7 : globalIllumination;
   
+  console.log("LightingSystem rendering, sources:", lightSources.length);
+  
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Глобальное затенение - полупрозрачный прямоугольник, если не день */}

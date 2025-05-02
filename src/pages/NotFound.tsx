@@ -7,6 +7,8 @@ import { Home } from 'lucide-react';
 const NotFound = () => {
   const navigate = useNavigate();
 
+  console.log("NotFound page rendering");
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md text-center space-y-8 bg-card/50 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-primary/20">
