@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanel from "@/components/battle/LeftPanel";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
@@ -716,4 +717,47 @@ const PlayBattlePage = () => {
             </div>
             
             <div className="mb-4">
-              <label
+              <label className="block text-sm font-medium mb-1">Выберите тип токена</label>
+              <div className="grid grid-cols-3 gap-2">
+                {defaultTokenImages.placeholder.map((img, idx) => (
+                  <div 
+                    key={idx} 
+                    className="bg-card p-2 rounded border hover:border-primary cursor-pointer"
+                    onClick={() => handleTokenSelect(img)}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`Avatar ${idx+1}`} 
+                      className="w-full h-20 object-cover rounded"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <Button 
+                variant="outline"
+                className="mr-2"
+                onClick={() => setShowAvatarSelector(false)}
+              >
+                Отмена
+              </Button>
+              <label className="bg-primary text-primary-foreground py-2 px-4 rounded cursor-pointer">
+                Загрузить свой
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleCustomTokenUpload}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PlayBattlePage;
