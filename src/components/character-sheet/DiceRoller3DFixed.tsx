@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -10,6 +10,7 @@ interface DiceRoller3DFixedProps {
   modifier?: number;
   onRollComplete?: (result: number) => void;
   fixedPosition?: boolean;
+  themeColor?: string;
 }
 
 export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
@@ -17,7 +18,8 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   hideControls = false,
   modifier = 0,
   onRollComplete,
-  fixedPosition = false
+  fixedPosition = false,
+  themeColor
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -28,7 +30,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
       hideControls={hideControls}
       modifier={modifier}
       onRollComplete={onRollComplete}
-      themeColor={currentTheme.accent}
+      themeColor={themeColor || currentTheme.accent}
       fixedPosition={fixedPosition}
     />
   );
