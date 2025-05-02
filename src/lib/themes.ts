@@ -8,7 +8,8 @@ export const themes = {
     name: 'Стандартная', // Brown/black/white tavern theme
     textColor: '#E8DDCB', // Warm light color for text
     contrastColor: '#000000',
-    mutedTextColor: '#A89B8C'
+    mutedTextColor: '#A89B8C',
+    tabInactiveText: '#D1C7B7' // Улучшенный контраст для неактивных вкладок
   },
   warlock: {
     primary: 'from-purple-700 to-purple-900',
@@ -18,7 +19,8 @@ export const themes = {
     name: 'Чернокнижник', // Purple theme
     textColor: '#E9D8FD',
     contrastColor: '#000000',
-    mutedTextColor: '#C9B6ED'
+    mutedTextColor: '#C9B6ED',
+    tabInactiveText: '#DBC8FF' // Улучшенный контраст для неактивных вкладок
   },
   wizard: {
     primary: 'from-blue-500 to-blue-700',
@@ -28,7 +30,8 @@ export const themes = {
     name: 'Волшебник', // Blue theme
     textColor: '#DBEAFE',
     contrastColor: '#000000',
-    mutedTextColor: '#B4CDEC'
+    mutedTextColor: '#B4CDEC',
+    tabInactiveText: '#C5DEFF' // Улучшенный контраст для неактивных вкладок
   },
   druid: {
     primary: 'from-green-600 to-green-800',
@@ -38,7 +41,8 @@ export const themes = {
     name: 'Друид', // Green theme
     textColor: '#D1FAE5',
     contrastColor: '#000000',
-    mutedTextColor: '#A3DBC7'
+    mutedTextColor: '#A3DBC7',
+    tabInactiveText: '#B8ECD6' // Улучшенный контраст для неактивных вкладок
   },
   warrior: {
     primary: 'from-red-600 to-red-800',
@@ -48,7 +52,8 @@ export const themes = {
     name: 'Воин', // Red theme
     textColor: '#FEE2E2',
     contrastColor: '#000000',
-    mutedTextColor: '#F1BDBD'
+    mutedTextColor: '#F1BDBD',
+    tabInactiveText: '#FFC7C7' // Улучшенный контраст для неактивных вкладок
   },
   bard: {
     primary: 'from-amber-500 to-amber-700',
@@ -58,6 +63,7 @@ export const themes = {
     name: 'Бард', // Yellow theme
     textColor: '#FEF3C7',
     contrastColor: '#000000',
-    mutedTextColor: '#EDDEAF'
+    mutedTextColor: '#EDDEAF',
+    tabInactiveText: '#FFF0B3' // Улучшенный контраст для неактивных вкладок
   }
 };

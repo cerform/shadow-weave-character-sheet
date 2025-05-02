@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getAllSpellNames, getSpellDetails } from '@/data/spells';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Search, Filter, BookOpen } from 'lucide-react';
 import SpellCard from '@/components/spell-detail/SpellCard';
 import { CharacterSpell } from '@/types/character';
 import ThemeSelector from '@/components/ThemeSelector';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const SpellbookPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,6 +106,10 @@ const SpellbookPage: React.FC = () => {
         <div className="flex gap-2">
           <ThemeSelector />
         </div>
+      </div>
+      
+      <div className="mb-6">
+        <NavigationButtons />
       </div>
       
       <div className="flex flex-wrap gap-4 mb-6">

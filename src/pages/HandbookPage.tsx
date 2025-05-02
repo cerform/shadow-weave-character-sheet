@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,8 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Home, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import ThemeSelector from "@/components/character-sheet/ThemeSelector";
+import NavigationButtons from "@/components/ui/NavigationButtons";
+import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
 
 const HandbookPage: React.FC = () => {
@@ -37,24 +36,7 @@ const HandbookPage: React.FC = () => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between">
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
-            <Home className="size-4" />
-            На главную
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/spellbook')} className="flex items-center gap-2">
-            <BookOpen className="size-4" />
-            Книга заклинаний
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/character-creation')} className="flex items-center gap-2">
-            <BookOpen className="size-4" />
-            Создание персонажа
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/dm/battle')} className="flex items-center gap-2">
-            <BookOpen className="size-4" />
-            Боевая карта
-          </Button>
-        </div>
+        <NavigationButtons />
         <div>
           <ThemeSelector />
         </div>
@@ -248,7 +230,7 @@ const HandbookPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={() => navigate('/')} 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
           На главную
@@ -256,7 +238,7 @@ const HandbookPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={() => navigate('/spellbook')} 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-foreground"
         >
           Книга заклинаний
           <ChevronRight className="h-4 w-4" />
@@ -272,7 +254,7 @@ const races = [
     name: "Человек",
     description: "Люди — самая распространённая раса в мирах D&D, адаптируемые и честолюбивые.",
     features: ["Универсальный", "Разнообразный", "Амбициозный"],
-    abilityScores: "+1 ко всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
+    abilityScores: "+1 к�� всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
   },
   {
     name: "Эльф",

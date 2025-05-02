@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import OBSLayout from "@/components/OBSLayout";
 import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
@@ -6,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, X, User, Skull, Crown } from "lucide-react";
+import { Plus, X, User, Skull, Crown, Home, Scroll, Book } from "lucide-react";
 import TokenSelector from "@/components/battle/TokenSelector";
 import BattleMap from "@/components/battle/BattleMap";
 import { Token as TokenType, VisibleArea } from "@/types/socket";
+import { useNavigate } from "react-router-dom";
+import NavigationButtons from "@/components/ui/NavigationButtons";
 
 // Типы токенов: игрок, моб или босс
 interface Token {
@@ -47,6 +48,7 @@ const monsterTokens = [
 ];
 
 const BattleScenePage = () => {
+  const navigate = useNavigate();
   const [background, setBackground] = useState<string | null>(null);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [zoom, setZoom] = useState(1);
@@ -219,6 +221,10 @@ const BattleScenePage = () => {
     <OBSLayout>
       {/* Левая панель */}
       <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto">
+        <div className="mb-4">
+          <NavigationButtons className="flex-col items-stretch" />
+        </div>
+        
         <Tabs defaultValue="tokens">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="tokens">Токены</TabsTrigger>
@@ -365,7 +371,7 @@ const BattleScenePage = () => {
               
               {initiative.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  Нет инициативы. Добавьте токены и нажмите "Бросить Инициативу".
+                  Нет инициативы. Добавьте токены и нажмите "Броси��ь Инициативу".
                 </div>
               )}
             </div>
