@@ -90,7 +90,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
         reader.readAsDataURL(file);
       }
     } else if (e.dataTransfer.getData('text').includes('data:image')) {
-      // Подд����жка drag-n-drop изображений из других источников
+      // Поддержка drag-n-drop изображений из других источников
       setBackground(e.dataTransfer.getData('text'));
     }
   };
@@ -191,7 +191,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
   }, [tokens, fogOfWar, visibleAreas]);
   
-  // ��трисовк���� тумана войны на холсте
+  // Отрисовка тумана войны на холсте
   const redrawFogOfWar = () => {
     if (!fogCanvasRef.current || !mapRef.current) return;
     
@@ -703,7 +703,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
         {/* Вид игрока (превью) */}
         {showPlayerView && (
           <div className="w-1/4 border-l border-border bg-background/50 p-2">
-            <h3 className="text-sm font-medium mb-2 text-foreground">Вид ��г��оков</h3>
+            <h3 className="text-sm font-medium mb-2 text-foreground">Вид игроков</h3>
             <div 
               ref={playerViewRef}
               className="relative w-full h-[calc(100%-30px)] rounded overflow-hidden bg-black/50"
@@ -759,7 +759,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       width: `${area.radius / 2.5}px`,
                       height: `${area.radius / 2.5}px`,
                       background: 'radial-gradient(circle, transparent 0%, rgba(0,0,0,0.7) 100%)',
-                      mixBlendMode: 'destination-out',
+                      mixBlendMode: "overlay" as React.CSSProperties["mixBlendMode"],
                     }}
                   ></div>
                 ))}
