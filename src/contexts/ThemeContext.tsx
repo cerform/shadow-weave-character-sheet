@@ -49,6 +49,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondary);
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
       document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
+      
+      // Дополнительно применяем цвета для фона и текста
+      document.documentElement.style.setProperty('--theme-bg', selectedTheme.primary);
+      document.documentElement.style.setProperty('--theme-fg', '#ffffff');
+      
+      // Установим также цвет акцента для компонентов
+      document.documentElement.style.setProperty('--theme-accent', selectedTheme.accent);
     }
   };
 

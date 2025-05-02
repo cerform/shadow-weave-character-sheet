@@ -1,12 +1,20 @@
+
 import React from "react";
 import SessionChat from "../components/session/SessionChat";
 import DiceRoller from "../components/session/DiceRoller";
+import { useParams } from "react-router-dom";
 
-interface GameRoomPageProps {
-  roomCode: string;
-}
+const GameRoomPage: React.FC = () => {
+  const { roomCode } = useParams<{ roomCode: string }>();
 
-const GameRoomPage: React.FC<GameRoomPageProps> = ({ roomCode }) => {
+  if (!roomCode) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4 text-red-600">Ошибка: Код комнаты не указан</h1>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">

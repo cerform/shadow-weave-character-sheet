@@ -41,6 +41,9 @@
     --secondary-gradient: from-stone-600/20 to-stone-800/20;
     --accent-color: #8E9196;
     --glow-effect: 0 0 15px #222;
+    --theme-bg: #333333;
+    --theme-fg: #ffffff;
+    --theme-accent: #8E9196;
   }
 
   .dark {
@@ -153,32 +156,53 @@
   --glow-effect-value: var(--glow-effect);
 }
 
-/* Стили для темной темы */
-.dark .themed-bg {
+/* Тематические классы для темной и светлой темы */
+.dark .themed-bg, .themed-bg {
   background: linear-gradient(to bottom right, var(--primary-gradient-value));
 }
-.dark .themed-card {
+.dark .themed-card, .themed-card {
   background: linear-gradient(to bottom right, var(--secondary-gradient-value));
   box-shadow: var(--glow-effect-value);
 }
-.dark .themed-text {
+.dark .themed-text, .themed-text {
   color: var(--accent-color-value);
 }
-.dark .themed-border {
+.dark .themed-border, .themed-border {
   border-color: var(--accent-color-value);
 }
 
-/* Стили для светлой темы */
-.themed-bg {
-  background: linear-gradient(to bottom right, var(--primary-gradient-value));
+/* Специфические стили для каждой темы */
+.theme-warlock {
+  --background: 270 50% 5%;
+  --foreground: 270 100% 90%;
+  --primary: 270 100% 50%;
+  --card: 270 30% 10%;
 }
-.themed-card {
-  background: linear-gradient(to bottom right, var(--secondary-gradient-value));
-  box-shadow: var(--glow-effect-value);
+
+.theme-wizard {
+  --background: 200 50% 5%;
+  --foreground: 200 100% 90%;  
+  --primary: 200 100% 50%;
+  --card: 200 30% 10%;
 }
-.themed-text {
-  color: var(--accent-color-value);
+
+.theme-druid {
+  --background: 120 50% 5%;
+  --foreground: 120 100% 90%;
+  --primary: 140 100% 50%;
+  --card: 120 30% 10%;
 }
-.themed-border {
-  border-color: var(--accent-color-value);
+
+.theme-warrior {
+  --background: 0 50% 5%;
+  --foreground: 0 100% 90%;
+  --primary: 0 100% 50%;
+  --card: 0 30% 10%;
+}
+
+.theme-bard {
+  --background: 40 50% 5%;
+  --foreground: 40 100% 90%;
+  --primary: 40 100% 50%;
+  --card: 40 30% 10%;
 }

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { themes } from "@/lib/themes";
 
 const ThemeSelector = () => {
@@ -12,7 +12,7 @@ const ThemeSelector = () => {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <label className="text-sm font-semibold">Выберите тему:</label>
+      <label className="text-sm font-semibold text-foreground">Выберите тему:</label>
       <select
         value={theme}
         onChange={handleChange}

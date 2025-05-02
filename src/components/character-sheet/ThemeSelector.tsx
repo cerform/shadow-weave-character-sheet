@@ -23,7 +23,7 @@ export const ThemeSelector = () => {
   
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">Тема оформления</p>
+      <p className="text-sm font-medium text-foreground">Тема оформления</p>
       <div className="flex flex-wrap gap-2 justify-center">
         {Object.keys(themes).map((themeId) => (
           <Button 
@@ -31,7 +31,7 @@ export const ThemeSelector = () => {
             variant={theme === themeId ? "default" : "outline"} 
             size="sm"
             onClick={() => handleThemeChange(themeId)}
-            className={`flex items-center ${theme === themeId ? 'bg-primary' : ''}`}
+            className={`flex items-center ${theme === themeId ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'}`}
           >
             {themeIcons[themeId as keyof typeof themeIcons]}
             {themes[themeId as keyof typeof themes].name}
