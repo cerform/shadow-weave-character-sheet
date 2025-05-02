@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Users, Link, ArrowRight } from 'lucide-react';
 import { useSessionStore } from '@/stores/sessionStore';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const CreateSessionPage = () => {
   const [sessionName, setSessionName] = useState('');
@@ -66,6 +67,11 @@ const CreateSessionPage = () => {
   return (
     <div className="container p-4 mx-auto max-w-3xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Создание новой сессии</h1>
+      
+      {/* Добавляем навигационные кнопки вверху страницы */}
+      <div className="mb-6">
+        <NavigationButtons />
+      </div>
       
       {!createdSession ? (
         <Card>

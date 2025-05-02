@@ -218,7 +218,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
                 В бой!
               </Button>
             </DialogContent>
-          </Dialog>
+          </DialogDialog>
         )}
       </div>
     </div>
