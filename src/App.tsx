@@ -19,7 +19,9 @@ function App() {
           <Route path="/spellbook" element={<SpellbookPage />} />
           <Route path="/handbook" element={<HandbookPage />} />
           <Route path="/create-character" element={<CharacterCreationPage />} />
+          <Route path="/character-creation" element={<CharacterCreationPage />} />
           <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+          <Route path="/dm" element={<DMDashboardPage />} />
           <Route path="/home" element={<Home />} />
           <Route path="/" element={<Index />} />
           <Route path="*" element={<NotFound />} />

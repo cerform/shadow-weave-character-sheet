@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ThemeSelector from "@/components/character-sheet/ThemeSelector";
+import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
 

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Badge } from "@/components/ui/badge";
 import { Dices, Sparkles, Wand, Leaf, Sword, Feather, Check } from "lucide-react";
@@ -23,8 +23,10 @@ import {
 const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
+  
   // Добавляем защиту от undefined
   const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   const themeIcons = {
     'default': <Dices className="h-4 w-4 mr-1" />,
@@ -43,8 +45,8 @@ const ThemeSelector = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2 w-full">
-              {themeIcons[themeKey]}
-              {themes[themeKey].name}
+              {themeIcons[themeKey] || <Dices className="h-4 w-4 mr-1" />}
+              {currentTheme?.name || "Стандартная"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-56 bg-popover">
@@ -54,7 +56,7 @@ const ThemeSelector = () => {
                 onClick={() => setTheme(key as any)}
                 className="flex items-center gap-2"
               >
-                {themeIcons[key as keyof typeof themeIcons]}
+                {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
                 <span>{value.name}</span>
                 {theme === key && <Check className="h-4 w-4 ml-auto" />}
               </DropdownMenuItem>
@@ -78,7 +80,7 @@ const ThemeSelector = () => {
             onClick={() => setTheme(key as any)}
             className={`flex items-center ${theme === key ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'}`}
           >
-            {themeIcons[key as keyof typeof themeIcons]}
+            {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
             {value.name}
           </Button>
         ))}
@@ -86,7 +88,7 @@ const ThemeSelector = () => {
       
       <div className="mt-2">
         <Badge className="bg-primary text-primary-foreground">
-          {themes[themeKey].name}
+          {currentTheme?.name || "Стандартная"}
         </Badge>
       </div>
     </div>
