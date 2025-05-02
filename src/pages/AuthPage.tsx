@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,13 @@ import { ArrowLeft, Mail, Shield, Github } from "lucide-react";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
-  const { login, register, googleLogin } = useAuth();
+  const { login, register, googleLogin, isAuthenticated } = useAuth();
+  
+  // Получаем адрес перенаправления из query параметров
+  const searchParams = new URLSearchParams(location.search);
+  const redirectTo = searchParams.get('redirectTo') || '/';
   
   // Состояния для форм
   const [email, setEmail] = useState("");
@@ -22,6 +28,13 @@ const AuthPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDM, setIsDM] = useState(false);
+  
+  // Если пользователь уже аутентифицирован, перенаправляем его
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(redirectTo);
+    }
+  }, [isAuthenticated, navigate, redirectTo]);
   
   // Функция для входа
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,10 +48,10 @@ const AuthPage: React.FC = () => {
     try {
       await login(email, password);
       toast.success("Вход выполнен успешно!");
-      navigate("/");
-    } catch (error) {
+      navigate(redirectTo);
+    } catch (error: any) {
       console.error("Ошибка входа:", error);
-      toast.error("Неверный логин или пароль");
+      toast.error(error?.message || "Неверный логин или пароль");
     } finally {
       setIsLoading(false);
     }
@@ -52,14 +65,19 @@ const AuthPage: React.FC = () => {
       return;
     }
     
+    if (password.length < 6) {
+      toast.error("Пароль должен содержать не менее 6 символов");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await register(email, password, username, isDM);
       toast.success("Регистрация прошла успешно!");
-      navigate("/");
-    } catch (error) {
+      navigate(redirectTo);
+    } catch (error: any) {
       console.error("Ошибка регистрации:", error);
-      toast.error("Ошибка при создании аккаунта");
+      toast.error(error?.message || "Ошибка при создании аккаунта");
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +88,11 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     try {
       await googleLogin(isDM);
-      toast.success("Вход через Google выполнен успешно!");
-    } catch (error) {
-      console.error("Ошибка входа через Google:", error);
-      toast.error("Не удалось войти через Google");
+      toast.success("Вход выполнен успешно!");
+      navigate(redirectTo);
+    } catch (error: any) {
+      console.error("Ошибка входа:", error);
+      toast.error(error?.message || "Не удалось выполнить вход");
     } finally {
       setIsLoading(false);
     }

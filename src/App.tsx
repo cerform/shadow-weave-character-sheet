@@ -15,6 +15,7 @@ import DMDashboardPage from './pages/DMDashboardPage';
 import NotFound from './pages/NotFound';
 import AuthPage from './pages/AuthPage'; // Добавляем новую страницу авторизации
 import JoinSessionPage from './pages/JoinSessionPage'; // Добавляем страницу присоединения к сессии
+import CharacterSheetPage from './pages/CharacterSheetPage'; // Добавляем страницу листа персонажа
 
 function App() {
   return (
@@ -30,9 +31,10 @@ function App() {
               <Route path="/character-creation" element={<CharacterCreationPage />} />
               <Route path="/dm-dashboard" element={<DMDashboardPage />} />
               <Route path="/dm" element={<DMDashboardPage />} />
-              <Route path="/auth" element={<AuthPage />} /> {/* Новый маршрут для авторизации */}
-              <Route path="/join" element={<JoinSessionPage />} /> {/* Явно добавляем маршрут для Join */}
+              <Route path="/auth" element={<AuthPage />} /> 
+              <Route path="/join" element={<JoinSessionPage />} />
               <Route path="/home" element={<Home />} />
+              <Route path="/sheet" element={<CharacterSheetPage />} /> {/* Добавляем путь к листу персонажа */}
               <Route path="/" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

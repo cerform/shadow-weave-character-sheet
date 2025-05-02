@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
 
 // Типы для пользователя и контекста
 export interface User {
@@ -123,9 +124,10 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   
   // Вход через Google (имитация)
   const googleLogin = async (isDM: boolean): Promise<void> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // Имитация входа через Google OAuth
-      setTimeout(() => {
+      try {
+        // Генерируем уникальный email, чтобы избежать дубликатов
         const randomId = Math.floor(Math.random() * 10000);
         const email = `user${randomId}@gmail.com`;
         
@@ -148,7 +150,9 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         
         setCurrentUser(user);
         resolve();
-      }, 1000);
+      } catch (error) {
+        reject(error);
+      }
     });
   };
   
@@ -156,6 +160,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const logout = async (): Promise<void> => {
     return new Promise(resolve => {
       setCurrentUser(null);
+      toast.success("Вы успешно вышли из системы");
       resolve();
     });
   };

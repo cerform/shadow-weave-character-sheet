@@ -1,12 +1,14 @@
+
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Check, Download, FileText, ArrowDown } from "lucide-react";
+import { Check, Download, FileText, ArrowDown, ArrowLeft } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
 import { downloadCharacterPDF, downloadCharacterHTMLPDF } from "@/utils/characterPdfGenerator";
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from "@/contexts/AuthContext";
 
 type Props = {
   character: {
@@ -38,6 +40,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
   const navigate = useNavigate();
   const { setCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
+  const { currentUser, addCharacterToUser, isAuthenticated } = useAuth();
 
   const getModifier = (score: number): string => {
     const mod = Math.floor((score - 10) / 2);
@@ -52,6 +55,21 @@ export default function CharacterReview({ character, prevStep }: Props) {
         variant: "destructive"
       });
       return;
+    }
+
+    // Проверка аутентификации
+    if (!isAuthenticated) {
+      const confirmAnonymous = window.confirm(
+        "Вы не вошли в систему. Ваш персонаж будет сохранен только локально. Хотите войти или зарегистрироваться перед сохранением персонажа?"
+      );
+      
+      if (confirmAnonymous) {
+        // Сохраняем персонажа временно в sessionStorage
+        const tmpCharData = JSON.stringify(character);
+        sessionStorage.setItem('tmp_character_data', tmpCharData);
+        navigate('/auth?redirectTo=/character-creation');
+        return;
+      }
     }
 
     // Convert character stats to the abilities format expected by the Character interface
@@ -98,10 +116,11 @@ export default function CharacterReview({ character, prevStep }: Props) {
     
     const maxHp = baseHp + conModifier;
     const now = new Date().toISOString();
+    const characterId = uuidv4();
     
     // Create the character object with the correct format for the Character interface
     const charObj: Character = {
-      id: uuidv4(), // Generate a valid id
+      id: characterId,
       name: character.name,
       race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
@@ -114,25 +133,47 @@ export default function CharacterReview({ character, prevStep }: Props) {
       gender: character.gender,
       alignment: character.alignment,
       background: character.background,
-      equipment: character.equipment,
-      languages: character.languages,
-      proficiencies: character.proficiencies,
+      equipment: character.equipment || [],
+      languages: character.languages || [],
+      proficiencies: character.proficiencies || [],
       theme: localStorage.getItem('theme') || undefined,
-      createdAt: now,  // Add required createdAt property
-      updatedAt: now   // Add required updatedAt property
+      createdAt: now,
+      updatedAt: now
     };
 
     // Сохраняем персонажа в контексте
     setCharacter(charObj);
     
-    // Показываем уведомление об успешном сохранении
-    toast({
-      title: "Персонаж сохранен",
-      description: `${character.name} успешно создан!`
-    });
+    // Если пользователь аутентифицирован, привязываем персонажа к его аккаунту
+    if (isAuthenticated && currentUser) {
+      addCharacterToUser(characterId)
+        .then(() => {
+          toast({
+            title: "Персонаж сохранен",
+            description: `${character.name} успешно создан и привязан к вашему аккаунту!`
+          });
+        })
+        .catch(error => {
+          console.error("Ошибка при привязке персонажа к аккаунту:", error);
+          toast({
+            title: "Внимание",
+            description: "Персонаж сохранен локально, но не привязан к аккаунту",
+            variant: "destructive"
+          });
+        });
+    } else {
+      toast({
+        title: "Персонаж сохранен",
+        description: `${character.name} успешно создан!`
+      });
+    }
     
-    // Переходим к листу персонажа - исправляем путь на /sheet
+    // Переходим к листу персонажа
     navigate("/sheet");
+  };
+
+  const handleBackToCreation = () => {
+    prevStep();
   };
 
   const handleDownloadPdf = () => {
@@ -149,6 +190,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
     const charForPdf: CharacterSheet = {
       name: character.name,
       race: character.race,
+      subrace: character.subrace,
       class: character.class,
       subclass: character.subclass,
       level: 1,
@@ -198,6 +240,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
     const charForPdf: CharacterSheet = {
       name: character.name,
       race: character.race,
+      subrace: character.subrace,
       class: character.class,
       subclass: character.subclass,
       level: 1,
@@ -340,11 +383,12 @@ export default function CharacterReview({ character, prevStep }: Props) {
 
       <div className="flex flex-wrap gap-4 justify-center">
         <Button
-          onClick={prevStep}
+          onClick={handleBackToCreation}
           variant="outline"
           className="flex items-center gap-2"
         >
-          Назад
+          <ArrowLeft className="h-4 w-4" />
+          Назад к созданию
         </Button>
         <Button
           onClick={handleDownloadPdf}
