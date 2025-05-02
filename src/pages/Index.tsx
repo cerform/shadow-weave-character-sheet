@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords } from "lucide-react";
@@ -55,7 +54,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => navigate("/create")} className="w-full gap-2">
+                  <Button onClick={() => navigate("/character-creation")} className="w-full gap-2">
                     <Plus className="size-4" />
                     Создать персонажа
                   </Button>

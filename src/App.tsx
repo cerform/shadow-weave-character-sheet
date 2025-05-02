@@ -33,6 +33,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/handbook" element={<HandbookPage />} />
             <Route path="/character-creation" element={<CharacterCreationPage />} />
+            <Route path="/create" element={<CharacterCreationPage />} />
             <Route path="/character-sheet" element={<CharacterSheetPage />} />
             <Route path="/spellbook" element={<SpellbookPage />} />
           </Routes>
