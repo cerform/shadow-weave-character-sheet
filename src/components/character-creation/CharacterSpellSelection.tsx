@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -66,29 +67,51 @@ const matchesFilters = (
 
 // Получаем доступные уровни заклинаний для класса и уровня
 const getAvailableSpellLevels = (characterClass: string, level: number = 1): number[] => {
+  // Воины-Мистические Рыцари и Плуты-Мистические Ловкачи получают заклинания с 3 уровня
+  if (characterClass === 'Воин' || characterClass === 'Плут') {
+    if (level >= 3) return [0, 1]; // С 3 уровня - заговоры и 1 уровень
+    if (level >= 7) return [0, 1, 2]; // С 7 уровня - заклинания 2 уровня
+    if (level >= 13) return [0, 1, 2, 3]; // С 13 уровня - заклинания 3 уровня
+    if (level >= 19) return [0, 1, 2, 3, 4]; // С 19 уровня - заклинания 4 уровня
+    return [];
+  }
+  
   // Всем заклинателям на первом уровне доступны заговоры (0) и заклинания 1 уровня
   if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(characterClass)) {
     if (level >= 3) return [0, 1, 2]; // С 3 уровня - доступ к заклинаниям 2 уровня
+    if (level >= 5) return [0, 1, 2, 3]; // С 5 уровня - доступ к заклинаниям 3 уровня
+    if (level >= 7) return [0, 1, 2, 3, 4]; // И так далее...
+    if (level >= 9) return [0, 1, 2, 3, 4, 5];
+    if (level >= 11) return [0, 1, 2, 3, 4, 5, 6];
+    if (level >= 13) return [0, 1, 2, 3, 4, 5, 6, 7];
+    if (level >= 15) return [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    if (level >= 17) return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     return [0, 1]; // Заговоры и 1 уровень для начинающих
   }
   
   // Полузаклинатели (следопыты, паладины) получают заклинания со второго уровня
   if (['Следопыт', 'Паладин'].includes(characterClass)) {
-    if (level >= 5) return [1, 2]; // С 5 уровня - доступ к заклинаниям 2 уровня
     if (level >= 2) return [1]; // С 2 уровня - доступ к заклинаниям 1 уровня
+    if (level >= 5) return [1, 2]; // С 5 уровня - доступ к заклинаниям 2 уровня
+    if (level >= 9) return [1, 2, 3]; // С 9 уровня - доступ к заклинаниям 3 уровня
+    if (level >= 13) return [1, 2, 3, 4]; // С 13 уровня - доступ к заклинаниям 4 уровня
+    if (level >= 17) return [1, 2, 3, 4, 5]; // С 17 уровня - доступ к заклинаниям 5 уровня
     return []; // На первом уровне нет заклинаний
   }
   
-  // Воин (Мистический рыцарь) и Плут (Мистический ловкач) получают заклинания с 3 уровня
-  if (characterClass === 'Воин' || characterClass === 'Плут') {
-    if (level >= 3) return [0, 1]; // С 3 уровня - заговоры и 1 уровень
+  // Варвары (Путь Тотемного Воина) могут получить ритуальные заклинания с 3 уровня
+  if (characterClass === 'Варвар') {
+    if (level >= 3) return [1]; // С 3 уровня - доступ к некоторым ритуальным заклинаниям
     return [];
   }
   
-  // Для классов Варвар и Монах, которые обычно не имеют заклинаний по умолчанию, 
-  // но могут получить их через особенности подклассов или фиты
-  if (['Варвар', 'Монах'].includes(characterClass)) {
-    if (level >= 3) return [0]; // С 3 уровня некоторые подклассы могут получать заговоры
+  // Монахи (Путь Четырех Стихий) получают некоторые заклинания с 3 уровня
+  if (characterClass === 'Монах') {
+    if (level >= 3) return [1]; // С 3 уровня - доступ к некоторым стихийным заклинаниям
+    if (level >= 5) return [1, 2]; 
+    if (level >= 9) return [1, 2, 3];
+    if (level >= 13) return [1, 2, 3, 4];
+    if (level >= 17) return [1, 2, 3, 4, 5];
     return [];
   }
   
@@ -97,8 +120,32 @@ const getAvailableSpellLevels = (characterClass: string, level: number = 1): num
 
 // Проверяет, имеет ли класс заклинания
 const hasSpells = (characterClass: string, level: number = 1): boolean => {
-  const availableLevels = getAvailableSpellLevels(characterClass, level);
-  return availableLevels.length > 0;
+  // Полные заклинатели всегда имеют заклинания
+  if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(characterClass)) {
+    return true;
+  }
+  
+  // Полузаклинатели имеют заклинания со второго уровня
+  if (['Следопыт', 'Паладин'].includes(characterClass)) {
+    return level >= 2;
+  }
+  
+  // Воин (Мистический рыцарь) и Плут (Мистический ловкач) могут получить заклинания с 3-го уровня
+  if (characterClass === 'Воин' || characterClass === 'Плут') {
+    return level >= 3;
+  }
+  
+  // Варвар (Путь Тотемного Воина) может получить некоторые ритуальные заклинания с 3-го уровня
+  if (characterClass === 'Варвар') {
+    return level >= 3;
+  }
+  
+  // Монах (Путь Четырех Стихий) может получить некоторые заклинания с 3-го уровня
+  if (characterClass === 'Монах') {
+    return level >= 3;
+  }
+  
+  return false;
 };
 
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
@@ -149,15 +196,15 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return filtered;
   }, [classSpells, searchQuery, levelFilter]);
   
-  // Получаем доступные уровни заклинаний для текущего класса
+  // Получаем доступные уровни заклинаний для текущего класса и уровня
   const availableSpellLevels = useMemo(() => {
-    return getAvailableSpellLevels(character.class);
-  }, [character.class]);
+    return getAvailableSpellLevels(character.class, character?.level || 1);
+  }, [character.class, character.level]);
   
-  // Проверка, имеет ли текущий класс заклинания
+  // Проверка, имеет ли текущий класс заклинания на данном уровне
   const classHasSpells = useMemo(() => {
-    return hasSpells(character.class);
-  }, [character.class]);
+    return hasSpells(character.class, character?.level || 1);
+  }, [character.class, character.level]);
   
   // Проверяет, выбрано ли заклинание
   const isSpellSelected = (spellName: string) => {
@@ -185,7 +232,16 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return (
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Заклинания</h2>
-        <p className="text-muted-foreground">Ваш класс ({character.class}) не использует заклинания на данном уровне.</p>
+        <p className="text-muted-foreground">
+          Ваш класс ({character.class}) не использует заклинания на {character.level || 1} уровне.
+        </p>
+        <p className="text-muted-foreground text-sm">
+          {character.class === "Воин" && "На 3-м уровне воины, выбравшие архетип Мистического Рыцаря, получают доступ к заклинаниям."}
+          {character.class === "Плут" && "На 3-м уровне плуты, выбравшие архетип Мистического Ловкача, получают доступ к заклинаниям."}
+          {character.class === "Варвар" && "На 3-м уровне варвары, выбравшие Путь Тотемного Воина, получают доступ к некоторым ритуальным заклинаниям."}
+          {character.class === "Монах" && "На 3-м уровне монахи, выбравшие Путь Четырех Стихий, получают доступ к некоторым заклинаниям стихий."}
+          {['Следопыт', 'Паладин'].includes(character.class) && `На 2-м уровне ${character.class === 'Следопыт' ? 'следопыты' : 'паладины'} получают доступ к заклинаниям.`}
+        </p>
         
         <NavigationButtons 
           allowNext={true}

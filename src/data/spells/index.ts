@@ -41,7 +41,54 @@ export const getSpellDetails = (spellName: string): CharacterSpell | undefined =
 
 // Получить заклинания для определённого класса
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
-  return allSpells.filter(spell => spell.classes.includes(className));
+  // Стандартные заклинатели
+  if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Чернокнижник', 'Паладин', 'Следопыт'].includes(className)) {
+    return allSpells.filter(spell => spell.classes.includes(className));
+  }
+  
+  // Особые случаи для классов, которые используют заклинания через подклассы
+  
+  // Воин (Мистический рыцарь) получает заклинания волшебника
+  if (className === 'Воин') {
+    return allSpells.filter(spell => 
+      spell.classes.includes('Волшебник') && 
+      // Мистические рыцари могут использовать только заклинания школ Преобразования и Ограждения до 4-го уровня
+      ['Преобразование', 'Ограждение'].includes(spell.school) && 
+      spell.level <= 4
+    );
+  }
+  
+  // Плут (Мистический ловкач) получает заклинания волшебника
+  if (className === 'Плут') {
+    return allSpells.filter(spell => 
+      spell.classes.includes('Волшебник') && 
+      // Мистические ловкачи могут использовать только заговоры и заклинания до 4-го уровня
+      spell.level <= 4
+    );
+  }
+  
+  // Варвар (Путь Тотемного Воина) может накладывать некоторые ритуальные заклинания
+  if (className === 'Варвар') {
+    return allSpells.filter(spell => 
+      // Доступны только некоторые заклинания друида, связанные с животными и природой
+      spell.ritual && 
+      spell.classes.includes('Друид') && 
+      spell.level === 1 &&
+      ['Разговор с животными', 'Зверинное чутьё', 'Общение с природой'].includes(spell.name)
+    );
+  }
+  
+  // Монах (Путь Четырех Стихий) может накладывать некоторые заклинания, связанные со стихиями
+  if (className === 'Монах') {
+    return allSpells.filter(spell => 
+      spell.classes.includes('Друид') && 
+      // Заклинания, связанные со стихиями (огонь, вода, воздух, земля)
+      ['Воплощение', 'Преобразование'].includes(spell.school) &&
+      spell.level <= 5
+    );
+  }
+  
+  return [];
 };
 
 // Получить заклинания определённого уровня
