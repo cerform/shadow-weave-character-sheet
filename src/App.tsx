@@ -10,6 +10,11 @@ import CharacterCreationPage from './pages/CharacterCreationPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
 import { CharacterProvider } from '@/contexts/CharacterContext';
 import SpellbookPage from './pages/SpellbookPage';
+import PlayBattlePage from './pages/PlayBattlePage';
+import DMDashboardPage from './pages/DMDashboardPage';
+import { SessionProvider } from '@/contexts/SessionContext';
+import { SocketProvider } from '@/contexts/SocketContext';
+import BattleScenePage from './pages/BattleScenePage';
 
 function App() {
   const location = useLocation();
@@ -28,15 +33,22 @@ function App() {
     >
       <CustomThemeProvider>
         <CharacterProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/handbook" element={<HandbookPage />} />
-            <Route path="/character-creation" element={<CharacterCreationPage />} />
-            <Route path="/create" element={<CharacterCreationPage />} />
-            <Route path="/character-sheet" element={<CharacterSheetPage />} />
-            <Route path="/spellbook" element={<SpellbookPage />} />
-          </Routes>
+          <SessionProvider>
+            <SocketProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/handbook" element={<HandbookPage />} />
+                <Route path="/character-creation" element={<CharacterCreationPage />} />
+                <Route path="/create" element={<CharacterCreationPage />} />
+                <Route path="/character-sheet" element={<CharacterSheetPage />} />
+                <Route path="/spellbook" element={<SpellbookPage />} />
+                <Route path="/battle" element={<PlayBattlePage />} />
+                <Route path="/dm" element={<DMDashboardPage />} />
+                <Route path="/scene" element={<BattleScenePage />} />
+              </Routes>
+            </SocketProvider>
+          </SessionProvider>
         </CharacterProvider>
       </CustomThemeProvider>
     </ThemeProvider>

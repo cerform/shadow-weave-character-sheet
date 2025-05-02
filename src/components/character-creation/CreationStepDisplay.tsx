@@ -22,14 +22,22 @@ const CreationStepDisplay: React.FC<StepDisplayProps> = ({
           return null;
         }
         
+        // Determine if this step is active, completed or upcoming
+        const isActive = currentStep === index;
+        const isCompleted = currentStep > index;
+        const isUpcoming = currentStep < index;
+        
         return (
           <div
             key={index}
             className={`p-2 rounded-md font-semibold text-sm ${
-              currentStep === index
+              isActive
                 ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
+                : isCompleted 
+                  ? "bg-primary/20 text-primary" 
+                  : "bg-muted text-muted-foreground"
             }`}
+            title={step.description}
           >
             {step.name}
           </div>

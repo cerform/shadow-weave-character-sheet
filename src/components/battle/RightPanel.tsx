@@ -1,23 +1,14 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Heart, 
-  Shield, 
-  Dice1, 
-  AtSign, 
-  Flame, 
-  Eye, 
-  EyeOff,
-  Feather,
-  Swords,
-  BookOpen,
-  Plus // Added missing Plus icon import here
-} from "lucide-react";
-import { Token } from "@/pages/PlayBattlePage";
+import { Heart, Shield, Activity, Plus, Minus, X, PlusCircle, MinusCircle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Token, Initiative } from '@/pages/PlayBattlePage';
+import { useToast } from '@/components/ui/use-toast';
 
 interface RightPanelProps {
   selectedTokenId: number | null;
@@ -25,298 +16,283 @@ interface RightPanelProps {
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
 }
 
-const conditions = [
-  "Оглушен", "Ослеплен", "Истощен", "Парализован", 
-  "Отравлен", "Испуган", "Схвачен", "Сбит с ног", "Без сознания"
-];
-
-const RightPanel: React.FC<RightPanelProps> = ({
-  selectedTokenId,
+const RightPanel: React.FC<RightPanelProps> = ({ 
+  selectedTokenId, 
   tokens,
-  setTokens,
+  setTokens 
 }) => {
+  const { toast } = useToast();
+  const [newCondition, setNewCondition] = useState("");
+  
+  // Find the selected token
   const selectedToken = tokens.find(token => token.id === selectedTokenId);
-  const [diceResult, setDiceResult] = useState<number | null>(null);
-  const [diceType, setDiceType] = useState<string>("d20");
   
-  const rollDice = (sides: number) => {
-    const result = Math.floor(Math.random() * sides) + 1;
-    setDiceResult(result);
-    setDiceType(`d${sides}`);
-  };
+  // If no token selected, show placeholder
+  if (!selectedToken) {
+    return (
+      <div className="h-full w-64 p-4 border-l flex flex-col">
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          <p className="text-center">Выберите токен для просмотра деталей</p>
+        </div>
+      </div>
+    );
+  }
   
-  const updateTokenHP = (newHP: number) => {
-    if (!selectedToken) return;
-    setTokens(tokens.map(token => 
-      token.id === selectedToken.id 
-        ? { ...token, hp: Math.max(0, Math.min(token.maxHp, newHP)) } 
-        : token
-    ));
-  };
-  
-  const updateTokenAC = (newAC: number) => {
-    if (!selectedToken) return;
-    setTokens(tokens.map(token => 
-      token.id === selectedToken.id ? { ...token, ac: newAC } : token
-    ));
-  };
-  
-  const toggleCondition = (condition: string) => {
-    if (!selectedToken) return;
+  // Update token hit points
+  const updateHP = (change: number) => {
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        const newHP = Math.max(0, Math.min(token.maxHp, token.hp + change));
+        return { ...token, hp: newHP };
+      }
+      return token;
+    }));
     
-    const hasCondition = selectedToken.conditions.includes(condition);
-    const updatedConditions = hasCondition
-      ? selectedToken.conditions.filter(c => c !== condition)
-      : [...selectedToken.conditions, condition];
-    
-    setTokens(tokens.map(token => 
-      token.id === selectedToken.id ? { ...token, conditions: updatedConditions } : token
-    ));
+    // Show toast for significant damage
+    if (change <= -5) {
+      toast({
+        title: `${selectedToken.name} получает урон`,
+        description: `${Math.abs(change)} урона нанесено`
+      });
+    }
   };
   
-  const toggleVisibility = () => {
-    if (!selectedToken) return;
+  // Add condition to token
+  const addCondition = () => {
+    if (newCondition.trim() === "") return;
     
-    setTokens(tokens.map(token => 
-      token.id === selectedToken.id ? { ...token, visible: !token.visible } : token
-    ));
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        // Don't add duplicate conditions
+        if (token.conditions.includes(newCondition)) {
+          toast({
+            title: "Состояние уже существует",
+            description: `${selectedToken.name} уже имеет состояние ${newCondition}`
+          });
+          return token;
+        }
+        
+        return { 
+          ...token, 
+          conditions: [...token.conditions, newCondition]
+        };
+      }
+      return token;
+    }));
+    
+    setNewCondition("");
+    
+    toast({
+      title: "Состояние добавлено",
+      description: `${selectedToken.name} теперь ${newCondition}`
+    });
+  };
+  
+  // Remove condition from token
+  const removeCondition = (condition: string) => {
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        return { 
+          ...token, 
+          conditions: token.conditions.filter(c => c !== condition) 
+        };
+      }
+      return token;
+    }));
+    
+    toast({
+      title: "Состояние удалено",
+      description: `${selectedToken.name} больше не ${condition}`
+    });
   };
 
+  // Modify resource value
+  const modifyResource = (resourceName: string, change: number) => {
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        const resources = { ...token.resources };
+        if (resources[resourceName] === undefined) {
+          resources[resourceName] = 0;
+        }
+        resources[resourceName] = Math.max(0, resources[resourceName] + change);
+        return { ...token, resources };
+      }
+      return token;
+    }));
+  };
+
+  // Add new resource
+  const addResource = (name: string, value: number = 0) => {
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        const resources = { ...token.resources };
+        if (resources[name] === undefined) {
+          resources[name] = value;
+        }
+        return { ...token, resources };
+      }
+      return token;
+    }));
+  };
+
+  // Toggle token visibility
+  const toggleVisibility = () => {
+    setTokens(tokens.map(token => {
+      if (token.id === selectedTokenId) {
+        return { ...token, visible: !token.visible };
+      }
+      return token;
+    }));
+    
+    toast({
+      title: selectedToken.visible ? "Токен скрыт" : "Токен виден",
+      description: `${selectedToken.name} теперь ${selectedToken.visible ? "не виден" : "виден"} для игроков`
+    });
+  };
+  
   return (
-    <div className="w-80 bg-muted/5 border-l border-border flex flex-col h-[calc(100vh-13rem-56px)]">
-      {selectedToken ? (
-        <Tabs defaultValue="details">
-          <TabsList className="w-full">
-            <TabsTrigger value="details" className="flex-1">Детали</TabsTrigger>
-            <TabsTrigger value="abilities" className="flex-1">Способности</TabsTrigger>
-            <TabsTrigger value="notes" className="flex-1">Заметки</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="p-3">
-            <div className="flex items-center gap-3 mb-4">
-              <img 
-                src={selectedToken.img} 
-                alt={selectedToken.name}
-                className={`w-16 h-16 rounded-full object-cover border-2 ${
-                  selectedToken.type === "boss"
-                    ? "border-red-500"
-                    : selectedToken.type === "monster"
-                    ? "border-yellow-500"
-                    : "border-green-500"
-                }`} 
-              />
-              <div>
-                <h2 className="font-bold text-lg">{selectedToken.name}</h2>
-                <div className="text-sm text-muted-foreground">
-                  {selectedToken.type === "boss" 
-                    ? "Босс" 
-                    : selectedToken.type === "monster" 
-                    ? "Монстр" 
-                    : selectedToken.type === "npc" 
-                    ? "НПС" 
-                    : "Игрок"}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button 
-                    size="sm" 
-                    variant={selectedToken.visible ? "outline" : "default"}
-                    className="h-6 py-0 px-2"
-                    onClick={toggleVisibility}
-                  >
-                    {selectedToken.visible ? (
-                      <><Eye className="h-3 w-3 mr-1" /> Видим</>
-                    ) : (
-                      <><EyeOff className="h-3 w-3 mr-1" /> Скрыт</>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              {/* HP и AC */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <div className="flex items-center mb-1">
-                    <Heart className="h-4 w-4 text-red-500 mr-1" />
-                    <span className="text-sm font-medium">Здоровье</span>
-                  </div>
-                  <div className="flex gap-1 items-center">
-                    <Input 
-                      type="number" 
-                      className="w-16" 
-                      value={selectedToken.hp}
-                      onChange={(e) => updateTokenHP(parseInt(e.target.value) || 0)}
-                    />
-                    <span className="text-muted-foreground">/</span>
-                    <Input 
-                      type="number" 
-                      className="w-16" 
-                      value={selectedToken.maxHp}
-                      disabled
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center mb-1">
-                    <Shield className="h-4 w-4 text-blue-500 mr-1" />
-                    <span className="text-sm font-medium">Класс брони</span>
-                  </div>
-                  <Input 
-                    type="number" 
-                    className="w-16" 
-                    value={selectedToken.ac}
-                    onChange={(e) => updateTokenAC(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-              
-              {/* Броски кубиков */}
-              <div>
-                <div className="flex items-center mb-1">
-                  <Dice1 className="h-4 w-4 text-purple-500 mr-1" />
-                  <span className="text-sm font-medium">Броски</span>
-                </div>
-                <div className="flex gap-1">
-                  {[4, 6, 8, 10, 12, 20].map(sides => (
-                    <Button 
-                      key={sides} 
-                      variant="outline" 
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => rollDice(sides)}
-                    >
-                      d{sides}
-                    </Button>
-                  ))}
-                </div>
-                {diceResult !== null && (
-                  <div className="mt-2 text-center py-1 bg-muted/20 rounded-md">
-                    {diceType}: <span className="font-bold">{diceResult}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Состояния */}
-              <div>
-                <div className="flex items-center mb-1">
-                  <AtSign className="h-4 w-4 text-yellow-500 mr-1" />
-                  <span className="text-sm font-medium">Состояния</span>
-                </div>
-                <ScrollArea className="h-28 border rounded-md p-1">
-                  <div className="grid grid-cols-2 gap-1">
-                    {conditions.map(condition => (
-                      <div key={condition} className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id={`condition-${condition}`}
-                          checked={selectedToken.conditions.includes(condition)}
-                          onChange={() => toggleCondition(condition)}
-                          className="mr-1.5"
-                        />
-                        <label htmlFor={`condition-${condition}`} className="text-sm">
-                          {condition}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="abilities" className="p-3">
-            <div className="space-y-4">
-              {/* Атаки */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center">
-                    <Swords className="h-4 w-4 text-red-500 mr-1" />
-                    <span className="text-sm font-medium">Атаки</span>
-                  </div>
-                  <Button size="sm" variant="ghost" className="h-6 p-1">
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-                <div className="space-y-1">
-                  <div className="p-2 border rounded-md">
-                    <div className="font-medium">Длинный меч</div>
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>+5 к атаке</span>
-                      <span>1d8+3 рубящий</span>
-                    </div>
-                    <div className="mt-1 flex justify-end gap-1">
-                      <Button size="sm" variant="outline" className="h-6 px-2 py-0">Атака</Button>
-                      <Button size="sm" variant="outline" className="h-6 px-2 py-0">Урон</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Заклинания */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center">
-                    <Flame className="h-4 w-4 text-orange-500 mr-1" />
-                    <span className="text-sm font-medium">Заклинания</span>
-                  </div>
-                  <Button size="sm" variant="ghost" className="h-6 p-1">
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-                <div className="space-y-1">
-                  <div className="p-2 border rounded-md">
-                    <div className="font-medium">Огненный шар</div>
-                    <div className="text-sm text-muted-foreground">3 уровень, 8d6 урона огнем</div>
-                    <div className="mt-1 flex justify-end">
-                      <Button size="sm" variant="outline" className="h-6 px-2 py-0">Каст</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Особые умения */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center">
-                    <Feather className="h-4 w-4 text-blue-500 mr-1" />
-                    <span className="text-sm font-medium">Особые умения</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="p-2 border rounded-md">
-                    <div className="font-medium">Вторая атака</div>
-                    <div className="text-sm text-muted-foreground">
-                      Позволяет атаковать дважды за одно действие
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="notes" className="p-3">
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center mb-1">
-                  <BookOpen className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm font-medium">Заметки ДМ</span>
-                </div>
-                <textarea 
-                  className="w-full h-60 p-2 border rounded-md bg-background"
-                  placeholder="Заметки для Мастера о персонаже или монстре..."
-                ></textarea>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-          <BookOpen className="h-12 w-12 mb-2" />
-          <p>Выберите токен на карте или из списка слева</p>
+    <ScrollArea className="h-full w-64 p-4 border-l">
+      <div className="space-y-4">
+        {/* Token Header */}
+        <div className="flex items-center space-x-3">
+          <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-primary">
+            <img src={selectedToken.img} alt={selectedToken.name} className="h-full w-full object-cover" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">{selectedToken.name}</h3>
+            <p className="text-xs text-muted-foreground capitalize">{selectedToken.type}</p>
+          </div>
         </div>
-      )}
-    </div>
+        
+        <Separator />
+        
+        {/* Token Stats */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <Card className="p-1">
+            <div className="flex flex-col items-center">
+              <Heart className="h-4 w-4 text-red-500" />
+              <span className="text-sm font-medium">{selectedToken.hp}/{selectedToken.maxHp}</span>
+              <span className="text-xs text-muted-foreground">HP</span>
+            </div>
+          </Card>
+          <Card className="p-1">
+            <div className="flex flex-col items-center">
+              <Shield className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium">{selectedToken.ac}</span>
+              <span className="text-xs text-muted-foreground">AC</span>
+            </div>
+          </Card>
+          <Card className="p-1">
+            <div className="flex flex-col items-center">
+              <Activity className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium">{selectedToken.initiative}</span>
+              <span className="text-xs text-muted-foreground">INIT</span>
+            </div>
+          </Card>
+        </div>
+        
+        {/* HP Controls */}
+        <Card>
+          <CardHeader className="p-3">
+            <CardTitle className="text-sm flex items-center">
+              <Heart className="h-4 w-4 mr-2 text-red-500" /> Здоровье
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="grid grid-cols-4 gap-2">
+              <Button size="sm" variant="outline" onClick={() => updateHP(-1)}>-1</Button>
+              <Button size="sm" variant="outline" onClick={() => updateHP(1)}>+1</Button>
+              <Button size="sm" variant="outline" onClick={() => updateHP(-5)}>-5</Button>
+              <Button size="sm" variant="outline" onClick={() => updateHP(5)}>+5</Button>
+            </div>
+            <div className="flex items-center mt-2">
+              <Button size="sm" variant="destructive" className="w-full" onClick={() => updateHP(-selectedToken.hp)}>
+                <Minus className="h-3 w-3 mr-1" /> Нокаут
+              </Button>
+              <Button size="sm" variant="default" className="w-full ml-2" onClick={() => updateHP(selectedToken.maxHp - selectedToken.hp)}>
+                <Plus className="h-3 w-3 mr-1" /> Полное
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Conditions */}
+        <Card>
+          <CardHeader className="p-3">
+            <CardTitle className="text-sm">Состояния</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="flex flex-wrap gap-1 mb-2">
+              {selectedToken.conditions.length === 0 ? (
+                <div className="text-xs text-muted-foreground">Нет активных состояний</div>
+              ) : (
+                selectedToken.conditions.map((condition, index) => (
+                  <Badge key={index} variant="outline" className="flex items-center">
+                    {condition}
+                    <button 
+                      className="ml-1 hover:bg-muted rounded-full" 
+                      onClick={() => removeCondition(condition)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))
+              )}
+            </div>
+            <div className="flex mt-2">
+              <Input 
+                value={newCondition}
+                onChange={(e) => setNewCondition(e.target.value)}
+                placeholder="Новое состояние..."
+                className="text-xs"
+                onKeyDown={(e) => e.key === 'Enter' && addCondition()}
+              />
+              <Button size="sm" onClick={addCondition} className="ml-2">
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Resources */}
+        <Card>
+          <CardHeader className="p-3">
+            <CardTitle className="text-sm">Ресурсы</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            {Object.keys(selectedToken.resources).length === 0 ? (
+              <div className="text-xs text-muted-foreground">Нет активных ресурсов</div>
+            ) : (
+              <div className="space-y-2">
+                {Object.keys(selectedToken.resources).map(resourceName => (
+                  <div key={resourceName} className="flex items-center justify-between">
+                    <span className="text-sm">{resourceName}</span>
+                    <div className="flex items-center">
+                      <Button size="icon" variant="ghost" className="h-6 w-6 p-0" onClick={() => modifyResource(resourceName, -1)}>
+                        <MinusCircle className="h-3 w-3" />
+                      </Button>
+                      <span className="mx-2 text-sm">{selectedToken.resources[resourceName]}</span>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 p-0" onClick={() => modifyResource(resourceName, 1)}>
+                        <PlusCircle className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <Button size="sm" variant="outline" className="mt-2 w-full">
+              <Plus className="h-3 w-3 mr-1" /> Добавить ресурс
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Visibility Toggle */}
+        <Button variant="outline" className="w-full" onClick={toggleVisibility}>
+          {selectedToken.visible ? "Скрыть от игроков" : "Показать игрокам"}
+        </Button>
+      </div>
+    </ScrollArea>
   );
 };
 

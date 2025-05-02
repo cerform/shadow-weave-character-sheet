@@ -1,111 +1,82 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 264 67% 50%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.75rem;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 217.2 32.6% 17.5%;
   }
 }
 
-/* Theme-specific color variables */
-.theme-default {
-  --background: 30 20% 5%;
-  --primary: 30 30% 50%;
-}
+  .theme-dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
 
-.theme-warlock {
-  --background: 270 50% 5%;
-  --primary: 270 100% 50%;
-}
-
-.theme-wizard {
-  --background: 195 50% 5%;
-  --primary: 195 100% 50%;
-}
-
-.theme-druid {
-  --background: 120 50% 5%;
-  --primary: 140 100% 50%;
-}
-
-.theme-warrior {
-  --background: 0 50% 5%;
-  --primary: 0 100% 50%;
-}
-
-.theme-bard {
-  --background: 45 50% 5%;
-  --primary: 45 100% 50%;
-}
-
-/* Racial and class bonus styling */
-.bonus-racial, .bonus-class {
-  color: rgb(74, 222, 128); /* Green color for racial bonuses */
-  font-weight: 500;
-}
-
-/* Improved text contrast on dark backgrounds */
-.text-themed {
-  color: hsl(var(--primary));
-}
-
-/* Improved character sheet stat display */
-.stat-box {
-  @apply border border-primary/30 rounded-md p-3 bg-primary/5 text-center;
-}
-
-.stat-label {
-  @apply text-sm text-primary/70 mb-1;
-}
-
-.stat-value {
-  @apply text-xl font-medium;
-}
-
-.stat-modifier {
-  @apply text-sm opacity-80 ml-1;
-}
-
-/* Character background section styling */
-.background-text {
-  color: hsl(var(--foreground));
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-}
-
-/* Dice styling */
-.dice-button {
-  @apply flex items-center justify-center p-2 rounded-md;
-  background: linear-gradient(to bottom right, hsl(var(--primary)), hsl(var(--primary)/70%));
-  color: hsl(var(--primary-foreground));
-  transition: all 0.2s ease;
-}
-
-.dice-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px hsl(var(--primary)/50%);
+  .theme-light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+  }
 }
 
 @layer base {
@@ -114,58 +85,58 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
-/* OBS-style трёхколоночная сетка */
+/* OBS Layout Grid - Add this to the end of index.css */
 .obs-grid {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr;
+  grid-template-areas: "left center right";
   height: 100vh;
-  width: 100vw;
+  overflow: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.obs-left {
+  grid-area: left;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.obs-center {
+  grid-area: center;
+  position: relative;
   overflow: hidden;
 }
 
-.obs-left   { grid-column: 1; }
-.obs-center { grid-column: 2; }
-.obs-right  { grid-column: 3; }
-
-/* Глобальные стили для переключения тем */
-[data-theme="default"] .bg-themed {
-  background-color: rgba(120, 113, 108, 0.1);
-}
-[data-theme="warlock"] .bg-themed {
-  background-color: rgba(139, 92, 246, 0.1);
-}
-[data-theme="wizard"] .bg-themed {
-  background-color: rgba(51, 195, 240, 0.1);
-}
-[data-theme="druid"] .bg-themed {
-  background-color: rgba(16, 185, 129, 0.1);
-}
-[data-theme="warrior"] .bg-themed {
-  background-color: rgba(234, 56, 77, 0.1);
-}
-[data-theme="bard"] .bg-themed {
-  background-color: rgba(252, 211, 77, 0.1);
+.obs-right {
+  grid-area: right;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
 }
 
-/* Цвета текста для темной темы */
-[data-theme] .text-themed {
-  color: var(--primary-color, #fff);
+/* For smaller screens, stack the panels */
+@media (max-width: 1024px) {
+  .obs-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+      "left"
+      "center"
+      "right";
+  }
+
+  .obs-left, .obs-right {
+    max-height: 250px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+  }
 }
 
-/* Улучшаем контрастность для предысторий и других элементов */
-.bg-card, .bg-background {
-  background-color: rgba(15, 15, 20, 0.8);
-}
-.text-foreground {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Улучшенная подсветка для кубиков */
-.dice-result-display {
-  @apply bg-primary/30 backdrop-blur-md p-3 rounded-md shadow-lg text-white font-bold;
-}
+/* End of OBS Layout styles */

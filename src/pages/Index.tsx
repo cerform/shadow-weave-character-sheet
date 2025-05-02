@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, Book, BookOpen, User, Swords } from "lucide-react";
+import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +20,16 @@ const Index = () => {
       console.log("Loading character from file:", file.name);
     }
   };
+
+  // Update the navigation links to include new pages
+  const menuItems = [
+    { title: "Главная", path: "/home", icon: Home },
+    { title: "Создание персонажа", path: "/character-creation", icon: UserPlus },
+    { title: "Лист персонажа", path: "/character-sheet", icon: FileText },
+    { title: "Книга заклинаний", path: "/spellbook", icon: BookOpen },
+    { title: "Боевая карта", path: "/battle", icon: Swords },
+    { title: "Панель мастера", path: "/dm", icon: Crown },
+  ];
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
