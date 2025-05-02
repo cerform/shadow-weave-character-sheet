@@ -446,7 +446,6 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
               height={0.1}
               curveSegments={12}
               bevelEnabled={false}
-              color={themeColor}
             >
               {result.toString()}
               <meshStandardMaterial color={themeColor} emissive={themeColor} emissiveIntensity={0.6} />
@@ -612,3 +611,4 @@ export const DiceRoller3D = ({
     </div>
   );
 };
+
