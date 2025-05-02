@@ -52,6 +52,7 @@ const drawAbilityBox = (doc: jsPDF, x: number, y: number, ability: string, score
   doc.setLineWidth(0.5);
   doc.rect(x + 5, y + 28, 20, 15, 'S');
   doc.setFontSize(14);
+  // Исправление 1: Преобразуем числовое значение в строку
   doc.text(String(score), x + 15, y + 37, { align: "center" });
 };
 
@@ -272,6 +273,7 @@ export const generateCharacterPDF = (character: Character): string => {
     
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
+    // Исправление 2: Преобразуем числовое значение в строку
     doc.text(String(passivePerception), 75, 180, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -841,6 +843,7 @@ export const downloadCharacterPDF = (character: Character): void => {
     
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
+    // Исправление 3: Преобразуем числовое значение в строку
     doc.text(String(passivePerception), 75, 180, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -1214,3 +1217,4 @@ export const downloadCharacterPDF = (character: Character): void => {
 };
 
 // Создаем фиктивный импорт для файла шрифтов (будет создан ниже)
+
