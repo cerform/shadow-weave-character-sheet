@@ -18,26 +18,45 @@ import JoinGamePage from "@/pages/JoinGamePage";
 import PlayerSessionPage from "@/pages/PlayerSessionPage";
 import HandbookPage from "@/pages/HandbookPage";
 
-import { CharacterContext } from "@/contexts/CharacterContext";
-import { ThemeContext } from "@/contexts/ThemeContext";
+import { CharacterContext, CharacterProvider } from "@/contexts/CharacterContext";
+import { ThemeContext, Theme } from "@/contexts/ThemeContext";
 import { SocketProvider } from "@/contexts/SocketContext";
 import { SessionProvider } from "@/contexts/SessionContext";
 
 function App() {
-  const [theme, setTheme] = React.useState("dark");
+  const [theme, setTheme] = React.useState<Theme>("default");
   const [character, setCharacter] = React.useState(null);
+  const [characters, setCharacters] = React.useState([]);
 
+  // Создаем заглушки для обязательных методов CharacterContext
   const updateCharacter = (updates: any) => {
     setCharacter((prevCharacter) => ({
       ...prevCharacter,
       ...updates,
     }));
   };
+  
+  const clearCharacter = () => {
+    setCharacter(null);
+  };
+  
+  const saveCharacter = async (char: any) => {
+    console.log("Save character called", char);
+    return char;
+  };
+  
+  const deleteCharacter = async (id: string) => {
+    console.log("Delete character called", id);
+  };
+  
+  const getUserCharacters = () => {
+    return characters;
+  };
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <ThemeContext.Provider value={{ theme, setTheme }}>
-        <CharacterContext.Provider value={{ character, updateCharacter }}>
+        <CharacterProvider>
           <SocketProvider>
             <SessionProvider>
               <Router>
@@ -60,7 +79,7 @@ function App() {
               <Toaster />
             </SessionProvider>
           </SocketProvider>
-        </CharacterContext.Provider>
+        </CharacterProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
   );
