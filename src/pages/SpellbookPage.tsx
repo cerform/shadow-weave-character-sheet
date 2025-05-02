@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getAllSpellNames, getSpellDetails } from '@/data/spells';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,6 @@ const SpellbookPage: React.FC = () => {
     const loadedSpells = allSpellNames.map(name => {
       const details = getSpellDetails(name);
       return {
-        id: name.toLowerCase().replace(/\s+/g, '-'),
         name,
         level: details?.level || 0,
         school: details?.school || '',
@@ -256,7 +254,11 @@ const SpellbookPage: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {filteredSpells.map(spell => (
-                      <SpellCard key={spell.id} spell={spell} compact />
+                      <SpellCard 
+                        key={spell.name} 
+                        spell={spell} 
+                        compact 
+                      />
                     ))}
                   </div>
                 )}
