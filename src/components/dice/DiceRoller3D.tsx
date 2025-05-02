@@ -103,7 +103,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
       case 'd20':
         return new IcosahedronGeometry(1, 0);
       case 'd100':
-        // Для d100 используем также геометрию d10, но с другой логикой результата
+        // Для d100 используем также геометрию d10, но с ��ругой логикой результата
         return createD10Geometry();
       default:
         return new BoxGeometry(1, 1, 1);
@@ -281,6 +281,11 @@ export const DiceRoller3D = ({
     setRoll(false);
     if (onRollComplete) {
       onRollComplete(result);
+    }
+    
+    // Log the roll with player name if available
+    if (playerName) {
+      console.log(`${playerName} rolled a ${result}${modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : ''}`);
     }
   };
   
