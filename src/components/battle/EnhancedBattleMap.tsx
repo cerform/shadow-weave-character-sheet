@@ -4,13 +4,11 @@ import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-// Import types from store instead of page
 import { Token, Initiative } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Исправляем тип, чтобы поддерживать оба варианта функций
   setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((newToken: Token) => void);
   background: string | null;
   setBackground: (url: string | null) => void;
@@ -27,10 +25,9 @@ interface EnhancedBattleMapProps {
   gridOpacity?: number;
   zoom?: number;
   isDM?: boolean;
-  // Добавляем параметры для освещения
   lightSources?: LightSource[];
   isDynamicLighting?: boolean;
-  className?: string; // Добавляем className для дополнительных стилей
+  className?: string;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -51,12 +48,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   gridOpacity = 0.5,
   zoom = 1,
   isDM = true,
-  // Добавляем параметры для освещения
   lightSources = [],
   isDynamicLighting = false,
   className = ""
 }) => {
-  // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -66,15 +61,12 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [spacePressed, setSpacePressed] = useState(false);
   
-  // Улучшенный функционал перетаскивания карты - теперь работает с правой кнопкой мыши или через зажатие пробела
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Средняя кнопка мыши или правая или левая при зажатом пробеле или Ctrl
     if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
       
-      // Добавляем класс grabbing для визуального фидбека
       if (mapContentRef.current) {
         mapContentRef.current.classList.add('grabbing');
       }
@@ -98,7 +90,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     if (isDragging) {
       setIsDragging(false);
       
-      // Убираем класс grabbing
       if (mapContentRef.current) {
         mapContentRef.current.classList.remove('grabbing');
       }
@@ -106,20 +97,14 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
   };
 
-  // Обработчик колесика мыши для зума
   const handleWheel = (e: WheelEvent) => {
-    if (e.ctrlKey && isDM) { // Проверяем isDM
+    if (e.ctrlKey && isDM) {
       e.preventDefault();
-      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
-      // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
-      
-      // Центрирование зума относительно курсора
       if (mapContainerRef.current && mapContentRef.current) {
         const container = mapContainerRef.current.getBoundingClientRect();
         const mouseX = e.clientX - container.left;
         const mouseY = e.clientY - container.top;
         
-        // Вычисляем новую позицию для центрирования зума по курсору
         setMapPosition(prev => {
           const dx = mouseX - container.width / 2;
           const dy = mouseY - container.height / 2;
@@ -133,7 +118,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
   };
 
-  // Добавляем обработчик клавиши пробел для входа в режим перетаскивания
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !spacePressed) {
@@ -160,7 +144,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
-    // Добавляем обработчик для колесика мыши для масштабирования
     const container = mapContainerRef.current;
     if (container) {
       container.addEventListener('wheel', handleWheel, { passive: false });
@@ -173,12 +156,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [spacePressed, isDM]); // isDM добавлен в зависимости
+  }, [spacePressed, isDM]);
 
-  // Улучшаем обработку контекстного меню для перетаскивания правой кнопкой мыши
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
-      // Предотвращаем появление контекстного меню при перетаскивании карты
       if (isDragging || mapContainerRef.current?.contains(e.target as Node)) {
         e.preventDefault();
       }
@@ -191,37 +172,24 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     };
   }, [isDragging]);
 
-  // Улучшенная функция для масштабирования карты пропорционально
   useEffect(() => {
     const container = mapContainerRef.current;
     const content = mapContentRef.current;
 
     if (container && content && background) {
-      // Загрузка изображения для получения его размеров
       const img = new Image();
       img.onload = () => {
-        // Получаем размеры контейнера
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
-        
-        // Размеры изображения
         const imgWidth = img.width;
         const imgHeight = img.height;
-        
-        // Вычисляем масштаб для содержания изображения
         const scaleX = containerWidth / imgWidth;
         const scaleY = containerHeight / imgHeight;
         const scale = Math.min(scaleX, scaleY);
-        
-        // Применяем размеры, учитывая масштабирование
         const mapWidth = Math.max(containerWidth, imgWidth * scale);
         const mapHeight = Math.max(containerHeight, imgHeight * scale);
-        
-        // Устанавливаем размеры контента карты для правильного отображения
         content.style.width = `${mapWidth}px`;
         content.style.height = `${mapHeight}px`;
-        
-        // Центрируем карту
         setMapPosition({ 
           x: (containerWidth - mapWidth * zoom) / 2,
           y: (containerHeight - mapHeight * zoom) / 2
@@ -230,8 +198,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       img.src = background;
     }
   }, [background, zoom]);
-  
-  // Добавляем функцию для центрирования карты
+
   const centerMap = () => {
     const container = mapContainerRef.current;
     const content = mapContentRef.current;
@@ -248,8 +215,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       });
     }
   };
-  
-  // Центрируем карту при первом рендере и когда изменяется zoom
+
   useEffect(() => {
     const timer = setTimeout(() => {
       centerMap();
@@ -258,7 +224,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return () => clearTimeout(timer);
   }, [zoom]);
 
-  // Создаем массив позиций токенов для передачи в компонент FogOfWar
   const tokenPositions = tokens.map(token => ({
     id: token.id,
     x: token.x,
@@ -267,7 +232,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     type: token.type
   }));
 
-  // Обновляем позиции источников света, привязанных к токенам
   const updatedLightSources = [...lightSources].map(light => {
     if (light.attachedToTokenId) {
       const token = tokens.find(t => t.id === light.attachedToTokenId);
@@ -312,7 +276,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           battleActive={battleActive}
         />
         
-        {/* Сетка только внутри карты боя */}
         {gridVisible && (
           <div className="battle-grid-container absolute inset-0 pointer-events-none">
             <BattleGrid 
@@ -323,7 +286,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           </div>
         )}
           
-        {/* Туман войны как отдельный слой */}
         {fogOfWar && (
           <div className="fog-of-war-container absolute inset-0">
             <FogOfWar

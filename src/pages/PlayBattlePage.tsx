@@ -449,7 +449,7 @@ const PlayBattlePage = () => {
 
   return (
     <div className="h-screen w-screen grid grid-cols-[250px_1fr_300px] grid-rows-[auto_1fr_auto] overflow-hidden bg-background text-foreground">
-      {/* Верхняя панель - на всю ширину */}
+      {/* Верхняя панель - на всю ширину с кнопками управления */}
       <div className="col-span-3 border-b bg-muted/10 z-10">
         <TopPanel
           battleState={battleState}
@@ -458,6 +458,14 @@ const PlayBattlePage = () => {
           onNextTurn={nextTurn}
           onUploadBackground={handleMapBackgroundUpload}
           isDM={isDM}
+          // Передаем функции управления картой
+          onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
+          gridVisible={mapSettings.gridVisible}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          zoomLevel={Math.round(mapSettings.zoom * 100)}
+          onToggleFogOfWar={() => setFogOfWar(!mapSettings.fogOfWar)}
+          fogOfWar={mapSettings.fogOfWar}
         />
       </div>
       

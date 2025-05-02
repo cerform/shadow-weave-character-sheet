@@ -28,45 +28,43 @@ export default function OBSLayout({
   const hasLeftPanel = !!leftPanelContent;
   const hasRightPanel = !!rightPanelContent;
   
-  // Определяем grid-template-rows и grid-template-columns динамически
-  const gridTemplateRows = hasTopPanel || hasBottomPanel 
-    ? "auto 1fr auto" 
-    : "1fr";
-    
-  const gridTemplateColumns = `${hasLeftPanel ? leftPanelWidth : '0'} 1fr ${hasRightPanel ? rightPanelWidth : '0'}`;
-  
   return (
-    <div 
-      className={cn("grid h-full w-full overflow-hidden", className)} 
-      style={{
-        gridTemplateRows,
-        gridTemplateColumns
-      }}
-    >
+    <div className={cn("grid h-full w-full", className)}>
+      {/* Верхняя панель, фиксированная и растянутая на всю ширину */}
       {topPanelContent && (
-        <div className="col-span-3 border-b bg-muted/10 z-10">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
           {topPanelContent}
         </div>
       )}
       
-      {hasLeftPanel && (
-        <div className="row-span-1 border-r bg-muted/10 h-full overflow-y-auto">
-          {leftPanelContent}
+      {/* Основная сетка с учетом отступа под верхнюю панель */}
+      <div 
+        className="grid h-full w-full"
+        style={{
+          gridTemplateColumns: `${hasLeftPanel ? leftPanelWidth : '0'} 1fr ${hasRightPanel ? rightPanelWidth : '0'}`,
+          marginTop: hasTopPanel ? '56px' : '0', // отступ под верхнюю панель
+          height: hasTopPanel ? 'calc(100% - 56px)' : '100%'
+        }}
+      >
+        {hasLeftPanel && (
+          <div className="h-full overflow-y-auto bg-muted/10 border-r">
+            {leftPanelContent}
+          </div>
+        )}
+        
+        <div className="w-full h-full relative overflow-hidden">
+          {children}
         </div>
-      )}
-      
-      <div className="w-full h-full relative overflow-hidden">
-        {children}
+        
+        {hasRightPanel && (
+          <div className="h-full overflow-y-auto bg-muted/10 border-l">
+            {rightPanelContent}
+          </div>
+        )}
       </div>
       
-      {hasRightPanel && (
-        <div className="border-l bg-muted/10 h-full overflow-y-auto">
-          {rightPanelContent}
-        </div>
-      )}
-      
       {bottomPanelContent && (
-        <div className="col-span-3 border-t bg-muted/10">
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-muted/10">
           {bottomPanelContent}
         </div>
       )}

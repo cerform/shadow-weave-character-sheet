@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pause, Play, SkipForward, Image, Home, ArrowLeft } from "lucide-react";
+import { Pause, Play, SkipForward, Image, Home, ArrowLeft, Grid, Eye, EyeOff, ZoomIn, ZoomOut, X, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 
@@ -17,7 +17,15 @@ interface TopPanelProps {
   onPauseBattle: () => void;
   onNextTurn: () => void;
   onUploadBackground?: () => void;
-  isDM?: boolean; // Добавляем проп isDM
+  isDM?: boolean;
+  // Добавляем новые пропсы для управления картой
+  onToggleGrid?: () => void;
+  gridVisible?: boolean;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  zoomLevel?: number;
+  onToggleFogOfWar?: () => void;
+  fogOfWar?: boolean;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -26,7 +34,15 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onPauseBattle,
   onNextTurn,
   onUploadBackground,
-  isDM = true, // По умолчанию - режим DM
+  isDM = true,
+  // Новые пропсы
+  onToggleGrid,
+  gridVisible = true,
+  onZoomIn,
+  onZoomOut,
+  zoomLevel = 100,
+  onToggleFogOfWar,
+  fogOfWar = false,
 }) => {
   const navigate = useNavigate();
 
@@ -53,8 +69,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
         </Button>
       </div>
 
-      <div className="flex gap-2">
-        {/* Только DM может управлять боем */}
+      <div className="flex items-center gap-2">
+        {/* Управление боем */}
         {isDM && (
           <>
             {!battleState.isActive && battleState.round === 0 ? (
@@ -93,16 +109,76 @@ const TopPanel: React.FC<TopPanelProps> = ({
           </>
         )}
 
-        {isDM && onUploadBackground && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onUploadBackground}
-          >
-            <Image size={16} className="mr-1" />
-            Загрузить карту
-          </Button>
-        )}
+        {/* Новая группа кнопок управления картой */}
+        <div className="flex items-center gap-1 border-l border-muted pl-2 ml-2">
+          {/* Сетка */}
+          {onToggleGrid && (
+            <Button 
+              variant={gridVisible ? "default" : "outline"} 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={onToggleGrid}
+              title={gridVisible ? "Скрыть сетку" : "Показать сетку"}
+            >
+              <Grid size={16} />
+            </Button>
+          )}
+          
+          {/* Туман войны */}
+          {isDM && onToggleFogOfWar && (
+            <Button 
+              variant={fogOfWar ? "default" : "outline"} 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={onToggleFogOfWar}
+              title={fogOfWar ? "Выключить туман войны" : "Включить туман войны"}
+            >
+              {fogOfWar ? <EyeOff size={16} /> : <Eye size={16} />}
+            </Button>
+          )}
+          
+          {/* Зум */}
+          {onZoomIn && onZoomOut && (
+            <>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={onZoomOut}
+                title="Уменьшить"
+              >
+                <ZoomOut size={16} />
+              </Button>
+              
+              <div className="text-xs px-1 min-w-[40px] text-center">
+                {zoomLevel}%
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={onZoomIn}
+                title="Увеличить"
+              >
+                <ZoomIn size={16} />
+              </Button>
+            </>
+          )}
+          
+          {/* Загрузка карты */}
+          {isDM && onUploadBackground && (
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={onUploadBackground}
+              className="h-8 w-8"
+              title="Загрузить карту"
+            >
+              <Map size={16} />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center">
