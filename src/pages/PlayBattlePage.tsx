@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
@@ -473,7 +472,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={addToken}
+          setTokens={(id, updates) => addToken(id as any, updates as any)}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -499,7 +498,7 @@ const PlayBattlePage = () => {
             <RightPanel
               selectedTokenId={selectedTokenId}
               tokens={tokens}
-              setTokens={updateToken}
+              setTokens={(id, updates) => updateToken(id as any, updates as any)}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
               revealRadius={mapSettings.revealRadius}
@@ -514,7 +513,7 @@ const PlayBattlePage = () => {
           ) : (
             <BattleTabs
               tokens={tokens}
-              setTokens={addToken}
+              setTokens={token => addToken(token as any)}
               initiative={initiative}
               selectedTokenId={selectedTokenId}
               onSelectToken={handleSelectToken}

@@ -14,6 +14,7 @@ interface MapControlsProps {
   gridOpacity: number;
   setGridOpacity: (value: number) => void;
   onResetFogOfWar: () => void;
+  isDM?: boolean; // Added isDM prop
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -25,7 +26,8 @@ const MapControls: React.FC<MapControlsProps> = ({
   setGridVisible,
   gridOpacity,
   setGridOpacity,
-  onResetFogOfWar
+  onResetFogOfWar,
+  isDM = true // Default to true
 }) => {
   return (
     <div className="space-y-4">
@@ -41,6 +43,7 @@ const MapControls: React.FC<MapControlsProps> = ({
                 size="sm"
                 onClick={() => setFogOfWar(!fogOfWar)}
                 className="gap-1"
+                disabled={!isDM} // Disable if not DM
               >
                 {fogOfWar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 {fogOfWar ? "Активен" : "Выключен"}
@@ -59,7 +62,8 @@ const MapControls: React.FC<MapControlsProps> = ({
                     min={1}
                     max={10}
                     step={1}
-                    onValueChange={(vals) => setRevealRadius(vals[0])}
+                    onValueChange={(vals) => isDM && setRevealRadius(vals[0])}
+                    disabled={!isDM} // Disable if not DM
                   />
                 </div>
                 
@@ -68,6 +72,7 @@ const MapControls: React.FC<MapControlsProps> = ({
                   size="sm" 
                   onClick={onResetFogOfWar}
                   className="w-full mt-1"
+                  disabled={!isDM} // Disable if not DM
                 >
                   Сбросить туман
                 </Button>
@@ -81,8 +86,9 @@ const MapControls: React.FC<MapControlsProps> = ({
               <Button
                 variant={gridVisible ? "default" : "outline"}
                 size="sm"
-                onClick={() => setGridVisible(!gridVisible)}
+                onClick={() => isDM && setGridVisible(!gridVisible)}
                 className="gap-1"
+                disabled={!isDM} // Disable if not DM
               >
                 {gridVisible ? <Map className="h-4 w-4" /> : <Layers className="h-4 w-4" />}
                 {gridVisible ? "Видна" : "Скрыта"}
@@ -100,7 +106,8 @@ const MapControls: React.FC<MapControlsProps> = ({
                   min={0.1}
                   max={1}
                   step={0.1}
-                  onValueChange={(vals) => setGridOpacity(vals[0])}
+                  onValueChange={(vals) => isDM && setGridOpacity(vals[0])}
+                  disabled={!isDM} // Disable if not DM
                 />
               </div>
             )}

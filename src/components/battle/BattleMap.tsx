@@ -1,13 +1,9 @@
-
-import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse, Eye, EyeOff, Lock, Unlock } from "lucide-react";
-import { Token, Initiative } from "@/pages/PlayBattlePage";
-import { VisibleArea } from "@/types/socket";
-import { Slider } from "@/components/ui/slider";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { Plus, Minus } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 
 interface BattleMapProps {
   tokens: Token[];
@@ -885,7 +881,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 }}
               />
               
-              {/* Токены в режиме игрока */}
+              {/* Токены в р��жиме игрока */}
               <div className="absolute inset-0 overflow-hidden">
                 {tokens
                   // Фильтруем только токены, которые должны быть видны игрокам

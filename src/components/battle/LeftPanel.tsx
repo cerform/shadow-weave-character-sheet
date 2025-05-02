@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Token, Initiative } from "@/pages/PlayBattlePage";
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";

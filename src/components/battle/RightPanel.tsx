@@ -1,18 +1,15 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Flame, Grid3x3, Eye, EyeOff, Plus, X, ZoomIn, ZoomOut, Scale } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DiceRoller3D } from "@/components/dice/DiceRoller3D";
-import { Token } from "@/pages/PlayBattlePage";
+import { Check, X, Shield, Heart, SkullIcon, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import DiceRoller3DFixed from "../character-sheet/DiceRoller3DFixed";
+import { Token } from '@/stores/battleStore'; // Import from store
 
 interface RightPanelProps {
   selectedTokenId: number | null;
@@ -260,7 +257,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       "Оглушен", "Отравлен", "Парализован", "Испуган", 
-                      "Бессознательный", "Схвачен", "Ослеплен", "Окаменен"
+                      "Бессознательный", "Схвачен", "Ослеплен", "��каменен"
                     ].map((condition) => {
                       const isActive = selectedToken.conditions?.includes(condition);
                       return (
@@ -288,7 +285,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   <div>
                     <h4 className="text-sm font-medium mb-2">Бросить кубик</h4>
                     <div className="h-32 border rounded overflow-hidden">
-                      <DiceRoller3D hideControls={true} initialDice="d20" />
+                      <DiceRoller3DFixed hideControls={true} initialDice="d20" />
                     </div>
                   </div>
                 </TabsContent>

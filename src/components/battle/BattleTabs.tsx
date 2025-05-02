@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -6,35 +5,11 @@ import { Users, Book, Settings } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { BestiaryPanel } from "./BestiaryPanel";
-
-interface Token {
-  id: number;
-  name: string;
-  type: "player" | "monster" | "npc" | "boss";
-  img: string;
-  x: number;
-  y: number;
-  hp: number;
-  maxHp: number;
-  ac: number;
-  initiative: number;
-  conditions: string[];
-  resources: { [key: string]: number };
-  visible: boolean;
-  size: number;
-}
-
-interface Initiative {
-  id: number;
-  tokenId: number;
-  name: string;
-  roll: number;
-  isActive: boolean;
-}
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 
 interface BattleTabsProps {
   tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((token: Token) => void);
   initiative: Initiative[];
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
@@ -46,7 +21,7 @@ interface BattleTabsProps {
   gridSize?: { rows: number; cols: number };
   setGridSize?: (size: { rows: number; cols: number }) => void;
   onAddToken?: (type: Token["type"]) => void;
-  isDM?: boolean; // Добавляем проп isDM
+  isDM?: boolean; // Added isDM prop
 }
 
 const BattleTabs: React.FC<BattleTabsProps> = ({
@@ -59,7 +34,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   removeToken,
   controlsPanel,
   onAddToken,
-  isDM = true, // По умолчанию - режим DM
+  isDM = true, // By default - DM mode
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>("tokens");
   const { theme } = useTheme();
@@ -81,7 +56,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
           {isDM && (
             <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
               <Book size={16} />
-              <span className="text-xs mt-1">Бестиарий</span>
+              <span className="text-xs mt-1">Бestiарий</span>
             </TabsTrigger>
           )}
           <TabsTrigger value="controls" className="flex flex-col items-center py-1">

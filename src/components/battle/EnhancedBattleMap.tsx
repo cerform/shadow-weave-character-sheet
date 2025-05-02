@@ -1,11 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
-import { Initiative, Token } from '@/pages/PlayBattlePage';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+// Import types from store instead of page
+import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
