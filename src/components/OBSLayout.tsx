@@ -5,8 +5,18 @@ import React, { PropsWithChildren } from "react";
 
 interface OBSLayoutProps {
   children: React.ReactNode;
+  leftPanelContent?: React.ReactNode; // добавляем опциональный контент для левой панели
 }
 
-export default function OBSLayout({ children }: OBSLayoutProps) {
-  return <div className="obs-grid">{children}</div>;
+export default function OBSLayout({ children, leftPanelContent }: OBSLayoutProps) {
+  return (
+    <div className="obs-grid">
+      {leftPanelContent && (
+        <div className="obs-left h-full">
+          {leftPanelContent}
+        </div>
+      )}
+      {children}
+    </div>
+  );
 }

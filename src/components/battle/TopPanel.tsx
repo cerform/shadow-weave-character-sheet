@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { BattleState } from "@/pages/PlayBattlePage";
-import { Pause, Play, Plus, SkipForward, Users, Calendar, Swords } from "lucide-react";
+import { Pause, Play, SkipForward, Users, Calendar, Swords } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
@@ -83,30 +83,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <Swords className="w-4 h-4 mr-1" /> Начать бой
           </Button>
         )}
-
-        <Button 
-          size="sm" 
-          variant="outline"
-          style={{ 
-            color: currentTheme.textColor,
-            borderColor: currentTheme.accent,
-            backgroundColor: 'rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          <Plus className="w-4 h-4 mr-1" /> Добавить существо
-        </Button>
-        
-        <Button 
-          size="sm" 
-          variant="outline"
-          style={{ 
-            color: currentTheme.textColor,
-            borderColor: currentTheme.accent,
-            backgroundColor: 'rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          <Users className="w-4 h-4 mr-1" /> Управление игроками
-        </Button>
       </div>
     </div>
   );

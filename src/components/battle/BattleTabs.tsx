@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DicePanel } from "@/components/character-sheet/DicePanel";
-import { Dice1, Users, Map, Cog, MessageSquare, Book, Settings } from "lucide-react";
+import { Users, Book, Settings } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
@@ -33,10 +32,6 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   updateTokenHP,
   removeToken,
   controlsPanel,
-  fogOfWar,
-  setFogOfWar,
-  gridSize,
-  setGridSize
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>("tokens");
   const { theme } = useTheme();
@@ -50,22 +45,14 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
         value={selectedTab} 
         onValueChange={setSelectedTab}
       >
-        <TabsList className="w-full grid grid-cols-5">
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="tokens" className="flex flex-col items-center py-1">
             <Users size={16} />
             <span className="text-xs mt-1">Токены</span>
           </TabsTrigger>
-          <TabsTrigger value="initiative" className="flex flex-col items-center py-1">
-            <Dice1 size={16} />
-            <span className="text-xs mt-1">Инициатива</span>
-          </TabsTrigger>
           <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
             <Book size={16} />
             <span className="text-xs mt-1">Бестиарий</span>
-          </TabsTrigger>
-          <TabsTrigger value="dice" className="flex flex-col items-center py-1">
-            <Dice1 size={16} />
-            <span className="text-xs mt-1">Кубики</span>
           </TabsTrigger>
           <TabsTrigger value="controls" className="flex flex-col items-center py-1">
             <Settings size={16} />
@@ -139,43 +126,6 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             )}
           </TabsContent>
           
-          <TabsContent value="initiative" className="m-0 p-3 h-full">
-            <h3 className="font-medium mb-2">Порядок ходов</h3>
-            {initiative.map((item, index) => {
-              const token = tokens.find(t => t.id === item.tokenId);
-              return (
-                <div 
-                  key={item.id} 
-                  className={`flex items-center gap-2 p-2 rounded mb-2 ${
-                    item.isActive ? "bg-primary/20 border border-primary" : "bg-card"
-                  }`}
-                >
-                  <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
-                    {item.roll}
-                  </div>
-                  
-                  {token && (
-                    <img src={token.img} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
-                  )}
-                  
-                  <div className="flex-1 truncate">{item.name}</div>
-                  
-                  {item.isActive && (
-                    <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                      Ход
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            
-            {initiative.length === 0 && (
-              <div className="text-center p-4 text-muted-foreground">
-                Инициатива не брошена
-              </div>
-            )}
-          </TabsContent>
-          
           <TabsContent value="bestiary" className="m-0 p-3 h-full">
             <BestiaryPanel addToMap={(monster) => {
               if (setTokens) {
@@ -200,47 +150,8 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             }} />
           </TabsContent>
           
-          <TabsContent value="dice" className="m-0 p-3 h-full">
-            <DicePanel />
-          </TabsContent>
-          
           <TabsContent value="controls" className="m-0 p-3 h-full">
             {controlsPanel}
-          </TabsContent>
-          
-          <TabsContent value="chat" className="m-0 p-3 h-full">
-            <div className="h-full flex flex-col">
-              <h3 className="font-medium mb-2">Игровой чат</h3>
-              <div className="flex-1 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
-                <div className="text-sm">
-                  <div className="mb-1">
-                    <span className="font-medium">DM:</span> Добро пожаловать в приключение!
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-medium">DM:</span> Бросаем инициативу...
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  className="flex-1 h-9 px-3 py-1 rounded-md border bg-muted/20"
-                  placeholder="Сообщение..." 
-                />
-                <button 
-                  className="px-3 h-9 rounded-md bg-primary text-primary-foreground"
-                  style={{
-                    backgroundColor: currentTheme.accent,
-                    color: currentTheme.textColor
-                  }}
-                >
-                  Отправить
-                </button>
-              </div>
-            </div>
           </TabsContent>
         </ScrollArea>
       </Tabs>

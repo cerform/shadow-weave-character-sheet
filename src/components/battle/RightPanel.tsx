@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +8,36 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Token, Initiative } from '@/pages/PlayBattlePage';
 import { useToast } from '@/components/ui/use-toast';
+import { MapControls } from './MapControls';
 
 interface RightPanelProps {
   selectedTokenId: number | null;
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  fogOfWar: boolean;
+  setFogOfWar: (value: boolean) => void;
+  revealRadius: number;
+  setRevealRadius: (value: number) => void;
+  gridVisible: boolean;
+  setGridVisible: (value: boolean) => void;
+  gridOpacity: number;
+  setGridOpacity: (value: number) => void;
+  onResetFogOfWar: () => void;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({ 
   selectedTokenId, 
   tokens,
-  setTokens 
+  setTokens,
+  fogOfWar,
+  setFogOfWar,
+  revealRadius,
+  setRevealRadius,
+  gridVisible,
+  setGridVisible,
+  gridOpacity,
+  setGridOpacity,
+  onResetFogOfWar 
 }) => {
   const { toast } = useToast();
   const [newCondition, setNewCondition] = useState("");
@@ -27,13 +45,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
   // Find the selected token
   const selectedToken = tokens.find(token => token.id === selectedTokenId);
   
-  // If no token selected, show placeholder
+  // If no token selected, show map controls
   if (!selectedToken) {
     return (
-      <div className="h-full w-64 p-4 border-l flex flex-col">
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          <p className="text-center">Выберите токен для просмотра деталей</p>
-        </div>
+      <div className="h-full w-64 p-4 border-l">
+        <h3 className="font-medium mb-4">Управление картой</h3>
+        <MapControls 
+          fogOfWar={fogOfWar}
+          setFogOfWar={setFogOfWar}
+          revealRadius={revealRadius}
+          setRevealRadius={setRevealRadius}
+          gridVisible={gridVisible}
+          setGridVisible={setGridVisible}
+          gridOpacity={gridOpacity}
+          setGridOpacity={setGridOpacity}
+          onResetFogOfWar={onResetFogOfWar}
+        />
       </div>
     );
   }
