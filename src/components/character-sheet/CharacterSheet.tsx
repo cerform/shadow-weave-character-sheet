@@ -92,7 +92,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
     setIsJoining(true);
     
     // Присоединение к сессии через sessionStore
-    const joined = sessionStore.joinSession(sessionCode, playerName, character?.id);
+    const joined = sessionStore.joinSession(sessionCode, playerName);
     
     if (joined) {
       toast({
@@ -199,7 +199,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
       setInitiative([]);
       
       toast({
-        title: "Бой окончен",
+        title: "��ой окончен",
         description: "Битва завершилась",
       });
       
@@ -867,7 +867,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="playerName">Ваше имя</Label>
+              <Label htmlFor="playerName">Ваше ��мя</Label>
               <Input 
                 id="playerName" 
                 placeholder="Как вас будут видеть другие игроки"
