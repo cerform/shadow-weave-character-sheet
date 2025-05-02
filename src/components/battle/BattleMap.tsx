@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse, Eye, EyeOff } from "lucide-react";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
+import { VisibleArea } from "@/types/socket";
 
 interface BattleMapProps {
   tokens: Token[];
@@ -44,7 +45,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   // Новые состояния для тумана войны
   const [fogOfWar, setFogOfWar] = useState<boolean>(false);
   const [showPlayerView, setShowPlayerView] = useState<boolean>(false);
-  const [visibleAreas, setVisibleAreas] = useState<{x: number, y: number, radius: number}[]>([]);
+  const [visibleAreas, setVisibleAreas] = useState<VisibleArea[]>([]);
   const fogCanvasRef = useRef<HTMLCanvasElement>(null);
   const playerViewRef = useRef<HTMLDivElement>(null);
 
@@ -207,7 +208,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     ctx.fillRect(0, 0, mapRect.width, mapRect.height);
     
     // Очищаем области видимости
-    ctx.globalCompositeOperation = 'destination-out';
+    ctx.globalCompositeOperation = 'destination-out' as GlobalCompositeOperation;
     visibleAreas.forEach(area => {
       const scaledX = area.x * zoom + mapOffset.x;
       const scaledY = area.y * zoom + mapOffset.y;
@@ -592,12 +593,12 @@ const BattleMap: React.FC<BattleMapProps> = ({
                     dragMomentum={false}
                     dragSnapToOrigin={false}
                     dragElastic={0.1}
-                    onDragStart={() => handleDragStart(token.id)}
-                    onDrag={(e, info) => handleDragUpdate(info, token.id)}
-                    onDragEnd={(e, info) => handleDragEnd(e, info, token.id)}
+                    onDragStart={() => handleDragStart(Number(token.id))}
+                    onDrag={(e, info) => handleDragUpdate(info, Number(token.id))}
+                    onDragEnd={(e, info) => handleDragEnd(e, info, Number(token.id))}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onSelectToken(token.id);
+                      onSelectToken(Number(token.id));
                     }}
                     whileDrag={{ scale: 1.1 * zoom, opacity: 0.8 }}
                   >
@@ -626,18 +627,20 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       />
 
                       {/* HP Bar */}
-                      <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
-                        <div
-                          className={`h-1 rounded-full ${
-                            token.hp > token.maxHp * 0.6
-                              ? "bg-green-500"
-                              : token.hp > token.maxHp * 0.3
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
-                        ></div>
-                      </div>
+                      {token.hp !== undefined && token.maxHp !== undefined && (
+                        <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
+                          <div
+                            className={`h-1 rounded-full ${
+                              token.hp > token.maxHp * 0.6
+                                ? "bg-green-500"
+                                : token.hp > token.maxHp * 0.3
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                            }`}
+                            style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
+                          ></div>
+                        </div>
+                      )}
 
                       {/* Имя токена */}
                       <div className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate max-w-[90px]">
@@ -729,8 +732,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       key={`player-view-${token.id}`}
                       className="absolute"
                       style={{
-                        left: `${token.x / 5}px`,
-                        top: `${token.y / 5}px`,
+                        left: `${Number(token.x) / 5}px`,
+                        top: `${Number(token.y) / 5}px`,
                         width: '10px',
                         height: '10px',
                       }}

@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, X, User, Skull, Crown } from "lucide-react";
 import TokenSelector from "@/components/battle/TokenSelector";
 import BattleMap from "@/components/battle/BattleMap";
+import { Token as TokenType, VisibleArea } from "@/types/socket";
 
 // Типы токенов: игрок, моб или босс
 interface Token {
@@ -23,6 +24,8 @@ interface Token {
   ac: number;
   initiative: number;
   conditions: string[];
+  resources: { [key: string]: number };
+  visible: boolean;
 }
 
 interface Initiative {
@@ -68,7 +71,9 @@ const BattleScenePage = () => {
       maxHp: tokenData.type === "boss" ? 100 : tokenData.type === "monster" ? 20 : 30,
       ac: tokenData.type === "boss" ? 17 : tokenData.type === "monster" ? 13 : 15,
       initiative: Math.floor(Math.random() * 20) + 1,
-      conditions: []
+      conditions: [],
+      resources: {},
+      visible: true
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -101,7 +106,9 @@ const BattleScenePage = () => {
       maxHp: monster.hp,
       ac: monster.ac,
       initiative: Math.floor(Math.random() * 20) + 1,
-      conditions: []
+      conditions: [],
+      resources: {},
+      visible: true
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -369,8 +376,8 @@ const BattleScenePage = () => {
       {/* Центральная пустая зона (сцена боя) */}
       <div className="obs-center">
         <BattleMap
-          tokens={tokens}
-          setTokens={setTokens}
+          tokens={tokens as any}
+          setTokens={setTokens as any}
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={updateTokenPosition}

@@ -1,4 +1,3 @@
-
 export interface ChatMessage {
   id: string;
   userId: string;
@@ -45,9 +44,9 @@ export interface SessionData {
 }
 
 export interface Token {
-  id: string;
+  id: string | number;
   name: string;
-  type: 'player' | 'monster' | 'npc' | 'object';
+  type: 'player' | 'monster' | 'npc' | 'boss' | 'object';
   x: number;
   y: number;
   size: number;
@@ -55,9 +54,12 @@ export interface Token {
   hp?: number;
   maxHp?: number;
   ac?: number;
+  initiative?: number;
   conditions?: string[];
   notes?: string;
   isVisible: boolean;
+  resources?: { [key: string]: number };
+  visible?: boolean;
 }
 
 export interface InitiativeOrder {
@@ -66,4 +68,12 @@ export interface InitiativeOrder {
   name: string;
   roll: number;
   active: boolean;
+}
+
+// Новый интерфейс для областей видимости
+export interface VisibleArea {
+  x: number;
+  y: number;
+  radius: number;
+  tokenId?: number;
 }
