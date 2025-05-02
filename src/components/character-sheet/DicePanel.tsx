@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import ThemeSelector from '@/components/character-sheet/ThemeSelector';
+import { Dices } from 'lucide-react';
 
 interface DicePanelProps {
   isDM?: boolean;
@@ -54,7 +55,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   compactMode = false,
   fixedPosition = false
 }) => {
-  const [diceCount] = useState(1);
+  const [diceCount, setDiceCount] = useState(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const [modifier, setModifier] = useState<number>(0);
   const [rollMessage, setRollMessage] = useState<string>('');
@@ -94,8 +95,18 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   }, [socket]);
   
   const handleRoll = async () => {
-    const diceRoll = Math.floor(Math.random() * Number(diceType.slice(1))) + 1;
-    const totalResult = diceRoll + modifier;
+    // Симулируем броски нескольких кубиков
+    const rolls = [];
+    let totalResult = 0;
+    
+    for (let i = 0; i < diceCount; i++) {
+      const diceRoll = Math.floor(Math.random() * Number(diceType.slice(1))) + 1;
+      rolls.push(diceRoll);
+      totalResult += diceRoll;
+    }
+    
+    // Добавляем модификатор к общему результату
+    totalResult += modifier;
     
     setRollResult(totalResult);
     
@@ -105,7 +116,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
       diceCount,
       diceType,
       modifier,
-      result: diceRoll,
+      rolls,
       total: totalResult,
       reason: reason,
       message: rollMessage,
@@ -132,10 +143,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <div className="space-y-4">
-        {/* Выбор темы */}
-        <ThemeSelector />
-        
-        {/* Кнопки типов кубиков в ряд */}
+        {/* Выбор типа кубика */}
         <div className="grid grid-cols-6 gap-1">
           {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
             <Button
@@ -153,13 +161,52 @@ export const DicePanel: React.FC<DicePanelProps> = ({
         {/* Секция настройки броска */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
+            {/* Количество кубиков */}
+            <div className="flex items-center gap-1">
+              <Label className="text-sm">Кол-во:</Label>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
+              >
+                -
+              </Button>
+              <div className="flex items-center border bg-background/50 rounded px-2 min-w-[30px] justify-center">
+                <span className="text-sm">{diceCount}</span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
+              >
+                +
+              </Button>
+            </div>
+            
             {/* Модификатор броска */}
             <div className="flex items-center gap-1">
-              <Button size="sm" variant="outline" className="px-2 h-8 min-w-8" onClick={() => setModifier(prev => Math.max(-20, prev - 1))}>-</Button>
-              <div className="flex items-center border bg-background/50 rounded px-2 min-w-[50px]">
+              <Label className="text-sm">Мод:</Label>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
+              >
+                -
+              </Button>
+              <div className="flex items-center border bg-background/50 rounded px-2 min-w-[40px] justify-center">
                 <span className="text-sm">{modifier >= 0 ? '+' : ''}{modifier}</span>
               </div>
-              <Button size="sm" variant="outline" className="px-2 h-8 min-w-8" onClick={() => setModifier(prev => Math.min(20, prev + 1))}>+</Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setModifier(prev => Math.min(20, prev + 1))}
+              >
+                +
+              </Button>
             </div>
             
             {/* Диалог дополнительных настроек */}
@@ -191,6 +238,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
               onRollComplete={handleDiceRollComplete}
               fixedPosition={fixedPosition}
               themeColor={currentTheme.accent}
+              diceCount={diceCount}
             />
           </div>
           
@@ -270,52 +318,11 @@ export const DicePanel: React.FC<DicePanelProps> = ({
               className="w-full bg-primary/90 hover:bg-primary"
               onClick={handleRoll}
             >
+              <Dices className="mr-2" size={16} />
               Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
             </Button>
           </div>
         </div>
-        
-        {/* История бросков */}
-        {rollHistory.length > 0 && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium">История бросков</h4>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 text-xs"
-                onClick={() => setRollHistory([])}
-              >
-                Очистить
-              </Button>
-            </div>
-            <ScrollArea className="h-32 rounded border bg-background/50 p-2">
-              <div className="space-y-2">
-                {rollHistory.map((roll, index) => (
-                  <div key={index} className="text-sm p-1 border-b border-dashed flex justify-between items-center">
-                    <div>
-                      <span className="font-medium">{roll.diceCount}{roll.diceType}</span>
-                      {roll.modifier !== 0 && (
-                        <span>{roll.modifier > 0 ? ' +' : ' '}{roll.modifier}</span>
-                      )}
-                      {roll.rolledBy && (
-                        <span className="text-muted-foreground ml-1">
-                          ({roll.rolledBy})
-                        </span>
-                      )}
-                    </div>
-                    <Badge variant="outline">
-                      {roll.result}
-                      {roll.modifier !== 0 && (
-                        <> = {roll.result + roll.modifier}</>
-                      )}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
       </div>
     </Card>
   );

@@ -12,6 +12,7 @@ interface DiceRoller3DFixedProps {
   fixedPosition?: boolean;
   themeColor?: string;
   playerName?: string;
+  diceCount?: number;
 }
 
 export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
@@ -21,7 +22,8 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   onRollComplete,
   fixedPosition = false,
   themeColor,
-  playerName
+  playerName,
+  diceCount = 1
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -35,6 +37,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
       themeColor={themeColor || currentTheme.accent}
       fixedPosition={fixedPosition}
       playerName={playerName}
+      diceCount={diceCount}
     />
   );
 };

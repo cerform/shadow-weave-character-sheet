@@ -13,6 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSession } from '@/contexts/SessionContext';
 import DiceRoller3DFixed from './DiceRoller3DFixed';
+import { Dices } from 'lucide-react';
 
 interface PlayerDicePanelProps {
   compactMode?: boolean;
@@ -24,6 +25,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   fixedPosition = false
 }) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
+  const [diceCount, setDiceCount] = useState<number>(1);
   const [modifier, setModifier] = useState<number>(0);
   const [rollReason, setRollReason] = useState<string>('');
   const [rollResult, setRollResult] = useState<number | null>(null);
@@ -62,9 +64,20 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   };
   
   const handleRoll = async () => {
-    const totalResult = rollResult !== null ? rollResult + modifier : Math.floor(Math.random() * Number(diceType.slice(1))) + 1 + modifier;
+    // Симулируем броски нескольких кубиков
+    const rolls = [];
+    let totalResult = 0;
     
-    const formula = `1${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
+    for (let i = 0; i < diceCount; i++) {
+      const roll = Math.floor(Math.random() * Number(diceType.slice(1))) + 1;
+      rolls.push(roll);
+      totalResult += roll;
+    }
+    
+    // Добавляем модификатор к общему результату
+    totalResult += modifier;
+    
+    const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
     const reason = rollReason || "Бросок персонажа";
     
     // Отправляем результат броска через сокет
@@ -74,8 +87,9 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     
     const rollData = {
       diceType,
+      diceCount,
       modifier,
-      result: totalResult - modifier,
+      rolls,
       total: totalResult,
       reason: reason,
       rolledBy: characterName
@@ -85,7 +99,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     
     toast({
       title: "Бросок успешен",
-      description: `${characterName} бросил ${diceType} + ${modifier} = ${totalResult}`,
+      description: `${characterName} бросил ${diceCount}${diceType} + ${modifier} = ${totalResult}`,
     });
   };
   
@@ -118,12 +132,47 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
         {/* Секция настройки броска */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Модификатор броска */}
+            {/* Количество кубиков */}
             <div className="flex items-center gap-1">
+              <Label className="text-xs" style={{ color: currentTheme.textColor }}>Кол-во:</Label>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 min-w-8" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor
+                }}
+              >-</Button>
+              <div 
+                className="flex items-center border rounded px-2 min-w-[30px] justify-center"
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor
+                }}
+              >
+                <span className="text-sm">{diceCount}</span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
+                onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor
+                }}
+              >+</Button>
+            </div>
+            
+            {/* Модификатор броска */}
+            <div className="flex items-center gap-1 ml-2">
+              <Label className="text-xs" style={{ color: currentTheme.textColor }}>Мод:</Label>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="px-2 h-8 w-8" 
                 onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
                 style={{
                   borderColor: currentTheme.accent,
@@ -131,7 +180,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                 }}
               >-</Button>
               <div 
-                className="flex items-center border rounded px-2 min-w-[50px] justify-center"
+                className="flex items-center border rounded px-2 min-w-[40px] justify-center"
                 style={{
                   borderColor: currentTheme.accent,
                   color: currentTheme.textColor
@@ -142,7 +191,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 min-w-8" 
+                className="px-2 h-8 w-8" 
                 onClick={() => setModifier(prev => Math.min(20, prev + 1))}
                 style={{
                   borderColor: currentTheme.accent,
@@ -186,6 +235,8 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               onRollComplete={handleDiceRollComplete}
               fixedPosition={fixedPosition}
               themeColor={currentTheme.accent}
+              playerName={characterName}
+              diceCount={diceCount}
             />
           </div>
           
@@ -197,7 +248,8 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               color: currentTheme.textColor
             }}
           >
-            Бросить {diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''} от имени {characterName}
+            <Dices className="mr-2" size={16} />
+            Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''} от имени {characterName}
           </Button>
         </div>
         
@@ -230,7 +282,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                     style={{ borderColor: `rgba(${currentTheme.accent}, 0.3)` }}
                   >
                     <div style={{ color: currentTheme.textColor }}>
-                      <span className="font-medium">{roll.diceType}</span>
+                      <span className="font-medium">{roll.diceCount}{roll.diceType}</span>
                       {roll.modifier !== 0 && (
                         <span>{roll.modifier > 0 ? ' +' : ' '}{roll.modifier}</span>
                       )}
@@ -247,7 +299,9 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                         color: currentTheme.textColor
                       }}
                     >
-                      {roll.result} = {roll.total}
+                      {Array.isArray(roll.rolls) 
+                        ? roll.rolls.join(', ') 
+                        : roll.result} = {roll.total}
                     </Badge>
                   </div>
                 ))}

@@ -250,7 +250,8 @@ export const DiceRoller3D = ({
   onRollComplete,
   themeColor = '#ffffff',
   fixedPosition = false,
-  playerName
+  playerName,
+  diceCount = 1
 }: {
   initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   hideControls?: boolean,
@@ -258,7 +259,8 @@ export const DiceRoller3D = ({
   onRollComplete?: (result: number) => void,
   themeColor?: string,
   fixedPosition?: boolean,
-  playerName?: string
+  playerName?: string,
+  diceCount?: number
 }) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
