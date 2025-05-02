@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -186,7 +187,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               <SelectValue placeholder="Уровень" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Все уровни</SelectItem>
+              {/* Важное исправление: не должно быть пустого значения value */}
+              <SelectItem value="all">Все уровни</SelectItem>
               {availableSpellLevels.map((level) => (
                 <SelectItem key={level} value={level.toString()}>
                   {level === 0 ? "Заговор" : `Уровень ${level}`}
@@ -268,7 +270,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </div>
         ) : (
           <p className="text-muted-foreground">
-            У вас пока нет выб��анных заклинаний
+            У вас пока нет выбранных заклинаний
           </p>
         )}
       </div>
