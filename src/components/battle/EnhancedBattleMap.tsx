@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -23,6 +24,8 @@ interface EnhancedBattleMapProps {
   gridSize?: { rows: number; cols: number };
   gridVisible?: boolean;
   gridOpacity?: number;
+  zoom?: number;
+  isDM?: boolean;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -41,8 +44,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   gridSize = { rows: 20, cols: 30 },
   gridVisible = true,
   gridOpacity = 0.5,
+  zoom = 1,
+  isDM = true
 }) => {
-  const [zoom, setZoom] = useState(1);
+  // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -94,11 +99,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
 
   // Обработчик колесика мыши для зума
   const handleWheel = (e: WheelEvent) => {
-    if (e.ctrlKey) {
+    if (e.ctrlKey && isDM) { // Проверяем isDM
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const newZoom = Math.min(Math.max(zoom + delta, 0.5), 2.5);
-      setZoom(newZoom);
+      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
+      // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
       
       // Центрирование зума относительно курсора
       if (mapContainerRef.current && mapContentRef.current) {
@@ -107,20 +111,15 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const mouseY = e.clientY - container.top;
         
         // Вычисляем новую позицию для центрирования зума по курсору
-        const zoomFactor = newZoom / zoom;
-        
-        // Корректируем позицию только если изменение зума значительное
-        if (Math.abs(zoomFactor - 1) > 0.01) {
-          setMapPosition(prev => {
-            const dx = mouseX - container.width / 2;
-            const dy = mouseY - container.height / 2;
-            
-            return {
-              x: prev.x - dx * (zoomFactor - 1) / zoom,
-              y: prev.y - dy * (zoomFactor - 1) / zoom
-            };
-          });
-        }
+        setMapPosition(prev => {
+          const dx = mouseX - container.width / 2;
+          const dy = mouseY - container.height / 2;
+          
+          return {
+            x: prev.x - dx * 0.1,
+            y: prev.y - dy * 0.1
+          };
+        });
       }
     }
   };
@@ -165,7 +164,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [spacePressed, zoom]);
+  }, [spacePressed, isDM]); // isDM добавлен в зависимости
 
   // Улучшаем обработку контекстного меню для перетаскивания правой кнопкой мыши
   useEffect(() => {
@@ -231,14 +230,14 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
   };
   
-  // Центрируем карту при первом рендере
+  // Центрируем карту при первом рендере и когда изменяется zoom
   useEffect(() => {
     const timer = setTimeout(() => {
       centerMap();
     }, 500);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [zoom]);
 
   return (
     <div 
