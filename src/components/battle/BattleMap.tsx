@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -12,7 +11,7 @@ import { motion } from 'framer-motion';
 interface BattleMapProps {
   tokens: Token[];
   // Обновляем тип, чтобы он поддерживал обе сигнатуры функций
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((token: Token) => void);
+  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((newToken: Token) => void);
   background: string | null;
   setBackground: React.Dispatch<React.SetStateAction<string | null>>;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -106,11 +105,24 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const handleTokenResize = (newSize: number) => {
     if (selectedTokenId) {
       setSelectedTokenSize(newSize);
-      setTokens(prev => prev.map(token => 
-        token.id === selectedTokenId 
-          ? { ...token, size: newSize }
-          : token
-      ));
+      
+      // Проверяем, какой тип функции у нас в setTokens
+      if (typeof setTokens === 'function') {
+        // Если это функция обновления состояния (setState)
+        if (setTokens.length !== 1) {
+          (setTokens as React.Dispatch<React.SetStateAction<Token[]>>)(prev => 
+            prev.map(token => 
+              token.id === selectedTokenId 
+                ? { ...token, size: newSize }
+                : token
+            )
+          );
+        } else {
+          // Мы не можем использовать этот тип функции для обновления существующего токена
+          // Выводим предупреждение в консоль
+          console.warn("Cannot update token size: setTokens function only accepts new tokens");
+        }
+      }
     }
   };
 
