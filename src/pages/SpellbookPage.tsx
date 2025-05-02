@@ -1,32 +1,17 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
-import SpellDatabaseManager from '@/components/spellbook/SpellDatabaseManager';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const SpellbookPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('viewer');
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">D&D 5e Книга заклинаний</h1>
-      
-      <Tabs defaultValue="viewer" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-center mb-6">
-          <TabsList>
-            <TabsTrigger value="viewer">Просмотр заклинаний</TabsTrigger>
-            <TabsTrigger value="manager">Управление базой</TabsTrigger>
-          </TabsList>
-        </div>
-        
-        <TabsContent value="viewer" className="mt-0">
-          <SpellBookViewer />
-        </TabsContent>
-        
-        <TabsContent value="manager" className="mt-0">
-          <SpellDatabaseManager />
-        </TabsContent>
-      </Tabs>
+    <div className="min-h-screen" style={{ backgroundColor: currentTheme.backgroundColor || 'rgba(0, 0, 0, 0.9)' }}>
+      <SpellBookViewer />
     </div>
   );
 };

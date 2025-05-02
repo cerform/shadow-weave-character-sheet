@@ -20,7 +20,9 @@ import NavigationButtons from '@/components/ui/NavigationButtons';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Separator } from '@/components/ui/separator';
-import { Filter } from "lucide-react";
+import { Filter, Check } from "lucide-react";
+import ThemeSelector from '@/components/ThemeSelector';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const spellSchools = [
   "Вызов",
@@ -47,7 +49,7 @@ const spellClasses = [
 
 const SpellBookViewer: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [showRitualOnly, setShowRitualOnly] = useState(false);
@@ -64,6 +66,14 @@ const SpellBookViewer: React.FC = () => {
 
   const allSpells = useMemo(() => getAllSpells(), []);
 
+  const toggleLevel = (level: number) => {
+    if (selectedLevels.includes(level)) {
+      setSelectedLevels(selectedLevels.filter(l => l !== level));
+    } else {
+      setSelectedLevels([...selectedLevels, level]);
+    }
+  };
+
   const filteredSpells = useMemo(() => {
     return allSpells.filter(spell => {
       // Text search
@@ -71,8 +81,8 @@ const SpellBookViewer: React.FC = () => {
         return false;
       }
       
-      // Level filter
-      if (selectedLevel !== 'all' && spell.level !== parseInt(selectedLevel, 10)) {
+      // Level filter - если выбраны уровни, проверяем вхождение
+      if (selectedLevels.length > 0 && !selectedLevels.includes(spell.level)) {
         return false;
       }
       
@@ -111,7 +121,7 @@ const SpellBookViewer: React.FC = () => {
     });
   }, [
     searchTerm, 
-    selectedLevel, 
+    selectedLevels, 
     selectedSchool, 
     selectedClass,
     showRitualOnly,
@@ -147,7 +157,7 @@ const SpellBookViewer: React.FC = () => {
 
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedLevel('all');
+    setSelectedLevels([]);
     setSelectedSchool('all');
     setSelectedClass('all');
     setShowRitualOnly(false);
@@ -170,7 +180,10 @@ const SpellBookViewer: React.FC = () => {
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-center" style={{ color: currentTheme.textColor }}>D&D 5e Книга заклинаний</h1>
-        <NavigationButtons className="mt-4" />
+        <div className="flex items-center gap-4 mt-2">
+          <NavigationButtons className="mt-4" />
+          <ThemeSelector />
+        </div>
       </div>
       
       <div className="flex gap-4">
@@ -193,35 +206,29 @@ const SpellBookViewer: React.FC = () => {
           {showFilterPanel && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h3 className="text-sm font-medium" style={{ color: currentTheme.mutedTextColor }}>Уровень</h3>
+                <h3 className="text-sm font-medium" style={{ color: currentTheme.mutedTextColor }}>Уровень (множественный выбор)</h3>
                 <div className="flex flex-wrap gap-1">
-                  <Button 
-                    size="sm"
-                    variant={selectedLevel === 'all' ? "default" : "outline"}
-                    onClick={() => setSelectedLevel('all')}
-                    className="text-xs"
-                  >
-                    Все
-                  </Button>
-                  <Button 
-                    size="sm"
-                    variant={selectedLevel === '0' ? "default" : "outline"}
-                    onClick={() => setSelectedLevel('0')}
-                    className="text-xs"
-                  >
-                    Заг. ({getSpellCountByLevel(0)})
-                  </Button>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                    <Button 
-                      key={level}
-                      size="sm"
-                      variant={selectedLevel === level.toString() ? "default" : "outline"}
-                      onClick={() => setSelectedLevel(level.toString())}
+                  <ToggleGroup type="multiple" className="flex flex-wrap gap-1" variant="outline">
+                    <ToggleGroupItem 
+                      value="cantrip"
+                      pressed={selectedLevels.includes(0)}
+                      onClick={() => toggleLevel(0)}
                       className="text-xs"
                     >
-                      {level} ({getSpellCountByLevel(level)})
-                    </Button>
-                  ))}
+                      Заг. ({getSpellCountByLevel(0)})
+                    </ToggleGroupItem>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+                      <ToggleGroupItem 
+                        key={level}
+                        value={level.toString()}
+                        pressed={selectedLevels.includes(level)}
+                        onClick={() => toggleLevel(level)}
+                        className="text-xs"
+                      >
+                        {level} ({getSpellCountByLevel(level)})
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
                 </div>
               </div>
               
@@ -460,9 +467,8 @@ const SpellCard: React.FC<{ spell: CharacterSpell }> = ({ spell }) => {
     
     let result = components.join(', ');
     
-    // Check if components string contains material component indicator without checking materialComponents
+    // Если есть материальный компонент, просто указываем, что он есть
     if (spell.material) {
-      // We don't have materialComponents property, so we just indicate there's a material component
       result += ' (материальные компоненты)';
     }
     
