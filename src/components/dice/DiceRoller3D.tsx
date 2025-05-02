@@ -19,11 +19,29 @@ type DiceModelProps = {
   playerName?: string,
 };
 
-// Кастомная геометрия для d10 (улучшенная)
+// Создание геометрии для d4 (тетраэдр с улучшенной геометрией)
+const createD4Geometry = () => {
+  const geometry = new THREE.TetrahedronGeometry(1.2, 0);
+  return geometry;
+};
+
+// Создание геометрии для d6 (куб с закругленными углами)
+const createD6Geometry = () => {
+  const geometry = new THREE.BoxGeometry(1.1, 1.1, 1.1);
+  return geometry;
+};
+
+// Создание геометрии для d8 (октаэдр)
+const createD8Geometry = () => {
+  const geometry = new THREE.OctahedronGeometry(1.1, 0);
+  return geometry;
+};
+
+// Кастомная геометрия для d10 (десятигранная трапецоэдра)
 const createD10Geometry = () => {
   const geometry = new THREE.BufferGeometry();
   
-  // Создаем пентагональную трапецоэдру для d10
+  // Создаем улучшенную пентагональную трапецоэдру для d10
   const vertices = [];
   const indices = [];
   
@@ -74,9 +92,15 @@ const createD10Geometry = () => {
   return geometry;
 };
 
-// Создаем улучшенную геометрию для d4
-const createD4Geometry = () => {
-  const geometry = new THREE.TetrahedronGeometry(1.2);
+// Создание геометрии для d12 (додекаэдр)
+const createD12Geometry = () => {
+  const geometry = new THREE.DodecahedronGeometry(1.1, 0);
+  return geometry;
+};
+
+// Создание геометрии для d20 (икосаэдр)
+const createD20Geometry = () => {
+  const geometry = new THREE.IcosahedronGeometry(1.1, 0);
   return geometry;
 };
 
@@ -107,9 +131,9 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
       setAnimationPhase(1);
       setRollStartTime(Date.now());
       setRotationSpeed({
-        x: Math.random() * 5 + 2,
-        y: Math.random() * 5 + 2,
-        z: Math.random() * 5 + 2
+        x: Math.random() * 4 + 2, // Уменьшена скорость вращения
+        y: Math.random() * 4 + 2,
+        z: Math.random() * 4 + 2
       });
       setResult(null);
       
@@ -122,7 +146,7 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
     }
   }, [rolling, animationPhase]);
 
-  // Анимация кубика с замедлением
+  // Анимация кубика с более плавным замедлением
   useFrame((_, delta) => {
     if (!meshRef.current) return;
 
@@ -134,28 +158,25 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
       meshRef.current.rotation.y += rotationSpeed.y * delta;
       meshRef.current.rotation.z += rotationSpeed.z * delta;
       
-      // Переход к фазе замедления через 1.2 секунды
-      if (elapsed > 1200) {
+      // Переход к фазе замедления через 1.5 секунд (увеличено время быстрого вращения)
+      if (elapsed > 1500) {
         setAnimationPhase(2);
       }
     } else if (animationPhase === 2) {
-      // Фаза замедления (1.2-2.5 секунды)
-      const slowdownFactor = Math.max(0.1, 1 - (elapsed - 1200) / 1300);
+      // Фаза замедления (1.5-3.0 секунды) - увеличено время замедления
+      const slowdownFactor = Math.max(0.1, 1 - (elapsed - 1500) / 1500);
       
       meshRef.current.rotation.x += rotationSpeed.x * delta * slowdownFactor;
       meshRef.current.rotation.y += rotationSpeed.y * delta * slowdownFactor;
       meshRef.current.rotation.z += rotationSpeed.z * delta * slowdownFactor;
       
       // Остановка вращения и определение результата
-      if (elapsed > 2500) {
+      if (elapsed > 3000) {
         setAnimationPhase(3);
         
         // Определяем результат броска
         const randomValue = Math.floor(Math.random() * getMaxValue()) + 1;
         setResult(randomValue);
-        
-        // Выравниваем кубик к ближайшей "правильной" ориентации для визуализации
-        // В реальном приложении здесь можно добавить более точное выравнивание по граням
         
         // Вызываем колбэк
         if (onRoll) {
@@ -172,31 +193,23 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
   });
 
   // Создаем геометрию для разных типов кубиков
-  const renderDiceGeometry = () => {
+  const getDiceGeometry = () => {
     switch (diceType) {
       case 'd4':
-        return <primitive object={createD4Geometry()} />;
+        return createD4Geometry();
       case 'd6':
-        return <boxGeometry args={[1.1, 1.1, 1.1]} />;
+        return createD6Geometry();
       case 'd8':
-        return <octahedronGeometry args={[1.1]} />;
+        return createD8Geometry();
       case 'd10':
-        return <primitive object={createD10Geometry()} />;
+        return createD10Geometry();
       case 'd12':
-        return <dodecahedronGeometry args={[1]} />;
+        return createD12Geometry();
       case 'd20':
-        return <icosahedronGeometry args={[1]} />;
+        return createD20Geometry();
       default:
-        return <boxGeometry args={[1, 1, 1]} />;
+        return createD6Geometry();
     }
-  };
-
-  // Получаем цвет для метки числа кубика
-  const getLabelColor = () => {
-    // Контрастный цвет для метки
-    const labelColor = new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 });
-    labelColor.l = labelColor.l > 0.5 ? 0.1 : 0.9;
-    return new THREE.Color().setHSL(labelColor.h, labelColor.s, labelColor.l);
   };
 
   // Добавляем подсветку для выделения граней
@@ -205,11 +218,11 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
   return (
     <group>
       <mesh ref={meshRef} position={[0, 0, 0]} castShadow receiveShadow>
-        {renderDiceGeometry()}
+        <primitive object={getDiceGeometry()} />
         <meshStandardMaterial 
           color={new THREE.Color(color)} 
-          metalness={0.3} 
-          roughness={0.4}
+          metalness={0.4} 
+          roughness={0.3}
           emissive={new THREE.Color(color).multiplyScalar(0.2)}
           envMapIntensity={0.8}
           flatShading={false}
@@ -285,16 +298,16 @@ export const DiceRoller3D: React.FC<{
     }
   }, [initialDice, fixedPosition]);
 
-  // Определяем цвета для разных типов кубиков
+  // Определяем цвета для разных типов кубиков - более яркие и различимые цвета
   const getDiceColor = (type: DiceType) => {
-    // Можно настроить разные цвета для разных типов кубиков
+    // Более яркие и различные цвета для разных типов кубиков
     switch (type) {
-      case 'd4': return diceType === 'd4' ? '#B0E0E6' : '#90CAD1';
-      case 'd6': return diceType === 'd6' ? '#98FB98' : '#7DCF7D';
-      case 'd8': return diceType === 'd8' ? '#FFA07A' : '#E08A68';
-      case 'd10': return diceType === 'd10' ? '#DDA0DD' : '#C98AC9';
-      case 'd12': return diceType === 'd12' ? '#FFD700' : '#E6C200';
-      case 'd20': return diceType === 'd20' ? '#87CEEB' : '#6BBCE6';
+      case 'd4': return diceType === 'd4' ? '#B0E0E6' : '#90CAD1'; // Светло-голубой
+      case 'd6': return diceType === 'd6' ? '#98FB98' : '#7DCF7D'; // Светло-зеленый
+      case 'd8': return diceType === 'd8' ? '#FFA07A' : '#E08A68'; // Светло-оранжевый
+      case 'd10': return diceType === 'd10' ? '#DDA0DD' : '#C98AC9'; // Светло-фиолетовый
+      case 'd12': return diceType === 'd12' ? '#FFD700' : '#E6C200'; // Золотой
+      case 'd20': return diceType === 'd20' ? '#87CEEB' : '#6BBCE6'; // Небесно-голубой
       default: return diceColor;
     }
   };

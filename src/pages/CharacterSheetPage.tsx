@@ -13,7 +13,7 @@ const CharacterSheetPage = () => {
     <div className="relative">
       <CharacterSheet />
       
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-8 right-4 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button size="lg" className="rounded-full h-14 w-14 p-0 bg-primary hover:bg-primary/90 shadow-lg">

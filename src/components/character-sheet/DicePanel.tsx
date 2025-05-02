@@ -22,7 +22,7 @@ type DiceRollRecord = {
 };
 
 export const DicePanel = () => {
-  const [diceCount] = useState(1); // В будущем можно добавить поддержку нескольких кубиков
+  const [diceCount] = useState(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const [modifier, setModifier] = useState(0);
   const [rollsHistory, setRollsHistory] = useState<DiceRollRecord[]>([]);
@@ -35,8 +35,19 @@ export const DicePanel = () => {
   
   // Компонент дайса для отображения в результате
   const DiceIcon = ({ value, diceType, size = 30 }: { value: number, diceType: string, size?: number }) => {
-    const diceColor = currentTheme.accent;
-    const textColor = currentTheme.textColor || '#FFFFFF';
+    // Используем разные цвета для разных типов кубиков
+    let diceColor;
+    switch (diceType) {
+      case 'd4': diceColor = '#B0E0E6'; break;
+      case 'd6': diceColor = '#98FB98'; break;
+      case 'd8': diceColor = '#FFA07A'; break;
+      case 'd10': diceColor = '#DDA0DD'; break;
+      case 'd12': diceColor = '#FFD700'; break;
+      case 'd20': diceColor = '#87CEEB'; break;
+      default: diceColor = currentTheme.accent;
+    }
+    
+    const textColor = '#000000'; // Черный текст для лучшей читаемости
     
     return (
       <div 
@@ -123,7 +134,7 @@ export const DicePanel = () => {
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[180px] mb-4 bg-black/20 rounded-lg overflow-hidden relative">
+          <div className="h-[220px] mb-5 bg-black/20 rounded-lg overflow-hidden relative"> {/* Увеличена высота с 180px до 220px */}
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -145,9 +156,20 @@ export const DicePanel = () => {
             />
           </div>
           
-          <div className="grid grid-cols-6 gap-2 mb-3">
+          <div className="grid grid-cols-6 gap-2 mb-4"> {/* Увеличен отступ снизу с 3 до 4 */}
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
               const isActive = diceType === dice;
+              // Используем те же цвета что и в 3D визуализации
+              let diceColor;
+              switch (dice) {
+                case 'd4': diceColor = '#B0E0E6'; break;
+                case 'd6': diceColor = '#98FB98'; break;
+                case 'd8': diceColor = '#FFA07A'; break;
+                case 'd10': diceColor = '#DDA0DD'; break;
+                case 'd12': diceColor = '#FFD700'; break;
+                case 'd20': diceColor = '#87CEEB'; break;
+                default: diceColor = currentTheme.accent;
+              }
               
               return (
                 <Button 
@@ -157,10 +179,10 @@ export const DicePanel = () => {
                   disabled={isRolling} 
                   className={`dice-button h-12 ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
                   style={{
-                    backgroundColor: isActive ? currentTheme.accent : 'transparent',
-                    color: isActive ? currentTheme.textColor : currentTheme.textColor,
-                    borderColor: `${currentTheme.accent}${isActive ? 'FF' : '40'}`,
-                    boxShadow: isActive ? `0 0 8px ${currentTheme.accent}80` : 'none'
+                    backgroundColor: isActive ? diceColor : 'transparent',
+                    color: isActive ? 'black' : currentTheme.textColor,
+                    borderColor: `${diceColor}${isActive ? 'FF' : '40'}`,
+                    boxShadow: isActive ? `0 0 8px ${diceColor}80` : 'none'
                   }}
                 >
                   <div className="flex flex-col items-center justify-center">
@@ -172,7 +194,7 @@ export const DicePanel = () => {
           </div>
           
           {/* Модификаторы */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="grid grid-cols-2 gap-2 mb-4"> {/* Увеличен отступ снизу с 3 до 4 */}
             <div>
               <label className="text-sm text-foreground">Причина броска:</label>
               <Input 
@@ -198,9 +220,16 @@ export const DicePanel = () => {
             className="w-full dice-button" 
             disabled={isRolling}
             style={{
-              backgroundColor: currentTheme.accent,
-              color: currentTheme.textColor,
-              boxShadow: `0 4px 12px ${currentTheme.accent}40`
+              backgroundColor: isRolling ? '#888888' : (diceType === 'd4' ? '#B0E0E6' : 
+                                                     diceType === 'd6' ? '#98FB98' :
+                                                     diceType === 'd8' ? '#FFA07A' :
+                                                     diceType === 'd10' ? '#DDA0DD' :
+                                                     diceType === 'd12' ? '#FFD700' : '#87CEEB'),
+              color: 'black',
+              boxShadow: `0 4px 12px ${currentTheme.accent}40`,
+              height: '45px', // Увеличена высота кнопки
+              fontSize: '16px', // Увеличен размер шрифта
+              fontWeight: 'bold'
             }}
           >
             {isRolling ? 'Бросаем...' : `Бросить ${diceType}`}
@@ -208,7 +237,7 @@ export const DicePanel = () => {
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
-          <div className="max-h-[350px] overflow-y-auto">
+          <div className="max-h-[380px] overflow-y-auto"> {/* Увеличена высота для истории */}
             {rollsHistory.length > 0 ? rollsHistory.map((roll) => (
               <div 
                 key={roll.id} 
