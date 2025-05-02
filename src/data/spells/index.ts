@@ -39,79 +39,116 @@ export const getSpellDetails = (spellName: string): CharacterSpell | undefined =
   return allSpells.find(spell => spell.name === spellName);
 };
 
+// Получение максимального уровня заклинаний для класса и уровня персонажа
+const getMaxSpellLevelForClass = (className: string, characterLevel: number): number => {
+  // Полные заклинатели (Бард, Волшебник, Жрец, Друид, Чародей)
+  if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей'].includes(className)) {
+    if (characterLevel < 3) return 1;        // 1-2 уровень: доступ к 1 кругу
+    if (characterLevel < 5) return 2;        // 3-4 уровень: доступ ко 2 кругу
+    if (characterLevel < 7) return 3;        // 5-6 уровень: доступ к 3 кругу
+    if (characterLevel < 9) return 4;        // 7-8 уровень: доступ к 4 кругу
+    if (characterLevel < 11) return 5;       // 9-10 уровень: доступ к 5 кругу
+    if (characterLevel < 13) return 6;       // 11-12 уровень: доступ к 6 кругу
+    if (characterLevel < 15) return 7;       // 13-14 уровень: доступ к 7 кругу
+    if (characterLevel < 17) return 8;       // 15-16 уровень: доступ к 8 кругу
+    return 9;                                // 17+ уровень: доступ к 9 кругу
+  }
+  
+  // Чернокнижник имеет особую систему заклинаний
+  if (className === 'Чернокнижник') {
+    if (characterLevel < 3) return 1;        // 1-2 уровень: доступ к 1 кругу
+    if (characterLevel < 5) return 2;        // 3-4 уровень: доступ ко 2 кругу
+    if (characterLevel < 7) return 3;        // 5-6 уровень: доступ к 3 кругу
+    if (characterLevel < 9) return 4;        // 7-8 уровень: доступ к 4 кругу
+    return 5;                                // 9+ уровень: доступ к 5 кругу
+  }
+  
+  // Полузаклинатели (Следопыт, Паладин)
+  if (className === 'Паладин' || className === 'Следопыт') {
+    if (characterLevel < 2) return 0;        // 1 уровень: нет заклинаний
+    if (characterLevel < 5) return 1;        // 2-4 уровень: доступ к 1 кругу
+    if (characterLevel < 9) return 2;        // 5-8 уровень: доступ ко 2 кругу
+    if (characterLevel < 13) return 3;       // 9-12 уровень: доступ к 3 кругу
+    if (characterLevel < 17) return 4;       // 13-16 уровень: доступ к 4 кругу
+    return 5;                                // 17+ уровень: доступ к 5 кругу
+  }
+  
+  // Воин (Мистический рыцарь) и Плут (Мистический ловкач)
+  if (className === 'Воин' || className === 'Плут') {
+    if (characterLevel < 3) return 0;        // 1-2 уровень: нет заклинаний
+    if (characterLevel < 7) return 1;        // 3-6 уровень: доступ к 1 кругу
+    if (characterLevel < 13) return 2;       // 7-12 уровень: доступ ко 2 кругу
+    if (characterLevel < 19) return 3;       // 13-18 уровень: доступ к 3 кругу
+    return 4;                                // 19+ уровень: доступ к 4 кругу
+  }
+  
+  // Монах (Путь Четырех Стихий)
+  if (className === 'Монах') {
+    if (characterLevel < 3) return 0;        // 1-2 уровень: нет заклинаний
+    if (characterLevel < 5) return 1;        // 3-4 уровень: доступ к 1 кругу
+    if (characterLevel < 9) return 2;        // 5-8 уровень: доступ ко 2 кругу
+    if (characterLevel < 13) return 3;       // 9-12 уровень: доступ к 3 кругу
+    if (characterLevel < 17) return 4;       // 13-16 уровень: доступ к 4 кругу
+    return 5;                                // 17+ уровень: доступ к 5 кругу
+  }
+  
+  // Варвар (Путь Тотемного Воина) может получить некоторые ритуальные заклинания
+  if (className === 'Варвар' && characterLevel >= 3) {
+    return 1; // Только заклинания 1 круга как ритуалы
+  }
+  
+  return 0; // По умолчанию нет доступных заклинаний
+};
+
 // Получить заклинания для определённого класса
 export const getSpellsByClass = (className: string, characterLevel: number = 1): CharacterSpell[] => {
-  // Стандартные заклинатели
-  if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(className)) {
-    return allSpells.filter(spell => spell.classes.includes(className));
-  }
+  // Максимальный уровень заклинаний для этого класса и уровня персонажа
+  const maxSpellLevel = getMaxSpellLevelForClass(className, characterLevel);
   
-  // Полузаклинатели
-  if (className === 'Паладин' || className === 'Следопыт') {
-    // Доступны только с 2 уровня
-    if (characterLevel < 2) return [];
-    
-    // Максимальный уровень заклинаний для полузаклинателей
-    const maxSpellLevel = Math.min(
-      Math.ceil(characterLevel / 4) + 1, // 5й уровень на 17м уровне персонажа
-      5
-    );
-    
+  // Если нет доступных заклинаний, возвращаем пустой массив
+  if (maxSpellLevel === 0) return [];
+  
+  // Полные заклинатели (включая Чернокнижников)
+  if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(className)) {
     return allSpells.filter(spell => 
       spell.classes.includes(className) && 
-      spell.level > 0 && // у них нет заговоров
+      spell.level <= maxSpellLevel // Фильтруем по максимальному доступному уровню
+    );
+  }
+  
+  // Полузаклинатели (Паладины и Следопыты)
+  if (['Паладин', 'Следопыт'].includes(className)) {
+    return allSpells.filter(spell => 
+      spell.classes.includes(className) && 
+      spell.level > 0 && // У них нет заговоров
       spell.level <= maxSpellLevel
     );
   }
   
-  // Особые случаи для классов, которые используют заклинания через подклассы
-  
-  // Воин (Мистический рыцарь) получает заклинания волшебника
+  // Воин (Мистический рыцарь)
   if (className === 'Воин') {
-    // Доступны только с 3 уровня
-    if (characterLevel < 3) return [];
-    
-    // Максимальный уровень доступных заклинаний зависит от уровня персонажа
-    const maxSpellLevel = Math.min(
-      Math.floor((characterLevel - 3) / 6) + 2, // 4й уровень на 19м уровне персонажа
-      4
-    );
-    
     return allSpells.filter(spell => 
       spell.classes.includes('Волшебник') && 
-      // Мистические рыцари могут использовать только заклинания школ Преобразования и Ограждения
       (spell.school === 'Преобразование' || spell.school === 'Ограждение' || 
-        spell.school === 'Воплощение' || spell.school === 'Ограждение') &&
-      spell.level <= maxSpellLevel
+       spell.school === 'Воплощение') &&
+      ((spell.level === 0 && characterLevel >= 3) || // Заговоры доступны с 3 уровня
+       (spell.level > 0 && spell.level <= maxSpellLevel)) // Заклинания уровней 1-4
     );
   }
   
-  // Плут (Мистический ловкач) получает заклинания волшебника
+  // Плут (Мистический ловкач)
   if (className === 'Плут') {
-    // Доступны только с 3 уровня
-    if (characterLevel < 3) return [];
-    
-    // Максимальный уровень доступных заклинаний зависит от уровня персонажа
-    const maxSpellLevel = Math.min(
-      Math.floor((characterLevel - 3) / 6) + 2, // 4й уровень на 19м уровне персонажа
-      4
-    );
-    
     return allSpells.filter(spell => 
       spell.classes.includes('Волшебник') && 
-      // Фокусируются на школах Иллюзии и Очарования
       (spell.school === 'Иллюзия' || spell.school === 'Очарование') &&
-      spell.level <= maxSpellLevel
+      ((spell.level === 0 && characterLevel >= 3) || // Заговоры доступны с 3 уровня
+       (spell.level > 0 && spell.level <= maxSpellLevel)) // Заклинания уровней 1-4
     );
   }
   
-  // Варвар (Путь Тотемного Воина) может накладывать некоторые ритуальные заклинания
+  // Варвар (Путь Тотемного Воина)
   if (className === 'Варвар') {
-    // Доступны только с 3 уровня
-    if (characterLevel < 3) return [];
-    
     return allSpells.filter(spell => 
-      // Доступны только некоторые заклинания друида, связанные с животными и природой
       spell.ritual && 
       spell.classes.includes('Друид') && 
       spell.level === 1 &&
@@ -119,20 +156,10 @@ export const getSpellsByClass = (className: string, characterLevel: number = 1):
     );
   }
   
-  // Монах (Путь Четырех Стихий) может накладывать некоторые заклинания, связанные со стихиями
+  // Монах (Путь Четырех Стихий)
   if (className === 'Монах') {
-    // Доступны только с 3 уровня
-    if (characterLevel < 3) return [];
-    
-    // Максимальный уровень заклинаний зависит от уровня персонажа
-    const maxSpellLevel = Math.min(
-      Math.floor((characterLevel - 1) / 4) + 1,
-      5
-    );
-    
     return allSpells.filter(spell => 
       spell.classes.includes('Друид') && 
-      // Заклинания, связанные со стихиями (огонь, вода, воздух, земля)
       (spell.school === 'Воплощение' || spell.school === 'Преобразование') &&
       spell.level <= maxSpellLevel
     );

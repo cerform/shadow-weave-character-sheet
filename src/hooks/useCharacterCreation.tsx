@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Character, AbilityScores, SpellSlots, Spell, SorceryPoints } from "@/contexts/CharacterContext";
 
@@ -120,37 +121,76 @@ export const useCharacterCreation = () => {
     return hitDice[characterClass] || 8; // По умолчанию d8
   };
 
-  // Рассчитываем ячейки заклинаний на основе класса и уровня
+  // Исправляем функцию расчета ячеек заклинаний на основе класса и уровня
   const calculateSpellSlots = (className: string, level: number) => {
     if (!isMagicClass(className) || level < 1) return {};
     
     const slots: SpellSlots = {};
+    
     // Полные заклинатели (Волшебник, Жрец, Друид, Бард, Чародей)
     if (["Волшебник", "Чародей", "Жрец", "Друид", "Бард"].includes(className)) {
-      if (level >= 1) slots[1] = { max: Math.min(level + 1, 4), used: 0 };
-      if (level >= 3) slots[2] = { max: Math.min(level - 1, 3), used: 0 };
-      if (level >= 5) slots[3] = { max: Math.min(level - 3, 3), used: 0 };
-      if (level >= 7) slots[4] = { max: Math.min(level - 6, 3), used: 0 };
-      if (level >= 9) slots[5] = { max: Math.min(level - 8, 2), used: 0 };
-      if (level >= 11) slots[6] = { max: 1, used: 0 };
-      if (level >= 13) slots[7] = { max: 1, used: 0 };
-      if (level >= 15) slots[8] = { max: 1, used: 0 };
-      if (level >= 17) slots[9] = { max: 1, used: 0 };
+      // Таблица ячеек заклинаний для полных заклинателей по PHB
+      if (level >= 1) {
+        slots[1] = { max: level === 1 ? 2 : 3, used: 0 };
+      }
+      if (level >= 3) {
+        slots[2] = { max: level === 3 ? 2 : 3, used: 0 };
+      }
+      if (level >= 5) {
+        slots[3] = { max: level === 5 ? 2 : 3, used: 0 };
+      }
+      if (level >= 7) {
+        slots[4] = { max: level === 7 ? 1 : 3, used: 0 };
+      }
+      if (level >= 9) {
+        slots[5] = { max: level === 9 ? 1 : (level >= 18 ? 3 : 2), used: 0 };
+      }
+      if (level >= 11) {
+        slots[6] = { max: level >= 19 ? 2 : 1, used: 0 };
+      }
+      if (level >= 13) {
+        slots[7] = { max: level >= 20 ? 2 : 1, used: 0 };
+      }
+      if (level >= 15) {
+        slots[8] = { max: 1, used: 0 };
+      }
+      if (level >= 17) {
+        slots[9] = { max: 1, used: 0 };
+      }
     }
     // Полу-заклинатели (Паладин, Следопыт)
     else if (["Паладин", "Следопыт"].includes(className)) {
-      // Полу-заклинатели используют половину своего уровня (округленную вверх) для расчета ячеек заклинаний
-      const effectiveLevel = Math.ceil(level / 2);
-      if (level >= 2) slots[1] = { max: Math.min(effectiveLevel + 1, 4), used: 0 };
-      if (level >= 5) slots[2] = { max: Math.min(effectiveLevel - 1, 3), used: 0 };
-      if (level >= 9) slots[3] = { max: Math.min(effectiveLevel - 3, 3), used: 0 };
-      if (level >= 13) slots[4] = { max: Math.min(effectiveLevel - 6, 2), used: 0 };
-      if (level >= 17) slots[5] = { max: Math.min(effectiveLevel - 8, 1), used: 0 };
+      // Начинают получать заклинания со второго уровня
+      if (level >= 2) {
+        slots[1] = { max: level === 2 ? 2 : 3, used: 0 };
+      }
+      if (level >= 5) {
+        slots[2] = { max: level < 7 ? 2 : 3, used: 0 };
+      }
+      if (level >= 9) {
+        slots[3] = { max: level < 11 ? 2 : 3, used: 0 };
+      }
+      if (level >= 13) {
+        slots[4] = { max: level < 15 ? 1 : (level < 17 ? 2 : 3), used: 0 };
+      }
+      if (level >= 17) {
+        slots[5] = { max: level < 19 ? 1 : 2, used: 0 };
+      }
     }
     // Чернокнижники имеют свою собственную прогрессию ячеек заклинаний
     else if (className === "Чернокнижник") {
-      const slotLevel = Math.min(Math.ceil(level / 2), 5);
-      const numSlots = level === 1 ? 1 : Math.min(Math.floor((level + 1) / 2) + 1, 4);
+      let slotLevel = 1;
+      if (level >= 3) slotLevel = 2;
+      if (level >= 5) slotLevel = 3;
+      if (level >= 7) slotLevel = 4;
+      if (level >= 9) slotLevel = 5;
+      
+      // Количество ячеек
+      let numSlots = 1;
+      if (level >= 2) numSlots = 2;
+      if (level >= 11) numSlots = 3;
+      if (level >= 17) numSlots = 4;
+      
       slots[slotLevel] = { max: numSlots, used: 0 };
     }
     
