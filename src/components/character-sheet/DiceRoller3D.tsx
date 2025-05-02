@@ -1,6 +1,7 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute } from 'three';
+import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -58,13 +59,14 @@ const createD10Geometry = () => {
   return geometry;
 };
 
-const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = false, forceReroll = false }: { 
+const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = false, forceReroll = false, themeColor = '#ffffff' }: { 
   type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   onRoll?: (result: number) => void,
   modifier?: number,
   autoRoll?: boolean,
   hideControls?: boolean,
-  forceReroll?: boolean
+  forceReroll?: boolean,
+  themeColor?: string
 }) => {
   const meshRef = useRef<Mesh>(null!);
   const initialPositionRef = useRef<Vector3>(new Vector3(0, 3, 0));
@@ -79,6 +81,9 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   const [result, setResult] = useState(0);
   const [readyToRoll, setReadyToRoll] = useState(true);
   const [rollPhase, setRollPhase] = useState(0); // 0: initial, 1: rolling, 2: settled
+  
+  // Преобразование HEX цвета в объект Color из Three.js
+  const diceColor = new Color(themeColor);
   
   // Определение геометрии и числа граней для кубика
   const getDiceGeometry = (type: string) => {
@@ -191,11 +196,18 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
     camera.lookAt(0, 0, 0);
   }, [camera]);
   
+  // Создаем материал с цветом темы
+  const diceMaterial = new MeshStandardMaterial({
+    color: diceColor,
+    metalness: 0.7,
+    roughness: 0.3
+  });
+  
   return (
     <group>
       <mesh ref={meshRef} position={initialPositionRef.current} castShadow receiveShadow>
         <primitive object={getDiceGeometry(type)} />
-        <meshStandardMaterial color="#ffffff" metalness={0.5} roughness={0.5} />
+        <primitive object={diceMaterial} attach="material" />
       </mesh>
       
       {!hideControls && (
@@ -221,11 +233,18 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   );
 };
 
-export const DiceRoller3D = ({ initialDice = 'd20', hideControls = false, modifier = 0, onRollComplete }: {
+export const DiceRoller3D = ({ 
+  initialDice = 'd20', 
+  hideControls = false, 
+  modifier = 0, 
+  onRollComplete,
+  themeColor = '#ffffff' 
+}: {
   initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   hideControls?: boolean,
   modifier?: number,
-  onRollComplete?: (result: number) => void
+  onRollComplete?: (result: number) => void,
+  themeColor?: string
 }) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
@@ -248,6 +267,9 @@ export const DiceRoller3D = ({ initialDice = 'd20', hideControls = false, modifi
     }
   };
   
+  // Кнопка броска внизу для лучшей доступности
+  const buttonBottom = hideControls ? "10px" : "55px";
+  
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas shadows>
@@ -260,12 +282,13 @@ export const DiceRoller3D = ({ initialDice = 'd20', hideControls = false, modifi
           autoRoll={roll}
           hideControls={hideControls}
           forceReroll={forceReroll}
+          themeColor={themeColor}
         />
         <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
       
       {!hideControls && (
-        <div style={{ position: 'absolute', bottom: 10, left: 0, width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+        <div style={{ position: 'absolute', bottom: buttonBottom, left: 0, width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
           <button onClick={() => handleDiceChange('d4')} style={{ padding: '4px 8px', opacity: diceType === 'd4' ? 1 : 0.6 }}>d4</button>
           <button onClick={() => handleDiceChange('d6')} style={{ padding: '4px 8px', opacity: diceType === 'd6' ? 1 : 0.6 }}>d6</button>
           <button onClick={() => handleDiceChange('d8')} style={{ padding: '4px 8px', opacity: diceType === 'd8' ? 1 : 0.6 }}>d8</button>
@@ -281,8 +304,8 @@ export const DiceRoller3D = ({ initialDice = 'd20', hideControls = false, modifi
           onClick={handleRoll}
           style={{
             position: 'absolute',
-            top: 10,
-            right: 10,
+            bottom: '10px',
+            right: '10px',
             padding: '8px 16px',
             backgroundColor: '#4CAF50',
             color: 'white',

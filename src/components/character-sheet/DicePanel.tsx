@@ -68,82 +68,87 @@ export const DicePanel = () => {
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h3 className="text-lg font-semibold mb-2 text-foreground">Кубики</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Кубики</h3>
       
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label className="text-sm text-foreground">Количество:</label>
-          <Input 
-            type="number" 
-            value={diceCount} 
-            onChange={(e) => setDiceCount(Number(e.target.value))} 
-            min={1}
-            max={20}
-            className="w-full mt-1 text-foreground"
+      <div className="mt-4">
+        {/* 3D Dice Roller - перемещено вверх для лучшей видимости */}
+        <div className="h-[180px] mb-4 bg-black/10 rounded-lg overflow-hidden">
+          <DiceRoller3D 
+            key={diceKey}
+            initialDice={diceType as any}
+            hideControls={true}
+            modifier={modifier}
+            onRollComplete={handleDiceResult}
+            themeColor={currentTheme.accent}
           />
         </div>
-        <div>
-          <label className="text-sm text-foreground">Модификатор:</label>
-          <Input 
-            type="number" 
-            value={modifier} 
-            onChange={(e) => setModifier(Number(e.target.value))} 
-            className="w-full mt-1 text-foreground"
-          />
+        
+        {/* Строка быстрых кубиков */}
+        <div className="grid grid-cols-7 gap-2 mb-3">
+          <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling} className="text-foreground">d4</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling} className="text-foreground">d6</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling} className="text-foreground">d8</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling} className="text-foreground">d10</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling} className="text-foreground">d12</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling} className="text-foreground">d20</Button>
+          <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling} className="text-foreground">d100</Button>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-4 gap-2 mb-3">
-        <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling} className="text-foreground">d4</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling} className="text-foreground">d6</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling} className="text-foreground">d8</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling} className="text-foreground">d10</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling} className="text-foreground">d12</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling} className="text-foreground">d20</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling} className="text-foreground">d100</Button>
-      </div>
-      
-      {/* 3D Dice Roller */}
-      <div className="h-[150px] mb-4 bg-black/10 rounded-lg overflow-hidden">
-        <DiceRoller3D 
-          key={diceKey}
-          initialDice={diceType as any}
-          hideControls={true}
-          modifier={modifier}
-          onRollComplete={handleDiceResult}
-        />
-      </div>
-      
-      {diceResult && !isRolling && (
-        <div className="p-2 mb-4 bg-primary/10 rounded-md text-center">
-          <div className="mb-2">
-            <span className="text-primary font-medium">Результат: </span>
-            <span className="text-2xl font-bold text-primary">{diceResult}</span>
+        
+        {/* Модификаторы */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div>
+            <label className="text-sm text-foreground">Количество:</label>
+            <Input 
+              type="number" 
+              value={diceCount} 
+              onChange={(e) => setDiceCount(Number(e.target.value))} 
+              min={1}
+              max={20}
+              className="w-full mt-1 text-foreground"
+            />
           </div>
-          <div className="flex flex-wrap justify-center gap-2 mb-2">
-            {rollsHistory[0]?.rolls.map((roll, idx) => (
-              <div key={idx} className="inline-flex items-center justify-center">
-                <DiceIcon value={roll} />
-              </div>
-            ))}
-            {rollsHistory[0]?.modifier !== 0 && (
-              <span className="inline-flex items-center justify-center text-primary font-bold">
-                {rollsHistory[0]?.modifier > 0 ? '+' : ''}{rollsHistory[0]?.modifier}
-              </span>
-            )}
-          </div>
-          <div className="mt-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetRoll} 
-              className="w-full text-primary"
-            >
-              Бросить снова
-            </Button>
+          <div>
+            <label className="text-sm text-foreground">Модификатор:</label>
+            <Input 
+              type="number" 
+              value={modifier} 
+              onChange={(e) => setModifier(Number(e.target.value))} 
+              className="w-full mt-1 text-foreground"
+            />
           </div>
         </div>
-      )}
+      
+        {diceResult && !isRolling && (
+          <div className="p-2 mb-4 bg-primary/10 rounded-md text-center">
+            <div className="mb-2">
+              <span className="text-primary font-medium">Результат: </span>
+              <span className="text-2xl font-bold text-primary">{diceResult}</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 mb-2">
+              {rollsHistory[0]?.rolls.map((roll, idx) => (
+                <div key={idx} className="inline-flex items-center justify-center">
+                  <DiceIcon value={roll} />
+                </div>
+              ))}
+              {rollsHistory[0]?.modifier !== 0 && (
+                <span className="inline-flex items-center justify-center text-primary font-bold">
+                  {rollsHistory[0]?.modifier > 0 ? '+' : ''}{rollsHistory[0]?.modifier}
+                </span>
+              )}
+            </div>
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetRoll} 
+                className="w-full text-primary"
+              >
+                Бросить снова
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
       
       <Separator className="my-2" />
       
