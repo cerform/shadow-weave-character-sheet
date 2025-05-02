@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Token, Initiative } from '@/pages/PlayBattlePage';
 import { useToast } from '@/components/ui/use-toast';
-import { MapControls } from './MapControls';
+import MapControls from './MapControls';
 
 interface RightPanelProps {
   selectedTokenId: number | null;

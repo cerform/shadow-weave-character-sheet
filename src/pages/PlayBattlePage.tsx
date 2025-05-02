@@ -721,6 +721,15 @@ const PlayBattlePage = () => {
                 selectedTokenId={selectedTokenId} 
                 tokens={tokens}
                 setTokens={setTokens}
+                fogOfWar={fogOfWar}
+                setFogOfWar={setFogOfWar}
+                revealRadius={revealRadius}
+                setRevealRadius={setRevealRadius}
+                gridVisible={gridVisible}
+                setGridVisible={setGridVisible}
+                gridOpacity={gridOpacity}
+                setGridOpacity={setGridOpacity}
+                onResetFogOfWar={resetFogOfWar}
               />
             ) : (
               <BattleTabs
