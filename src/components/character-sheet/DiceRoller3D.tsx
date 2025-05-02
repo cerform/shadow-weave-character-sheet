@@ -1,9 +1,10 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 // Кастомная геометрия для d10 (Pentagonal trapezohedron)
 const createD10Geometry = () => {
@@ -196,11 +197,12 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
     camera.lookAt(0, 0, 0);
   }, [camera]);
   
-  // Создаем материал с цветом темы
+  // Создаем материал с цветом темы и улучшенными настройками
   const diceMaterial = new MeshStandardMaterial({
     color: diceColor,
     metalness: 0.7,
-    roughness: 0.3
+    roughness: 0.3,
+    emissive: new Color(diceColor).multiplyScalar(0.2),
   });
   
   return (
@@ -224,7 +226,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
       
       {result > 0 && !rolling && (
         <group position={[0, 1.5, 0]}>
-          <Text position={[0, 0, 0]} fontSize={0.5} color="#FFD700">
+          <Text position={[0, 0, 0]} fontSize={0.5} color={themeColor} anchorX="center" anchorY="middle">
             {result + (modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : '')}
           </Text>
         </group>
@@ -249,6 +251,9 @@ export const DiceRoller3D = ({
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
   const [forceReroll, setForceReroll] = useState(false);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const actualThemeColor = themeColor || currentTheme.accent;
   
   const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
     setDiceType(type);
@@ -282,20 +287,96 @@ export const DiceRoller3D = ({
           autoRoll={roll}
           hideControls={hideControls}
           forceReroll={forceReroll}
-          themeColor={themeColor}
+          themeColor={actualThemeColor}
         />
         <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
       
       {!hideControls && (
-        <div style={{ position: 'absolute', bottom: buttonBottom, left: 0, width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-          <button onClick={() => handleDiceChange('d4')} style={{ padding: '4px 8px', opacity: diceType === 'd4' ? 1 : 0.6 }}>d4</button>
-          <button onClick={() => handleDiceChange('d6')} style={{ padding: '4px 8px', opacity: diceType === 'd6' ? 1 : 0.6 }}>d6</button>
-          <button onClick={() => handleDiceChange('d8')} style={{ padding: '4px 8px', opacity: diceType === 'd8' ? 1 : 0.6 }}>d8</button>
-          <button onClick={() => handleDiceChange('d10')} style={{ padding: '4px 8px', opacity: diceType === 'd10' ? 1 : 0.6 }}>d10</button>
-          <button onClick={() => handleDiceChange('d12')} style={{ padding: '4px 8px', opacity: diceType === 'd12' ? 1 : 0.6 }}>d12</button>
-          <button onClick={() => handleDiceChange('d20')} style={{ padding: '4px 8px', opacity: diceType === 'd20' ? 1 : 0.6 }}>d20</button>
-          <button onClick={() => handleDiceChange('d100')} style={{ padding: '4px 8px', opacity: diceType === 'd100' ? 1 : 0.6 }}>d100</button>
+        <div style={{ 
+          position: 'absolute', 
+          bottom: buttonBottom, 
+          left: 0, 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '8px',
+          background: 'rgba(0,0,0,0.2)',
+          padding: '8px',
+          borderRadius: '8px',
+        }}>
+          <button 
+            onClick={() => handleDiceChange('d4')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd4' ? 1 : 0.6,
+              backgroundColor: diceType === 'd4' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd4' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d4</button>
+          <button 
+            onClick={() => handleDiceChange('d6')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd6' ? 1 : 0.6,
+              backgroundColor: diceType === 'd6' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd6' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d6</button>
+          <button 
+            onClick={() => handleDiceChange('d8')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd8' ? 1 : 0.6,
+              backgroundColor: diceType === 'd8' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd8' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d8</button>
+          <button 
+            onClick={() => handleDiceChange('d10')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd10' ? 1 : 0.6,
+              backgroundColor: diceType === 'd10' ? actualThemeColor : 'rgba(255,255,255,0.1)', 
+              color: diceType === 'd10' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d10</button>
+          <button 
+            onClick={() => handleDiceChange('d12')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd12' ? 1 : 0.6,
+              backgroundColor: diceType === 'd12' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd12' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d12</button>
+          <button 
+            onClick={() => handleDiceChange('d20')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd20' ? 1 : 0.6,
+              backgroundColor: diceType === 'd20' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd20' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d20</button>
         </div>
       )}
       
@@ -307,11 +388,12 @@ export const DiceRoller3D = ({
             bottom: '10px',
             right: '10px',
             padding: '8px 16px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
+            backgroundColor: actualThemeColor,
+            color: 'black',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            fontWeight: 'bold'
           }}
         >
           Бросить {diceType}

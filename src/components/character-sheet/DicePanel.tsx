@@ -83,15 +83,56 @@ export const DicePanel = () => {
           />
         </div>
         
-        {/* Строка быстрых кубиков */}
-        <div className="grid grid-cols-7 gap-2 mb-3">
-          <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling} className="text-foreground">d4</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling} className="text-foreground">d6</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling} className="text-foreground">d8</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling} className="text-foreground">d10</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling} className="text-foreground">d12</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling} className="text-foreground">d20</Button>
-          <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling} className="text-foreground">d100</Button>
+        {/* Строка кнопок-кубиков */}
+        <div className="grid grid-cols-6 gap-2 mb-3">
+          <Button 
+            variant={diceType === 'd4' ? "default" : "outline"} 
+            onClick={() => rollDice('d4')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd4' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d4
+          </Button>
+          <Button 
+            variant={diceType === 'd6' ? "default" : "outline"} 
+            onClick={() => rollDice('d6')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd6' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d6
+          </Button>
+          <Button 
+            variant={diceType === 'd8' ? "default" : "outline"} 
+            onClick={() => rollDice('d8')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd8' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d8
+          </Button>
+          <Button 
+            variant={diceType === 'd10' ? "default" : "outline"} 
+            onClick={() => rollDice('d10')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd10' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d10
+          </Button>
+          <Button 
+            variant={diceType === 'd12' ? "default" : "outline"} 
+            onClick={() => rollDice('d12')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd12' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d12
+          </Button>
+          <Button 
+            variant={diceType === 'd20' ? "default" : "outline"} 
+            onClick={() => rollDice('d20')} 
+            disabled={isRolling} 
+            className={`text-foreground ${diceType === 'd20' ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            d20
+          </Button>
         </div>
         
         {/* Модификаторы */}
@@ -117,9 +158,17 @@ export const DicePanel = () => {
             />
           </div>
         </div>
+        
+        <Button 
+          onClick={() => rollDice(diceType)} 
+          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground" 
+          disabled={isRolling}
+        >
+          Бросить {diceType}
+        </Button>
       
         {diceResult && !isRolling && (
-          <div className="p-2 mb-4 bg-primary/10 rounded-md text-center">
+          <div className="p-2 mt-3 mb-4 bg-primary/10 rounded-md text-center">
             <div className="mb-2">
               <span className="text-primary font-medium">Результат: </span>
               <span className="text-2xl font-bold text-primary">{diceResult}</span>

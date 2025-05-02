@@ -7,7 +7,7 @@ import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import MapControls from "@/components/battle/MapControls";
 import { motion } from "framer-motion";
-import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull } from "lucide-react";
+import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull, ZoomIn, ZoomOut, Scale, Grid3x3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,6 +16,9 @@ import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ThemeSelector from "@/components/ThemeSelector";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
+import { DicePanel } from "@/components/character-sheet/DicePanel";
 
 // Типы для управления битвой
 export interface Token {
@@ -111,6 +114,8 @@ const PlayBattlePage = () => {
   
   const { toast } = useToast();
   const mapRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // Добавляем новые состояния для тумана войны и размера сетки
   const [fogOfWar, setFogOfWar] = useState<boolean>(true);
@@ -201,7 +206,7 @@ const PlayBattlePage = () => {
       };
     });
     
-    // Сортируем по результату инициативы (от большег�� к меньшему)
+    // Сортируем по результату инициатив�� (от большег�� к меньшему)
     const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
     
     // Устанавливаем первого участника активным
@@ -414,7 +419,7 @@ const PlayBattlePage = () => {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
-      {/* Верхняя панель */}
+      {/* Верхняя панель с расширенными элементами управления */}
       <div className="p-2 border-b flex justify-between items-center">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold">D&D Боевая карта</h1>
@@ -424,6 +429,26 @@ const PlayBattlePage = () => {
             variant={showSceneMode ? "default" : "outline"}
           >
             {showSceneMode ? "Боевой режим" : "Режим сцены"}
+          </Button>
+          
+          {/* Элементы управления сеткой и туманом перенесены в верх��юю панель */}
+          <Button
+            size="sm"
+            variant={gridVisible ? "default" : "outline"}
+            onClick={() => setGridVisible(!gridVisible)}
+            title="Показать/скрыть сетку"
+          >
+            <Grid3x3 size={16} className="mr-1" />
+            {gridVisible ? "Скрыть сетку" : "Показать сетку"}
+          </Button>
+          
+          <Button
+            size="sm"
+            variant={fogOfWar ? "default" : "outline"}
+            onClick={() => setFogOfWar(!fogOfWar)}
+            title="Включить/выключить туман войны"
+          >
+            {fogOfWar ? "Выключить туман" : "Включить туман"}
           </Button>
         </div>
         
@@ -472,21 +497,23 @@ const PlayBattlePage = () => {
       </div>
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Левая панель */}
-        <div className="w-64 border-r bg-muted/10 overflow-y-auto p-3">
-          <LeftPanel
-            tokens={tokens}
-            setTokens={setTokens}
-            initiative={initiative}
-            setInitiative={setInitiative}
-            selectedTokenId={selectedTokenId}
-            onSelectToken={handleSelectToken}
-            battleState={battleState}
-            fogOfWar={fogOfWar}
-            setFogOfWar={setFogOfWar}
-            gridSize={gridSize}
-            setGridSize={setGridSize}
-          />
+        {/* Левая панель с фиксированной шириной и прокруткой */}
+        <div className="w-72 border-r bg-muted/10 overflow-y-auto p-3">
+          <ScrollArea className="h-full pr-2">
+            <LeftPanel
+              tokens={tokens}
+              setTokens={setTokens}
+              initiative={initiative}
+              setInitiative={setInitiative}
+              selectedTokenId={selectedTokenId}
+              onSelectToken={handleSelectToken}
+              battleState={battleState}
+              fogOfWar={fogOfWar}
+              setFogOfWar={setFogOfWar}
+              gridSize={gridSize}
+              setGridSize={setGridSize}
+            />
+          </ScrollArea>
         </div>
         
         {/* Центральная карта */}
@@ -510,55 +537,57 @@ const PlayBattlePage = () => {
           />
         </div>
         
-        {/* Правая панель */}
-        <div className="w-64 border-l bg-muted/10 overflow-y-auto p-3">
-          {selectedTokenId !== null ? (
-            <RightPanel
-              selectedTokenId={selectedTokenId} 
-              tokens={tokens}
-              setTokens={setTokens}
-            />
-          ) : (
-            <div className="space-y-4">
-              <MapControls
-                fogOfWar={fogOfWar}
-                setFogOfWar={setFogOfWar}
-                revealRadius={revealRadius}
-                setRevealRadius={setRevealRadius}
-                gridVisible={gridVisible}
-                setGridVisible={setGridVisible}
-                gridOpacity={gridOpacity}
-                setGridOpacity={setGridOpacity}
-                onResetFogOfWar={resetFogOfWar}
+        {/* Правая панель с фиксированной шириной и прокруткой */}
+        <div className="w-72 border-l bg-muted/10 overflow-y-auto p-3">
+          <ScrollArea className="h-full pr-2">
+            {selectedTokenId !== null ? (
+              <RightPanel
+                selectedTokenId={selectedTokenId} 
+                tokens={tokens}
+                setTokens={setTokens}
               />
-              
-              <h3 className="font-medium mb-4">��убики</h3>
-              <div className="h-64">
-                <DiceRoller3D />
-              </div>
-              
-              <div className="mt-4 p-4 border rounded bg-muted/10">
-                <h3 className="font-medium mb-2">Чат</h3>
-                <div className="h-48 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
-                  <div className="text-sm">
-                    <div className="mb-1">
-                      <span className="font-medium">DM:</span> Добро пожаловать в приключение!
-                    </div>
-                    <div className="mb-1">
-                      <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
-                    </div>
-                    <div className="mb-1">
-                      <span className="font-medium">DM:</span> Бросаем инициативу...
+            ) : (
+              <div className="space-y-4">
+                <MapControls
+                  fogOfWar={fogOfWar}
+                  setFogOfWar={setFogOfWar}
+                  revealRadius={revealRadius}
+                  setRevealRadius={setRevealRadius}
+                  gridVisible={gridVisible}
+                  setGridVisible={setGridVisible}
+                  gridOpacity={gridOpacity}
+                  setGridOpacity={setGridOpacity}
+                  onResetFogOfWar={resetFogOfWar}
+                />
+                
+                <h3 className="font-medium mb-4">Кубики</h3>
+                <div className="h-64">
+                  <DicePanel />
+                </div>
+                
+                <div className="mt-4 p-4 border rounded bg-muted/10">
+                  <h3 className="font-medium mb-2">Чат</h3>
+                  <div className="h-48 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
+                    <div className="text-sm">
+                      <div className="mb-1">
+                        <span className="font-medium">DM:</span> Добро пожаловать в приключение!
+                      </div>
+                      <div className="mb-1">
+                        <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
+                      </div>
+                      <div className="mb-1">
+                        <span className="font-medium">DM:</span> Бросаем инициативу...
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Input placeholder="Сообщение..." />
-                  <Button>Отправить</Button>
+                  <div className="flex gap-2">
+                    <Input placeholder="Сообщение..." />
+                    <Button>Отправить</Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </ScrollArea>
         </div>
       </div>
       

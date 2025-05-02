@@ -45,6 +45,9 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const [zoom, setZoom] = useState(1);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
 
   // Увеличение масштаба
   const handleZoomIn = () => {
@@ -59,6 +62,31 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   // Сброс масштаба
   const handleResetZoom = () => {
     setZoom(1);
+    setMapPosition({ x: 0, y: 0 });
+  };
+  
+  // Функционал перетаскивания карты
+  const startDrag = (e: React.MouseEvent) => {
+    if (e.button !== 1) return; // Только средняя кнопка мыши
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    e.preventDefault();
+  };
+  
+  const onDrag = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    setMapPosition(prev => ({
+      x: prev.x + dx,
+      y: prev.y + dy
+    }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+    e.preventDefault();
+  };
+  
+  const endDrag = () => {
+    setIsDragging(false);
   };
 
   // Сделать карту больше, чтобы заполнить пространство
@@ -83,11 +111,20 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   }, [background]);
 
   return (
-    <div className="battle-map-container" ref={mapContainerRef}>
+    <div className="battle-map-container h-full" ref={mapContainerRef}>
       <div 
-        className="map-content zoomable" 
+        className="map-content zoomable relative" 
         ref={mapContentRef}
-        style={{ transform: `scale(${zoom})` }}
+        style={{ 
+          transform: `scale(${zoom}) translate(${mapPosition.x}px, ${mapPosition.y}px)`,
+          transformOrigin: 'center center',
+          height: '100%',
+          width: '100%'
+        }}
+        onMouseDown={startDrag}
+        onMouseMove={onDrag}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
       >
         <BattleMap
           tokens={tokens}
@@ -101,21 +138,24 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           battleActive={battleActive}
         />
         
-        <BattleGrid 
-          gridSize={gridSize}
-          visible={gridVisible}
-          opacity={gridOpacity}
-        />
-        
-        <FogOfWar
-          gridSize={gridSize}
-          revealedCells={revealedCells}
-          onRevealCell={onRevealCell}
-          active={fogOfWar}
-        />
+        {/* Сетка только внутри карты боя */}
+        <div className="battle-grid-container absolute inset-0 pointer-events-none">
+          <BattleGrid 
+            gridSize={gridSize}
+            visible={gridVisible}
+            opacity={gridOpacity}
+          />
+          
+          <FogOfWar
+            gridSize={gridSize}
+            revealedCells={revealedCells}
+            onRevealCell={onRevealCell}
+            active={fogOfWar}
+          />
+        </div>
       </div>
       
-      <div className="zoom-controls">
+      <div className="zoom-controls absolute bottom-4 right-4 flex gap-2 z-10 bg-background/80 p-2 rounded-lg shadow-lg backdrop-blur">
         <Button 
           size="icon" 
           variant="secondary" 
