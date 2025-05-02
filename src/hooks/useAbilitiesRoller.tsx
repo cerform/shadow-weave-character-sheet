@@ -1,25 +1,36 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "roll", characterLevel: number) => {
+// Определяем типы для разных методов распределения характеристик
+export type AbilityRollMethod = "pointbuy" | "standard" | "roll" | "manual";
+
+export const useAbilitiesRoller = (
+  abilitiesMethod: AbilityRollMethod = "standard", 
+  characterLevel: number = 1
+) => {
+  // Массив результатов бросков кубиков
   const [diceResults, setDiceResults] = useState<number[][]>([]);
+  
+  // Очки для метода "Point Buy"
   const [abilityScorePoints, setAbilityScorePoints] = useState<number>(27);
+  
+  // История бросков для отслеживания
   const [rollsHistory, setRollsHistory] = useState<{ ability: string, rolls: number[], total: number }[]>([]);
 
-  // Initialize dice results when method changes to roll
+  // Инициализация результатов бросков при изменении метода на "roll"
   useEffect(() => {
     if (abilitiesMethod === "roll" && diceResults.length === 0) {
       rollAllAbilities();
     }
   }, [abilitiesMethod]);
 
-  // Calculate point buy points based on character level
+  // Расчет количества очков для Point Buy на основе уровня персонажа
   useEffect(() => {
     if (abilitiesMethod === "pointbuy") {
-      // Base points is 27 for level 1
+      // Базовое количество очков - 27 для 1 уровня
       let points = 27;
       
-      // Add additional points for higher levels
+      // Добавляем дополнительные очки для более высоких уровней
       // Согласно правилам D&D 5e, при повышении уровня игрок может увеличивать характеристики
       if (characterLevel >= 4) points += 2;  // На 4 уровне
       if (characterLevel >= 8) points += 2;  // На 8 уровне
@@ -97,6 +108,7 @@ export const useAbilitiesRoller = (abilitiesMethod: "pointbuy" | "standard" | "r
     };
   }, [diceResults]);
 
+  // Возвращаем объект с состоянием и функциями
   return {
     diceResults,
     rollAllAbilities,

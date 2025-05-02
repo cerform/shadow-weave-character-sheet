@@ -1,11 +1,12 @@
+
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Check, Download, FileText } from "lucide-react";
+import { Check, Download, FileText, FileArrowDown } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
-import { downloadCharacterPDF } from "@/utils/characterPdfGenerator";
+import { downloadCharacterPDF, downloadCharacterHTMLPDF } from "@/utils/characterPdfGenerator";
 
 type Props = {
   character: {
@@ -180,6 +181,55 @@ export default function CharacterReview({ character, prevStep }: Props) {
     });
   };
 
+  const handleDownloadHtmlPdf = () => {
+    if (!character.name) {
+      toast({
+        title: "Ошибка",
+        description: "Персонаж должен иметь имя",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const charForPdf: CharacterSheet = {
+      name: character.name,
+      race: character.race,
+      class: character.class,
+      subclass: character.subclass,
+      level: 1,
+      background: character.background,
+      alignment: character.alignment,
+      abilities: {
+        strength: character.stats.strength,
+        dexterity: character.stats.dexterity,
+        constitution: character.stats.constitution,
+        intelligence: character.stats.intelligence,
+        wisdom: character.stats.wisdom,
+        charisma: character.stats.charisma
+      },
+      skills: [],
+      languages: character.languages || [],
+      equipment: character.equipment || [],
+      spells: character.spells || [],
+      proficiencies: character.proficiencies || [],
+      features: [],
+      personalityTraits: '',
+      ideals: '',
+      bonds: '',
+      flaws: '',
+      appearance: '',
+      backstory: character.background || ''
+    };
+    
+    // Скачиваем HTML PDF
+    downloadCharacterHTMLPDF(charForPdf);
+    
+    toast({
+      title: "PDF создан",
+      description: "HTML лист персонажа успешно скачан!"
+    });
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Проверка персонажа</h1>
@@ -298,7 +348,15 @@ export default function CharacterReview({ character, prevStep }: Props) {
           className="flex items-center gap-2"
         >
           <FileText className="h-4 w-4" />
-          Скачать PDF
+          Скачать PDF (jsPDF)
+        </Button>
+        <Button
+          onClick={handleDownloadHtmlPdf}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <FileArrowDown className="h-4 w-4" />
+          Скачать PDF (HTML)
         </Button>
         <Button
           onClick={handleFinish}

@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { Button } from "@/components/ui/button";
-import { Dices } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { AbilityScoreMethodSelector, AbilityRollMethod } from "./AbilityScoreMethodSelector";
+import AbilityRollingPanel from "./AbilityRollingPanel";
+import PointBuyPanel from "./PointBuyPanel";
+import StandardArrayPanel from "./StandardArrayPanel";
+import ManualInputPanel from "./ManualInputPanel";
 
 interface CharacterAbilityScoresProps {
   character: any;
   updateCharacter: (updates: any) => void;
   nextStep: () => void;
   prevStep: () => void;
-  abilitiesMethod: "pointbuy" | "standard" | "roll";
-  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll") => void;
+  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
+  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
   diceResults: number[][];
   getModifier: (score: number) => string;
   rollAllAbilities: () => void;
@@ -53,10 +55,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     wisdom: null,
     charisma: null,
   });
-  
-  // Получаем текущую тему для динамического стилизования
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
   
   // Константы для расчета Point Buy
   const POINT_COSTS: {[key: number]: number} = {
@@ -119,6 +117,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     return POINT_COSTS[value] - POINT_COSTS[value - 1] || 0;
   };
 
+  // Обработчик для ручного ввода
+  const updateStat = (stat: keyof typeof stats, value: number) => {
+    setStats({ ...stats, [stat]: value });
+  };
+
   // Обработчики для метода бросков
   const assignDiceToStat = (stat: keyof typeof stats, diceIndex: number) => {
     // Проверяем, что эта кость еще не назначена
@@ -142,7 +145,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     if (rollSingleAbility) {
       const result = rollSingleAbility(0); // Используем индекс 0, т.к. бросаем одну характеристику
       setStats({ ...stats, [stat]: result.total });
-      console.log(`Бросок для ${getStatName(stat)}: ${result.rolls.join(', ')} = ${result.total}`);
+      console.log(`Бросок для ${stat}: ${result.rolls.join(', ')} = ${result.total}`);
     }
   };
 
@@ -151,134 +154,67 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     nextStep();
   };
 
+  // Проверяем, можно ли перейти к следующему шагу
+  const canProceed = () => {
+    if (abilitiesMethod === "standard") return true;
+    if (abilitiesMethod === "pointbuy") return pointsLeft >= 0;
+    if (abilitiesMethod === "roll") return Object.values(stats).every(val => val >= 3);
+    if (abilitiesMethod === "manual") return Object.values(stats).every(val => val >= 1 && val <= 30);
+    return false;
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-foreground">Распределение характеристик</h2>
       
-      {abilitiesMethod === "pointbuy" && (
-        <div className="mb-4">
-          <p className="mb-2 text-foreground">
-            Осталось очков: <span className="font-bold">{pointsLeft}</span>
-          </p>
-          <p className="text-sm text-muted-foreground mb-4">
-            Распределите {abilityScorePoints} очков между характеристиками. Значение от 8 до 15.
-          </p>
-        </div>
-      )}
+      <AbilityScoreMethodSelector 
+        selectedMethod={abilitiesMethod}
+        onChange={setAbilitiesMethod}
+      />
       
-      {abilitiesMethod === "roll" && (
-        <div className="mb-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-            {diceResults.map((roll, index) => {
-              const sortedRolls = [...roll].sort((a, b) => b - a);
-              const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
-              const isAssigned = Object.values(assignedDice).includes(index);
-              
-              return (
-                <div 
-                  key={index}
-                  className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-card'}`}
-                >
-                  <div className="text-sm text-foreground">Бросок {index + 1}</div>
-                  <div className="font-bold text-lg text-foreground">{total}</div>
-                  <div className="text-xs" style={{ color: currentTheme.accent }}>
-                    {sortedRolls.slice(0, 3).join(' + ')} {roll.length > 3 && <span className="line-through">+ {sortedRolls[3]}</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          <Button 
-            onClick={rollAllAbilities}
-            className="w-full mb-4"
-            variant="outline"
-          >
-            <Dices className="mr-2 h-4 w-4" />
-            Перебросить все кубики
-          </Button>
-          
-          <p className="text-sm text-muted-foreground mb-2">
-            Выберите результат броска для каждой характеристики, кликнув по характеристике, а затем по значению броска.
-          </p>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {Object.keys(stats).map((key) => {
-          const stat = key as keyof typeof stats;
-          const value = stats[stat];
-          const modifier = getModifier(value);
-          
-          return (
-            <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
-              <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
-              <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
-              
-              {abilitiesMethod === "pointbuy" && (
-                <div className="flex justify-center gap-2">
-                  <Button
-                    onClick={() => decrementStat(stat)}
-                    disabled={value <= 8}
-                    size="sm"
-                  >
-                    -
-                  </Button>
-                  <Button
-                    onClick={() => incrementStat(stat)}
-                    disabled={value >= 15 || pointsLeft < getPointCost(value + 1)}
-                    size="sm"
-                  >
-                    +
-                  </Button>
-                </div>
-              )}
-              
-              {abilitiesMethod === "roll" && (
-                <div className="grid grid-cols-2 gap-2">
-                  {diceResults.map((roll, index) => {
-                    const sortedRolls = [...roll].sort((a, b) => b - a);
-                    const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
-                    const isAssigned = Object.values(assignedDice).includes(index);
-                    const isAssignedToThisStat = assignedDice[stat] === index;
-                    
-                    return (
-                      <Button
-                        key={index}
-                        size="sm"
-                        variant={isAssignedToThisStat ? "default" : "outline"}
-                        disabled={isAssigned && !isAssignedToThisStat}
-                        onClick={() => assignDiceToStat(stat, index)}
-                      >
-                        {total}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {abilitiesMethod === "roll" && rollSingleAbility && (
-                <Button
-                  onClick={() => handleRollAbility(stat)}
-                  size="sm"
-                  className="mt-2 w-full"
-                >
-                  <Dices className="mr-1 h-4 w-4" />
-                  Отдельный бросок
-                </Button>
-              )}
-            </div>
-          );
-        })}
+      <div className="my-6">
+        {abilitiesMethod === "pointbuy" && (
+          <PointBuyPanel 
+            stats={stats}
+            pointsLeft={pointsLeft}
+            incrementStat={incrementStat}
+            decrementStat={decrementStat}
+            getModifier={getModifier}
+            getPointCost={getPointCost}
+            abilityScorePoints={abilityScorePoints}
+          />
+        )}
+        
+        {abilitiesMethod === "standard" && (
+          <StandardArrayPanel 
+            stats={stats}
+            getModifier={getModifier}
+          />
+        )}
+        
+        {abilitiesMethod === "roll" && (
+          <AbilityRollingPanel 
+            diceResults={diceResults}
+            assignedDice={assignedDice}
+            onRollAllAbilities={rollAllAbilities}
+            onAssignDiceToStat={assignDiceToStat}
+            onRollSingleAbility={handleRollAbility}
+            stats={stats}
+            getModifier={getModifier}
+          />
+        )}
+        
+        {abilitiesMethod === "manual" && (
+          <ManualInputPanel 
+            stats={stats}
+            updateStat={updateStat}
+            getModifier={getModifier}
+          />
+        )}
       </div>
 
       <NavigationButtons
-        allowNext={
-          abilitiesMethod === "standard" ||
-          (abilitiesMethod === "pointbuy" && pointsLeft >= 0) ||
-          (abilitiesMethod === "roll" && Object.values(stats).every(val => val >= 3))
-        }
+        allowNext={canProceed()}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}
@@ -286,18 +222,5 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     </div>
   );
 };
-
-// Вспомогательные функции
-function getStatName(stat: string): string {
-  const names: {[key: string]: string} = {
-    'strength': 'Сила',
-    'dexterity': 'Ловкость',
-    'constitution': 'Телосложение',
-    'intelligence': 'Интеллект',
-    'wisdom': 'Мудрость',
-    'charisma': 'Харизма'
-  };
-  return names[stat] || stat;
-}
 
 export default CharacterAbilityScores;

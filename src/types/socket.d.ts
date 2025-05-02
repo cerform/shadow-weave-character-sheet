@@ -92,10 +92,36 @@ export interface BattleUpdate {
   turn: number;
 }
 
-// Новый интерфейс для видимой области на карте
+// Интерфейс для видимой области на карте
 export interface VisibleArea {
   x: number;
   y: number;
   radius: number;
   tokenId: number;
+}
+
+// Интерфейс для данных сессии
+export interface SessionData {
+  id: string;
+  name: string;
+  dmId: string;
+  players: UserData[];
+  status: 'active' | 'inactive' | 'paused';
+  createdAt: number;
+}
+
+// Интерфейс для токенов на карте
+export interface Token {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  img: string;
+  type: 'character' | 'monster' | 'npc';
+  size: number; // размер токена
+  ownerId: string;
+  health?: {
+    current: number;
+    max: number;
+  };
+  visible: boolean;
 }
