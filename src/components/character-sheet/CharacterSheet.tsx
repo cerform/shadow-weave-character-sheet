@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
-import { Character } from '@/types/character';
+import { Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Pdf } from "lucide-react";
+import { FileText } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { useTheme } from '@/hooks/use-theme';
@@ -55,11 +56,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
       head: [['Attribute', 'Value']],
       body: [
         ['Name', character.name],
-        ['Class', character.class],
-        ['Race', character.race],
-        ['Level', character.level.toString()],
-        ['Experience', character.experience.toString()],
-        ['Alignment', character.alignment],
+        ['Class', character.className || ''],
+        ['Race', character.race || ''],
+        ['Level', character.level?.toString() || '1'],
+        ['Experience', character.currentHp?.toString() || '0'],
+        ['Alignment', character.alignment || ''],
       ],
     });
 
@@ -85,7 +86,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
       return;
     }
     
-    const joined = joinSession(sessionCode, { name: character.name, character: character });
+    const joined = joinSession(sessionCode, { name: character.name, character });
     
     if (joined) {
       toast({
@@ -130,7 +131,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
             </div>
             <div>
               <Label>Класс</Label>
-              <Input type="text" value={character?.class || ''} readOnly />
+              <Input type="text" value={character?.className || ''} readOnly />
             </div>
             <div>
               <Label>Раса</Label>
@@ -154,7 +155,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
         <div className="flex justify-end mt-4">
           <Button onClick={handleCharacterSave} className="mr-2">Сохранить</Button>
           <Button variant="outline" onClick={handleExportToPdf}>
-            <Pdf className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
           <Button onClick={() => setShowCombatDialog(true)} className="ml-2">В бой!</Button>
@@ -231,14 +232,14 @@ const CharacterHeader: React.FC<CharacterHeaderProps> = ({ character, onCharacte
           {character ? character.name : 'Новый персонаж'}
         </CardTitle>
         <CardDescription>
-          {character ? `Класс: ${character.class}, Раса: ${character.race}` : 'Создайте своего персонажа'}
+          {character ? `Класс: ${character.className || ''}, Раса: ${character.race || ''}` : 'Создайте своего персонажа'}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex justify-between items-center">
         <div>
           <Button onClick={onCharacterSave} className="mr-2">Сохранить</Button>
           <Button variant="outline" onClick={onCharacterExport}>
-            <Pdf className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
         </div>
