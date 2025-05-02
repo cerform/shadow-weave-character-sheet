@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -120,7 +119,7 @@ const SpellBookViewer: React.FC = () => {
     allSpells
   ]);
 
-  // Функция для группировки заклинаний по уровням
+  // Функция для группировки заклинаний по уро��ням
   const spellsByLevel = useMemo(() => {
     const grouped: { [key: string]: CharacterSpell[] } = {};
     
@@ -406,8 +405,11 @@ const SpellCard: React.FC<{ spell: CharacterSpell }> = ({ spell }) => {
     if (spell.material) components.push('М');
     
     let result = components.join(', ');
-    if (spell.materialComponents) {
-      result += ` (${spell.materialComponents})`;
+    
+    // Check if components string contains material component indicator without checking materialComponents
+    if (spell.material) {
+      // We don't have materialComponents property, so we just indicate there's a material component
+      result += ' (материальные компоненты)';
     }
     
     return result;
@@ -533,4 +535,3 @@ const SpellLinkCard: React.FC<{ spell: CharacterSpell }> = ({ spell }) => {
 };
 
 export default SpellBookViewer;
-
