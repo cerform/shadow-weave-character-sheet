@@ -1,11 +1,20 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Card } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent,
+  CardHeader,
+  CardTitle 
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Shield, Heart, SkullIcon, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Check, X, Shield, Heart, SkullIcon, Eye, EyeOff, ZoomIn, ZoomOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import DiceRoller3DFixed from "../character-sheet/DiceRoller3DFixed";

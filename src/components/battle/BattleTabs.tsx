@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,7 +10,7 @@ import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 
 interface BattleTabsProps {
   tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((token: Token) => void);
+  setTokens: (token: Token) => void;
   initiative: Initiative[];
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
@@ -153,7 +154,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
                     visible: true,
                     size: monster.size === 'Large' ? 1.5 : monster.size === 'Huge' ? 2 : monster.size === 'Gargantuan' ? 2.5 : 1
                   };
-                  setTokens(prev => [...prev, newToken]);
+                  setTokens(newToken);
                 }
               }} />
             </TabsContent>

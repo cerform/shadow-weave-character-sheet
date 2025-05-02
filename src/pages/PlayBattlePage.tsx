@@ -15,7 +15,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
 // Импортируем наше хранилище
-import useBattleStore from "@/stores/battleStore";
+import useBattleStore, { Token } from "@/stores/battleStore";
 
 // Тип для предустановленных монстров
 interface PresetMonster {
@@ -472,7 +472,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={(id, updates) => addToken(id as any, updates as any)}
+          setTokens={(newTokens) => setTokens(newTokens)}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -498,7 +498,7 @@ const PlayBattlePage = () => {
             <RightPanel
               selectedTokenId={selectedTokenId}
               tokens={tokens}
-              setTokens={(id, updates) => updateToken(id as any, updates as any)}
+              setTokens={(newTokens) => setTokens(newTokens)}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
               revealRadius={mapSettings.revealRadius}
@@ -513,7 +513,7 @@ const PlayBattlePage = () => {
           ) : (
             <BattleTabs
               tokens={tokens}
-              setTokens={token => addToken(token as any)}
+              setTokens={(newToken) => addToken(newToken)}
               initiative={initiative}
               selectedTokenId={selectedTokenId}
               onSelectToken={handleSelectToken}

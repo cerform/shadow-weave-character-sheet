@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from 'lucide-react';
+import { Slider } from "@/components/ui/slider";
+import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Token, Initiative } from '@/stores/battleStore'; // Import from store
+import { VisibleArea } from '@/types/battle';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -292,7 +294,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
       ctx.fill();
     });
     
-    // Возвращаем обратно режим отрисовки
+    // Возвращаем обратн�� режим отрисовки
     ctx.globalCompositeOperation = "source-over" as GlobalCompositeOperation;
   };
 
