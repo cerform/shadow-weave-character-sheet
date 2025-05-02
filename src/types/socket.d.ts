@@ -1,4 +1,3 @@
-
 // Интерфейс для сообщений от сервера
 export interface ServerToClientEvents {
   message: (data: ChatMessage) => void;

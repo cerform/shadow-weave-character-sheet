@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { LeftPanel } from "@/components/battle/LeftPanel";
 import BattleMap from "@/components/battle/BattleMap";
@@ -32,6 +31,7 @@ export interface Token {
   resources: { [key: string]: number };
   spellSlots?: { [key: string]: { used: number; max: number } };
   visible: boolean; // видимость для игроков
+  size: number; // Размер токена
 }
 
 export interface Initiative {
@@ -214,7 +214,7 @@ const PlayBattlePage = () => {
     setSelectedTokenId(id);
   };
 
-  // Новые функции из BattleScenePage
+  // Новые функции ��з BattleScenePage
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -240,7 +240,8 @@ const PlayBattlePage = () => {
       initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},
-      visible: true
+      visible: true,
+      size: 1 // Default token size
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -283,7 +284,8 @@ const PlayBattlePage = () => {
       initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},
-      visible: true
+      visible: true,
+      size: type === "boss" ? 1.5 : 1 // Default size, larger for bosses
     };
     
     setTokens((prev) => [...prev, newToken]);
@@ -348,7 +350,8 @@ const PlayBattlePage = () => {
           initiative: Math.floor(Math.random() * 5),
           conditions: [],
           resources: {},
-          visible: true
+          visible: true,
+          size: tokenType === "boss" ? 1.5 : 1 // Default size, larger for bosses
         };
         
         setTokens((prev) => [...prev, newToken]);
