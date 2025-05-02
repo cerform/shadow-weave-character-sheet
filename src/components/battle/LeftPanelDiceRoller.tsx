@@ -1,14 +1,13 @@
 
 import React, { useState } from 'react';
-import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Dices } from 'lucide-react';
+import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 
 interface LeftPanelDiceRollerProps {
   playerName?: string;
@@ -20,11 +19,17 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const [showDiceRoller, setShowDiceRoller] = useState<boolean>(false);
   
   // Dummy function for onClose that's required by DiceRoller3DFixed
   const handleClose = () => {
-    // This is just a placeholder since we're not actually closing anything in this context
-    console.log("DiceRoller close button clicked (no action needed)");
+    // Закрываем окно броска кубиков
+    setShowDiceRoller(false);
+  };
+
+  // Функция для броска кубика
+  const handleRollDice = () => {
+    setShowDiceRoller(true);
   };
   
   return (
@@ -100,20 +105,10 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
             </div>
           </div>
           
-          <div className="h-[200px] w-full">
-            <DiceRoller3DFixed 
-              initialDice={diceType}
-              modifier={modifier} 
-              themeColor={currentTheme.accent}
-              playerName={playerName}
-              diceCount={diceCount}
-              onClose={handleClose} // Add the required onClose prop
-            />
-          </div>
-          
           <Button 
             className="w-full mt-2" 
             variant="default"
+            onClick={handleRollDice}
             style={{
               backgroundColor: currentTheme.accent,
               color: currentTheme.textColor
@@ -122,6 +117,18 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
             <Dices className="mr-2" size={16} />
             Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
           </Button>
+          
+          {/* Отображаем кубик только когда нужно его бросить */}
+          {showDiceRoller && (
+            <DiceRoller3DFixed 
+              initialDice={diceType}
+              modifier={modifier} 
+              themeColor={currentTheme.accent}
+              playerName={playerName}
+              diceCount={diceCount}
+              onClose={handleClose}
+            />
+          )}
         </div>
       </ScrollArea>
     </Card>

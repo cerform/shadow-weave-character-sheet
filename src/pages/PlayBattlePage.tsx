@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
@@ -5,17 +6,18 @@ import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import BattleTabs from "@/components/battle/BattleTabs";
-import MapControls from "@/components/battle/MapControls";
+import MapToolbar from "@/components/battle/MapToolbar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { X, ZoomIn, ZoomOut, Scale, Eye, EyeOff } from "lucide-react";
+import { X, Dices } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
-// Импортируем наше хранилище
-import useBattleStore, { Token } from "@/stores/battleStore";
+// Импортируем наше хранилище и утилиты
+import useBattleStore from "@/stores/battleStore";
+import { createToken } from "@/utils/battle";
 
 // Тип для предустановленных монстров
 interface PresetMonster {
@@ -102,23 +104,16 @@ const PlayBattlePage = () => {
     setShowAvatarSelector(true);
   };
 
+  // Обновленная функция добавления предустановленного монстра с использованием createToken
   const handleAddPresetMonster = (monster: PresetMonster, type: "monster" | "boss") => {
-    const newToken = {
-      id: Date.now(),
+    const newToken = createToken({
       name: monster.name,
       type,
       img: defaultTokenImages.placeholder[Math.floor(Math.random() * defaultTokenImages.placeholder.length)],
-      x: 100 + Math.random() * 300,
-      y: 100 + Math.random() * 300,
       hp: monster.hp,
-      maxHp: monster.hp,
       ac: monster.ac,
-      initiative: Math.floor(Math.random() * 5),
-      conditions: [],
-      resources: {},
-      visible: true,
       size: type === "boss" ? 1.5 : 1
-    };
+    });
     
     addToken(newToken);
     
@@ -132,25 +127,15 @@ const PlayBattlePage = () => {
     revealCell(row, col);
   };
 
+  // Обновленная функция выбора токена с использованием createToken
   const handleTokenSelect = (img: string) => {
     if (!tokenName) return;
 
-    const newToken = {
-      id: Date.now(),
+    const newToken = createToken({
       name: tokenName,
       type: tokenType,
-      img,
-      x: 100 + Math.random() * 300,
-      y: 100 + Math.random() * 300,
-      hp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
-      maxHp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
-      ac: tokenType === "boss" ? 17 : tokenType === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5),
-      conditions: [],
-      resources: {},
-      visible: true,
-      size: 1
-    };
+      img
+    });
     
     addToken(newToken);
     
@@ -185,28 +170,17 @@ const PlayBattlePage = () => {
     });
   };
 
-  // Обработчик загрузки пользовательского токена
+  // Обработчик загрузки пользовательского токена с использованием createToken
   const handleCustomTokenUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && tokenName.trim()) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const newToken = {
-          id: Date.now(),
+        const newToken = createToken({
           name: tokenName,
           type: tokenType,
-          img: reader.result as string,
-          x: 100 + Math.random() * 300,
-          y: 100 + Math.random() * 300,
-          hp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
-          maxHp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
-          ac: tokenType === "boss" ? 17 : tokenType === "monster" ? 13 : 15,
-          initiative: Math.floor(Math.random() * 5),
-          conditions: [],
-          resources: {},
-          visible: true,
-          size: tokenType === "boss" ? 1.5 : 1
-        };
+          img: reader.result as string
+        });
         
         addToken(newToken);
         
@@ -292,161 +266,27 @@ const PlayBattlePage = () => {
     });
   };
 
-  // Создаем панель управления картой для правой части
+  // Создаем панель управления картой используя новый компонент MapToolbar
   const mapControlPanel = (
-    <div className="space-y-4">
-      {/* Переключение режима DM/Player */}
-      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md mb-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-medium">Режим доступа</h3>
-          <Button 
-            variant={isDM ? "default" : "outline"} 
-            size="sm" 
-            onClick={toggleDMMode}
-            style={{ background: isDM ? currentTheme.accent : undefined }}
-          >
-            {isDM ? "DM" : "Игрок"}
-          </Button>
-        </div>
-      </div>
-      
-      <MapControls
-        fogOfWar={mapSettings.fogOfWar}
-        setFogOfWar={setFogOfWar}
-        revealRadius={mapSettings.revealRadius}
-        setRevealRadius={setRevealRadius}
-        gridVisible={mapSettings.gridVisible}
-        setGridVisible={setGridVisible}
-        gridOpacity={mapSettings.gridOpacity}
-        setGridOpacity={setGridOpacity}
-        onResetFogOfWar={resetFogOfWar}
-        isDM={isDM}
-      />
-      
-      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
-        <h3 className="font-medium mb-3">Управление картой</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <div className="mb-1 text-sm font-medium">Масштаб</div>
-            <div className="flex items-center gap-2">
-              <Button size="icon" variant="outline" onClick={handleZoomOut} className="h-8 w-8" disabled={!isDM}>
-                <ZoomOut size={16} />
-              </Button>
-              <div className="flex-1 text-center text-sm">
-                {Math.round(mapSettings.zoom * 100)}%
-              </div>
-              <Button size="icon" variant="outline" onClick={handleZoomIn} className="h-8 w-8" disabled={!isDM}>
-                <ZoomIn size={16} />
-              </Button>
-              <Button size="sm" variant="secondary" onClick={handleResetZoom} className="h-8" disabled={!isDM}>
-                <Scale size={14} className="mr-1" /> Сброс
-              </Button>
-            </div>
-          </div>
-          
-          {isDM && (
-            <div>
-              <div className="mb-1 text-sm font-medium">Перемещение карты</div>
-              <div className="grid grid-cols-3 gap-1 place-items-center">
-                <div></div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('up')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 15l-6-6-6 6"/>
-                  </svg>
-                </Button>
-                <div></div>
-                
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('left')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </Button>
-                <div className="text-xs text-muted-foreground">Двигать</div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('right')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 18l6-6-6-6"/>
-                  </svg>
-                </Button>
-                
-                <div></div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('down')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
-                </Button>
-                <div></div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {isDM && (
-        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
-          <h3 className="font-medium mb-3">Освещение</h3>
-          
-          <div className="space-y-3">
-            <div>
-              <div className="mb-1 text-sm font-medium">Добавить источник света</div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('torch')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2c.46 0 .9.18 1.23.5.32.34.5.78.5 1.24v1.52l4.09 4.1c.34.33.51.77.51 1.21V13c0 1.1-.9 2-2 2h-8.63c-.97 0-1.84-.76-1.97-1.71a2 2 0 0 1 .51-1.98l4.09-4.1V3.74c0-.46.18-.9.5-1.23A1.74 1.74 0 0 1 12 2Z"/>
-                    <path d="M8 15v3c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-3"/>
-                    <path d="M13 22H11"/>
-                  </svg>
-                  <span className="text-xs">Факел</span>
-                  <span className="text-[10px] text-muted-foreground">радиус 6</span>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('lantern')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21h6"/>
-                    <path d="M12 21v-6"/>
-                    <path d="M15 9.25a3 3 0 1 0-6 0v1.5L6 12c0 .94.33 1.85.93 2.57A5.02 5.02 0 0 0 12 17c2.22 0 4.17-1.44 4.83-3.55l-1.83-1.7v-2.5Z"/>
-                  </svg>
-                  <span className="text-xs">Фонарь</span>
-                  <span className="text-[10px] text-muted-foreground">радиус 10</span>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('daylight')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="4"/>
-                    <path d="M12 2v2"/>
-                    <path d="M12 20v2"/>
-                    <path d="M5 5l1.4 1.4"/>
-                    <path d="M17.6 17.6 19 19"/>
-                    <path d="M2 12h2"/>
-                    <path d="M20 12h2"/>
-                    <path d="M5 19l1.4-1.4"/>
-                    <path d="M17.6 6.4 19 5"/>
-                  </svg>
-                  <span className="text-xs">Дневной</span>
-                  <span className="text-[10px] text-muted-foreground">по всей карте</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <MapToolbar
+      zoom={mapSettings.zoom}
+      onZoomIn={handleZoomIn}
+      onZoomOut={handleZoomOut}
+      onResetZoom={handleResetZoom}
+      onMoveMap={handleMoveMap}
+      gridVisible={mapSettings.gridVisible}
+      gridOpacity={mapSettings.gridOpacity}
+      onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
+      onSetGridOpacity={setGridOpacity}
+      fogOfWar={mapSettings.fogOfWar}
+      revealRadius={mapSettings.revealRadius}
+      onToggleFog={() => setFogOfWar(!mapSettings.fogOfWar)}
+      onResetFog={resetFogOfWar}
+      onSetRevealRadius={setRevealRadius}
+      isDM={isDM}
+      onToggleDMMode={toggleDMMode}
+      variant="full"
+    />
   );
 
   return (
@@ -472,7 +312,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={addToken} // This is correct - passing the addToken function
+          onAddToken={addToken} // Переименовано для ясности
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -508,7 +348,7 @@ const PlayBattlePage = () => {
               battleActive={battleState.isActive}
               fogOfWar={mapSettings.fogOfWar}
               onToggleFogOfWar={() => setFogOfWar(!mapSettings.fogOfWar)}
-              onRevealAllFog={() => {}} // Добавим пустую функцию для примера
+              onRevealAllFog={null} // Изменено с пустой функции на null для ясности
               onResetFog={resetFogOfWar}
               gridVisible={mapSettings.gridVisible}
               onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}

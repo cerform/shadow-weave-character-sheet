@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -10,8 +9,8 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Modified: Allow both ways of handling tokens
-  setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
+  // Modified: Rename to onAddToken for clarity
+  onAddToken: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -31,7 +30,7 @@ interface EnhancedBattleMapProps {
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   tokens,
-  setTokens,
+  onAddToken,
   background,
   setBackground,
   onUpdateTokenPosition,
@@ -196,7 +195,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // Делаем карту больше контейнера, чтобы обеспечить скроллинг
+        // Делаем карту б��льше контейнера, чтобы обеспечить скроллинг
         const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
         const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
         
@@ -240,15 +239,15 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return () => clearTimeout(timer);
   }, [zoom]);
 
-  // Helper function to handle the token addition based on the type of setTokens
+  // Helper function to handle the token addition based on the type of onAddToken
   const handleAddToken = (token: Token) => {
-    if (typeof setTokens === 'function') {
-      if ('length' in setTokens) {
+    if (typeof onAddToken === 'function') {
+      if ('length' in onAddToken) {
         // It's a React.Dispatch<SetStateAction<Token[]>> function
-        (setTokens as React.Dispatch<React.SetStateAction<Token[]>>)(prev => [...prev, token]);
+        (onAddToken as React.Dispatch<React.SetStateAction<Token[]>>)(prev => [...prev, token]);
       } else {
         // It's an addToken function that takes a single token
-        (setTokens as (token: Token) => void)(token);
+        (onAddToken as (token: Token) => void)(token);
       }
     }
   };
