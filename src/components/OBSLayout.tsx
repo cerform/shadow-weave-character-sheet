@@ -1,8 +1,12 @@
 
-// Путь: shadow/src/components/OBSLayout.tsx
+// Путь: src/components/OBSLayout.tsx
 
 import React, { PropsWithChildren } from "react";
 
-export default function OBSLayout({ children }: PropsWithChildren) {
+interface OBSLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function OBSLayout({ children }: OBSLayoutProps) {
   return <div className="obs-grid">{children}</div>;
 }

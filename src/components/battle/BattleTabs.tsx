@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DicePanel } from "@/components/character-sheet/DicePanel";
-import { Dice1, Users, Map, Cog, MessageSquare } from "lucide-react";
+import { Dice1, Users, Map, Cog, MessageSquare, Book, Settings } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
+import { BestiaryPanel } from "./BestiaryPanel";
 
 interface BattleTabsProps {
   tokens: Token[];
@@ -17,6 +18,10 @@ interface BattleTabsProps {
   updateTokenHP?: (id: number, change: number) => void;
   removeToken?: (id: number) => void;
   controlsPanel?: React.ReactNode;
+  fogOfWar?: boolean;
+  setFogOfWar?: (value: boolean) => void;
+  gridSize?: { rows: number; cols: number };
+  setGridSize?: (size: { rows: number; cols: number }) => void;
 }
 
 const BattleTabs: React.FC<BattleTabsProps> = ({
@@ -27,11 +32,26 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   onSelectToken,
   updateTokenHP,
   removeToken,
-  controlsPanel
+  controlsPanel,
+  fogOfWar,
+  setFogOfWar,
+  gridSize,
+  setGridSize
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>("tokens");
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
+  
+  // Состояния для размера сетки
+  const [rows, setRows] = useState(gridSize?.rows || 30);
+  const [cols, setCols] = useState(gridSize?.cols || 40);
+  
+  // Обработчик изменения размера сетки
+  const handleGridSizeChange = () => {
+    if (setGridSize) {
+      setGridSize({ rows, cols });
+    }
+  };
   
   return (
     <div className="h-full">
@@ -41,7 +61,7 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
         value={selectedTab} 
         onValueChange={setSelectedTab}
       >
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="tokens" className="flex flex-col items-center py-1">
             <Users size={16} />
             <span className="text-xs mt-1">Токены</span>
@@ -50,13 +70,17 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             <Dice1 size={16} />
             <span className="text-xs mt-1">Инициатива</span>
           </TabsTrigger>
+          <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
+            <Book size={16} />
+            <span className="text-xs mt-1">Бестиарий</span>
+          </TabsTrigger>
           <TabsTrigger value="dice" className="flex flex-col items-center py-1">
             <Dice1 size={16} />
             <span className="text-xs mt-1">Кубики</span>
           </TabsTrigger>
-          <TabsTrigger value="chat" className="flex flex-col items-center py-1">
-            <MessageSquare size={16} />
-            <span className="text-xs mt-1">Чат</span>
+          <TabsTrigger value="controls" className="flex flex-col items-center py-1">
+            <Settings size={16} />
+            <span className="text-xs mt-1">Настройки</span>
           </TabsTrigger>
         </TabsList>
         
@@ -163,12 +187,92 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             )}
           </TabsContent>
           
+          <TabsContent value="bestiary" className="m-0 p-3 h-full">
+            <BestiaryPanel addToMap={(monster) => {
+              if (setTokens) {
+                const newToken = {
+                  id: Date.now(),
+                  name: monster.name,
+                  type: monster.challenge >= 5 ? "boss" : "monster" as "player" | "monster" | "boss" | "npc",
+                  img: monster.img || `/assets/tokens/${monster.type.toLowerCase()}.png`,
+                  x: 100 + Math.random() * 300,
+                  y: 100 + Math.random() * 300,
+                  hp: monster.hp,
+                  maxHp: monster.hp,
+                  ac: monster.ac,
+                  initiative: monster.dexMod || 0,
+                  conditions: [],
+                  resources: {},
+                  visible: true,
+                  size: monster.size === 'Large' ? 1.5 : monster.size === 'Huge' ? 2 : monster.size === 'Gargantuan' ? 2.5 : 1
+                };
+                setTokens(prev => [...prev, newToken]);
+              }
+            }} />
+          </TabsContent>
+          
           <TabsContent value="dice" className="m-0 p-3 h-full">
             <DicePanel />
           </TabsContent>
           
           <TabsContent value="controls" className="m-0 p-3 h-full">
             {controlsPanel}
+            
+            {/* Контроль тумана войны */}
+            {setFogOfWar && (
+              <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md mb-3">
+                <h3 className="font-medium mb-2">Туман войны</h3>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="fog-toggle"
+                    checked={fogOfWar}
+                    onChange={() => setFogOfWar(!fogOfWar)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="fog-toggle">Включить</label>
+                </div>
+              </div>
+            )}
+            
+            {/* Контроль размера сетки */}
+            {setGridSize && (
+              <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
+                <h3 className="font-medium mb-2">Размер сетки</h3>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label htmlFor="grid-rows" className="block text-sm mb-1">Строки</label>
+                    <input
+                      id="grid-rows"
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={rows}
+                      onChange={(e) => setRows(parseInt(e.target.value) || 30)}
+                      className="w-full p-1 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="grid-cols" className="block text-sm mb-1">Столбцы</label>
+                    <input
+                      id="grid-cols"
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={cols}
+                      onChange={(e) => setCols(parseInt(e.target.value) || 40)}
+                      className="w-full p-1 border rounded"
+                    />
+                  </div>
+                </div>
+                <button 
+                  onClick={handleGridSizeChange}
+                  className="w-full bg-primary text-primary-foreground py-1 px-3 rounded"
+                >
+                  Применить
+                </button>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="chat" className="m-0 p-3 h-full">
