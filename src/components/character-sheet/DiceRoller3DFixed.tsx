@@ -11,6 +11,7 @@ interface DiceRoller3DFixedProps {
   themeColor?: string;
   modifier?: number;
   diceCount?: number;
+  playerName?: string; // Added playerName prop
 }
 
 export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
@@ -19,7 +20,8 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   onRollComplete,
   themeColor,
   modifier = 0,
-  diceCount = 1
+  diceCount = 1,
+  playerName // Added to props destructuring
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
@@ -77,6 +79,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
           themeColor={themeColor}
           modifier={modifier}
           diceCount={diceCount}
+          playerName={playerName} // Pass the playerName to DiceRoller3D
         />
       </div>
     </div>

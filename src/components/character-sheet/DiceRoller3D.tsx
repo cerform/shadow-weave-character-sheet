@@ -12,7 +12,8 @@ export const DiceRoller3D = ({
   onRollComplete,
   fixedPosition = false,
   themeColor = '#ffffff',
-  diceCount = 1
+  diceCount = 1,
+  playerName // Added playerName prop
 }: {
   initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   hideControls?: boolean,
@@ -20,7 +21,8 @@ export const DiceRoller3D = ({
   onRollComplete?: (result: number) => void,
   fixedPosition?: boolean,
   themeColor?: string,
-  diceCount?: number
+  diceCount?: number,
+  playerName?: string // Added type for playerName
 }) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>(
     initialDice === 'd100' ? 'd10' : initialDice as any
