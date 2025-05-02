@@ -91,6 +91,11 @@ const PlayBattlePage = () => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
+  // Состояния для сетки
+  const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+  const [gridScale, setGridScale] = useState(1);
+  const [showPlayerView, setShowPlayerView] = useState(true);
+
   // Обработчики UI событий, которые будут использовать функции из хранилища
   const handleSelectToken = (id: number | null) => {
     selectToken(id);
@@ -177,6 +182,42 @@ const PlayBattlePage = () => {
 
   const handleResetZoom = () => {
     setZoom(1);
+  };
+
+  // Функции управления сеткой
+  const handleGridZoomIn = () => {
+    setGridScale(prev => Math.min(prev + 0.1, 2.5));
+  };
+
+  const handleGridZoomOut = () => {
+    setGridScale(prev => Math.max(prev - 0.1, 0.5));
+  };
+
+  const handleResetGridZoom = () => {
+    setGridScale(1);
+  };
+
+  const handleMoveGrid = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 20;
+    switch(direction) {
+      case 'up':
+        setGridPosition(prev => ({ ...prev, y: prev.y + step }));
+        break;
+      case 'down':
+        setGridPosition(prev => ({ ...prev, y: prev.y - step }));
+        break;
+      case 'left':
+        setGridPosition(prev => ({ ...prev, x: prev.x + step }));
+        break;
+      case 'right':
+        setGridPosition(prev => ({ ...prev, x: prev.x - step }));
+        break;
+    }
+  };
+
+  const handleAlignGridToMap = () => {
+    setGridPosition({ x: 0, y: 0 });
+    setGridScale(mapSettings.zoom);
   };
 
   // Переключение режима DM/Player
@@ -367,6 +408,17 @@ const PlayBattlePage = () => {
             {isDM ? "DM" : "Игрок"}
           </Button>
         </div>
+        
+        {isDM && (
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-sm">Предпросмотр вида игрока</span>
+            <Switch
+              checked={showPlayerView}
+              onCheckedChange={togglePlayerView}
+              aria-label="Предпросмотр вида игрока"
+            />
+          </div>
+        )}
       </div>
       
       <MapControls
@@ -380,70 +432,24 @@ const PlayBattlePage = () => {
         setGridOpacity={setGridOpacity}
         onResetFogOfWar={resetFogOfWar}
         isDM={isDM}
-        // Добавляем новые параметры для освещения
+        // Параметры для освещения
         isDynamicLighting={mapSettings.isDynamicLighting}
         setDynamicLighting={setDynamicLighting}
         onAddLight={handleAddLight}
+        // Параметры для управления картой
+        onMoveMap={handleMoveMap}
+        zoom={mapSettings.zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetZoom={handleResetZoom}
+        // Параметры для управления сеткой
+        onMoveGrid={handleMoveGrid}
+        gridScale={gridScale}
+        onGridZoomIn={handleGridZoomIn}
+        onGridZoomOut={handleGridZoomOut}
+        onResetGridZoom={handleResetGridZoom}
+        onAlignGridToMap={handleAlignGridToMap}
       />
-      
-      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
-        <h3 className="font-medium mb-3">Управление картой</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <div className="mb-1 text-sm font-medium">Масштаб</div>
-            <div className="flex items-center gap-2">
-              <Button size="icon" variant="outline" onClick={handleZoomOut} className="h-8 w-8" disabled={!isDM}>
-                <ZoomOut size={16} />
-              </Button>
-              <div className="flex-1 text-center text-sm">
-                {Math.round(mapSettings.zoom * 100)}%
-              </div>
-              <Button size="icon" variant="outline" onClick={handleZoomIn} className="h-8 w-8" disabled={!isDM}>
-                <ZoomIn size={16} />
-              </Button>
-              <Button size="sm" variant="secondary" onClick={handleResetZoom} className="h-8" disabled={!isDM}>
-                <Scale size={14} className="mr-1" /> Сброс
-              </Button>
-            </div>
-          </div>
-          
-          {isDM && (
-            <div>
-              <div className="mb-1 text-sm font-medium">Перемещение карты</div>
-              <div className="grid grid-cols-3 gap-1 place-items-center">
-                <div></div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('up')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 15l-6-6-6 6"/>
-                  </svg>
-                </Button>
-                <div></div>
-                
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('left')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </Button>
-                <div className="text-xs text-muted-foreground">Двигать</div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('right')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 18l6-6-6-6"/>
-                  </svg>
-                </Button>
-                
-                <div></div>
-                <Button size="icon" variant="outline" onClick={() => handleMoveMap('down')} className="h-8 w-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
-                </Button>
-                <div></div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 
@@ -497,6 +503,7 @@ const PlayBattlePage = () => {
           lightSources={mapSettings.lightSources}
           isDynamicLighting={mapSettings.isDynamicLighting}
           className="w-full h-full"
+          showPlayerView={showPlayerView && isDM}
         />
       </div>
       

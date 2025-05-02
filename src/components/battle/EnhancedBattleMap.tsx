@@ -30,6 +30,7 @@ interface EnhancedBattleMapProps {
   lightSources?: LightSource[];
   isDynamicLighting?: boolean;
   className?: string;
+  showPlayerView?: boolean;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -52,7 +53,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   isDM = true,
   lightSources = [],
   isDynamicLighting = false,
-  className = ""
+  className = "",
+  showPlayerView = false
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const [spacePressed, setSpacePressed] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  
+  // Новые состояния для независимого управления сеткой
+  const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+  const [gridZoom, setGridZoom] = useState(1);
   
   // Отслеживаем размер контейнера
   useEffect(() => {
@@ -206,6 +212,13 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           x: (containerWidth - scaledWidth) / 2,
           y: (containerHeight - scaledHeight) / 2
         });
+        
+        // Синхронизируем начальную позицию сетки с картой
+        setGridPosition({
+          x: (containerWidth - scaledWidth) / 2,
+          y: (containerHeight - scaledHeight) / 2
+        });
+        setGridZoom(zoom);
       }
     };
     img.src = background;
@@ -251,11 +264,67 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       });
     }
   };
+  
+  // Центрирование и выравнивание сетки по карте
+  const alignGridToMap = () => {
+    setGridPosition({ ...mapPosition });
+    setGridZoom(zoom);
+  };
 
   // Центрируем карту при изменении масштаба
   useEffect(() => {
     centerMap();
   }, [zoom]);
+
+  // Функции управления сеткой
+  const handleGridZoomIn = () => {
+    setGridZoom(prev => Math.min(prev + 0.1, 2.5));
+  };
+  
+  const handleGridZoomOut = () => {
+    setGridZoom(prev => Math.max(prev - 0.1, 0.5));
+  };
+  
+  const handleResetGridZoom = () => {
+    setGridZoom(1);
+  };
+  
+  const handleMoveGrid = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 20;
+    switch(direction) {
+      case 'up':
+        setGridPosition(prev => ({ ...prev, y: prev.y + step }));
+        break;
+      case 'down':
+        setGridPosition(prev => ({ ...prev, y: prev.y - step }));
+        break;
+      case 'left':
+        setGridPosition(prev => ({ ...prev, x: prev.x + step }));
+        break;
+      case 'right':
+        setGridPosition(prev => ({ ...prev, x: prev.x - step }));
+        break;
+    }
+  };
+  
+  // Функции управления картой
+  const handleMoveMap = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 20;
+    switch(direction) {
+      case 'up':
+        setMapPosition(prev => ({ ...prev, y: prev.y + step }));
+        break;
+      case 'down':
+        setMapPosition(prev => ({ ...prev, y: prev.y - step }));
+        break;
+      case 'left':
+        setMapPosition(prev => ({ ...prev, x: prev.x + step }));
+        break;
+      case 'right':
+        setMapPosition(prev => ({ ...prev, x: prev.x - step }));
+        break;
+    }
+  };
 
   // Получаем позиции токенов для fog of war и освещения
   const tokenPositions = tokens.map(token => ({
@@ -305,130 +374,177 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       };
 
   return (
-    <div 
-      className={`battle-map-container h-full w-full relative overflow-hidden ${className}`}
-      ref={mapContainerRef}
-      onContextMenu={(e) => e.preventDefault()}
-    >
+    <div className={`flex flex-col ${className}`}>
+      {/* Основная карта */}
       <div 
-        className={`map-content zoomable relative w-full h-full ${spacePressed ? 'grab' : ''}`}
-        ref={mapContentRef}
-        style={{ 
-          transform: `scale(${zoom}) translate(${mapPosition.x / zoom}px, ${mapPosition.y / zoom}px)`,
-          transformOrigin: 'center center',
-          cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default'),
-          ...contentStyle
-        }}
-        onMouseDown={(e) => {
-          // Начало перемещения карты только если нажата средняя кнопка мыши, правая кнопка мыши,
-          // или левая кнопка мыши с зажатой клавишей пробела или Ctrl
-          if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
-            setIsDragging(true);
-            setDragStart({ x: e.clientX, y: e.clientY });
-            e.preventDefault();
-            
-            if (mapContentRef.current) {
-              mapContentRef.current.classList.add('grabbing');
-            }
-            document.body.classList.add('grabbing');
-          }
-        }}
-        onMouseMove={(e) => {
-          if (!isDragging) return;
-          const dx = e.clientX - dragStart.x;
-          const dy = e.clientY - dragStart.y;
-          setMapPosition(prev => ({
-            x: prev.x + dx,
-            y: prev.y + dy
-          }));
-          setDragStart({ x: e.clientX, y: e.clientY });
-          e.preventDefault();
-        }}
-        onMouseUp={() => {
-          if (isDragging) {
-            setIsDragging(false);
-            
-            if (mapContentRef.current) {
-              mapContentRef.current.classList.remove('grabbing');
-            }
-            document.body.classList.remove('grabbing');
-          }
-        }}
-        onMouseLeave={() => {
-          if (isDragging) {
-            setIsDragging(false);
-            
-            if (mapContentRef.current) {
-              mapContentRef.current.classList.remove('grabbing');
-            }
-            document.body.classList.remove('grabbing');
-          }
-        }}
-        onClick={(e) => {
-          // Отменяем снятие выделения если перетаскивали карту
-          if (isDragging) return;
-          
-          // Отменяем снятие выделения если клик был не по основной области карты
-          const target = e.target as HTMLElement;
-          if (target.closest('.token')) return;
-          
-          onSelectToken(null);
-        }}
+        className="battle-map-container h-full w-full relative overflow-hidden"
+        ref={mapContainerRef}
+        onContextMenu={(e) => e.preventDefault()}
       >
-        {/* Фоновая карта */}
-        {background && (
-          <img 
-            src={background}
-            alt="Battle map"
-            className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
-          />
-        )}
-        
-        {/* Сетка - перемещена поверх фоновой карты */}
-        {gridVisible && (
-          <div className="battle-grid-container absolute inset-0 pointer-events-none z-20">
-            <BattleGrid 
-              gridSize={gridSize}
-              visible={true}
-              opacity={gridOpacity}
-              imageSize={imageSize}
-              containerSize={containerSize}
+        <div 
+          className={`map-content zoomable relative w-full h-full ${spacePressed ? 'grab' : ''}`}
+          ref={mapContentRef}
+          style={{ 
+            transform: `scale(${zoom}) translate(${mapPosition.x / zoom}px, ${mapPosition.y / zoom}px)`,
+            transformOrigin: 'center center',
+            cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default'),
+            ...contentStyle
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onClick={handleMapClick}
+        >
+          {/* Фоновая карта */}
+          {background && (
+            <img 
+              src={background}
+              alt="Battle map"
+              className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
             />
-          </div>
-        )}
-        
-        {/* Токены */}
-        {tokens.map(token => (
-          <Token 
-            key={token.id}
-            token={token}
-            isSelected={selectedTokenId === token.id}
-            gridSize={gridSize}
-            imageSize={imageSize}
-            zoom={zoom}
-            onSelect={onSelectToken}
-            onUpdatePosition={onUpdateTokenPosition}
-            isDM={isDM}
-          />
-        ))}
+          )}
           
-        {/* Туман войны */}
-        {fogOfWar && (
-          <div className="fog-of-war-container absolute inset-0 z-30">
-            <FogOfWar
+          {/* Токены */}
+          {tokens.map(token => (
+            <Token 
+              key={token.id}
+              token={token}
+              isSelected={selectedTokenId === token.id}
               gridSize={gridSize}
-              revealedCells={revealedCells}
-              onRevealCell={onRevealCell}
-              active={fogOfWar}
-              lightSources={updatedLightSources}
-              tokenPositions={tokenPositions}
-              isDM={isDM}
-              isDynamicLighting={isDynamicLighting}
               imageSize={imageSize}
+              zoom={zoom}
+              onSelect={onSelectToken}
+              onUpdatePosition={onUpdateTokenPosition}
+              isDM={isDM}
             />
-          </div>
-        )}
+          ))}
+
+          {/* Сетка - отдельный слой с независимым масштабированием и позиционированием */}
+          {gridVisible && (
+            <div 
+              className="battle-grid-container absolute inset-0 pointer-events-none z-20"
+              style={{ 
+                transform: `scale(${gridZoom}) translate(${(gridPosition.x - mapPosition.x) / gridZoom}px, ${(gridPosition.y - mapPosition.y) / gridZoom}px)`,
+                transformOrigin: 'center center',
+              }}
+            >
+              <BattleGrid 
+                gridSize={gridSize}
+                visible={true}
+                opacity={gridOpacity}
+                imageSize={imageSize}
+                containerSize={containerSize}
+              />
+            </div>
+          )}
+            
+          {/* Туман войны */}
+          {fogOfWar && (
+            <div className="fog-of-war-container absolute inset-0 z-30">
+              <FogOfWar
+                gridSize={gridSize}
+                revealedCells={revealedCells}
+                onRevealCell={onRevealCell}
+                active={fogOfWar}
+                lightSources={updatedLightSources}
+                tokenPositions={tokenPositions}
+                isDM={isDM}
+                isDynamicLighting={isDynamicLighting}
+                imageSize={imageSize}
+              />
+            </div>
+          )}
+        </div>
       </div>
+      
+      {/* Предпросмотр карты (вид игрока) */}
+      {showPlayerView && isDM && (
+        <div className="mt-4 border border-primary rounded-lg overflow-hidden" style={{ height: '150px' }}>
+          <div className="bg-primary/20 p-1 text-xs font-medium text-center">Вид игрока</div>
+          <div className="relative w-full h-full overflow-hidden">
+            <div 
+              className="relative w-full h-full"
+              style={{ 
+                transform: `scale(${zoom * 0.3}) translate(${mapPosition.x / (zoom * 0.3)}px, ${mapPosition.y / (zoom * 0.3)}px)`,
+                transformOrigin: 'center center',
+                ...contentStyle
+              }}
+            >
+              {/* Фоновая карта */}
+              {background && (
+                <img 
+                  src={background}
+                  alt="Battle map preview"
+                  className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
+                />
+              )}
+              
+              {/* Сетка */}
+              {gridVisible && (
+                <div 
+                  className="battle-grid-container absolute inset-0 pointer-events-none z-20"
+                  style={{ 
+                    transform: `scale(${gridZoom}) translate(${(gridPosition.x - mapPosition.x) / gridZoom}px, ${(gridPosition.y - mapPosition.y) / gridZoom}px)`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <BattleGrid 
+                    gridSize={gridSize}
+                    visible={true}
+                    opacity={gridOpacity}
+                    imageSize={imageSize}
+                    containerSize={containerSize}
+                  />
+                </div>
+              )}
+              
+              {/* Токены - только видимые игрокам */}
+              {tokens.filter(t => t.visible).map(token => (
+                <div
+                  key={token.id}
+                  className="absolute token"
+                  style={{
+                    left: `${token.x}px`,
+                    top: `${token.y}px`,
+                    width: `${30 * (token.size || 1)}px`,
+                    height: `${30 * (token.size || 1)}px`,
+                    transform: 'translate(-50%, -50%)',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    zIndex: 10,
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <img
+                    src={token.img}
+                    alt={token.name}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+              
+              {/* Туман войны - для игроков */}
+              {fogOfWar && (
+                <div className="fog-of-war-container absolute inset-0 z-30">
+                  <FogOfWar
+                    gridSize={gridSize}
+                    revealedCells={revealedCells}
+                    onRevealCell={() => {}}
+                    active={fogOfWar}
+                    lightSources={updatedLightSources}
+                    tokenPositions={tokenPositions}
+                    isDM={false}
+                    isDynamicLighting={isDynamicLighting}
+                    imageSize={imageSize}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
