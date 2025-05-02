@@ -123,7 +123,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Исправляем проблему с типом never
+        // Исправляем проблему с типом never, добавляя строгие проверки типов
         if (typeof spell === 'object' && spell !== null) {
           if ('name' in spell && typeof spell.name === 'string') {
             return spell.name.toLowerCase().includes(searchQuery.toLowerCase());

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { LeftPanel } from "@/components/battle/LeftPanel";
 import BattleMap from "@/components/battle/BattleMap";
@@ -179,7 +178,7 @@ const PlayBattlePage = () => {
           tokens={tokens} 
           setTokens={setTokens} 
           initiative={initiative}
-          setInitiative={setInitiative}
+          setInitiative={setInitiative}  // Передаем setInitiative как обязательный параметр
           selectedTokenId={selectedTokenId}
           onSelectToken={handleSelectToken}
           battleState={battleState}
