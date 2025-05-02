@@ -22,7 +22,7 @@ function App() {
   const [isCharacterPage, setIsCharacterPage] = useState(false);
 
   useEffect(() => {
-    setIsCharacterPage(location.pathname === '/character-sheet');
+    setIsCharacterPage(location.pathname === '/character-sheet' || location.pathname === '/sheet');
   }, [location]);
 
   return (
@@ -43,6 +43,7 @@ function App() {
                 <Route path="/character-creation" element={<CharacterCreationPage />} />
                 <Route path="/create" element={<CharacterCreationPage />} />
                 <Route path="/character-sheet" element={<CharacterSheetPage />} />
+                <Route path="/sheet" element={<CharacterSheetPage />} />
                 <Route path="/spellbook" element={<SpellbookPage />} />
                 <Route path="/battle" element={<PlayBattlePage />} />
                 <Route path="/dm" element={<DMDashboardPage />} />

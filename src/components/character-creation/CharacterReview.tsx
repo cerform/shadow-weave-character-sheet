@@ -1,8 +1,7 @@
-
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Check, Download, FileText, ArrowDown } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
@@ -39,7 +38,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
   const { setCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
 
-  const getModifier = (score: number) => {
+  const getModifier = (score: number): string => {
     const mod = Math.floor((score - 10) / 2);
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
@@ -127,7 +126,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       description: `${character.name} успешно создан!`
     });
     
-    // Переходим к листу персонажа
+    // Переходим к листу персонажа - исправляем путь на /sheet
     navigate("/sheet");
   };
 

@@ -9,10 +9,10 @@ import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
 import { Save, Printer } from 'lucide-react';
-import { DiceRoller3D } from './DiceRoller3D';
+import { DiceRoller3D } from '../dice/DiceRoller3D';
 import { SpellPanel } from './SpellPanel';
 import { CharacterContext } from '@/contexts/CharacterContext';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { RestPanel } from './RestPanel';
 
 interface CharacterSheetProps {
