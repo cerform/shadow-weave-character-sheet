@@ -19,7 +19,9 @@ import { themes } from "@/lib/themes";
 // Импортируем наше хранилище, типы и утилиты
 import useBattleStore from "@/stores/battleStore";
 import { createToken } from "@/utils/battle";
-import { useSessionStore, SavedMap, LightSource } from "@/stores/sessionStore";
+import { useSessionStore } from "@/stores/sessionStore";
+import { AreaEffect, LightSource } from "@/types/battle"; // Correct import for AreaEffect
+import { Token, Initiative, SavedMap } from "@/types/battleTypes"; // Other battle types
 
 // Тип для предустановленных монстров
 interface PresetMonster {
@@ -84,7 +86,7 @@ const PlayBattlePage = () => {
     lightSources, addLightSource, removeLightSource
   } = useBattleStore();
   
-  // Используем SessionStore для сохранения/загрузки карт
+  // Используем SessionStore ��ля сохранения/загрузки карт
   const { currentSession, saveMap, loadMap, deleteMap } = useSessionStore();
   
   // Локальные состояния UI
