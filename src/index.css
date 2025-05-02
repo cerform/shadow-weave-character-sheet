@@ -42,11 +42,11 @@
     --accent-color: #8B5A2B;
     --glow-effect: 0 0 15px #4B3621;
     --theme-bg: #2C1B0E;
-    --theme-fg: #E8DDCB;
+    --theme-fg: #FFFFFF;
     --theme-accent: #8B5A2B;
-    --text-color: #E8DDCB;
+    --text-color: #FFFFFF;
     --contrast-color: #000000;
-    --muted-text-color: #A89B8C;
+    --muted-text-color: #DDDDDD;
   }
 
   .dark {
@@ -248,7 +248,7 @@
   --foreground: 270 100% 90%;  
   --primary: 270 100% 50%;
   --card: 270 30% 10%;
-  color: var(--text-color, #E9D8FD);
+  color: var(--text-color, #FFFFFF);
 }
 
 .theme-wizard {
@@ -256,7 +256,7 @@
   --foreground: 200 100% 90%;  
   --primary: 200 100% 50%;
   --card: 200 30% 10%;
-  color: var(--text-color, #DBEAFE);
+  color: var(--text-color, #FFFFFF);
 }
 
 .theme-druid {
@@ -264,7 +264,7 @@
   --foreground: 120 100% 90%;
   --primary: 140 100% 50%;
   --card: 120 30% 10%;
-  color: var(--text-color, #D1FAE5);
+  color: var(--text-color, #FFFFFF);
 }
 
 .theme-warrior {
@@ -272,7 +272,7 @@
   --foreground: 0 100% 90%;
   --primary: 0 100% 50%;
   --card: 0 30% 10%;
-  color: var(--text-color, #FEE2E2);
+  color: var(--text-color, #FFFFFF);
 }
 
 .theme-bard {
@@ -280,7 +280,7 @@
   --foreground: 40 100% 90%;
   --primary: 40 100% 50%;
   --card: 40 30% 10%;
-  color: var(--text-color, #FEF3C7);
+  color: var(--text-color, #FFFFFF);
 }
 
 .theme-default {
@@ -288,13 +288,13 @@
   --foreground: 30 30% 90%;
   --primary: 25 40% 30%;
   --card: 30 30% 10%;
-  color: var(--text-color, #E8DDCB);
+  color: var(--text-color, #FFFFFF);
   background-color: var(--theme-bg, #2C1B0E);
 }
 
 /* Улучшение контрастности для элементов UI */
 .bg-card, .bg-background {
-  background-color: rgba(20, 20, 20, 0.8);
+  background-color: rgba(20, 20, 20, 0.85);
 }
 
 .text-foreground {
@@ -303,25 +303,26 @@
 
 /* Улучшаем чтение текста */
 .text-muted-foreground {
-  color: var(--muted-text-color, rgba(255, 255, 255, 0.7)) !important;
-  opacity: 0.9; /* Повышаем непрозрачность для лучшей читаемости */
+  color: var(--muted-text-color, #DDDDDD) !important; 
+  opacity: 1; /* Повышаем непрозрачность для лучшей читаемости */
 }
 
 /* Улучшаем контрастность для карточек заклинаний */
 [data-theme] .card {
   border: 1px solid var(--accent-color, #8B5A2B);
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: var(--text-color, #FFFFFF);
 }
 
 /* Стили для заголовков */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--text-color, #E8DDCB);
+  color: var(--text-color, #FFFFFF);
 }
 
 /* Улучшенные стили для бейджей */
 .badge {
   border: 1px solid var(--accent-color, #8B5A2B);
-  color: var(--text-color, #E8DDCB);
+  color: var(--text-color, #FFFFFF);
 }
 
 /* Таверна стиль для стандартной темы */
@@ -340,7 +341,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .theme-default .text-primary-foreground {
-  color: #E8DDCB;
+  color: #FFFFFF;
 }
 
 /* Улучшение стилей для токенов */
@@ -363,23 +364,24 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Обеспечиваем контрастность и читаемость текста в формах создания персонажа */
 .text-form-label {
-  color: var(--text-color, #E8DDCB);
+  color: var(--text-color, #FFFFFF);
 }
 
 .text-form-value {
-  color: var(--text-color, #E8DDCB);
+  color: var(--text-color, #FFFFFF);
 }
 
 /* Стили для элементов создания персонажа */
 .creation-step {
-  color: var(--text-color, #E8DDCB);
-  background-color: rgba(0, 0, 0, 0.4);
+  color: var(--text-color, #FFFFFF);
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 /* Добавляем явный цвет текста для форм и инпутов */
 input, select, textarea {
-  color: var(--text-color, #E8DDCB) !important;
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  color: var(--text-color, #FFFFFF) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border-color: var(--accent-color, rgba(255, 255, 255, 0.2)) !important;
 }
 
 input::placeholder {
@@ -389,19 +391,20 @@ input::placeholder {
 
 /* Улучшаем контрастность для бейджей */
 .badge {
-  color: var(--text-color, #E8DDCB) !important;
+  color: var(--text-color, #FFFFFF) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Стили для книги заклинаний - усиленная читаемость */
 [data-state="active"] {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
   color: var(--text-color, #FFFFFF) !important;
   font-weight: 600;
 }
 
 [data-state="inactive"] {
   color: var(--text-color, #FFFFFF) !important;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* Стили для токен-селектора */
@@ -475,17 +478,17 @@ input::placeholder {
 
 /* Добавляем стили для книги заклинаний */
 .spell-card {
-  background-color: rgba(30, 30, 30, 0.9) !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
   border: 1px solid var(--accent-color, #8B5A2B);
-  color: var(--text-color, #E8DDCB) !important;
+  color: var(--text-color, #FFFFFF) !important;
 }
 
 .spell-card h3, .spell-card h4 {
-  color: var(--text-color, #E8DDCB) !important;
+  color: var(--text-color, #FFFFFF) !important;
 }
 
 .spell-card p, .spell-card span {
-  color: var(--text-color, #E8DDCB) !important;
+  color: var(--text-color, #FFFFFF) !important;
 }
 
 /* Стили для масштабируемой карты */
@@ -512,7 +515,7 @@ input::placeholder {
   top: 10px;
   right: 10px;
   z-index: 100;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
   border-radius: 4px;
   padding: 5px;
   display: flex;
@@ -535,4 +538,110 @@ input::placeholder {
 
 .shadow-glow {
   animation: glow 2s infinite;
+}
+
+/* Повышаем контрастность текста в карточках характеристик */
+.stat-card {
+  background-color: var(--statBoxBackground, rgba(0, 0, 0, 0.75)) !important;
+}
+
+.stat-card h3,
+.stat-card h4,
+.stat-card p,
+.stat-card span {
+  color: var(--text-color, #FFFFFF) !important;
+}
+
+/* Улучшаем видимость табов */
+.tabs-list {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border-bottom: 2px solid var(--accent-color, #8B5A2B) !important;
+}
+
+.tab-button {
+  color: var(--text-color, #FFFFFF) !important;
+  font-weight: 600;
+}
+
+.tab-button[data-state="active"] {
+  background-color: var(--accent-color, #8B5A2B) !important;
+  color: var(--text-color, #FFFFFF) !important;
+}
+
+.tab-button[data-state="inactive"] {
+  background-color: transparent !important;
+  color: var(--text-color, #FFFFFF) !important;
+  opacity: 0.8;
+}
+
+/* Стили для характеристик персонажа */
+.ability-score-box {
+  background-color: var(--statBoxBackground, rgba(0, 0, 0, 0.75));
+  border: 1px solid var(--accent-color, #8B5A2B);
+  color: var(--abilityScoreColor, #FFFFFF);
+}
+
+.modifier {
+  color: var(--abilityScoreColor, #FFFFFF);
+  font-weight: bold;
+}
+
+/* Улучшаем видимость кнопок */
+button {
+  background-color: var(--buttonBackground, rgba(0, 0, 0, 0.75)) !important;
+  color: var(--buttonText, #FFFFFF) !important;
+  border: 1px solid var(--accent-color, #8B5A2B) !important;
+  font-weight: 600 !important;
+}
+
+button:hover {
+  background-color: var(--accent-color, #8B5A2B) !important;
+  color: var(--buttonText, #FFFFFF) !important;
+}
+
+/* Повышаем видимость списка заклинаний */
+.spell-level {
+  background-color: var(--statBoxBackground, rgba(0, 0, 0, 0.75)) !important;
+  color: var(--text-color, #FFFFFF) !important;
+  border: 1px solid var(--accent-color, #8B5A2B) !important;
+  font-weight: 600 !important;
+}
+
+.spell-list-item {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: var(--text-color, #FFFFFF) !important;
+  border: 1px solid var(--accent-color, #8B5A2B) !important;
+}
+
+/* Улучшаем контрастность отдельных компонентов */
+.text-negative-mod {
+  color: #FF5050 !important;
+  font-weight: bold;
+}
+
+.text-positive-mod {
+  color: #50FF50 !important;
+  font-weight: bold;
+}
+
+.text-neutral-mod {
+  color: #FFFFFF !important;
+  font-weight: bold;
+}
+
+/* Фоновый цвет для таблиц */
+table {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--accent-color, #8B5A2B);
+}
+
+table th {
+  color: var(--text-color, #FFFFFF);
+  background-color: var(--statBoxBackground, rgba(0, 0, 0, 0.75));
+  border-bottom: 2px solid var(--accent-color, #8B5A2B);
+}
+
+table td {
+  color: var(--text-color, #FFFFFF);
+  border: 1px solid var(--accent-color, rgba(139, 90, 43, 0.5));
 }

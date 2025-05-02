@@ -53,6 +53,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
       document.documentElement.style.setProperty('--contrast-color', selectedTheme.contrastColor);
       document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
+      document.documentElement.style.setProperty('--stat-box-background', selectedTheme.statBoxBackground);
+      document.documentElement.style.setProperty('--ability-score-color', selectedTheme.abilityScoreColor);
+      document.documentElement.style.setProperty('--button-text', selectedTheme.buttonText);
+      document.documentElement.style.setProperty('--button-background', selectedTheme.buttonBackground);
       
       // Фон для всех страниц, учитывая тему
       document.documentElement.style.setProperty('--background-color', themeName === 'default' ? '#1A1105' : '#0A0A0A');

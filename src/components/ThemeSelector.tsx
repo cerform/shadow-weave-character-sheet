@@ -37,24 +37,47 @@ const ThemeSelector = () => {
     'bard': <Feather className="h-4 w-4 mr-1" />
   };
 
+  // Стили для кнопок на основе текущей темы
+  const buttonStyle = {
+    color: currentTheme.buttonText || '#FFFFFF',
+    borderColor: currentTheme.accent,
+  };
+
+  const selectedButtonStyle = {
+    backgroundColor: currentTheme.accent,
+    color: currentTheme.buttonText || '#FFFFFF',
+  };
+
   // Мобильная версия с дропдаун-меню
   if (isMobile) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <label className="text-sm font-semibold text-foreground">Тема:</label>
+        <label className="text-sm font-semibold" style={{color: currentTheme.textColor}}>Тема:</label>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2 w-full">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 w-full"
+              style={buttonStyle}
+            >
               {themeIcons[themeKey] || <Dices className="h-4 w-4 mr-1" />}
               {currentTheme?.name || "Стандартная"}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-56 bg-popover">
+          <DropdownMenuContent 
+            align="center" 
+            className="w-56 bg-black/90 border-accent"
+            style={{
+              backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.9)'}`,
+              borderColor: currentTheme.accent,
+            }}
+          >
             {Object.entries(themes).map(([key, value]) => (
               <DropdownMenuItem
                 key={key}
                 onClick={() => setTheme(key as any)}
                 className="flex items-center gap-2"
+                style={{color: currentTheme.textColor}}
               >
                 {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
                 <span>{value.name}</span>
@@ -70,7 +93,7 @@ const ThemeSelector = () => {
   // Десктопная версия с кнопками
   return (
     <div className="flex flex-col items-center gap-2">
-      <label className="text-sm font-semibold text-foreground">Выберите тему:</label>
+      <label className="text-sm font-semibold" style={{color: currentTheme.textColor}}>Выберите тему:</label>
       <div className="flex flex-wrap gap-1 justify-center">
         {Object.entries(themes).map(([key, value]) => (
           <Button
@@ -79,6 +102,7 @@ const ThemeSelector = () => {
             size="sm"
             onClick={() => setTheme(key as any)}
             className={`flex items-center ${theme === key ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'}`}
+            style={theme === key ? selectedButtonStyle : buttonStyle}
           >
             {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
             {value.name}
@@ -87,7 +111,13 @@ const ThemeSelector = () => {
       </div>
       
       <div className="mt-2">
-        <Badge className="bg-primary text-primary-foreground">
+        <Badge 
+          className="bg-primary text-primary-foreground"
+          style={{
+            backgroundColor: currentTheme.accent,
+            color: currentTheme.buttonText || '#FFFFFF',
+          }}
+        >
           {currentTheme?.name || "Стандартная"}
         </Badge>
       </div>
