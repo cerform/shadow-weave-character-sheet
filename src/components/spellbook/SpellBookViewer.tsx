@@ -19,9 +19,10 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useNavigate } from 'react-router-dom';
+import { spells as allSpells } from '@/data/spells';
 
 interface SpellData {
-  id: string;
+  id?: string;
   name: string;
   name_en?: string;
   level: number;
@@ -38,7 +39,6 @@ interface SpellData {
 }
 
 const SpellBookViewer = () => {
-  const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeLevel, setActiveLevel] = useState<string>("all");
@@ -85,39 +85,17 @@ const SpellBookViewer = () => {
   };
 
   useEffect(() => {
-    // Загружаем заклинания из JSON файла
-    const loadSpells = async () => {
-      try {
-        const response = await fetch('/src/data/spells-phb.json');
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить заклинания');
-        }
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setSpells(data);
-          setFilteredSpells(data);
-        } else {
-          console.error('Загруженные данные не являются массивом:', data);
-          setSpells([]);
-          setFilteredSpells([]);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке заклинаний:', error);
-        setSpells([]);
-        setFilteredSpells([]);
-      }
-    };
-
-    loadSpells();
+    // Используем заклинания из импортированного модуля вместо загрузки из файла
+    if (allSpells && allSpells.length > 0) {
+      setFilteredSpells(allSpells);
+    } else {
+      console.error('Не удалось загрузить заклинания из модуля');
+      setFilteredSpells([]);
+    }
   }, []);
 
   useEffect(() => {
-    if (!Array.isArray(spells)) {
-      console.error('spells не является массивом:', spells);
-      return;
-    }
-    
-    let result = [...spells];
+    let result = [...allSpells];
 
     // Фильтруем по поисковому запросу
     if (searchTerm.trim() !== '') {
@@ -126,7 +104,7 @@ const SpellBookViewer = () => {
         spell => 
           spell.name.toLowerCase().includes(term) || 
           (spell.description && spell.description.toLowerCase().includes(term)) ||
-          (spell.classes && spell.classes.toLowerCase().includes(term))
+          (spell.classes && typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term))
       );
     }
 
@@ -142,7 +120,7 @@ const SpellBookViewer = () => {
     }
 
     setFilteredSpells(result);
-  }, [searchTerm, activeLevel, activeSchool, spells]);
+  }, [searchTerm, activeLevel, activeSchool]);
 
   const handleOpenSpell = (spell: SpellData) => {
     setSelectedSpell(spell);
@@ -153,13 +131,16 @@ const SpellBookViewer = () => {
     setIsModalOpen(false);
   };
 
-  const allLevels = Array.isArray(spells) 
-    ? Array.from(new Set(spells.map(spell => spell.level))).sort() 
-    : [];
-    
-  const allSchools = Array.isArray(spells)
-    ? Array.from(new Set(spells.map(spell => spell.school))).sort()
-    : [];
+  const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
+  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
+
+  // Преобразовываем классы из массива в строку для отображения
+  const formatClasses = (classes: string[] | string): string => {
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    }
+    return classes || '';
+  };
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
@@ -278,9 +259,9 @@ const SpellBookViewer = () => {
               <ScrollArea className="h-[70vh]">
                 <div className="p-4 space-y-4">
                   {filteredSpells.length > 0 ? (
-                    filteredSpells.map(spell => (
+                    filteredSpells.map((spell, index) => (
                       <Card 
-                        key={spell.id} 
+                        key={spell.id || `spell-${index}`} 
                         className="spell-card border border-accent hover:border-primary cursor-pointer transition-all"
                         onClick={() => handleOpenSpell(spell)}
                         style={{backgroundColor: `${currentTheme.cardBackground}`}}
@@ -308,12 +289,12 @@ const SpellBookViewer = () => {
                             >
                               {spell.school}
                             </Badge>
-                            {spell.isRitual && (
+                            {spell.ritual && (
                               <Badge variant="outline" className="ml-2 border-accent">
                                 Ритуал
                               </Badge>
                             )}
-                            {spell.isConcentration && (
+                            {spell.concentration && (
                               <Badge variant="outline" className="ml-2 border-accent">
                                 Концентрация
                               </Badge>
@@ -336,7 +317,7 @@ const SpellBookViewer = () => {
                           </div>
                           {spell.classes && (
                             <div className="mt-2 text-sm">
-                              <span className="font-semibold">Классы:</span> {spell.classes}
+                              <span className="font-semibold">Классы:</span> {formatClasses(spell.classes)}
                             </div>
                           )}
                         </CardContent>
