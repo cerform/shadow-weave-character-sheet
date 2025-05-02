@@ -121,7 +121,7 @@ export const useCharacterCreation = () => {
     return hitDice[characterClass] || 8; // По умолчанию d8
   };
 
-  // Исправляем функцию расчета ячеек заклинаний на основе класса и уровня
+  // Расчет ячеек заклинаний на основе класса и уровня
   const calculateSpellSlots = (className: string, level: number) => {
     if (!isMagicClass(className) || level < 1) return {};
     
