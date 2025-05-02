@@ -1,9 +1,12 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { LeftPanel } from "@/components/battle/LeftPanel";
+import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
 import BattleMap from "@/components/battle/BattleMap";
 import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
+import MapControls from "@/components/battle/MapControls";
 import { motion } from "framer-motion";
 import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,6 +112,14 @@ const PlayBattlePage = () => {
   
   const { toast } = useToast();
   const mapRef = useRef<HTMLDivElement>(null);
+
+  // Добавляем новые состояния для тумана войны и размера сетки
+  const [fogOfWar, setFogOfWar] = useState<boolean>(true);
+  const [revealedCells, setRevealedCells] = useState<{[key: string]: boolean}>({});
+  const [revealRadius, setRevealRadius] = useState<number>(3);
+  const [gridVisible, setGridVisible] = useState<boolean>(true);
+  const [gridOpacity, setGridOpacity] = useState<number>(0.5);
+  const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 20, cols: 30});
 
   // Обработчики для управления боем
   const startBattle = () => {
@@ -374,6 +385,34 @@ const PlayBattlePage = () => {
     }
   };
 
+  // Обработчики для тумана войны
+  const handleRevealCell = (row: number, col: number) => {
+    if (!fogOfWar) return;
+
+    const newRevealed = { ...revealedCells };
+    
+    // Открываем клетки в радиусе
+    for (let r = Math.max(0, row - revealRadius); r <= Math.min(gridSize.rows - 1, row + revealRadius); r++) {
+      for (let c = Math.max(0, col - revealRadius); c <= Math.min(gridSize.cols - 1, col + revealRadius); c++) {
+        // Проверяем, находится ли клетка в радиусе круга
+        const distance = Math.sqrt(Math.pow(r - row, 2) + Math.pow(c - col, 2));
+        if (distance <= revealRadius) {
+          newRevealed[`${r}-${c}`] = true;
+        }
+      }
+    }
+    
+    setRevealedCells(newRevealed);
+  };
+  
+  const resetFogOfWar = () => {
+    setRevealedCells({});
+    toast({
+      title: "Туман войны сброшен",
+      description: "Карта снова полностью скрыта",
+    });
+  };
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
       {/* Верхняя панель */}
@@ -436,172 +475,19 @@ const PlayBattlePage = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Левая панель */}
         <div className="w-64 border-r bg-muted/10 overflow-y-auto p-3">
-          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid grid-cols-3 mb-4">
-              <TabsTrigger value="tokens">Токены</TabsTrigger>
-              <TabsTrigger value="monsters">Монстры</TabsTrigger>
-              <TabsTrigger value="initiative">Инициатива</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="tokens" className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBackgroundUpload}
-                  className="p-2 border rounded bg-primary/10 file:mr-2 file:py-1 file:px-2 file:border-0 file:rounded file:bg-primary/20 file:text-foreground"
-                />
-                <Button
-                  onClick={() => handleAddToken("player")}
-                  className="flex justify-center items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
-                >
-                  <User size={16} />
-                  Добавить Игрока
-                </Button>
-                <Button
-                  onClick={() => handleAddToken("monster")}
-                  className="flex justify-center items-center gap-2 bg-red-500 hover:bg-red-600 text-white"
-                >
-                  <Skull size={16} />
-                  Добавить Моба
-                </Button>
-                <Button
-                  onClick={() => handleAddToken("boss")}
-                  className="flex justify-center items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white"
-                >
-                  <Crown size={16} />
-                  Добавить Босса
-                </Button>
-                <Button
-                  onClick={rollInitiative}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                >
-                  Бросить Инициативу
-                </Button>
-              </div>
-
-              {/* Список токенов */}
-              <div className="space-y-2">
-                <h3 className="font-medium">Токены на поле ({tokens.length})</h3>
-                {tokens.map(token => (
-                  <div 
-                    key={token.id} 
-                    className={`flex items-center justify-between p-2 rounded cursor-pointer ${
-                      selectedTokenId === token.id ? "bg-primary/20 border border-primary" : "bg-card"
-                    }`}
-                    onClick={() => setSelectedTokenId(token.id)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <img 
-                        src={token.img} 
-                        alt={token.name} 
-                        className={`w-8 h-8 rounded-full object-cover token-image-container ${
-                          token.type === "boss"
-                            ? "token-boss"
-                            : token.type === "monster"
-                            ? "token-monster"
-                            : "token-player"
-                        }`}
-                      />
-                      <div className="text-sm">
-                        <div>{token.name}</div>
-                        <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp} AC: {token.ac}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {
-                        e.stopPropagation();
-                        updateTokenHP(token.id, -1);
-                      }}>-</Button>
-                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {
-                        e.stopPropagation();
-                        updateTokenHP(token.id, 1);
-                      }}>+</Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => {
-                        e.stopPropagation();
-                        removeToken(token.id);
-                      }}>
-                        <X size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="monsters" className="space-y-4">
-              <h3 className="font-medium mb-2">Библиотека монстров</h3>
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {monsterTokens.map((monster, index) => (
-                    <div key={index} className="bg-card p-2 rounded border">
-                      <img 
-                        src={defaultTokenImages.placeholder[index % defaultTokenImages.placeholder.length]} 
-                        alt={monster.name} 
-                        className="w-full h-20 object-contain rounded mb-2 bg-muted/20 p-1"
-                      />
-                      <div className="text-center text-sm font-medium mb-1">{monster.name}</div>
-                      <div className="text-xs text-center mb-2">HP: {monster.hp} | AC: {monster.ac}</div>
-                      <div className="grid grid-cols-2 gap-1">
-                        <Button size="sm" variant="outline" onClick={() => handleAddPresetMonster(monster, "monster")}>
-                          Моб
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAddPresetMonster(monster, "boss")}>
-                          Босс
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-            
-            <TabsContent value="initiative" className="space-y-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-medium">Порядок инициативы</h3>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={rollInitiative}>Перебросить</Button>
-                  <Button size="sm" onClick={nextTurn}>Следующий</Button>
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                {initiative.map((item, index) => {
-                  const token = tokens.find(t => t.id === item.tokenId);
-                  return (
-                    <div 
-                      key={item.id} 
-                      className={`flex items-center gap-2 p-2 rounded ${
-                        item.isActive ? "bg-primary/20 border border-primary" : "bg-card"
-                      }`}
-                    >
-                      <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
-                        {item.roll}
-                      </div>
-                      
-                      {token && (
-                        <img src={token.img} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
-                      )}
-                      
-                      <div className="flex-1 truncate">{item.name}</div>
-                      
-                      {item.isActive && (
-                        <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                          Текущий ход
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-                
-                {initiative.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Нет инициативы. Добавьте токены и нажмите "Бросить Инициативу".
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+          <LeftPanel
+            tokens={tokens}
+            setTokens={setTokens}
+            initiative={initiative}
+            setInitiative={setInitiative}
+            selectedTokenId={selectedTokenId}
+            onSelectToken={handleSelectToken}
+            battleState={battleState}
+            fogOfWar={fogOfWar}
+            setFogOfWar={setFogOfWar}
+            gridSize={gridSize}
+            setGridSize={setGridSize}
+          />
         </div>
         
         {/* Центральная карта */}
@@ -616,6 +502,12 @@ const PlayBattlePage = () => {
             selectedTokenId={selectedTokenId}
             initiative={initiative}
             battleActive={battleState.isActive}
+            fogOfWar={fogOfWar}
+            revealedCells={revealedCells}
+            onRevealCell={handleRevealCell}
+            gridSize={gridSize}
+            gridVisible={gridVisible}
+            gridOpacity={gridOpacity}
           />
         </div>
         
@@ -628,7 +520,19 @@ const PlayBattlePage = () => {
               setTokens={setTokens}
             />
           ) : (
-            <>
+            <div className="space-y-4">
+              <MapControls
+                fogOfWar={fogOfWar}
+                setFogOfWar={setFogOfWar}
+                revealRadius={revealRadius}
+                setRevealRadius={setRevealRadius}
+                gridVisible={gridVisible}
+                setGridVisible={setGridVisible}
+                gridOpacity={gridOpacity}
+                setGridOpacity={setGridOpacity}
+                onResetFogOfWar={resetFogOfWar}
+              />
+              
               <h3 className="font-medium mb-4">Кубики</h3>
               <div className="h-64">
                 <DiceRoller3D />
@@ -654,7 +558,7 @@ const PlayBattlePage = () => {
                   <Button>Отправить</Button>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Sword, Shield, Zap, PlusCircle, MinusCircle } from 'lucide-react';
+import { Plus, Sword, Shield, Zap, PlusCircle, MinusCircle, GridIcon, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useDeviceType } from "@/hooks/use-mobile";
@@ -23,6 +24,10 @@ export interface LeftPanelProps {
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
   battleState: BattleState;
+  fogOfWar?: boolean;
+  setFogOfWar?: (active: boolean) => void;
+  gridSize?: { rows: number, cols: number };
+  setGridSize?: (size: { rows: number, cols: number }) => void;
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({
@@ -32,13 +37,21 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   setInitiative, // Используем параметр напрямую
   selectedTokenId,
   onSelectToken,
-  battleState
+  battleState,
+  fogOfWar = false,
+  setFogOfWar = () => {},
+  gridSize = { rows: 10, cols: 20 }, // По умолчанию большая сетка
+  setGridSize = () => {}
 }) => {
   const { toast } = useToast();
   const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(null);
   const [monsterQuantity, setMonsterQuantity] = useState(1);
   const [newMonsterName, setNewMonsterName] = useState('');
   const deviceType = useDeviceType();
+  
+  // Состояния для настроек сетки
+  const [tempRows, setTempRows] = useState(gridSize.rows.toString());
+  const [tempCols, setTempCols] = useState(gridSize.cols.toString());
 
   // Обработчики для управления боевым порядком
   const startCombat = () => {
@@ -85,6 +98,27 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     toast({
       title: "Следующий ход",
       description: `Ход ${initiative[nextIndex]?.name || "следующего участника"}`,
+    });
+  };
+  
+  // Обработчик изменения размера сетки
+  const updateGridSize = () => {
+    const rows = parseInt(tempRows, 10);
+    const cols = parseInt(tempCols, 10);
+    
+    if (isNaN(rows) || isNaN(cols) || rows < 5 || cols < 5) {
+      toast({
+        title: "Неверный размер сетки",
+        description: "Укажите корректный размер (минимум 5x5)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setGridSize({ rows, cols });
+    toast({
+      title: "Размер сетки обновлен",
+      description: `Новый размер сетки: ${rows}x${cols}`,
     });
   };
 
@@ -367,6 +401,52 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
               Следующий
             </Button>
           )}
+        </div>
+      </div>
+      
+      <div className="p-2 border-b">
+        <h4 className="text-sm font-medium mb-2">Настройки сетки и тумана войны</h4>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Туман войны</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => setFogOfWar(!fogOfWar)}
+            >
+              {fogOfWar ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+              {fogOfWar ? "Выключить" : "Включить"}
+            </Button>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={tempRows}
+              onChange={(e) => setTempRows(e.target.value)}
+              className="w-16"
+              placeholder="Строки"
+              min={5}
+            />
+            <span className="text-sm">×</span>
+            <Input
+              type="number"
+              value={tempCols}
+              onChange={(e) => setTempCols(e.target.value)}
+              className="w-16"
+              placeholder="Столбцы"
+              min={5}
+            />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={updateGridSize}
+            >
+              <GridIcon className="h-4 w-4 mr-1" />
+              Обновить
+            </Button>
+          </div>
         </div>
       </div>
       
