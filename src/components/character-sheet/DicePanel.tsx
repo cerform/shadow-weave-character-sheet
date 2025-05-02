@@ -29,6 +29,7 @@ export const DicePanel = () => {
   const [playerName, setPlayerName] = useState('');
   const [reason, setReason] = useState('');
   const [isRolling, setIsRolling] = useState(false);
+  const [lastRollResult, setLastRollResult] = useState<number | null>(null);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
   const { toast } = useToast();
@@ -68,6 +69,7 @@ export const DicePanel = () => {
   // Обработчик результата броска из 3D компонента
   const handleDiceResult = (value: number) => {
     const finalTotal = value + modifier;
+    setLastRollResult(value);
     
     // Сохраняем результат броска в историю
     const newRoll: DiceRollRecord = { 
@@ -96,6 +98,7 @@ export const DicePanel = () => {
   
   const handleRoll = () => {
     setIsRolling(true);
+    setLastRollResult(null); // Сбрасываем предыдущий результат
   };
   
   // Загружаем историю из localStorage при монтировании
@@ -124,6 +127,19 @@ export const DicePanel = () => {
       second: '2-digit'
     }).format(new Date(date));
   };
+
+  // Определяем цвет для текущего типа кубика
+  const getDiceColor = (type: string) => {
+    switch (type) {
+      case 'd4': return '#B0E0E6';
+      case 'd6': return '#98FB98';
+      case 'd8': return '#FFA07A';
+      case 'd10': return '#DDA0DD';
+      case 'd12': return '#FFD700';
+      case 'd20': return '#87CEEB';
+      default: return currentTheme.accent;
+    }
+  };
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
@@ -134,42 +150,53 @@ export const DicePanel = () => {
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[220px] mb-5 bg-black/20 rounded-lg overflow-hidden relative"> {/* Увеличена высота с 180px до 220px */}
+          <div className="h-[200px] mb-3 bg-black/70 rounded-lg overflow-hidden relative">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
               modifier={modifier}
               onRollComplete={handleDiceResult}
-              themeColor={currentTheme.accent}
+              themeColor={getDiceColor(diceType)}
               fixedPosition={true}
               playerName={playerName || undefined}
             />
           </div>
+
+          {lastRollResult !== null && !isRolling && (
+            <div className="mb-4 p-3 bg-black/70 rounded-lg border text-center"
+                 style={{ borderColor: getDiceColor(diceType) }}>
+              <div className="text-sm text-white/70 mb-1">Результат</div>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-xl font-bold">{lastRollResult}</span>
+                {modifier !== 0 && (
+                  <>
+                    <span className="text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
+                    <span className="text-xl font-bold" style={{ color: getDiceColor(diceType) }}>
+                      = {lastRollResult + modifier}
+                    </span>
+                  </>
+                )}
+              </div>
+              {reason && (
+                <div className="text-sm text-white/70 mt-1">{reason}</div>
+              )}
+            </div>
+          )}
           
           <div className="mb-3">
-            <label className="text-sm text-foreground">Имя игрока:</label>
+            <label className="text-sm font-medium text-white mb-1 block">Имя игрока:</label>
             <Input 
               value={playerName} 
               onChange={(e) => setPlayerName(e.target.value)} 
               placeholder="Введите имя"
-              className="w-full mt-1 text-foreground bg-black/20 border-primary/30"
+              className="w-full mt-1 text-white bg-black/50 border-white/20"
             />
           </div>
           
-          <div className="grid grid-cols-6 gap-2 mb-4"> {/* Увеличен отступ снизу с 3 до 4 */}
+          <div className="grid grid-cols-6 gap-2 mb-3">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
               const isActive = diceType === dice;
-              // Используем те же цвета что и в 3D визуализации
-              let diceColor;
-              switch (dice) {
-                case 'd4': diceColor = '#B0E0E6'; break;
-                case 'd6': diceColor = '#98FB98'; break;
-                case 'd8': diceColor = '#FFA07A'; break;
-                case 'd10': diceColor = '#DDA0DD'; break;
-                case 'd12': diceColor = '#FFD700'; break;
-                case 'd20': diceColor = '#87CEEB'; break;
-                default: diceColor = currentTheme.accent;
-              }
+              const buttonColor = getDiceColor(dice);
               
               return (
                 <Button 
@@ -177,12 +204,11 @@ export const DicePanel = () => {
                   variant={isActive ? "default" : "outline"} 
                   onClick={() => setDiceType(dice)} 
                   disabled={isRolling} 
-                  className={`dice-button h-12 ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
+                  className={`dice-button h-12 ${isActive ? 'text-black' : 'text-white hover:text-black'}`}
                   style={{
-                    backgroundColor: isActive ? diceColor : 'transparent',
-                    color: isActive ? 'black' : currentTheme.textColor,
-                    borderColor: `${diceColor}${isActive ? 'FF' : '40'}`,
-                    boxShadow: isActive ? `0 0 8px ${diceColor}80` : 'none'
+                    backgroundColor: isActive ? buttonColor : 'transparent',
+                    borderColor: `${buttonColor}${isActive ? 'FF' : '40'}`,
+                    boxShadow: isActive ? `0 0 8px ${buttonColor}80` : 'none'
                   }}
                 >
                   <div className="flex flex-col items-center justify-center">
@@ -194,41 +220,37 @@ export const DicePanel = () => {
           </div>
           
           {/* Модификаторы */}
-          <div className="grid grid-cols-2 gap-2 mb-4"> {/* Увеличен отступ снизу с 3 до 4 */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
             <div>
-              <label className="text-sm text-foreground">Причина броска:</label>
+              <label className="text-sm font-medium text-white mb-1 block">Причина броска:</label>
               <Input 
                 value={reason} 
                 onChange={(e) => setReason(e.target.value)} 
                 placeholder="Например: Атака мечом"
-                className="w-full mt-1 text-foreground bg-black/20 border-primary/30"
+                className="w-full text-white bg-black/50 border-white/20"
               />
             </div>
             <div>
-              <label className="text-sm text-foreground">Модификатор:</label>
+              <label className="text-sm font-medium text-white mb-1 block">Модификатор:</label>
               <Input 
                 type="number" 
                 value={modifier} 
                 onChange={(e) => setModifier(Number(e.target.value))} 
-                className="w-full mt-1 text-foreground bg-black/20 border-primary/30"
+                className="w-full text-white bg-black/50 border-white/20"
               />
             </div>
           </div>
           
           <Button 
             onClick={handleRoll} 
-            className="w-full dice-button" 
+            className="w-full font-bold py-3"
             disabled={isRolling}
             style={{
-              backgroundColor: isRolling ? '#888888' : (diceType === 'd4' ? '#B0E0E6' : 
-                                                     diceType === 'd6' ? '#98FB98' :
-                                                     diceType === 'd8' ? '#FFA07A' :
-                                                     diceType === 'd10' ? '#DDA0DD' :
-                                                     diceType === 'd12' ? '#FFD700' : '#87CEEB'),
+              backgroundColor: isRolling ? '#888888' : getDiceColor(diceType),
               color: 'black',
-              boxShadow: `0 4px 12px ${currentTheme.accent}40`,
-              height: '45px', // Увеличена высота кнопки
-              fontSize: '16px', // Увеличен размер шрифта
+              boxShadow: `0 4px 12px ${getDiceColor(diceType)}40`,
+              height: '45px',
+              fontSize: '16px',
               fontWeight: 'bold'
             }}
           >
@@ -237,36 +259,37 @@ export const DicePanel = () => {
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
-          <div className="max-h-[380px] overflow-y-auto"> {/* Увеличена высота для истории */}
+          <div className="max-h-[380px] overflow-y-auto rounded-md bg-black/50 border border-white/10">
             {rollsHistory.length > 0 ? rollsHistory.map((roll) => (
               <div 
                 key={roll.id} 
-                className="text-sm p-2 flex flex-col"
-                style={{ borderBottom: `1px solid ${currentTheme.accent}10` }}
+                className="text-sm p-3 flex flex-col"
+                style={{ borderBottom: `1px solid ${currentTheme.accent}20` }}
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">{roll.playerName}</span>
-                  <span className="text-xs text-muted-foreground">{formatTime(new Date(roll.timestamp))}</span>
+                  <span className="font-medium text-white">{roll.playerName}</span>
+                  <span className="text-xs text-white/50">{formatTime(new Date(roll.timestamp))}</span>
                 </div>
                 
                 <div className="flex justify-between items-center mt-1">
                   <div className="flex items-center">
                     <DiceIcon value={roll.result} diceType={roll.diceType} />
                     {roll.modifier !== 0 && (
-                      <span className="ml-1 text-xs">{roll.modifier > 0 ? '+' : ''}{roll.modifier}</span>
-                    )}
-                    {roll.reason && (
-                      <span className="ml-2 text-xs text-muted-foreground">({roll.reason})</span>
+                      <span className="ml-2 text-sm text-white">{roll.modifier > 0 ? '+' : ''}{roll.modifier}</span>
                     )}
                   </div>
                   <span 
-                    className="font-medium"
-                    style={{ color: currentTheme.accent }}
+                    className="font-bold text-lg"
+                    style={{ color: getDiceColor(roll.diceType) }}
                   >{roll.total}</span>
                 </div>
+                
+                {roll.reason && (
+                  <div className="mt-1 text-xs text-white/70">{roll.reason}</div>
+                )}
               </div>
             )) : (
-              <div className="text-center py-4 text-muted-foreground">
+              <div className="text-center py-4 text-white/50">
                 История бросков пуста
               </div>
             )}
@@ -276,7 +299,7 @@ export const DicePanel = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full mt-3" 
+              className="w-full mt-3 border-white/20 text-white/70 hover:bg-white/10" 
               onClick={() => {
                 setRollsHistory([]);
                 localStorage.removeItem('diceRollsHistory');

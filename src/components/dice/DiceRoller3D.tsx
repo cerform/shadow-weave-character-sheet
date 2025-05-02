@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
@@ -17,6 +16,7 @@ type DiceModelProps = {
   setRolling: (rolling: boolean) => void,
   modifier?: number,
   playerName?: string,
+  showResultInScene?: boolean
 };
 
 // Создание геометрии для d4 (тетраэдр с улучшенной геометрией)
@@ -105,7 +105,7 @@ const createD20Geometry = () => {
 };
 
 // Компонент кубика с индивидуальными геометриями
-function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, modifier = 0, playerName }: DiceModelProps) {
+function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, modifier = 0, playerName, showResultInScene = false }: DiceModelProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const [result, setResult] = useState<number | null>(null);
   const [animationPhase, setAnimationPhase] = useState(0); // 0: initial, 1: rolling, 2: slowing, 3: stopped
@@ -229,7 +229,7 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
         />
       </mesh>
       
-      {result !== null && !rolling && (
+      {result !== null && !rolling && showResultInScene && (
         <Text
           position={[0, 2, 0]}
           fontSize={0.8}
@@ -328,6 +328,7 @@ export const DiceRoller3D: React.FC<{
           setRolling={setRolling}
           modifier={modifier}
           playerName={playerName}
+          showResultInScene={false} // Отключаем результат внутри сцены
         />
 
         <OrbitControls 
@@ -338,6 +339,36 @@ export const DiceRoller3D: React.FC<{
           maxPolarAngle={Math.PI * 5/6}
         />
       </Canvas>
+
+      {/* Блок с результатом под сценой */}
+      {result && !rolling && (
+        <div style={{
+          position: 'absolute',
+          bottom: hideControls ? '10px' : '80px',
+          left: '10px',
+          right: '10px',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          borderRadius: '8px',
+          padding: '10px',
+          textAlign: 'center',
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontSize: '20px',
+          boxShadow: `0 0 15px ${getDiceColor(diceType)}80`,
+          border: `1px solid ${getDiceColor(diceType)}`,
+          zIndex: 30
+        }}>
+          <span style={{ fontSize: '16px', opacity: 0.8 }}>Результат:</span><br />
+          <span style={{ fontSize: '24px' }}>
+            {result}
+            {modifier !== 0 && (
+              <span style={{ opacity: 0.8 }}>
+                {' '}{modifier > 0 ? '+' : ''}{modifier} = {result + modifier}
+              </span>
+            )}
+          </span>
+        </div>
+      )}
 
       {!hideControls && (
         <>
@@ -397,7 +428,9 @@ export const DiceRoller3D: React.FC<{
               boxShadow: rolling ? 'none' : `0 0 15px ${getDiceColor(diceType)}80`,
               zIndex: 20,
               opacity: rolling ? 0.7 : 1,
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              fontSize: '16px',
+              width: '180px'
             }}
           >
             {rolling ? 'Бросаем...' : `Бросить ${diceType}`}
@@ -405,7 +438,7 @@ export const DiceRoller3D: React.FC<{
         </>
       )}
 
-      {playerName && result && (
+      {playerName && (
         <div style={{
           position: 'absolute',
           top: '10px',
@@ -415,7 +448,8 @@ export const DiceRoller3D: React.FC<{
           padding: '5px 10px',
           borderRadius: '4px',
           color: 'white',
-          fontSize: '14px'
+          fontSize: '14px',
+          fontWeight: 'bold'
         }}>
           {playerName}
         </div>
