@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Circle } from 'react-konva';
 
 export interface LightSourceProps {
   id: string;
@@ -27,17 +26,15 @@ const LightingSystem: React.FC<LightingSystemProps> = ({
   const ambientLightLevel = isDaytime ? 0.7 : globalIllumination;
   
   return (
-    <>
+    <div className="absolute inset-0 pointer-events-none">
       {/* Глобальное затенение - полупрозрачный прямоугольник, если не день */}
       {!isDaytime && (
-        <Circle
-          x={0}
-          y={0}
-          radius={99999} // Очень большой круг, чтобы покрыть всю карту
-          fill="black"
-          opacity={1 - ambientLightLevel}
-          perfectDrawEnabled={false}
-          listening={false}
+        <div 
+          className="absolute inset-0"
+          style={{ 
+            backgroundColor: 'black', 
+            opacity: 1 - ambientLightLevel,
+          }}
         />
       )}
       
@@ -45,32 +42,26 @@ const LightingSystem: React.FC<LightingSystemProps> = ({
       {lightSources.map((light) => {
         // Настраиваем параметры в зависимости от типа источника света
         const radiusMultiplier = light.type === 'torch' ? 1 : 
-                                light.type === 'lantern' ? 1.5 : 
-                                light.type === 'daylight' ? 10 : 1;
+                               light.type === 'lantern' ? 1.5 : 
+                               light.type === 'daylight' ? 10 : 1;
         
         const effectiveRadius = light.radius * radiusMultiplier;
         
         return (
-          <Circle
+          <div
             key={light.id}
-            x={light.x}
-            y={light.y}
-            radius={effectiveRadius}
-            fillRadialGradientStartPoint={{ x: 0, y: 0 }}
-            fillRadialGradientStartRadius={0}
-            fillRadialGradientEndPoint={{ x: 0, y: 0 }}
-            fillRadialGradientEndRadius={effectiveRadius}
-            fillRadialGradientColorStops={[
-              0, light.color,
-              0.7, `${light.color}50`, // Полупрозрачный на 70%
-              1, `${light.color}00`    // Полностью прозрачный на границе
-            ]}
-            globalCompositeOperation='lighter'
-            listening={false}
+            className="absolute rounded-full mix-blend-lighten"
+            style={{
+              left: light.x - effectiveRadius,
+              top: light.y - effectiveRadius,
+              width: effectiveRadius * 2,
+              height: effectiveRadius * 2,
+              background: `radial-gradient(circle, ${light.color} 0%, ${light.color}50 70%, ${light.color}00 100%)`,
+            }}
           />
         );
       })}
-    </>
+    </div>
   );
 };
 

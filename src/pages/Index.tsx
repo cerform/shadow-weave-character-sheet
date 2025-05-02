@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown } from "lucide-react";
@@ -122,9 +123,12 @@ const Index = () => {
                     Создавайте и управляйте игровыми сессиями
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-2">
                   <Button onClick={() => navigate("/dm")} className="w-full">
                     Панель мастера
+                  </Button>
+                  <Button onClick={() => navigate("/dm/session")} className="w-full" variant="outline">
+                    Создать сессию
                   </Button>
                 </CardContent>
               </Card>

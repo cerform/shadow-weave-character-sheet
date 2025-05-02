@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Circle, Line, RegularPolygon } from 'react-konva';
 
 interface AreaEffectProps {
   type: 'circle' | 'cone' | 'square' | 'line';
@@ -25,58 +24,86 @@ const AreaEffects: React.FC<AreaEffectProps> = ({
 }) => {
   const sizeInPixels = size * gridSize;
   
+  // Common style
+  const baseStyle: React.CSSProperties = {
+    position: 'absolute',
+    opacity: opacity,
+    pointerEvents: 'none',
+  };
+  
   switch (type) {
     case 'circle':
       return (
-        <Circle
-          x={x}
-          y={y}
-          radius={sizeInPixels}
-          fill={color}
-          opacity={opacity}
-          listening={false}
+        <div 
+          style={{
+            ...baseStyle,
+            left: x - sizeInPixels,
+            top: y - sizeInPixels,
+            width: sizeInPixels * 2,
+            height: sizeInPixels * 2,
+            borderRadius: '50%',
+            backgroundColor: color,
+          }}
         />
       );
     case 'cone':
       return (
-        <RegularPolygon
-          x={x}
-          y={y}
-          sides={3}
-          radius={sizeInPixels}
-          fill={color}
-          opacity={opacity}
-          rotation={rotation}
-          listening={false}
+        <div
+          style={{
+            ...baseStyle,
+            left: x,
+            top: y,
+            width: 0,
+            height: 0,
+            borderLeft: `${sizeInPixels}px solid transparent`,
+            borderRight: `${sizeInPixels}px solid transparent`,
+            borderBottom: `${sizeInPixels * 2}px solid ${color}`,
+            transform: `translateX(-${sizeInPixels}px) translateY(-${sizeInPixels}px) rotate(${rotation}deg)`,
+            transformOrigin: 'center',
+          }}
         />
       );
     case 'square':
       return (
-        <RegularPolygon
-          x={x}
-          y={y}
-          sides={4}
-          radius={sizeInPixels / Math.sqrt(2)} // Для корректного размера квадрата
-          fill={color}
-          opacity={opacity}
-          rotation={rotation + 45}
-          listening={false}
+        <div
+          style={{
+            ...baseStyle,
+            left: x - sizeInPixels / 2,
+            top: y - sizeInPixels / 2,
+            width: sizeInPixels,
+            height: sizeInPixels,
+            backgroundColor: color,
+            transform: `rotate(${rotation + 45}deg)`,
+            transformOrigin: 'center',
+          }}
         />
       );
     case 'line':
-      // Для линии используем более сложную геометрию
+      // For line we use SVG for better drawing capabilities
+      const endX = x + sizeInPixels * Math.cos(Math.PI * rotation / 180);
+      const endY = y + sizeInPixels * Math.sin(Math.PI * rotation / 180);
+      
       return (
-        <Line
-          points={[
-            x, y,
-            x + sizeInPixels * Math.cos(Math.PI * rotation / 180),
-            y + sizeInPixels * Math.sin(Math.PI * rotation / 180)
-          ]}
-          stroke={color}
-          strokeWidth={gridSize / 2}
-          opacity={opacity}
-          listening={false}
-        />
+        <svg 
+          style={{
+            ...baseStyle,
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+          }}
+        >
+          <line
+            x1={x}
+            y1={y}
+            x2={endX}
+            y2={endY}
+            stroke={color}
+            strokeWidth={gridSize / 2}
+            strokeOpacity={opacity}
+          />
+        </svg>
       );
     default:
       return null;

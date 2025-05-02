@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,7 +36,7 @@ const DMSessionPage = () => {
 
     const newSession = createSession(sessionName, sessionDescription);
 
-    // Исправляем функцию toast вместо toast(title, description)
+    // Исправляем функцию toast
     toast({
       title: "Сессия создана",
       description: "Поделитесь кодом с игроками, чтобы они могли присоединиться"

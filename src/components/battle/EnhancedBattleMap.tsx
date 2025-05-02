@@ -6,13 +6,12 @@ import AreaEffects from './AreaEffects';
 import LightingSystem from './LightingSystem';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-// Import types from store instead of page
-import { Token, Initiative } from '@/stores/battleStore';
+// Import types from our new type file
+import { Token, Initiative } from '@/types/battleTypes';
 import { AreaEffect, LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Modified: Rename to onAddToken for clarity
   onAddToken: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
@@ -29,7 +28,6 @@ interface EnhancedBattleMapProps {
   gridOpacity?: number;
   zoom?: number;
   isDM?: boolean;
-  // Добавленные поля для эффектов и освещения
   areaEffects?: AreaEffect[];
   lightSources?: LightSource[];
   onMapClick?: (x: number, y: number) => void;
@@ -308,18 +306,20 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         />
         
         {/* Отрисовка эффектов области */}
-        {areaEffects.map(effect => (
-          <AreaEffects
-            key={effect.id}
-            type={effect.type}
-            x={effect.x}
-            y={effect.y}
-            size={effect.size}
-            color={effect.color}
-            opacity={effect.opacity}
-            rotation={effect.rotation}
-          />
-        ))}
+        <div className="area-effects-container absolute inset-0 pointer-events-none">
+          {areaEffects.map(effect => (
+            <AreaEffects
+              key={effect.id}
+              type={effect.type}
+              x={effect.x}
+              y={effect.y}
+              size={effect.size}
+              color={effect.color}
+              opacity={effect.opacity}
+              rotation={effect.rotation}
+            />
+          ))}
+        </div>
         
         {/* Освещение карты */}
         {lightSources && lightSources.length > 0 && (

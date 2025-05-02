@@ -12,6 +12,7 @@ import { CharacterProvider } from '@/contexts/CharacterContext';
 import SpellbookPage from './pages/SpellbookPage';
 import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
+import DMSessionPage from './pages/DMSessionPage';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import GameRoomPage from './pages/GameRoomPage';
@@ -47,9 +48,12 @@ function App() {
                 <Route path="/spellbook" element={<SpellbookPage />} />
                 <Route path="/battle" element={<PlayBattlePage />} />
                 <Route path="/dm" element={<DMDashboardPage />} />
+                <Route path="/dm/session" element={<DMSessionPage />} />
                 <Route path="/dm/battle" element={<PlayBattlePage />} />
                 <Route path="/scene" element={<PlayBattlePage />} />
+                <Route path="/session/:roomCode" element={<GameRoomPage />} />
                 <Route path="/room/:roomCode" element={<GameRoomPage />} />
+                <Route path="/join" element={<Home />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </SocketProvider>
