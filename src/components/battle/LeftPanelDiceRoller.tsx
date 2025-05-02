@@ -34,7 +34,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({
   return (
     <ScrollArea className="h-full pr-2">
       <div className="p-3">
-        <Card className="bg-background/40 backdrop-blur-md border-primary/20 shadow-xl">
+        <Card className="bg-background/40 backdrop-blur-md border-primary/20 shadow-xl z-50 relative">
           <div className="p-3">
             <h3 className="font-bold mb-3 text-lg text-center">Бросок кубиков</h3>
             <DicePanel 
@@ -43,6 +43,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({
               selectedTokenId={selectedTokenId}
               setSelectedTokenId={setSelectedTokenId}
               compactMode={true}
+              fixedPosition={true}
             />
           </div>
         </Card>

@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
@@ -290,7 +289,7 @@ export const DiceRoller3D = ({
   
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <Canvas shadows>
+      <Canvas shadows className={fixedPosition ? "dice-fixed-position" : ""}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} castShadow />
         <Dice 
@@ -303,7 +302,7 @@ export const DiceRoller3D = ({
           themeColor={actualThemeColor}
           fixedPosition={fixedPosition}
         />
-        <OrbitControls enablePan={false} enableZoom={false} />
+        {!fixedPosition && <OrbitControls enablePan={false} enableZoom={false} />}
       </Canvas>
     </div>
   );
