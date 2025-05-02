@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { themes } from '@/lib/themes';
 import { DiceRoller3D } from '../dice/DiceRoller3D';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useSocket } from '@/contexts/SocketContext';
+import { useSession } from '@/contexts/SessionContext';
 
 type DiceRollRecord = {
   id: number;
@@ -20,7 +23,17 @@ type DiceRollRecord = {
   reason?: string;
 };
 
-export const DicePanel = () => {
+interface DicePanelProps {
+  useDmMode?: boolean;
+  selectedTokenId?: number | null;
+  tokens?: any[];
+}
+
+export const DicePanel: React.FC<DicePanelProps> = ({ 
+  useDmMode = false,
+  selectedTokenId = null,
+  tokens = []
+}) => {
   const [diceCount] = useState(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const [modifier, setModifier] = useState(0);
@@ -32,6 +45,26 @@ export const DicePanel = () => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
   const { toast } = useToast();
+  const { sessionData } = useSocket();
+  const { currentSession } = useSession();
+  
+  // Определяем имя игрока из выбранного токена или из введенного имени
+  const getActivePlayerName = () => {
+    if (useDmMode && selectedTokenId && tokens) {
+      const selectedToken = tokens.find((token: any) => token.id === selectedTokenId);
+      if (selectedToken) {
+        return selectedToken.name;
+      }
+    }
+    
+    // Если это режим DM и нет выбранного токена, используем "DM"
+    if (useDmMode) {
+      return "DM";
+    }
+    
+    // В обычном режиме используем введенное имя или "Игрок"
+    return playerName || 'Игрок';
+  };
   
   // Компонент дайса для отображения в результате
   const DiceIcon = ({ value, diceType, size = 30 }: { value: number, diceType: string, size?: number }) => {
@@ -70,10 +103,12 @@ export const DicePanel = () => {
     const finalTotal = value + modifier;
     setLastRollResult(value);
     
+    const effectivePlayerName = getActivePlayerName();
+    
     // Сохраняем результат броска в историю
     const newRoll: DiceRollRecord = { 
       id: Date.now(),
-      playerName: playerName || 'Игрок',
+      playerName: effectivePlayerName,
       diceType, 
       result: value,
       modifier,
@@ -86,7 +121,7 @@ export const DicePanel = () => {
     
     // Показываем уведомление с результатом
     toast({
-      title: `${playerName || 'Игрок'} бросает ${diceType}`,
+      title: `${effectivePlayerName} бросает ${diceType}`,
       description: reason ? 
         `${reason}: ${value}${modifier !== 0 ? ` + ${modifier} = ${finalTotal}` : ''}` : 
         `Результат: ${value}${modifier !== 0 ? ` + ${modifier} = ${finalTotal}` : ''}`,
@@ -149,7 +184,7 @@ export const DicePanel = () => {
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[280px] mb-6 bg-black/70 rounded-lg overflow-hidden relative">
+          <div className="h-[300px] mb-8 bg-black/70 rounded-lg overflow-hidden relative">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -157,12 +192,12 @@ export const DicePanel = () => {
               onRollComplete={handleDiceResult}
               themeColor={getDiceColor(diceType)}
               fixedPosition={true}
-              playerName={playerName || undefined}
+              playerName={getActivePlayerName()}
             />
           </div>
 
           {/* Результат броска с увеличенным отступом */}
-          <div className="mb-6 p-5 bg-black/80 rounded-xl border text-center"
+          <div className="mb-8 p-5 bg-black/80 rounded-xl border text-center"
                style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType), width: '100%' }}>
             <div className="text-sm text-white/70 mb-2">Результат</div>
             {isRolling ? (
@@ -187,15 +222,18 @@ export const DicePanel = () => {
             )}
           </div>
           
-          <div className="mb-3">
-            <label className="text-sm font-medium text-white mb-1 block">Имя игрока:</label>
-            <Input 
-              value={playerName} 
-              onChange={(e) => setPlayerName(e.target.value)} 
-              placeholder="Введите имя"
-              className="w-full mt-1 text-white bg-black/50 border-white/20"
-            />
-          </div>
+          {/* Показываем поле ввода имени только если не в режиме DM */}
+          {!useDmMode && (
+            <div className="mb-3">
+              <label className="text-sm font-medium text-white mb-1 block">Имя игрока:</label>
+              <Input 
+                value={playerName} 
+                onChange={(e) => setPlayerName(e.target.value)} 
+                placeholder="Введите имя"
+                className="w-full mt-1 text-white bg-black/50 border-white/20"
+              />
+            </div>
+          )}
           
           <div className="grid grid-cols-6 gap-2 mb-5 p-3 bg-black/40 rounded-lg">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
@@ -208,7 +246,7 @@ export const DicePanel = () => {
                   variant={isActive ? "default" : "outline"} 
                   onClick={() => setDiceType(dice)} 
                   disabled={isRolling} 
-                  className={`dice-button h-12 ${isActive ? 'text-black' : 'text-white hover:text-black'}`}
+                  className={`dice-button h-14 ${isActive ? 'text-black' : 'text-white hover:text-black'}`}
                   style={{
                     backgroundColor: isActive ? buttonColor : 'transparent',
                     borderColor: `${buttonColor}${isActive ? 'FF' : '40'}`,
@@ -216,7 +254,7 @@ export const DicePanel = () => {
                   }}
                 >
                   <div className="flex flex-col items-center justify-center">
-                    <span className="text-sm">{dice}</span>
+                    <span className="text-base font-bold">{dice}</span>
                   </div>
                 </Button>
               );
