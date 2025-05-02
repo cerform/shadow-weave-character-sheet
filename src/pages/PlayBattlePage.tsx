@@ -473,11 +473,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={tokens => {
-            // This is just a wrapper around the store's setTokens function
-            // We need to use individual update functions from the store
-            console.log("Setting tokens:", tokens);
-          }}
+          setTokens={addToken}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -503,18 +499,7 @@ const PlayBattlePage = () => {
             <RightPanel
               selectedTokenId={selectedTokenId}
               tokens={tokens}
-              setTokens={tokens => {
-                // Этот setTokens - обертка вокруг функций store
-                if (Array.isArray(tokens)) {
-                  // Если передан массив, заменяем все токены
-                  console.log("Trying to replace all tokens, which is not directly supported");
-                } else if (typeof tokens === 'function') {
-                  // Если передана функция, используем существующие токены для обновления
-                  const updatedTokens = tokens(tokens);
-                  console.log("Updating tokens via function:", updatedTokens);
-                  // В этом примере мы просто логируем, но в реальности здесь нужно обновить токены
-                }
-              }}
+              updateToken={updateToken}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
               revealRadius={mapSettings.revealRadius}
@@ -529,12 +514,7 @@ const PlayBattlePage = () => {
           ) : (
             <BattleTabs
               tokens={tokens}
-              setTokens={token => {
-                // Другая обертка для addToken
-                if (token && typeof token === 'object' && !Array.isArray(token)) {
-                  addToken(token as Token);
-                }
-              }}
+              addToken={addToken}
               initiative={initiative}
               selectedTokenId={selectedTokenId}
               onSelectToken={handleSelectToken}

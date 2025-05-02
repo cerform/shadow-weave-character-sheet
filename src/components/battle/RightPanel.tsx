@@ -1,29 +1,18 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { 
-  Card, 
-  CardContent,
-  CardHeader,
-  CardTitle 
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Shield, Heart, SkullIcon, Eye, EyeOff, ZoomIn, ZoomOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
-import DiceRoller3DFixed from "../character-sheet/DiceRoller3DFixed";
-import { Token } from '@/stores/battleStore'; // Import from store
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Token } from '@/stores/battleStore';
 
 interface RightPanelProps {
-  selectedTokenId: number;
+  selectedTokenId: number | null;
   tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  updateToken: (id: number, updates: Partial<Token>) => void;
   fogOfWar: boolean;
   setFogOfWar: (enabled: boolean) => void;
   revealRadius: number;
@@ -33,349 +22,310 @@ interface RightPanelProps {
   gridOpacity: number;
   setGridOpacity: (opacity: number) => void;
   onResetFogOfWar: () => void;
-  isDM?: boolean; // Add isDM prop
+  isDM: boolean;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
   selectedTokenId,
   tokens,
-  setTokens,
+  updateToken,
   fogOfWar,
   setFogOfWar,
   revealRadius,
   setRevealRadius,
-  gridVisible, 
+  gridVisible,
   setGridVisible,
   gridOpacity,
   setGridOpacity,
   onResetFogOfWar,
-  isDM = true // Default to DM mode
+  isDM
 }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const [activeTab, setActiveTab] = useState("stats");
-
-  const selectedToken = tokens.find(token => token.id === selectedTokenId);
-
-  const handleUpdateTokenHP = (change: number) => {
-    if (!selectedToken) return;
+  const [selectedTab, setSelectedTab] = useState<string>("stats");
+  
+  // Находим выбранный токен
+  const selectedToken = selectedTokenId !== null 
+    ? tokens.find(t => t.id === selectedTokenId) 
+    : null;
     
-    setTokens(prev => prev.map(token => 
-      token.id === selectedTokenId 
-        ? {...token, hp: Math.max(0, Math.min(token.maxHp, token.hp + change))} 
-        : token
-    ));
-  };
-
-  const handleUpdateTokenAC = (change: number) => {
-    if (!selectedToken) return;
-    
-    setTokens(prev => prev.map(token => 
-      token.id === selectedTokenId 
-        ? {...token, ac: Math.max(0, token.ac + change)} 
-        : token
-    ));
-  };
-
-  const handleToggleCondition = (condition: string) => {
-    if (!selectedToken) return;
-    
-    setTokens(prev => prev.map(token => {
-      if (token.id === selectedTokenId) {
-        const hasCondition = (token.conditions || []).includes(condition);
-        return {
-          ...token,
-          conditions: hasCondition 
-            ? token.conditions.filter(c => c !== condition) 
-            : [...token.conditions, condition]
-        };
-      }
-      return token;
-    }));
-  };
-
-  const handleToggleVisible = () => {
-    if (!selectedToken || !isDM) return;
-    
-    setTokens(prev => prev.map(token => 
-      token.id === selectedTokenId 
-        ? {...token, visible: !token.visible} 
-        : token
-    ));
-  };
-
-  const handleUpdateTokenSize = (newSize: number) => {
-    if (!selectedToken || !isDM) return;
-    
-    setTokens(prev => prev.map(token => 
-      token.id === selectedTokenId 
-        ? {...token, size: newSize} 
-        : token
-    ));
-  };
-
-  // Проверяем, существует ли выбранный токен
   if (!selectedToken) {
     return (
-      <div className="p-4 space-y-4">
-        <h3 className="font-semibold">Выберите токен на карте</h3>
+      <div className="p-4 text-center">
+        <div className="text-muted-foreground">Выберите токен для просмотра деталей</div>
       </div>
     );
   }
-
+  
+  // Обработчики обновлений токена
+  const handleStatChange = (stat: string, value: number | string) => {
+    if (selectedToken) {
+      updateToken(selectedToken.id, { 
+        [stat]: typeof value === 'string' ? value : Number(value)
+      } as any);
+    }
+  };
+  
+  const handleConditionToggle = (condition: string) => {
+    if (!selectedToken) return;
+    
+    const currentConditions = [...(selectedToken.conditions || [])];
+    const index = currentConditions.indexOf(condition);
+    
+    if (index >= 0) {
+      currentConditions.splice(index, 1);
+    } else {
+      currentConditions.push(condition);
+    }
+    
+    updateToken(selectedToken.id, { conditions: currentConditions });
+  };
+  
+  // Определение типа токена для отображения
+  const tokenTypeName = 
+    selectedToken.type === "player" ? "Игрок" :
+    selectedToken.type === "monster" ? "Монстр" :
+    selectedToken.type === "boss" ? "Босс" : "NPC";
+    
+  // Процент здоровья
+  const healthPercent = Math.floor((selectedToken.hp / selectedToken.maxHp) * 100);
+  const healthColor = 
+    healthPercent >= 66 ? "bg-green-500" : 
+    healthPercent >= 33 ? "bg-yellow-500" : 
+    "bg-red-500";
+  
+  // Список возможных состояний
+  const conditions = [
+    "Испуган", "Отравлен", "Ошеломлен", "Оглушен", 
+    "Лежащий", "Схвачен", "Опутан", "Ослеплен",
+    "Очарован", "Окаменелый", "Парализован", "Невидимый"
+  ];
+  
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Выбранный токен</h3>
-        <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
-          <X size={18} />
-        </Button>
-      </div>
-      
-      <Card className="bg-background/70 backdrop-blur-sm">
-        <CardHeader className="py-2">
+    <div className="p-4">
+      <Card className="mb-4">
+        <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-3">
-            <img 
-              src={selectedToken.img} 
-              alt={selectedToken.name} 
-              className="w-12 h-12 rounded-lg object-cover" 
+            <div 
+              className="w-12 h-12 rounded-full bg-muted overflow-hidden"
               style={{
-                borderColor: selectedToken.type === "boss" ? "#ff5555" 
-                          : selectedToken.type === "monster" ? "#ff9955" : "#55ff55",
-                borderWidth: 2
+                backgroundImage: `url(${selectedToken.img})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                borderColor: 
+                  selectedToken.type === "player" ? "#4CAF50" : 
+                  selectedToken.type === "boss" ? "#F44336" : 
+                  "#FF9800",
+                borderWidth: 2,
+                borderStyle: 'solid'
               }}
             />
             <div>
-              <h3 className="font-medium text-lg">{selectedToken.name}</h3>
-              <p className="text-xs text-muted-foreground">
-                {selectedToken.type === "player" ? "Игрок" 
-                : selectedToken.type === "boss" ? "Босс" 
-                : selectedToken.type === "npc" ? "NPC" : "Монстр"}
-              </p>
+              <h3 className="font-semibold">{selectedToken.name}</h3>
+              <div className="text-xs text-muted-foreground">{tokenTypeName}</div>
             </div>
-            {isDM && (
-              <div className="ml-auto">
-                <Button 
-                  variant={selectedToken.visible ? "outline" : "secondary"} 
-                  size="icon"
-                  onClick={handleToggleVisible}
-                  title={selectedToken.visible ? "Скрыть от игроков" : "Показать игрокам"}
-                >
-                  {selectedToken.visible ? <Eye size={16} /> : <EyeOff size={16} />}
-                </Button>
-              </div>
-            )}
           </div>
+          
+          {isDM && (
+            <Button variant="outline" size="sm">
+              Изменить
+            </Button>
+          )}
         </CardHeader>
         
-        <CardContent className="pb-4">
-          <Tabs defaultValue="stats" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3 mb-2">
-              <TabsTrigger value="stats">Параметры</TabsTrigger>
-              <TabsTrigger value="conditions">Состояния</TabsTrigger>
-              <TabsTrigger value="actions">Действия</TabsTrigger>
+        <CardContent className="p-4">
+          <Tabs defaultValue="stats" value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="stats" className="text-xs">Характеристики</TabsTrigger>
+              <TabsTrigger value="conditions" className="text-xs">Состояния</TabsTrigger>
+              <TabsTrigger value="resources" className="text-xs">Ресурсы</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="stats" className="space-y-3">
-              <div>
-                <Label>Здоровье</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleUpdateTokenHP(-1)}
-                  >
-                    <span className="font-bold">-</span>
-                  </Button>
-                  
-                  <div className="flex-1 bg-muted/30 rounded h-8 relative">
-                    <div 
-                      className="absolute inset-y-0 left-0 rounded" 
-                      style={{
-                        width: `${(selectedToken.hp / selectedToken.maxHp) * 100}%`,
-                        backgroundColor: `rgba(${selectedToken.hp < selectedToken.maxHp / 2 ? '220, 38, 38' : '34, 197, 94'}, 0.6)`,
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-foreground font-medium">
-                      {selectedToken.hp} / {selectedToken.maxHp}
+            <TabsContent value="stats" className="pt-4">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="hp" className="mb-2 block">Здоровье</Label>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStatChange('hp', Math.max(0, selectedToken.hp - 1))}
+                      disabled={!isDM && selectedToken.type !== "player"}
+                    >-</Button>
+                    <div className="flex-1">
+                      <div className="h-2 bg-muted rounded overflow-hidden">
+                        <div className={`h-full ${healthColor}`} style={{width: `${healthPercent}%`}}></div>
+                      </div>
+                      <div className="flex justify-between mt-1 text-xs">
+                        <span>Текущее: {selectedToken.hp}</span>
+                        <span>Максимум: {selectedToken.maxHp}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStatChange('hp', Math.min(selectedToken.maxHp, selectedToken.hp + 1))}
+                      disabled={!isDM && selectedToken.type !== "player"}
+                    >+</Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="ac" className="mb-2 block">Класс доспеха (AC)</Label>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStatChange('ac', selectedToken.ac - 1)}
+                      disabled={!isDM}
+                    >-</Button>
+                    <div className="flex-1 text-center font-semibold text-xl">
+                      {selectedToken.ac}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStatChange('ac', selectedToken.ac + 1)}
+                      disabled={!isDM}
+                    >+</Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="size" className="mb-2 block">Размер токена</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-grow flex items-center gap-2">
+                      <ZoomOut size={16} />
+                      <Slider
+                        id="size"
+                        min={0.5}
+                        max={3.0}
+                        step={0.1}
+                        defaultValue={[selectedToken.size || 1]}
+                        value={[selectedToken.size || 1]}
+                        onValueChange={([value]) => handleStatChange('size', value)}
+                        disabled={!isDM}
+                      />
+                      <ZoomIn size={16} />
+                    </div>
+                    <div className="w-12 text-center">
+                      {selectedToken.size?.toFixed(1) || '1.0'}x
                     </div>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleUpdateTokenHP(1)}
-                  >
-                    <span className="font-bold">+</span>
-                  </Button>
                 </div>
-              </div>
-              
-              <div>
-                <Label>Класс брони (AC)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleUpdateTokenAC(-1)}
-                  >
-                    <span className="font-bold">-</span>
-                  </Button>
-                  
-                  <div className="flex-1 flex items-center justify-center h-8 bg-muted/30 rounded font-medium">
-                    {selectedToken.ac}
+                
+                {isDM && (
+                  <div>
+                    <Label htmlFor="visible" className="mb-2 block">Видимость токена</Label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="visible"
+                        checked={selectedToken.visible}
+                        onCheckedChange={(checked) => handleStatChange('visible', checked)}
+                      />
+                      <span className="text-sm">{selectedToken.visible ? 'Видим всем' : 'Скрыт (только DM)'}</span>
+                    </div>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleUpdateTokenAC(1)}
-                  >
-                    <span className="font-bold">+</span>
-                  </Button>
-                </div>
-              </div>
-              
-              {isDM && (
-                <div>
-                  <Label>Размер токена</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={() => handleUpdateTokenSize(Math.max(0.5, selectedToken.size - 0.5))}
-                      title="Уменьшить"
-                    >
-                      <ZoomOut size={16} />
-                    </Button>
-                    <Slider
-                      value={[selectedToken.size]}
-                      min={0.5}
-                      max={3}
-                      step={0.5}
-                      onValueChange={(values) => handleUpdateTokenSize(values[0])}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={() => handleUpdateTokenSize(Math.min(3, selectedToken.size + 0.5))}
-                      title="Увеличить"
-                    >
-                      <ZoomIn size={16} />
-                    </Button>
-                  </div>
-                  <div className="text-xs text-center mt-1 text-muted-foreground">
-                    {selectedToken.size === 0.5 ? 'Крохотный' : 
-                     selectedToken.size === 1 ? 'Обычный' : 
-                     selectedToken.size === 1.5 ? 'Большой' : 
-                     selectedToken.size === 2 ? 'Огромный' : 'Гигантский'}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="conditions" className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  "Оглушен", "Отравлен", "Парализован", "Испуган", 
-                  "Бессознательный", "Схвачен", "Ослеплен", "Окаменен"
-                ].map((condition) => {
-                  const isActive = selectedToken.conditions?.includes(condition);
-                  return (
-                    <Button 
-                      key={condition}
-                      variant={isActive ? "default" : "outline"}
-                      className={`text-xs h-auto py-2 ${isActive ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                      onClick={() => handleToggleCondition(condition)}
-                      disabled={!isDM && selectedToken.type !== "player"}
-                    >
-                      {condition}
-                    </Button>
-                  );
-                })}
+                )}
               </div>
             </TabsContent>
             
-            <TabsContent value="actions" className="space-y-3">
+            <TabsContent value="conditions" className="pt-4">
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline">Атака</Button>
-                <Button variant="outline">Заклинание</Button>
-                <Button variant="outline">Навык</Button>
-                <Button variant="outline">Спасбросок</Button>
+                {conditions.map(condition => (
+                  <Button
+                    key={condition}
+                    variant={selectedToken.conditions?.includes(condition) ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => handleConditionToggle(condition)}
+                    disabled={!isDM && selectedToken.type !== "player"}
+                  >
+                    {condition}
+                  </Button>
+                ))}
               </div>
-              
-              <div>
-                <h4 className="text-sm font-medium mb-2">Бросить кубик</h4>
-                <div className="h-32 border rounded overflow-hidden">
-                  <DiceRoller3DFixed hideControls={true} initialDice="d20" />
-                </div>
+            </TabsContent>
+            
+            <TabsContent value="resources" className="pt-4">
+              <div className="text-center text-muted-foreground py-4">
+                Дополнительные ресурсы появятся в следующей версии
               </div>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
       
+      {/* Секция настроек карты */}
       {isDM && (
-        <Card className="bg-background/70 backdrop-blur-sm">
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm">Управление картой</CardTitle>
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">Настройки отображения</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-0">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="fog-switch">Туман войны</Label>
-              <Switch 
-                id="fog-switch" 
-                checked={fogOfWar} 
-                onCheckedChange={setFogOfWar}
-              />
-            </div>
-            
-            {fogOfWar && (
-              <div>
-                <div className="flex justify-between items-center">
-                  <Label>Радиус видимости</Label>
-                  <span className="text-xs">{revealRadius} клеток</span>
-                </div>
-                <Slider
-                  value={[revealRadius]}
-                  min={1}
-                  max={10}
-                  step={1}
-                  onValueChange={(values) => setRevealRadius(values[0])}
-                  className="my-2"
-                />
-                <Button variant="outline" size="sm" className="w-full mt-1" onClick={onResetFogOfWar}>
-                  Сбросить туман войны
-                </Button>
-              </div>
-            )}
-            
-            <div className="flex justify-between items-center pt-2">
-              <Label htmlFor="grid-switch">Отображение сетки</Label>
-              <Switch 
-                id="grid-switch" 
-                checked={gridVisible} 
-                onCheckedChange={setGridVisible}
-              />
-            </div>
-            
-            {gridVisible && (
-              <div>
-                <div className="flex justify-between items-center">
-                  <Label>Прозрачность сетки</Label>
-                  <span className="text-xs">{Math.round(gridOpacity * 100)}%</span>
-                </div>
-                <Slider
-                  value={[gridOpacity]}
-                  min={0.1}
-                  max={1}
-                  step={0.1}
-                  onValueChange={(values) => setGridOpacity(values[0])}
-                  className="my-2"
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="fog-of-war" className="cursor-pointer">Туман войны</Label>
+                <Switch 
+                  id="fog-of-war" 
+                  checked={fogOfWar}
+                  onCheckedChange={setFogOfWar}
                 />
               </div>
-            )}
+              
+              {fogOfWar && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="reveal-radius" className="block">Радиус обзора</Label>
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        id="reveal-radius"
+                        min={1}
+                        max={10}
+                        step={1}
+                        defaultValue={[revealRadius]}
+                        value={[revealRadius]}
+                        onValueChange={([value]) => setRevealRadius(value)}
+                      />
+                      <span className="w-8 text-center">{revealRadius}</span>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={onResetFogOfWar}
+                  >
+                    Сбросить туман войны
+                  </Button>
+                </>
+              )}
+              
+              <div className="flex items-center justify-between mt-4">
+                <Label htmlFor="grid-visible" className="cursor-pointer">Показывать сетку</Label>
+                <Switch 
+                  id="grid-visible" 
+                  checked={gridVisible}
+                  onCheckedChange={setGridVisible}
+                />
+              </div>
+              
+              {gridVisible && (
+                <div className="space-y-2">
+                  <Label htmlFor="grid-opacity" className="block">Прозрачность сетки</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      id="grid-opacity"
+                      min={0.1}
+                      max={1.0}
+                      step={0.1}
+                      defaultValue={[gridOpacity]}
+                      value={[gridOpacity]}
+                      onValueChange={([value]) => setGridOpacity(value)}
+                    />
+                    <span className="w-12 text-center">{Math.round(gridOpacity * 100)}%</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

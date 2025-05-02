@@ -1,33 +1,33 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Book, Settings } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
-import { BestiaryPanel } from "./BestiaryPanel";
-import { Token, Initiative } from '@/stores/battleStore'; // Import from store
+import React, { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Skull, User, Crown, RefreshCw, ArrowRight } from "lucide-react";
+import { Initiative, Token } from '@/stores/battleStore';
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface BattleTabsProps {
   tokens: Token[];
-  setTokens: (token: Token) => void;
+  addToken?: (token: Token) => void;
   initiative: Initiative[];
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
-  updateTokenHP?: (id: number, change: number) => void;
-  removeToken?: (id: number) => void;
+  updateTokenHP: (id: number, change: number) => void;
+  removeToken: (id: number) => void;
   controlsPanel?: React.ReactNode;
+  onAddToken?: (type: "player" | "monster" | "boss" | "npc") => void;
   fogOfWar?: boolean;
-  setFogOfWar?: (value: boolean) => void;
+  setFogOfWar?: (enabled: boolean) => void;
   gridSize?: { rows: number; cols: number };
   setGridSize?: (size: { rows: number; cols: number }) => void;
-  onAddToken?: (type: Token["type"]) => void;
-  isDM?: boolean; // Added isDM prop
+  isDM?: boolean;
 }
 
 const BattleTabs: React.FC<BattleTabsProps> = ({
   tokens,
-  setTokens,
+  addToken,
   initiative,
   selectedTokenId,
   onSelectToken,
@@ -35,137 +35,301 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
   removeToken,
   controlsPanel,
   onAddToken,
-  isDM = true, // By default - DM mode
+  fogOfWar,
+  setFogOfWar,
+  gridSize,
+  setGridSize,
+  isDM = true
 }) => {
-  const [selectedTab, setSelectedTab] = useState<string>("tokens");
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  const [activeTab, setActiveTab] = useState("tokens");
+  
+  const handleOnAddToken = (type: "player" | "monster" | "boss" | "npc") => {
+    if (onAddToken && isDM) {
+      onAddToken(type);
+    }
+  };
+  
+  // Сортировка токенов в группы
+  const players = tokens.filter(t => t.type === "player");
+  const monsters = tokens.filter(t => t.type === "monster");
+  const bosses = tokens.filter(t => t.type === "boss");
   
   return (
-    <div className="h-full">
-      <Tabs 
-        defaultValue="tokens" 
-        className="h-full flex flex-col" 
-        value={selectedTab} 
-        onValueChange={setSelectedTab}
-      >
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="tokens" className="flex flex-col items-center py-1">
-            <Users size={16} />
-            <span className="text-xs mt-1">Токены</span>
-          </TabsTrigger>
-          {isDM && (
-            <TabsTrigger value="bestiary" className="flex flex-col items-center py-1">
-              <Book size={16} />
-              <span className="text-xs mt-1">Бestiарий</span>
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="controls" className="flex flex-col items-center py-1">
-            <Settings size={16} />
-            <span className="text-xs mt-1">Настройки</span>
-          </TabsTrigger>
+    <div className="p-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="tokens" className="text-xs sm:text-sm">Токены</TabsTrigger>
+          <TabsTrigger value="initiative" className="text-xs sm:text-sm">Инициатива</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm">Настройки</TabsTrigger>
         </TabsList>
         
-        <ScrollArea className="flex-1">
-          <TabsContent value="tokens" className="m-0 p-3 h-full">
-            <h3 className="font-medium mb-2">Токены на карте ({tokens.length})</h3>
-            {tokens.map(token => (
-              <div 
-                key={token.id} 
-                className={`flex items-center justify-between p-2 rounded mb-2 ${
-                  selectedTokenId === token.id ? 'bg-primary/20 border border-primary' : 'bg-card'
-                }`}
-                onClick={() => onSelectToken(token.id)}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={token.img} 
-                    alt={token.name} 
-                    className="w-8 h-8 rounded-full object-cover"
-                    style={{
-                      borderColor: token.type === "boss"
-                          ? "#ff5555"
-                          : token.type === "monster"
-                          ? "#ff9955"
-                          : "#55ff55",
-                      borderWidth: 2
-                    }}
-                  />
-                  <div>
-                    <div className="font-medium">{token.name}</div>
-                    <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp}</div>
-                  </div>
-                </div>
-                {isDM && (
-                  <div className="flex items-center gap-1">
-                    {updateTokenHP && (
-                      <>
-                        <button 
-                          className="h-6 w-6 flex items-center justify-center rounded border text-xs"
-                          onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}
-                        >
-                          -
-                        </button>
-                        <button 
-                          className="h-6 w-6 flex items-center justify-center rounded border text-xs"
-                          onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}
-                        >
-                          +
-                        </button>
-                      </>
-                    )}
-                    {removeToken && (
-                      <button 
-                        className="h-6 w-6 flex items-center justify-center rounded text-destructive"
-                        onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            {tokens.length === 0 && (
-              <div className="text-center p-4 text-muted-foreground">
-                Нет токенов на карте
-              </div>
-            )}
-          </TabsContent>
-          
+        <TabsContent value="tokens">
           {isDM && (
-            <TabsContent value="bestiary" className="m-0 p-3 h-full">
-              <BestiaryPanel addToMap={(monster) => {
-                if (setTokens && isDM) {
-                  const newToken = {
-                    id: Date.now(),
-                    name: monster.name,
-                    type: monster.challenge >= 5 ? "boss" : "monster" as "player" | "monster" | "boss" | "npc",
-                    img: monster.img || `/assets/tokens/${monster.type.toLowerCase()}.png`,
-                    x: 100 + Math.random() * 300,
-                    y: 100 + Math.random() * 300,
-                    hp: monster.hp,
-                    maxHp: monster.hp,
-                    ac: monster.ac,
-                    initiative: monster.dexMod || 0,
-                    conditions: [],
-                    resources: {},
-                    visible: true,
-                    size: monster.size === 'Large' ? 1.5 : monster.size === 'Huge' ? 2 : monster.size === 'Gargantuan' ? 2.5 : 1
-                  };
-                  setTokens(newToken);
-                }
-              }} />
-            </TabsContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+              <Button
+                onClick={() => handleOnAddToken("player")}
+                variant="outline"
+                className="w-full flex justify-center items-center gap-1"
+                size="sm"
+              >
+                <User size={14} />
+                <span className="text-xs">Игрок</span>
+              </Button>
+              <Button
+                onClick={() => handleOnAddToken("monster")}
+                variant="outline"
+                className="w-full flex justify-center items-center gap-1"
+                size="sm"
+              >
+                <Skull size={14} />
+                <span className="text-xs">Моб</span>
+              </Button>
+              <Button
+                onClick={() => handleOnAddToken("boss")}
+                variant="outline"
+                className="w-full flex justify-center items-center gap-1"
+                size="sm"
+              >
+                <Crown size={14} />
+                <span className="text-xs">Босс</span>
+              </Button>
+            </div>
           )}
           
-          <TabsContent value="controls" className="m-0 p-3 h-full">
-            {controlsPanel}
-          </TabsContent>
-        </ScrollArea>
+          <div className="space-y-4">
+            {/* Секция игроков */}
+            {players.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2 flex items-center">
+                  <User size={14} className="mr-1" /> Игроки ({players.length})
+                </h3>
+                <div className="space-y-2">
+                  {players.map(token => (
+                    <TokenCard
+                      key={token.id}
+                      token={token}
+                      isSelected={token.id === selectedTokenId}
+                      onSelect={() => onSelectToken(token.id)}
+                      onUpdateHP={updateTokenHP}
+                      onRemove={isDM ? removeToken : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Секция мобов */}
+            {monsters.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2 flex items-center mt-4">
+                  <Skull size={14} className="mr-1" /> Монстры ({monsters.length})
+                </h3>
+                <div className="space-y-2">
+                  {monsters.map(token => (
+                    <TokenCard
+                      key={token.id}
+                      token={token}
+                      isSelected={token.id === selectedTokenId}
+                      onSelect={() => onSelectToken(token.id)}
+                      onUpdateHP={updateTokenHP}
+                      onRemove={isDM ? removeToken : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Секция боссов */}
+            {bosses.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2 flex items-center mt-4">
+                  <Crown size={14} className="mr-1" /> Боссы ({bosses.length})
+                </h3>
+                <div className="space-y-2">
+                  {bosses.map(token => (
+                    <TokenCard
+                      key={token.id}
+                      token={token}
+                      isSelected={token.id === selectedTokenId}
+                      onSelect={() => onSelectToken(token.id)}
+                      onUpdateHP={updateTokenHP}
+                      onRemove={isDM ? removeToken : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {tokens.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                {isDM 
+                  ? "Добавьте токены на карту с помощью кнопок выше" 
+                  : "Нет активных токенов на карте"}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="initiative">
+          <div className="mb-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-semibold">Порядок инициативы</h3>
+              {isDM && (
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <RefreshCw size={14} />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <ArrowRight size={14} />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <Separator className="my-2" />
+          </div>
+          
+          <div className="space-y-1">
+            {initiative.map((item, index) => {
+              const token = tokens.find(t => t.id === item.tokenId);
+              if (!token) return null;
+              
+              return (
+                <div 
+                  key={item.id} 
+                  className={`flex items-center p-2 rounded ${
+                    item.isActive ? "bg-primary/20 border border-primary" : "bg-muted/10 border"
+                  } cursor-pointer`}
+                  onClick={() => onSelectToken(token.id)}
+                >
+                  <div className="mr-2 w-6 h-6 flex items-center justify-center rounded-full bg-muted font-medium text-xs">
+                    {item.roll}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 flex-1">
+                    <div 
+                      className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0"
+                      style={{
+                        backgroundImage: `url(${token.img})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <span className="text-sm truncate">{token.name}</span>
+                  </div>
+                  
+                  {item.isActive && (
+                    <Badge variant="secondary" className="ml-1 flex-shrink-0 text-xs">
+                      Ход
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+            
+            {initiative.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Инициатива не была брошена
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="settings">
+          {controlsPanel}
+        </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// Компонент карточки токена
+interface TokenCardProps {
+  token: Token;
+  isSelected: boolean;
+  onSelect: () => void;
+  onUpdateHP: (id: number, change: number) => void;
+  onRemove?: (id: number) => void;
+}
+
+const TokenCard: React.FC<TokenCardProps> = ({ token, isSelected, onSelect, onUpdateHP, onRemove }) => {
+  // Процент здоровья для индикатора
+  const healthPercent = Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100));
+  const healthColor = healthPercent > 66 ? "bg-green-500" : healthPercent > 33 ? "bg-yellow-500" : "bg-red-500";
+  
+  return (
+    <Card 
+      className={`${isSelected ? 'border-primary border-2' : ''} hover:bg-muted/10 transition-colors cursor-pointer`}
+      onClick={onSelect}
+    >
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div 
+              className="w-10 h-10 rounded-full overflow-hidden bg-muted"
+              style={{
+                backgroundImage: `url(${token.img})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                border: `2px solid ${token.type === 'player' ? '#4CAF50' : token.type === 'boss' ? '#F44336' : '#FF9800'}`
+              }}
+            />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start">
+              <div className="font-medium truncate" title={token.name}>{token.name}</div>
+              {onRemove && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 -mt-1 -mr-2 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {e.stopPropagation(); onRemove(token.id);}}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </Button>
+              )}
+            </div>
+            
+            <div className="text-xs text-muted-foreground flex justify-between items-center gap-1">
+              <div>КЗ: {token.ac}</div>
+              <div className="flex-1 flex items-center gap-1">
+                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full ${healthColor}`} style={{width: `${healthPercent}%`}}></div>
+                </div>
+                <span>{token.hp}/{token.maxHp}</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 text-xs px-1.5 text-muted-foreground"
+                onClick={(e) => {e.stopPropagation(); onUpdateHP(token.id, -1);}}
+              >
+                -1
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 text-xs px-1.5 text-muted-foreground"
+                onClick={(e) => {e.stopPropagation(); onUpdateHP(token.id, 1);}}
+              >
+                +1
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 text-xs px-1.5 text-muted-foreground"
+                onClick={(e) => {e.stopPropagation(); onUpdateHP(token.id, 5);}}
+              >
+                +5
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

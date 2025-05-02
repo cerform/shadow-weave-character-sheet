@@ -10,7 +10,7 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  setTokens: (token: Token) => void;
   background: string | null;
   setBackground: React.Dispatch<React.SetStateAction<string | null>>;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
