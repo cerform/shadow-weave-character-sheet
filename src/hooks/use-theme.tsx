@@ -6,7 +6,9 @@ export const useTheme = () => {
   const context = useContext(ThemeContext);
   
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Изменяем поведение на обработку по умолчанию вместо выброса исключения
+    console.warn('useTheme must be used within a ThemeProvider');
+    return { theme: 'default', setTheme: () => {} };
   }
   
   return context;

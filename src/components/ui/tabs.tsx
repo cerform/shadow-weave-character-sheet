@@ -13,7 +13,9 @@ const TabsList = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
 >(({ className, ...props }, ref) => {
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   return (
     <TabsPrimitive.List
@@ -37,7 +39,9 @@ const TabsTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, ref) => {
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   return (
     <TabsPrimitive.Trigger

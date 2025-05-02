@@ -19,7 +19,9 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
   const [diceCount, setDiceCount] = useState<number>(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   return (
     <Card className="w-full h-full bg-background/90 backdrop-blur-sm">

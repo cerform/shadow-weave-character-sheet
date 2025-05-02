@@ -46,7 +46,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     const { theme } = useTheme();
-    const currentTheme = themes[theme as keyof typeof themes];
+    // Добавляем проверку на существование темы и используем 'default' как значение по умолчанию
+    const themeKey = (theme || 'default') as keyof typeof themes;
+    const currentTheme = themes[themeKey] || themes.default;
     
     return (
       <Comp

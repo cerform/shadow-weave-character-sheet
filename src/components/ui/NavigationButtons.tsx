@@ -13,7 +13,9 @@ interface NavigationButtonsProps {
 export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
