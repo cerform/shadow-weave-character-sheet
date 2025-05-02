@@ -1,3 +1,4 @@
+
 // Путь: shadow/src/components/OBSLayout.tsx
 
 import React, { PropsWithChildren } from "react";

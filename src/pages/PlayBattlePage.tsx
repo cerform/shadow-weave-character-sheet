@@ -6,6 +6,7 @@ import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import MapControls from "@/components/battle/MapControls";
+import BattleTabs from "@/components/battle/BattleTabs";
 import { motion } from "framer-motion";
 import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull, ZoomIn, ZoomOut, Scale, Grid3x3, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -442,6 +443,176 @@ const PlayBattlePage = () => {
     setFogOfWar(!fogOfWar);
   };
 
+  // Перемещение карты в указанном направлении
+  const handleMoveMap = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!mapRef.current) return;
+    
+    const step = 100; // шаг перемещения в пикселях
+    
+    switch (direction) {
+      case 'up':
+        mapRef.current.scrollBy(0, -step);
+        break;
+      case 'down':
+        mapRef.current.scrollBy(0, step);
+        break;
+      case 'left':
+        mapRef.current.scrollBy(-step, 0);
+        break;
+      case 'right':
+        mapRef.current.scrollBy(step, 0);
+        break;
+    }
+  };
+
+  // Функция добавления источника света
+  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight') => {
+    // Здесь будет логика добавления источника света
+    // Сейчас просто показываем уведомление
+    toast({
+      title: `Добавлен источник света: ${type}`,
+      description: type === 'daylight' ? 'Карта освещена полностью' : 
+                  `Радиус освещения: ${type === 'torch' ? '6' : '10'} клеток`,
+    });
+  };
+
+  // Создаем панель управления картой для правой части
+  const mapControlPanel = (
+    <div className="space-y-4">
+      <MapControls
+        fogOfWar={fogOfWar}
+        setFogOfWar={setFogOfWar}
+        revealRadius={revealRadius}
+        setRevealRadius={setRevealRadius}
+        gridVisible={gridVisible}
+        setGridVisible={setGridVisible}
+        gridOpacity={gridOpacity}
+        setGridOpacity={setGridOpacity}
+        onResetFogOfWar={resetFogOfWar}
+      />
+      
+      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
+        <h3 className="font-medium mb-3">Управление картой</h3>
+        
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 text-sm font-medium">Масштаб</div>
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="outline" onClick={handleZoomOut} className="h-8 w-8">
+                <ZoomOut size={16} />
+              </Button>
+              <div className="flex-1 text-center text-sm">
+                {Math.round(zoom * 100)}%
+              </div>
+              <Button size="icon" variant="outline" onClick={handleZoomIn} className="h-8 w-8">
+                <ZoomIn size={16} />
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleResetZoom} className="h-8">
+                <Scale size={14} className="mr-1" /> Сброс
+              </Button>
+            </div>
+          </div>
+          
+          <div>
+            <div className="mb-1 text-sm font-medium">Перемещение карты</div>
+            <div className="grid grid-cols-3 gap-1 place-items-center">
+              <div></div>
+              <Button size="icon" variant="outline" onClick={() => handleMoveMap('up')} className="h-8 w-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 15l-6-6-6 6"/>
+                </svg>
+              </Button>
+              <div></div>
+              
+              <Button size="icon" variant="outline" onClick={() => handleMoveMap('left')} className="h-8 w-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+              </Button>
+              <div className="text-xs text-muted-foreground">Двигать</div>
+              <Button size="icon" variant="outline" onClick={() => handleMoveMap('right')} className="h-8 w-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </Button>
+              
+              <div></div>
+              <Button size="icon" variant="outline" onClick={() => handleMoveMap('down')} className="h-8 w-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </Button>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
+        <h3 className="font-medium mb-3">Освещение</h3>
+        
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 text-sm font-medium">Добавить источник света</div>
+            <div className="grid grid-cols-3 gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddLight('torch')}
+                className="h-auto py-2 flex flex-col items-center"
+                style={{ color: currentTheme.accent }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2c.46 0 .9.18 1.23.5.32.34.5.78.5 1.24v1.52l4.09 4.1c.34.33.51.77.51 1.21V13c0 1.1-.9 2-2 2h-8.63c-.97 0-1.84-.76-1.97-1.71a2 2 0 0 1 .51-1.98l4.09-4.1V3.74c0-.46.18-.9.5-1.23A1.74 1.74 0 0 1 12 2Z"/>
+                  <path d="M8 15v3c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-3"/>
+                  <path d="M13 22H11"/>
+                </svg>
+                <span className="text-xs">Факел</span>
+                <span className="text-[10px] text-muted-foreground">радиус 6</span>
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddLight('lantern')}
+                className="h-auto py-2 flex flex-col items-center"
+                style={{ color: currentTheme.accent }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21h6"/>
+                  <path d="M12 21v-6"/>
+                  <path d="M15 9.25a3 3 0 1 0-6 0v1.5L6 12c0 .94.33 1.85.93 2.57A5.02 5.02 0 0 0 12 17c2.22 0 4.17-1.44 4.83-3.55l-1.83-1.7v-2.5Z"/>
+                </svg>
+                <span className="text-xs">Фонарь</span>
+                <span className="text-[10px] text-muted-foreground">радиус 10</span>
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddLight('daylight')}
+                className="h-auto py-2 flex flex-col items-center"
+                style={{ color: currentTheme.accent }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"/>
+                  <path d="M12 2v2"/>
+                  <path d="M12 20v2"/>
+                  <path d="M5 5l1.4 1.4"/>
+                  <path d="M17.6 17.6 19 19"/>
+                  <path d="M2 12h2"/>
+                  <path d="M20 12h2"/>
+                  <path d="M5 19l1.4-1.4"/>
+                  <path d="M17.6 6.4 19 5"/>
+                </svg>
+                <span className="text-xs">Дневной</span>
+                <span className="text-[10px] text-muted-foreground">по всей карте</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
       {/* Верхняя панель с расширенными элементами управления */}
@@ -454,26 +625,6 @@ const PlayBattlePage = () => {
             variant={showSceneMode ? "default" : "outline"}
           >
             {showSceneMode ? "Боевой режим" : "Режим сцены"}
-          </Button>
-          
-          {/* Элементы управления сеткой и туманом перенесены в верх��юю панель */}
-          <Button
-            size="sm"
-            variant={gridVisible ? "default" : "outline"}
-            onClick={() => setGridVisible(!gridVisible)}
-            title="Показать/скрыть сетку"
-          >
-            <Grid3x3 size={16} className="mr-1" />
-            {gridVisible ? "Скрыть сетку" : "Показать сетку"}
-          </Button>
-          
-          <Button
-            size="sm"
-            variant={fogOfWar ? "default" : "outline"}
-            onClick={() => setFogOfWar(!fogOfWar)}
-            title="Включить/выключить туман войны"
-          >
-            {fogOfWar ? "Выключить туман" : "Включить туман"}
           </Button>
         </div>
         
@@ -542,7 +693,7 @@ const PlayBattlePage = () => {
         </div>
         
         {/* Центральная карта */}
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden" ref={mapRef}>
           <EnhancedBattleMap 
             tokens={tokens}
             setTokens={setTokens}
@@ -560,18 +711,6 @@ const PlayBattlePage = () => {
             gridVisible={gridVisible}
             gridOpacity={gridOpacity}
           />
-          
-          {/* Вынесенная панель управления картой */}
-          <MapControlBox 
-            zoom={zoom}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onResetZoom={handleResetZoom}
-            gridVisible={gridVisible}
-            toggleGrid={toggleGridVisible}
-            fogOfWar={fogOfWar}
-            toggleFogOfWar={toggleFogOfWar}
-          />
         </div>
         
         {/* Правая панель с фиксированной шириной и прокруткой */}
@@ -584,45 +723,16 @@ const PlayBattlePage = () => {
                 setTokens={setTokens}
               />
             ) : (
-              <div className="space-y-4">
-                <MapControls
-                  fogOfWar={fogOfWar}
-                  setFogOfWar={setFogOfWar}
-                  revealRadius={revealRadius}
-                  setRevealRadius={setRevealRadius}
-                  gridVisible={gridVisible}
-                  setGridVisible={setGridVisible}
-                  gridOpacity={gridOpacity}
-                  setGridOpacity={setGridOpacity}
-                  onResetFogOfWar={resetFogOfWar}
-                />
-                
-                <h3 className="font-medium mb-4">Кубики</h3>
-                <div className="h-64">
-                  <DicePanel />
-                </div>
-                
-                <div className="mt-4 p-4 border rounded bg-muted/10">
-                  <h3 className="font-medium mb-2">Чат</h3>
-                  <div className="h-48 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
-                    <div className="text-sm">
-                      <div className="mb-1">
-                        <span className="font-medium">DM:</span> Добро пожаловать в приключение!
-                      </div>
-                      <div className="mb-1">
-                        <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
-                      </div>
-                      <div className="mb-1">
-                        <span className="font-medium">DM:</span> Бросаем инициативу...
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input placeholder="Сообщение..." />
-                    <Button>Отправить</Button>
-                  </div>
-                </div>
-              </div>
+              <BattleTabs
+                tokens={tokens}
+                setTokens={setTokens}
+                initiative={initiative}
+                selectedTokenId={selectedTokenId}
+                onSelectToken={handleSelectToken}
+                updateTokenHP={updateTokenHP}
+                removeToken={removeToken}
+                controlsPanel={mapControlPanel}
+              />
             )}
           </ScrollArea>
         </div>

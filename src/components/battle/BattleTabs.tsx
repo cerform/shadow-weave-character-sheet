@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DicePanel } from "@/components/character-sheet/DicePanel";
-import { Dice, Users, Map, Cog, MessageSquare } from "lucide-react";
+import { Dice1, Users, Map, Cog, MessageSquare } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
@@ -47,11 +47,11 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
             <span className="text-xs mt-1">Токены</span>
           </TabsTrigger>
           <TabsTrigger value="initiative" className="flex flex-col items-center py-1">
-            <Dice size={16} />
+            <Dice1 size={16} />
             <span className="text-xs mt-1">Инициатива</span>
           </TabsTrigger>
           <TabsTrigger value="dice" className="flex flex-col items-center py-1">
-            <Dice size={16} />
+            <Dice1 size={16} />
             <span className="text-xs mt-1">Кубики</span>
           </TabsTrigger>
           <TabsTrigger value="chat" className="flex flex-col items-center py-1">
@@ -165,6 +165,10 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
           
           <TabsContent value="dice" className="m-0 p-3 h-full">
             <DicePanel />
+          </TabsContent>
+          
+          <TabsContent value="controls" className="m-0 p-3 h-full">
+            {controlsPanel}
           </TabsContent>
           
           <TabsContent value="chat" className="m-0 p-3 h-full">
