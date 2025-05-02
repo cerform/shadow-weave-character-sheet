@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { DicePanel } from '@/components/character-sheet/DicePanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,8 +31,6 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({
   selectedTokenId = null,
   setSelectedTokenId = () => {}
 }) => {
-  const { sessionData } = useSocket();
-  
   return (
     <ScrollArea className="h-full pr-2">
       <div className="p-3">
@@ -43,6 +41,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({
               useDmMode={true} 
               tokens={tokens} 
               selectedTokenId={selectedTokenId}
+              setSelectedTokenId={setSelectedTokenId}
             />
           </div>
         </Card>

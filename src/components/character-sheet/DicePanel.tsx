@@ -34,6 +34,7 @@ interface DicePanelProps {
   useDmMode?: boolean;
   selectedTokenId?: number | null;
   tokens?: any[];
+  setSelectedTokenId?: (id: number | null) => void;
 }
 
 // Предопределенные причины бросков
@@ -51,7 +52,8 @@ const rollReasons = [
 export const DicePanel: React.FC<DicePanelProps> = ({ 
   useDmMode = false,
   selectedTokenId = null,
-  tokens = []
+  tokens = [],
+  setSelectedTokenId = () => {}
 }) => {
   const [diceCount] = useState(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
@@ -209,7 +211,35 @@ export const DicePanel: React.FC<DicePanelProps> = ({
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[300px] mb-8 bg-black/70 rounded-lg overflow-hidden relative">
+          {/* Блок с выбором кубиков (сверху) */}
+          <div className="grid grid-cols-6 gap-2 mb-5 p-3 bg-black/90 rounded-lg">
+            {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
+              const isActive = diceType === dice;
+              const buttonColor = getDiceColor(dice);
+              
+              return (
+                <Button 
+                  key={dice}
+                  variant={isActive ? "default" : "outline"} 
+                  onClick={() => setDiceType(dice)} 
+                  disabled={isRolling} 
+                  className={`dice-button h-14 ${isActive ? 'text-black' : 'text-white hover:text-black'}`}
+                  style={{
+                    backgroundColor: isActive ? buttonColor : 'transparent',
+                    borderColor: `${buttonColor}${isActive ? 'FF' : '40'}`,
+                    boxShadow: isActive ? `0 0 8px ${buttonColor}80` : 'none'
+                  }}
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-base font-bold">{dice}</span>
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
+          
+          {/* Отделенный от кнопок 3D кубик */}
+          <div className="h-[300px] mb-4 bg-black/70 rounded-lg overflow-hidden relative">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -221,8 +251,25 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             />
           </div>
 
+          {/* Кнопка для броска кубика */}
+          <Button 
+            onClick={handleRoll} 
+            className="w-full font-bold py-3 mb-6"
+            disabled={isRolling}
+            style={{
+              backgroundColor: isRolling ? '#888888' : getDiceColor(diceType),
+              color: 'black',
+              boxShadow: `0 4px 12px ${getDiceColor(diceType)}40`,
+              height: '55px',
+              fontSize: '18px',
+              fontWeight: 'bold'
+            }}
+          >
+            {isRolling ? 'Бросаем...' : `Бросить ${diceType}`}
+          </Button>
+
           {/* Результат броска с увеличенным отступом */}
-          <div className="mb-8 p-5 bg-black/80 rounded-xl border text-center"
+          <div className="mb-6 p-5 bg-black/80 rounded-xl border text-center"
                style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType), width: '100%' }}>
             <div className="text-sm text-white/70 mb-2">Результат</div>
             {isRolling ? (
@@ -296,34 +343,8 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             </div>
           )}
           
-          <div className="grid grid-cols-6 gap-2 mb-5 p-3 bg-black/40 rounded-lg">
-            {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
-              const isActive = diceType === dice;
-              const buttonColor = getDiceColor(dice);
-              
-              return (
-                <Button 
-                  key={dice}
-                  variant={isActive ? "default" : "outline"} 
-                  onClick={() => setDiceType(dice)} 
-                  disabled={isRolling} 
-                  className={`dice-button h-14 ${isActive ? 'text-black' : 'text-white hover:text-black'}`}
-                  style={{
-                    backgroundColor: isActive ? buttonColor : 'transparent',
-                    borderColor: `${buttonColor}${isActive ? 'FF' : '40'}`,
-                    boxShadow: isActive ? `0 0 8px ${buttonColor}80` : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="text-base font-bold">{dice}</span>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-          
           {/* Модификаторы и причина броска */}
-          <div className="grid grid-cols-2 gap-2 mb-5">
+          <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
               <label className="text-sm font-medium text-white mb-1 block">Причина броска:</label>
               <Select
@@ -361,22 +382,6 @@ export const DicePanel: React.FC<DicePanelProps> = ({
               />
             </div>
           </div>
-          
-          <Button 
-            onClick={handleRoll} 
-            className="w-full font-bold py-3"
-            disabled={isRolling}
-            style={{
-              backgroundColor: isRolling ? '#888888' : getDiceColor(diceType),
-              color: 'black',
-              boxShadow: `0 4px 12px ${getDiceColor(diceType)}40`,
-              height: '55px',
-              fontSize: '18px',
-              fontWeight: 'bold'
-            }}
-          >
-            {isRolling ? 'Бросаем...' : `Бросить ${diceType}`}
-          </Button>
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
