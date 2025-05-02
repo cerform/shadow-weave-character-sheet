@@ -2,7 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Scroll, Map, Dices, Users } from "lucide-react";
+import { Home, BookOpen, Scroll, Map, Users, Book } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -10,6 +11,8 @@ interface NavigationButtonsProps {
 
 export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const isDM = currentUser?.isDM;
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
@@ -28,7 +31,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         className="flex items-center gap-2"
       >
         <BookOpen className="size-4" />
-        Руководство
+        Руководство игрока
       </Button>
       
       <Button 
@@ -40,14 +43,17 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         Книга заклинаний
       </Button>
       
-      <Button 
-        variant="outline" 
-        onClick={() => navigate('/dm/battle')}
-        className="flex items-center gap-2"
-      >
-        <Map className="size-4" />
-        Боевая карта
-      </Button>
+      {/* Показывать кнопку боевой карты только Мастерам */}
+      {isDM && (
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/dm/battle')}
+          className="flex items-center gap-2"
+        >
+          <Map className="size-4" />
+          Боевая карта
+        </Button>
+      )}
       
       <Button 
         variant="outline" 

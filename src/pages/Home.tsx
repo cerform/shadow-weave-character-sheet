@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home as HomeIcon, UserPlus, LogIn, LogOut, Search, Filter } from "lucide-react";
@@ -28,6 +27,8 @@ const Home = () => {
   const { theme } = useTheme();
   const { currentUser, isAuthenticated, logout } = useAuth();
   const { characters, getUserCharacters, setCharacter } = useCharacter();
+  
+  const isDM = currentUser?.isDM;
   
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -231,10 +232,13 @@ const Home = () => {
               <User className="mr-2 h-4 w-4" />
               Игрок
             </TabsTrigger>
-            <TabsTrigger value="dm" className="text-base py-3">
-              <Users className="mr-2 h-4 w-4" />
-              Мастер
-            </TabsTrigger>
+            {/* Показывать вкладку Мастера только если пользователь имеет права мастера */}
+            {isDM && (
+              <TabsTrigger value="dm" className="text-base py-3">
+                <Users className="mr-2 h-4 w-4" />
+                Мастер
+              </TabsTrigger>
+            )}
             <TabsTrigger value="handbook" className="text-base py-3">
               <BookOpen className="mr-2 h-4 w-4" />
               Справочник
@@ -342,46 +346,49 @@ const Home = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="dm" className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="size-5" />
-                    Управление сессиями
-                  </CardTitle>
-                  <CardDescription>
-                    Создавайте и управляйте игровыми сессиями
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button onClick={() => navigate("/create-session")} className="w-full">
-                    Создать новую сессию
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate("/dm-dashboard")} className="w-full">
-                    Панель мастера
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Book className="size-5" />
-                    Ресурсы Мастера
-                  </CardTitle>
-                  <CardDescription>
-                    Инструменты для ведения игры
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button onClick={() => navigate("/battle")} className="w-full">
-                    Боевая карта
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+          {/* Показывать вкладку мастера только если пользователь имеет права мастера */}
+          {isDM && (
+            <TabsContent value="dm" className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="size-5" />
+                      Управление сессиями
+                    </CardTitle>
+                    <CardDescription>
+                      Создавайте и управляйте игровыми сессиями
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button onClick={() => navigate("/create-session")} className="w-full">
+                      Создать новую сессию
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/dm-dashboard")} className="w-full">
+                      Панель мастера
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Book className="size-5" />
+                      Ресурсы Мастера
+                    </CardTitle>
+                    <CardDescription>
+                      Инструменты для ведения игры
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button onClick={() => navigate("/battle")} className="w-full">
+                      Боевая карта
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="handbook" className="space-y-8">
             {/* База заклинаний */}
