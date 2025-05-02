@@ -82,12 +82,43 @@ export const useCharacterCreation = () => {
     const mod = Math.floor((score - 10) / 2);
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
+  
+  // Получаем особенности подкласса, доступные для текущего уровня
+  const getAvailableSubclassFeatures = (): string[] => {
+    if (!character.subclass) return [];
+    
+    // Здесь будет логика получения особенностей на основе подкласса и уровня
+    // Пример возвращаемых данных:
+    return [
+      `${character.subclass} (подкласс ${character.class})`
+    ];
+  };
+  
+  // Получаем доступные классовые особенности на основе уровня
+  const getClassFeatures = (): string[] => {
+    // Здесь будет логика получения особенностей на основе класса и уровня
+    return [];
+  };
+  
+  // Рассчитываем опыт необходимый для текущего уровня
+  const getRequiredXP = (): number => {
+    const xpByLevel = [
+      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
+      85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
+    ];
+    
+    const level = Math.min(20, Math.max(1, character.level || 1));
+    return xpByLevel[level - 1];
+  };
 
   return { 
     character, 
     updateCharacter, 
     isMagicClass, 
     getProficiencyBonus,
-    getModifier
+    getModifier,
+    getAvailableSubclassFeatures,
+    getClassFeatures,
+    getRequiredXP
   };
 };

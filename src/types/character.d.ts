@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   name: string;
   level: number;
@@ -43,6 +44,8 @@ export interface CharacterSheet {
   flaws: string;
   appearance: string;
   backstory: string;
+  xp?: number; // Добавляем поле для опыта
+  inspiration?: boolean; // Добавляем поле для вдохновения
 }
 
 // Интерфейс для подклассов персонажей
@@ -54,5 +57,53 @@ export interface CharacterSubclass {
     level: number;
     name: string;
     description: string;
+  }[];
+}
+
+// Определяем доступные классы и их подклассы
+export interface CharacterClassData {
+  name: string;
+  description: string;
+  hitDie: string;
+  primaryAbility: string;
+  savingThrows: string;
+  proficiencies: string;
+  subclasses: CharacterSubclass[];
+  features: {
+    level: number;
+    name: string;
+    description: string;
+  }[];
+}
+
+// Тип для выбора метода распределения характеристик
+export type AbilityScoreMethod = "pointbuy" | "standard" | "roll" | "manual";
+
+// Интерфейс для расовых черт и бонусов
+export interface RaceTraits {
+  name: string;
+  description: string;
+}
+
+// Интерфейс для рас
+export interface CharacterRace {
+  name: string;
+  description: string;
+  abilityScoreIncrease: {
+    [key: string]: number;  // "strength": 2, "dexterity": 1, etc.
+  };
+  age: string;
+  alignment: string;
+  size: string;
+  speed: number;
+  languages: string[];
+  traits: RaceTraits[];
+  subraces?: {
+    name: string;
+    description: string;
+    abilityScoreIncrease: {
+      [key: string]: number;
+    };
+    traits: RaceTraits[];
   }[];
 }

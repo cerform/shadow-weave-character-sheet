@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -10,7 +9,7 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  setTokens: (token: Token) => void;
+  setTokens: (token: Token) => void; // Исправленный тип для setTokens
   background: string | null;
   setBackground: React.Dispatch<React.SetStateAction<string | null>>;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -260,7 +259,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          setTokens={setTokens}
+          setTokens={setTokens} // Правильный тип props
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}

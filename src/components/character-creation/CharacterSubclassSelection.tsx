@@ -1,385 +1,235 @@
 
-import React, { useState, useMemo } from 'react';
-import NavigationButtons from './NavigationButtons';
-import { classes } from '@/data/classes';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import NavigationButtons from "@/components/character-creation/NavigationButtons";
+import { CharacterSubclass } from "@/types/character";
+import { useToast } from "@/hooks/use-toast";
 
-interface SubclassOption {
-  name: string;
-  description: string;
-  features: {
-    name: string;
-    description: string;
-  }[];
-}
+// Данные о подклассах
+const subclasses: CharacterSubclass[] = [
+  // Подклассы Воина
+  {
+    name: "Мастер боя",
+    className: "Воин",
+    description: "Мастера боя - непревзойденные воины, которые совершенствуют свои боевые навыки до уровня искусства. Применяя особые приемы, они расширяют свои возможности в бою.",
+    features: [
+      { level: 3, name: "Боевое превосходство", description: "Вы изучаете приёмы, называемые манёврами, которые усиливаются костями превосходства." },
+      { level: 7, name: "Немало повидавший", description: "Вы можете добавить половину бонуса мастерства (с округлением вниз) ко всем проверкам Силы, Ловкости и Телосложения, если они еще не используют бонус мастерства." },
+      { level: 10, name: "Дополнительный прием", description: "Вы изучаете дополнительный боевой прием." },
+    ]
+  },
+  {
+    name: "Чемпион",
+    className: "Воин",
+    description: "Архетип чемпиона фокусируется на развитии грубой физической силы с совершенствованием смертоносности. Для тех, кто следует этому архетипу, имеет значение потенциально смертельный удар, потрясающее спасение или победа в соревновании.",
+    features: [
+      { level: 3, name: "Улучшенный критический удар", description: "Ваши атаки оружием совершают критическое попадание при выпадении на кубе 19 или 20." },
+      { level: 7, name: "Замечательный атлет", description: "Вы добавляете половину бонуса мастерства (с округлением вверх) к проверкам Силы, Ловкости и Телосложения, если вы ещё не добавляете к ним бонус мастерства." },
+      { level: 10, name: "Дополнительный боевой стиль", description: "Вы можете выбрать второй вариант из особенности «Боевой стиль»." },
+    ]
+  },
+  {
+    name: "Рыцарь эльдрича",
+    className: "Воин",
+    description: "Архетип рыцаря эльдрича сочетает мастерство и упорство воина с изучением магии. Рыцари эльдрича используют магические техники, схожие с теми, что используются волшебниками.",
+    features: [
+      { level: 3, name: "Заклинательная магия", description: "Вы дополняете свое воинское искусство заклинаниями." },
+      { level: 7, name: "Магическое оружие", description: "Вы обучаетесь наполнять оружие, которое используете, магической энергией." },
+      { level: 10, name: "Магическая защита", description: "Вы обучаетесь прерывать атаки по себе или рядом стоящему существу." },
+    ]
+  },
+  
+  // Подклассы Плута
+  {
+    name: "Вор",
+    className: "Плут",
+    description: "Вы оттачиваете навыки скрытного проникновения. Воры и разбойники следуют этому архетипу, также как и те плуты, что предпочитают думать о себе как о профессиональных охотниках за сокровищами, исследователях или следопытах.",
+    features: [
+      { level: 3, name: "Ловкие руки", description: "Вы можете использовать действие Бонусное действие, предоставляемое умением Хитрое действие, чтобы совершить проверку Ловкости (Ловкость рук), использовать воровские инструменты для обезвреживания ловушек или вскрытия замков, или же совершить действие Использование предмета." },
+      { level: 3, name: "Второй этаж", description: "Когда вы взбираетесь, ваша скорость лазания равна скорости ходьбы. Кроме того, вы совершаете прыжки с разбега дальше обычного — на количество футов, равное вашему модификатору Ловкости." },
+      { level: 9, name: "Превосходная скрытность", description: "Вы совершаете броски с преимуществом, когда прячетесь, если перемещаетесь в свой ход не более чем наполовину от своей скорости." },
+    ]
+  },
+  {
+    name: "Убийца",
+    className: "Плут",
+    description: "Вы фокусируетесь на убийстве. Вы обучаетесь ужасающим и эффективным техникам убийства и сосредотачиваете свои тренировки на этом кровавом искусстве.",
+    features: [
+      { level: 3, name: "Мастер убийства", description: "Вы обучаетесь наиболее эффективным способам убийства. Вы имеете преимущество в спасбросках от любого яда. Также вы получаете знание об использовании ядов, и можете пропитать любое рубящее или колющее оружие дозой яда в качестве бонусного действия вместо обычного." },
+      { level: 3, name: "Убийственная профессия", description: "Вы получаете знание об использовании комплектов для маскировки и можете всегда действовать им грамотно. Кроме того, вы можете дублировать внешность другого человека за 3 часа, если будете изучать его поведение в течение трёх часов." },
+      { level: 9, name: "Инфильтрация", description: "Вы можете создавать себе фальшивые личности. Для этого вам нужно потратить 7 дней и 25 зм на установление личности с контактами, историей, и так далее. Вы не можете установить личность, уже задействованную кем-то. Например, вы можете приобрести набор одежды, иметь при себе письма от выдуманных НИПов и знать местные обычаи." },
+    ]
+  },
+  {
+    name: "Мистический ловкач",
+    className: "Плут",
+    description: "Некоторые плуты усиливают свою скрытность и ловкость посредством магии, обучаясь основам заклинаний и используя магию в своей работе.",
+    features: [
+      { level: 3, name: "Заклинательная магия", description: "Вы получаете способность использовать заклинания волшебника." },
+      { level: 3, name: "Ловкая рука мага", description: "Когда вы используете действие для сотворения заклинания волшебника, вы можете использовать бонусное действие для Хитрого действия, использования Скрытой атаки или Стремительной руки." },
+      { level: 9, name: "Магическая амбидекстрия", description: "Вы получаете преимущество на спасброски против заклинаний." },
+    ]
+  },
+  
+  // Подклассы Волшебника
+  {
+    name: "Школа Преобразования",
+    className: "Волшебник",
+    description: "Вы направляете свои исследования на восемь школ магии, но предпочитаете заклинания школы Преобразования. Вы фокусируетесь на изменении энергии и материи.",
+    features: [
+      { level: 2, name: "Школьная специализация: Преобразование", description: "Когда вы выбираете эту школу на 2 уровне, золото и время, необходимое для копирования заклинаний Преобразования в вашу книгу заклинаний, уменьшается вдвое." },
+      { level: 2, name: "Второстепенная алхимия", description: "Когда вы выбираете эту школу на 2 уровне, вы можете временно изменять физические свойства одного немагического объекта, изменяя его материал." },
+      { level: 6, name: "Преобразователь", description: "Начиная с 6 уровня, вы можете использовать своё действие, чтобы преобразовать часть своей энергии в одну из перечисленных ниже выгод, которая длится 1 час." },
+    ]
+  },
+  {
+    name: "Школа Вызова",
+    className: "Волшебник",
+    description: "Как специалист по вызову, вы предпочитаете заклинания, которые создают объекты и существа из ничего. Вы можете найти заклинания, создающие оружие из силы, призывающие внеземных союзников или создающие безжизненные объекты из сырой материи.",
+    features: [
+      { level: 2, name: "Школьная специализация: Вызов", description: "Когда вы выбираете эту школу на 2 уровне, золото и время, необходимое для копирования заклинаний Вызова в вашу книгу заклинаний, уменьшается вдвое." },
+      { level: 2, name: "Бережливый вызыватель", description: "Начиная со 2-го уровня, магическая энергия, которую вы используете для наложения заклинаний Вызова, растягивается ещё дальше. Если вы сотворяете заклинание Вызова, которое требует расхода одной или нескольких ячеек заклинания, вы восстанавливаете одну израсходованную ячейку, если уровень ячейки заклинания Вызова 1 или 2." },
+      { level: 6, name: "Стабильная сила", description: "Ваше покорение явлений вызова улучшается. Всякий раз, когда вы сотворяете заклинание Вызова длительности в 1 минуту или дольше, его длительность удваивается (максимум до 24 часов)." },
+    ]
+  },
+  
+  // Другие подклассы для всех классов...
+];
 
 interface CharacterSubclassSelectionProps {
-  character: {
-    class: string;
-    level: number;
-    subclass?: string;
-  };
+  character: any;
   updateCharacter: (updates: any) => void;
   nextStep: () => void;
   prevStep: () => void;
 }
 
-// Получаем доступные подклассы для класса на определенном уровне
-const getAvailableSubclasses = (characterClass: string): SubclassOption[] => {
-  switch (characterClass) {
-    case 'Паладин':
-      return [
-        {
-          name: 'Клятва Преданности',
-          description: 'Паладины, принесшие Клятву Преданности, связывают себя с идеалами справедливости, добродетели и порядка.',
-          features: [
-            { 
-              name: 'Принципы Преданности', 
-              description: 'Честность: не лги и не жульничай. Позволь своему слову быть своими обязательствами. Храбрость: никогда не бойся действовать, хотя предусмотрительность является мудростью. Сострадание: помогай другим, защищай слабых и наказывай тех, кто угрожает им. Честь: относись к другим с честностью и позволь своим честным делам быть примером для них. Долг: будь ответственным за свои действия и их последствия, защищай тех, кто доверен твоей заботе, и повинуйся тем, у кого есть власть над тобой.' 
-            },
-            { 
-              name: 'Заклинания клятвы', 
-              description: 'Вы получаете доступ к следующим заклинаниям: 3 уровень — защита от добра и зла, очистительный удар; 5 уровень — малое восстановление, область истины; 9 уровень — рассеивание магии, возрождение; 13 уровень — страж веры, свобода перемещения; 17 уровень — общение, обет' 
-            },
-            { 
-              name: 'Божественный канал', 
-              description: 'Вы получаете два варианта использования Божественного канала: Священное оружие и Аура преданности.' 
-            }
-          ]
-        },
-        {
-          name: 'Клятва Древних',
-          description: 'Паладины, принесшие Клятву Древних, связывают себя со светом, радостью и красотой природы.',
-          features: [
-            { 
-              name: 'Принципы Древних', 
-              description: 'Разжигай Свет: через свои действия и поступки, позволь свету надежды, радости и жизни сиять. Храни Свет: там, где есть добро, красота, любовь и смех в мире, выступи против злых сил, которые хотят уничтожить это. Сам стань Светом: будь маяком, который несет радость, ясность и тепло в своем бесконечном свете.' 
-            },
-            { 
-              name: 'Заклинания клятвы', 
-              description: 'Вы получаете следующие заклинания: 3 уровень — опутывание, разговор с животными; 5 уровень — лунный луч, туманный шаг; 9 уровень — защита от энергии, рост растений; 13 уровень — ледяной шторм, каменная кожа; 17 уровень — общение с природой, древесный путь' 
-            },
-            { 
-              name: 'Божественный канал', 
-              description: 'Вы получаете два варианта использования Божественного канала: Гнев природы и Обращение неверных.' 
-            }
-          ]
-        },
-        {
-          name: 'Клятва Мести',
-          description: 'Паладины, принесшие Клятву Мести, стремятся наказать тех, кто совершил тяжкие грехи.',
-          features: [
-            { 
-              name: 'Принципы Мести', 
-              description: 'Сражайся со Злом: страх, слабость и сострадание не могут помешать мне наказывать нечестивцев. Никакой Милости Виновным: обычное милосердие не имеет места рядом с виновными, поскольку оно не останавливает зла. Если требуются наказания, они должны быть быстрыми и окончательными. Правосудие Превыше Всего: добродетель не должна просто побеждать, но и торжествовать над злом.' 
-            },
-            { 
-              name: 'Заклинания клятвы', 
-              description: 'Вы получаете следующие заклинания: 3 уровень — проклятие, бесследное передвижение; 5 уровень — удержание личности, туманный шаг; 9 уровень — мигающая собака, ускорение; 13 уровень — изгнание, каменная кожа; 17 уровень — общение, удержание чудовища' 
-            },
-            { 
-              name: 'Божественный канал', 
-              description: 'Вы получаете два варианта использования Божественного канала: Устрашающий вид и Клятвенный враг.' 
-            }
-          ]
-        }
-      ];
-    case 'Воин':
-      return [
-        {
-          name: 'Мастер боевых искусств',
-          description: 'Вы посвятили себя изучению боевых искусств и совершенствованию своей техники владения оружием.',
-          features: [
-            { 
-              name: 'Боевое превосходство', 
-              description: 'Вы получаете боевые приемы, которые можно использовать для выполнения особых атак и манёвров в бою.' 
-            },
-            { 
-              name: 'Превосходящая критическая атака', 
-              description: 'Ваши атаки оружием совершают критическое попадание при результате броска 19-20 на к20.' 
-            }
-          ]
-        },
-        {
-          name: 'Мистический рыцарь',
-          description: 'Вы дополняете свои боевые навыки способностью накладывать заклинания.',
-          features: [
-            { 
-              name: 'Использование заклинаний', 
-              description: 'Вы можете накладывать заклинания волшебника. Интеллект — ваша базовая характеристика для накладывания заклинаний.' 
-            },
-            { 
-              name: 'Боевая магия', 
-              description: 'Когда вы используете действие для накладывания заклинания, вы можете совершить одну атаку оружием бонусным действием.' 
-            }
-          ]
-        },
-        {
-          name: 'Чемпион',
-          description: 'Архетип Чемпиона фокусируется на развитии грубой физической мощи для достижения сокрушительного совершенства в бою.',
-          features: [
-            { 
-              name: 'Улучшенная критическая атака', 
-              description: 'Ваши атаки оружием совершают критическое попадание при результате броска 19-20 на к20.' 
-            },
-            { 
-              name: 'Замечательный атлет', 
-              description: 'Вы получаете бонус к проверкам Силы (Атлетика) и Ловкости (Акробатика), равный половине бонуса мастерства.' 
-            }
-          ]
-        }
-      ];
-    case 'Бард':
-      return [
-        {
-          name: 'Коллегия Знаний',
-          description: 'Барды Коллегии Знаний ценят знания и обучение выше всего.',
-          features: [
-            { 
-              name: 'Дополнительные мастерства', 
-              description: 'Вы изучаете 3 новых навыка мастерства на ваш выбор.' 
-            },
-            { 
-              name: 'Обрывки знаний', 
-              description: 'Вы можете добавить половину своего бонуса мастерства (округляя в меньшую сторону) к любой проверке характеристики, к которой вы ещё не добавляете бонус мастерства.' 
-            }
-          ]
-        },
-        {
-          name: 'Коллегия Доблести',
-          description: 'Барды Коллегии Доблести используют магию вдохновения для воодушевления своих союзников и устрашения противников.',
-          features: [
-            { 
-              name: 'Бонусное владение', 
-              description: 'Вы получаете владение средними доспехами и щитами.' 
-            },
-            { 
-              name: 'Боевое вдохновение', 
-              description: 'Вы можете вдохновить других, используя свои слова или музыку. Любое существо, которое имеет кость бардовского вдохновения от вас, может потратить её и добавить к броску атаки или броску урона.' 
-            }
-          ]
-        }
-      ];
-    case 'Жрец':
-      return [
-        {
-          name: 'Домен Жизни',
-          description: 'Домен Жизни сосредоточен на энергии, которая поддерживает всю жизнь.',
-          features: [
-            { 
-              name: 'Бонусное владение', 
-              description: 'Вы получаете владение тяжелыми доспехами.' 
-            },
-            { 
-              name: 'Ученик жизни', 
-              description: 'Ваши заклинания исцеления становятся более эффективными. Всякий раз, когда вы используете заклинание 1-го уровня или выше для восстановления хитов существа, оно восстанавливает дополнительные хиты в размере 2 + уровень заклинания.' 
-            }
-          ]
-        },
-        {
-          name: 'Домен Света',
-          description: 'Божества света, включая Латандера, Пелора и Хельма, продвигают идеалы возрождения и обновления.',
-          features: [
-            { 
-              name: 'Заговор вспышка', 
-              description: 'Когда вы выбираете этот домен на 1 уровне, вы получаете заговор вспышка, если вы ещё не знаете его.' 
-            },
-            { 
-              name: 'Сияющий блеск', 
-              description: 'Также на 1 уровне вы можете использовать свой Божественный канал, чтобы создать вспышку света, раскрывающую и разгоняющую тьму. Действием вы можете активировать яркий свет, исходящий от вас радиусом 30 футов и тусклый свет на дополнительные 30 футов.' 
-            }
-          ]
-        }
-      ];
-    case 'Варвар':
-      return [
-        {
-          name: 'Путь Берсерка',
-          description: 'Для некоторых варваров ярость — это средство достижения цели, которая заключается в насилии.',
-          features: [
-            { 
-              name: 'Безумство', 
-              description: 'Когда вы выбираете этот путь на 3 уровне, вы можете ввергнуть себя в безумие во время ярости. Если вы так делаете, то в течение своего хода, но после того как вошли в ярость, вы можете совершить одну атаку рукопашным оружием бонусным действием.' 
-            }
-          ]
-        },
-        {
-          name: 'Путь Тотемного Воина',
-          description: 'Путь Тотемного Воина — это духовное путешествие, во время которого варвар принимает дух животного в качестве руководства, защиты и источника вдохновения.',
-          features: [
-            { 
-              name: 'Искатель Духа', 
-              description: 'Вы можете накладывать заклинание разговор с животными как ритуал.' 
-            },
-            { 
-              name: 'Дух Тотема', 
-              description: 'Выберите тотемный дух и его преимущество: Медведь, Орел или Волк. Каждый дух даёт различные преимущества.' 
-            }
-          ]
-        }
-      ];
-    // Добавим другие классы по мере необходимости
-    default:
-      return [];
-  }
-};
-
-// Проверяем, доступен ли выбор подкласса на данном уровне
-const isSubclassAvailable = (characterClass: string, level: number): boolean => {
-  switch (characterClass) {
-    case 'Воин':
-    case 'Плут':
-    case 'Варвар':
-    case 'Бард':
-    case 'Друид':
-    case 'Колдун':
-    case 'Монах':
-      return level >= 3;
-    case 'Паладин':
-    case 'Следопыт':
-      return level >= 3;
-    case 'Жрец':
-    case 'Волшебник':
-      return level >= 2;
-    case 'Чародей':
-      return level >= 1;
-    default:
-      return false;
-  }
-};
-
 const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   character,
   updateCharacter,
   nextStep,
-  prevStep
+  prevStep,
 }) => {
   const [selectedSubclass, setSelectedSubclass] = useState<string>(character.subclass || "");
-  
-  // Получаем доступные подклассы для данного класса
-  const availableSubclasses = useMemo(() => 
-    getAvailableSubclasses(character.class), 
-    [character.class]
-  );
-  
-  // Проверяем доступность выбора подкласса
-  const subclassAvailable = useMemo(() => 
-    isSubclassAvailable(character.class, character.level), 
-    [character.class, character.level]
-  );
+  const [filteredSubclasses, setFilteredSubclasses] = useState<CharacterSubclass[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("features");
+  const { toast } = useToast();
 
-  // Выбранный подкласс с дополнительной информацией
-  const selectedSubclassDetails = useMemo(() => 
-    availableSubclasses.find(subclass => subclass.name === selectedSubclass), 
-    [availableSubclasses, selectedSubclass]
-  );
-  
-  // Обработчик для перехода к следующему шагу
+  // Фильтруем подклассы для текущего класса при загрузке компонента
+  useEffect(() => {
+    if (character.class) {
+      const classSubclasses = subclasses.filter(
+        (subclass) => subclass.className === character.class
+      );
+      
+      setFilteredSubclasses(classSubclasses);
+      
+      // Если нет подклассов для этого класса или подкласс уже выбран
+      if (classSubclasses.length === 0) {
+        toast({
+          title: "Внимание",
+          description: `Для класса "${character.class}" пока нет доступных подклассов.`,
+        });
+      }
+    }
+  }, [character.class, toast]);
+
   const handleNext = () => {
-    if (selectedSubclass || !subclassAvailable) {
+    // Если подкласс выбран или подклассов нет для данного класса (тогда просто продолжаем)
+    if (selectedSubclass || filteredSubclasses.length === 0) {
       updateCharacter({ subclass: selectedSubclass });
       nextStep();
+    } else {
+      toast({
+        title: "Выберите подкласс",
+        description: "Пожалуйста, выберите подкласс перед продолжением.",
+        variant: "destructive",
+      });
     }
   };
-
-  if (!subclassAvailable) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Выбор специализации</h2>
-        <p className="text-muted-foreground">
-          На {character.level} уровне класса {character.class} специализация еще недоступна.
-        </p>
-        <p className="text-muted-foreground text-sm">
-          {character.class === "Воин" && "Воины выбирают боевой архетип на 3-м уровне."}
-          {character.class === "Паладин" && "Паладины приносят священную клятву на 3-м уровне."}
-          {character.class === "Жрец" && "Жрецы выбирают божественный домен на 1-м уровне."}
-          {character.class === "Варвар" && "Варвары выбирают первобытный путь на 3-м уровне."}
-          {character.class === "Бард" && "Барды выбирают коллегию бардов на 3-м уровне."}
-          {character.class === "Следопыт" && "Следопыты выбирают архетип следопыта на 3-м уровне."}
-        </p>
-        
-        <NavigationButtons
-          allowNext={true}
-          nextStep={handleNext}
-          prevStep={prevStep}
-          nextLabel="Далее"
-          prevLabel="Назад"
-        />
-      </div>
-    );
-  }
+  
+  // Находим детали выбранного подкласса
+  const selectedSubclassDetails = filteredSubclasses.find(
+    (subclass) => subclass.name === selectedSubclass
+  );
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold mb-4">Выберите специализацию</h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Выберите специализацию для класса {character.class}</h2>
       
-      <p className="text-muted-foreground mb-4">
-        На {character.level} уровне ваш {character.class} должен выбрать специализацию.
-        {character.class === "Паладин" && " Паладины приносят священную клятву, которая определяет их роль."}
-        {character.class === "Воин" && " Воины выбирают боевой архетип, которому они будут следовать."}
-        {character.class === "Варвар" && " Варвары выбирают первобытный путь, определяющий источник их ярости."}
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {availableSubclasses.map((subclass) => (
-          <Card 
-            key={subclass.name}
-            className={`cursor-pointer transition-all ${
-              selectedSubclass === subclass.name 
-                ? "border-primary shadow-md" 
-                : "hover:border-primary/50"
-            }`}
-            onClick={() => setSelectedSubclass(subclass.name)}
-          >
-            <CardHeader>
-              <CardTitle>{subclass.name}</CardTitle>
-              <CardDescription>{subclass.description}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button 
-                variant={selectedSubclass === subclass.name ? "default" : "outline"}
-                className="w-full"
+      {filteredSubclasses.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {filteredSubclasses.map((subclass) => (
+              <Card
+                key={subclass.name}
+                className={`p-4 cursor-pointer transition-all ${
+                  selectedSubclass === subclass.name 
+                    ? "bg-primary text-primary-foreground shadow-lg" 
+                    : "bg-background hover:bg-muted/20"
+                }`}
                 onClick={() => setSelectedSubclass(subclass.name)}
               >
-                {selectedSubclass === subclass.name ? "Выбрано" : "Выбрать"}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                <h3 className="text-xl font-medium">{subclass.name}</h3>
+                <p className="mt-2 text-sm">
+                  {subclass.description.length > 150 
+                    ? `${subclass.description.slice(0, 150)}...` 
+                    : subclass.description}
+                </p>
+              </Card>
+            ))}
+          </div>
 
-      {selectedSubclassDetails && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>{selectedSubclassDetails.name}</CardTitle>
-            <CardDescription>{selectedSubclassDetails.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-64">
-              <div className="space-y-4">
-                {selectedSubclassDetails.features.map((feature, index) => (
-                  <div key={index}>
-                    <h3 className="font-semibold">{feature.name}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+          {selectedSubclassDetails && (
+            <div className="mb-8">
+              <h3 className="text-xl font-medium mb-3">
+                {selectedSubclassDetails.name}
+              </h3>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="features">Особенности</TabsTrigger>
+                  <TabsTrigger value="description">Описание</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="features">
+                  <ScrollArea className="h-64 rounded-md border p-4">
+                    <div className="space-y-4">
+                      {selectedSubclassDetails.features.map((feature, index) => (
+                        <div key={index} className="space-y-1">
+                          <h4 className="font-medium text-primary">
+                            {feature.name} ({feature.level} уровень)
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {feature.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                
+                <TabsContent value="description">
+                  <ScrollArea className="h-64 rounded-md border p-4">
+                    <p className="text-sm">{selectedSubclassDetails.description}</p>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center p-8 bg-muted/20 rounded-lg mb-8">
+          <p>Для класса "{character.class}" пока нет доступных подклассов.</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Вы можете продолжить создание персонажа без выбора подкласса.
+          </p>
+        </div>
       )}
 
       <NavigationButtons
-        allowNext={!!selectedSubclass}
+        allowNext={selectedSubclass !== "" || filteredSubclasses.length === 0}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}

@@ -12,13 +12,26 @@ import { useSocket } from '@/contexts/SocketContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSession } from '@/contexts/SessionContext';
-import DiceRoller3DFixed from './DiceRoller3DFixed';
+import GradientDice from '@/components/dice/GradientDice';
 import { Dices } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PlayerDicePanelProps {
   compactMode?: boolean;
   fixedPosition?: boolean;
 }
+
+// Предопределенные причины для бросков
+const diceRollReasons = [
+  { value: 'attack', label: 'Атака' },
+  { value: 'skill_check', label: 'Проверка навыка' },
+  { value: 'saving_throw', label: 'Спасбросок' },
+  { value: 'damage', label: 'Урон' },
+  { value: 'initiative', label: 'Инициатива' },
+  { value: 'heal', label: 'Лечение' },
+  { value: 'ability_check', label: 'Проверка характеристики' },
+  { value: 'other', label: 'Другое...' }
+];
 
 export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   compactMode = false,
@@ -27,9 +40,11 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const [diceCount, setDiceCount] = useState<number>(1);
   const [modifier, setModifier] = useState<number>(0);
-  const [rollReason, setRollReason] = useState<string>('');
+  const [rollReason, setRollReason] = useState<string>("attack");
+  const [customReason, setCustomReason] = useState<string>("");
   const [rollResult, setRollResult] = useState<number | null>(null);
   const [rollHistory, setRollHistory] = useState<any[]>([]);
+  const [isRolling, setIsRolling] = useState(false);
   
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -59,11 +74,23 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     return () => {};
   }, [socket, characterName]);
   
+  // Функция для получения отображаемого текста причины броска
+  const getReasonText = () => {
+    if (rollReason === 'other') {
+      return customReason || "Бросок персонажа";
+    }
+    const reasonObj = diceRollReasons.find(r => r.value === rollReason);
+    return reasonObj ? reasonObj.label : "Бросок персонажа";
+  };
+  
   const handleDiceRollComplete = (result: number) => {
     setRollResult(result);
+    setIsRolling(false);
   };
   
   const handleRoll = async () => {
+    setIsRolling(true);
+    
     // Симулируем броски нескольких кубиков
     const rolls = [];
     let totalResult = 0;
@@ -78,7 +105,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     totalResult += modifier;
     
     const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
-    const reason = rollReason || "Бросок персонажа";
+    const reason = getReasonText();
     
     // Отправляем результат броска через сокет
     if (socket && socket.sendRoll) {
@@ -96,11 +123,17 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     };
     
     setRollHistory((prev) => [...prev.slice(-9), rollData]);
+    setRollResult(totalResult);
     
-    toast({
-      title: "Бросок успешен",
-      description: `${characterName} бросил ${diceCount}${diceType} + ${modifier} = ${totalResult}`,
-    });
+    // Задержка для имитации броска кубика
+    setTimeout(() => {
+      setIsRolling(false);
+      
+      toast({
+        title: "Бросок успешен",
+        description: `${characterName} бросил ${diceCount}${diceType} + ${modifier} = ${totalResult} (${reason})`,
+      });
+    }, 800);
   };
   
   // Вычисляем высоту для 3D кубика в зависимости от режима
@@ -203,41 +236,54 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             <div className="ml-auto">
               <Label 
                 htmlFor="roll-reason" 
-                className="text-xs mr-2"
+                className="text-xs mb-1 block"
                 style={{ color: currentTheme.textColor }}
               >
                 Причина броска:
               </Label>
-              <Input
-                id="roll-reason"
-                type="text"
-                placeholder="Опишите цель броска..."
-                value={rollReason}
-                onChange={(e) => setRollReason(e.target.value)}
-                className="h-8 w-[150px] text-xs"
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              />
+              <Select value={rollReason} onValueChange={setRollReason}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue placeholder="Выберите причину" />
+                </SelectTrigger>
+                <SelectContent>
+                  {diceRollReasons.map((reason) => (
+                    <SelectItem key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
-          {/* 3D кубик в центре */}
+          {rollReason === 'other' && (
+            <Input
+              type="text"
+              placeholder="Опишите причину броска..."
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              className="h-8 text-xs mt-1"
+              style={{
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
+            />
+          )}
+          
+          {/* Градиентные кубики в центре */}
           <div 
             className="mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
             style={{ height: diceContainerHeight, zIndex: fixedPosition ? 1 : 'auto' }}
           >
-            <DiceRoller3DFixed 
-              initialDice={diceType}
-              hideControls={true}
-              modifier={modifier}
-              onRollComplete={handleDiceRollComplete}
-              fixedPosition={fixedPosition}
-              themeColor={currentTheme.accent}
-              playerName={characterName}
-              diceCount={diceCount}
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <GradientDice 
+                diceType={diceType}
+                size={120}
+                rolling={isRolling}
+                result={rollResult}
+                showNumber={true}
+              />
+            </div>
           </div>
           
           <Button 

@@ -8,12 +8,12 @@ import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
-import { Save, Printer } from 'lucide-react';
-import { DiceRoller3D } from '../dice/DiceRoller3D';
+import { Save, Printer, Book, User2, AlertTriangle } from 'lucide-react';
 import { SpellPanel } from './SpellPanel';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from "@/hooks/use-toast";
 import { RestPanel } from './RestPanel';
+import { Progress } from "@/components/ui/progress";
 
 interface CharacterSheetProps {
   character?: any;
@@ -62,6 +62,33 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
     window.print();
   };
 
+  // Функция для расчета опыта до следующего уровня
+  const calculateLevelProgress = () => {
+    const currentLevel = character?.level || 1;
+    
+    // Таблица опыта по уровням D&D 5e
+    const xpTable = [
+      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
+      85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
+    ];
+    
+    // Если персонаж максимального уровня, возвращаем 100%
+    if (currentLevel >= 20) {
+      return 100;
+    }
+    
+    // Считаем, что у персонажа сейчас ровно минимальный опыт для текущего уровня
+    const currentXP = character?.xp || xpTable[currentLevel - 1];
+    
+    // Расчет прогресса до следующего уровня
+    const xpForCurrentLevel = xpTable[currentLevel - 1];
+    const xpForNextLevel = xpTable[currentLevel];
+    const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+    const currentProgress = currentXP - xpForCurrentLevel;
+    
+    return Math.min(100, Math.max(0, Math.floor((currentProgress / xpNeeded) * 100)));
+  };
+
   if (!character) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -106,10 +133,48 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
               onHpChange={handleHpChange}
             />
             
+            {/* Заменяем блок с кубиками на информацию о прогрессе персонажа */}
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-              <h3 className="text-lg font-semibold mb-2 text-primary">Кубики</h3>
-              <div className="h-[200px]">
-                <DiceRoller3D />
+              <h3 className="text-lg font-semibold mb-2 text-primary">Прогресс</h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-primary/70">Уровень {character.level}</span>
+                    <span className="text-sm text-primary/70">Уровень {Math.min(20, character.level + 1)}</span>
+                  </div>
+                  <Progress value={calculateLevelProgress()} className="h-2" />
+                  <div className="mt-1 text-xs text-center text-primary/60">
+                    {calculateLevelProgress()}% до следующего уровня
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-t border-primary/10">
+                  <span className="text-primary/80 flex items-center gap-1">
+                    <User2 className="h-4 w-4" /> Класс
+                  </span>
+                  <span className="font-medium text-primary">
+                    {character.className} {character.subclass ? `(${character.subclass})` : ''}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-t border-primary/10">
+                  <span className="text-primary/80 flex items-center gap-1">
+                    <Book className="h-4 w-4" /> Предыстория
+                  </span>
+                  <span className="font-medium text-primary">
+                    {character.background || 'Не указано'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-t border-primary/10">
+                  <span className="text-primary/80 flex items-center gap-1">
+                    <AlertTriangle className="h-4 w-4" /> Мировоззрение
+                  </span>
+                  <span className="font-medium text-primary">
+                    {character.alignment || 'Нейтральный'}
+                  </span>
+                </div>
               </div>
             </Card>
             
