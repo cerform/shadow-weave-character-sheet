@@ -1,9 +1,8 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { Clock } from 'lucide-react';
 
@@ -12,18 +11,32 @@ export const RestPanel = () => {
   const { toast } = useToast();
 
   const handleShortRest = () => {
-    if (!character) return;
+    if (!character) {
+      toast({
+        title: "Ошибка",
+        description: "Персонаж не выбран",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    // Восстанавливаем Hit Dice (до половины максимума, округлённого вниз)
+    // Определяем максимальные Hit Dice, которые можно восстановить
     const maxHitDiceRecovery = Math.floor(character.level / 2);
     
-    // Обновляем здоровье (не восстанавливает всё HP)
-    // Восстанавливается бонусом за телосложение + уровень
-    const conModifier = Math.floor((character.abilities.CON - 10) / 2);
-    const hpRecovery = Math.max(1, conModifier + 1);
-    const newCurrentHp = Math.min(character.maxHp || 0, (character.currentHp || 0) + hpRecovery);
+    // Расчитываем восстановление здоровья
+    // При коротком отдыхе игрок может потратить Hit Dice для восстановления здоровья
+    // Но базовое восстановление равно модификатору телосложения (минимум 1)
+    const conModifier = character.abilities?.CON 
+      ? Math.floor((character.abilities.CON - 10) / 2) 
+      : 0;
     
-    // Обновляем свойства персонажа после короткого отдыха
+    const hpRecovery = Math.max(1, conModifier + 1);
+    const newCurrentHp = Math.min(
+      character.maxHp || 0, 
+      (character.currentHp || 0) + hpRecovery
+    );
+    
+    // Обновляем персонажа
     updateCharacter({
       currentHp: newCurrentHp
     });
@@ -31,38 +44,47 @@ export const RestPanel = () => {
     // Уведомляем игрока
     toast({
       title: "Короткий отдых",
-      description: `Восстановлено ${hpRecovery} HP. Можно потратить Hit Dice для восстановления здоровья.`,
+      description: `Восстановлено ${hpRecovery} HP. Можно потратить Hit Dice для дополнительного восстановления здоровья.`,
     });
   };
 
   const handleLongRest = () => {
-    if (!character) return;
+    if (!character) {
+      toast({
+        title: "Ошибка",
+        description: "Персонаж не выбран",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    // Восстанавливаем все HP
+    // При длинном отдыхе восстанавливаем все здоровье
     const fullHp = character.maxHp || 0;
     
-    // Восстанавливаем все ячейки заклинаний
+    // Восстанавливаем все ячейки заклинаний, если они есть
     let updatedSpellSlots = { ...character.spellSlots };
     
-    for (const level in updatedSpellSlots) {
-      if (updatedSpellSlots.hasOwnProperty(level)) {
-        updatedSpellSlots[level] = {
-          ...updatedSpellSlots[level],
-          used: 0
-        };
+    if (updatedSpellSlots) {
+      for (const level in updatedSpellSlots) {
+        if (updatedSpellSlots.hasOwnProperty(level)) {
+          updatedSpellSlots[level] = {
+            ...updatedSpellSlots[level],
+            used: 0
+          };
+        }
       }
     }
     
-    // Восстанавливаем Sorcery Points (если персонаж Чародей)
+    // Восстанавливаем очки чародея, если персонаж - Чародей
     let sorceryPoints = character.sorceryPoints || { current: 0, max: 0 };
-    if (character.className?.includes('Чародей')) {
+    if (character.className?.toLowerCase().includes('чародей')) {
       sorceryPoints = {
         current: character.level,
         max: character.level
       };
     }
     
-    // Обновляем свойства персонажа после длинного отдыха
+    // Обновляем персонажа
     updateCharacter({
       currentHp: fullHp,
       spellSlots: updatedSpellSlots,
