@@ -125,7 +125,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         hp: baseMonster.hp,
         maxHp: baseMonster.hp,
         ac: baseMonster.ac,
-        initiative: 10, // Инициатива всегда должна быть числом
+        initiative: 10, // Явно указываем, что это число, а не строка
         conditions: [],
         resources: {},
         visible: true,
