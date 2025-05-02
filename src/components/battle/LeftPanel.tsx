@@ -1,17 +1,15 @@
-
 // В LeftPanel.tsx нужно исправить ошибку с типом initiative, чтобы оно всегда было числом
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Sword, Shield, ZapFast, PlusCircle, MinusCircle } from 'lucide-react';
+import { Plus, Sword, Shield, Zap, PlusCircle, MinusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 // Вспомогательные компоненты и утилиты
-import { MonsterCard } from './MonsterCard';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 // Типы данных
 interface Condition {
@@ -147,7 +145,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         hp: baseMonster.hp,
         maxHp: baseMonster.hp,
         ac: baseMonster.ac,
-        // Fix: Ensure initiative is always a number by parsing to number or using default 0
+        // Fix: Ensure initiative is always a number by using Math.random
         initiative: Math.floor(Math.random() * 20) + 1,
         conditions: [],
         resources: {},

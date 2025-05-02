@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -124,12 +123,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Properly type guard the spell object and its properties
-        if (typeof spell === 'object' && spell !== null && 'name' in spell) {
-          const spellName = spell.name;
-          if (typeof spellName === 'string') {
-            return spellName.toLowerCase().includes(searchQuery.toLowerCase());
-          }
+        // Исправление типа never: добавляем строгую проверку типов
+        if (typeof spell === 'object' && spell !== null && 'name' in spell && typeof spell.name === 'string') {
+          return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
         } else if (typeof spell === 'string') {
           return spell.toLowerCase().includes(searchQuery.toLowerCase());
         }
@@ -140,11 +136,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Фильтр по уровню
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
-        if (typeof spell === 'object' && spell !== null && 'level' in spell) {
-          const level = spell.level;
-          if (typeof level === 'number') {
-            return level === levelFilter;
-          }
+        if (typeof spell === 'object' && spell !== null && 'level' in spell && typeof spell.level === 'number') {
+          return spell.level === levelFilter; // Исправлено: spell.level вместо level
         }
         return false;
       });

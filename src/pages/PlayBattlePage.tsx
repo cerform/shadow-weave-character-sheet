@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import LeftPanel from "@/components/battle/LeftPanel";
+import { LeftPanel } from "@/components/battle/LeftPanel";
 import BattleMap from "@/components/battle/BattleMap";
 import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
