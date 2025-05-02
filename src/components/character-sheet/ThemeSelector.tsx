@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/use-theme';
 import { Button } from "@/components/ui/button";
 import { Leaf, Sword, Wand, Feather, Sparkles, Dices, Check } from "lucide-react";
 import { themes } from "@/lib/themes";
@@ -101,7 +101,7 @@ export const ThemeSelector = () => {
               }}
             >
               {themeIcons[themeId as keyof typeof themeIcons]}
-              <span>{themes[themeId as keyof typeof themes].name}</span>
+              <span>{currentThemeObj.name}</span>
             </Button>
           );
         })}

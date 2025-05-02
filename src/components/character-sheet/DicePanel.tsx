@@ -25,6 +25,7 @@ import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
+import ThemeSelector from '@/components/character-sheet/ThemeSelector';
 
 interface DicePanelProps {
   isDM?: boolean;
@@ -113,10 +114,10 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     
     setRollHistory((prev) => [...prev, rollData]);
     
-    if (socket && socket.sendRoll) {
+    if (socket && socket.socketService && socket.socketService.sendRoll) {
       // Используем метод sendRoll из контекста для отправки броска
       const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
-      socket.sendRoll(formula, reason);
+      socket.socketService.sendRoll(formula, reason);
     }
     
     toast({
@@ -131,6 +132,9 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <div className="space-y-4">
+        {/* Выбор темы */}
+        <ThemeSelector />
+        
         {/* Кнопки типов кубиков в ряд */}
         <div className="grid grid-cols-6 gap-1">
           {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
@@ -186,6 +190,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
               modifier={modifier}
               onRollComplete={handleDiceRollComplete}
               fixedPosition={fixedPosition}
+              themeColor={currentTheme.accent}
             />
           </div>
           
