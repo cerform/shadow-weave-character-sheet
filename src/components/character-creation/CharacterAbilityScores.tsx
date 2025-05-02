@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
@@ -35,16 +34,17 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   abilityScorePoints = 27,
   rollsHistory = []
 }) => {
+  // Инициализируем stats с безопасной проверкой на существование character.stats
   const [stats, setStats] = useState({
-    strength: character.stats.strength,
-    dexterity: character.stats.dexterity,
-    constitution: character.stats.constitution,
-    intelligence: character.stats.intelligence,
-    wisdom: character.stats.wisdom,
-    charisma: character.stats.charisma,
+    strength: character?.stats?.strength || 10,
+    dexterity: character?.stats?.dexterity || 10,
+    constitution: character?.stats?.constitution || 10,
+    intelligence: character?.stats?.intelligence || 10,
+    wisdom: character?.stats?.wisdom || 10,
+    charisma: character?.stats?.charisma || 10,
   });
 
-  const [pointsLeft, setPointsLeft] = useState(abilityScorePoints); // Для метода Point Buy
+  const [pointsLeft, setPointsLeft] = useState(abilityScorePoints);
   const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
     strength: null,
     dexterity: null,
@@ -153,11 +153,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Распределение характеристик</h2>
+      <h2 className="text-2xl font-bold mb-4 text-foreground">Распределение характеристик</h2>
       
       {abilitiesMethod === "pointbuy" && (
         <div className="mb-4">
-          <p className="mb-2">
+          <p className="mb-2 text-foreground">
             Осталось очков: <span className="font-bold">{pointsLeft}</span>
           </p>
           <p className="text-sm text-muted-foreground mb-4">
@@ -179,8 +179,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
                   key={index}
                   className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-card'}`}
                 >
-                  <div className="text-sm">Бросок {index + 1}</div>
-                  <div className="font-bold text-lg">{total}</div>
+                  <div className="text-sm text-foreground">Бросок {index + 1}</div>
+                  <div className="font-bold text-lg text-foreground">{total}</div>
                   <div className="text-xs" style={{ color: currentTheme.accent }}>
                     {sortedRolls.slice(0, 3).join(' + ')} {roll.length > 3 && <span className="line-through">+ {sortedRolls[3]}</span>}
                   </div>
@@ -212,8 +212,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
           
           return (
             <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1">{getStatName(stat)}</h3>
-              <div className="text-3xl font-bold mb-1">{value}</div>
+              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
+              <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
               <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
               
               {abilitiesMethod === "pointbuy" && (

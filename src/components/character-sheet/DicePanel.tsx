@@ -5,13 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dices, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
 import { Separator } from '@/components/ui/separator';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 export const DicePanel = () => {
   const [diceCount, setDiceCount] = useState(1);
   const [diceResult, setDiceResult] = useState<string | null>(null);
   const [diceType, setDiceType] = useState('d20');
-  const [rollsHistory, setRollsHistory] = useState<{type: string, rolls: number[], total: number}[]>([]);
+  const [modifier, setModifier] = useState(0);
+  const [rollsHistory, setRollsHistory] = useState<{type: string, rolls: number[], total: number, modifier: number}[]>([]);
   const [isRolling, setIsRolling] = useState(false);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
   
   // Компонент дайса для отображения в результате
   const DiceIcon = ({ value, size = 24 }: { value: number, size?: number }) => {
@@ -45,11 +50,14 @@ export const DicePanel = () => {
         total += roll;
       }
       
+      // Добавляем модификатор
+      const finalTotal = total + modifier;
+      
       // Сохраняем результат броска
-      const newRoll = { type, rolls, total };
+      const newRoll = { type, rolls, total: finalTotal, modifier };
       setRollsHistory(prev => [newRoll, ...prev.slice(0, 9)]);
       
-      setDiceResult(`${total}`);
+      setDiceResult(`${finalTotal}`);
       setIsRolling(false);
     }, 500);
   };
@@ -62,27 +70,39 @@ export const DicePanel = () => {
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h3 className="text-lg font-semibold mb-2 text-primary">Кубики</h3>
+      <h3 className="text-lg font-semibold mb-2 text-foreground">Кубики</h3>
       
-      <div className="mb-2">
-        <label className="text-sm text-primary/80">Количество кубиков:</label>
-        <Input 
-          type="number" 
-          value={diceCount} 
-          onChange={(e) => setDiceCount(Number(e.target.value))} 
-          min={1}
-          max={20}
-          className="w-full mt-1"
-        />
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <label className="text-sm text-foreground">Количество:</label>
+          <Input 
+            type="number" 
+            value={diceCount} 
+            onChange={(e) => setDiceCount(Number(e.target.value))} 
+            min={1}
+            max={20}
+            className="w-full mt-1"
+          />
+        </div>
+        <div>
+          <label className="text-sm text-foreground">Модификатор:</label>
+          <Input 
+            type="number" 
+            value={modifier} 
+            onChange={(e) => setModifier(Number(e.target.value))} 
+            className="w-full mt-1"
+          />
+        </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid grid-cols-4 gap-2 mb-3">
         <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling}>d4</Button>
         <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling}>d6</Button>
         <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling}>d8</Button>
         <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling}>d10</Button>
         <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling}>d12</Button>
         <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling}>d20</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling}>d100</Button>
       </div>
       
       {isRolling && (
@@ -104,6 +124,11 @@ export const DicePanel = () => {
                 <DiceIcon value={roll} />
               </div>
             ))}
+            {rollsHistory[0]?.modifier !== 0 && (
+              <span className="inline-flex items-center justify-center text-primary font-bold">
+                {rollsHistory[0]?.modifier > 0 ? '+' : ''}{rollsHistory[0]?.modifier}
+              </span>
+            )}
           </div>
           <div className="mt-2">
             <Button 
@@ -121,12 +146,16 @@ export const DicePanel = () => {
       <Separator className="my-2" />
       
       <div className="mt-2">
-        <h4 className="text-sm font-medium mb-1 text-primary">История бросков</h4>
+        <h4 className="text-sm font-medium mb-1 text-foreground">История бросков</h4>
         <div className="max-h-32 overflow-y-auto">
           {rollsHistory.map((roll, index) => (
             <div key={index} className="text-sm p-1 border-b border-primary/10 flex justify-between">
-              <span className="text-primary/80">
-                {roll.rolls.length}× {roll.type} [{roll.rolls.join(', ')}]
+              <span className="text-foreground/80">
+                {roll.rolls.length}× {roll.type} 
+                <span className="text-xs ml-1">[{roll.rolls.join(', ')}]</span>
+                {roll.modifier !== 0 && (
+                  <span className="ml-1">{roll.modifier > 0 ? '+' : ''}{roll.modifier}</span>
+                )}
               </span>
               <span className="font-medium text-primary">{roll.total}</span>
             </div>

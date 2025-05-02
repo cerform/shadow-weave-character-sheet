@@ -289,3 +289,28 @@ h1, h2, h3, h4, h5, h6 {
 .token-boss {
   border-color: #8B5CF6 !important;
 }
+
+/* Обеспечиваем контрастность и читаемость текста в формах создания персонажа */
+.text-form-label {
+  color: var(--text-color, #E8DDCB);
+}
+
+.text-form-value {
+  color: var(--text-color, #E8DDCB);
+}
+
+/* Стили для элементов создания персонажа */
+.creation-step {
+  color: var(--text-color, #E8DDCB);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Добавляем явный цвет текста для форм и инпутов */
+input, select, textarea {
+  color: var(--text-color, #E8DDCB);
+}
+
+/* Улучшаем контраст для текста предпросмотра */
+.preview-text {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}

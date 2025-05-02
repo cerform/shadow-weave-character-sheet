@@ -16,9 +16,52 @@ const diceConfigs = {
   d10: { sides: 10, texture: null },
   d12: { sides: 12, texture: null },
   d20: { sides: 20, texture: null },
+  d100: { sides: 100, texture: null }
 }
 
 type DieType = keyof typeof diceConfigs;
+
+// Создание специальной геометрии для d10
+const createD10Geometry = () => {
+  // Создаем базовую геометрию для d10 (правильный 10-гранник - decagon prism)
+  const radius = 1.2;
+  const height = 0.8;
+  
+  // Создаем пентагональную призму и деформируем её для d10
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 10);
+  
+  // Модифицируем вершины для создания двух конусов (верхний и нижний)
+  const positions = geometry.attributes.position;
+  
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    
+    // Смещаем верхние и нижние вершины для создания формы d10
+    if (y > 0) {
+      // Верхний конус
+      positions.setY(i, y * 1.5); // Вытягиваем верхушку
+      
+      // Смещаем вершины внутрь для сужения
+      const scale = 0.6 + (y / height) * 0.4;
+      positions.setX(i, x * scale);
+      positions.setZ(i, z * scale);
+    }
+    else if (y < 0) {
+      // Нижний конус
+      positions.setY(i, y * 1.5); // Вытягиваем низ
+      
+      // Смещаем вершины внутрь для сужения
+      const scale = 0.6 + (Math.abs(y) / height) * 0.4;
+      positions.setX(i, x * scale);
+      positions.setZ(i, z * scale);
+    }
+  }
+  
+  geometry.computeVertexNormals();
+  return geometry;
+};
 
 // Individual Die component
 function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: (value: number) => void }) {
@@ -32,6 +75,23 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
   ));
   const { theme } = useTheme();
   
+  // Функция для броска кубика
+  const roll = () => {
+    setRolling(true);
+    rotationSpeed.current = new THREE.Vector3(
+      Math.random() * 0.6 - 0.3, // увеличили силу броска
+      Math.random() * 0.6 - 0.3,
+      Math.random() * 0.6 - 0.3
+    );
+    
+    // Добавляем случайное начальное положение для реалистичности
+    if (meshRef.current) {
+      meshRef.current.rotation.x = Math.random() * Math.PI;
+      meshRef.current.rotation.y = Math.random() * Math.PI;
+      meshRef.current.rotation.z = Math.random() * Math.PI;
+    }
+  };
+  
   // Auto-roll on first render
   useEffect(() => {
     // Small delay for initial rendering
@@ -39,7 +99,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       roll();
     }, 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [type]); // Перебрасываем при изменении типа кубика
   
   // Animation logic
   useFrame((state) => {
@@ -50,6 +110,9 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       meshRef.current.rotation.x += rotationSpeed.current.x;
       meshRef.current.rotation.y += rotationSpeed.current.y;
       meshRef.current.rotation.z += rotationSpeed.current.z;
+      
+      // Имитация гравитации и трения
+      rotationSpeed.current.y -= 0.001; // гравитация
       
       // Slow down rotation gradually
       rotationSpeed.current.x *= 0.97; // Slightly faster slow down
@@ -84,12 +147,15 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       case 'd8':
         return <octahedronGeometry args={[1.2, 0]} />;
       case 'd10':
-        // Simplified as cylinder for now
-        return <cylinderGeometry args={[1, 1, 1.5, 10]} />;
+        // Используем специальную геометрию для d10
+        return <primitive object={createD10Geometry()} />;
       case 'd12':
         return <dodecahedronGeometry args={[1.2, 0]} />;
       case 'd20':
         return <icosahedronGeometry args={[1.2, 0]} />;
+      case 'd100':
+        // d100 визуально как d10, но с другим результатом
+        return <primitive object={createD10Geometry()} />;
       default:
         return <icosahedronGeometry args={[1.2, 0]} />;
     }
@@ -116,21 +182,13 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
           case 'druid': return new THREE.Color("#10B981"); // Green
           case 'warrior': return new THREE.Color("#EA384D"); // Red
           case 'bard': return new THREE.Color("#FCD34D"); // Yellow
-          default: return new THREE.Color("#8B5CF6"); // Default purple
+          default: return new THREE.Color("#8B5A2B"); // Default tavern theme
         }
+      case 'd100':
+        return new THREE.Color("#6366F1"); // Indigo
       default:
         return new THREE.Color("#8B5CF6"); // Vivid purple
     }
-  };
-  
-  // Roll the die with random force
-  const roll = () => {
-    setRolling(true);
-    rotationSpeed.current = new THREE.Vector3(
-      Math.random() * 0.3 - 0.15,
-      Math.random() * 0.3 - 0.15,
-      Math.random() * 0.3 - 0.15
-    );
   };
   
   return (
@@ -138,10 +196,10 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       {getGeometry()}
       <meshStandardMaterial 
         color={getDiceColor()} 
-        metalness={0.2} // Reduced metalness for better visibility
-        roughness={0.1} // Smoother for better light reflection
+        metalness={0.5} 
+        roughness={0.2} 
         emissive={getDiceColor()}
-        emissiveIntensity={0.4} // Increased glow for better visibility
+        emissiveIntensity={0.4}
       />
     </mesh>
   );
@@ -156,13 +214,13 @@ function DiceScene({ diceType, onRollComplete }: { diceType: DieType, onRollComp
     if(camera instanceof THREE.PerspectiveCamera) {
       camera.position.z = 5;
     }
-  }, []);
+  }, [camera]);
   
   return (
     <>
-      <ambientLight intensity={1.2} /> {/* Increased ambient light */}
-      <directionalLight position={[10, 10, 10]} intensity={2.0} castShadow /> {/* Increased intensity */}
-      <pointLight position={[-10, -10, -10]} intensity={1.0} color="#ffffff" /> {/* Brighter point light */}
+      <ambientLight intensity={1.2} /> 
+      <directionalLight position={[10, 10, 10]} intensity={2.0} castShadow />
+      <pointLight position={[-10, -10, -10]} intensity={1.0} color="#ffffff" />
       <Die type={diceType} onRollComplete={onRollComplete} />
       <OrbitControls enablePan={false} />
     </>
@@ -173,18 +231,21 @@ interface DiceRoller3DProps {
   initialDice?: DieType;
   onRollComplete?: (value: number) => void;
   hideControls?: boolean;
+  modifier?: number;
 }
 
 export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({ 
   initialDice = 'd20', 
   onRollComplete = () => {}, 
-  hideControls = false 
+  hideControls = false,
+  modifier = 0
 }) => {
   const [diceCount, setDiceCount] = useState(1);
   const [activeDice, setActiveDice] = useState<DieType>(initialDice);
   const [results, setResults] = useState<{dice: DieType, value: number}[]>([]);
   const [rolling, setRolling] = useState(false);
   const [resultHistory, setResultHistory] = useState<{dice: DieType, value: number, timestamp: number}[]>([]);
+  const [diceModifier, setDiceModifier] = useState(modifier);
   
   const handleRollComplete = (value: number) => {
     const newResult = { dice: activeDice, value };
@@ -199,7 +260,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
     setRolling(false);
     
     // Call external handler if provided
-    onRollComplete(value);
+    onRollComplete(value + diceModifier);
   };
   
   const rollDice = (type: DieType) => {
@@ -211,7 +272,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
   };
   
   // Calculate the total of all dice rolled
-  const totalResult = results.reduce((sum, result) => sum + result.value, 0);
+  const totalResult = results.reduce((sum, result) => sum + result.value, 0) + diceModifier;
   
   return (
     <div className="flex flex-col h-full">
@@ -227,11 +288,10 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
           <div className="absolute bottom-2 left-0 right-0 mx-auto w-max bg-primary/20 backdrop-blur-md p-3 rounded-md shadow-lg text-center">
             <div>
               <span className="font-bold text-2xl">{totalResult}</span>
-              {results.length > 1 && (
-                <div className="text-xs mt-0.5 opacity-90">
-                  {results.map((r, i) => r.value).join(' + ')}
-                </div>
-              )}
+              <div className="text-xs mt-0.5 opacity-90">
+                {results.map((r) => r.value).join(' + ')}
+                {diceModifier !== 0 && ` ${diceModifier >= 0 ? '+' : ''} ${diceModifier}`}
+              </div>
             </div>
           </div>
         )}
@@ -240,10 +300,10 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
       {/* История бросков - улучшенная видимость */}
       {!hideControls && resultHistory.length > 0 && (
         <div className="h-10 mb-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
-          {resultHistory.map((item, index) => (
+          {resultHistory.map((item) => (
             <div key={item.timestamp} className="px-2 py-1 text-xs bg-primary/20 rounded-md flex items-center gap-1 whitespace-nowrap border border-primary/20">
               <span className="font-medium">{item.dice}:</span>
-              <span className="font-bold text-primary">{item.value}</span>
+              <span className="font-bold text-primary">{item.value + diceModifier}</span>
             </div>
           ))}
         </div>
@@ -253,13 +313,14 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
         <>
           <div className="mb-2">
             <Tabs defaultValue={activeDice} value={activeDice} className="w-full" onValueChange={(val) => setActiveDice(val as DieType)}>
-              <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 h-auto">
+              <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-1 h-auto">
                 <TabsTrigger value="d4" className="text-sm py-1 px-2">d4</TabsTrigger>
                 <TabsTrigger value="d6" className="text-sm py-1 px-2">d6</TabsTrigger>
                 <TabsTrigger value="d8" className="text-sm py-1 px-2">d8</TabsTrigger>
                 <TabsTrigger value="d10" className="text-sm py-1 px-2">d10</TabsTrigger>
                 <TabsTrigger value="d12" className="text-sm py-1 px-2">d12</TabsTrigger>
                 <TabsTrigger value="d20" className="text-sm py-1 px-2">d20</TabsTrigger>
+                <TabsTrigger value="d100" className="text-sm py-1 px-2">d100</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -269,9 +330,16 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
               type="number" 
               value={diceCount} 
               onChange={(e) => setDiceCount(Number(e.target.value))}
-              className="w-20 text-center"
+              className="w-16 text-center"
               min={1}
               max={10}
+            />
+            <Input 
+              type="number" 
+              value={diceModifier} 
+              onChange={(e) => setDiceModifier(Number(e.target.value))}
+              className="w-16 text-center"
+              placeholder="+/-"
             />
             <Button 
               onClick={() => rollDice(activeDice)} 
@@ -279,7 +347,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
               className="flex-1"
               disabled={rolling}
             >
-              {`Бросить ${diceCount}d${activeDice.substring(1)}`}
+              {`Бросить ${diceCount}${activeDice}${diceModifier !== 0 ? (diceModifier > 0 ? '+' : '') + diceModifier : ''}`}
             </Button>
           </div>
         </>

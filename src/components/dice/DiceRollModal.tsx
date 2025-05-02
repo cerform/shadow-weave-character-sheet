@@ -23,6 +23,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
   const [selectedDice, setSelectedDice] = useState<DiceType>('d20');
   const [quantity, setQuantity] = useState(1);
   const [modifier, setModifier] = useState(0);
+  const [lastDieResult, setLastDieResult] = useState<number | null>(null);
 
   const handleDiceSelect = (dice: DiceType) => {
     setSelectedDice(dice);
@@ -57,10 +58,15 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
     onClose();
   };
 
+  // Обработчик результата броска кубика из 3D компонента
+  const handleRollComplete = (value: number) => {
+    setLastDieResult(value);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <h2 className="text-lg font-semibold text-center mb-4">Бросок кубиков</h2>
+      <DialogContent className="sm:max-w-[450px] bg-card/90 backdrop-blur-lg">
+        <h2 className="text-lg font-semibold text-center mb-4 text-foreground">Бросок кубиков</h2>
         
         <Tabs defaultValue="builder" className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
@@ -70,7 +76,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
           
           <TabsContent value="builder" className="space-y-4">
             <div>
-              <Label>Тип кубика</Label>
+              <Label className="text-foreground">Тип кубика</Label>
               <div className="grid grid-cols-7 gap-2 mt-2">
                 {DICE_TYPES.map((dice) => (
                   <Button
@@ -88,7 +94,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="quantity">Количество</Label>
+                <Label htmlFor="quantity" className="text-foreground">Количество</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -98,7 +104,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="modifier">Модификатор</Label>
+                <Label htmlFor="modifier" className="text-foreground">Модификатор</Label>
                 <Input
                   id="modifier"
                   type="number"
@@ -111,7 +117,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
           
           <TabsContent value="advanced" className="space-y-4">
             <div>
-              <Label htmlFor="formula">Формула броска</Label>
+              <Label htmlFor="formula" className="text-foreground">Формула броска</Label>
               <Input
                 id="formula"
                 value={formula}
@@ -126,7 +132,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
         </Tabs>
         
         <div className="mt-4">
-          <Label htmlFor="reason">Причина броска (необязательно)</Label>
+          <Label htmlFor="reason" className="text-foreground">Причина броска (необязательно)</Label>
           <Input
             id="reason"
             value={reason}
@@ -135,8 +141,13 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
           />
         </div>
         
-        <div className="h-[150px] w-full">
-          <DiceRoller3D />
+        <div className="h-[200px] w-full">
+          <DiceRoller3D 
+            initialDice={selectedDice} 
+            onRollComplete={handleRollComplete}
+            hideControls={true} 
+            modifier={modifier}
+          />
         </div>
 
         <DialogFooter>
