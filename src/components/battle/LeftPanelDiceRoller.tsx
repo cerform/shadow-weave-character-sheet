@@ -5,7 +5,7 @@ import { DicePanel } from "@/components/character-sheet/DicePanel";
 
 const LeftPanelDiceRoller: React.FC = () => {
   return (
-    <div className="h-full flex flex-col p-4 bg-background/95 text-foreground overflow-y-auto">
+    <div className="h-full flex flex-col p-4 overflow-y-auto">
       <h3 className="font-semibold mb-4 text-center">Бросок кубиков</h3>
       <div className="flex-1 overflow-y-auto">
         <DicePanel />

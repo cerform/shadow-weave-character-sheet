@@ -21,6 +21,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { DicePanel } from "@/components/character-sheet/DicePanel";
 import MapControlBox from "@/components/battle/MapControlBox";
+import OBSLayout from "@/components/OBSLayout";
+import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 
 // Типы для управления битвой
 export interface Token {
@@ -209,7 +211,7 @@ const PlayBattlePage = () => {
       };
     });
     
-    // Сортируем по результату инициатив�� (от большег�� к меньшему)
+    // Сортируем по результату инициатив (от большег к меньшему)
     const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
     
     // Устанавливаем первого участника активным
@@ -232,7 +234,7 @@ const PlayBattlePage = () => {
     setSelectedTokenId(id);
   };
 
-  // Новые функции ��з BattleScenePage
+  // Новые функции з BattleScenePage
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -616,135 +618,74 @@ const PlayBattlePage = () => {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
       {/* Верхняя панель с расширенными элементами управления */}
-      <div className="p-2 border-b flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold">D&D Боевая карта</h1>
-          <Button 
-            size="sm" 
-            onClick={() => setShowSceneMode(!showSceneMode)}
-            variant={showSceneMode ? "default" : "outline"}
-          >
-            {showSceneMode ? "Боевой режим" : "Режим сцены"}
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <ThemeSelector />
-          
-          {!showSceneMode && (
-            <>
-              <Button 
-                size="sm" 
-                onClick={startBattle}
-                disabled={battleState.isActive}
-              >
-                <Play className="h-4 w-4 mr-1" />
-                Начать бой
-              </Button>
-              
-              <Button 
-                size="sm" 
-                onClick={pauseBattle}
-                disabled={!battleState.isActive}
-                variant="outline"
-              >
-                <Pause className="h-4 w-4 mr-1" />
-                {battleState.isActive ? "Пауза" : "Продолжить"}
-              </Button>
-              
-              <Button 
-                size="sm" 
-                onClick={nextTurn}
-                disabled={!battleState.isActive}
-                variant="outline"
-              >
-                <SkipForward className="h-4 w-4 mr-1" />
-                След. ход
-              </Button>
-              
-              {battleState.isActive && (
-                <div className="px-2 py-1 bg-primary/20 rounded text-sm">
-                  Раунд: {battleState.round}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+      <TopPanel
+        battleState={battleState}
+        onStartBattle={startBattle}
+        onPauseBattle={pauseBattle}
+        onNextTurn={nextTurn}
+      />
+      
+      {/* Основной контент */}
+      <div className="flex-1 overflow-hidden">
+        <OBSLayout 
+          leftPanelContent={<LeftPanelDiceRoller />}
+        >
+          <div className="flex flex-col h-full">
+            {/* Центральная карта */}
+            <div className="flex-1 relative overflow-hidden" ref={mapRef}>
+              <EnhancedBattleMap 
+                tokens={tokens}
+                setTokens={setTokens}
+                background={mapBackground}
+                setBackground={setMapBackground}
+                onUpdateTokenPosition={handleUpdateTokenPosition}
+                onSelectToken={handleSelectToken}
+                selectedTokenId={selectedTokenId}
+                initiative={initiative}
+                battleActive={battleState.isActive}
+                fogOfWar={fogOfWar}
+                revealedCells={revealedCells}
+                onRevealCell={handleRevealCell}
+                gridSize={gridSize}
+                gridVisible={gridVisible}
+                gridOpacity={gridOpacity}
+              />
+            </div>
+          </div>
+        </OBSLayout>
       </div>
       
-      <div className="flex flex-1 overflow-hidden">
-        {/* Левая панель с фиксированной шириной и прокруткой */}
-        <div className="w-72 border-r bg-muted/10 overflow-y-auto p-3">
-          <ScrollArea className="h-full pr-2">
-            <LeftPanel
+      {/* Правая панель */}
+      <div className="w-72 border-l bg-muted/10 overflow-y-auto absolute top-14 right-0 bottom-0">
+        <ScrollArea className="h-full pr-2">
+          {selectedTokenId !== null ? (
+            <RightPanel
+              selectedTokenId={selectedTokenId} 
+              tokens={tokens}
+              setTokens={setTokens}
+              fogOfWar={fogOfWar}
+              setFogOfWar={setFogOfWar}
+              revealRadius={revealRadius}
+              setRevealRadius={setRevealRadius}
+              gridVisible={gridVisible}
+              setGridVisible={setGridVisible}
+              gridOpacity={gridOpacity}
+              setGridOpacity={setGridOpacity}
+              onResetFogOfWar={resetFogOfWar}
+            />
+          ) : (
+            <BattleTabs
               tokens={tokens}
               setTokens={setTokens}
               initiative={initiative}
-              setInitiative={setInitiative}
               selectedTokenId={selectedTokenId}
               onSelectToken={handleSelectToken}
-              battleState={battleState}
-              fogOfWar={fogOfWar}
-              setFogOfWar={setFogOfWar}
-              gridSize={gridSize}
-              setGridSize={setGridSize}
+              updateTokenHP={updateTokenHP}
+              removeToken={removeToken}
+              controlsPanel={mapControlPanel}
             />
-          </ScrollArea>
-        </div>
-        
-        {/* Центральная карта */}
-        <div className="flex-1 relative overflow-hidden" ref={mapRef}>
-          <EnhancedBattleMap 
-            tokens={tokens}
-            setTokens={setTokens}
-            background={mapBackground}
-            setBackground={setMapBackground}
-            onUpdateTokenPosition={handleUpdateTokenPosition}
-            onSelectToken={handleSelectToken}
-            selectedTokenId={selectedTokenId}
-            initiative={initiative}
-            battleActive={battleState.isActive}
-            fogOfWar={fogOfWar}
-            revealedCells={revealedCells}
-            onRevealCell={handleRevealCell}
-            gridSize={gridSize}
-            gridVisible={gridVisible}
-            gridOpacity={gridOpacity}
-          />
-        </div>
-        
-        {/* Правая панель с фиксированной шириной и прокруткой */}
-        <div className="w-72 border-l bg-muted/10 overflow-y-auto p-3">
-          <ScrollArea className="h-full pr-2">
-            {selectedTokenId !== null ? (
-              <RightPanel
-                selectedTokenId={selectedTokenId} 
-                tokens={tokens}
-                setTokens={setTokens}
-                fogOfWar={fogOfWar}
-                setFogOfWar={setFogOfWar}
-                revealRadius={revealRadius}
-                setRevealRadius={setRevealRadius}
-                gridVisible={gridVisible}
-                setGridVisible={setGridVisible}
-                gridOpacity={gridOpacity}
-                setGridOpacity={setGridOpacity}
-                onResetFogOfWar={resetFogOfWar}
-              />
-            ) : (
-              <BattleTabs
-                tokens={tokens}
-                setTokens={setTokens}
-                initiative={initiative}
-                selectedTokenId={selectedTokenId}
-                onSelectToken={handleSelectToken}
-                updateTokenHP={updateTokenHP}
-                removeToken={removeToken}
-                controlsPanel={mapControlPanel}
-              />
-            )}
-          </ScrollArea>
-        </div>
+          )}
+        </ScrollArea>
       </div>
       
       {/* Нижняя панель */}
@@ -775,34 +716,4 @@ const PlayBattlePage = () => {
             </div>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Загрузить свой токен</label>
-              <div className="flex gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="flex-1 file:mr-2 file:py-1 file:px-2 file:border-0 file:rounded file:bg-primary/20 file:text-foreground"
-                  onChange={handleCustomTokenUpload}
-                />
-              </div>
-            </div>
-            
-            <h4 className="font-medium mb-2">Или выберите готовый:</h4>
-            <div className="grid grid-cols-4 gap-2">
-              {defaultTokenImages.placeholder.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleTokenSelect(img)}
-                  className="p-1 border rounded hover:bg-muted transition-colors"
-                >
-                  <img src={img} alt={`Avatar ${idx + 1}`} className="w-full aspect-square object-contain rounded" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default PlayBattlePage;
+              <label

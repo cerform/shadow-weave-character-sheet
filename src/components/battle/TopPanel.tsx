@@ -23,7 +23,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const currentTheme = themes[theme as keyof typeof themes];
 
   return (
-    <div className="h-14 border-b border-border bg-muted/10 flex items-center justify-between px-4">
+    <div className="h-14 border-b border-border bg-muted/10 flex items-center justify-between px-4 z-10">
       <div className="flex items-center space-x-2">
         <div className="font-bold flex items-center" style={{ color: currentTheme.textColor }}>
           <Swords className="w-5 h-5 mr-2" />
