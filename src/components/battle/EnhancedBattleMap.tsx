@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -60,6 +61,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [spacePressed, setSpacePressed] = useState(false);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
@@ -172,58 +174,93 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     };
   }, [isDragging]);
 
+  // Обработчик загрузки изображения для правильного масштабирования
   useEffect(() => {
-    const container = mapContainerRef.current;
-    const content = mapContentRef.current;
-
-    if (container && content && background) {
-      const img = new Image();
-      img.onload = () => {
+    if (!background) return;
+    
+    const img = new Image();
+    img.onload = () => {
+      setImageSize({ width: img.width, height: img.height });
+      
+      // Центрируем карту после загрузки изображения
+      const container = mapContainerRef.current;
+      if (container) {
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
-        const imgWidth = img.width;
-        const imgHeight = img.height;
-        const scaleX = containerWidth / imgWidth;
-        const scaleY = containerHeight / imgHeight;
-        const scale = Math.min(scaleX, scaleY);
-        const mapWidth = Math.max(containerWidth, imgWidth * scale);
-        const mapHeight = Math.max(containerHeight, imgHeight * scale);
-        content.style.width = `${mapWidth}px`;
-        content.style.height = `${mapHeight}px`;
-        setMapPosition({ 
-          x: (containerWidth - mapWidth * zoom) / 2,
-          y: (containerHeight - mapHeight * zoom) / 2
+        
+        // Вычисляем соотношение сторон контейнера и изображения
+        const containerRatio = containerWidth / containerHeight;
+        const imgRatio = img.width / img.height;
+        
+        let scaledWidth, scaledHeight;
+        
+        // Масштабируем изображение, сохраняя соотношение сторон
+        if (containerRatio > imgRatio) {
+          // Контейнер шире, чем изображение
+          scaledHeight = containerHeight * zoom;
+          scaledWidth = scaledHeight * imgRatio;
+        } else {
+          // Изображение шире, чем контейнер
+          scaledWidth = containerWidth * zoom;
+          scaledHeight = scaledWidth / imgRatio;
+        }
+        
+        // Центрируем изображение
+        setMapPosition({
+          x: (containerWidth - scaledWidth) / 2,
+          y: (containerHeight - scaledHeight) / 2
         });
-      };
-      img.src = background;
-    }
+      }
+    };
+    img.src = background;
   }, [background, zoom]);
 
   const centerMap = () => {
-    const container = mapContainerRef.current;
-    const content = mapContentRef.current;
+    if (!background || !mapContainerRef.current) return;
     
-    if (container && content) {
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-      const contentWidth = content.clientWidth;
-      const contentHeight = content.clientHeight;
+    const container = mapContainerRef.current;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Если у нас есть размеры изображения, используем их
+    if (imageSize.width > 0 && imageSize.height > 0) {
+      // Вычисляем соотношение сторон контейнера и изображения
+      const containerRatio = containerWidth / containerHeight;
+      const imgRatio = imageSize.width / imageSize.height;
       
+      let scaledWidth, scaledHeight;
+      
+      // Масштабируем изображение, сохраняя соотношение сторон
+      if (containerRatio > imgRatio) {
+        // Контейнер шире, чем изображение
+        scaledHeight = containerHeight * zoom;
+        scaledWidth = scaledHeight * imgRatio;
+      } else {
+        // Изображение шире, чем контейнер
+        scaledWidth = containerWidth * zoom;
+        scaledHeight = scaledWidth / imgRatio;
+      }
+      
+      // Центрируем изображение
       setMapPosition({
-        x: (containerWidth - contentWidth * zoom) / 2,
-        y: (containerHeight - contentHeight * zoom) / 2
+        x: (containerWidth - scaledWidth) / 2,
+        y: (containerHeight - scaledHeight) / 2
+      });
+    } else {
+      // Если размеры изображения неизвестны, просто центрируем содержимое
+      setMapPosition({
+        x: (containerWidth - containerWidth * zoom) / 2,
+        y: (containerHeight - containerHeight * zoom) / 2
       });
     }
   };
 
+  // Центрируем карту при изменении масштаба
   useEffect(() => {
-    const timer = setTimeout(() => {
-      centerMap();
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    centerMap();
   }, [zoom]);
 
+  // Получаем позиции токенов для fog of war и освещения
   const tokenPositions = tokens.map(token => ({
     id: token.id,
     x: token.x,
@@ -232,6 +269,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     type: token.type
   }));
 
+  // Обновляем источники света, прикрепленные к токенам
   const updatedLightSources = [...lightSources].map(light => {
     if (light.attachedToTokenId) {
       const token = tokens.find(t => t.id === light.attachedToTokenId);
@@ -241,6 +279,21 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
     return light;
   });
+  
+  // Вычисляем размер контента карты на основе размера изображения
+  const contentStyle = background && imageSize.width > 0 && imageSize.height > 0
+    ? {
+        width: `${imageSize.width}px`,
+        height: `${imageSize.height}px`,
+        backgroundImage: `url(${background})`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    : {
+        width: '100%',
+        height: '100%',
+      };
 
   return (
     <div 
@@ -255,9 +308,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           transform: `scale(${zoom}) translate(${mapPosition.x / zoom}px, ${mapPosition.y / zoom}px)`,
           transformOrigin: 'center center',
           cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default'),
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
+          ...contentStyle
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
