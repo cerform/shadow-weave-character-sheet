@@ -47,6 +47,7 @@ function App() {
                 <Route path="/spellbook" element={<SpellbookPage />} />
                 <Route path="/battle" element={<PlayBattlePage />} />
                 <Route path="/dm" element={<DMDashboardPage />} />
+                <Route path="/dm/battle" element={<BattleScenePage />} />
                 <Route path="/scene" element={<BattleScenePage />} />
                 <Route path="/room/:roomCode" element={<GameRoomPage />} />
                 <Route path="*" element={<NotFound />} />
