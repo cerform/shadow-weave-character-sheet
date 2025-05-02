@@ -76,7 +76,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       maxHp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
       ac: newTokenType === "boss" ? 17 : newTokenType === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5), // Убедимся, что initiative всегда число
+      initiative: Math.floor(Math.random() * 5), // Ensure initiative is always a number
       conditions: [],
       resources: {},
       visible: true
@@ -100,7 +100,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: monster.hp,
       maxHp: monster.hp,
       ac: monster.ac,
-      initiative: Math.floor(Math.random() * 5), // Убедимся, что initiative всегда число
+      initiative: Math.floor(Math.random() * 5), // Ensure initiative is always a number
       conditions: [],
       resources: {},
       visible: true
