@@ -1,5 +1,5 @@
-
 import { create } from "zustand";
+import { LightSource } from "@/types/battle";
 
 // Импортируем необходимые типы
 export interface Token {
@@ -43,6 +43,8 @@ export interface MapSettings {
   gridSize: { rows: number; cols: number };
   zoom: number;
   background: string | null;
+  lightSources: LightSource[];
+  isDynamicLighting: boolean;
 }
 
 // Интерфейс состояния хранилища
@@ -84,6 +86,13 @@ interface BattleStore {
   setRevealRadius: (radius: number) => void;
   setZoom: (zoom: number) => void;
   
+  // Новые методы для работы со светом
+  addLightSource: (lightSource: Omit<LightSource, "id">) => void;
+  removeLightSource: (id: number) => void;
+  updateLightSource: (id: number, updates: Partial<Omit<LightSource, "id">>) => void;
+  setDynamicLighting: (enabled: boolean) => void;
+  attachLightToToken: (lightId: number, tokenId: number | undefined) => void;
+  
   // Общие настройки
   setIsDM: (isDM: boolean) => void;
   setShowWebcams: (show: boolean) => void;
@@ -111,6 +120,8 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     gridSize: { rows: 30, cols: 40 },
     zoom: 1,
     background: null,
+    lightSources: [],
+    isDynamicLighting: false,
   },
   
   // Визуальные настройки
@@ -351,6 +362,59 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       mapSettings: {
         ...state.mapSettings,
         zoom
+      }
+    }));
+  },
+  
+  // Новые методы для работы со светом
+  addLightSource: (lightSource) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: [...state.mapSettings.lightSources, { 
+          ...lightSource, 
+          id: Date.now() 
+        }]
+      }
+    }));
+  },
+  
+  removeLightSource: (id) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.filter(light => light.id !== id)
+      }
+    }));
+  },
+  
+  updateLightSource: (id, updates) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.map(light => 
+          light.id === id ? { ...light, ...updates } : light
+        )
+      }
+    }));
+  },
+  
+  setDynamicLighting: (enabled) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        isDynamicLighting: enabled
+      }
+    }));
+  },
+  
+  attachLightToToken: (lightId, tokenId) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.map(light => 
+          light.id === lightId ? { ...light, attachedToTokenId: tokenId } : light
+        )
       }
     }));
   },

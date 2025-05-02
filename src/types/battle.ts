@@ -12,3 +12,14 @@ export interface TokenOwner {
   userName: string;
 }
 
+// Тип для источника света
+export interface LightSource {
+  id: number;
+  type: 'torch' | 'lantern' | 'daylight' | 'custom';
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  intensity: number;
+  attachedToTokenId?: number;
+}

@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 // Import types from store instead of page
 import { Token, Initiative } from '@/stores/battleStore';
+import { LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
@@ -26,6 +27,9 @@ interface EnhancedBattleMapProps {
   gridOpacity?: number;
   zoom?: number;
   isDM?: boolean;
+  // Добавляем параметры для освещения
+  lightSources?: LightSource[];
+  isDynamicLighting?: boolean;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -45,7 +49,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   gridVisible = true,
   gridOpacity = 0.5,
   zoom = 1,
-  isDM = true
+  isDM = true,
+  // Добавляем параметры для освещения
+  lightSources = [],
+  isDynamicLighting = false
 }) => {
   // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -239,6 +246,26 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return () => clearTimeout(timer);
   }, [zoom]);
 
+  // Создаем массив позиций токенов для передачи в компонент FogOfWar
+  const tokenPositions = tokens.map(token => ({
+    id: token.id,
+    x: token.x,
+    y: token.y,
+    visible: token.visible,
+    type: token.type
+  }));
+
+  // Обновляем позиции источников света, привязанных к токенам
+  const updatedLightSources = [...lightSources].map(light => {
+    if (light.attachedToTokenId) {
+      const token = tokens.find(t => t.id === light.attachedToTokenId);
+      if (token) {
+        return { ...light, x: token.x, y: token.y };
+      }
+    }
+    return light;
+  });
+
   return (
     <div 
       className="battle-map-container h-full relative" 
@@ -290,6 +317,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
               revealedCells={revealedCells}
               onRevealCell={onRevealCell}
               active={fogOfWar}
+              lightSources={updatedLightSources}
+              tokenPositions={tokenPositions}
+              isDM={isDM}
+              isDynamicLighting={isDynamicLighting}
             />
           </div>
         )}

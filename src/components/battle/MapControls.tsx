@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Layers, Map } from 'lucide-react';
+import { Eye, EyeOff, Layers, Map, Sun, Moon } from 'lucide-react';
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 
 interface MapControlsProps {
   fogOfWar: boolean;
@@ -14,7 +15,11 @@ interface MapControlsProps {
   gridOpacity: number;
   setGridOpacity: (value: number) => void;
   onResetFogOfWar: () => void;
-  isDM?: boolean; // Added isDM prop
+  isDM?: boolean;
+  // Добавляем новые свойства для освещения
+  isDynamicLighting?: boolean;
+  setDynamicLighting?: (value: boolean) => void;
+  onAddLight?: (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => void;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -27,7 +32,11 @@ const MapControls: React.FC<MapControlsProps> = ({
   gridOpacity,
   setGridOpacity,
   onResetFogOfWar,
-  isDM = true // Default to true
+  isDM = true,
+  // Новые свойства для освещения
+  isDynamicLighting = false,
+  setDynamicLighting = () => {},
+  onAddLight = () => {}
 }) => {
   return (
     <div className="space-y-4">
@@ -52,6 +61,17 @@ const MapControls: React.FC<MapControlsProps> = ({
             
             {fogOfWar && (
               <>
+                {/* Добавляем опцию динамического освещения */}
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm">Динамическое освещение</span>
+                  <Switch
+                    checked={isDynamicLighting}
+                    onCheckedChange={(checked) => isDM && setDynamicLighting(checked)}
+                    disabled={!isDM}
+                    aria-label="Динамическое освещение"
+                  />
+                </div>
+                
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Радиус открытия</span>
@@ -79,6 +99,65 @@ const MapControls: React.FC<MapControlsProps> = ({
               </>
             )}
           </div>
+          
+          {/* Добавляем секцию для управления светом */}
+          {fogOfWar && isDynamicLighting && (
+            <div className="space-y-2 pt-2 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Источники света</span>
+                <div className="flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => isDM && onAddLight('torch')}
+                    disabled={!isDM}
+                    className="w-8 h-8"
+                    title="Добавить факел"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2c.46 0 .9.18 1.23.5.32.34.5.78.5 1.24v1.52l4.09 4.1c.34.33.51.77.51 1.21V13c0 1.1-.9 2-2 2h-8.63c-.97 0-1.84-.76-1.97-1.71a2 2 0 0 1 .51-1.98l4.09-4.1V3.74c0-.46.18-.9.5-1.23A1.74 1.74 0 0 1 12 2Z"/>
+                      <path d="M8 15v3c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-3"/>
+                      <path d="M13 22H11"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => isDM && onAddLight('lantern')}
+                    disabled={!isDM}
+                    className="w-8 h-8"
+                    title="Добавить фонарь"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21h6"/>
+                      <path d="M12 21v-6"/>
+                      <path d="M15 9.25a3 3 0 1 0-6 0v1.5L6 12c0 .94.33 1.85.93 2.57A5.02 5.02 0 0 0 12 17c2.22 0 4.17-1.44 4.83-3.55l-1.83-1.7v-2.5Z"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => isDM && onAddLight('daylight')}
+                    disabled={!isDM}
+                    className="w-8 h-8"
+                    title="Добавить дневной свет"
+                  >
+                    <Sun className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => isDM && onAddLight('custom', '#4287f5', 0.7)}
+                    disabled={!isDM}
+                    className="w-8 h-8"
+                    title="Добавить свой источник света"
+                  >
+                    <Moon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">

@@ -1,13 +1,5 @@
-
 import React, { useEffect, useRef, useState } from 'react';
-
-interface LightSource {
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
-  intensity: number;
-}
+import { LightSource } from '@/types/battle'; 
 
 interface FogOfWarProps {
   gridSize: { rows: number; cols: number };
@@ -17,6 +9,7 @@ interface FogOfWarProps {
   lightSources?: LightSource[];
   tokenPositions?: {id: number, x: number, y: number, visible: boolean, type: string}[];
   isDM?: boolean;
+  isDynamicLighting?: boolean;
 }
 
 const FogOfWar: React.FC<FogOfWarProps> = ({ 
@@ -26,7 +19,8 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
   active, 
   lightSources = [],
   tokenPositions = [],
-  isDM = false 
+  isDM = false,
+  isDynamicLighting = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({width: 0, height: 0});
@@ -81,7 +75,7 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Рисуем общий туман войны (полная темнота)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = isDynamicLighting ? 'rgba(0, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Создаем композитный режим для освещения
@@ -101,8 +95,10 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
               x + cellWidth/2, y + cellHeight/2, cellWidth * 0.8  // Внешняя точка градиента
             );
             
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');  // Полностью открыто в центре
-            gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)'); // Полупрозрачно на краях
+            const opacity = isDynamicLighting ? 0.6 : 0.9; // При динамическом освещении уменьшаем базовое открытие
+            
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);  // Полностью открыто в центре
+            gradient.addColorStop(0.7, `rgba(255, 255, 255, ${opacity * 0.7})`); // Полупрозрачно на краях
             gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');    // Плавный переход к туману
             
             ctx.fillStyle = gradient;
@@ -114,8 +110,8 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
       // Добавляем динамические источники света
       lightSources.forEach(light => {
         // Нормализуем координаты к координатам canvas
-        const x = light.x / 100 * canvas.width;
-        const y = light.y / 100 * canvas.height;
+        const x = light.x;
+        const y = light.y;
         const radius = light.radius * Math.min(cellWidth, cellHeight);
         
         // Создаем градиент для света
@@ -124,10 +120,57 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
           x, y, radius
         );
         
-        const alphaMax = Math.min(0.9, light.intensity);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${alphaMax})`);
-        gradient.addColorStop(0.5, `rgba(255, 255, 255, ${alphaMax * 0.7})`);
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        // Используем цвет и интенсивность из источника света
+        const alphaMax = Math.min(0.95, light.intensity);
+        
+        // Создаем цвет на основе параметров света
+        let lightColor = light.color || 'rgba(255, 255, 255, 1)';
+        
+        // Преобразуем HTML цвет в rgba, если это не rgba
+        if (lightColor.startsWith('#')) {
+          const r = parseInt(lightColor.slice(1, 3), 16);
+          const g = parseInt(lightColor.slice(3, 5), 16);
+          const b = parseInt(lightColor.slice(5, 7), 16);
+          lightColor = `rgba(${r}, ${g}, ${b}, 1)`;
+        }
+        
+        // Специальные визуальные эффекты в зависимости от типа света
+        switch(light.type) {
+          case 'torch':
+            gradient.addColorStop(0, `rgba(255, 200, 100, ${alphaMax})`);
+            gradient.addColorStop(0.5, `rgba(255, 150, 50, ${alphaMax * 0.7})`);
+            gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+            break;
+            
+          case 'lantern':
+            gradient.addColorStop(0, `rgba(255, 230, 150, ${alphaMax})`);
+            gradient.addColorStop(0.5, `rgba(255, 210, 120, ${alphaMax * 0.7})`);
+            gradient.addColorStop(1, 'rgba(255, 180, 80, 0)');
+            break;
+            
+          case 'daylight':
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${alphaMax})`);
+            gradient.addColorStop(0.7, `rgba(240, 240, 255, ${alphaMax * 0.7})`);
+            gradient.addColorStop(1, 'rgba(220, 220, 255, 0)');
+            break;
+            
+          default: // custom
+            // Используем цвет из параметров
+            const rgba = lightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([.\d]+))?\)/);
+            if (rgba) {
+              const r = rgba[1];
+              const g = rgba[2];
+              const b = rgba[3];
+              gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alphaMax})`);
+              gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, ${alphaMax * 0.5})`);
+              gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+            } else {
+              // Если формат цвета не распознан, используем белый
+              gradient.addColorStop(0, `rgba(255, 255, 255, ${alphaMax})`);
+              gradient.addColorStop(0.6, `rgba(255, 255, 255, ${alphaMax * 0.5})`);
+              gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            }
+        }
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -187,7 +230,7 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [active, dimensions, gridSize, revealedCells, lightSources, tokenPositions, isDM]);
+  }, [active, dimensions, gridSize, revealedCells, lightSources, tokenPositions, isDM, isDynamicLighting]);
   
   // Состояние для выделения области
   const [isDragging, setIsDragging] = useState(false);

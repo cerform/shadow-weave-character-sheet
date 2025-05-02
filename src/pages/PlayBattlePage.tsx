@@ -16,6 +16,7 @@ import { themes } from "@/lib/themes";
 
 // Импортируем наше хранилище
 import useBattleStore, { Token } from "@/stores/battleStore";
+import { LightSource } from "@/types/battle";
 
 // Тип для предустановленных монстров
 interface PresetMonster {
@@ -75,7 +76,9 @@ const PlayBattlePage = () => {
     mapSettings, setMapBackground, setFogOfWar, revealCell, resetFogOfWar,
     setGridVisible, setGridOpacity, setGridSize, setRevealRadius, setZoom,
     isDM, setIsDM,
-    showWebcams, setShowWebcams
+    showWebcams, setShowWebcams,
+    // Добавляем новые методы для работы с освещением
+    addLightSource, removeLightSource, updateLightSource, setDynamicLighting, attachLightToToken
   } = useBattleStore();
   
   // Локальные состояния UI, не связанные с основным функционалом
@@ -283,12 +286,68 @@ const PlayBattlePage = () => {
   };
 
   // Функция добавления источника света
-  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight') => {
-    // Здесь будет логика добавления источника света
+  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
+    if (!isDM) {
+      toast({
+        title: "Недостаточно прав",
+        description: "Только DM может добавлять источники света",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const lightRadius = type === 'torch' ? 6 :
+                       type === 'lantern' ? 10 :
+                       type === 'daylight' ? 30 : 8;
+    
+    const lightColor = color || (
+      type === 'torch' ? '#FF6A00' :
+      type === 'lantern' ? '#FFD700' :
+      type === 'daylight' ? '#FFFFFF' : '#4287f5'
+    );
+    
+    const lightIntensity = intensity || (
+      type === 'torch' ? 0.7 :
+      type === 'lantern' ? 0.8 :
+      type === 'daylight' ? 0.95 : 0.7
+    );
+
+    // Определяем позицию для нового источника света
+    // Если выбран токен, прикрепляем свет к нему
+    let position = { x: 200, y: 200 }; // дефолтное положение
+    let attachedTokenId = undefined;
+    
+    if (selectedTokenId) {
+      const selectedToken = tokens.find(t => t.id === selectedTokenId);
+      if (selectedToken) {
+        position = { x: selectedToken.x, y: selectedToken.y };
+        attachedTokenId = selectedToken.id;
+      }
+    }
+    
+    // Создаем новый источник света
+    const newLight: Omit<LightSource, "id"> = {
+      type,
+      x: position.x,
+      y: position.y,
+      radius: lightRadius,
+      color: lightColor,
+      intensity: lightIntensity,
+      attachedToTokenId: attachedTokenId
+    };
+    
+    // Добавляем источник света в хранилище
+    addLightSource(newLight);
+    
+    // Устанавливаем динамическое освещение, если оно еще не включено
+    if (!mapSettings.isDynamicLighting) {
+      setDynamicLighting(true);
+    }
+    
     toast({
       title: `Добавлен источник света: ${type}`,
       description: type === 'daylight' ? 'Карта освещена полностью' : 
-                  `Радиус освещения: ${type === 'torch' ? '6' : '10'} клеток`,
+                  `Радиус освещения: ${lightRadius} клеток`,
     });
   };
 
@@ -321,6 +380,10 @@ const PlayBattlePage = () => {
         setGridOpacity={setGridOpacity}
         onResetFogOfWar={resetFogOfWar}
         isDM={isDM}
+        // Добавляем новые параметры для освещения
+        isDynamicLighting={mapSettings.isDynamicLighting}
+        setDynamicLighting={setDynamicLighting}
+        onAddLight={handleAddLight}
       />
       
       <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
@@ -381,71 +444,6 @@ const PlayBattlePage = () => {
           )}
         </div>
       </div>
-      
-      {isDM && (
-        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
-          <h3 className="font-medium mb-3">Освещение</h3>
-          
-          <div className="space-y-3">
-            <div>
-              <div className="mb-1 text-sm font-medium">Добавить источник света</div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('torch')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2c.46 0 .9.18 1.23.5.32.34.5.78.5 1.24v1.52l4.09 4.1c.34.33.51.77.51 1.21V13c0 1.1-.9 2-2 2h-8.63c-.97 0-1.84-.76-1.97-1.71a2 2 0 0 1 .51-1.98l4.09-4.1V3.74c0-.46.18-.9.5-1.23A1.74 1.74 0 0 1 12 2Z"/>
-                    <path d="M8 15v3c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-3"/>
-                    <path d="M13 22H11"/>
-                  </svg>
-                  <span className="text-xs">Факел</span>
-                  <span className="text-[10px] text-muted-foreground">радиус 6</span>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('lantern')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21h6"/>
-                    <path d="M12 21v-6"/>
-                    <path d="M15 9.25a3 3 0 1 0-6 0v1.5L6 12c0 .94.33 1.85.93 2.57A5.02 5.02 0 0 0 12 17c2.22 0 4.17-1.44 4.83-3.55l-1.83-1.7v-2.5Z"/>
-                  </svg>
-                  <span className="text-xs">Фонарь</span>
-                  <span className="text-[10px] text-muted-foreground">радиус 10</span>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleAddLight('daylight')}
-                  className="h-auto py-2 flex flex-col items-center"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="4"/>
-                    <path d="M12 2v2"/>
-                    <path d="M12 20v2"/>
-                    <path d="M5 5l1.4 1.4"/>
-                    <path d="M17.6 17.6 19 19"/>
-                    <path d="M2 12h2"/>
-                    <path d="M20 12h2"/>
-                    <path d="M5 19l1.4-1.4"/>
-                    <path d="M17.6 6.4 19 5"/>
-                  </svg>
-                  <span className="text-xs">Дневной</span>
-                  <span className="text-[10px] text-muted-foreground">по всей карте</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -488,6 +486,9 @@ const PlayBattlePage = () => {
           gridOpacity={mapSettings.gridOpacity}
           zoom={mapSettings.zoom}
           isDM={isDM}
+          // Добавляем новые параметры для освещения
+          lightSources={mapSettings.lightSources}
+          isDynamicLighting={mapSettings.isDynamicLighting}
         />
       </div>
       
