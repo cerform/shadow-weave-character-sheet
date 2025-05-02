@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -197,13 +198,22 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
           
           {/* Center content */}
           <div className="flex flex-col space-y-4">
+            {/* Блок "Магия Теней" - вернули в центр экрана над вкладками */}
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+              <div className="flex flex-col items-center justify-center py-6">
+                <div className="text-3xl font-bold text-primary mb-3">Магия Теней</div>
+                <p className="text-center text-primary/80 text-lg max-w-2xl">
+                  Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
+                  В этой области будут происходить интерактивные события во время игры.
+                </p>
+              </div>
+            </Card>
+            
             <CharacterTabs activeTab={activeTab} setActiveTab={setActiveTab} />
             
             {activeTab === 'spells' && (
               <SpellPanel />
             )}
-            
-            {/* Убрали блок "Магия Теней" отсюда */}
             
             {activeTab === 'combat' && (
               <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
@@ -235,16 +245,6 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
           {/* Right sidebar */}
           <div className="space-y-4">
             <StatsPanel character={character} />
-            
-            {/* Блок "Магия Теней" - переместили сюда под спасброски */}
-            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-              <div className="flex flex-col items-center justify-center">
-                <div className="text-2xl font-bold text-primary mb-2">Магия Теней</div>
-                <p className="text-center text-primary/80 text-sm">
-                  Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
-                </p>
-              </div>
-            </Card>
             
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <h3 className="text-lg font-semibold mb-2 text-primary">Навыки</h3>
