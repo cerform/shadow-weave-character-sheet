@@ -187,7 +187,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               <SelectValue placeholder="Уровень" />
             </SelectTrigger>
             <SelectContent>
-              {/* Важное исправление: не должно быть пустого значения value */}
+              {/* Fix: Using "all" as value instead of empty string */}
               <SelectItem value="all">Все уровни</SelectItem>
               {availableSpellLevels.map((level) => (
                 <SelectItem key={level} value={level.toString()}>

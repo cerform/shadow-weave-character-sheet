@@ -100,7 +100,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       hp: monster.hp,
       maxHp: monster.hp,
       ac: monster.ac,
-      initiative: Math.floor(Math.random() * 5), // Ensure initiative is always a number
+      // Fix: Ensure initiative is always a number by parsing to number or using default 0
+      initiative: Math.floor(Math.random() * 5),
       conditions: [],
       resources: {},
       visible: true
