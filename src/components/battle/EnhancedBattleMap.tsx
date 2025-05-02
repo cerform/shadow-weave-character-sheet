@@ -4,8 +4,6 @@ import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
 import { Initiative, Token } from '@/pages/PlayBattlePage';
-import { ZoomIn, ZoomOut, Scale } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -52,30 +50,21 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-
-  // Увеличение масштаба
-  const handleZoomIn = () => {
-    setZoom(prevZoom => Math.min(prevZoom + 0.1, 2.5));
-  };
-
-  // Уменьшение масштаба
-  const handleZoomOut = () => {
-    setZoom(prevZoom => Math.max(prevZoom - 0.1, 0.5));
-  };
-
-  // Сброс масштаба
-  const handleResetZoom = () => {
-    setZoom(1);
-    setMapPosition({ x: 0, y: 0 });
-  };
+  const [spacePressed, setSpacePressed] = useState(false);
   
   // Улучшенный функционал перетаскивания карты - теперь работает с правой кнопкой мыши или через зажатие пробела
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Средняя кнопка мыши или правая
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+    // Средняя кнопка мыши или правая или левая при зажатом пробеле или Ctrl
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
+      
+      // Добавляем класс grabbing для визуального фидбека
+      if (mapContentRef.current) {
+        mapContentRef.current.classList.add('grabbing');
+      }
+      document.body.classList.add('grabbing');
     }
   };
   
@@ -92,14 +81,31 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   };
   
   const handleMouseUp = () => {
-    setIsDragging(false);
+    if (isDragging) {
+      setIsDragging(false);
+      
+      // Убираем класс grabbing
+      if (mapContentRef.current) {
+        mapContentRef.current.classList.remove('grabbing');
+      }
+      document.body.classList.remove('grabbing');
+    }
+  };
+
+  // Обработчик колесика мыши для зума
+  const handleWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 2.5));
+    }
   };
 
   // Добавляем обработчик клавиши пробел для входа в режим перетаскивания
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !isDragging) {
-        // Включаем режим перетаскивания при нажатии пробела
+      if (e.code === 'Space' && !spacePressed) {
+        setSpacePressed(true);
         document.body.style.cursor = 'grab';
         const container = mapContainerRef.current;
         if (container) {
@@ -110,7 +116,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
-        // Выключаем режим перетаскивания при отпускании пробела
+        setSpacePressed(false);
         document.body.style.cursor = 'default';
         const container = mapContainerRef.current;
         if (container) {
@@ -122,11 +128,20 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
+    // Добавляем обработчик для колесика мыши для масштабирования
+    const container = mapContainerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
     };
-  }, [isDragging]);
+  }, [spacePressed]);
 
   // Улучшаем обработку контекстного меню для перетаскивания правой кнопкой мыши
   useEffect(() => {
@@ -157,8 +172,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        content.style.width = `${Math.max(containerWidth, img.width * 1.2)}px`;
-        content.style.height = `${Math.max(containerHeight, img.height * 1.2)}px`;
+        content.style.width = `${Math.max(containerWidth * 2, img.width * 1.5)}px`;
+        content.style.height = `${Math.max(containerHeight * 2, img.height * 1.5)}px`;
       };
       img.src = background;
     }
@@ -171,14 +186,14 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       onContextMenu={(e) => e.preventDefault()}
     >
       <div 
-        className="map-content zoomable relative overflow-hidden" 
+        className={`map-content zoomable relative overflow-hidden ${spacePressed ? 'grab' : ''}`}
         ref={mapContentRef}
         style={{ 
           transform: `scale(${zoom}) translate(${mapPosition.x}px, ${mapPosition.y}px)`,
           transformOrigin: 'center center',
           height: '100%',
           width: '100%',
-          cursor: isDragging ? 'grabbing' : 'default'
+          cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default')
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -221,40 +236,9 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         )}
       </div>
       
-      {/* Улучшенная панель управления картой */}
-      <div className="zoom-controls absolute bottom-4 right-4 flex gap-2 z-10 bg-background/80 p-2 rounded-lg shadow-lg backdrop-blur">
-        <Button 
-          size="icon" 
-          variant="secondary" 
-          onClick={handleZoomIn} 
-          title="Увеличить"
-          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
-        >
-          <ZoomIn size={16} />
-        </Button>
-        <Button 
-          size="icon" 
-          variant="secondary" 
-          onClick={handleZoomOut} 
-          title="Уменьшить"
-          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
-        >
-          <ZoomOut size={16} />
-        </Button>
-        <Button 
-          size="icon" 
-          variant="secondary" 
-          onClick={handleResetZoom} 
-          title="Сбросить масштаб"
-          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
-        >
-          <Scale size={16} />
-        </Button>
-      </div>
-      
       {/* Подсказка о перетаскивании */}
       <div className="absolute top-4 left-4 bg-background/70 p-2 rounded text-xs z-10 backdrop-blur-sm">
-        Используйте среднюю кнопку мыши, правую кнопку, или Ctrl+ЛКМ для перемещения карты
+        Используйте среднюю кнопку мыши, правую кнопку, пробел+ЛКМ или Ctrl+ЛКМ для перемещения карты
       </div>
     </div>
   );

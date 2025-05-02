@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dices, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -22,16 +21,20 @@ export const DicePanel = () => {
   
   // Компонент дайса для отображения в результате
   const DiceIcon = ({ value, size = 24 }: { value: number, size?: number }) => {
-    const icons = {
-      1: <Dice1 size={size} className="text-primary" />,
-      2: <Dice2 size={size} className="text-primary" />,
-      3: <Dice3 size={size} className="text-primary" />,
-      4: <Dice4 size={size} className="text-primary" />,
-      5: <Dice5 size={size} className="text-primary" />,
-      6: <Dice6 size={size} className="text-primary" />
-    };
-    
-    return icons[value as keyof typeof icons] || <span className="text-primary font-bold">{value}</span>;
+    return (
+      <div 
+        className="inline-flex items-center justify-center font-bold rounded-md"
+        style={{ 
+          width: size, 
+          height: size, 
+          backgroundColor: `${currentTheme.accent}20`,
+          color: currentTheme.accent,
+          border: `1px solid ${currentTheme.accent}40`
+        }}
+      >
+        {value}
+      </div>
+    );
   };
   
   const rollDice = (type: string) => {
@@ -85,54 +88,18 @@ export const DicePanel = () => {
         
         {/* Строка кнопок-кубиков с улучшенным стилем */}
         <div className="grid grid-cols-6 gap-2 mb-3">
-          <Button 
-            variant={diceType === 'd4' ? "default" : "outline"} 
-            onClick={() => rollDice('d4')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd4' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d4
-          </Button>
-          <Button 
-            variant={diceType === 'd6' ? "default" : "outline"} 
-            onClick={() => rollDice('d6')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd6' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d6
-          </Button>
-          <Button 
-            variant={diceType === 'd8' ? "default" : "outline"} 
-            onClick={() => rollDice('d8')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd8' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d8
-          </Button>
-          <Button 
-            variant={diceType === 'd10' ? "default" : "outline"} 
-            onClick={() => rollDice('d10')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd10' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d10
-          </Button>
-          <Button 
-            variant={diceType === 'd12' ? "default" : "outline"} 
-            onClick={() => rollDice('d12')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd12' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d12
-          </Button>
-          <Button 
-            variant={diceType === 'd20' ? "default" : "outline"} 
-            onClick={() => rollDice('d20')} 
-            disabled={isRolling} 
-            className={`${diceType === 'd20' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
-          >
-            d20
-          </Button>
+          {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map(dice => (
+            <Button 
+              key={dice}
+              variant={diceType === dice ? "default" : "outline"} 
+              onClick={() => rollDice(dice)} 
+              disabled={isRolling} 
+              className={`dice-button ${diceType === dice ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
+              style={diceType === dice ? {} : {borderColor: `${currentTheme.accent}40`}}
+            >
+              {dice}
+            </Button>
+          ))}
         </div>
         
         {/* Модификаторы */}
@@ -161,7 +128,7 @@ export const DicePanel = () => {
         
         <Button 
           onClick={() => rollDice(diceType)} 
-          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground" 
+          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground dice-button" 
           disabled={isRolling}
         >
           Бросить {diceType}

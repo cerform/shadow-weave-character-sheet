@@ -7,7 +7,7 @@ import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import MapControls from "@/components/battle/MapControls";
 import { motion } from "framer-motion";
-import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull, ZoomIn, ZoomOut, Scale, Grid3x3 } from "lucide-react";
+import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull, ZoomIn, ZoomOut, Scale, Grid3x3, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -19,6 +19,7 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { DicePanel } from "@/components/character-sheet/DicePanel";
+import MapControlBox from "@/components/battle/MapControlBox";
 
 // Типы для управления битвой
 export interface Token {
@@ -124,6 +125,7 @@ const PlayBattlePage = () => {
   const [gridVisible, setGridVisible] = useState<boolean>(true);
   const [gridOpacity, setGridOpacity] = useState<number>(0.5);
   const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 30, cols: 40}); // Увеличили размер сетки
+  const [zoom, setZoom] = useState(1);
 
   // Обработчики для управления боем
   const startBattle = () => {
@@ -417,6 +419,29 @@ const PlayBattlePage = () => {
     });
   };
 
+  // Функции управления зумом
+  const handleZoomIn = () => {
+    setZoom(prevZoom => Math.min(prevZoom + 0.1, 2.5));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+  };
+  
+  // Переключение видимости сетки
+  const toggleGridVisible = () => {
+    setGridVisible(!gridVisible);
+  };
+  
+  // Переключение тумана войны
+  const toggleFogOfWar = () => {
+    setFogOfWar(!fogOfWar);
+  };
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
       {/* Верхняя панель с расширенными элементами управления */}
@@ -534,6 +559,18 @@ const PlayBattlePage = () => {
             gridSize={gridSize}
             gridVisible={gridVisible}
             gridOpacity={gridOpacity}
+          />
+          
+          {/* Вынесенная панель управления картой */}
+          <MapControlBox 
+            zoom={zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onResetZoom={handleResetZoom}
+            gridVisible={gridVisible}
+            toggleGrid={toggleGridVisible}
+            fogOfWar={fogOfWar}
+            toggleFogOfWar={toggleFogOfWar}
           />
         </div>
         
