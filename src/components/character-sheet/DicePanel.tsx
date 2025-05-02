@@ -11,6 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSocket } from '@/contexts/SocketContext';
 import { useSession } from '@/contexts/SessionContext';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 type DiceRollRecord = {
   id: number;
@@ -29,6 +36,18 @@ interface DicePanelProps {
   tokens?: any[];
 }
 
+// Предопределенные причины бросков
+const rollReasons = [
+  { value: "attack", label: "Бросок атаки" },
+  { value: "damage", label: "Бросок урона" },
+  { value: "saving", label: "Спасбросок" },
+  { value: "skill", label: "Проверка навыка" },
+  { value: "ability", label: "Проверка характеристики" },
+  { value: "initiative", label: "Инициатива" },
+  { value: "death", label: "Спасбросок от смерти" },
+  { value: "other", label: "Другое" }
+];
+
 export const DicePanel: React.FC<DicePanelProps> = ({ 
   useDmMode = false,
   selectedTokenId = null,
@@ -40,6 +59,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   const [rollsHistory, setRollsHistory] = useState<DiceRollRecord[]>([]);
   const [playerName, setPlayerName] = useState('');
   const [reason, setReason] = useState('');
+  const [selectedReason, setSelectedReason] = useState<string>("");
   const [isRolling, setIsRolling] = useState(false);
   const [lastRollResult, setLastRollResult] = useState<number | null>(null);
   const { theme } = useTheme();
@@ -105,6 +125,11 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     
     const effectivePlayerName = getActivePlayerName();
     
+    // Получаем название причины броска из выбранной опции
+    const reasonText = selectedReason 
+      ? rollReasons.find(r => r.value === selectedReason)?.label || selectedReason
+      : reason;
+    
     // Сохраняем результат броска в историю
     const newRoll: DiceRollRecord = { 
       id: Date.now(),
@@ -114,7 +139,7 @@ export const DicePanel: React.FC<DicePanelProps> = ({
       modifier,
       total: finalTotal,
       timestamp: new Date(),
-      reason: reason || undefined
+      reason: reasonText || undefined
     };
     
     setRollsHistory(prev => [newRoll, ...prev]);
@@ -122,8 +147,8 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     // Показываем уведомление с результатом
     toast({
       title: `${effectivePlayerName} бросает ${diceType}`,
-      description: reason ? 
-        `${reason}: ${value}${modifier !== 0 ? ` + ${modifier} = ${finalTotal}` : ''}` : 
+      description: reasonText ? 
+        `${reasonText}: ${value}${modifier !== 0 ? ` + ${modifier} = ${finalTotal}` : ''}` : 
         `Результат: ${value}${modifier !== 0 ? ` + ${modifier} = ${finalTotal}` : ''}`,
     });
     
@@ -215,12 +240,48 @@ export const DicePanel: React.FC<DicePanelProps> = ({
                     </>
                   )}
                 </div>
-                {reason && (
-                  <div className="text-sm text-white/80 mt-1">{reason}</div>
+                {(selectedReason || reason) && (
+                  <div className="text-sm text-white/80 mt-1">
+                    {selectedReason 
+                      ? rollReasons.find(r => r.value === selectedReason)?.label || selectedReason
+                      : reason}
+                  </div>
                 )}
               </div>
             )}
           </div>
+          
+          {/* Если в режиме DM и есть токены, показываем селектор токенов */}
+          {useDmMode && tokens && tokens.length > 0 && (
+            <div className="mb-3">
+              <label className="text-sm font-medium text-white mb-1 block">Выбрать токен:</label>
+              <Select 
+                onValueChange={(value) => {
+                  const tokenId = parseInt(value);
+                  if (!isNaN(tokenId)) {
+                    // Находим токен по id и используем его имя как имя игрока
+                    const token = tokens.find((t: any) => t.id === tokenId);
+                    if (token && token.id === tokenId) {
+                      setSelectedTokenId(tokenId);
+                    }
+                  }
+                }}
+                value={selectedTokenId?.toString() || ""}
+              >
+                <SelectTrigger className="w-full bg-black/50 border-white/20 text-white">
+                  <SelectValue placeholder="Выберите токен" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 border-white/20 text-white">
+                  <SelectItem value="dm">DM (Мастер)</SelectItem>
+                  {tokens.map((token: any) => (
+                    <SelectItem key={token.id} value={token.id.toString()}>
+                      {token.name} ({token.type === "player" ? "Игрок" : token.type === "boss" ? "Босс" : "Монстр"})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {/* Показываем поле ввода имени только если не в режиме DM */}
           {!useDmMode && (
@@ -261,16 +322,34 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             })}
           </div>
           
-          {/* Модификаторы */}
+          {/* Модификаторы и причина броска */}
           <div className="grid grid-cols-2 gap-2 mb-5">
             <div>
               <label className="text-sm font-medium text-white mb-1 block">Причина броска:</label>
-              <Input 
-                value={reason} 
-                onChange={(e) => setReason(e.target.value)} 
-                placeholder="Например: Атака мечом"
-                className="w-full text-white bg-black/50 border-white/20"
-              />
+              <Select
+                onValueChange={(value) => setSelectedReason(value)}
+                value={selectedReason}
+              >
+                <SelectTrigger className="w-full bg-black/50 border-white/20 text-white">
+                  <SelectValue placeholder="Выберите причину" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 border-white/20 text-white">
+                  {rollReasons.map((reason) => (
+                    <SelectItem key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {selectedReason === "other" && (
+                <Input 
+                  value={reason} 
+                  onChange={(e) => setReason(e.target.value)} 
+                  placeholder="Укажите причину"
+                  className="w-full mt-2 text-white bg-black/50 border-white/20"
+                />
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-white mb-1 block">Модификатор:</label>
