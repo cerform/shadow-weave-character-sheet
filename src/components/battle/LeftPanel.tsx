@@ -122,10 +122,10 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         img: '/images/tokens/monster.png',
         x: 0,
         y: 0,
-        hp: baseMonster.hp,
-        maxHp: baseMonster.hp,
-        ac: baseMonster.ac,
-        initiative: 10, // Конвертируем в число явным образом
+        hp: typeof baseMonster.hp === 'string' ? parseInt(baseMonster.hp, 10) : baseMonster.hp,
+        maxHp: typeof baseMonster.hp === 'string' ? parseInt(baseMonster.hp, 10) : baseMonster.hp,
+        ac: typeof baseMonster.ac === 'string' ? parseInt(baseMonster.ac, 10) : baseMonster.ac,
+        initiative: 10, // Явно используем число для инициативы
         conditions: [],
         resources: {},
         visible: true,
