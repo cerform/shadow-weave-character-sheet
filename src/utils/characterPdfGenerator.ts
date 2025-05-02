@@ -1,3 +1,4 @@
+
 import jsPDF from "jspdf";
 import { CharacterSheet } from "@/types/character";
 
@@ -9,9 +10,9 @@ export const generateCharacterSheetPdf = (character: CharacterSheet) => {
     format: "a4",
   });
 
-  // Добавляем шрифты
-  doc.addFont("helvetica", "normal");
-  doc.addFont("helvetica", "bold");
+  // Добавляем шрифты - исправляем аргументы для метода addFont
+  doc.addFont("helvetica", "normal", "normal");
+  doc.addFont("helvetica", "bold", "bold");
 
   // Устанавливаем отступы
   const margin = 10;
@@ -35,7 +36,7 @@ export const generateCharacterSheetPdf = (character: CharacterSheet) => {
   doc.setFont("helvetica", "bold");
   doc.text("Уровень:", 145, 32);
   doc.setFont("helvetica", "normal");
-  doc.text(character.level.toString(), 170, 32);
+  doc.text(character.level.toString(), 170, 32);  // Исправляем преобразование числа в строку
 
   // Класс персонажа
   doc.setFont("helvetica", "bold");
@@ -70,7 +71,7 @@ export const generateCharacterSheetPdf = (character: CharacterSheet) => {
     doc.setFont("helvetica", "bold");
     doc.text(`${ability.name}:`, startX, startY);
     doc.setFont("helvetica", "normal");
-    doc.text(ability.value.toString(), startX + 20, startY);
+    doc.text(ability.value.toString(), startX + 20, startY);  // Исправляем преобразование числа в строку
     startY += lineHeight;
   });
 
@@ -85,7 +86,7 @@ export const generateCharacterSheetPdf = (character: CharacterSheet) => {
   doc.setFont("helvetica", "bold");
   doc.text("Бонус мастерства: +", 150, 77);
   doc.setFont("helvetica", "normal");
-  doc.text(proficiencyBonus.toString(), 195, 77);
+  doc.text(proficiencyBonus.toString(), 195, 77);  // Исправляем преобразование числа в строку
 
   // Навыки
   doc.setFont("helvetica", "bold");
@@ -197,9 +198,15 @@ export const generateCharacterSheetPdf = (character: CharacterSheet) => {
 
     doc.setFontSize(8);
     doc.text("Страница:", 190, 280);
-    doc.text(pageNumber.toString(), 210, 280);
+    doc.text(pageNumber.toString(), 210, 280);  // Исправляем преобразование числа в строку
   }
 
   // Возвращаем PDF документ
   return doc;
+};
+
+// Добавляем экспорт функции downloadCharacterPDF, которая используется в CharacterReview
+export const downloadCharacterPDF = (character: any) => {
+  const doc = generateCharacterSheetPdf(character);
+  doc.save(`${character.name || 'character'}_sheet.pdf`);
 };

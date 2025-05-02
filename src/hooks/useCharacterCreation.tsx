@@ -41,7 +41,7 @@ export const useCharacterCreation = () => {
   };
 
   // Проверяем, является ли класс магическим
-  const isMagicClass = (): boolean => {
+  const isMagicClass = () => {
     const magicClasses = [
       "Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун", "Чернокнижник",
       "Паладин", "Следопыт"
@@ -78,14 +78,15 @@ export const useCharacterCreation = () => {
   };
 
   // Вычисляем модификатор характеристики
-  const getModifier = (score: number): number => {
-    return Math.floor((score - 10) / 2);
+  const getModifier = (score: number): string => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
   return { 
     character, 
     updateCharacter, 
-    isMagicClass: isMagicClass(), 
+    isMagicClass, 
     getProficiencyBonus,
     getModifier
   };

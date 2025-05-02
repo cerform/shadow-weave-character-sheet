@@ -1,4 +1,3 @@
-
 import React from "react";
 import CharacterRaceSelection from "./CharacterRaceSelection";
 import CharacterClassSelection from "./CharacterClassSelection";
@@ -20,13 +19,13 @@ interface Props {
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll";
   setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll") => void;
-  diceResults: number[];
-  getModifier: (score: number) => number;
+  diceResults: { ability: string; rolls: number[]; total: number; }[];
+  getModifier: (score: number) => string;
   rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => void;
+  rollSingleAbility: (abilityIndex: number) => { rolls: number[]; total: number; };
   abilityScorePoints: number;
   isMagicClass: boolean;
-  rollsHistory: number[][];
+  rollsHistory: { ability: string; rolls: number[]; total: number; }[];
   onLevelChange: (level: number) => void;
 }
 
@@ -204,7 +203,7 @@ const CharacterCreationContent: React.FC<Props> = ({
         return <CharacterReview character={character} />;
       case 10:
         // Если ранее показали заклинания, то сюда добавляем обзор
-        return <CharacterReview character={character} />;
+        return <CharacterReview character={character} prevStep={prevStep} />;
       default:
         return null;
     }

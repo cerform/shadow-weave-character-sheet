@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const CharacterCreationPage = () => {
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
-  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep(isMagicClass, character.class);
+  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep(isMagicClass(), character.class);
 
   // Навигация на главную
   const goToHomePage = () => {
@@ -85,7 +84,7 @@ const CharacterCreationPage = () => {
       <CreationStepDisplay 
         steps={steps} 
         currentStep={currentStep}
-        isMagicClass={isMagicClass}
+        isMagicClass={isMagicClass()}
         characterClass={character.class}
       />
 
@@ -104,7 +103,7 @@ const CharacterCreationPage = () => {
           rollAllAbilities={rollAllAbilities}
           rollSingleAbility={rollSingleAbility}
           abilityScorePoints={abilityScorePoints}
-          isMagicClass={isMagicClass}
+          isMagicClass={isMagicClass()}
           rollsHistory={rollsHistory}
           onLevelChange={handleLevelChange}
         />

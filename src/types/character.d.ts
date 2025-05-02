@@ -13,3 +13,34 @@ export interface CharacterSpell {
   ritual?: boolean;
   concentration?: boolean;
 }
+
+// Adding the CharacterSheet interface for use in useCharacterCreation and the PDF generator
+export interface CharacterSheet {
+  name: string;
+  race: string;
+  class: string;
+  subclass: string;
+  level: number;
+  background: string;
+  alignment: string;
+  abilities: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  skills: string[];
+  languages: string[];
+  equipment: string[];
+  spells: string[];
+  proficiencies: string[];
+  features: string[];
+  personalityTraits: string;
+  ideals: string;
+  bonds: string;
+  flaws: string;
+  appearance: string;
+  backstory: string;
+}
