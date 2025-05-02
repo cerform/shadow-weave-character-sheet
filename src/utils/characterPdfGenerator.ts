@@ -295,6 +295,7 @@ export const generateCharacterPDF = (character: Character): string => {
     
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(armorClass), xPos + 10, yPos + 18, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -332,6 +333,7 @@ export const generateCharacterPDF = (character: Character): string => {
     
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(character.currentHp || 0), 45, yPos + 25, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -346,6 +348,7 @@ export const generateCharacterPDF = (character: Character): string => {
     
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(character.maxHp || 0), 45, yPos + 10, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -581,8 +584,10 @@ export const generateCharacterPDF = (character: Character): string => {
     if (character.spellSlots && Object.keys(character.spellSlots).length > 0) {
       Object.entries(character.spellSlots).forEach(([level, slots]) => {
         doc.text(`${level}`, xPos, yPos);
-        doc.text(`${slots.max}`, xPos + 35, yPos);
-        doc.text(`${slots.used}`, xPos + 75, yPos);
+        // Исправление: преобразуем числовое значение в строку
+        doc.text(String(slots.max), xPos + 35, yPos);
+        // Исправление: преобразуем числовое значение в строку
+        doc.text(String(slots.used), xPos + 75, yPos);
         yPos += 7;
       });
     } else {
@@ -865,6 +870,7 @@ export const downloadCharacterPDF = (character: Character): void => {
     
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(armorClass), xPos + 10, yPos + 18, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -902,6 +908,7 @@ export const downloadCharacterPDF = (character: Character): void => {
     
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(character.currentHp || 0), 45, yPos + 25, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -916,6 +923,7 @@ export const downloadCharacterPDF = (character: Character): void => {
     
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
+    // Исправление: преобразуем числовое значение в строку
     doc.text(String(character.maxHp || 0), 45, yPos + 10, { align: "center" });
     doc.setFont("helvetica", "normal");
     
@@ -1151,8 +1159,10 @@ export const downloadCharacterPDF = (character: Character): void => {
     if (character.spellSlots && Object.keys(character.spellSlots).length > 0) {
       Object.entries(character.spellSlots).forEach(([level, slots]) => {
         doc.text(`${level}`, xPos, yPos);
-        doc.text(`${slots.max}`, xPos + 35, yPos);
-        doc.text(`${slots.used}`, xPos + 75, yPos);
+        // Исправление: преобразуем числовое значение в строку
+        doc.text(String(slots.max), xPos + 35, yPos);
+        // Исправление: преобразуем числовое значение в строку
+        doc.text(String(slots.used), xPos + 75, yPos);
         yPos += 7;
       });
     } else {
