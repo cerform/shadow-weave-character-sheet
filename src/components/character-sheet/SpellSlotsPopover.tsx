@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, BookOpen } from 'lucide-react';
+import { BookOpen, Sparkles } from 'lucide-react';
 
 interface SpellSlotsProps {
   spellSlots: Record<number, { max: number; used: number }>;
