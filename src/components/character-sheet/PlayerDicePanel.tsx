@@ -49,15 +49,27 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   const { toast } = useToast();
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const socket = useSocket();
-  const { currentSession } = useSession();
   
-  const player = currentSession?.players.find(p => p.connected) || null;
-  const character = player?.character || null;
-  const characterName = character?.name || player?.name || "Игрок";
+  // Используем try-catch для безопасного получения контекстов
+  let socket;
+  let currentSession;
+  let player = null;
+  let character = null;
+  let characterName = "Игрок";
+  
+  try {
+    socket = useSocket();
+    currentSession = useSession()?.currentSession;
+    player = currentSession?.players.find(p => p.connected) || null;
+    character = player?.character || null;
+    characterName = character?.name || player?.name || "Игрок";
+  } catch (error) {
+    // Если контекст недоступен, используем значения по умолчанию
+    console.log("Контекст сокета или сессии недоступен:", error);
+  }
   
   useEffect(() => {
-    // Подписываемся только на собственные броски игрока
+    // Подписываемся только при наличии socket и если это собственные броски игрока
     if (socket?.socketService) {
       const unsubscribe = socket.socketService.on('receive-roll', (data) => {
         // Проверяем, что это бросок текущего игрока
@@ -107,9 +119,13 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
     const reason = getReasonText();
     
-    // Отправляем результат броска через сокет
+    // Отправляем результат броска через сокет только если соединение доступно
     if (socket && socket.sendRoll) {
-      socket.sendRoll(formula, reason);
+      try {
+        socket.sendRoll(formula, reason);
+      } catch (error) {
+        console.log("Ошибка отправки броска:", error);
+      }
     }
     
     const rollData = {
