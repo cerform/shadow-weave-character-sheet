@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
         ['Class', character.className || ''],
         ['Race', character.race || ''],
         ['Level', character.level?.toString() || '1'],
-        ['Experience', character.currentHp?.toString() || '0'],
+        ['Experience', (character.level || 0).toString()], // Using level as a fallback since "experience" property doesn't exist
         ['Alignment', character.alignment || ''],
       ],
     });
@@ -143,7 +142,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
             </div>
             <div>
               <Label>Опыт</Label>
-              <Input type="number" value={character?.experience || 0} readOnly />
+              <Input type="number" value={character?.level || 0} readOnly /> {/* Changed from experience to level */}
             </div>
             <div>
               <Label>Мировоззрение</Label>
