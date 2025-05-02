@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -56,30 +55,121 @@
 .obs-center { grid-column: 2; }
 .obs-right  { grid-column: 3; }
 
+/* Стили для тем */
+:root {
+  --primary-gradient: from-amber-900 to-stone-900;
+  --secondary-gradient: from-amber-800/20 to-stone-900/20;
+  --accent-color: #8B5A2B;
+  --glow-effect: 0 0 15px #4B3621;
+  --text-color: #E8DDCB;
+  --contrast-color: #000000;
+  --muted-text-color: #A89B8C;
+  --background-color: #1A1105;
+}
+
 /* Глобальные стили для переключения тем */
-[data-theme="shadow"] .bg-themed {
-  background-color: rgba(127, 0, 255, 0.1);
+.theme-default {
+  --primary-gradient: from-amber-900 to-stone-900;
+  --secondary-gradient: from-amber-800/20 to-stone-900/20;
+  --accent-color: #8B5A2B;
+  --glow-effect: 0 0 15px #4B3621;
+  --text-color: #E8DDCB;
+  --contrast-color: #000000;
+  --muted-text-color: #A89B8C;
+  --background-color: #1A1105;
+
+  --primary: 36 60% 40%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="fire"] .bg-themed {
-  background-color: rgba(255, 68, 0, 0.1);
+
+.theme-warlock {
+  --primary-gradient: from-purple-700 to-purple-900;
+  --secondary-gradient: from-purple-600/20 to-purple-800/20;
+  --accent-color: #8B5CF6;
+  --glow-effect: 0 0 15px #8B5CF6;
+  --text-color: #E9D8FD;
+  --contrast-color: #000000;
+  --muted-text-color: #C9B6ED;
+  --background-color: #0A0A0A;
+
+  --primary: 260 91% 66%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="nature"] .bg-themed {
-  background-color: rgba(0, 255, 68, 0.1);
+
+.theme-wizard {
+  --primary-gradient: from-blue-500 to-blue-700;
+  --secondary-gradient: from-blue-500/20 to-blue-700/20;
+  --accent-color: #33C3F0;
+  --glow-effect: 0 0 15px #33C3F0;
+  --text-color: #DBEAFE;
+  --contrast-color: #000000;
+  --muted-text-color: #B4CDEC;
+  --background-color: #0A0A0A;
+
+  --primary: 195 88% 57%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="arcane"] .bg-themed {
-  background-color: rgba(0, 255, 255, 0.1);
+
+.theme-druid {
+  --primary-gradient: from-green-600 to-green-800;
+  --secondary-gradient: from-green-600/20 to-green-800/20;
+  --accent-color: #10B981;
+  --glow-effect: 0 0 15px #10B981;
+  --text-color: #D1FAE5;
+  --contrast-color: #000000;
+  --muted-text-color: #A3DBC7;
+  --background-color: #0A0A0A;
+
+  --primary: 158 83% 40%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="warrior"] .bg-themed {
-  background-color: rgba(255, 170, 0, 0.1);
+
+.theme-warrior {
+  --primary-gradient: from-red-600 to-red-800;
+  --secondary-gradient: from-red-600/20 to-red-800/20;
+  --accent-color: #EA384D;
+  --glow-effect: 0 0 15px #EA384D;
+  --text-color: #FEE2E2;
+  --contrast-color: #000000;
+  --muted-text-color: #F1BDBD;
+  --background-color: #0A0A0A;
+
+  --primary: 353 83% 57%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="bard"] .bg-themed {
-  background-color: rgba(255, 105, 180, 0.1);
+
+.theme-bard {
+  --primary-gradient: from-amber-500 to-amber-700;
+  --secondary-gradient: from-amber-500/20 to-amber-700/20;
+  --accent-color: #FCD34D;
+  --glow-effect: 0 0 15px #FCD34D;
+  --text-color: #FEF3C7;
+  --contrast-color: #000000;
+  --muted-text-color: #EDDEAF;
+  --background-color: #0A0A0A;
+
+  --primary: 47 96% 64%;
+  --primary-foreground: 0 0% 98%;
 }
-[data-theme="paladin"] .bg-themed {
-  background-color: rgba(255, 255, 0, 0.1);
+
+/* Apply theme to body */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
 }
-[data-theme="rogue"] .bg-themed {
-  background-color: rgba(51, 51, 51, 0.1);
+
+/* Компоненты UI стилизуются с учетом текущей темы */
+.themed-button {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  border: 1px solid var(--accent-color);
+}
+
+.themed-card {
+  background-color: var(--background-color);
+  border: 1px solid var(--accent-color);
+  box-shadow: var(--glow-effect);
 }
 
 /* Цвета текста для темной темы */

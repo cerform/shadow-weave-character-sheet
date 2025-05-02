@@ -14,13 +14,12 @@ export const ThemeSelector = () => {
   const { setUserTheme, activeTheme } = useUserTheme();
   
   const themes = [
-    { name: "amethyst", label: "Аметист" },
-    { name: "emerald", label: "Изумруд" },
-    { name: "ruby", label: "Рубин" },
-    { name: "sapphire", label: "Сапфир" },
-    { name: "topaz", label: "Топаз" },
-    { name: "obsidian", label: "Обсидиан" },
     { name: "default", label: "По умолчанию" },
+    { name: "warlock", label: "Чернокнижник" },
+    { name: "wizard", label: "Волшебник" },
+    { name: "druid", label: "Друид" },
+    { name: "warrior", label: "Воин" },
+    { name: "bard", label: "Бард" },
   ];
 
   return (
@@ -33,12 +32,11 @@ export const ThemeSelector = () => {
             className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
             style={{
               backgroundColor: 
-                activeTheme === 'amethyst' ? '#9b87f5' : 
-                activeTheme === 'emerald' ? '#10B981' : 
-                activeTheme === 'ruby' ? '#EA384D' : 
-                activeTheme === 'sapphire' ? '#33C3F0' : 
-                activeTheme === 'topaz' ? '#FCD34D' : 
-                activeTheme === 'obsidian' ? '#222222' : '#8B5A2B'
+                activeTheme === 'warlock' ? '#8B5CF6' : 
+                activeTheme === 'wizard' ? '#33C3F0' : 
+                activeTheme === 'druid' ? '#10B981' : 
+                activeTheme === 'warrior' ? '#EA384D' : 
+                activeTheme === 'bard' ? '#FCD34D' : '#8B5A2B'
             }}
           />
         </Button>
@@ -54,12 +52,12 @@ export const ThemeSelector = () => {
               <div 
                 className="h-3 w-3 rounded-full" 
                 style={{
-                  backgroundColor: theme.name === 'amethyst' ? '#9b87f5' : 
-                                  theme.name === 'emerald' ? '#10B981' : 
-                                  theme.name === 'ruby' ? '#EA384D' : 
-                                  theme.name === 'sapphire' ? '#33C3F0' : 
-                                  theme.name === 'topaz' ? '#FCD34D' : 
-                                  theme.name === 'obsidian' ? '#222222' : '#8B5A2B'
+                  backgroundColor: 
+                    theme.name === 'warlock' ? '#8B5CF6' : 
+                    theme.name === 'wizard' ? '#33C3F0' : 
+                    theme.name === 'druid' ? '#10B981' : 
+                    theme.name === 'warrior' ? '#EA384D' : 
+                    theme.name === 'bard' ? '#FCD34D' : '#8B5A2B'
                 }}
               />
               {theme.label} {activeTheme === theme.name && '✓'}

@@ -56,24 +56,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       // Фон для всех страниц, учитывая тему
       document.documentElement.style.setProperty('--background-color', themeName === 'default' ? '#1A1105' : '#0A0A0A');
-      document.documentElement.style.setProperty('--background-card', 'rgba(0, 0, 0, 0.8)');
       
-      // Цвета текста и акцента для всего приложения
-      document.documentElement.style.setProperty('--theme-bg', themeName === 'default' ? '#1A1105' : '#0A0A0A');
-      document.documentElement.style.setProperty('--theme-fg', selectedTheme.textColor);
-      document.documentElement.style.setProperty('--theme-accent', selectedTheme.accent);
-      
-      // Основные цвета Tailwind для приложения
-      document.documentElement.style.setProperty('--background', themeName === 'default' ? '26 10% 5%' : '0 0% 5%');
-      document.documentElement.style.setProperty('--foreground', '0 0% 98%');
-      document.documentElement.style.setProperty('--card', '0 0% 3%');
-      document.documentElement.style.setProperty('--card-foreground', '0 0% 98%');
+      // Переменные tailwind для конкретной темы
       document.documentElement.style.setProperty('--primary', selectedTheme.accent.replace('#', ''));
-      document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
+      document.documentElement.style.setProperty('--background', themeName === 'default' ? '26 10% 5%' : '0 0% 5%');
       
-      // Обеспечиваем читабельность на всех страницах
-      document.body.style.backgroundColor = themeName === 'default' ? '#1A1105' : '#0A0A0A';
-      document.body.style.color = selectedTheme.textColor;
+      // Позаботимся о переменных для компонентов shadcn
+      const hue = parseInt(selectedTheme.accent.replace('#', ''), 16);
+      const h = hue % 360;
+      const s = '70%';
+      const l = '50%';
+      
+      document.documentElement.style.setProperty('--primary', `${h} ${s} ${l}`);
+      document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
     }
   };
 

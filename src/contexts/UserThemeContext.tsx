@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
-import { Theme } from './ThemeContext';
+import { Theme, useTheme } from './ThemeContext';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
@@ -12,6 +12,7 @@ const UserThemeContext = createContext<UserThemeContextType | undefined>(undefin
 
 export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, updateUserTheme } = useSessionStore();
+  const { setTheme } = useTheme();
   const [activeTheme, setActiveTheme] = useState(() => {
     // При монтировании проверяем сохраненную тему в localStorage
     const savedTheme = localStorage.getItem('theme');
@@ -25,14 +26,16 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (savedTheme) {
       applyThemeToDocument(savedTheme);
       setActiveTheme(savedTheme);
+      setTheme(savedTheme as Theme);
     }
     
     // Если есть пользовательская тема, применяем ее
     if (currentUser?.themePreference) {
       applyThemeToDocument(currentUser.themePreference);
       setActiveTheme(currentUser.themePreference);
+      setTheme(currentUser.themePreference as Theme);
     }
-  }, [currentUser?.id, currentUser?.themePreference]);
+  }, [currentUser?.id, currentUser?.themePreference, setTheme]);
   
   // Функция для применения темы к документу
   const applyThemeToDocument = (theme: string) => {
@@ -56,6 +59,7 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Сохраняем новую тему
     setActiveTheme(theme);
     localStorage.setItem('theme', theme);
+    setTheme(theme as Theme);
     
     // Если пользователь авторизован, сохраняем также в его профиле
     if (currentUser) {
