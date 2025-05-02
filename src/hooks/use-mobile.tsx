@@ -42,3 +42,28 @@ export function useDeviceType() {
 
   return deviceType
 }
+
+// Хук для проверки ориентации устройства
+export function useOrientation() {
+  const [orientation, setOrientation] = React.useState<"portrait" | "landscape">(
+    window.innerHeight > window.innerWidth ? "portrait" : "landscape"
+  )
+
+  React.useEffect(() => {
+    const handleOrientationChange = () => {
+      setOrientation(
+        window.innerHeight > window.innerWidth ? "portrait" : "landscape"
+      )
+    }
+
+    window.addEventListener("resize", handleOrientationChange)
+    window.addEventListener("orientationchange", handleOrientationChange)
+
+    return () => {
+      window.removeEventListener("resize", handleOrientationChange)
+      window.removeEventListener("orientationchange", handleOrientationChange)
+    }
+  }, [])
+
+  return orientation
+}

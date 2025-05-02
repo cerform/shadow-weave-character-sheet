@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Sword, Shield, Zap, PlusCircle, MinusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useDeviceType } from "@/hooks/use-mobile";
 
 // Вспомогательные компоненты и утилиты
 import { useToast } from '@/components/ui/use-toast';
@@ -39,6 +40,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(null);
   const [monsterQuantity, setMonsterQuantity] = useState(1);
   const [newMonsterName, setNewMonsterName] = useState('');
+  const deviceType = useDeviceType();
 
   // Обработчики для управления боевым порядком
   const startCombat = () => {
@@ -125,7 +127,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         hp: baseMonster.hp,
         maxHp: baseMonster.hp,
         ac: baseMonster.ac,
-        initiative: 10,
+        initiative: 10, // Инициатива всегда должна быть числом
         conditions: [],
         resources: {},
         visible: true,
@@ -167,8 +169,99 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     }));
   };
 
-  // Функция для отображения списка участников боя
-  const renderTokens = () => {
+  // Функция для отображения списка участников боя для мобильной версии
+  const renderTokensMobile = () => {
+    if (tokens.length === 0) {
+      return (
+        <div className="text-center p-4 text-muted-foreground">
+          Нет участников боя. Добавьте персонажей или монстров.
+        </div>
+      );
+    }
+
+    return tokens.map((token, index) => {
+      const isCurrentTurn = battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === token.id;
+      
+      return (
+        <div 
+          key={token.id}
+          className={`p-2 border rounded-md mb-2 ${isCurrentTurn ? 'bg-primary/10 border-primary' : ''}`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <img 
+                src={token.img} 
+                alt={token.name} 
+                className={`w-6 h-6 rounded-full object-cover`}
+              />
+              <div className="font-medium text-sm line-clamp-1">{token.name}</div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0"
+              onClick={() => removeToken(token.id)}
+            >
+              ✕
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-1 mt-1">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">HP</div>
+              <div className="flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-full p-0"
+                  onClick={() => updateTokenHP(token.id, -1)}
+                >
+                  -
+                </Button>
+                <span className="mx-1 text-xs">
+                  {token.hp}/{token.maxHp}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-full p-0"
+                  onClick={() => updateTokenHP(token.id, 1)}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">AC</div>
+              <div className="text-xs">{token.ac}</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Иниц.</div>
+              <div className="text-xs">{token.initiative}</div>
+            </div>
+          </div>
+          
+          {token.conditions.length > 0 && (
+            <div className="mt-1">
+              <div className="text-xs text-muted-foreground">Состояния:</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {token.conditions.map((condition, i) => (
+                  <Badge key={i} variant="outline" className="text-[10px] px-1 py-0">
+                    {condition}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+
+  // Функция для отображения списка участников боя для десктопа
+  const renderTokensDesktop = () => {
     if (tokens.length === 0) {
       return (
         <div className="text-center p-4 text-muted-foreground">
@@ -256,37 +349,43 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         <h3 className="text-lg font-semibold">Участники боя</h3>
       </div>
       
-      <div className="p-4 border-b">
-        <div className="flex space-x-2">
+      <div className="p-2 border-b">
+        <div className="flex space-x-1">
           <Button 
             onClick={battleState.isActive ? endCombat : startCombat} 
             variant={battleState.isActive ? "destructive" : "default"}
             className="flex-1"
+            size={deviceType === "mobile" ? "sm" : "default"}
           >
-            {battleState.isActive ? "Завершить бой" : "Начать бой"}
+            {battleState.isActive ? "Завершить" : "Начать бой"}
           </Button>
           
           {battleState.isActive && (
-            <Button onClick={nextTurn} variant="outline">
-              Следующий ход
+            <Button 
+              onClick={nextTurn} 
+              variant="outline"
+              size={deviceType === "mobile" ? "sm" : "default"}
+            >
+              Следующий
             </Button>
           )}
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4">
-        {renderTokens()}
+      <div className="flex-1 overflow-y-auto p-2">
+        {deviceType === "mobile" ? renderTokensMobile() : renderTokensDesktop()}
       </div>
       
-      <div className="p-4 border-t">
+      <div className="p-2 border-t">
         <h4 className="text-sm font-medium mb-2">Добавить монстра</h4>
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div>
             <Input
               placeholder="Имя нового монстра..."
               value={newMonsterName}
               onChange={(e) => setNewMonsterName(e.target.value)}
               className="mb-2"
+              size={deviceType === "mobile" ? "sm" : "default"}
             />
             
             <div className="flex items-center space-x-2">
@@ -297,11 +396,13 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                 value={monsterQuantity}
                 onChange={(e) => setMonsterQuantity(Number(e.target.value) || 1)}
                 className="w-20"
+                size={deviceType === "mobile" ? "sm" : "default"}
               />
               
               <Button 
                 variant="default" 
                 className="flex-1"
+                size={deviceType === "mobile" ? "sm" : "default"}
                 onClick={() => addMonster()}
               >
                 <Plus className="h-4 w-4 mr-1" />
@@ -313,35 +414,10 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
           <Separator />
           
           <div className="max-h-40 overflow-y-auto">
-            {/* {monsters.map(monster => (
-              <div 
-                key={monster.id}
-                className="p-2 hover:bg-muted/50 rounded cursor-pointer flex justify-between items-center"
-                onClick={() => {
-                  setSelectedMonsterId(monster.id === selectedMonsterId ? null : monster.id);
-                  setNewMonsterName(monster.name);
-                }}
-              >
-                <div className="flex items-center">
-                  <Checkbox 
-                    checked={monster.id === selectedMonsterId}
-                    onCheckedChange={() => {
-                      setSelectedMonsterId(monster.id === selectedMonsterId ? null : monster.id);
-                      setNewMonsterName(monster.name);
-                    }}
-                    className="mr-2"
-                  />
-                  <span>{monster.name}</span>
-                </div>
-                <Badge variant="outline">CR {monster.cr}</Badge>
-              </div>
-            ))} */}
-            
-            {/* {monsters.length === 0 && (
-              <div className="text-center p-4 text-muted-foreground">
-                Нет доступных монстров в базе данных
-              </div>
-            )} */}
+            {/* Список монстров будет добавлен позже */}
+            <div className="text-center p-4 text-muted-foreground">
+              Нет доступных монстров в базе данных
+            </div>
           </div>
         </div>
       </div>
