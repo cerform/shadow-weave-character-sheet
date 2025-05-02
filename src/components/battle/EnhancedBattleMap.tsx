@@ -2,17 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
-import AreaEffects from './AreaEffects';
-import LightingSystem from './LightingSystem';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-// Import types from our new type file
-import { Token, Initiative } from '@/types/battleTypes';
-import { AreaEffect, LightSource } from '@/types/battle';
+// Import types from store instead of page
+import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  onAddToken: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
+  // Fixed: Changed type to accept either token add function or state setter
+  setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -28,14 +26,11 @@ interface EnhancedBattleMapProps {
   gridOpacity?: number;
   zoom?: number;
   isDM?: boolean;
-  areaEffects?: AreaEffect[];
-  lightSources?: LightSource[];
-  onMapClick?: (x: number, y: number) => void;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   tokens,
-  onAddToken,
+  setTokens,
   background,
   setBackground,
   onUpdateTokenPosition,
@@ -50,10 +45,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   gridVisible = true,
   gridOpacity = 0.5,
   zoom = 1,
-  isDM = true,
-  areaEffects = [],
-  lightSources = [],
-  onMapClick
+  isDM = true
 }) => {
   // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -109,7 +101,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey && isDM) { // Проверяем isDM
       e.preventDefault();
-      // Здесь больш�� не меняем zoom локально, а используем внешнюю функцию
+      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
       // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
       
       // Центрирование зума относительно курсора
@@ -203,7 +195,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // Д��лаем карту б��льше контейнера, чтобы обеспечить скроллинг
+        // Делаем карту больше контейнера, чтобы обеспечить скроллинг
         const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
         const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
         
@@ -247,32 +239,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return () => clearTimeout(timer);
   }, [zoom]);
 
-  // Helper function to handle the token addition based on the type of onAddToken
-  const handleAddToken = (token: Token) => {
-    if (typeof onAddToken === 'function') {
-      if ('length' in onAddToken) {
-        // It's a React.Dispatch<SetStateAction<Token[]>> function
-        (onAddToken as React.Dispatch<React.SetStateAction<Token[]>>)(prev => [...prev, token]);
-      } else {
-        // It's an addToken function that takes a single token
-        (onAddToken as (token: Token) => void)(token);
-      }
-    }
-  };
-
-  // Обработчик клика на карту для добавления эффектов области
-  const handleMapClick = (e: React.MouseEvent) => {
-    if (!onMapClick) return;
-    
-    // Получаем координаты клика относительно контейнера
-    if (mapContentRef.current) {
-      const rect = mapContentRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / zoom;
-      const y = (e.clientY - rect.top) / zoom;
-      onMapClick(x, y);
-    }
-  };
-
   return (
     <div 
       className="battle-map-container h-full relative" 
@@ -291,11 +257,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onClick={handleMapClick}
       >
         <BattleMap
           tokens={tokens}
-          setTokens={handleAddToken as any} // Using 'any' to bypass the type check since we handle the type inside
+          setTokens={setTokens} // We pass the prop as is, no type conversion needed now
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}
@@ -304,31 +269,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           initiative={initiative}
           battleActive={battleActive}
         />
-        
-        {/* Отрисовка эффектов области */}
-        <div className="area-effects-container absolute inset-0 pointer-events-none">
-          {areaEffects.map(effect => (
-            <AreaEffects
-              key={effect.id}
-              type={effect.type}
-              x={effect.x}
-              y={effect.y}
-              size={effect.size}
-              color={effect.color}
-              opacity={effect.opacity}
-              rotation={effect.rotation}
-            />
-          ))}
-        </div>
-        
-        {/* Освещение карты */}
-        {lightSources && lightSources.length > 0 && (
-          <LightingSystem
-            lightSources={lightSources}
-            isDaytime={false}
-            globalIllumination={0.1}
-          />
-        )}
         
         {/* Сетка только внутри карты боя */}
         {gridVisible && (
@@ -341,7 +281,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           </div>
         )}
           
-        {/* Туман войны как отдель��ый слой */}
+        {/* Туман войны как отдельный слой */}
         {fogOfWar && (
           <div className="fog-of-war-container absolute inset-0">
             <FogOfWar

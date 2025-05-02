@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { socketService } from "@/services/socket";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useSessionStore } from "@/stores/sessionStore";
 
 interface CreateSessionProps {
   onRoomCreated: (roomCode: string) => void;
@@ -11,18 +10,12 @@ interface CreateSessionProps {
 const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
   const [nickname, setNickname] = useState("");
   const { theme } = useTheme();
-  const { setUserType, setUsername } = useSessionStore();
 
   const handleCreate = () => {
     if (!nickname.trim()) {
       alert("Введите ваше имя!");
       return;
     }
-    
-    // Set user as DM in the store
-    setUserType('dm');
-    setUsername(nickname);
-    
     socketService.connect("", nickname);
     socketService.on("roomCreated", ({ roomCode }: { roomCode: string }) => {
       onRoomCreated(roomCode);

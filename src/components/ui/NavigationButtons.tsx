@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Scroll, Map, Dices, Users } from "lucide-react";
 import { useTheme } from '@/hooks/use-theme';
@@ -14,8 +14,6 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const navigate = useNavigate();
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
-  
-  console.log("NavigationButtons rendering, theme:", theme);
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
@@ -63,7 +61,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => navigate('/battle')}
+        onClick={() => navigate('/dm/battle')}
         className="flex items-center gap-2"
         style={{
           color: currentTheme.textColor,

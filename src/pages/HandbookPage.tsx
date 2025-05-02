@@ -1,181 +1,354 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, Home, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, BookOpen, Scroll, Award, User, Shield, Swords } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { NavigationButtons } from '@/components/ui/NavigationButtons';
+import NavigationButtons from "@/components/ui/NavigationButtons";
+import ThemeSelector from "@/components/ThemeSelector";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const HandbookPage: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const [searchQuery, setSearchQuery] = useState('');
+  const currentTheme = themes[theme as keyof typeof themes];
 
-  console.log("HandbookPage rendering");
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  // Используем стили темы для улучшения контрастности
+  const cardBgClass = "bg-card border border-primary/10 hover:border-primary/30 transition-all duration-300";
+  
+  // Стили для текста с улучшенной контрастностью
+  const textStyle = { 
+    color: currentTheme.textColor,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.5)'
+  };
+  
+  const mutedTextStyle = {
+    color: currentTheme.mutedTextColor,
+    textShadow: '0px 1px 1px rgba(0, 0, 0, 0.4)'
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme} p-4`}>
-      <div className="container mx-auto max-w-6xl">
-        <header className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate('/')} size="icon">
-              <ArrowLeft className="size-4" />
-            </Button>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <BookOpen className="size-6" />
-              Руководство игрока D&D 5e
-            </h1>
-          </div>
-        </header>
+    <div className="container relative pb-10 pt-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2" style={textStyle}>
+          <BookOpen className="size-6" />
+          Руководство игрока D&D 5e
+        </h1>
+        <p style={mutedTextStyle} className="text-muted-foreground">
+          Основная информация для игроков Dungeons & Dragons 5-й редакции
+        </p>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Боковая панель с поиском и навигацией */}
-          <div className="w-full md:w-64 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-              <Input 
-                placeholder="Поиск в руководстве..." 
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-9"
-              />
-            </div>
-            
-            <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-              <CardHeader className="pb-2">
-                <CardTitle>Разделы</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 pt-0">
-                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {}}>
-                  <User className="size-4" />
-                  <span>Расы</span>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {}}>
-                  <Swords className="size-4" />
-                  <span>Классы</span>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {}}>
-                  <Award className="size-4" />
-                  <span>Предыстории</span>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {}}>
-                  <Shield className="size-4" />
-                  <span>Снаряжение</span>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {}}>
-                  <Scroll className="size-4" />
-                  <span>Заклинания</span>
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <NavigationButtons className="flex-col" />
-          </div>
-          
-          {/* Основной контент */}
-          <div className="flex-1">
-            <Tabs defaultValue="intro">
-              <TabsList className="mb-4">
-                <TabsTrigger value="intro">Введение</TabsTrigger>
-                <TabsTrigger value="races">Расы</TabsTrigger>
-                <TabsTrigger value="classes">Классы</TabsTrigger>
-                <TabsTrigger value="rules">Правила</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="intro">
-                <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-                  <CardHeader>
-                    <CardTitle>Добро пожаловать в мир D&D!</CardTitle>
-                    <CardDescription>
-                      Руководство игрока - основная книга правил для игроков в Dungeons & Dragons
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 prose dark:prose-invert max-w-none">
-                    <p>
-                      <strong>Dungeons & Dragons</strong> — это игра, рассказывающая истории, происходящие в мирах мечей и магии. В ней есть элементы игры-притворства, настольной игры, а также магического всемирного досуга. Эта игра имеет корни в рассказах о великих волшебниках дуэлянтах и храбрых сердцем героях. 
-                    </p>
-                    <p>
-                      В отличие от игр с определенным сюжетом, D&D позволяет вам персонализировать персонажей как вы захотите, имея неисчислимое количество игрового опыта и приключений. Когда вы играете D&D, вы рассказываете историю вместе, направляя персонажей сквозь фантастическое приключение. 
-                    </p>
-                    <p>
-                      Один игрок берет на себя роль Мастера Подземелий (МП), главного рассказчика и судьи игры. МП создаёт приключения для персонажей, которые преодолевают опасности и решают, куда отправиться в путешествие. 
-                    </p>
-                    <p>
-                      Мастер может описать вход в замок Равенлофт, а игроки решить, как их искатели приключений будут взаимодействовать с ситуацией. Они ворвутся через дверь? Попытаются сначала поговорить со стражей? Или они воспользуются магией?
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="races">
-                <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-                  <CardHeader>
-                    <CardTitle>Расы</CardTitle>
-                    <CardDescription>
-                      Выберите свою расу и узнайте о её особенностях
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="prose dark:prose-invert max-w-none">
-                    <p>
-                      Посетив шумные ратуши в поселениях людей, ты встретишь крепких дварфов и стройных эльфов, а также многих других диковинных рас. В одних районах города могут проживать представители наиболее многочисленных рас, а в других — представители редких и необычных рас.
-                    </p>
-                    <p>
-                      Раса персонажа не только влияет на его внешность, но и даёт ему преимущество в виде расовой особенности, крепкого телосложения, скорости, зрения и т. д. Расовая принадлежность влияет на склонность персонажа к определённым классам и определяет доступность некоторых вариантов и способностей. К сожалению, из-за некоторых расовых особенностей персонаж также может встречаться с предрассудками во время своих путешествий.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="classes">
-                <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-                  <CardHeader>
-                    <CardTitle>Классы</CardTitle>
-                    <CardDescription>
-                      Познакомьтесь с доступными классами персонажей
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="prose dark:prose-invert max-w-none">
-                    <p>
-                      В мире Dungeons & Dragons каждый искатель приключений — представитель определённого класса. Класс отражает призвание персонажа, набор особых талантов и тактик, которыми от располагает. Классы рассказывают не только о занятиях и способностях персонажа, но и о его месте в мире D&D.
-                    </p>
-                    <p>
-                      Искатели приключений тренируются многие годы, оттачивая свои навыки, и в их тренировках нередко пригождаются техники и традиции, формирующиеся на протяжении многих поколений и даже веков.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="rules">
-                <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-                  <CardHeader>
-                    <CardTitle>Правила</CardTitle>
-                    <CardDescription>
-                      Основные игровые механики и правила
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="prose dark:prose-invert max-w-none">
-                    <p>
-                      В основе игры Dungeons & Dragons лежит взаимодействие между Мастером Подземелий, описывающим окружающую среду и сюжетную линию, и игроками, описывающими действия, которые хотят совершить их персонажи. Во многих случаях исход попытки действия известен. Если искатель приключений хочет пройти через стандартную дверь, которая не заперта, он просто проходит через неё.
-                    </p>
-                    <p>
-                      В других случаях исход действия не определен, например, когда искатель приключений пытается пробежать по скользкому льду, убедить стражника отпустить пленника, или не поддаться магическим эффектам. В таких ситуациях игра полагается на броски d20, двадцатигранного игрального кубика, который определяет исход действия.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between">
+        <NavigationButtons />
+        <div>
+          <ThemeSelector />
         </div>
+      </div>
+
+      <Tabs defaultValue="races" className="space-y-4">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsTrigger 
+            value="races" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Расы
+          </TabsTrigger>
+          <TabsTrigger 
+            value="classes" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Классы
+          </TabsTrigger>
+          <TabsTrigger 
+            value="equipment" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Снаряжение
+          </TabsTrigger>
+          <TabsTrigger 
+            value="rules" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Правила
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="races" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle style={textStyle}>Расы D&D 5e</CardTitle>
+              <CardDescription style={mutedTextStyle}>
+                Выберите основную расу вашего персонажа
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {races.map((race) => (
+                  <Card key={race.name} className={cardBgClass}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg" style={textStyle}>{race.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm mb-2" style={mutedTextStyle}>{race.description}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Особенности:</h4>
+                      <ul className="list-disc pl-5 text-sm mb-2" style={textStyle}>
+                        {race.features.map((feature, i) => (
+                          <li key={i}>{feature}</li>
+                        ))}
+                      </ul>
+                      <h4 className="text-sm font-medium" style={textStyle}>Прирост характеристик:</h4>
+                      <p className="text-sm" style={textStyle}>{race.abilityScores}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="classes" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle style={textStyle}>Классы D&D 5e</CardTitle>
+              <CardDescription style={mutedTextStyle}>
+                Основные классы персонажей
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {classes.map((classItem) => (
+                  <Card key={classItem.name} className={cardBgClass}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg" style={textStyle}>{classItem.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm mb-2" style={mutedTextStyle}>{classItem.description}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Основные умения:</h4>
+                      <ul className="list-disc pl-5 text-sm mb-2" style={textStyle}>
+                        {classItem.features.map((feature, i) => (
+                          <li key={i}>{feature}</li>
+                        ))}
+                      </ul>
+                      <h4 className="text-sm font-medium" style={textStyle}>Хиты:</h4>
+                      <p className="text-sm" style={textStyle}>{classItem.hitDice}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="equipment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle style={textStyle}>Снаряжение</CardTitle>
+              <CardDescription style={mutedTextStyle}>Оружие, доспехи и снаряжение</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Оружие</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      В D&D доступно разнообразное оружие, каждое со своими характеристиками и особенностями. 
+                      Оружие делится на простое и воинское, а также на рукопашное и дальнобойное.
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Доспехи</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      Доспехи предоставляют защиту вашему персонажу. Они подразделяются на лёгкие, средние и тяжёлые.
+                      Вид доспеха, который может носить ваш персонаж, зависит от его класса и характеристик.
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Приключенческое снаряжение</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      Включает в себя всё необходимое для приключений: верёвки, фонари, инструменты для взлома, 
+                      наборы для лечения, рационы, палатки и многое другое.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rules" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle style={textStyle}>Основные правила</CardTitle>
+              <CardDescription style={mutedTextStyle}>Базовые механики игры</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Проверки характеристик</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      Проверки характеристик определяют успех или неудачу в действиях персонажа.
+                      Игрок бросает d20, добавляет соответствующий модификатор характеристики и сравнивает результат со сложностью (DC).
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Боевая система</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      Бой в D&D проходит в пошаговом режиме. Каждый участник действует в своём ходе согласно инициативе.
+                      На своём ходе персонаж может совершить действие, бонусное действие, перемещение и реакцию.
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Отдых</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      В игре существует два типа отдыха: короткий (1 час) и долгий (8 часов).
+                      Во время отдыха персонажи восстанавливают здоровье и ресурсы.
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={cardBgClass}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg" style={textStyle}>Опыт и уровни</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm" style={textStyle}>
+                      Персонажи получают опыт за победу над врагами и выполнение заданий.
+                      Накопив достаточно опыта, персонаж повышает свой уровень, что даёт новые способности и увеличивает характеристики.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-between mt-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          На главную
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/spellbook')} 
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
+        >
+          Книга заклинаний
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 };
+
+// Данные для демонстрации
+const races = [
+  {
+    name: "Человек",
+    description: "Люди — самая распространённая раса в мирах D&D, адаптируемые и честолюбивые.",
+    features: ["Универсальный", "Разнообразный", "Амбициозный"],
+    abilityScores: "+1 ко всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
+  },
+  {
+    name: "Эльф",
+    description: "Эльфы — магический народ неземной грации, живущий в мире, но не являющийся его частью.",
+    features: ["Тёмное зрение", "Обострённые чувства", "Наследие фей", "Транс"],
+    abilityScores: "+2 к Ловкости"
+  },
+  {
+    name: "Дварф",
+    description: "Отважные и выносливые воины, дварфы известны своей мастерской работой с камнем и металлом.",
+    features: ["Тёмное зрение", "Дварфская выносливость", "Дварфский боевой тренинг", "Знание камня"],
+    abilityScores: "+2 к Телосложению"
+  },
+  {
+    name: "Полурослик",
+    description: "Маленькие исследователи, известные своей смелостью и любопытством.",
+    features: ["Везучий", "Храбрость", "Проворство полурослика"],
+    abilityScores: "+2 к Ловкости"
+  },
+  {
+    name: "Дракорождённый",
+    description: "Гуманоиды с драконьим наследием, способные использовать дыхание дракона.",
+    features: ["Драконье происхождение", "Дыхание дракона", "Сопротивление к урону"],
+    abilityScores: "+2 к Силе, +1 к Харизме"
+  }
+];
+
+const classes = [
+  {
+    name: "Воин",
+    description: "Мастер оружия и доспехов, опытный в бою и выносливый.",
+    features: ["Боевой стиль", "Второе дыхание", "Всплеск действий"],
+    hitDice: "1d10 за уровень воина"
+  },
+  {
+    name: "Волшебник",
+    description: "Учёный магии, способный управлять могущественными заклинаниями.",
+    features: ["Магическое восстановление", "Магическая традиция", "Школьные умения"],
+    hitDice: "1d6 за уровень волшебника"
+  },
+  {
+    name: "Жрец",
+    description: "Проводник божественной силы, способный лечить и защищать.",
+    features: ["Божественный домен", "Божественный канал", "Ритуалы"],
+    hitDice: "1d8 за уровень жреца"
+  },
+  {
+    name: "Плут",
+    description: "Мастер скрытности и коварных атак.",
+    features: ["Скрытая атака", "Воровские способности", "Увёртливость"],
+    hitDice: "1d8 за уровень плута"
+  },
+  {
+    name: "Варвар",
+    description: "Свирепый воин, черпающий силу в ярости.",
+    features: ["Ярость", "Безрассудное нападение", "Защита без доспехов"],
+    hitDice: "1d12 за уровень варвара"
+  }
+];
 
 export default HandbookPage;

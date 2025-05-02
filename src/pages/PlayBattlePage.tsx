@@ -5,23 +5,17 @@ import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
 import BattleTabs from "@/components/battle/BattleTabs";
-import MapToolbar from "@/components/battle/MapToolbar";
-import MapSaveLoad from "@/components/battle/MapSaveLoad";
-import OBSLayout from "@/components/OBSLayout";
+import MapControls from "@/components/battle/MapControls";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import { X, Dices, Copy } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Scale, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
-// Импортируем наше хранилище, типы и утилиты
-import useBattleStore from "@/stores/battleStore";
-import { createToken } from "@/utils/battle";
-import { useSessionStore } from "@/stores/sessionStore";
-import { AreaEffect, LightSource } from "@/types/battle"; // Correct import for AreaEffect
-import { Token, Initiative, SavedMap } from "@/types/battleTypes"; // Other battle types
+// Импортируем наше хранилище
+import useBattleStore, { Token } from "@/stores/battleStore";
 
 // Тип для предустановленных монстров
 interface PresetMonster {
@@ -81,217 +75,18 @@ const PlayBattlePage = () => {
     mapSettings, setMapBackground, setFogOfWar, revealCell, resetFogOfWar,
     setGridVisible, setGridOpacity, setGridSize, setRevealRadius, setZoom,
     isDM, setIsDM,
-    showWebcams, setShowWebcams,
-    areaEffects, addAreaEffect, removeAreaEffect,
-    lightSources, addLightSource, removeLightSource
+    showWebcams, setShowWebcams
   } = useBattleStore();
   
-  // Используем SessionStore ��ля сохранения/загрузки карт
-  const { currentSession, saveMap, loadMap, deleteMap } = useSessionStore();
-  
-  // Локальные состояния UI
+  // Локальные состояния UI, не связанные с основным функционалом
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [tokenType, setTokenType] = useState<"player" | "monster" | "npc" | "boss">("player");
   const [tokenName, setTokenName] = useState("");
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [showLoadDialog, setShowLoadDialog] = useState(false);
-  const [currentAreaEffectType, setCurrentAreaEffectType] = useState<'circle' | 'cone' | 'square' | 'line' | null>(null);
   
   const { toast } = useToast();
   const mapRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
-  // Обработчик дублирования токена
-  const handleDuplicateToken = () => {
-    if (!selectedTokenId) {
-      toast({
-        title: "Ошибка",
-        description: "Сначала выберите токен для дублирования",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const selectedToken = tokens.find(t => t.id === selectedTokenId);
-    if (!selectedToken) return;
-    
-    // Создаем дубликат токена с небольшим смещением
-    const duplicatedToken = {
-      ...selectedToken,
-      id: Date.now(),
-      x: selectedToken.x + 50, // Небольшое смещение вправо
-      y: selectedToken.y + 50, // и вниз
-      name: `${selectedToken.name} (копия)`
-    };
-    
-    addToken(duplicatedToken);
-    
-    toast({
-      title: "Токен дублирован",
-      description: `${duplicatedToken.name} добавлен на карту`,
-    });
-  };
-  
-  // Обработчики для работы с клавиатурными сочетаниями
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Дублирование токена при нажатии Ctrl+D
-      if (e.ctrlKey && e.key === 'd' && isDM) {
-        e.preventDefault(); // Предотвращаем стандартное поведение браузера
-        handleDuplicateToken();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedTokenId, tokens, isDM]);
-  
-  // Функция добавления эффекта области
-  const handleAddAreaEffect = (type: 'circle' | 'cone' | 'square' | 'line') => {
-    // Если клик был на карте, то координаты будут известны в момент клика
-    setCurrentAreaEffectType(type);
-    
-    toast({
-      title: "Выберите позицию",
-      description: `Кликните на карту, чтобы разместить ${
-        type === 'circle' ? 'круг' : 
-        type === 'cone' ? 'конус' : 
-        type === 'square' ? 'квадрат' : 'линию'
-      }`,
-    });
-  };
-  
-  // Функция добавления источника света
-  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight') => {
-    // Для примера добавляем источник света в центр карты
-    // В реальном сценарии нужно дать пользователю выбрать место
-    const newLight: LightSource = {
-      id: Date.now().toString(),
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-      radius: type === 'torch' ? 100 : type === 'lantern' ? 150 : 500,
-      type,
-      color: type === 'torch' ? '#ff7700' : type === 'lantern' ? '#ffaa00' : '#ffffff',
-      intensity: type === 'daylight' ? 1 : 0.7
-    };
-    
-    addLightSource(newLight);
-    
-    toast({
-      title: `Добавлен источник света: ${type}`,
-      description: type === 'daylight' ? 'Карта освещена полностью' : 
-                  `Радиус освещения: ${type === 'torch' ? '6' : '10'} клеток`,
-    });
-  };
-  
-  // Функции сохранения и загрузки карты
-  const handleSaveMap = (name: string) => {
-    if (!currentSession) {
-      toast({
-        title: "Ошибка",
-        description: "Нет активной сессии для сохранения карты",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const mapData = {
-      name,
-      background: mapSettings.background,
-      tokens,
-      fogOfWar: mapSettings.fogOfWar,
-      revealedCells: mapSettings.revealedCells,
-      lighting: lightSources,
-      gridSettings: {
-        visible: mapSettings.gridVisible,
-        opacity: mapSettings.gridOpacity,
-        size: mapSettings.gridSize  // Теперь это объект { rows, cols }
-      }
-    };
-    
-    const saved = saveMap(currentSession.id, mapData);
-    
-    if (saved) {
-      toast({
-        title: "Карта сохранена",
-        description: `Карта "${name}" успешно сохранена`,
-      });
-    } else {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить карту",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleLoadMap = (mapId: string) => {
-    if (!currentSession) {
-      toast({
-        title: "Ошибка",
-        description: "Нет активной сессии для загрузки карты",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const mapData = loadMap(currentSession.id, mapId);
-    
-    if (mapData) {
-      // Загружаем данные карты в наше состояние
-      setMapBackground(mapData.background || '');
-      
-      // Загружаем токены
-      mapData.tokens.forEach(token => {
-        addToken(token);
-      });
-      
-      // Загружаем настройки сетки
-      if (mapData.gridSettings) {
-        setGridVisible(mapData.gridSettings.visible);
-        setGridOpacity(mapData.gridSettings.opacity);
-        setGridSize(mapData.gridSettings.size);  // Передаем объект { rows, cols }
-      }
-      
-      // Загружаем туман войны
-      if (typeof mapData.fogOfWar !== 'undefined') {
-        setFogOfWar(mapData.fogOfWar);
-      }
-      
-      // Загружаем освещение
-      if (mapData.lighting && Array.isArray(mapData.lighting)) {
-        mapData.lighting.forEach(light => {
-          addLightSource(light);
-        });
-      }
-      
-      toast({
-        title: "Карта загружена",
-        description: `Карта "${mapData.name}" успешно загружена`,
-      });
-    } else {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить карту",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleDeleteMap = (mapId: string) => {
-    if (!currentSession) return;
-    
-    deleteMap(currentSession.id, mapId);
-    
-    toast({
-      title: "Карта удалена",
-      description: "Карта успешно удалена",
-    });
-  };
 
   // Обработчики UI событий, которые будут использовать функции из хранилища
   const handleSelectToken = (id: number | null) => {
@@ -307,16 +102,23 @@ const PlayBattlePage = () => {
     setShowAvatarSelector(true);
   };
 
-  // Обновленная функция добавления предустановленного монстра с использованием createToken
   const handleAddPresetMonster = (monster: PresetMonster, type: "monster" | "boss") => {
-    const newToken = createToken({
+    const newToken = {
+      id: Date.now(),
       name: monster.name,
       type,
       img: defaultTokenImages.placeholder[Math.floor(Math.random() * defaultTokenImages.placeholder.length)],
+      x: 100 + Math.random() * 300,
+      y: 100 + Math.random() * 300,
       hp: monster.hp,
+      maxHp: monster.hp,
       ac: monster.ac,
+      initiative: Math.floor(Math.random() * 5),
+      conditions: [],
+      resources: {},
+      visible: true,
       size: type === "boss" ? 1.5 : 1
-    });
+    };
     
     addToken(newToken);
     
@@ -330,15 +132,25 @@ const PlayBattlePage = () => {
     revealCell(row, col);
   };
 
-  // Обновленная функция выбора токена с использованием createToken
   const handleTokenSelect = (img: string) => {
     if (!tokenName) return;
 
-    const newToken = createToken({
+    const newToken = {
+      id: Date.now(),
       name: tokenName,
       type: tokenType,
-      img
-    });
+      img,
+      x: 100 + Math.random() * 300,
+      y: 100 + Math.random() * 300,
+      hp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
+      maxHp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
+      ac: tokenType === "boss" ? 17 : tokenType === "monster" ? 13 : 15,
+      initiative: Math.floor(Math.random() * 5),
+      conditions: [],
+      resources: {},
+      visible: true,
+      size: 1
+    };
     
     addToken(newToken);
     
@@ -373,17 +185,28 @@ const PlayBattlePage = () => {
     });
   };
 
-  // Обработчик загрузки пользовательского токена с использованием createToken
+  // Обработчик загрузки пользовательского токена
   const handleCustomTokenUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && tokenName.trim()) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const newToken = createToken({
+        const newToken = {
+          id: Date.now(),
           name: tokenName,
           type: tokenType,
-          img: reader.result as string
-        });
+          img: reader.result as string,
+          x: 100 + Math.random() * 300,
+          y: 100 + Math.random() * 300,
+          hp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
+          maxHp: tokenType === "boss" ? 100 : tokenType === "monster" ? 20 : 30,
+          ac: tokenType === "boss" ? 17 : tokenType === "monster" ? 13 : 15,
+          initiative: Math.floor(Math.random() * 5),
+          conditions: [],
+          resources: {},
+          visible: true,
+          size: tokenType === "boss" ? 1.5 : 1
+        };
         
         addToken(newToken);
         
@@ -428,7 +251,7 @@ const PlayBattlePage = () => {
           setMapBackground(reader.result as string);
           toast({
             title: "Фон карты загружен",
-            description: "Новый фон карты у��пешно прим��нен",
+            description: "Новый фон карты успешно применен",
           });
         };
         reader.readAsDataURL(file);
@@ -459,148 +282,271 @@ const PlayBattlePage = () => {
     }
   };
 
-  // Создаем панель управления картой используя обновленный компонент MapToolbar
+  // Функция добавления источника света
+  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight') => {
+    // Здесь будет логика добавления источника света
+    toast({
+      title: `Добавлен источник света: ${type}`,
+      description: type === 'daylight' ? 'Карта освещена полностью' : 
+                  `Радиус освещения: ${type === 'torch' ? '6' : '10'} клеток`,
+    });
+  };
+
+  // Создаем панель управления картой для правой части
   const mapControlPanel = (
-    <MapToolbar
-      zoom={mapSettings.zoom}
-      onZoomIn={handleZoomIn}
-      onZoomOut={handleZoomOut}
-      onResetZoom={handleResetZoom}
-      onMoveMap={handleMoveMap}
-      gridVisible={mapSettings.gridVisible}
-      gridOpacity={mapSettings.gridOpacity}
-      onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
-      onSetGridOpacity={setGridOpacity}
-      fogOfWar={mapSettings.fogOfWar}
-      revealRadius={mapSettings.revealRadius}
-      onToggleFog={() => setFogOfWar(!mapSettings.fogOfWar)}
-      onResetFog={resetFogOfWar}
-      onSetRevealRadius={setRevealRadius}
-      isDM={isDM}
-      onToggleDMMode={toggleDMMode}
-      onSaveMap={() => setShowSaveDialog(true)}
-      onLoadMap={() => setShowLoadDialog(true)}
-      onAddAreaEffect={handleAddAreaEffect}
-      onAddLight={handleAddLight}
-      onDuplicateToken={handleDuplicateToken}
-      onDeleteToken={() => selectedTokenId && removeToken(selectedTokenId)}
-      variant="full"
-    />
+    <div className="space-y-4">
+      {/* Переключение режима DM/Player */}
+      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md mb-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-medium">Режим доступа</h3>
+          <Button 
+            variant={isDM ? "default" : "outline"} 
+            size="sm" 
+            onClick={toggleDMMode}
+            style={{ background: isDM ? currentTheme.accent : undefined }}
+          >
+            {isDM ? "DM" : "Игрок"}
+          </Button>
+        </div>
+      </div>
+      
+      <MapControls
+        fogOfWar={mapSettings.fogOfWar}
+        setFogOfWar={setFogOfWar}
+        revealRadius={mapSettings.revealRadius}
+        setRevealRadius={setRevealRadius}
+        gridVisible={mapSettings.gridVisible}
+        setGridVisible={setGridVisible}
+        gridOpacity={mapSettings.gridOpacity}
+        setGridOpacity={setGridOpacity}
+        onResetFogOfWar={resetFogOfWar}
+        isDM={isDM}
+      />
+      
+      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
+        <h3 className="font-medium mb-3">Управление картой</h3>
+        
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 text-sm font-medium">Масштаб</div>
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="outline" onClick={handleZoomOut} className="h-8 w-8" disabled={!isDM}>
+                <ZoomOut size={16} />
+              </Button>
+              <div className="flex-1 text-center text-sm">
+                {Math.round(mapSettings.zoom * 100)}%
+              </div>
+              <Button size="icon" variant="outline" onClick={handleZoomIn} className="h-8 w-8" disabled={!isDM}>
+                <ZoomIn size={16} />
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleResetZoom} className="h-8" disabled={!isDM}>
+                <Scale size={14} className="mr-1" /> Сброс
+              </Button>
+            </div>
+          </div>
+          
+          {isDM && (
+            <div>
+              <div className="mb-1 text-sm font-medium">Перемещение карты</div>
+              <div className="grid grid-cols-3 gap-1 place-items-center">
+                <div></div>
+                <Button size="icon" variant="outline" onClick={() => handleMoveMap('up')} className="h-8 w-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 15l-6-6-6 6"/>
+                  </svg>
+                </Button>
+                <div></div>
+                
+                <Button size="icon" variant="outline" onClick={() => handleMoveMap('left')} className="h-8 w-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </Button>
+                <div className="text-xs text-muted-foreground">Двигать</div>
+                <Button size="icon" variant="outline" onClick={() => handleMoveMap('right')} className="h-8 w-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </Button>
+                
+                <div></div>
+                <Button size="icon" variant="outline" onClick={() => handleMoveMap('down')} className="h-8 w-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </Button>
+                <div></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {isDM && (
+        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-md">
+          <h3 className="font-medium mb-3">Освещение</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-sm font-medium">Добавить источник света</div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleAddLight('torch')}
+                  className="h-auto py-2 flex flex-col items-center"
+                  style={{ color: currentTheme.accent }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2c.46 0 .9.18 1.23.5.32.34.5.78.5 1.24v1.52l4.09 4.1c.34.33.51.77.51 1.21V13c0 1.1-.9 2-2 2h-8.63c-.97 0-1.84-.76-1.97-1.71a2 2 0 0 1 .51-1.98l4.09-4.1V3.74c0-.46.18-.9.5-1.23A1.74 1.74 0 0 1 12 2Z"/>
+                    <path d="M8 15v3c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-3"/>
+                    <path d="M13 22H11"/>
+                  </svg>
+                  <span className="text-xs">Факел</span>
+                  <span className="text-[10px] text-muted-foreground">радиус 6</span>
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleAddLight('lantern')}
+                  className="h-auto py-2 flex flex-col items-center"
+                  style={{ color: currentTheme.accent }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21h6"/>
+                    <path d="M12 21v-6"/>
+                    <path d="M15 9.25a3 3 0 1 0-6 0v1.5L6 12c0 .94.33 1.85.93 2.57A5.02 5.02 0 0 0 12 17c2.22 0 4.17-1.44 4.83-3.55l-1.83-1.7v-2.5Z"/>
+                  </svg>
+                  <span className="text-xs">Фонарь</span>
+                  <span className="text-[10px] text-muted-foreground">радиус 10</span>
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleAddLight('daylight')}
+                  className="h-auto py-2 flex flex-col items-center"
+                  style={{ color: currentTheme.accent }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2"/>
+                    <path d="M12 20v2"/>
+                    <path d="M5 5l1.4 1.4"/>
+                    <path d="M17.6 17.6 19 19"/>
+                    <path d="M2 12h2"/>
+                    <path d="M20 12h2"/>
+                    <path d="M5 19l1.4-1.4"/>
+                    <path d="M17.6 6.4 19 5"/>
+                  </svg>
+                  <span className="text-xs">Дневной</span>
+                  <span className="text-[10px] text-muted-foreground">по всей карте</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 
-  // Используем OBSLayout для более структурированного расположения элементов
   return (
-    <>
-      <OBSLayout
-        topPanelContent={
-          <TopPanel
-            battleState={battleState}
-            onStartBattle={startBattle}
-            onPauseBattle={pauseBattle}
-            onNextTurn={nextTurn}
-            onUploadBackground={handleMapBackgroundUpload}
-            isDM={isDM}
-          />
-        }
-        leftPanelContent={
-          <LeftPanelDiceRoller playerName={isDM ? "DM" : "Игрок"} />
-        }
-        bottomPanelContent={
-          <BottomPanel 
-            showWebcams={showWebcams} 
-            setShowWebcams={setShowWebcams} 
-            isDM={isDM}
-          />
-        }
-        rightPanelContent={
-          <ScrollArea className="h-full pr-2">
-            {selectedTokenId !== null ? (
-              <RightPanel
-                tokens={tokens}
-                selectedTokenId={selectedTokenId}
-                onSelectToken={selectToken}
-                onAddToken={addToken}
-                onRemoveToken={removeToken}
-                onStartBattle={startBattle}
-                onEndBattle={pauseBattle}
-                onRollInitiative={nextTurn}
-                initiative={initiative}
-                battleActive={battleState.isActive}
-                fogOfWar={mapSettings.fogOfWar}
-                onToggleFogOfWar={() => setFogOfWar(!mapSettings.fogOfWar)}
-                onRevealAllFog={null} // Изменено с пустой функции на null для ясности
-                onResetFog={resetFogOfWar}
-                gridVisible={mapSettings.gridVisible}
-                onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
-                onUpdateGridSettings={setGridSize}
-                gridSize={mapSettings.gridSize}
-                zoom={mapSettings.zoom}
-                onZoomChange={setZoom}
-                isDM={isDM}
-              />
-            ) : (
-              <BattleTabs
-                tokens={tokens}
-                addToken={addToken}
-                initiative={initiative}
-                selectedTokenId={selectedTokenId}
-                onSelectToken={selectToken}
-                updateTokenHP={updateTokenHP}
-                removeToken={removeToken}
-                controlsPanel={mapControlPanel}
-                onAddToken={handleAddToken}
-                fogOfWar={mapSettings.fogOfWar}
-                setFogOfWar={setFogOfWar}
-                gridSize={mapSettings.gridSize}
-                setGridSize={setGridSize}
-                isDM={isDM}
-              />
-            )}
-          </ScrollArea>
-        }
-      >
-        {/* Центральная часть - карта боя */}
-        <div className="relative overflow-hidden h-full" ref={mapRef}>
-          <EnhancedBattleMap
-            tokens={tokens}
-            onAddToken={addToken}
-            background={mapSettings.background}
-            setBackground={setMapBackground}
-            onUpdateTokenPosition={handleUpdateTokenPosition}
-            onSelectToken={handleSelectToken}
-            selectedTokenId={selectedTokenId}
-            initiative={initiative}
-            battleActive={battleState.isActive}
-            fogOfWar={mapSettings.fogOfWar}
-            revealedCells={mapSettings.revealedCells}
-            onRevealCell={handleRevealCell}
-            gridSize={mapSettings.gridSize}
-            gridVisible={mapSettings.gridVisible}
-            gridOpacity={mapSettings.gridOpacity}
-            zoom={mapSettings.zoom}
-            isDM={isDM}
-            areaEffects={areaEffects}
-            lightSources={lightSources}
-            onMapClick={(x, y) => {
-              // Если выбран тип эффекта области, добавляем его при клике
-              if (currentAreaEffectType) {
-                const newEffect: AreaEffect = {
-                  id: Date.now().toString(),
-                  type: currentAreaEffectType,
-                  x,
-                  y,
-                  size: currentAreaEffectType === 'line' ? 10 : 5,
-                  color: '#ff5500',
-                  opacity: 0.4,
-                  rotation: 0
-                };
-                addAreaEffect(newEffect);
-                setCurrentAreaEffectType(null);
-              }
-            }}
-          />
-        </div>
-      </OBSLayout>
+    <div className="h-screen w-screen grid grid-rows-[auto_1fr_auto] grid-cols-[250px_1fr_300px] text-foreground bg-background overflow-hidden">
+      {/* Верхняя панель - на всю ширину */}
+      <div className="col-span-3 border-b bg-muted/10">
+        <TopPanel
+          battleState={battleState}
+          onStartBattle={startBattle}
+          onPauseBattle={pauseBattle}
+          onNextTurn={nextTurn}
+          onUploadBackground={handleMapBackgroundUpload}
+          isDM={isDM}
+        />
+      </div>
+      
+      {/* Левая панель - кубики */}
+      <div className="row-span-1 border-r bg-muted/10 overflow-y-auto">
+        <LeftPanelDiceRoller playerName={isDM ? "DM" : "Игрок"} />
+      </div>
+      
+      {/* Центральная часть - карта боя */}
+      <div className="relative overflow-hidden" ref={mapRef}>
+        <EnhancedBattleMap
+          tokens={tokens}
+          setTokens={addToken} // This is correct - passing the addToken function
+          background={mapSettings.background}
+          setBackground={setMapBackground}
+          onUpdateTokenPosition={handleUpdateTokenPosition}
+          onSelectToken={handleSelectToken}
+          selectedTokenId={selectedTokenId}
+          initiative={initiative}
+          battleActive={battleState.isActive}
+          fogOfWar={mapSettings.fogOfWar}
+          revealedCells={mapSettings.revealedCells}
+          onRevealCell={handleRevealCell}
+          gridSize={mapSettings.gridSize}
+          gridVisible={mapSettings.gridVisible}
+          gridOpacity={mapSettings.gridOpacity}
+          zoom={mapSettings.zoom}
+          isDM={isDM}
+        />
+      </div>
+      
+      {/* Правая панель - управление токенами и настройки */}
+      <div className="border-l bg-muted/10 overflow-y-auto">
+        <ScrollArea className="h-full pr-2">
+          {selectedTokenId !== null ? (
+            <RightPanel
+              tokens={tokens}
+              selectedTokenId={selectedTokenId}
+              onSelectToken={selectToken}
+              onAddToken={addToken}
+              onRemoveToken={removeToken}
+              onStartBattle={startBattle}
+              onEndBattle={pauseBattle}
+              onRollInitiative={nextTurn}
+              initiative={initiative}
+              battleActive={battleState.isActive}
+              fogOfWar={mapSettings.fogOfWar}
+              onToggleFogOfWar={() => setFogOfWar(!mapSettings.fogOfWar)}
+              onRevealAllFog={() => {}} // Добавим пустую функцию для примера
+              onResetFog={resetFogOfWar}
+              gridVisible={mapSettings.gridVisible}
+              onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
+              onUpdateGridSettings={setGridSize}
+              gridSize={mapSettings.gridSize}
+              zoom={mapSettings.zoom}
+              onZoomChange={setZoom}
+              isDM={isDM}
+            />
+          ) : (
+            <BattleTabs
+              tokens={tokens}
+              addToken={addToken}
+              initiative={initiative}
+              selectedTokenId={selectedTokenId}
+              onSelectToken={handleSelectToken}
+              updateTokenHP={updateTokenHP}
+              removeToken={removeToken}
+              controlsPanel={mapControlPanel}
+              onAddToken={handleAddToken}
+              fogOfWar={mapSettings.fogOfWar}
+              setFogOfWar={setFogOfWar}
+              gridSize={mapSettings.gridSize}
+              setGridSize={setGridSize}
+              isDM={isDM}
+            />
+          )}
+        </ScrollArea>
+      </div>
+      
+      {/* Нижняя панель - на всю ширину */}
+      <div className="col-span-3 border-t bg-muted/10">
+        <BottomPanel 
+          showWebcams={showWebcams} 
+          setShowWebcams={setShowWebcams} 
+          isDM={isDM}
+        />
+      </div>
       
       {/* Модальное окно выбора аватара */}
       {showAvatarSelector && isDM && (
@@ -663,28 +609,7 @@ const PlayBattlePage = () => {
           </div>
         </div>
       )}
-      
-      {/* Диалоги сохранения и загрузки карты */}
-      <MapSaveLoad
-        open={showSaveDialog}
-        onOpenChange={setShowSaveDialog}
-        mode="save"
-        onSave={handleSaveMap}
-        onLoad={() => {}}
-        onDelete={() => {}}
-        maps={currentSession?.savedMaps || []}
-      />
-      
-      <MapSaveLoad
-        open={showLoadDialog}
-        onOpenChange={setShowLoadDialog}
-        mode="load"
-        onSave={() => {}}
-        onLoad={handleLoadMap}
-        onDelete={handleDeleteMap}
-        maps={currentSession?.savedMaps || []}
-      />
-    </>
+    </div>
   );
 };
 

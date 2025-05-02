@@ -1,5 +1,5 @@
+
 import { create } from "zustand";
-import { VisibleArea } from "@/types/battle";
 
 // Импортируем необходимые типы
 export interface Token {
@@ -45,28 +45,6 @@ export interface MapSettings {
   background: string | null;
 }
 
-// Новые интерфейсы для эффектов области и источников света
-export interface AreaEffect {
-  id: string;
-  type: 'circle' | 'cone' | 'square' | 'line';
-  x: number;
-  y: number;
-  size: number;
-  color: string;
-  opacity?: number;
-  rotation?: number;
-}
-
-export interface LightSource {
-  id: string;
-  x: number;
-  y: number;
-  radius: number;
-  type: 'torch' | 'lantern' | 'daylight';
-  color: string;
-  intensity: number;
-}
-
 // Интерфейс состояния хранилища
 interface BattleStore {
   // Данные боя
@@ -79,10 +57,6 @@ interface BattleStore {
   // Настройки карты
   mapSettings: MapSettings;
   
-  // Эффекты области и освещение
-  areaEffects: AreaEffect[];
-  lightSources: LightSource[];
-  
   // Визуальные настройки
   showWebcams: boolean;
   
@@ -93,14 +67,6 @@ interface BattleStore {
   updateTokenPosition: (id: number, x: number, y: number) => void;
   updateTokenHP: (id: number, change: number) => void;
   selectToken: (id: number | null) => void;
-  
-  // Действия с эффектами области
-  addAreaEffect: (effect: AreaEffect) => void;
-  removeAreaEffect: (id: string) => void;
-  
-  // Действия с источниками света
-  addLightSource: (light: LightSource) => void;
-  removeLightSource: (id: string) => void;
   
   // Действия с боем
   startBattle: () => void;
@@ -146,10 +112,6 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     zoom: 1,
     background: null,
   },
-  
-  // Эффекты области и источники света
-  areaEffects: [],
-  lightSources: [],
   
   // Визуальные настройки
   showWebcams: true,
@@ -218,32 +180,6 @@ const useBattleStore = create<BattleStore>((set, get) => ({
   
   selectToken: (id) => {
     set({ selectedTokenId: id });
-  },
-  
-  // Методы для управления эффектами области
-  addAreaEffect: (effect) => {
-    set((state) => ({
-      areaEffects: [...state.areaEffects, effect]
-    }));
-  },
-  
-  removeAreaEffect: (id) => {
-    set((state) => ({
-      areaEffects: state.areaEffects.filter(effect => effect.id !== id)
-    }));
-  },
-  
-  // Методы для управления источниками света
-  addLightSource: (light) => {
-    set((state) => ({
-      lightSources: [...state.lightSources, light]
-    }));
-  },
-  
-  removeLightSource: (id) => {
-    set((state) => ({
-      lightSources: state.lightSources.filter(light => light.id !== id)
-    }));
   },
   
   // Методы для управления боем

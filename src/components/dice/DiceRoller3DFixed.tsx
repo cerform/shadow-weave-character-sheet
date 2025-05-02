@@ -13,7 +13,7 @@ interface DiceRoller3DFixedProps {
   onRollComplete?: (result: number) => void;
   fixedPosition?: boolean;
   themeColor?: string;
-  playerName?: string; // Added playerName prop
+  playerName?: string;
   diceCount?: number;
 }
 

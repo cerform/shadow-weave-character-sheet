@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown } from "lucide-react";
@@ -8,22 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ThemeSelector from "@/components/character-sheet/ThemeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
-import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { toast } = useToast();
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // TODO: Implement character loading logic
-      toast({
-        title: "Загрузка персонажа",
-        description: `Файл ${file.name} выбран. Функция находится в разработке.`,
-      });
+      console.log("Loading character from file:", file.name);
     }
   };
 
@@ -36,11 +30,6 @@ const Index = () => {
     { title: "Боевая карта", path: "/battle", icon: Swords },
     { title: "Панель мастера", path: "/dm", icon: Crown },
   ];
-
-  const handleNavigate = (path: string) => {
-    console.log("Navigating to:", path);
-    navigate(path);
-  };
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
@@ -75,7 +64,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => handleNavigate("/character-creation")} className="w-full gap-2">
+                  <Button onClick={() => navigate("/character-creation")} className="w-full gap-2">
                     <Plus className="size-4" />
                     Создать персонажа
                   </Button>
@@ -114,7 +103,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleNavigate("/join")} className="w-full">
+                  <Button onClick={() => navigate("/join")} className="w-full">
                     Присоединиться к сессии
                   </Button>
                 </CardContent>
@@ -133,12 +122,9 @@ const Index = () => {
                     Создавайте и управляйте игровыми сессиями
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button onClick={() => handleNavigate("/dm")} className="w-full">
+                <CardContent>
+                  <Button onClick={() => navigate("/dm")} className="w-full">
                     Панель мастера
-                  </Button>
-                  <Button onClick={() => handleNavigate("/dm/session")} className="w-full" variant="outline">
-                    Создать сессию
                   </Button>
                 </CardContent>
               </Card>
@@ -155,7 +141,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleNavigate("/handbook")} className="w-full">
+                  <Button onClick={() => navigate("/handbook")} className="w-full">
                     Открыть руководство
                   </Button>
                 </CardContent>
@@ -172,7 +158,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleNavigate("/spellbook")} className="w-full">
+                  <Button onClick={() => navigate("/spellbook")} className="w-full">
                     Открыть книгу заклинаний
                   </Button>
                 </CardContent>
