@@ -21,18 +21,19 @@ import DiceRoller3DFixed from "../character-sheet/DiceRoller3DFixed";
 import { Token } from '@/stores/battleStore'; // Import from store
 
 interface RightPanelProps {
-  selectedTokenId: number | null;
+  selectedTokenId: number;
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
   fogOfWar: boolean;
-  setFogOfWar: React.Dispatch<React.SetStateAction<boolean>>;
+  setFogOfWar: (enabled: boolean) => void;
   revealRadius: number;
-  setRevealRadius: React.Dispatch<React.SetStateAction<number>>;
+  setRevealRadius: (radius: number) => void;
   gridVisible: boolean;
-  setGridVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  setGridVisible: (visible: boolean) => void;
   gridOpacity: number;
-  setGridOpacity: React.Dispatch<React.SetStateAction<number>>;
+  setGridOpacity: (opacity: number) => void;
   onResetFogOfWar: () => void;
+  isDM?: boolean; // Add isDM prop
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({

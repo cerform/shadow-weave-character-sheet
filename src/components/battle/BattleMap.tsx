@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload } from 'lucide-react';
+import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload, ImageIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 import { VisibleArea } from '@/types/battle';
+import { motion } from 'framer-motion';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -629,7 +630,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
               asChild
             >
               <span>
-                <Image className="h-4 w-4 mr-1" /> Карта
+                <ImageIcon className="h-4 w-4 mr-1" /> Карта
               </span>
             </Button>
             <input

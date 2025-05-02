@@ -472,7 +472,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={(newTokens) => setTokens(newTokens)}
+          setTokens={setTokens}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -498,7 +498,7 @@ const PlayBattlePage = () => {
             <RightPanel
               selectedTokenId={selectedTokenId}
               tokens={tokens}
-              setTokens={(newTokens) => setTokens(newTokens)}
+              setTokens={setTokens}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
               revealRadius={mapSettings.revealRadius}
