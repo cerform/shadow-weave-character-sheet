@@ -12,7 +12,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -82,10 +81,11 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     // Подключаемся к событиям получения бросков через socketService
     const socketService = socket?.socketService;
     if (socketService && socketService.on) {
-      socketService.on('receive-roll', handleRoll);
+      const unsubscribe = socketService.on('receive-roll', handleRoll);
       
       return () => {
-        socketService.off('receive-roll', handleRoll);
+        // Используем возвращаемую функцию отписки
+        unsubscribe();
       };
     }
     

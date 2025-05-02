@@ -62,6 +62,10 @@ export const socketService = {
     socket.on(event, callback);
     return () => socket.off(event, callback);
   },
+  
+  off: (event: string, callback?: (...args: any[]) => void) => {
+    socket.off(event, callback);
+  },
 };
 
 export default socketService;
