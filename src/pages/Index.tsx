@@ -22,12 +22,18 @@ const Index = () => {
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
 
-  // Загружаем персонажей пользователя при изменении авторизации
+  // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
   useEffect(() => {
+    console.log("Index: Обновляем список персонажей");
+    
     if (isAuthenticated) {
-      setUserCharacters(getUserCharacters());
+      const chars = getUserCharacters();
+      console.log("Index: Персонажи пользователя", chars);
+      setUserCharacters(chars);
     } else {
-      setUserCharacters([]);
+      // Если пользователь не аутентифицирован, просто берем все персонажи из localStorage
+      console.log("Index: Персонажи из localStorage", characters);
+      setUserCharacters(characters);
     }
   }, [isAuthenticated, getUserCharacters, characters]);
 
@@ -52,7 +58,7 @@ const Index = () => {
   // Загрузка выбранного персонажа
   const loadCharacter = (character: any) => {
     setCharacter(character);
-    navigate("/character-sheet");
+    navigate("/sheet");
   };
 
   // Update the navigation links to include new pages
@@ -236,7 +242,7 @@ const Index = () => {
               {isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}
             </h3>
             
-            {userCharacters.length > 0 ? (
+            {userCharacters && userCharacters.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userCharacters.map((char) => (
                   <Card 
@@ -265,7 +271,7 @@ const Index = () => {
               <div className="bg-card/30 backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground">
                 {isAuthenticated ? 
                   "У вас пока нет сохраненных персонажей" : 
-                  "Войдите в аккаунт, чтобы увидеть своих персонажей"
+                  "Создайте персонажа или войдите в аккаунт, чтобы увидеть своих персонажей"
                 }
               </div>
             )}

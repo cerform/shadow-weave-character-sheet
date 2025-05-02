@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
+import { toast } from "sonner";
 
 // Типы для заклинания и персонажа
 export interface Spell {
@@ -224,7 +225,12 @@ export function CharacterProvider({ children }: Props) {
       
       // Если есть авторизованный пользователь, добавляем персонажа к нему
       if (currentUser) {
-        await addCharacterToUser(newChar.id);
+        try {
+          await addCharacterToUser(newChar.id);
+          toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
+        } catch (err) {
+          console.error("Ошибка при привязке персонажа к пользователю:", err);
+        }
       }
       
       console.log("Создан новый персонаж:", newChar.name);
@@ -262,7 +268,7 @@ export function CharacterProvider({ children }: Props) {
     // Иначе только персонажи этого пользователя
     return characters.filter(char => 
       char.userId === currentUser.id || 
-      currentUser.characters?.includes(char.id)
+      (currentUser.characters && currentUser.characters.includes(char.id))
     );
   }, [characters, currentUser]);
 

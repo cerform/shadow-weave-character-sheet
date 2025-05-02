@@ -1,9 +1,9 @@
-
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Check, Download, FileText, ArrowDown, ArrowLeft } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
 import { downloadCharacterPDF, downloadCharacterHTMLPDF } from "@/utils/characterPdfGenerator";
@@ -38,8 +38,7 @@ type Props = {
 
 export default function CharacterReview({ character, prevStep }: Props) {
   const navigate = useNavigate();
-  const { setCharacter } = useContext(CharacterContext);
-  const { toast } = useToast();
+  const { saveCharacter, setCharacter } = useContext(CharacterContext);
   const { currentUser, addCharacterToUser, isAuthenticated } = useAuth();
 
   const getModifier = (score: number): string => {
@@ -47,13 +46,9 @@ export default function CharacterReview({ character, prevStep }: Props) {
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!character.name) {
-      toast({
-        title: "Ошибка",
-        description: "Персонаж должен иметь имя",
-        variant: "destructive"
-      });
+      toast.error("Ошибка: Персонаж должен иметь имя");
       return;
     }
 
@@ -115,12 +110,9 @@ export default function CharacterReview({ character, prevStep }: Props) {
     }
     
     const maxHp = baseHp + conModifier;
-    const now = new Date().toISOString();
-    const characterId = uuidv4();
     
     // Create the character object with the correct format for the Character interface
-    const charObj: Character = {
-      id: characterId,
+    const charObj: Partial<Character> = {
       name: character.name,
       race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
@@ -136,40 +128,25 @@ export default function CharacterReview({ character, prevStep }: Props) {
       equipment: character.equipment || [],
       languages: character.languages || [],
       proficiencies: character.proficiencies || [],
-      theme: localStorage.getItem('theme') || undefined,
-      createdAt: now,
-      updatedAt: now
+      theme: localStorage.getItem('theme') || undefined
     };
 
-    // Сохраняем персонажа в контексте
-    setCharacter(charObj);
-    
-    // Если пользователь аутентифицирован, привязываем персонажа к его аккаунту
-    if (isAuthenticated && currentUser) {
-      addCharacterToUser(characterId)
-        .then(() => {
-          toast({
-            title: "Персонаж сохранен",
-            description: `${character.name} успешно создан и привязан к вашему аккаунту!`
-          });
-        })
-        .catch(error => {
-          console.error("Ошибка при привязке персонажа к аккаунту:", error);
-          toast({
-            title: "Внимание",
-            description: "Персонаж сохранен локально, но не привязан к аккаунту",
-            variant: "destructive"
-          });
-        });
-    } else {
-      toast({
-        title: "Персонаж сохранен",
-        description: `${character.name} успешно создан!`
-      });
+    try {
+      // Сохраняем персонажа и получаем обратно полный объект
+      const savedCharacter = await saveCharacter(charObj);
+      
+      // Устанавливаем его как активный
+      setCharacter(savedCharacter);
+      
+      // Уведомляем пользователя
+      toast.success(`Персонаж ${character.name} успешно создан!`);
+      
+      // Переходим к листу персонажа
+      navigate("/sheet");
+    } catch (error) {
+      console.error("Ошибка при сохранении персонажа:", error);
+      toast.error("Ошибка при сохранении персонажа");
     }
-    
-    // Переходим к листу персонажа
-    navigate("/sheet");
   };
 
   const handleBackToCreation = () => {
@@ -178,11 +155,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
 
   const handleDownloadPdf = () => {
     if (!character.name) {
-      toast({
-        title: "Ошибка",
-        description: "Персонаж должен иметь имя",
-        variant: "destructive"
-      });
+      toast.error("Ошибка: Персонаж должен иметь имя");
       return;
     }
     
@@ -221,19 +194,12 @@ export default function CharacterReview({ character, prevStep }: Props) {
     // Скачиваем PDF
     downloadCharacterPDF(charForPdf);
     
-    toast({
-      title: "PDF создан",
-      description: "Лист персонажа успешно скачан!"
-    });
+    toast.success("PDF создан: Лист персонажа успешно скачан!");
   };
 
   const handleDownloadHtmlPdf = () => {
     if (!character.name) {
-      toast({
-        title: "Ошибка",
-        description: "Персонаж должен иметь имя",
-        variant: "destructive"
-      });
+      toast.error("Ошибка: Персонаж должен иметь имя");
       return;
     }
     
@@ -271,10 +237,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
     // Скачиваем HTML PDF
     downloadCharacterHTMLPDF(charForPdf);
     
-    toast({
-      title: "PDF создан",
-      description: "HTML лист персонажа успешно скачан!"
-    });
+    toast.success("PDF создан: HTML лист персонажа успешно скачан!");
   };
 
   return (
