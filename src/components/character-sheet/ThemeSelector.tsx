@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from "@/components/ui/button";
 import { Leaf, Sword, Wand, Feather, Sparkles, Dices } from "lucide-react";
 import { themes } from "@/lib/themes";
@@ -19,7 +19,6 @@ export const ThemeSelector = () => {
   
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme as any);
-    localStorage.setItem('theme', newTheme);
   };
   
   return (
@@ -32,7 +31,7 @@ export const ThemeSelector = () => {
             variant={theme === themeId ? "default" : "outline"} 
             size="sm"
             onClick={() => handleThemeChange(themeId)}
-            className="flex items-center"
+            className={`flex items-center ${theme === themeId ? 'bg-primary' : ''}`}
           >
             {themeIcons[themeId as keyof typeof themeIcons]}
             {themes[themeId as keyof typeof themes].name}

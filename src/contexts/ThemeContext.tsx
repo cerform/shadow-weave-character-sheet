@@ -16,12 +16,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme") as Theme;
-    if (storedTheme) {
+    if (storedTheme && Object.keys(themes).includes(storedTheme)) {
       setTheme(storedTheme);
-      applyTheme(storedTheme);
-    } else {
-      applyTheme(theme);
     }
+  }, []);
+
+  useEffect(() => {
+    // Применение темы при изменении
+    applyTheme(theme);
+    // Сохраняем выбранную тему в localStorage
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const applyTheme = (themeName: Theme) => {
@@ -37,6 +41,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Обновляем глобальную переменную темы
     document.documentElement.setAttribute('data-theme', themeName);
+
+    // Применяем CSS переменные из темы
+    const selectedTheme = themes[themeName];
+    if (selectedTheme) {
+      document.documentElement.style.setProperty('--primary-gradient', selectedTheme.primary);
+      document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondary);
+      document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
+      document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
+    }
   };
 
   return (

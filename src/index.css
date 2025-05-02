@@ -35,6 +35,12 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+
+    /* Тематические переменные */
+    --primary-gradient: from-stone-700 to-stone-900;
+    --secondary-gradient: from-stone-600/20 to-stone-800/20;
+    --accent-color: #8E9196;
+    --glow-effect: 0 0 15px #222;
   }
 
   .dark {
@@ -67,9 +73,7 @@
 
     --ring: 217.2 32.6% 17.5%;
   }
-}
 
-@layer base {
   .theme-dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -140,3 +144,41 @@
 }
 
 /* End of OBS Layout styles */
+
+/* Классы для тем - применяют общие переменные темы */
+.theme-default, .theme-warlock, .theme-wizard, .theme-druid, .theme-warrior, .theme-bard {
+  --primary-gradient-value: var(--primary-gradient);
+  --secondary-gradient-value: var(--secondary-gradient);
+  --accent-color-value: var(--accent-color);
+  --glow-effect-value: var(--glow-effect);
+}
+
+/* Стили для темной темы */
+.dark .themed-bg {
+  background: linear-gradient(to bottom right, var(--primary-gradient-value));
+}
+.dark .themed-card {
+  background: linear-gradient(to bottom right, var(--secondary-gradient-value));
+  box-shadow: var(--glow-effect-value);
+}
+.dark .themed-text {
+  color: var(--accent-color-value);
+}
+.dark .themed-border {
+  border-color: var(--accent-color-value);
+}
+
+/* Стили для светлой темы */
+.themed-bg {
+  background: linear-gradient(to bottom right, var(--primary-gradient-value));
+}
+.themed-card {
+  background: linear-gradient(to bottom right, var(--secondary-gradient-value));
+  box-shadow: var(--glow-effect-value);
+}
+.themed-text {
+  color: var(--accent-color-value);
+}
+.themed-border {
+  border-color: var(--accent-color-value);
+}
