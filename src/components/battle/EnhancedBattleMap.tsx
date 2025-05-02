@@ -9,7 +9,7 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Fixed: Changed type to accept either token add function or state setter
+  // Modified: Fixed type issue with setTokens
   setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
@@ -239,6 +239,19 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return () => clearTimeout(timer);
   }, [zoom]);
 
+  // Helper function to handle the token addition based on the type of setTokens
+  const handleSetTokens = (token: Token) => {
+    if (typeof setTokens === 'function') {
+      if (setTokens.length === 1) {
+        // If it accepts one parameter, assume it's the addToken function
+        (setTokens as (token: Token) => void)(token);
+      } else {
+        // If it's a state setter function, update with a function
+        (setTokens as React.Dispatch<React.SetStateAction<Token[]>>)(prev => [...prev, token]);
+      }
+    }
+  };
+
   return (
     <div 
       className="battle-map-container h-full relative" 
@@ -260,7 +273,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          setTokens={setTokens} // We pass the prop as is, no type conversion needed now
+          setTokens={handleSetTokens} // Use our helper function to properly handle the type
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}
