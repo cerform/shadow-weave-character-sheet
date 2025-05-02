@@ -123,9 +123,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Исправление типа never: добавляем строгую проверку типов
-        if (typeof spell === 'object' && spell !== null && 'name' in spell && typeof spell.name === 'string') {
-          return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+        // Исправляем проблему с типом never, используя строгую типизацию
+        if (typeof spell === 'object' && spell !== null) {
+          if ('name' in spell && typeof spell.name === 'string') {
+            return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          return false;
         } else if (typeof spell === 'string') {
           return spell.toLowerCase().includes(searchQuery.toLowerCase());
         }
@@ -137,7 +140,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (levelFilter !== null) {
       filtered = filtered.filter((spell) => {
         if (typeof spell === 'object' && spell !== null && 'level' in spell && typeof spell.level === 'number') {
-          return spell.level === levelFilter; // Исправлено: spell.level вместо level
+          return spell.level === levelFilter;
         }
         return false;
       });

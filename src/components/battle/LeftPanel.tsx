@@ -11,53 +11,26 @@ import { Separator } from '@/components/ui/separator';
 // Вспомогательные компоненты и утилиты
 import { useToast } from '@/components/ui/use-toast';
 
-// Типы данных
-interface Condition {
-  name: string;
-  duration: number | null;
-}
+// Типы данных из PlayBattlePage.tsx
+import { Token, Initiative, BattleState } from '@/pages/PlayBattlePage';
 
-interface Combatant {
-  id: string;
-  name: string;
-  type: 'character' | 'monster' | 'npc';
-  hp: number;
-  maxHp: number;
-  ac: number;
-  initiative: number; // Убедимся что тип всегда number, не string
-  conditions: Condition[];
-  resources?: Record<string, { current: number; max: number }>;
-  visible: boolean;
-}
-
-interface Monster {
-  id: string;
-  name: string;
-  type: string;
-  hp: number;
-  ac: number;
-  cr: string;
-  abilities: Record<string, number>;
-}
-
-interface LeftPanelProps {
-  combatants: Combatant[];
-  setCombatants: React.Dispatch<React.SetStateAction<Combatant[]>>;
-  monsters: Monster[];
-  currentTurn: number;
-  setCurrentTurn: React.Dispatch<React.SetStateAction<number>>;
-  isCombatActive: boolean;
-  setIsCombatActive: React.Dispatch<React.SetStateAction<boolean>>;
+// Обновленные типы для LeftPanel
+export interface LeftPanelProps {
+  tokens: Token[];
+  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  initiative: Initiative[];
+  selectedTokenId: number | null;
+  onSelectToken: (id: number | null) => void;
+  battleState: BattleState;
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({
-  combatants,
-  setCombatants,
-  monsters,
-  currentTurn,
-  setCurrentTurn,
-  isCombatActive,
-  setIsCombatActive,
+  tokens,
+  setTokens,
+  initiative,
+  selectedTokenId,
+  onSelectToken,
+  battleState
 }) => {
   const { toast } = useToast();
   const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(null);
@@ -66,7 +39,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
 
   // Обработчики для управления боевым порядком
   const startCombat = () => {
-    if (combatants.length < 1) {
+    if (tokens.length < 1) {
       toast({
         title: "Ошибка",
         description: "Добавьте хотя бы одного участника в бой",
@@ -76,13 +49,13 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     }
 
     // Сортируем участников по инициативе (от большей к меньшей)
-    const sortedCombatants = [...combatants].sort(
-      (a, b) => b.initiative - a.initiative
+    const sortedCombatants = [...initiative].sort(
+      (a, b) => b.roll - a.roll
     );
 
-    setCombatants(sortedCombatants);
-    setCurrentTurn(0);
-    setIsCombatActive(true);
+    setInitiative(sortedCombatants);
+    battleState.currentInitiativeIndex = 0;
+    battleState.isActive = true;
 
     toast({
       title: "Бой начался!",
@@ -91,8 +64,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   };
 
   const endCombat = () => {
-    setIsCombatActive(false);
-    setCurrentTurn(0);
+    battleState.isActive = false;
+    battleState.currentInitiativeIndex = -1;
     toast({
       title: "Бой завершен",
       description: "Инициатива сброшена",
@@ -100,19 +73,19 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   };
 
   const nextTurn = () => {
-    if (combatants.length === 0) return;
+    if (initiative.length === 0) return;
     
-    const nextTurn = (currentTurn + 1) % combatants.length;
-    setCurrentTurn(nextTurn);
+    let nextIndex = (battleState.currentInitiativeIndex + 1) % initiative.length;
+    battleState.currentInitiativeIndex = nextIndex;
     
     toast({
       title: "Следующий ход",
-      description: `Ход ${combatants[nextTurn]?.name || "следующего участника"}`,
+      description: `Ход ${initiative[nextIndex]?.name || "следующего участника"}`,
     });
   };
 
   // Добавление монстра в бой
-  const addMonster = (monster: Monster | null = null) => {
+  const addMonster = (monster: any | null = null) => {
     // Если не выбран монстр из списка и не введено имя монстра, показываем ошибку
     if (!monster && (!newMonsterName || newMonsterName.trim() === '')) {
       toast({
@@ -135,25 +108,27 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     };
 
     // Добавление указанного количества монстров
-    const newCombatants: Combatant[] = [];
+    const newTokens: Token[] = [];
     
     for (let i = 0; i < monsterQuantity; i++) {
-      newCombatants.push({
-        id: `${baseMonster.id}-${Date.now()}-${i}`,
+      newTokens.push({
+        id: Date.now() + i,
         name: monsterQuantity > 1 ? `${baseMonster.name} ${i + 1}` : baseMonster.name,
         type: 'monster',
+        img: '/images/tokens/monster.png',
+        x: 0,
+        y: 0,
         hp: baseMonster.hp,
         maxHp: baseMonster.hp,
         ac: baseMonster.ac,
-        // Fix: Ensure initiative is always a number by using Math.random
-        initiative: Math.floor(Math.random() * 20) + 1,
+        initiative: 10,
         conditions: [],
         resources: {},
         visible: true
       });
     }
     
-    setCombatants([...combatants, ...newCombatants]);
+    setTokens([...tokens, ...newTokens]);
     
     // Сброс полей формы
     setSelectedMonsterId(null);
@@ -167,18 +142,18 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   };
 
   // Удаление участника из боя
-  const removeCombatant = (id: string) => {
-    setCombatants(combatants.filter(c => c.id !== id));
+  const removeToken = (id: number) => {
+    setTokens(tokens.filter(c => c.id !== id));
     
     // Если удаляем активного участника, переходим к следующему
-    if (isCombatActive && combatants[currentTurn]?.id === id) {
+    if (battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === id) {
       nextTurn();
     }
   };
 
   // Обновление хитпоинтов участника
-  const updateCombatantHP = (id: string, change: number) => {
-    setCombatants(combatants.map(c => {
+  const updateTokenHP = (id: number, change: number) => {
+    setTokens(tokens.map(c => {
       if (c.id === id) {
         const newHP = Math.max(0, Math.min(c.maxHp, c.hp + change));
         return { ...c, hp: newHP };
@@ -188,8 +163,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   };
 
   // Функция для отображения списка участников боя
-  const renderCombatants = () => {
-    if (combatants.length === 0) {
+  const renderTokens = () => {
+    if (tokens.length === 0) {
       return (
         <div className="text-center p-4 text-muted-foreground">
           Нет участников боя. Добавьте персонажей или монстров.
@@ -197,20 +172,20 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
       );
     }
 
-    return combatants.map((combatant, index) => {
-      const isCurrentTurn = isCombatActive && index === currentTurn;
+    return tokens.map((token, index) => {
+      const isCurrentTurn = battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === token.id;
       
       return (
         <div 
-          key={combatant.id}
+          key={token.id}
           className={`p-3 border rounded-md mb-2 ${isCurrentTurn ? 'bg-primary/10 border-primary' : ''}`}
         >
           <div className="flex justify-between items-center">
-            <div className="font-medium">{combatant.name}</div>
+            <div className="font-medium">{token.name}</div>
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => removeCombatant(combatant.id)}
+              onClick={() => removeToken(token.id)}
             >
               ✕
             </Button>
@@ -224,18 +199,18 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                   variant="outline" 
                   size="icon" 
                   className="h-6 w-6 rounded-full"
-                  onClick={() => updateCombatantHP(combatant.id, -1)}
+                  onClick={() => updateTokenHP(token.id, -1)}
                 >
                   <MinusCircle className="h-3 w-3" />
                 </Button>
                 <span className="mx-2">
-                  {combatant.hp}/{combatant.maxHp}
+                  {token.hp}/{token.maxHp}
                 </span>
                 <Button 
                   variant="outline" 
                   size="icon" 
                   className="h-6 w-6 rounded-full"
-                  onClick={() => updateCombatantHP(combatant.id, 1)}
+                  onClick={() => updateTokenHP(token.id, 1)}
                 >
                   <PlusCircle className="h-3 w-3" />
                 </Button>
@@ -244,23 +219,22 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
             
             <div className="text-center">
               <div className="text-xs text-muted-foreground">AC</div>
-              <div className="mt-1">{combatant.ac}</div>
+              <div className="mt-1">{token.ac}</div>
             </div>
             
             <div className="text-center">
               <div className="text-xs text-muted-foreground">Инициатива</div>
-              <div className="mt-1">{combatant.initiative}</div>
+              <div className="mt-1">{token.initiative}</div>
             </div>
           </div>
           
-          {combatant.conditions.length > 0 && (
+          {token.conditions.length > 0 && (
             <div className="mt-2">
               <div className="text-xs text-muted-foreground mb-1">Состояния:</div>
               <div className="flex flex-wrap gap-1">
-                {combatant.conditions.map((condition, i) => (
+                {token.conditions.map((condition, i) => (
                   <Badge key={i} variant="outline">
-                    {condition.name}
-                    {condition.duration && ` (${condition.duration})`}
+                    {condition}
                   </Badge>
                 ))}
               </div>
@@ -280,14 +254,14 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
       <div className="p-4 border-b">
         <div className="flex space-x-2">
           <Button 
-            onClick={isCombatActive ? endCombat : startCombat} 
-            variant={isCombatActive ? "destructive" : "default"}
+            onClick={battleState.isActive ? endCombat : startCombat} 
+            variant={battleState.isActive ? "destructive" : "default"}
             className="flex-1"
           >
-            {isCombatActive ? "Завершить бой" : "Начать бой"}
+            {battleState.isActive ? "Завершить бой" : "Начать бой"}
           </Button>
           
-          {isCombatActive && (
+          {battleState.isActive && (
             <Button onClick={nextTurn} variant="outline">
               Следующий ход
             </Button>
@@ -296,7 +270,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
-        {renderCombatants()}
+        {renderTokens()}
       </div>
       
       <div className="p-4 border-t">
@@ -334,7 +308,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
           <Separator />
           
           <div className="max-h-40 overflow-y-auto">
-            {monsters.map(monster => (
+            {/* {monsters.map(monster => (
               <div 
                 key={monster.id}
                 className="p-2 hover:bg-muted/50 rounded cursor-pointer flex justify-between items-center"
@@ -356,13 +330,13 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                 </div>
                 <Badge variant="outline">CR {monster.cr}</Badge>
               </div>
-            ))}
+            ))} */}
             
-            {monsters.length === 0 && (
+            {/* {monsters.length === 0 && (
               <div className="text-center p-4 text-muted-foreground">
                 Нет доступных монстров в базе данных
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
