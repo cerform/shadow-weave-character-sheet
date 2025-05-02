@@ -472,7 +472,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden" ref={mapRef}>
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={addToken}
+          setTokens={addToken} // This is correct - passing the addToken function
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}

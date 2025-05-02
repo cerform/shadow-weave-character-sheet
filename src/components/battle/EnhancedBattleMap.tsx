@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -10,7 +9,8 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  setTokens: (token: Token) => void; // Исправленный тип для setTokens
+  // Fixed: Changed type to accept either token add function or state setter
+  setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -260,7 +260,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          setTokens={setTokens} // Правильный тип props
+          setTokens={setTokens} // We pass the prop as is, no type conversion needed now
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}

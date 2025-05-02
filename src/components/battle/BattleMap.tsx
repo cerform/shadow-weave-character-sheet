@@ -884,7 +884,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 }}
               />
               
-              {/* Токены в р��жиме игрока */}
+              {/* Т��кены в р��жиме игрока */}
               <div className="absolute inset-0 overflow-hidden">
                 {tokens
                   // Фильтруем только токены, которые должны быть видны игрокам
