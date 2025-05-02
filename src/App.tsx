@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider as CustomThemeProvider } from "@/contexts/ThemeContext";
 import Home from './pages/Home';
 import HandbookPage from './pages/HandbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
@@ -24,15 +25,17 @@ function App() {
       enableSystem
       disableTransitionOnChange
     >
-      <CharacterProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/handbook" element={<HandbookPage />} />
-          <Route path="/character-creation" element={<CharacterCreationPage />} />
-          <Route path="/character-sheet" element={<CharacterSheetPage />} />
-          <Route path="/spellbook" element={<SpellbookPage />} />
-        </Routes>
-      </CharacterProvider>
+      <CustomThemeProvider>
+        <CharacterProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/handbook" element={<HandbookPage />} />
+            <Route path="/character-creation" element={<CharacterCreationPage />} />
+            <Route path="/character-sheet" element={<CharacterSheetPage />} />
+            <Route path="/spellbook" element={<SpellbookPage />} />
+          </Routes>
+        </CharacterProvider>
+      </CustomThemeProvider>
     </ThemeProvider>
   );
 }
