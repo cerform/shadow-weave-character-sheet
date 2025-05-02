@@ -3,9 +3,9 @@ import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails, getSpellsByLevel } from "@/data/spells";
+import { getSpellDetails, getSpellsByLevels, getSpellsByLevel } from "@/data/spells";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Book, Plus, Search, Filter } from "lucide-react"; 
+import { Book, Plus, Search, Filter, XCircle } from "lucide-react"; 
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CharacterSpell } from '@/types/character';
+import { useDeviceType } from '@/hooks/use-mobile';
 
 export const SpellsTab = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -21,7 +24,25 @@ export const SpellsTab = () => {
   const [levelFilter, setLevelFilter] = useState<number | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [activeSpellTab, setActiveSpellTab] = useState('all');
+  const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
+  const deviceType = useDeviceType();
   const { toast } = useToast();
+  
+  // Функция для переключения выбора уровней заклинаний
+  const toggleLevelFilter = (level: number) => {
+    setSelectedLevels(prev => 
+      prev.includes(level)
+        ? prev.filter(l => l !== level)
+        : [...prev, level]
+    );
+  };
+  
+  // Очистка фильтров
+  const clearFilters = () => {
+    setSelectedLevels([]);
+    setSearchQuery('');
+    setSchoolFilter(null);
+  };
   
   // Group spells by level
   const spellsByLevel = character?.spells?.reduce((acc: {[key: string]: string[]}, spell: string) => {
@@ -181,6 +202,46 @@ export const SpellsTab = () => {
     return result;
   }, []);
 
+  // Фильтрация заклинаний для текущего отображения в зависимости от выбранных фильтров
+  const filteredSpells = useMemo(() => {
+    if (!character?.spells) return [];
+    
+    // Если есть выбранные уровни для фильтрации
+    if (selectedLevels.length > 0) {
+      return character.spells.filter(spellName => {
+        const spellDetails = getSpellDetails(spellName);
+        
+        // Проверяем, соответствует ли уровень заклинания хотя бы одному из выбранных уровней
+        const matchesLevel = spellDetails && selectedLevels.includes(spellDetails.level);
+        
+        // Проверяем, соответствует ли заклинание поисковому запросу
+        const matchesSearch = !searchQuery || 
+          (spellName.toLowerCase().includes(searchQuery.toLowerCase()));
+        
+        // Проверяем, соответствует ли заклинание фильтру по школе
+        const matchesSchool = !schoolFilter || 
+          (spellDetails && spellDetails.school === schoolFilter);
+        
+        return matchesLevel && matchesSearch && matchesSchool;
+      });
+    }
+    
+    // Если нет выбранных уровней, применяем только поиск и фильтр по школе
+    return character.spells.filter(spellName => {
+      const spellDetails = getSpellDetails(spellName);
+      
+      // Проверяем, соответствует ли заклинание поисковому запросу
+      const matchesSearch = !searchQuery || 
+        (spellName.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Проверяем, соответствует ли заклинание фильтру по школе
+      const matchesSchool = !schoolFilter || 
+        (spellDetails && spellDetails.school === schoolFilter);
+      
+      return matchesSearch && matchesSchool;
+    });
+  }, [character?.spells, selectedLevels, searchQuery, schoolFilter]);
+
   if (!character?.spells || character?.spells.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
@@ -250,9 +311,10 @@ export const SpellsTab = () => {
         </Card>
       )}
       
-      {/* Поиск заклинаний */}
-      <div className="mb-4">
-        <div className="flex items-center relative mb-2">
+      {/* Фильтры заклинаний */}
+      <div className="space-y-3">
+        {/* Поиск заклинаний */}
+        <div className="flex items-center relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Поиск заклинаний..."
@@ -261,140 +323,91 @@ export const SpellsTab = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </div>
-      
-      {/* Табы с уровнями заклинаний */}
-      <Tabs value={activeSpellTab} onValueChange={setActiveSpellTab} className="w-full mb-4">
-        <TabsList className="grid grid-cols-6 lg:grid-cols-11 mb-4">
-          <TabsTrigger value="all">
-            Все
-          </TabsTrigger>
-          {Object.keys(spellsByLevel).sort((a, b) => parseInt(a) - parseInt(b)).map(level => (
-            <TabsTrigger key={level} value={level}>
-              {parseInt(level) === 0 ? "Заговоры" : `${level} круг`}
-            </TabsTrigger>
-          ))}
-        </TabsList>
         
-        {/* Контент для вкладки "Все" */}
-        <TabsContent value="all">
-          <div className="space-y-6">
-            {Object.entries(spellsByLevel)
-              .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
-              .map(([level, spellNames]) => {
-                // Фильтруем заклинания по поисковому запросу
-                const filteredSpells = spellNames.filter(spell => 
-                  searchQuery ? spell.toLowerCase().includes(searchQuery.toLowerCase()) : true
-                );
-                
-                if (filteredSpells.length === 0) return null;
-                
-                return (
-                  <div key={level}>
-                    <h4 className="font-medium mb-2">{getLevelName(Number(level))}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {filteredSpells.map((spell: string) => {
-                        const details = getSpellDetails(spell);
-                        
-                        return (
-                          <HoverCard key={spell}>
-                            <HoverCardTrigger asChild>
-                              <div className="p-2 bg-primary/5 rounded-md hover:bg-primary/10 cursor-pointer group">
-                                <div className="flex justify-between items-center">
-                                  <h5 className="font-medium">{spell}</h5>
-                                  {details?.school && (
-                                    <span className={`text-xs px-2 py-1 rounded ${getSchoolColor(details.school)}`}>
-                                      {details.school}
-                                    </span>
-                                  )}
-                                </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeSpell(spell);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 mt-1"
-                                >
-                                  Удалить
-                                </Button>
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-96 max-h-[80vh] overflow-auto">
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <h4 className="font-semibold text-lg">{spell}</h4>
-                                  <Badge className={`${details?.school ? getSchoolColor(details.school) : ''}`}>
-                                    {Number(level) === 0 ? "Заговор" : `${level} круг`}
-                                  </Badge>
-                                </div>
-                                
-                                <p className="text-xs text-muted-foreground">{details?.school}</p>
-                                
-                                <div className="py-2">
-                                  {renderCastingTime(details?.castingTime)}
-                                  {renderRange(details?.range)}
-                                  {renderComponents(details?.components)}
-                                  {renderDuration(details?.duration)}
-                                </div>
-                                
-                                <Separator className="my-2" />
-                                
-                                <div className="space-y-2">
-                                  <p className="text-sm">{details?.description}</p>
-                                  {details?.higherLevels && (
-                                    <div className="pt-2 text-sm">
-                                      <p className="font-medium">На более высоком уровне:</p>
-                                      <p>{details.higherLevels}</p>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                  Классы: {details?.classes?.join(", ")}
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Множественный выбор уровней заклинаний */}
+        <div className="bg-muted/30 p-3 rounded-md">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium flex items-center">
+              <Filter className="h-4 w-4 mr-1" />
+              Фильтр по уровням
+            </h4>
+            {(selectedLevels.length > 0 || searchQuery) && (
+              <Button size="sm" variant="ghost" onClick={clearFilters} className="h-7 px-2">
+                <XCircle className="h-4 w-4 mr-1" />
+                Очистить
+              </Button>
+            )}
           </div>
-        </TabsContent>
-        
-        {/* Контент для вкладок по конкретным уровням */}
-        {Object.keys(spellsByLevel).sort((a, b) => parseInt(a) - parseInt(b)).map(level => (
-          <TabsContent key={level} value={level}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {spellsByLevel[level]
-                .filter(spell => 
-                  searchQuery ? spell.toLowerCase().includes(searchQuery.toLowerCase()) : true
-                )
-                .map((spell: string) => {
-                  const details = getSpellDetails(spell);
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i} className="flex items-center justify-center">
+                <Checkbox 
+                  id={`level-${i}`}
+                  checked={selectedLevels.includes(i)}
+                  onCheckedChange={() => toggleLevelFilter(i)}
+                  className="mr-1"
+                />
+                <label 
+                  htmlFor={`level-${i}`} 
+                  className="text-xs cursor-pointer select-none"
+                >
+                  {i === 0 ? "Зг" : i}
+                </label>
+              </div>
+            ))}
+          </div>
+          {selectedLevels.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {selectedLevels.sort((a, b) => a - b).map(level => (
+                <Badge 
+                  key={level} 
+                  variant="outline" 
+                  className="cursor-pointer"
+                  onClick={() => toggleLevelFilter(level)}
+                >
+                  {level === 0 ? "Заговоры" : `${level} круг`}
+                  <XCircle className="h-3 w-3 ml-1" />
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Список заклинаний с фильтрацией */}
+      <div className="space-y-4">
+        {/* При множественном выборе показываем все отфильтрованные заклинания */}
+        {selectedLevels.length > 0 ? (
+          <div>
+            <h4 className="font-medium mb-2">Отфильтрованные заклинания</h4>
+            {filteredSpells.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {filteredSpells.map((spellName) => {
+                  const details = getSpellDetails(spellName);
                   
                   return (
-                    <HoverCard key={spell}>
+                    <HoverCard key={spellName}>
                       <HoverCardTrigger asChild>
                         <div className="p-2 bg-primary/5 rounded-md hover:bg-primary/10 cursor-pointer group">
                           <div className="flex justify-between items-center">
-                            <h5 className="font-medium">{spell}</h5>
-                            {details?.school && (
-                              <span className={`text-xs px-2 py-1 rounded ${getSchoolColor(details.school)}`}>
-                                {details.school}
+                            <h5 className="font-medium">{spellName}</h5>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs bg-primary/10 px-2 py-0.5 rounded">
+                                {details?.level === 0 ? "Заг" : details?.level}
                               </span>
-                            )}
+                              {details?.school && (
+                                <span className={`text-xs px-2 py-1 rounded ${getSchoolColor(details.school)}`}>
+                                  {details.school}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              removeSpell(spell);
+                              removeSpell(spellName);
                             }}
                             className="opacity-0 group-hover:opacity-100 mt-1"
                           >
@@ -405,9 +418,9 @@ export const SpellsTab = () => {
                       <HoverCardContent className="w-96 max-h-[80vh] overflow-auto">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-semibold text-lg">{spell}</h4>
+                            <h4 className="font-semibold text-lg">{spellName}</h4>
                             <Badge className={`${details?.school ? getSchoolColor(details.school) : ''}`}>
-                              {parseInt(level) === 0 ? "Заговор" : `${level} круг`}
+                              {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
                             </Badge>
                           </div>
                           
@@ -440,10 +453,199 @@ export const SpellsTab = () => {
                     </HoverCard>
                   );
                 })}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                Нет заклинаний, соответствующих выбранным фильтрам
+              </p>
+            )}
+          </div>
+        ) : (
+          // Табы с уровнями заклинаний (стандартный вид)
+          <Tabs value={activeSpellTab} onValueChange={setActiveSpellTab} className="w-full">
+            <TabsList className={`grid ${deviceType === "mobile" ? "grid-cols-5" : "grid-cols-6 lg:grid-cols-11"} mb-4`}>
+              <TabsTrigger value="all">
+                Все
+              </TabsTrigger>
+              {Object.keys(spellsByLevel).sort((a, b) => parseInt(a) - parseInt(b)).map(level => (
+                <TabsTrigger key={level} value={level}>
+                  {deviceType === "mobile" ? 
+                    (parseInt(level) === 0 ? "Зг" : level) : 
+                    (parseInt(level) === 0 ? "Заговоры" : `${level} круг`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {/* Контент для вкладки "Все" */}
+            <TabsContent value="all">
+              <div className="space-y-6">
+                {Object.entries(spellsByLevel)
+                  .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
+                  .map(([level, spellNames]) => {
+                    // Фильтруем заклинания по поисковому запросу
+                    const filteredSpells = spellNames.filter(spell => 
+                      searchQuery ? spell.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                    );
+                    
+                    if (filteredSpells.length === 0) return null;
+                    
+                    return (
+                      <div key={level}>
+                        <h4 className="font-medium mb-2">{getLevelName(Number(level))}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {filteredSpells.map((spell: string) => {
+                            const details = getSpellDetails(spell);
+                            
+                            return (
+                              <HoverCard key={spell}>
+                                <HoverCardTrigger asChild>
+                                  <div className="p-2 bg-primary/5 rounded-md hover:bg-primary/10 cursor-pointer group">
+                                    <div className="flex justify-between items-center">
+                                      <h5 className="font-medium">{spell}</h5>
+                                      {details?.school && (
+                                        <span className={`text-xs px-2 py-1 rounded ${getSchoolColor(details.school)}`}>
+                                          {details.school}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeSpell(spell);
+                                      }}
+                                      className="opacity-0 group-hover:opacity-100 mt-1"
+                                    >
+                                      Удалить
+                                    </Button>
+                                  </div>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-96 max-h-[80vh] overflow-auto">
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <h4 className="font-semibold text-lg">{spell}</h4>
+                                      <Badge className={`${details?.school ? getSchoolColor(details.school) : ''}`}>
+                                        {Number(level) === 0 ? "Заговор" : `${level} круг`}
+                                      </Badge>
+                                    </div>
+                                    
+                                    <p className="text-xs text-muted-foreground">{details?.school}</p>
+                                    
+                                    <div className="py-2">
+                                      {renderCastingTime(details?.castingTime)}
+                                      {renderRange(details?.range)}
+                                      {renderComponents(details?.components)}
+                                      {renderDuration(details?.duration)}
+                                    </div>
+                                    
+                                    <Separator className="my-2" />
+                                    
+                                    <div className="space-y-2">
+                                      <p className="text-sm">{details?.description}</p>
+                                      {details?.higherLevels && (
+                                        <div className="pt-2 text-sm">
+                                          <p className="font-medium">На более высоком уровне:</p>
+                                          <p>{details.higherLevels}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
+                                      Классы: {details?.classes?.join(", ")}
+                                    </div>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </TabsContent>
+            
+            {/* Контент для вкладок по конкретным уровням */}
+            {Object.keys(spellsByLevel).sort((a, b) => parseInt(a) - parseInt(b)).map(level => (
+              <TabsContent key={level} value={level}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {spellsByLevel[level]
+                    .filter(spell => 
+                      searchQuery ? spell.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                    )
+                    .map((spell: string) => {
+                      const details = getSpellDetails(spell);
+                      
+                      return (
+                        <HoverCard key={spell}>
+                          <HoverCardTrigger asChild>
+                            <div className="p-2 bg-primary/5 rounded-md hover:bg-primary/10 cursor-pointer group">
+                              <div className="flex justify-between items-center">
+                                <h5 className="font-medium">{spell}</h5>
+                                {details?.school && (
+                                  <span className={`text-xs px-2 py-1 rounded ${getSchoolColor(details.school)}`}>
+                                    {details.school}
+                                  </span>
+                                )}
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeSpell(spell);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 mt-1"
+                              >
+                                Удалить
+                              </Button>
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-96 max-h-[80vh] overflow-auto">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <h4 className="font-semibold text-lg">{spell}</h4>
+                                <Badge className={`${details?.school ? getSchoolColor(details.school) : ''}`}>
+                                  {parseInt(level) === 0 ? "Заговор" : `${level} круг`}
+                                </Badge>
+                              </div>
+                              
+                              <p className="text-xs text-muted-foreground">{details?.school}</p>
+                              
+                              <div className="py-2">
+                                {renderCastingTime(details?.castingTime)}
+                                {renderRange(details?.range)}
+                                {renderComponents(details?.components)}
+                                {renderDuration(details?.duration)}
+                              </div>
+                              
+                              <Separator className="my-2" />
+                              
+                              <div className="space-y-2">
+                                <p className="text-sm">{details?.description}</p>
+                                {details?.higherLevels && (
+                                  <div className="pt-2 text-sm">
+                                    <p className="font-medium">На более высоком уровне:</p>
+                                    <p>{details.higherLevels}</p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
+                                Классы: {details?.classes?.join(", ")}
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      );
+                    })}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+      </div>
       
       {/* Диалог добавления заклинания */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -466,22 +668,78 @@ export const SpellsTab = () => {
               />
             </div>
             
-            {/* Табы с уровнями заклинаний */}
-            <Tabs defaultValue="0" className="w-full">
-              <TabsList className="grid grid-cols-5 md:grid-cols-10">
+            {/* Выбор нескольких уровней заклинаний для фильтрации */}
+            <div className="bg-muted/20 p-2 rounded-md">
+              <h4 className="text-sm font-medium mb-2">Фильтр по уровням</h4>
+              <div className="grid grid-cols-5 md:grid-cols-10 gap-1">
                 {Array.from({ length: 10 }, (_, i) => (
-                  <TabsTrigger key={i} value={i.toString()}>
-                    {i === 0 ? "Заг" : i}
-                  </TabsTrigger>
+                  <div key={i} className="flex items-center justify-center">
+                    <Checkbox 
+                      id={`dialog-level-${i}`}
+                      checked={selectedLevels.includes(i)}
+                      onCheckedChange={() => toggleLevelFilter(i)}
+                      className="mr-1"
+                    />
+                    <label 
+                      htmlFor={`dialog-level-${i}`} 
+                      className="text-xs cursor-pointer select-none"
+                    >
+                      {i === 0 ? "Зг" : i}
+                    </label>
+                  </div>
                 ))}
-              </TabsList>
-              
-              {Array.from({ length: 10 }, (_, i) => (
-                <TabsContent key={i} value={i.toString()}>
-                  <ScrollArea className="h-[40vh]">
-                    <div className="space-y-1">
-                      {allSpellsByLevel[i.toString()]
-                        ?.filter(spell => 
+              </div>
+            </div>
+            
+            {/* Результаты поиска с учетом множественной фильтрации */}
+            <ScrollArea className="h-[40vh]">
+              <div className="space-y-1">
+                {/* Если выбран хотя бы один уровень, показываем заклинания этих уровней */}
+                {selectedLevels.length > 0 ? (
+                  selectedLevels.flatMap(level => 
+                    allSpellsByLevel[level.toString()]
+                      ?.filter(spell => 
+                        !searchQuery || spell.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map(spell => {
+                        const details = getSpellDetails(spell);
+                        const isAlreadyAdded = character?.spells?.includes(spell);
+                        
+                        return (
+                          <button
+                            key={spell}
+                            onClick={() => addSpell(spell)}
+                            disabled={isAlreadyAdded}
+                            className={`w-full p-2 text-left rounded-md flex justify-between items-center ${
+                              isAlreadyAdded 
+                                ? 'bg-gray-200 dark:bg-gray-700 opacity-50 cursor-not-allowed'
+                                : 'bg-primary/5 hover:bg-primary/10'
+                            }`}
+                          >
+                            <div className="flex-1">
+                              <div>{spell}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {details?.level === 0 ? "Заговор" : `${details?.level} круг`}
+                              </div>
+                            </div>
+                            {details?.school && (
+                              <Badge className={getSchoolColor(details.school)}>
+                                {details.school}
+                              </Badge>
+                            )}
+                          </button>
+                        );
+                      })
+                  )
+                ) : (
+                  // Если уровни не выбраны, показываем заклинания, сгруппированные по уровням
+                  Object.entries(allSpellsByLevel).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([level, spells]) => (
+                    <div key={level}>
+                      <h5 className="font-medium text-sm mt-4 mb-2">
+                        {parseInt(level) === 0 ? "Заговоры" : `${level} круг`}
+                      </h5>
+                      {spells
+                        .filter(spell => 
                           !searchQuery || spell.toLowerCase().includes(searchQuery.toLowerCase())
                         )
                         .map(spell => {
@@ -509,10 +767,10 @@ export const SpellsTab = () => {
                           );
                         })}
                     </div>
-                  </ScrollArea>
-                </TabsContent>
-              ))}
-            </Tabs>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>

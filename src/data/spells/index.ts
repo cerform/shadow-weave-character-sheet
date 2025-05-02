@@ -141,6 +141,12 @@ export const getSpellsByClass = (className: string, characterLevel: number = 1):
   return [];
 };
 
+// Получить заклинания по нескольким уровням
+export const getSpellsByLevels = (levels: number[]): CharacterSpell[] => {
+  if (!levels || levels.length === 0) return [];
+  return allSpells.filter(spell => levels.includes(spell.level));
+};
+
 // Логика для мультиклассирования
 export const getMulticlassSpells = (classes: {className: string, level: number}[]): CharacterSpell[] => {
   // Если нет мультиклассов, возвращаем пустой массив
