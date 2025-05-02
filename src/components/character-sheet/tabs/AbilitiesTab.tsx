@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { Card, CardContent } from "@/components/ui/card";
 
 export const AbilitiesTab = () => {
   const { character } = useCharacter();
@@ -32,76 +33,83 @@ export const AbilitiesTab = () => {
   };
 
   return (
-    <div className="space-y-6 pb-4">
-      <h3 className="text-lg font-semibold">Характеристики персонажа</h3>
+    <div className="space-y-8 pb-6 mt-8">
+      <Card className="border border-primary/30 bg-card/20">
+        <CardContent className="p-6">
+          <h3 className="text-xl font-semibold mb-6">Характеристики персонажа</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Сила</div>
+              <div className="text-4xl font-bold my-1">{abilities.STR}</div>
+              <div className="text-md text-primary">{getModifier(abilities.STR)}</div>
+            </div>
+            
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Ловкость</div>
+              <div className="text-4xl font-bold my-1">{abilities.DEX}</div>
+              <div className="text-md text-primary">{getModifier(abilities.DEX)}</div>
+            </div>
+            
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Телосложение</div>
+              <div className="text-4xl font-bold my-1">{abilities.CON}</div>
+              <div className="text-md text-primary">{getModifier(abilities.CON)}</div>
+            </div>
+            
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Интеллект</div>
+              <div className="text-4xl font-bold my-1">{abilities.INT}</div>
+              <div className="text-md text-primary">{getModifier(abilities.INT)}</div>
+            </div>
+            
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Мудрость</div>
+              <div className="text-4xl font-bold my-1">{abilities.WIS}</div>
+              <div className="text-md text-primary">{getModifier(abilities.WIS)}</div>
+            </div>
+            
+            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+              <div className="text-lg font-medium">Харизма</div>
+              <div className="text-4xl font-bold my-1">{abilities.CHA}</div>
+              <div className="text-md text-primary">{getModifier(abilities.CHA)}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Сила</div>
-          <div className="text-3xl font-bold">{abilities.STR}</div>
-          <div className="text-md">{getModifier(abilities.STR)}</div>
-        </div>
-        
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Ловкость</div>
-          <div className="text-3xl font-bold">{abilities.DEX}</div>
-          <div className="text-md">{getModifier(abilities.DEX)}</div>
-        </div>
-        
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Телосложение</div>
-          <div className="text-3xl font-bold">{abilities.CON}</div>
-          <div className="text-md">{getModifier(abilities.CON)}</div>
-        </div>
-        
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Интеллект</div>
-          <div className="text-3xl font-bold">{abilities.INT}</div>
-          <div className="text-md">{getModifier(abilities.INT)}</div>
-        </div>
-        
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Мудрость</div>
-          <div className="text-3xl font-bold">{abilities.WIS}</div>
-          <div className="text-md">{getModifier(abilities.WIS)}</div>
-        </div>
-        
-        <div className="p-3 bg-primary/5 rounded-lg text-center">
-          <div className="text-lg font-medium">Харизма</div>
-          <div className="text-3xl font-bold">{abilities.CHA}</div>
-          <div className="text-md">{getModifier(abilities.CHA)}</div>
-        </div>
-      </div>
-      
-      <div className="bg-primary/5 rounded-lg p-4 mt-6">
-        <h4 className="font-semibold mb-2">Спасброски</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex justify-between">
-            <span>Сила</span>
-            <span>{getModifier(getSavingThrowMod('STR', abilities.STR))}</span>
+      <Card className="border border-primary/30 bg-card/20 mt-8">
+        <CardContent className="p-6">
+          <h4 className="text-xl font-semibold mb-4">Спасброски</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Сила</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('STR', abilities.STR))}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Ловкость</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('DEX', abilities.DEX))}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Телосложение</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('CON', abilities.CON))}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Интеллект</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('INT', abilities.INT))}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Мудрость</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('WIS', abilities.WIS))}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b border-primary/20">
+              <span className="font-medium">Харизма</span>
+              <span className="text-lg">{getModifier(getSavingThrowMod('CHA', abilities.CHA))}</span>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>Ловкость</span>
-            <span>{getModifier(getSavingThrowMod('DEX', abilities.DEX))}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Телосложение</span>
-            <span>{getModifier(getSavingThrowMod('CON', abilities.CON))}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Интеллект</span>
-            <span>{getModifier(getSavingThrowMod('INT', abilities.INT))}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Мудрость</span>
-            <span>{getModifier(getSavingThrowMod('WIS', abilities.WIS))}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Харизма</span>
-            <span>{getModifier(getSavingThrowMod('CHA', abilities.CHA))}</span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
