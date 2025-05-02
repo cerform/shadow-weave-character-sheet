@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
@@ -124,7 +123,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((spell) => {
-        // Исправляем проблему с типом never, добавляя строгие проверки типов
+        // Исправляем проблему с типом never, добавляя явные проверки типов
         if (typeof spell === 'object' && spell !== null) {
           if ('name' in spell && typeof spell.name === 'string') {
             return spell.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -225,7 +224,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               <SelectValue placeholder="Уровень" />
             </SelectTrigger>
             <SelectContent>
-              {/* Fix: Using "all" as value instead of empty string */}
               <SelectItem value="all">Все уровни</SelectItem>
               {availableSpellLevels.map((level) => (
                 <SelectItem key={level} value={level.toString()}>
@@ -242,13 +240,19 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         {filteredSpells.length > 0 ? (
           filteredSpells.map((spell, index) => {
             // Определяем имя и уровень заклинания в зависимости от типа
-            const spellName = typeof spell === 'object' && spell !== null && 'name' in spell 
-              ? spell.name 
-              : typeof spell === 'string' ? spell : '';
+            let spellName: string = '';
+            let spellLevel: number = 0;
             
-            const spellLevel = typeof spell === 'object' && spell !== null && 'level' in spell 
-              ? spell.level 
-              : 0;
+            // Явно проверяем и приводим типы, чтобы избежать ошибки never
+            if (typeof spell === 'object' && spell !== null && 'name' in spell && typeof spell.name === 'string') {
+              spellName = spell.name;
+            } else if (typeof spell === 'string') {
+              spellName = spell;
+            }
+            
+            if (typeof spell === 'object' && spell !== null && 'level' in spell && typeof spell.level === 'number') {
+              spellLevel = spell.level;
+            }
             
             // Если пустое имя, пропускаем
             if (!spellName) return null;
