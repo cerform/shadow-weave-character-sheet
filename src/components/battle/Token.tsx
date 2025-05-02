@@ -42,7 +42,7 @@ const Token: React.FC<TokenProps> = ({
   
   // Обработчик начала перетаскивания
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isDM && token.type === 'player') return;
+    if (!isDM && token.type !== 'player') return;
     
     e.preventDefault();
     e.stopPropagation();
