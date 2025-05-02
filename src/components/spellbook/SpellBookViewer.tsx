@@ -93,10 +93,18 @@ const SpellBookViewer = () => {
           throw new Error('Не удалось загрузить заклинания');
         }
         const data = await response.json();
-        setSpells(data);
-        setFilteredSpells(data);
+        if (Array.isArray(data)) {
+          setSpells(data);
+          setFilteredSpells(data);
+        } else {
+          console.error('Загруженные данные не являются массивом:', data);
+          setSpells([]);
+          setFilteredSpells([]);
+        }
       } catch (error) {
         console.error('Ошибка при загрузке заклинаний:', error);
+        setSpells([]);
+        setFilteredSpells([]);
       }
     };
 
@@ -104,7 +112,12 @@ const SpellBookViewer = () => {
   }, []);
 
   useEffect(() => {
-    let result = spells;
+    if (!Array.isArray(spells)) {
+      console.error('spells не является массивом:', spells);
+      return;
+    }
+    
+    let result = [...spells];
 
     // Фильтруем по поисковому запросу
     if (searchTerm.trim() !== '') {
@@ -140,8 +153,13 @@ const SpellBookViewer = () => {
     setIsModalOpen(false);
   };
 
-  const allLevels = Array.from(new Set(spells.map(spell => spell.level))).sort();
-  const allSchools = Array.from(new Set(spells.map(spell => spell.school))).sort();
+  const allLevels = Array.isArray(spells) 
+    ? Array.from(new Set(spells.map(spell => spell.level))).sort() 
+    : [];
+    
+  const allSchools = Array.isArray(spells)
+    ? Array.from(new Set(spells.map(spell => spell.school))).sort()
+    : [];
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">

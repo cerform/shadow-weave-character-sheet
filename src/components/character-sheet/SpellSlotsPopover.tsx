@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Magic, Sparkles } from 'lucide-react';
+import { Sparkles, BookOpen } from 'lucide-react';
 
 interface SpellSlotsProps {
   spellSlots: Record<number, { max: number; used: number }>;
@@ -39,7 +39,7 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
             color: currentTheme.textColor
           }}
         >
-          <Magic className="w-5 h-5 mr-2" />
+          <BookOpen className="w-5 h-5 mr-2" />
           Слоты заклинаний
           <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {orderedLevels.length}
