@@ -32,7 +32,7 @@ export const DicePanel = () => {
   const DiceIcon = ({ value, diceType, size = 30 }: { value: number, diceType?: string, size?: number }) => {
     const type = diceType?.replace('d', '') || '20';
     const diceColor = currentTheme.accent;
-    const textColor = currentTheme.bg;
+    const textColor = currentTheme.textColor;
     
     // Определяем форму для разных типов кубиков
     let shape = 'rounded-full';
@@ -126,7 +126,7 @@ export const DicePanel = () => {
                 className={`dice-button h-12 ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
                 style={{
                   backgroundColor: isActive ? currentTheme.accent : 'transparent',
-                  color: isActive ? currentTheme.bg : currentTheme.textColor,
+                  color: isActive ? currentTheme.textColor : currentTheme.textColor,
                   borderColor: `${currentTheme.accent}${isActive ? 'FF' : '40'}`,
                   boxShadow: isActive ? `0 0 8px ${currentTheme.accent}80` : 'none'
                 }}
@@ -169,7 +169,7 @@ export const DicePanel = () => {
           disabled={isRolling}
           style={{
             backgroundColor: currentTheme.accent,
-            color: currentTheme.bg,
+            color: currentTheme.textColor,
             boxShadow: `0 4px 12px ${currentTheme.accent}40`
           }}
         >

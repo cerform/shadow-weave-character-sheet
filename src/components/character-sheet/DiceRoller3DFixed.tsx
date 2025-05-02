@@ -1,465 +1,407 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Box, Text, Octahedron, Icosahedron, Dodecahedron, Tetrahedron } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
+import { OrbitControls, Text } from '@react-three/drei';
+import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import * as THREE from 'three';
 
-// Типы поддерживаемых кубиков
-export type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
-
-interface DiceProps {
-  diceType: DiceType;
-  onRollComplete?: (result: number) => void;
-  rolling: boolean;
-  setRolling: (rolling: boolean) => void;
-  themeColor: string;
-}
-
-interface DiceRoller3DProps {
-  initialDice?: DiceType;
-  onRollComplete?: (result: number) => void;
-  hideControls?: boolean;
-  modifier?: number;
-  themeColor?: string;
-  fixedPosition?: boolean; // Новый параметр для фиксации позиции
-}
-
-// Кубик D4 (тетраэдр)
-const D4 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
+// Кастомная геометрия для d10 (Pentagonal trapezohedron)
+const createD10Geometry = () => {
+  // Создаем геометрию для пятиугольной трапецоэдры (Pentagonal trapezohedron)
+  const vertices = [];
+  const indices = [];
   
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        // Быстрое вращение при броске
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        // Медленное вращение в обычном состоянии
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
+  // Верхняя вершина
+  vertices.push(0, 1, 0);
   
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 4) + 1;
-      setResult(newResult);
-      
-      // Завершаем бросок через некоторое время
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
+  // Верхний пентагон
+  for (let i = 0; i < 5; i++) {
+    const angle = (Math.PI * 2 / 5) * i;
+    vertices.push(
+      0.6 * Math.cos(angle),
+      0.2,
+      0.6 * Math.sin(angle)
+    );
+  }
   
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
+  // Нижний пентагон (повернутый на 36 градусов)
+  for (let i = 0; i < 5; i++) {
+    const angle = (Math.PI * 2 / 5) * (i + 0.5);
+    vertices.push(
+      0.6 * Math.cos(angle),
+      -0.2,
+      0.6 * Math.sin(angle)
+    );
+  }
   
-  return (
-    <Tetrahedron ref={meshRef} args={[1, 0]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} wireframe={false} roughness={0.4} metalness={0.6} />
-      {Array.from({length: 4}).map((_, i) => (
-        <Text
-          key={i}
-          position={[
-            i === 0 ? 0 : i === 1 ? 0.5 : i === 2 ? -0.5 : 0,
-            i === 0 ? 0.8 : i === 1 ? -0.3 : i === 2 ? -0.3 : -0.5,
-            i === 0 ? 0 : i === 1 ? 0.5 : i === 2 ? -0.5 : 0
-          ]}
-          rotation={[0, 0, 0]}
-          fontSize={0.5}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {(i + 1).toString()}
-        </Text>
-      ))}
-    </Tetrahedron>
-  );
+  // Нижняя вершина
+  vertices.push(0, -1, 0);
+  
+  // Грани (верхняя половина)
+  for (let i = 0; i < 5; i++) {
+    const next = (i + 1) % 5;
+    indices.push(0, i + 1, next + 1);
+    indices.push(i + 1, i + 6, next + 1);
+    indices.push(next + 1, i + 6, next + 6);
+  }
+  
+  // Грани (нижняя половина)
+  for (let i = 0; i < 5; i++) {
+    const next = (i + 1) % 5;
+    indices.push(11, i + 6, next + 6);
+  }
+  
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  
+  return geometry;
 };
 
-// Кубик D6 (куб)
-const D6 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        // Быстрое вращение при броске
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        // Медленное вращение в обычном состоянии
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
-  
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 6) + 1;
-      setResult(newResult);
-      
-      // Завершаем бросок через некоторое время
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
-  
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
-  
-  return (
-    <Box ref={meshRef} args={[1, 1, 1]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.6} />
-      {/* Цифры на гранях */}
-      <Text position={[0, 0, 0.51]} rotation={[0, 0, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {result.toString()}
-      </Text>
-      <Text position={[0, 0, -0.51]} rotation={[0, Math.PI, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {(7 - result).toString()}
-      </Text>
-      <Text position={[0, 0.51, 0]} rotation={[Math.PI/2, 0, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {((result % 3) + (result > 3 ? 3 : 0)).toString()}
-      </Text>
-      <Text position={[0, -0.51, 0]} rotation={[-Math.PI/2, 0, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {(7 - ((result % 3) + (result > 3 ? 3 : 0))).toString()}
-      </Text>
-      <Text position={[0.51, 0, 0]} rotation={[0, Math.PI/2, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {(((result + 1) % 3) + (result > 3 ? 3 : 0)).toString()}
-      </Text>
-      <Text position={[-0.51, 0, 0]} rotation={[0, -Math.PI/2, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {(7 - (((result + 1) % 3) + (result > 3 ? 3 : 0))).toString()}
-      </Text>
-    </Box>
-  );
-};
-
-// Кубик D8 (октаэдр)
-const D8 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
-  
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 8) + 1;
-      setResult(newResult);
-      
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
-  
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
-  
-  return (
-    <Octahedron ref={meshRef} args={[1, 0]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.6} />
-      {/* Номера на гранях */}
-      {Array.from({length: 8}).map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const y = Math.sin(angle) * 0.7;
-        const z = Math.cos(angle) * 0.7;
-        return (
-          <Text
-            key={i}
-            position={[0, y, z]}
-            rotation={[0, 0, -angle]}
-            fontSize={0.4}
-            color="white"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {(i + 1).toString()}
-          </Text>
-        );
-      })}
-    </Octahedron>
-  );
-};
-
-// Кубик D10 (специальный многогранник)
-const D10 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  // Используем Octahedron в качестве базы (упрощенно)
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
-  
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 10) + 1;
-      setResult(newResult);
-      
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
-  
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
-  
-  // Используем модифицированный октаэдр для d10
-  return (
-    <Octahedron ref={meshRef} args={[1, 1]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.6} />
-      <Text position={[0, 0, 0.7]} rotation={[0, 0, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {result.toString()}
-      </Text>
-    </Octahedron>
-  );
-};
-
-// Кубик D12 (додекаэдр)
-const D12 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
-  
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 12) + 1;
-      setResult(newResult);
-      
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
-  
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
-  
-  return (
-    <Dodecahedron ref={meshRef} args={[1, 0]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.6} />
-      <Text position={[0, 0, 1]} rotation={[0, 0, 0]} fontSize={0.4} color="white" anchorX="center" anchorY="middle">
-        {result.toString()}
-      </Text>
-    </Dodecahedron>
-  );
-};
-
-// Кубик D20 (икосаэдр)
-const D20 = ({ rolling, setRolling, onRollComplete, themeColor }: DiceProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.01 - 0.005,
-    y: Math.random() * 0.01 - 0.005,
-    z: Math.random() * 0.01 - 0.005
-  }));
-  const [result, setResult] = useState(1);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      if (rolling) {
-        meshRef.current.rotation.x += rotationSpeed.x * 30;
-        meshRef.current.rotation.y += rotationSpeed.y * 30;
-        meshRef.current.rotation.z += rotationSpeed.z * 30;
-      } else {
-        meshRef.current.rotation.x += rotationSpeed.x;
-        meshRef.current.rotation.y += rotationSpeed.y;
-        meshRef.current.rotation.z += rotationSpeed.z;
-      }
-    }
-  });
-  
-  useEffect(() => {
-    if (rolling) {
-      const newResult = Math.floor(Math.random() * 20) + 1;
-      setResult(newResult);
-      
-      const timer = setTimeout(() => {
-        setRolling(false);
-        if (onRollComplete) {
-          onRollComplete(newResult);
-        }
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [rolling, setRolling, onRollComplete]);
-  
-  // Конвертируем hex цвет в объект THREE.Color
-  const color = new THREE.Color(themeColor || '#7E69AB');
-  
-  return (
-    <Icosahedron ref={meshRef} args={[1, 0]} position={[0, 0, 0]}>
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.6} />
-      <Text position={[0, 0, 1]} rotation={[0, 0, 0]} fontSize={0.5} color="white" anchorX="center" anchorY="middle">
-        {result.toString()}
-      </Text>
-    </Icosahedron>
-  );
-};
-
-export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
-  initialDice = 'd20',
-  onRollComplete,
-  hideControls = false,
-  modifier = 0,
-  themeColor,
-  fixedPosition = false
+const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = false, forceReroll = false, themeColor = '#ffffff' }: { 
+  type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
+  onRoll?: (result: number) => void,
+  modifier?: number,
+  autoRoll?: boolean,
+  hideControls?: boolean,
+  forceReroll?: boolean,
+  themeColor?: string
 }) => {
+  const meshRef = useRef<Mesh>(null!);
+  const initialPositionRef = useRef<Vector3>(new Vector3(0, 3, 0));
+  const targetPositionRef = useRef<Vector3>(new Vector3(0, 0, 0));
+  const throwForceRef = useRef<Vector3>(new Vector3(
+    (Math.random() - 0.5) * 10,
+    0,
+    (Math.random() - 0.5) * 10
+  ));
+  
+  const [rolling, setRolling] = useState(false);
+  const [result, setResult] = useState(0);
+  const [readyToRoll, setReadyToRoll] = useState(true);
+  const [rollPhase, setRollPhase] = useState(0); // 0: initial, 1: rolling, 2: settled
+  
+  // Преобразование HEX цвета в объект Color из Three.js
+  const diceColor = new Color(themeColor);
+  
+  // Определение геометрии и числа граней для кубика
+  const getDiceGeometry = (type: string) => {
+    switch (type) {
+      case 'd4':
+        return new TetrahedronGeometry(1, 0);
+      case 'd6':
+        return new BoxGeometry(1, 1, 1);
+      case 'd8':
+        return new OctahedronGeometry(1, 0);
+      case 'd10':
+        return createD10Geometry();
+      case 'd12':
+        return new DodecahedronGeometry(1, 0);
+      case 'd20':
+        return new IcosahedronGeometry(1, 0);
+      case 'd100':
+        // Для d100 используем также геометрию d10, но с другой логикой результата
+        return createD10Geometry();
+      default:
+        return new BoxGeometry(1, 1, 1);
+    }
+  };
+  
+  const getMaxValue = (type: string) => {
+    switch (type) {
+      case 'd4': return 4;
+      case 'd6': return 6;
+      case 'd8': return 8;
+      case 'd10': return 10;
+      case 'd12': return 12;
+      case 'd20': return 20;
+      case 'd100': return 100;
+      default: return 6;
+    }
+  };
+  
+  useEffect(() => {
+    if (autoRoll || forceReroll) {
+      rollDice();
+    }
+  }, [autoRoll, forceReroll]);
+  
+  const rollDice = () => {
+    if (!readyToRoll) return;
+    
+    setRolling(true);
+    setRollPhase(1);
+    setReadyToRoll(false);
+    
+    // Сброс позиции и генерация новой силы броска
+    if (meshRef.current) {
+      meshRef.current.position.copy(initialPositionRef.current);
+      throwForceRef.current = new Vector3(
+        (Math.random() - 0.5) * 10,
+        0,
+        (Math.random() - 0.5) * 10
+      );
+    }
+    
+    // Определяем результат броска
+    const maxValue = getMaxValue(type);
+    let newResult = Math.floor(Math.random() * maxValue) + 1;
+    
+    // Для d100, умножаем результат на 10
+    if (type === 'd100') {
+      newResult = newResult * 10;
+    }
+    
+    // Таймер для "остановки" кубика
+    setTimeout(() => {
+      setResult(newResult);
+      setRollPhase(2);
+      
+      if (onRoll) {
+        onRoll(newResult);
+      }
+      
+      // Позволяем бросить кубик снова через небольшую задержку
+      setTimeout(() => {
+        setRolling(false);
+        setReadyToRoll(true);
+        setRollPhase(0);
+      }, 500);
+    }, 1000);
+  };
+  
+  useFrame((_, delta) => {
+    if (!meshRef.current) return;
+    
+    if (rolling && rollPhase === 1) {
+      // Когда кубик катится
+      meshRef.current.rotation.x += throwForceRef.current.x * delta;
+      meshRef.current.rotation.y += 5 * delta;
+      meshRef.current.rotation.z += throwForceRef.current.z * delta;
+      
+      // Движение к целевой позиции
+      meshRef.current.position.lerp(targetPositionRef.current, 0.1);
+    } else if (rollPhase === 2) {
+      // Замедляем вращение когда кубик "остановился"
+      meshRef.current.rotation.x *= 0.95;
+      meshRef.current.rotation.y *= 0.95;
+      meshRef.current.rotation.z *= 0.95;
+    }
+  });
+  
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.set(0, 2, 5);
+    camera.lookAt(0, 0, 0);
+  }, [camera]);
+  
+  // Создаем материал с цветом темы и улучшенными настройками
+  const diceMaterial = new MeshStandardMaterial({
+    color: diceColor,
+    metalness: 0.7,
+    roughness: 0.3,
+    emissive: new Color(diceColor).multiplyScalar(0.2),
+  });
+  
+  return (
+    <group>
+      <mesh ref={meshRef} position={[0, 3, 0]} castShadow receiveShadow>
+        <primitive object={getDiceGeometry(type)} />
+        <primitive object={diceMaterial} attach="material" />
+      </mesh>
+      
+      {!hideControls && (
+        <group position={[0, -2, 0]}>
+          <mesh position={[0, 0, 0]} onClick={rollDice} onPointerOver={() => document.body.style.cursor = 'pointer'} onPointerOut={() => document.body.style.cursor = 'default'}>
+            <boxGeometry args={[2.5, 0.5, 1]} />
+            <meshStandardMaterial color={readyToRoll ? "#4CAF50" : "#9E9E9E"} />
+          </mesh>
+          <Text position={[0, 0, 0.6]} fontSize={0.2} color="#FFFFFF">
+            {readyToRoll ? "Бросить" : "..."}
+          </Text>
+        </group>
+      )}
+      
+      {result > 0 && !rolling && (
+        <group position={[0, 1.5, 0]}>
+          <Text position={[0, 0, 0]} fontSize={0.5} color={themeColor} anchorX="center" anchorY="middle">
+            {result + (modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : '')}
+          </Text>
+        </group>
+      )}
+    </group>
+  );
+};
+
+export const DiceRoller3D = ({ 
+  initialDice = 'd20', 
+  hideControls = false, 
+  modifier = 0, 
+  onRollComplete,
+  themeColor = '#ffffff',
+  fixedPosition = false
+}: {
+  initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
+  hideControls?: boolean,
+  modifier?: number,
+  onRollComplete?: (result: number) => void,
+  themeColor?: string,
+  fixedPosition?: boolean
+}) => {
+  const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
+  const [roll, setRoll] = useState(false);
+  const [forceReroll, setForceReroll] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const [diceType, setDiceType] = useState<DiceType>(initialDice);
-  const [rolling, setRolling] = useState(false);
-  const finalThemeColor = themeColor || currentTheme.accent;
+  const actualThemeColor = themeColor || currentTheme.accent;
   
-  // Обрабатываем результат броска с учетом модификатора
-  const handleRollResult = (result: number) => {
+  const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
+    setDiceType(type);
+    setForceReroll(prev => !prev); // Reset the dice when changing type
+  };
+  
+  const handleRoll = () => {
+    setRoll(true);
+    setForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
+  };
+  
+  const handleRollComplete = (result: number) => {
+    setRoll(false);
     if (onRollComplete) {
       onRollComplete(result);
     }
   };
   
-  // Центрирование камеры для фиксированного положения
-  const cameraPosition = fixedPosition ? [0, 0, 5] : [2, 1, 5];
+  // Кнопка броска внизу для лучшей доступности
+  const buttonBottom = hideControls ? "10px" : "55px";
   
   return (
-    <div className="dice-container w-full h-full">
-      <Canvas camera={{ position: cameraPosition, fov: 75 }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <Canvas shadows>
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        
-        {diceType === 'd4' && <D4 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
-        {diceType === 'd6' && <D6 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
-        {diceType === 'd8' && <D8 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
-        {diceType === 'd10' && <D10 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
-        {diceType === 'd12' && <D12 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
-        {diceType === 'd20' && <D20 diceType={diceType} rolling={rolling} setRolling={setRolling} onRollComplete={handleRollResult} themeColor={finalThemeColor} />}
+        <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+        <Dice 
+          type={diceType} 
+          onRoll={handleRollComplete}
+          modifier={modifier}
+          autoRoll={roll}
+          hideControls={hideControls}
+          forceReroll={forceReroll}
+          themeColor={actualThemeColor}
+        />
+        <OrbitControls enablePan={false} enableZoom={false} enableRotate={!fixedPosition} />
       </Canvas>
       
       {!hideControls && (
-        <div className="absolute bottom-0 left-0 right-0 p-2 flex justify-center">
-          <div className="flex space-x-2">
-            <button onClick={() => { setDiceType('d4'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D4</button>
-            <button onClick={() => { setDiceType('d6'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D6</button>
-            <button onClick={() => { setDiceType('d8'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D8</button>
-            <button onClick={() => { setDiceType('d10'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D10</button>
-            <button onClick={() => { setDiceType('d12'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D12</button>
-            <button onClick={() => { setDiceType('d20'); setRolling(true); }} className="px-2 py-1 bg-primary text-primary-foreground rounded">D20</button>
-          </div>
+        <div style={{ 
+          position: 'absolute', 
+          bottom: buttonBottom, 
+          left: 0, 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '8px',
+          background: 'rgba(0,0,0,0.2)',
+          padding: '8px',
+          borderRadius: '8px',
+        }}>
+          <button 
+            onClick={() => handleDiceChange('d4')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd4' ? 1 : 0.6,
+              backgroundColor: diceType === 'd4' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd4' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d4</button>
+          <button 
+            onClick={() => handleDiceChange('d6')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd6' ? 1 : 0.6,
+              backgroundColor: diceType === 'd6' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd6' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d6</button>
+          <button 
+            onClick={() => handleDiceChange('d8')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd8' ? 1 : 0.6,
+              backgroundColor: diceType === 'd8' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd8' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d8</button>
+          <button 
+            onClick={() => handleDiceChange('d10')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd10' ? 1 : 0.6,
+              backgroundColor: diceType === 'd10' ? actualThemeColor : 'rgba(255,255,255,0.1)', 
+              color: diceType === 'd10' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d10</button>
+          <button 
+            onClick={() => handleDiceChange('d12')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd12' ? 1 : 0.6,
+              backgroundColor: diceType === 'd12' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd12' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d12</button>
+          <button 
+            onClick={() => handleDiceChange('d20')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd20' ? 1 : 0.6,
+              backgroundColor: diceType === 'd20' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd20' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d20</button>
         </div>
       )}
       
-      <div className="absolute top-0 left-0 right-0 p-2 flex justify-center">
-        {!rolling && (
-          <button 
-            onClick={() => setRolling(true)} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/80"
-          >
-            Бросить {diceType}
-          </button>
-        )}
-      </div>
+      {!hideControls && (
+        <button 
+          onClick={handleRoll}
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            right: '10px',
+            padding: '8px 16px',
+            backgroundColor: actualThemeColor,
+            color: 'black',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Бросить {diceType}
+        </button>
+      )}
     </div>
   );
 };
