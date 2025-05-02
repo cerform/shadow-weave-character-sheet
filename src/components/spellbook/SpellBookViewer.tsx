@@ -210,8 +210,8 @@ const SpellBookViewer: React.FC = () => {
                 <div className="flex flex-wrap gap-1">
                   <ToggleGroup type="multiple" className="flex flex-wrap gap-1" variant="outline">
                     <ToggleGroupItem 
-                      value="cantrip"
-                      pressed={selectedLevels.includes(0)}
+                      value="0"
+                      data-state={selectedLevels.includes(0) ? "on" : "off"}
                       onClick={() => toggleLevel(0)}
                       className="text-xs"
                     >
@@ -221,7 +221,7 @@ const SpellBookViewer: React.FC = () => {
                       <ToggleGroupItem 
                         key={level}
                         value={level.toString()}
-                        pressed={selectedLevels.includes(level)}
+                        data-state={selectedLevels.includes(level) ? "on" : "off"}
                         onClick={() => toggleLevel(level)}
                         className="text-xs"
                       >

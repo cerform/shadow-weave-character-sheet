@@ -10,7 +10,7 @@ const SpellbookPage: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: currentTheme.backgroundColor || 'rgba(0, 0, 0, 0.9)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: currentTheme.cardBackground ? currentTheme.cardBackground.replace('rgba', 'rgb').replace(', 0.6)', ', 0.9)') : '#000000' }}>
       <SpellBookViewer />
     </div>
   );
