@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -419,7 +420,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
               revealedCells={revealedCells}
               onRevealCell={onRevealCell}
               active={fogOfWar}
-              lightSources={lightSources}
+              lightSources={updatedLightSources}
               tokenPositions={tokenPositions}
               isDM={isDM}
               isDynamicLighting={isDynamicLighting}
