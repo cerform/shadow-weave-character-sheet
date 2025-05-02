@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { X, ZoomIn, ZoomOut, Scale, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import { Switch } from "@/components/ui/switch";
 
 // Импортируем наше хранилище
 import useBattleStore, { Token } from "@/stores/battleStore";
@@ -414,7 +415,7 @@ const PlayBattlePage = () => {
             <span className="text-sm">Предпросмотр вида игрока</span>
             <Switch
               checked={showPlayerView}
-              onCheckedChange={togglePlayerView}
+              onCheckedChange={setShowPlayerView}
               aria-label="Предпросмотр вида игрока"
             />
           </div>
