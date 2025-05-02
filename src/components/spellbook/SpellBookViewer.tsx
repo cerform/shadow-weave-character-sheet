@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,8 @@ import NavigationButtons from '@/components/ui/NavigationButtons';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Separator } from '@/components/ui/separator';
-import { Filter, Check } from "lucide-react";
-import ThemeSelector from '@/components/ThemeSelector';
+import { Filter, Check, BookOpen } from "lucide-react";
+import ThemeSelector from '@/components/character-sheet/ThemeSelector';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Tooltip,
@@ -37,6 +38,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Link } from 'react-router-dom';
 
 const spellSchools = [
   "Вызов",
@@ -87,6 +89,38 @@ const SpellBookViewer: React.FC = () => {
       setSelectedLevels(selectedLevels.filter(l => l !== level));
     } else {
       setSelectedLevels([...selectedLevels, level]);
+    }
+  };
+
+  // Функция для получения цвета уровня заклинания в соответствии с темой
+  const getLevelColor = (level: number) => {
+    // Базовый цвет темы
+    const baseColor = currentTheme.accent;
+    
+    // Определяем цвет в зависимости от уровня
+    switch(level) {
+      case 0: // Заговоры
+        return `${baseColor}`;
+      case 1:
+        return `${baseColor}`;
+      case 2:
+        return `${baseColor}`;
+      case 3:
+        return `${baseColor}`;
+      case 4:
+        return `${baseColor}`;
+      case 5:
+        return `${baseColor}`;
+      case 6:
+        return `${baseColor}`;
+      case 7:
+        return `${baseColor}`;
+      case 8:
+        return `${baseColor}`;
+      case 9:
+        return `${baseColor}`;
+      default:
+        return `${baseColor}`;
     }
   };
 
@@ -204,7 +238,19 @@ const SpellBookViewer: React.FC = () => {
         <div className="flex flex-col items-center mb-8">
           <h1 className="text-4xl font-bold mb-4 text-center" style={{ color: currentTheme.textColor }}>D&D 5e Книга заклинаний</h1>
           <div className="flex items-center gap-4 mt-2">
-            <NavigationButtons className="mt-4" />
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                asChild
+                className="flex items-center gap-2"
+              >
+                <Link to='/handbook'>
+                  <BookOpen className="size-4" />
+                  Руководство игрока
+                </Link>
+              </Button>
+              <NavigationButtons />
+            </div>
             <ThemeSelector />
           </div>
         </div>
@@ -237,6 +283,10 @@ const SpellBookViewer: React.FC = () => {
                         data-state={selectedLevels.includes(0) ? "on" : "off"}
                         onClick={() => toggleLevel(0)}
                         className="text-xs"
+                        style={{
+                          backgroundColor: selectedLevels.includes(0) ? `${currentTheme.accent}30` : '',
+                          color: selectedLevels.includes(0) ? currentTheme.accent : ''
+                        }}
                       >
                         Заг. ({getSpellCountByLevel(0)})
                       </ToggleGroupItem>
@@ -247,6 +297,10 @@ const SpellBookViewer: React.FC = () => {
                           data-state={selectedLevels.includes(level) ? "on" : "off"}
                           onClick={() => toggleLevel(level)}
                           className="text-xs"
+                          style={{
+                            backgroundColor: selectedLevels.includes(level) ? `${currentTheme.accent}30` : '',
+                            color: selectedLevels.includes(level) ? currentTheme.accent : ''
+                          }}
                         >
                           {level} ({getSpellCountByLevel(level)})
                         </ToggleGroupItem>
@@ -263,6 +317,7 @@ const SpellBookViewer: React.FC = () => {
                       variant={selectedSchool === 'all' ? "default" : "outline"}
                       onClick={() => setSelectedSchool('all')}
                       className="text-xs"
+                      style={selectedSchool === 'all' ? { backgroundColor: currentTheme.accent + '99', color: currentTheme.textColor } : {}}
                     >
                       Все
                     </Button>
@@ -273,6 +328,7 @@ const SpellBookViewer: React.FC = () => {
                         variant={selectedSchool === school ? "default" : "outline"}
                         onClick={() => setSelectedSchool(school)}
                         className="text-xs"
+                        style={selectedSchool === school ? { backgroundColor: currentTheme.accent + '99', color: currentTheme.textColor } : {}}
                       >
                         {school}
                       </Button>
@@ -288,6 +344,7 @@ const SpellBookViewer: React.FC = () => {
                       variant={selectedClass === 'all' ? "default" : "outline"}
                       onClick={() => setSelectedClass('all')}
                       className="text-xs"
+                      style={selectedClass === 'all' ? { backgroundColor: currentTheme.accent + '99', color: currentTheme.textColor } : {}}
                     >
                       Все
                     </Button>
@@ -298,6 +355,7 @@ const SpellBookViewer: React.FC = () => {
                         variant={selectedClass === className ? "default" : "outline"}
                         onClick={() => setSelectedClass(className)}
                         className="text-xs"
+                        style={selectedClass === className ? { backgroundColor: currentTheme.accent + '99', color: currentTheme.textColor } : {}}
                       >
                         {className}
                       </Button>
@@ -313,8 +371,12 @@ const SpellBookViewer: React.FC = () => {
                         id="ritual" 
                         checked={showRitualOnly}
                         onCheckedChange={(checked) => setShowRitualOnly(checked as boolean)}
+                        style={{
+                          borderColor: currentTheme.accent,
+                          ['--checkbox-checked-bg' as any]: currentTheme.accent,
+                        }}
                       />
-                      <label htmlFor="ritual" className="text-sm">
+                      <label htmlFor="ritual" className="text-sm" style={{ color: currentTheme.textColor }}>
                         Только ритуалы
                       </label>
                     </div>
@@ -323,8 +385,12 @@ const SpellBookViewer: React.FC = () => {
                         id="concentration" 
                         checked={showConcentrationOnly}
                         onCheckedChange={(checked) => setShowConcentrationOnly(checked as boolean)}
+                        style={{
+                          borderColor: currentTheme.accent,
+                          ['--checkbox-checked-bg' as any]: currentTheme.accent,
+                        }}
                       />
-                      <label htmlFor="concentration" className="text-sm">
+                      <label htmlFor="concentration" className="text-sm" style={{ color: currentTheme.textColor }}>
                         Требует концентрации
                       </label>
                     </div>
@@ -333,8 +399,12 @@ const SpellBookViewer: React.FC = () => {
                         id="verbal" 
                         checked={showVerbalOnly}
                         onCheckedChange={(checked) => setShowVerbalOnly(checked as boolean)}
+                        style={{
+                          borderColor: currentTheme.accent,
+                          ['--checkbox-checked-bg' as any]: currentTheme.accent,
+                        }}
                       />
-                      <label htmlFor="verbal" className="text-sm">
+                      <label htmlFor="verbal" className="text-sm" style={{ color: currentTheme.textColor }}>
                         Вербальный компонент (В)
                       </label>
                     </div>
@@ -343,8 +413,12 @@ const SpellBookViewer: React.FC = () => {
                         id="somatic" 
                         checked={showSomaticOnly}
                         onCheckedChange={(checked) => setShowSomaticOnly(checked as boolean)}
+                        style={{
+                          borderColor: currentTheme.accent,
+                          ['--checkbox-checked-bg' as any]: currentTheme.accent,
+                        }}
                       />
-                      <label htmlFor="somatic" className="text-sm">
+                      <label htmlFor="somatic" className="text-sm" style={{ color: currentTheme.textColor }}>
                         Соматический компонент (С)
                       </label>
                     </div>
@@ -353,8 +427,12 @@ const SpellBookViewer: React.FC = () => {
                         id="material" 
                         checked={showMaterialOnly}
                         onCheckedChange={(checked) => setShowMaterialOnly(checked as boolean)}
+                        style={{
+                          borderColor: currentTheme.accent,
+                          ['--checkbox-checked-bg' as any]: currentTheme.accent,
+                        }}
                       />
-                      <label htmlFor="material" className="text-sm">
+                      <label htmlFor="material" className="text-sm" style={{ color: currentTheme.textColor }}>
                         Материальный компонент (М)
                       </label>
                     </div>
@@ -362,7 +440,16 @@ const SpellBookViewer: React.FC = () => {
                 </div>
                 
                 <div className="pt-2">
-                  <Button onClick={resetFilters} variant="outline" size="sm" className="w-full">
+                  <Button 
+                    onClick={resetFilters} 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    style={{
+                      borderColor: currentTheme.accent,
+                      color: currentTheme.textColor
+                    }}
+                  >
                     Сбросить все фильтры
                   </Button>
                 </div>
@@ -374,9 +461,9 @@ const SpellBookViewer: React.FC = () => {
           <div className="bg-background/25 backdrop-blur-sm p-6 rounded-lg shadow-md border border-primary/20 mb-6 flex-1">
             <Tabs defaultValue="by-level" className="w-full">
               <TabsList className="mb-4 mx-auto">
-                <TabsTrigger value="by-level">По уровням</TabsTrigger>
-                <TabsTrigger value="all">Все заклинания</TabsTrigger>
-                <TabsTrigger value="search">Поиск</TabsTrigger>
+                <TabsTrigger value="by-level" style={{color: currentTheme.textColor}}>По уровням</TabsTrigger>
+                <TabsTrigger value="all" style={{color: currentTheme.textColor}}>Все заклинания</TabsTrigger>
+                <TabsTrigger value="search" style={{color: currentTheme.textColor}}>Поиск</TabsTrigger>
               </TabsList>
               
               <TabsContent value="search" className="space-y-4">
@@ -395,8 +482,8 @@ const SpellBookViewer: React.FC = () => {
                 
                 {filteredSpells.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-lg font-medium">Заклинания не найдены</p>
-                    <p className="text-muted-foreground">Попробуйте изменить параметры поиска</p>
+                    <p className="text-lg font-medium" style={{ color: currentTheme.textColor }}>Заклинания не найдены</p>
+                    <p style={{ color: currentTheme.mutedTextColor }}>Попробуйте изменить параметры поиска</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -411,6 +498,8 @@ const SpellBookViewer: React.FC = () => {
                               key={spell.name} 
                               spell={spell}
                               onClick={() => handleOpenSpellDetails(spell)}
+                              themeColor={getLevelColor(spell.level)}
+                              currentTheme={currentTheme}
                             />
                           ))}
                         </div>
@@ -424,7 +513,7 @@ const SpellBookViewer: React.FC = () => {
                 <div className="space-y-8">
                   {/* Заговоры */}
                   <div>
-                    <h2 className="text-2xl font-semibold mb-4 border-b pb-2" style={{ color: currentTheme.accent }}>
+                    <h2 className="text-2xl font-semibold mb-4 border-b pb-2" style={{ color: currentTheme.accent, borderColor: `${currentTheme.accent}50` }}>
                       Заговоры (0 уровень)
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mb-4">
@@ -436,6 +525,8 @@ const SpellBookViewer: React.FC = () => {
                             key={spell.name} 
                             spell={spell} 
                             onClick={() => handleOpenSpellDetails(spell)}
+                            themeColor={getLevelColor(spell.level)}
+                            currentTheme={currentTheme}
                           />
                         ))}
                     </div>
@@ -448,7 +539,13 @@ const SpellBookViewer: React.FC = () => {
                     
                     return (
                       <div key={level}>
-                        <h2 className="text-2xl font-semibold mb-4 border-b pb-2" style={{ color: currentTheme.accent }}>
+                        <h2 
+                          className="text-2xl font-semibold mb-4 border-b pb-2" 
+                          style={{ 
+                            color: currentTheme.accent, 
+                            borderColor: `${currentTheme.accent}50` 
+                          }}
+                        >
                           {level} уровень
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mb-4">
@@ -459,6 +556,8 @@ const SpellBookViewer: React.FC = () => {
                                 key={spell.name} 
                                 spell={spell} 
                                 onClick={() => handleOpenSpellDetails(spell)}
+                                themeColor={getLevelColor(spell.level)}
+                                currentTheme={currentTheme}
                               />
                             ))}
                         </div>
@@ -479,6 +578,8 @@ const SpellBookViewer: React.FC = () => {
                             key={spell.name} 
                             spell={spell}
                             onClick={() => handleOpenSpellDetails(spell)} 
+                            themeColor={getLevelColor(spell.level)}
+                            currentTheme={currentTheme}
                           />
                         ))}
                     </div>
@@ -491,38 +592,58 @@ const SpellBookViewer: React.FC = () => {
         
         {/* Модальное окно с детальной информацией о заклинании */}
         <Dialog open={isSpellDialogOpen} onOpenChange={setIsSpellDialogOpen}>
-          <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogContent 
+            className="sm:max-w-md md:max-w-lg"
+            style={{
+              backgroundColor: `${currentTheme.cardBackground || "rgba(0, 0, 0, 0.7)"}`,
+              borderColor: `${currentTheme.accent}50`,
+              color: currentTheme.textColor
+            }}
+          >
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
+              <DialogTitle className="flex items-center justify-between" style={{ color: currentTheme.accent }}>
                 <div className="flex items-center">
                   {selectedSpell?.name}
-                  <Badge className="ml-2">
+                  <Badge 
+                    className="ml-2" 
+                    style={{ 
+                      backgroundColor: selectedSpell ? getLevelColor(selectedSpell.level) : currentTheme.accent,
+                      color: currentTheme.textColor
+                    }}
+                  >
                     {selectedSpell?.level === 0 ? 'Заговор' : `${selectedSpell?.level} уровень`}
                   </Badge>
                 </div>
                 {selectedSpell?.ritual && (
-                  <Badge variant="outline" className="ml-2">
+                  <Badge 
+                    variant="outline" 
+                    className="ml-2"
+                    style={{
+                      borderColor: currentTheme.accent,
+                      color: currentTheme.accent
+                    }}
+                  >
                     Ритуал
                   </Badge>
                 )}
               </DialogTitle>
-              <DialogDescription>{selectedSpell?.school}</DialogDescription>
+              <DialogDescription style={{ color: currentTheme.mutedTextColor }}>{selectedSpell?.school}</DialogDescription>
             </DialogHeader>
             
             {selectedSpell && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium">Время накладывания:</p>
-                    <p className="text-sm">{selectedSpell.castingTime}</p>
+                    <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>Время накладывания:</p>
+                    <p className="text-sm" style={{ color: currentTheme.textColor }}>{selectedSpell.castingTime}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Дистанция:</p>
-                    <p className="text-sm">{selectedSpell.range}</p>
+                    <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>Дистанция:</p>
+                    <p className="text-sm" style={{ color: currentTheme.textColor }}>{selectedSpell.range}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Компоненты:</p>
-                    <p className="text-sm">
+                    <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>Компоненты:</p>
+                    <p className="text-sm" style={{ color: currentTheme.textColor }}>
                       {[
                         selectedSpell.verbal ? 'В' : '',
                         selectedSpell.somatic ? 'С' : '',
@@ -532,32 +653,39 @@ const SpellBookViewer: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Длительность:</p>
-                    <p className="text-sm">
+                    <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>Длительность:</p>
+                    <p className="text-sm" style={{ color: currentTheme.textColor }}>
                       {selectedSpell.concentration ? 'Концентрация, ' : ''}
                       {selectedSpell.duration}
                     </p>
                   </div>
                 </div>
                 
-                <Separator />
+                <Separator style={{ backgroundColor: `${currentTheme.accent}50` }} />
                 
                 <div>
-                  <p className="text-sm whitespace-pre-line">{selectedSpell.description}</p>
+                  <p className="text-sm whitespace-pre-line" style={{ color: currentTheme.textColor }}>{selectedSpell.description}</p>
                 </div>
                 
                 {selectedSpell.higherLevels && (
                   <div>
-                    <p className="text-sm font-medium">На более высоком уровне:</p>
-                    <p className="text-sm">{selectedSpell.higherLevels}</p>
+                    <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>На более высоком уровне:</p>
+                    <p className="text-sm" style={{ color: currentTheme.textColor }}>{selectedSpell.higherLevels}</p>
                   </div>
                 )}
                 
                 <div>
-                  <p className="text-sm font-medium">Классы:</p>
+                  <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>Классы:</p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedSpell.classes.map(cls => (
-                      <Badge key={cls} variant="outline">
+                      <Badge 
+                        key={cls} 
+                        variant="outline"
+                        style={{
+                          borderColor: `${currentTheme.accent}50`,
+                          color: currentTheme.accent
+                        }}
+                      >
                         {cls}
                       </Badge>
                     ))}
@@ -576,11 +704,9 @@ const SpellBookViewer: React.FC = () => {
 const SpellCard: React.FC<{ 
   spell: CharacterSpell; 
   onClick?: () => void;
-}> = ({ spell, onClick }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
+  themeColor?: string;
+  currentTheme: any;
+}> = ({ spell, onClick, themeColor, currentTheme }) => {
   const getComponentString = () => {
     const components = [];
     if (spell.verbal) components.push('В');
@@ -599,15 +725,18 @@ const SpellCard: React.FC<{
 
   return (
     <Card 
-      className="p-4 h-full border border-primary/20 bg-background/40 backdrop-blur-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="p-4 h-full border bg-background/40 backdrop-blur-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
+      style={{
+        borderColor: `${currentTheme.accent}30`,
+      }}
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-bold" style={{ color: currentTheme.accent }}>{spell.name}</h3>
         <Badge 
           className="text-xs"
           style={{ 
-            backgroundColor: `${currentTheme.cardBackground || "rgba(0, 0, 0, 0.2)"}`,
+            backgroundColor: themeColor ? themeColor + '90' : currentTheme.accent + '90',
             color: currentTheme.textColor
           }}
         >
@@ -618,21 +747,21 @@ const SpellCard: React.FC<{
       <p className="text-sm mb-2" style={{ color: currentTheme.mutedTextColor }}>{spell.school}</p>
       
       <div className="space-y-1 mb-3">
-        <p className="text-sm">
-          <span className="font-medium">Время накладывания:</span> {spell.castingTime}
+        <p className="text-sm" style={{ color: currentTheme.textColor }}>
+          <span className="font-medium" style={{ color: currentTheme.accent }}>Время:</span> {spell.castingTime}
           {spell.ritual && <span className="ml-1 italic">(ритуал)</span>}
         </p>
         
-        <p className="text-sm">
-          <span className="font-medium">Дистанция:</span> {spell.range}
+        <p className="text-sm" style={{ color: currentTheme.textColor }}>
+          <span className="font-medium" style={{ color: currentTheme.accent }}>Дистанция:</span> {spell.range}
         </p>
         
-        <p className="text-sm">
-          <span className="font-medium">Компоненты:</span> {getComponentString()}
+        <p className="text-sm" style={{ color: currentTheme.textColor }}>
+          <span className="font-medium" style={{ color: currentTheme.accent }}>Компоненты:</span> {getComponentString()}
         </p>
         
-        <p className="text-sm">
-          <span className="font-medium">Длительность:</span> {spell.duration}
+        <p className="text-sm" style={{ color: currentTheme.textColor }}>
+          <span className="font-medium" style={{ color: currentTheme.accent }}>Длительность:</span> {spell.duration}
           {spell.concentration && <span className="ml-1 italic">(концентрация)</span>}
         </p>
       </div>
@@ -640,15 +769,15 @@ const SpellCard: React.FC<{
       <Separator className="my-2" style={{ backgroundColor: currentTheme.accent + '40' }} />
       
       <div className="mt-2">
-        <p className="text-sm line-clamp-3" title={spell.description}>
+        <p className="text-sm line-clamp-3" style={{ color: currentTheme.textColor }} title={spell.description}>
           {spell.description}
         </p>
       </div>
       
       {spell.higherLevels && (
         <div className="mt-2">
-          <p className="text-sm font-medium">На более высоком уровне:</p>
-          <p className="text-sm line-clamp-2" title={spell.higherLevels}>
+          <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>На более высоком уровне:</p>
+          <p className="text-sm line-clamp-2" style={{ color: currentTheme.textColor }} title={spell.higherLevels}>
             {spell.higherLevels}
           </p>
         </div>
@@ -676,11 +805,9 @@ const SpellCard: React.FC<{
 const SpellLinkCard: React.FC<{ 
   spell: CharacterSpell; 
   onClick?: () => void;
-}> = ({ spell, onClick }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
+  themeColor?: string;
+  currentTheme: any;
+}> = ({ spell, onClick, themeColor, currentTheme }) => {
   // Формируем строку компонентов (В, С, М)
   const getComponentIcons = () => {
     let result = '';
@@ -703,7 +830,14 @@ const SpellLinkCard: React.FC<{
     <div className="space-y-2 max-w-md">
       <div className="flex justify-between items-center">
         <h4 className="font-bold">{spell.name}</h4>
-        <Badge variant="outline" className="ml-2">
+        <Badge 
+          variant="outline" 
+          className="ml-2"
+          style={{
+            borderColor: themeColor || currentTheme.accent,
+            color: themeColor || currentTheme.accent
+          }}
+        >
           {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
         </Badge>
       </div>
@@ -752,7 +886,10 @@ const SpellLinkCard: React.FC<{
       <TooltipTrigger asChild>
         <div 
           className="p-2 rounded border flex justify-between items-center hover:bg-background/50 transition-colors cursor-pointer"
-          style={{ borderColor: `${currentTheme.accent}30` }}
+          style={{ 
+            borderColor: `${currentTheme.accent}30`,
+            backgroundColor: `${themeColor || currentTheme.accent}10`
+          }}
           onClick={onClick}
         >
           <div className="flex flex-col">
@@ -763,8 +900,8 @@ const SpellLinkCard: React.FC<{
             <span 
               className="text-xs px-2 py-1 rounded"
               style={{ 
-                backgroundColor: `${currentTheme.accent}20`,
-                color: currentTheme.accent
+                backgroundColor: `${themeColor || currentTheme.accent}30`,
+                color: themeColor || currentTheme.accent
               }}
             >
               {getComponentIcons()}{getAdditionalIcons()}
@@ -772,7 +909,15 @@ const SpellLinkCard: React.FC<{
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent className="w-72 p-3" sideOffset={10}>
+      <TooltipContent 
+        className="w-72 p-3" 
+        sideOffset={10}
+        style={{ 
+          backgroundColor: currentTheme.cardBackground || "rgba(0, 0, 0, 0.8)", 
+          color: currentTheme.textColor,
+          borderColor: `${currentTheme.accent}50`
+        }}
+      >
         {tooltipContent}
       </TooltipContent>
     </Tooltip>
@@ -780,3 +925,4 @@ const SpellLinkCard: React.FC<{
 };
 
 export default SpellBookViewer;
+
