@@ -287,6 +287,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   const [readyToRoll, setReadyToRoll] = useState(true);
   const [rollPhase, setRollPhase] = useState(0); // 0: initial, 1: rolling, 2: settled
   const [showNumbers, setShowNumbers] = useState(false);
+  const [rollKey, setRollKey] = useState(0); // Добавляем ключ для принудительного обновления состояния
   
   // Преобразование HEX цвета в объект Color из Three.js
   const diceColor = new Color(themeColor);
@@ -328,10 +329,25 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   };
   
   useEffect(() => {
-    if (autoRoll || forceReroll) {
+    // Сбрасываем состояние при изменении типа кубика или форсированном перезапуске
+    if (forceReroll) {
+      setRollKey(prev => prev + 1);
+      setReadyToRoll(true);
+      setRolling(false);
+      setRollPhase(0);
+      
+      // Если нужно автоматически бросить кубик
+      if (autoRoll) {
+        setTimeout(() => rollDice(), 100);
+      }
+    }
+  }, [forceReroll, type]);
+
+  useEffect(() => {
+    if (autoRoll && readyToRoll) {
       rollDice();
     }
-  }, [autoRoll, forceReroll]);
+  }, [autoRoll, readyToRoll]);
   
   const rollDice = () => {
     if (!readyToRoll) return;
@@ -416,7 +432,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   });
   
   return (
-    <group>
+    <group key={rollKey}>
       <Center>
         <mesh 
           ref={meshRef} 
@@ -503,15 +519,22 @@ export const DiceRoller3D = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const actualThemeColor = themeColor || currentTheme.accent;
+  const [diceKey, setDiceKey] = useState(0); // Для форсирования пересоздания компонента
   
   const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
     setDiceType(type);
-    setForceReroll(prev => !prev); // Reset the dice when changing type
+    setDiceKey(prev => prev + 1); // Принудительно пересоздаем компонент при смене типа
+    setTimeout(() => {
+      setForceReroll(prev => !prev); // Reset the dice when changing type
+    }, 50);
   };
   
   const handleRoll = () => {
     setRoll(true);
-    setForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
+    setDiceKey(prev => prev + 1); // Принудительно пересоздаем компонент при броске
+    setTimeout(() => {
+      setForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
+    }, 50);
   };
   
   const handleRollComplete = (result: number) => {
@@ -527,6 +550,7 @@ export const DiceRoller3D = ({
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas 
+        key={diceKey}
         shadows 
         camera={{ position: [0, 0, 5], fov: 50 }}
         style={{ background: 'transparent' }}
@@ -611,4 +635,3 @@ export const DiceRoller3D = ({
     </div>
   );
 };
-
