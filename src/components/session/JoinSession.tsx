@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { socket } from "@/services/socket";
+import { socketService } from "@/services/socket";
 
 interface JoinSessionProps {
   onJoined: (roomCode: string) => void;
@@ -15,18 +15,15 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
       alert("Введите ник и код комнаты!");
       return;
     }
-    socket.connect();
-    socket.emit(
-      "joinRoom",
-      { roomCode: roomCode.trim().toUpperCase(), nickname },
-      ({ success, message }: { success: boolean; message?: string }) => {
-        if (success) {
-          onJoined(roomCode.trim().toUpperCase());
-        } else {
-          alert(message || "Не удалось подключиться к комнате");
-        }
-      }
-    );
+    
+    socketService.connect(roomCode.trim().toUpperCase(), nickname);
+    socketService.on("joinSuccess", () => {
+      onJoined(roomCode.trim().toUpperCase());
+    });
+    
+    socketService.on("joinError", ({ message }: { message: string }) => {
+      alert(message || "Не удалось подключиться к комнате");
+    });
   };
 
   return (

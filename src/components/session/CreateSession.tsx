@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { socket } from "@/services/socket";
+import { socketService } from "@/services/socket";
 
 interface CreateSessionProps {
   onRoomCreated: (roomCode: string) => void;
@@ -14,8 +14,8 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
       alert("Введите ваше имя!");
       return;
     }
-    socket.connect();
-    socket.emit("createRoom", nickname, ({ roomCode }: { roomCode: string }) => {
+    socketService.connect("", nickname);
+    socketService.on("roomCreated", ({ roomCode }: { roomCode: string }) => {
       onRoomCreated(roomCode);
     });
   };

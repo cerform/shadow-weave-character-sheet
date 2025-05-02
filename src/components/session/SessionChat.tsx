@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { socket, type ChatMessage } from "@/services/socket";
+import { socketService, ChatMessage } from "@/services/socket";
 
 interface SessionChatProps {
   roomCode: string;
@@ -11,22 +11,18 @@ const SessionChat: React.FC<SessionChatProps> = ({ roomCode }) => {
   const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => {
-    socket.on("chatMessage", (newMessage: ChatMessage) => {
+    const unsubscribe = socketService.on("chatMessage", (newMessage: ChatMessage) => {
       setMessages((prev) => [...prev, newMessage]);
     });
 
     return () => {
-      socket.off("chatMessage");
+      unsubscribe();
     };
   }, []);
 
   const sendMessage = () => {
     if (messageInput.trim() !== "") {
-      socket.emit("chatMessage", {
-        roomCode,
-        nickname: socket.id,
-        message: messageInput.trim(),
-      });
+      socketService.sendChatMessage(messageInput.trim());
       setMessageInput("");
     }
   };

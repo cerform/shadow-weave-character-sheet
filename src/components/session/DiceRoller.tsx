@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { socket, DiceResult } from "@/services/socket";
+import { socketService, DiceResult } from "@/services/socket";
 
 interface DiceRollerProps {
   roomCode: string;
@@ -10,16 +10,16 @@ const DiceRoller: React.FC<DiceRollerProps> = ({ roomCode }) => {
   const [results, setResults] = useState<DiceResult[]>([]);
 
   const rollDice = (diceType: string) => {
-    socket.emit("rollDice", { roomCode, nickname: socket.id, diceType });
+    socketService.sendRoll(`1${diceType}`);
   };
 
   useEffect(() => {
-    socket.on("diceResult", (result: DiceResult) => {
+    const unsubscribe = socketService.on("diceResult", (result: DiceResult) => {
       setResults((prev) => [...prev, result]);
     });
 
     return () => {
-      socket.off("diceResult");
+      unsubscribe();
     };
   }, []);
 

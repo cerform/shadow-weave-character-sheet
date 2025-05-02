@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { socketService } from '@/services/socket';
-import { ChatMessage, SessionData, Token, InitiativeOrder } from '@/types/socket';
+import { socketService, ChatMessage } from '@/services/socket';
+import { SessionData, Token } from '@/types/socket';
 import { useToast } from '@/components/ui/use-toast';
 
 interface SocketContextType {

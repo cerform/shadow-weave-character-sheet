@@ -30,5 +30,38 @@ export const socket: Socket = io(SERVER_URL, {
   reconnectionAttempts: 5,
 });
 
-// Hook для использования в компонентах
-export default socket;
+// Сервис для работы с сокетами
+export const socketService = {
+  connect: (sessionCode: string, playerName: string, characterId?: string) => {
+    socket.connect();
+    socket.emit('joinRoom', { roomCode: sessionCode, nickname: playerName, characterId });
+  },
+
+  disconnect: () => {
+    socket.disconnect();
+  },
+
+  sendChatMessage: (message: string) => {
+    socket.emit('chatMessage', {
+      message,
+    });
+  },
+
+  sendRoll: (formula: string, reason?: string) => {
+    socket.emit('rollDice', {
+      formula,
+      reason,
+    });
+  },
+
+  updateToken: (token: any) => {
+    socket.emit('updateToken', token);
+  },
+  
+  on: (event: string, callback: (...args: any[]) => void) => {
+    socket.on(event, callback);
+    return () => socket.off(event, callback);
+  },
+};
+
+export default socketService;
