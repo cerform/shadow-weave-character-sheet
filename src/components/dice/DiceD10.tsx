@@ -150,7 +150,9 @@ export const DiceD10: React.FC<DiceD10Props> = ({
       geometry={geometry}
     >
       {materials.length === 10 ? (
-        <primitive object={new THREE.MeshFaceMaterial(materials)} attach="material" />
+        materials.map((material, i) => (
+          <primitive key={i} object={material} attach={`material-${i}`} />
+        ))
       ) : (
         <meshPhongMaterial 
           color={themeColor} 

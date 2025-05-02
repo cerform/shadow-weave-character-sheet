@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -79,7 +78,9 @@ export const DiceD6: React.FC<DiceD6Props> = ({
     >
       <boxGeometry args={[1, 1, 1]} />
       {materials.length === 6 ? (
-        <primitive object={new THREE.MeshFaceMaterial(materials)} attach="material" />
+        materials.map((material, i) => (
+          <primitive key={i} object={material} attach={`material-${i}`} />
+        ))
       ) : (
         <meshPhongMaterial 
           color={themeColor} 

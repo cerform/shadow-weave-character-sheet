@@ -78,7 +78,9 @@ export const DiceD12: React.FC<DiceD12Props> = ({
     >
       <dodecahedronGeometry args={[1, 0]} />
       {materials.length === 12 ? (
-        <primitive object={new THREE.MeshFaceMaterial(materials)} attach="material" />
+        materials.map((material, i) => (
+          <primitive key={i} object={material} attach={`material-${i}`} />
+        ))
       ) : (
         <meshPhongMaterial 
           color={themeColor} 

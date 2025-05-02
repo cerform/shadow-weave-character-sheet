@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { DiceRoller3D } from './DiceRoller3D';
@@ -82,3 +82,6 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
     </div>
   );
 };
+
+// Add a default export to maintain compatibility with code that might be using it
+export default DiceRoller3DFixed;

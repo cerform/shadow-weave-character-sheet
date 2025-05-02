@@ -78,7 +78,9 @@ export const DiceD8: React.FC<DiceD8Props> = ({
     >
       <octahedronGeometry args={[1, 0]} />
       {materials.length === 8 ? (
-        <primitive object={new THREE.MeshFaceMaterial(materials)} attach="material" />
+        materials.map((material, i) => (
+          <primitive key={i} object={material} attach={`material-${i}`} />
+        ))
       ) : (
         <meshPhongMaterial 
           color={themeColor} 

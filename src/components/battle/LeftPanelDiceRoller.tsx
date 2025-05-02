@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import DiceRoller3DFixed from '@/components/character-sheet/DiceRoller3DFixed';
+import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';

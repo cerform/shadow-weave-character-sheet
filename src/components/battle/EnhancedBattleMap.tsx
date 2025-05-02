@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -9,7 +10,7 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Modified: Fixed type issue with setTokens
+  // Modified: Fixed type issue with setTokens - can be either function
   setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
   background: string | null;
   setBackground: (url: string | null) => void;
@@ -242,7 +243,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   // Helper function to handle the token addition based on the type of setTokens
   const handleSetTokens = (token: Token) => {
     if (typeof setTokens === 'function') {
-      if (setTokens.length === 1) {
+      // Check if it's a function that accepts a single token parameter (addToken)
+      if ('length' in setTokens && setTokens.length === 1) {
         // If it accepts one parameter, assume it's the addToken function
         (setTokens as (token: Token) => void)(token);
       } else {

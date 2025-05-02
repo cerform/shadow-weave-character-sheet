@@ -78,7 +78,9 @@ export const DiceD20: React.FC<DiceD20Props> = ({
     >
       <icosahedronGeometry args={[1, 0]} />
       {materials.length === 20 ? (
-        <primitive object={new THREE.MeshFaceMaterial(materials)} attach="material" />
+        materials.map((material, i) => (
+          <primitive key={i} object={material} attach={`material-${i}`} />
+        ))
       ) : (
         <meshPhongMaterial 
           color={themeColor} 
