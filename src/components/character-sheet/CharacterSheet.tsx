@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import NavigationButtons from "@/components/ui/NavigationButtons";
+import { StatsPanel } from './StatsPanel';
+import { CharacterTabs } from './CharacterTabs';
+import { ResourcePanel } from './ResourcePanel';
+import { RestPanel } from './RestPanel';
 
 interface CharacterSheetProps {
   character: Character | null;
@@ -22,6 +27,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [showCombatDialog, setShowCombatDialog] = useState(false);
   const [sessionCode, setSessionCode] = useState('');
+  const [activeTab, setActiveTab] = useState("abilities");
   const { toast } = useToast();
   const { theme } = useTheme();
   const { joinSession } = useSession();
@@ -103,6 +109,14 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
     }
   };
 
+  const handleHpChange = (newHp: number) => {
+    // Здесь будет обновление значения HP персонажа
+    toast({
+      title: "Здоровье обновлено",
+      description: `Текущее здоровье: ${newHp}`,
+    });
+  };
+
   return (
     <div className={`min-h-screen bg-[${bgColor}] text-${theme === "dark" ? "white" : "black"}`}>
       <div className="container mx-auto py-4 px-2">
@@ -118,38 +132,27 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
           onJoinSession={() => setShowSessionDialog(true)}
         />
         
-        <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle>Информация о персонаже</CardTitle>
-            <CardDescription>Основные данные вашего персонажа</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div>
-              <Label>Имя</Label>
-              <Input type="text" value={character?.name || ''} readOnly />
-            </div>
-            <div>
-              <Label>Класс</Label>
-              <Input type="text" value={character?.className || ''} readOnly />
-            </div>
-            <div>
-              <Label>Раса</Label>
-              <Input type="text" value={character?.race || ''} readOnly />
-            </div>
-            <div>
-              <Label>Уровень</Label>
-              <Input type="number" value={character?.level || 0} readOnly />
-            </div>
-            <div>
-              <Label>Опыт</Label>
-              <Input type="number" value={character?.level || 0} readOnly /> {/* Changed from experience to level */}
-            </div>
-            <div>
-              <Label>Мировоззрение</Label>
-              <Input type="text" value={character?.alignment || ''} readOnly />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Основной интерфейс листа персонажа */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          {/* Левая колонка */}
+          <div className="md:col-span-1 space-y-4">
+            <StatsPanel character={character} />
+            <ResourcePanel 
+              currentHp={character?.currentHp || 0}
+              maxHp={character?.maxHp || 0}
+              onHpChange={handleHpChange}
+            />
+            <RestPanel />
+          </div>
+          
+          {/* Центральная и правая колонки (на мобильном будут снизу) */}
+          <div className="md:col-span-2">
+            <CharacterTabs 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+            />
+          </div>
+        </div>
         
         <div className="flex justify-end mt-4">
           <Button onClick={handleCharacterSave} className="mr-2">Сохранить</Button>
