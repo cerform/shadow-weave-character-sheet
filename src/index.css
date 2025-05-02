@@ -37,14 +37,14 @@
     --radius: 0.5rem;
 
     /* Тематические переменные */
-    --primary-gradient: from-stone-700 to-stone-900;
-    --secondary-gradient: from-stone-600/20 to-stone-800/20;
-    --accent-color: #8E9196;
-    --glow-effect: 0 0 15px #222;
-    --theme-bg: #333333;
-    --theme-fg: #ffffff;
-    --theme-accent: #8E9196;
-    --text-color: #FFFFFF;
+    --primary-gradient: from-amber-900 to-stone-900;
+    --secondary-gradient: from-amber-800/20 to-stone-900/20;
+    --accent-color: #8B5A2B;
+    --glow-effect: 0 0 15px #4B3621;
+    --theme-bg: #2C1B0E;
+    --theme-fg: #E8DDCB;
+    --theme-accent: #8B5A2B;
+    --text-color: #E8DDCB;
   }
 
   .dark {
@@ -214,7 +214,12 @@
 }
 
 .theme-default {
-  color: var(--text-color, #FFFFFF);
+  --background: 30 50% 5%;
+  --foreground: 30 30% 90%;
+  --primary: 25 40% 30%;
+  --card: 30 30% 10%;
+  color: var(--text-color, #E8DDCB);
+  background-color: var(--theme-bg, #2C1B0E);
 }
 
 /* Улучшение контрастности для элементов UI */
@@ -233,18 +238,54 @@
 
 /* Улучшаем контрастность для карточек заклинаний */
 [data-theme] .card {
-  border: 1px solid var(--accent-color, #8E9196);
+  border: 1px solid var(--accent-color, #8B5A2B);
   background-color: rgba(0, 0, 0, 0.6);
 }
 
 /* Стили для заголовков */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--text-color, #FFFFFF);
+  color: var(--text-color, #E8DDCB);
 }
 
 /* Улучшенные стили для бейджей */
 .badge {
-  border: 1px solid var(--accent-color, #8E9196);
-  color: var(--text-color, #FFFFFF);
+  border: 1px solid var(--accent-color, #8B5A2B);
+  color: var(--text-color, #E8DDCB);
 }
 
+/* Таверна стиль для стандартной темы */
+.theme-default button, 
+.theme-default .btn, 
+.theme-default .card {
+  border-color: #8B5A2B;
+}
+
+.theme-default .bg-primary {
+  background: linear-gradient(to bottom, #8B5A2B, #4B3621);
+}
+
+.theme-default .bg-secondary {
+  background-color: rgba(139, 90, 43, 0.2);
+}
+
+.theme-default .text-primary-foreground {
+  color: #E8DDCB;
+}
+
+/* Улучшение стилей для токенов */
+.token-image-container {
+  border: 2px solid var(--accent-color, #8B5A2B);
+  box-shadow: 0 0 10px var(--glow-effect, rgba(75, 54, 33, 0.5));
+}
+
+.token-player {
+  border-color: #10B981 !important;
+}
+
+.token-monster {
+  border-color: #EA384D !important;
+}
+
+.token-boss {
+  border-color: #8B5CF6 !important;
+}

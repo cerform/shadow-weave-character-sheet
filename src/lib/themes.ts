@@ -1,12 +1,12 @@
 
 export const themes = {
   default: {
-    primary: 'from-stone-700 to-stone-900',
-    secondary: 'from-stone-600/20 to-stone-800/20',
-    accent: '#8E9196',
-    glow: '0 0 15px #222',
-    name: 'Стандартная', // Brown/black/white tones
-    textColor: '#FFFFFF'
+    primary: 'from-amber-900 to-stone-900',
+    secondary: 'from-amber-800/20 to-stone-900/20',
+    accent: '#8B5A2B',
+    glow: '0 0 15px #4B3621',
+    name: 'Стандартная', // Brown/black/white tavern theme
+    textColor: '#E8DDCB' // Warm light color for text
   },
   warlock: {
     primary: 'from-purple-700 to-purple-900',

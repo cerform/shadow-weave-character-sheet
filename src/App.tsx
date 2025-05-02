@@ -14,7 +14,6 @@ import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
-import BattleScenePage from './pages/BattleScenePage';
 import GameRoomPage from './pages/GameRoomPage';
 import NotFound from './pages/NotFound';
 
@@ -47,8 +46,8 @@ function App() {
                 <Route path="/spellbook" element={<SpellbookPage />} />
                 <Route path="/battle" element={<PlayBattlePage />} />
                 <Route path="/dm" element={<DMDashboardPage />} />
-                <Route path="/dm/battle" element={<BattleScenePage />} />
-                <Route path="/scene" element={<BattleScenePage />} />
+                <Route path="/dm/battle" element={<PlayBattlePage />} />
+                <Route path="/scene" element={<PlayBattlePage />} />
                 <Route path="/room/:roomCode" element={<GameRoomPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

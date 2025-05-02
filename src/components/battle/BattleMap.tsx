@@ -38,6 +38,37 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
   const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [startDragPos, setStartDragPos] = useState({ x: 0, y: 0 });
+  const [dragPath, setDragPath] = useState<{ x: number, y: number }[]>([]);
+  const [dragConstraints, setDragConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
+
+  // Обновление размеров поля для ограничения перетаскивания
+  useEffect(() => {
+    if (mapRef.current) {
+      const rect = mapRef.current.getBoundingClientRect();
+      setDragConstraints({
+        top: 0,
+        left: 0,
+        right: rect.width - 64,   // Учитываем размер токена
+        bottom: rect.height - 64  // Учитываем размер токена
+      });
+    }
+
+    // Обработчик изменения размера окна
+    const handleResize = () => {
+      if (mapRef.current) {
+        const rect = mapRef.current.getBoundingClientRect();
+        setDragConstraints({
+          top: 0,
+          left: 0,
+          right: rect.width - 64,
+          bottom: rect.height - 64
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mapRef.current]);
 
   // Обработчик загрузки фона карты
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,9 +86,27 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const handleDragStart = (id: number) => {
     setDraggingTokenId(id);
     onSelectToken(id);
+    setDragPath([]);
   };
 
-  // Завершение перетаскивания токена
+  // Обновление пути перетаскивания для визуального отслеживания
+  const handleDragUpdate = (info: any, id: number) => {
+    if (!mapRef.current || draggingTokenId !== id) return;
+    
+    const rect = mapRef.current.getBoundingClientRect();
+    const x = (info.point.x - rect.left - mapOffset.x) / zoom;
+    const y = (info.point.y - rect.top - mapOffset.y) / zoom;
+    
+    // Добавляем точку к пути только если она значительно отличается от предыдущей
+    const lastPoint = dragPath[dragPath.length - 1];
+    if (!lastPoint || 
+        Math.abs(lastPoint.x - x) > GRID_SIZE/4 || 
+        Math.abs(lastPoint.y - y) > GRID_SIZE/4) {
+      setDragPath([...dragPath, { x, y }]);
+    }
+  };
+
+  // Завершение перетаскивания токена с привязкой к сетке
   const handleDragEnd = (
     event: any,
     info: { point: { x: number; y: number } },
@@ -74,12 +123,18 @@ const BattleMap: React.FC<BattleMapProps> = ({
     const snappedX = showGrid ? Math.round(x / GRID_SIZE) * GRID_SIZE : x;
     const snappedY = showGrid ? Math.round(y / GRID_SIZE) * GRID_SIZE : y;
 
-    onUpdateTokenPosition(id, snappedX, snappedY);
+    // Проверка на границы поля
+    const constrainedX = Math.max(0, Math.min(snappedX, dragConstraints.right));
+    const constrainedY = Math.max(0, Math.min(snappedY, dragConstraints.bottom));
+
+    onUpdateTokenPosition(id, constrainedX, constrainedY);
     setDraggingTokenId(null);
+    setDragPath([]);
   };
 
   // Изменение зума колесом мыши
   const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault(); // Предотвращаем прокрутку страницы
     if (e.deltaY < 0) {
       setZoom(prev => Math.min(prev + 0.1, 2));
     } else {
@@ -87,7 +142,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
   };
 
-  // Начало перетаскивания карты средней кнопкой мыши
+  // Начало перетаскивания карты средней кнопкой мыши или с инструментом перемещения
   const handleMapDragStart = (e: React.MouseEvent) => {
     // Только средняя кнопка мыши (button: 1) или если выбран инструмент перемещения
     if (e.button === 1 || mapTool === "select") {
@@ -116,13 +171,36 @@ const BattleMap: React.FC<BattleMapProps> = ({
     setIsDraggingMap(false);
   };
 
+  // Добавляем эффект для слежения за окончанием перетаскивания карты
   useEffect(() => {
     window.addEventListener("mouseup", handleMapDragEnd);
-
     return () => {
       window.removeEventListener("mouseup", handleMapDragEnd);
     };
   }, []);
+
+  // Отрисовка пути перетаскивания токена
+  const renderDragPath = () => {
+    if (dragPath.length < 2) return null;
+
+    let pathData = `M ${dragPath[0].x} ${dragPath[0].y}`;
+    dragPath.slice(1).forEach(point => {
+      pathData += ` L ${point.x} ${point.y}`;
+    });
+
+    return (
+      <svg className="absolute inset-0 pointer-events-none z-10">
+        <path
+          d={pathData}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.5)"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          style={{ transform: `scale(${zoom})` }}
+        />
+      </svg>
+    );
+  };
 
   // Функция для отрисовки сетки
   const renderGrid = () => {
@@ -132,14 +210,17 @@ const BattleMap: React.FC<BattleMapProps> = ({
     const horizontalLines = [];
     const verticalLines = [];
 
+    // Рисуем больше линий, учитывая смещение и масштаб
+    const extraSize = 1000; // Добавляем дополнительное пространство
+
     // Горизонтальные линии
-    for (let y = 0; y < height / zoom; y += GRID_SIZE) {
+    for (let y = -extraSize; y < (height / zoom) + extraSize; y += GRID_SIZE) {
       horizontalLines.push(
         <line
           key={`h-${y}`}
-          x1="0"
+          x1={-extraSize}
           y1={y}
-          x2={width / zoom}
+          x2={(width / zoom) + extraSize}
           y2={y}
           stroke="rgba(255,255,255,0.2)"
           strokeWidth="1"
@@ -148,17 +229,49 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
 
     // Вертикальные линии
-    for (let x = 0; x < width / zoom; x += GRID_SIZE) {
+    for (let x = -extraSize; x < (width / zoom) + extraSize; x += GRID_SIZE) {
       verticalLines.push(
         <line
           key={`v-${x}`}
           x1={x}
-          y1="0"
+          y1={-extraSize}
           x2={x}
-          y2={height / zoom}
+          y2={(height / zoom) + extraSize}
           stroke="rgba(255,255,255,0.2)"
           strokeWidth="1"
         />
+      );
+    }
+
+    // Координатные числа по краям
+    const coordinateLabels = [];
+    for (let x = 0; x < width / zoom; x += GRID_SIZE) {
+      coordinateLabels.push(
+        <text
+          key={`label-x-${x}`}
+          x={x + 5}
+          y={20}
+          fill="rgba(255,255,255,0.5)"
+          fontSize="10"
+          style={{ transformOrigin: 'top left' }}
+        >
+          {Math.floor(x / GRID_SIZE)}
+        </text>
+      );
+    }
+
+    for (let y = 0; y < height / zoom; y += GRID_SIZE) {
+      coordinateLabels.push(
+        <text
+          key={`label-y-${y}`}
+          x={5}
+          y={y + 15}
+          fill="rgba(255,255,255,0.5)"
+          fontSize="10"
+          style={{ transformOrigin: 'top left' }}
+        >
+          {Math.floor(y / GRID_SIZE)}
+        </text>
       );
     }
 
@@ -169,6 +282,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
       >
         {horizontalLines}
         {verticalLines}
+        {coordinateLabels}
       </svg>
     );
   };
@@ -271,7 +385,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
         onWheel={handleWheel}
         onMouseDown={handleMapDragStart}
         onMouseMove={handleMapDrag}
-        style={{ cursor: isDraggingMap ? "grabbing" : "default" }}
+        style={{ cursor: isDraggingMap ? "grabbing" : mapTool === "select" ? "grab" : "default" }}
       >
         <div
           className="absolute inset-0"
@@ -323,9 +437,16 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 }}
                 drag={mapTool === "select"}
                 dragMomentum={false}
+                dragSnapToOrigin={false}
+                dragElastic={0.1} // Небольшая эластичность для более плавного перетаскивания
                 onDragStart={() => handleDragStart(token.id)}
+                onDrag={(e, info) => handleDragUpdate(info, token.id)}
                 onDragEnd={(e, info) => handleDragEnd(e, info, token.id)}
-                onClick={() => onSelectToken(token.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectToken(token.id);
+                }}
+                whileDrag={{ scale: 1.1 * zoom, opacity: 0.8 }} // Слабый эффект при перетаскивании
               >
                 <div
                   className={`relative ${
@@ -342,12 +463,12 @@ const BattleMap: React.FC<BattleMapProps> = ({
                   <img
                     src={token.img}
                     alt={token.name}
-                    className={`w-12 h-12 object-cover rounded-full border-2 ${
+                    className={`w-12 h-12 object-cover rounded-full border-2 token-image-container ${
                       token.type === "boss"
-                        ? "border-red-500"
+                        ? "token-boss"
                         : token.type === "monster"
-                        ? "border-yellow-500"
-                        : "border-green-500"
+                        ? "token-monster"
+                        : "token-player"
                     }`}
                   />
 
@@ -380,6 +501,9 @@ const BattleMap: React.FC<BattleMapProps> = ({
               </motion.div>
             );
           })}
+          
+          {/* Путь перетаскивания */}
+          {renderDragPath()}
         </div>
 
         {/* Если карта не загружена, показываем подсказку */}
