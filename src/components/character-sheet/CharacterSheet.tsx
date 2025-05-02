@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Character, CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ import LevelUpPanel from './LevelUpPanel';
 
 interface CharacterSheetProps {
   character: Character | null;
-  isDM?: boolean; // Добавляем опциональный параметр для проверки, является ли пользователь мастером
+  isDM?: boolean; 
 }
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false }) => {
@@ -128,7 +127,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
     });
   };
   
-  // Обработчики для слотов заклинаний
   const handleUseSpellSlot = (level: number) => {
     if (!character || !character.spellSlots) return;
     
@@ -179,15 +177,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
     >
       <div className="container mx-auto py-4 px-2">
     
-        {/* Добавляем навигационные кнопки вверху страницы */}
         <NavigationButtons className="mb-4" />
         
-        {/* Добавляем селектор тем */}
         <div className="flex justify-end mb-4">
           <ThemeSelector />
         </div>
       
-        {/* Остальной контент */}
         <CharacterHeader 
           character={character} 
           onCharacterSave={handleCharacterSave} 
@@ -196,9 +191,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           theme={currentTheme}
         />
         
-        {/* Основной интерфейс листа персонажа */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {/* Левая колонка */}
           <div className="md:col-span-1 space-y-4">
             <StatsPanel character={character} />
             
@@ -206,15 +199,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
               currentHp={character?.currentHp || 0}
               maxHp={character?.maxHp || 0}
               onHpChange={handleHpChange}
-              theme={currentTheme}
             />
             
-            {/* Добавляем панель для управления уровнем */}
             <LevelUpPanel />
             
             <RestPanel />
             
-            {/* Добавляем поповер для управления слотами заклинаний */}
             {character?.spellSlots && Object.keys(character.spellSlots).length > 0 && (
               <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
                 <h3 className="text-lg font-semibold mb-4" style={{ color: currentTheme.textColor }}>
@@ -227,7 +217,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
                     onRestoreSlot={handleRestoreSpellSlot}
                   />
                   
-                  {/* Если персонаж - чародей, показываем очки чародейства */}
                   {character.className?.toLowerCase().includes('чародей') && character.sorceryPoints && (
                     <Card className="p-3 w-full mt-2 bg-card/50">
                       <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.textColor }}>
@@ -296,7 +285,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             )}
           </div>
           
-          {/* Центральная и правая колонки (на мобильном будут снизу) */}
           <div className="md:col-span-2">
             <CharacterTabs 
               activeTab={activeTab} 
@@ -311,13 +299,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
-          {/* Отображаем кнопку "В бой!" только если пользователь - Мастер Подземелий */}
           {isDM && (
             <Button onClick={() => setShowCombatDialog(true)} className="ml-2">В бой!</Button>
           )}
         </div>
         
-        {/* Диалог подключения к сессии */}
         <Dialog open={showSessionDialog} onOpenChange={setShowSessionDialog}>
           <DialogContent 
             className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20"
@@ -364,7 +350,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           </DialogContent>
         </Dialog>
         
-        {/* Диалог для боя (только для Мастера) */}
         {isDM && (
           <Dialog open={showCombatDialog} onOpenChange={setShowCombatDialog}>
             <DialogContent 
