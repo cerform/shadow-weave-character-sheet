@@ -25,17 +25,17 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex flex-wrap mb-4 gap-1">
-          <TabsTrigger value="abilities" className="flex-grow basis-[calc(33.333%-4px)]">Характеристики</TabsTrigger>
-          <TabsTrigger value="combat" className="flex-grow basis-[calc(33.333%-4px)]">Атаки</TabsTrigger>
-          <TabsTrigger value="spells" className="flex-grow basis-[calc(33.333%-4px)]">Заклинания</TabsTrigger>
-          <TabsTrigger value="features" className="flex-grow basis-[calc(33.333%-4px)]">Особенности</TabsTrigger>
-          <TabsTrigger value="background" className="flex-grow basis-[calc(33.333%-4px)]">Предыстория</TabsTrigger>
-          <TabsTrigger value="handbook" className="flex-grow basis-[calc(33.333%-4px)]">Справочник</TabsTrigger>
-          <TabsTrigger value="playerhandbook" className="flex-grow">Руководство игрока</TabsTrigger>
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 mb-4 gap-1">
+          <TabsTrigger value="abilities">Характеристики</TabsTrigger>
+          <TabsTrigger value="combat">Атаки</TabsTrigger>
+          <TabsTrigger value="spells">Заклинания</TabsTrigger>
+          <TabsTrigger value="features">Особенности</TabsTrigger>
+          <TabsTrigger value="background">Предыстория</TabsTrigger>
+          <TabsTrigger value="handbook">Справочник</TabsTrigger>
+          <TabsTrigger value="playerhandbook" className="col-span-full sm:col-span-1">Руководство игрока</TabsTrigger>
         </TabsList>
         
-        <ScrollArea className="h-[calc(100vh-240px)]">
+        <ScrollArea className="h-[calc(100vh-240px)] mt-6">
           <TabsContent value="abilities" className="mt-0">
             <AbilitiesTab />
           </TabsContent>

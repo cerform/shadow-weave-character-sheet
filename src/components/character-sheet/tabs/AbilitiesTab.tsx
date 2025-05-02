@@ -32,7 +32,7 @@ export const AbilitiesTab = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-4">
       <h3 className="text-lg font-semibold">Характеристики персонажа</h3>
       
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -73,7 +73,7 @@ export const AbilitiesTab = () => {
         </div>
       </div>
       
-      <div className="bg-primary/5 rounded-lg p-4">
+      <div className="bg-primary/5 rounded-lg p-4 mt-6">
         <h4 className="font-semibold mb-2">Спасброски</h4>
         <div className="grid grid-cols-2 gap-2">
           <div className="flex justify-between">
