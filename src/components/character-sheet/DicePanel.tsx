@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -149,7 +150,7 @@ export const DicePanel = () => {
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[250px] mb-3 bg-black/70 rounded-lg overflow-hidden relative">
+          <div className="h-[280px] mb-6 bg-black/70 rounded-lg overflow-hidden relative">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -161,27 +162,27 @@ export const DicePanel = () => {
             />
           </div>
 
-          {/* Результат броска - теперь только один блок */}
-          <div className="mb-4 p-4 bg-black/80 rounded-lg border text-center"
-               style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType) }}>
-            <div className="text-sm text-white/70 mb-1">Результат</div>
+          {/* Результат броска с увеличенным отступом */}
+          <div className="mb-6 p-5 bg-black/80 rounded-xl border text-center"
+               style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType), width: '100%' }}>
+            <div className="text-sm text-white/70 mb-2">Результат</div>
             {isRolling ? (
-              <div className="text-2xl font-bold animate-pulse">Бросаем...</div>
+              <div className="text-3xl font-bold animate-pulse py-1">Бросаем...</div>
             ) : (
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-3 py-1">
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl font-bold">{lastRollResult}</span>
-                  {modifier !== 0 && (
+                  <span className="text-4xl font-bold">{lastRollResult}</span>
+                  {modifier !== 0 && lastRollResult !== null && (
                     <>
-                      <span className="text-xl text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
-                      <span className="text-3xl font-bold" style={{ color: getDiceColor(diceType) }}>
-                        = {lastRollResult !== null ? lastRollResult + modifier : ''}
+                      <span className="text-2xl text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
+                      <span className="text-4xl font-bold" style={{ color: getDiceColor(diceType) }}>
+                        = {lastRollResult + modifier}
                       </span>
                     </>
                   )}
                 </div>
                 {reason && (
-                  <div className="text-sm text-white/70 mt-1">{reason}</div>
+                  <div className="text-sm text-white/80 mt-1">{reason}</div>
                 )}
               </div>
             )}
@@ -197,7 +198,7 @@ export const DicePanel = () => {
             />
           </div>
           
-          <div className="grid grid-cols-6 gap-2 mb-3">
+          <div className="grid grid-cols-6 gap-2 mb-5 p-3 bg-black/40 rounded-lg">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const).map((dice) => {
               const isActive = diceType === dice;
               const buttonColor = getDiceColor(dice);
@@ -224,7 +225,7 @@ export const DicePanel = () => {
           </div>
           
           {/* Модификаторы */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="grid grid-cols-2 gap-2 mb-5">
             <div>
               <label className="text-sm font-medium text-white mb-1 block">Причина броска:</label>
               <Input 
