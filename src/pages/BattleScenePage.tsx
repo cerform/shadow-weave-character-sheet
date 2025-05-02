@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, X, User, Skull, Crown, Home, Scroll, Book } from "lucide-react";
 import TokenSelector from "@/components/battle/TokenSelector";
 import BattleMap from "@/components/battle/BattleMap";
-import { Token as TokenType, VisibleArea } from "@/types/socket";
+import { VisibleArea } from "@/types/socket";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 
@@ -219,7 +219,7 @@ const BattleScenePage = () => {
 
   return (
     <OBSLayout>
-      {/* Левая панель */}
+      {/* Левая ��анель */}
       <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto">
         <div className="mb-4">
           <NavigationButtons className="flex-col items-stretch" />

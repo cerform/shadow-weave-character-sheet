@@ -191,7 +191,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
   }, [tokens, fogOfWar, visibleAreas]);
   
-  // ��трисовк�� тумана войны на холсте
+  // ��трисовк���� тумана войны на холсте
   const redrawFogOfWar = () => {
     if (!fogCanvasRef.current || !mapRef.current) return;
     
@@ -703,7 +703,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
         {/* Вид игрока (превью) */}
         {showPlayerView && (
           <div className="w-1/4 border-l border-border bg-background/50 p-2">
-            <h3 className="text-sm font-medium mb-2 text-foreground">Вид ��гроков</h3>
+            <h3 className="text-sm font-medium mb-2 text-foreground">Вид ��г��оков</h3>
             <div 
               ref={playerViewRef}
               className="relative w-full h-[calc(100%-30px)] rounded overflow-hidden bg-black/50"
