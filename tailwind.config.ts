@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -89,12 +90,28 @@ export default {
           '0%, 100%': { boxShadow: '0 0 5px 2px rgba(255, 204, 0, 0.5)' },
           '50%': { boxShadow: '0 0 10px 4px rgba(255, 204, 0, 0.7)' },
         },
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'glow': 'glow 2s infinite',
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+      },
+      zIndex: {
+        '60': '60',
+        '70': '70',
+        '80': '80',
+        '90': '90',
+        '100': '100',
       },
     },
   },

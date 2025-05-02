@@ -42,6 +42,7 @@ const Token: React.FC<TokenProps> = ({
   
   // Обработчик начала перетаскивания
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Разрешаем перемещать токены игроков только игрокам и всем токенам DM-у
     if (!isDM && token.type !== 'player') return;
     
     e.preventDefault();
@@ -130,6 +131,14 @@ const Token: React.FC<TokenProps> = ({
     }
   };
   
+  // Получаем класс для индикатора здоровья
+  const getHealthBarColor = () => {
+    const healthPercent = token.hp / token.maxHp;
+    if (healthPercent <= 0.3) return 'bg-red-500';
+    if (healthPercent <= 0.6) return 'bg-yellow-500';
+    return 'bg-green-500';
+  }
+  
   // Вычисляем правильное положение токена с учетом его размера
   const positionStyle = {
     left: `${tokenPos.x}px`,
@@ -166,7 +175,7 @@ const Token: React.FC<TokenProps> = ({
       {/* Показатель здоровья */}
       <div className="absolute -bottom-5 left-0 w-full h-2 bg-gray-800 rounded-full overflow-hidden">
         <div 
-          className={`h-full ${token.hp <= token.maxHp * 0.3 ? 'bg-red-500' : token.hp <= token.maxHp * 0.6 ? 'bg-yellow-500' : 'bg-green-500'}`}
+          className={`h-full ${getHealthBarColor()}`}
           style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
         />
       </div>
@@ -175,6 +184,20 @@ const Token: React.FC<TokenProps> = ({
       {isSelected && (
         <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/70 text-white text-xs rounded whitespace-nowrap">
           {token.name}
+        </div>
+      )}
+      
+      {/* Значение здоровья (если токен выбран) */}
+      {isSelected && (
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-0.5 bg-black/70 text-white text-xs rounded whitespace-nowrap">
+          {token.hp}/{token.maxHp}
+        </div>
+      )}
+      
+      {/* Индикатор защиты (AC) для DM или владельца токена */}
+      {(isDM || token.type === 'player') && (
+        <div className="absolute -top-4 -right-4 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs border-2 border-blue-700">
+          {token.ac}
         </div>
       )}
     </div>
