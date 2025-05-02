@@ -1,16 +1,17 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Pause, Play, SkipForward, Image, Home, ArrowLeft } from "lucide-react";
 import { BattleState } from "@/pages/PlayBattlePage";
-import { Pause, Play, SkipForward, Users, Calendar, Swords } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { useNavigate } from "react-router-dom";
+import NavigationButtons from "@/components/ui/NavigationButtons";
 
 interface TopPanelProps {
   battleState: BattleState;
   onStartBattle: () => void;
   onPauseBattle: () => void;
   onNextTurn: () => void;
+  onUploadBackground?: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -18,71 +19,87 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onStartBattle,
   onPauseBattle,
   onNextTurn,
+  onUploadBackground,
 }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  const navigate = useNavigate();
 
   return (
-    <div className="h-14 border-b border-border bg-muted/10 flex items-center justify-between px-4 z-10">
-      <div className="flex items-center space-x-2">
-        <div className="font-bold flex items-center" style={{ color: currentTheme.textColor }}>
-          <Swords className="w-5 h-5 mr-2" />
-          Панель Мастера
-        </div>
+    <div className="flex justify-between items-center p-2 h-14">
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={() => navigate("/")}
+        >
+          <Home size={16} />
+          Главная
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft size={16} />
+          Назад
+        </Button>
       </div>
 
-      <div className="flex items-center space-x-2">
-        {battleState.isActive ? (
+      <div className="flex gap-2">
+        {!battleState.isActive && battleState.round === 0 ? (
+          <Button 
+            onClick={onStartBattle}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Play size={16} className="mr-1" />
+            Начать бой
+          </Button>
+        ) : (
           <>
-            <div className="flex items-center mr-4" style={{ color: currentTheme.textColor }}>
-              <Calendar className="w-4 h-4 mr-1" />
-              <span className="text-sm font-medium">Раунд {battleState.round}</span>
-            </div>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onPauseBattle}
-              style={{ 
-                color: currentTheme.textColor,
-                borderColor: currentTheme.accent,
-                backgroundColor: 'rgba(0, 0, 0, 0.2)'
-              }}
-            >
+            <Button onClick={onPauseBattle}>
               {battleState.isActive ? (
                 <>
-                  <Pause className="w-4 h-4 mr-1" /> Пауза
+                  <Pause size={16} className="mr-1" />
+                  Пауза
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 mr-1" /> Продолжить
+                  <Play size={16} className="mr-1" />
+                  Продолжить
                 </>
               )}
             </Button>
             <Button 
-              size="sm" 
-              variant="default" 
               onClick={onNextTurn}
-              style={{ 
-                color: currentTheme.textColor,
-                backgroundColor: `rgba(${currentTheme.accent}, 0.7)`
-              }}
+              disabled={!battleState.isActive}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              <SkipForward className="w-4 h-4 mr-1" /> Следующий ход
+              <SkipForward size={16} className="mr-1" />
+              Следующий ход
             </Button>
           </>
-        ) : (
+        )}
+
+        {onUploadBackground && (
           <Button 
-            size="sm" 
-            variant="default" 
-            onClick={onStartBattle}
-            style={{ 
-              color: currentTheme.textColor,
-              backgroundColor: `rgba(${currentTheme.accent}, 0.7)`
-            }}
+            variant="outline" 
+            size="sm"
+            onClick={onUploadBackground}
           >
-            <Swords className="w-4 h-4 mr-1" /> Начать бой
+            <Image size={16} className="mr-1" />
+            Загрузить карту
           </Button>
         )}
+      </div>
+
+      <div className="flex items-center">
+        <div className="mr-4 font-semibold">
+          {battleState.round > 0 && (
+            <span>Раунд: {battleState.round}</span>
+          )}
+        </div>
+        <NavigationButtons className="!flex-row" />
       </div>
     </div>
   );

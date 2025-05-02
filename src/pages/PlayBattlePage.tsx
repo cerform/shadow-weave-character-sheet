@@ -1,29 +1,17 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import LeftPanel from "@/components/battle/LeftPanel";
+import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
-import BattleMap from "@/components/battle/BattleMap";
 import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
-import MapControls from "@/components/battle/MapControls";
 import BattleTabs from "@/components/battle/BattleTabs";
-import { motion } from "framer-motion";
-import { Dice1, Pause, Play, Plus, SkipForward, Users, Image, X, Crown, User, Skull, ZoomIn, ZoomOut, Scale, Grid3x3, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
-import DiceRoller3DFixed from "@/components/character-sheet/DiceRoller3DFixed";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import ThemeSelector from "@/components/ThemeSelector";
+import { X, ZoomIn, ZoomOut, Scale, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { DicePanel } from "@/components/character-sheet/DicePanel";
-import MapControlBox from "@/components/battle/MapControlBox";
-import OBSLayout from "@/components/OBSLayout";
-import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 
 // Типы для управления битвой
 export interface Token {
@@ -128,7 +116,7 @@ const PlayBattlePage = () => {
   const [revealRadius, setRevealRadius] = useState<number>(3);
   const [gridVisible, setGridVisible] = useState<boolean>(true);
   const [gridOpacity, setGridOpacity] = useState<number>(0.5);
-  const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 30, cols: 40}); // Увеличили размер сетки
+  const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 30, cols: 40});
   const [zoom, setZoom] = useState(1);
 
   // Обработчики для управления боем
@@ -616,52 +604,74 @@ const PlayBattlePage = () => {
     </div>
   );
 
+  // Обработчик загрузки фона карты
+  const handleMapBackgroundUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMapBackground(reader.result as string);
+          toast({
+            title: "Фон карты загружен",
+            description: "Новый фон карты успешно применен",
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
-      {/* Верхняя панель с расширенными элементами управления */}
-      <TopPanel
-        battleState={battleState}
-        onStartBattle={startBattle}
-        onPauseBattle={pauseBattle}
-        onNextTurn={nextTurn}
-      />
-      
-      {/* Основной контент */}
-      <div className="flex-1 overflow-hidden">
-        <OBSLayout 
-          leftPanelContent={<LeftPanelDiceRoller />}
-        >
-          <div className="flex flex-col h-full">
-            {/* Центральная карта */}
-            <div className="flex-1 relative overflow-hidden" ref={mapRef}>
-              <EnhancedBattleMap 
-                tokens={tokens}
-                setTokens={setTokens}
-                background={mapBackground}
-                setBackground={setMapBackground}
-                onUpdateTokenPosition={handleUpdateTokenPosition}
-                onSelectToken={handleSelectToken}
-                selectedTokenId={selectedTokenId}
-                initiative={initiative}
-                battleActive={battleState.isActive}
-                fogOfWar={fogOfWar}
-                revealedCells={revealedCells}
-                onRevealCell={handleRevealCell}
-                gridSize={gridSize}
-                gridVisible={gridVisible}
-                gridOpacity={gridOpacity}
-              />
-            </div>
-          </div>
-        </OBSLayout>
+    <div className="h-screen w-screen grid grid-rows-[auto_1fr_auto] grid-cols-[250px_1fr_300px] text-foreground bg-background overflow-hidden">
+      {/* Верхняя панель - на всю ширину */}
+      <div className="col-span-3 border-b bg-muted/10">
+        <TopPanel
+          battleState={battleState}
+          onStartBattle={startBattle}
+          onPauseBattle={pauseBattle}
+          onNextTurn={nextTurn}
+          onUploadBackground={handleMapBackgroundUpload}
+        />
       </div>
       
-      {/* Правая панель */}
-      <div className="w-72 border-l bg-muted/10 overflow-y-auto absolute top-14 right-0 bottom-0">
+      {/* Левая панель - кубики */}
+      <div className="row-span-1 border-r bg-muted/10 overflow-y-auto">
+        <LeftPanelDiceRoller playerName="DM" />
+      </div>
+      
+      {/* Центральная часть - карта боя */}
+      <div className="relative overflow-hidden">
+        <EnhancedBattleMap
+          tokens={tokens}
+          setTokens={setTokens}
+          background={mapBackground}
+          setBackground={setMapBackground}
+          onUpdateTokenPosition={handleUpdateTokenPosition}
+          onSelectToken={handleSelectToken}
+          selectedTokenId={selectedTokenId}
+          initiative={initiative}
+          battleActive={battleState.isActive}
+          fogOfWar={fogOfWar}
+          revealedCells={revealedCells}
+          onRevealCell={handleRevealCell}
+          gridSize={gridSize}
+          gridVisible={gridVisible}
+          gridOpacity={gridOpacity}
+        />
+      </div>
+      
+      {/* Правая панель - управление токенами и настройки */}
+      <div className="border-l bg-muted/10 overflow-y-auto">
         <ScrollArea className="h-full pr-2">
           {selectedTokenId !== null ? (
             <RightPanel
-              selectedTokenId={selectedTokenId} 
+              selectedTokenId={selectedTokenId}
               tokens={tokens}
               setTokens={setTokens}
               fogOfWar={fogOfWar}
@@ -684,16 +694,20 @@ const PlayBattlePage = () => {
               updateTokenHP={updateTokenHP}
               removeToken={removeToken}
               controlsPanel={mapControlPanel}
+              onAddToken={handleAddToken}
+              onAddPresetMonster={handleAddPresetMonster}
             />
           )}
         </ScrollArea>
       </div>
       
-      {/* Нижняя панель */}
-      <BottomPanel 
-        showWebcams={showWebcams} 
-        setShowWebcams={setShowWebcams} 
-      />
+      {/* Нижняя панель - на всю ширину */}
+      <div className="col-span-3 border-t bg-muted/10">
+        <BottomPanel 
+          showWebcams={showWebcams} 
+          setShowWebcams={setShowWebcams} 
+        />
+      </div>
       
       {/* Модальное окно выбора аватара */}
       {showAvatarSelector && (
