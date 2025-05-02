@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -73,14 +72,18 @@ import {
   Search,
   Filter,
   Settings,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { CharacterSpell } from '@/types/character';
 import { spells, getSpellsByLevel } from '@/data/spells';
+import { useTheme } from '@/hooks/use-theme';
 
 const PlayerHandbookPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
@@ -119,7 +122,7 @@ const PlayerHandbookPage: React.FC = () => {
       filteredSpells = filteredSpells.filter(spell => spell.level === level);
     }
     
-    // Применяем поиск по тексту
+    // Прим��няем поиск по тексту
     if (searchTerm) {
       const searchTermLower = searchTerm.toLowerCase();
       filteredSpells = filteredSpells.filter(spell => {
@@ -191,6 +194,14 @@ const PlayerHandbookPage: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
+  // Навигация между страницами
+  const navigationLinks = [
+    { name: "Главная", path: "/", icon: <Home className="h-4 w-4" /> },
+    { name: "Руководство", path: "/handbook", icon: <BookOpen className="h-4 w-4" /> },
+    { name: "Создание персонажа", path: "/character-creation", icon: <Book className="h-4 w-4" /> },
+    { name: "Боевая карта", path: "/dm/battle", icon: <Book className="h-4 w-4" /> }
+  ];
+
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">
@@ -203,15 +214,19 @@ const PlayerHandbookPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
-          <Home className="h-4 w-4" />
-          На главную
-        </Button>
-        <Button variant="outline" onClick={() => navigate('/handbook')} className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4" />
-          Руководство игрока
-        </Button>
+      {/* Улучшенная навигация */}
+      <div className="flex gap-2 flex-wrap mb-6">
+        {navigationLinks.map((link, index) => (
+          <Button 
+            key={link.path} 
+            variant="outline" 
+            onClick={() => navigate(link.path)} 
+            className="flex items-center gap-2"
+          >
+            {link.icon}
+            {link.name}
+          </Button>
+        ))}
       </div>
 
       <div className="lg:grid grid-cols-5 gap-6">
@@ -300,20 +315,20 @@ const PlayerHandbookPage: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Табы с уровнями заклинаний */}
+          {/* Табы с уровнями заклинаний - обновленные стили для лучшей контрастности */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList className="grid grid-cols-6 lg:grid-cols-11">
-              <TabsTrigger value="all">Все</TabsTrigger>
-              <TabsTrigger value="0">Заговоры</TabsTrigger>
-              <TabsTrigger value="1">1 круг</TabsTrigger>
-              <TabsTrigger value="2">2 круг</TabsTrigger>
-              <TabsTrigger value="3">3 круг</TabsTrigger>
-              <TabsTrigger value="4">4 круг</TabsTrigger>
-              <TabsTrigger value="5">5 круг</TabsTrigger>
-              <TabsTrigger value="6">6 круг</TabsTrigger>
-              <TabsTrigger value="7">7 круг</TabsTrigger>
-              <TabsTrigger value="8">8 круг</TabsTrigger>
-              <TabsTrigger value="9">9 круг</TabsTrigger>
+              <TabsTrigger value="all" className="text-foreground data-[state=inactive]:text-foreground/70">Все</TabsTrigger>
+              <TabsTrigger value="0" className="text-foreground data-[state=inactive]:text-foreground/70">Заговоры</TabsTrigger>
+              <TabsTrigger value="1" className="text-foreground data-[state=inactive]:text-foreground/70">1 круг</TabsTrigger>
+              <TabsTrigger value="2" className="text-foreground data-[state=inactive]:text-foreground/70">2 круг</TabsTrigger>
+              <TabsTrigger value="3" className="text-foreground data-[state=inactive]:text-foreground/70">3 круг</TabsTrigger>
+              <TabsTrigger value="4" className="text-foreground data-[state=inactive]:text-foreground/70">4 круг</TabsTrigger>
+              <TabsTrigger value="5" className="text-foreground data-[state=inactive]:text-foreground/70">5 круг</TabsTrigger>
+              <TabsTrigger value="6" className="text-foreground data-[state=inactive]:text-foreground/70">6 круг</TabsTrigger>
+              <TabsTrigger value="7" className="text-foreground data-[state=inactive]:text-foreground/70">7 круг</TabsTrigger>
+              <TabsTrigger value="8" className="text-foreground data-[state=inactive]:text-foreground/70">8 круг</TabsTrigger>
+              <TabsTrigger value="9" className="text-foreground data-[state=inactive]:text-foreground/70">9 круг</TabsTrigger>
             </TabsList>
           </Tabs>
           
@@ -605,6 +620,26 @@ const PlayerHandbookPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Навигационные кнопки внизу */}
+      <div className="flex justify-between mt-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/handbook')} 
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Руководство игрока
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/character-creation')} 
+          className="flex items-center gap-2"
+        >
+          Создание персонажа
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Модальное окно с деталями заклинания */}

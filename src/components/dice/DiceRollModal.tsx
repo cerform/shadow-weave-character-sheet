@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,10 +24,19 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [modifier, setModifier] = useState(0);
   const [lastDieResult, setLastDieResult] = useState<number | null>(null);
+  const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
+
+  // При открытии модала, сбрасываем ключ для принудительной перерисовки
+  useEffect(() => {
+    if (open) {
+      setKey(prev => prev + 1);
+    }
+  }, [open]);
 
   const handleDiceSelect = (dice: DiceType) => {
     setSelectedDice(dice);
     updateFormula(quantity, dice, modifier);
+    setKey(prev => prev + 1); // Перерисовываем кубик при смене типа
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,8 +79,8 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
         
         <Tabs defaultValue="builder" className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="builder">Конструктор</TabsTrigger>
-            <TabsTrigger value="advanced">Вручную</TabsTrigger>
+            <TabsTrigger value="builder" className="text-foreground data-[state=inactive]:text-foreground/70">Конструктор</TabsTrigger>
+            <TabsTrigger value="advanced" className="text-foreground data-[state=inactive]:text-foreground/70">Вручную</TabsTrigger>
           </TabsList>
           
           <TabsContent value="builder" className="space-y-4">
@@ -101,6 +110,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
                   min="1"
                   value={quantity}
                   onChange={handleQuantityChange}
+                  className="text-foreground"
                 />
               </div>
               <div>
@@ -110,6 +120,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
                   type="number"
                   value={modifier}
                   onChange={handleModifierChange}
+                  className="text-foreground"
                 />
               </div>
             </div>
@@ -123,6 +134,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
                 value={formula}
                 onChange={(e) => setFormula(e.target.value)}
                 placeholder="например: 2d6+3"
+                className="text-foreground"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Формат: [количество]d[тип]+[модификатор]
@@ -138,11 +150,13 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Например: Атака дубиной"
+            className="text-foreground"
           />
         </div>
         
         <div className="h-[200px] w-full">
           <DiceRoller3D 
+            key={key} // Принудительное пересоздание компонента
             initialDice={selectedDice} 
             onRollComplete={handleRollComplete}
             hideControls={true} 

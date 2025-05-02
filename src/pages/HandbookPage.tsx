@@ -12,7 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Home, ArrowLeft } from "lucide-react";
+import { BookOpen, Home, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import ThemeSelector from "@/components/character-sheet/ThemeSelector";
@@ -46,6 +46,14 @@ const HandbookPage: React.FC = () => {
             <BookOpen className="size-4" />
             Книга заклинаний
           </Button>
+          <Button variant="outline" onClick={() => navigate('/character-creation')} className="flex items-center gap-2">
+            <BookOpen className="size-4" />
+            Создание персонажа
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/dm/battle')} className="flex items-center gap-2">
+            <BookOpen className="size-4" />
+            Боевая карта
+          </Button>
         </div>
         <div>
           <ThemeSelector />
@@ -54,10 +62,10 @@ const HandbookPage: React.FC = () => {
 
       <Tabs defaultValue="races" className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto">
-          <TabsTrigger value="races">Расы</TabsTrigger>
-          <TabsTrigger value="classes">Классы</TabsTrigger>
-          <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-          <TabsTrigger value="rules">Правила</TabsTrigger>
+          <TabsTrigger value="races" className="text-foreground data-[state=inactive]:text-foreground/70">Расы</TabsTrigger>
+          <TabsTrigger value="classes" className="text-foreground data-[state=inactive]:text-foreground/70">Классы</TabsTrigger>
+          <TabsTrigger value="equipment" className="text-foreground data-[state=inactive]:text-foreground/70">Снаряжение</TabsTrigger>
+          <TabsTrigger value="rules" className="text-foreground data-[state=inactive]:text-foreground/70">Правила</TabsTrigger>
         </TabsList>
 
         <TabsContent value="races" className="space-y-4">
@@ -235,17 +243,24 @@ const HandbookPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      <div className="mt-6">
-        <NavigationButtons 
-          allowNext={true}
-          nextStep={() => navigate('/spellbook')}
-          prevStep={() => navigate('/')}
-          isFirstStep={false}
-          isLastStep={false}
-          homePath="/"
-          nextLabel="Книга заклинаний"
-          prevLabel="На главную"
-        />
+      {/* Улучшенная навигация внизу страницы */}
+      <div className="flex justify-between mt-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          На главную
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/spellbook')} 
+          className="flex items-center gap-2"
+        >
+          Книга заклинаний
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

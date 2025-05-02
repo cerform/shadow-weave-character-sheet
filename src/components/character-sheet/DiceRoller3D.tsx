@@ -21,45 +21,71 @@ const diceConfigs = {
 
 type DieType = keyof typeof diceConfigs;
 
-// Создание специальной геометрии для d10
+// Создание улучшенной геометрии для d10 на основе изображения-примера
 const createD10Geometry = () => {
-  // Создаем базовую геометрию для d10 (правильный 10-гранник - decagon prism)
-  const radius = 1.2;
-  const height = 0.8;
+  // Создаем базовую геометрию для d10, используя модифицированную пирамиду с 10 гранями
+  const geometry = new THREE.BufferGeometry();
+  const height = 1.2;
   
-  // Создаем пентагональную призму и деформируем её для d10
-  const geometry = new THREE.CylinderGeometry(radius, radius, height, 10);
+  // Генерируем вершины для d10 на основе десятиугольника
+  const vertices = [];
+  const topPt = new THREE.Vector3(0, height, 0);
+  const botPt = new THREE.Vector3(0, -height, 0);
   
-  // Модифицируем вершины для создания двух конусов (верхний и нижний)
-  const positions = geometry.attributes.position;
+  // Основания: верхнее и нижнее
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 5) * Math.PI; // Угол на окружности
+    // Вершина на "экваторе" - смещена чтобы создать ромбовидную форму
+    const pt = new THREE.Vector3(
+      Math.cos(angle) * 1.2,
+      i % 2 === 0 ? 0.15 : -0.15, // Чередуем высоту для создания ромбовидности
+      Math.sin(angle) * 1.2
+    );
+    vertices.push(pt);
+  }
   
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i);
-    const y = positions.getY(i);
-    const z = positions.getZ(i);
-    
-    // Смещаем верхние и нижние вершины для создания формы d10
-    if (y > 0) {
-      // Верхний конус
-      positions.setY(i, y * 1.5); // Вытягиваем верхушку
-      
-      // Смещаем вершины внутрь для сужения
-      const scale = 0.6 + (y / height) * 0.4;
-      positions.setX(i, x * scale);
-      positions.setZ(i, z * scale);
-    }
-    else if (y < 0) {
-      // Нижний конус
-      positions.setY(i, y * 1.5); // Вытягиваем низ
-      
-      // Смещаем вершины внутрь для сужения
-      const scale = 0.6 + (Math.abs(y) / height) * 0.4;
-      positions.setX(i, x * scale);
-      positions.setZ(i, z * scale);
+  // Индексы для треугольников
+  const indices = [];
+  
+  // Соединяем верхнюю точку с каждой второй вершиной экватора
+  for (let i = 0; i < 10; i += 2) {
+    indices.push(10, i, (i + 2) % 10);
+  }
+  
+  // Соединяем нижнюю точку с каждой нечетной вершиной экватора
+  for (let i = 1; i < 10; i += 2) {
+    indices.push(11, (i + 2) % 10, i);
+  }
+  
+  // Добавляем треугольники для боковых граней
+  for (let i = 0; i < 10; i++) {
+    const next = (i + 1) % 10;
+    if (i % 2 === 0) {
+      indices.push(i, next, 10); // Верхняя грань
+    } else {
+      indices.push(i, 11, next); // Нижняя грань
     }
   }
   
+  // Добавляем верхнюю и нижнюю точки в вершины
+  vertices.push(topPt);  // Индекс 10
+  vertices.push(botPt);  // Индекс 11
+  
+  // Преобразование массива вершин в плоский массив
+  const positions = new Float32Array(vertices.length * 3);
+  for (let i = 0; i < vertices.length; i++) {
+    positions[i * 3] = vertices[i].x;
+    positions[i * 3 + 1] = vertices[i].y;
+    positions[i * 3 + 2] = vertices[i].z;
+  }
+  
+  // Создание индексного буфера
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  // Вычисляем нормали для правильного освещения
   geometry.computeVertexNormals();
+  
   return geometry;
 };
 
@@ -79,7 +105,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
   const roll = () => {
     setRolling(true);
     rotationSpeed.current = new THREE.Vector3(
-      Math.random() * 0.6 - 0.3, // увеличили силу броска
+      Math.random() * 0.6 - 0.3,
       Math.random() * 0.6 - 0.3,
       Math.random() * 0.6 - 0.3
     );
@@ -92,7 +118,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
     }
   };
   
-  // Auto-roll on first render
+  // Auto-roll on first render and type change
   useEffect(() => {
     // Small delay for initial rendering
     const timer = setTimeout(() => {
@@ -147,7 +173,7 @@ function Die({ type = 'd20', onRollComplete }: { type: DieType, onRollComplete: 
       case 'd8':
         return <octahedronGeometry args={[1.2, 0]} />;
       case 'd10':
-        // Используем специальную геометрию для d10
+        // Используем специальную улучшенную геометрию для d10
         return <primitive object={createD10Geometry()} />;
       case 'd12':
         return <dodecahedronGeometry args={[1.2, 0]} />;
@@ -246,6 +272,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
   const [rolling, setRolling] = useState(false);
   const [resultHistory, setResultHistory] = useState<{dice: DieType, value: number, timestamp: number}[]>([]);
   const [diceModifier, setDiceModifier] = useState(modifier);
+  const [key, setKey] = useState(0); // Ключ для принудительного обновления компонента
   
   const handleRollComplete = (value: number) => {
     const newResult = { dice: activeDice, value };
@@ -269,6 +296,9 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
     
     // Clear previous results
     setResults([]);
+    
+    // Форсируем обновление компонента для перебрасывания
+    setKey(prevKey => prevKey + 1);
   };
   
   // Calculate the total of all dice rolled
@@ -277,7 +307,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 mb-2 bg-black/10 rounded-lg overflow-hidden relative">
-        <Canvas shadows>
+        <Canvas shadows key={key}>
           <Suspense fallback={null}>
             <DiceScene diceType={activeDice} onRollComplete={handleRollComplete} />
           </Suspense>
@@ -314,13 +344,13 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
           <div className="mb-2">
             <Tabs defaultValue={activeDice} value={activeDice} className="w-full" onValueChange={(val) => setActiveDice(val as DieType)}>
               <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-1 h-auto">
-                <TabsTrigger value="d4" className="text-sm py-1 px-2">d4</TabsTrigger>
-                <TabsTrigger value="d6" className="text-sm py-1 px-2">d6</TabsTrigger>
-                <TabsTrigger value="d8" className="text-sm py-1 px-2">d8</TabsTrigger>
-                <TabsTrigger value="d10" className="text-sm py-1 px-2">d10</TabsTrigger>
-                <TabsTrigger value="d12" className="text-sm py-1 px-2">d12</TabsTrigger>
-                <TabsTrigger value="d20" className="text-sm py-1 px-2">d20</TabsTrigger>
-                <TabsTrigger value="d100" className="text-sm py-1 px-2">d100</TabsTrigger>
+                <TabsTrigger value="d4" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d4</TabsTrigger>
+                <TabsTrigger value="d6" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d6</TabsTrigger>
+                <TabsTrigger value="d8" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d8</TabsTrigger>
+                <TabsTrigger value="d10" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d10</TabsTrigger>
+                <TabsTrigger value="d12" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d12</TabsTrigger>
+                <TabsTrigger value="d20" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d20</TabsTrigger>
+                <TabsTrigger value="d100" className="text-sm py-1 px-2 text-foreground data-[state=inactive]:text-foreground/70">d100</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -330,7 +360,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
               type="number" 
               value={diceCount} 
               onChange={(e) => setDiceCount(Number(e.target.value))}
-              className="w-16 text-center"
+              className="w-16 text-center text-foreground"
               min={1}
               max={10}
             />
@@ -338,7 +368,7 @@ export const DiceRoller3D: React.FC<DiceRoller3DProps> = ({
               type="number" 
               value={diceModifier} 
               onChange={(e) => setDiceModifier(Number(e.target.value))}
-              className="w-16 text-center"
+              className="w-16 text-center text-foreground"
               placeholder="+/-"
             />
             <Button 

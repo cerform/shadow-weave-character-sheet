@@ -7,6 +7,7 @@ import { Dices, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { DiceRoller3D } from './DiceRoller3D';
 
 export const DicePanel = () => {
   const [diceCount, setDiceCount] = useState(1);
@@ -17,6 +18,7 @@ export const DicePanel = () => {
   const [isRolling, setIsRolling] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes];
+  const [diceKey, setDiceKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
   
   // Компонент дайса для отображения в результате
   const DiceIcon = ({ value, size = 24 }: { value: number, size?: number }) => {
@@ -35,37 +37,33 @@ export const DicePanel = () => {
   const rollDice = (type: string) => {
     setDiceType(type);
     setIsRolling(true);
+    setDiceKey(prev => prev + 1); // Перерисовываем кубик для нового броска
+  };
+  
+  // Обработчик результата броска из 3D компонента
+  const handleDiceResult = (value: number) => {
+    const count = Math.max(1, Math.min(20, diceCount));
+    const max = parseInt(diceType.replace('d', ''));
     
-    // Небольшая задержка для эффекта "броска"
-    setTimeout(() => {
-      const count = Math.max(1, Math.min(20, diceCount));
-      const max = parseInt(type.replace('d', ''));
-      
-      let rolls = [];
-      let total = 0;
-      
-      for (let i = 0; i < count; i++) {
-        const roll = Math.floor(Math.random() * max) + 1;
-        rolls.push(roll);
-        total += roll;
-      }
-      
-      // Добавляем модификатор
-      const finalTotal = total + modifier;
-      
-      // Сохраняем результат броска
-      const newRoll = { type, rolls, total: finalTotal, modifier };
-      setRollsHistory(prev => [newRoll, ...prev.slice(0, 9)]);
-      
-      setDiceResult(`${finalTotal}`);
-      setIsRolling(false);
-    }, 500);
+    let rolls = [value];
+    let total = value;
+    
+    // Добавляем модификатор
+    const finalTotal = total + modifier;
+    
+    // Сохраняем результат броска
+    const newRoll = { type: diceType, rolls, total: finalTotal, modifier };
+    setRollsHistory(prev => [newRoll, ...prev.slice(0, 9)]);
+    
+    setDiceResult(`${finalTotal}`);
+    setIsRolling(false);
   };
   
   // Сброс состояния броска, чтобы кнопку можно было нажать снова
   const resetRoll = () => {
     setDiceResult(null);
     setIsRolling(false);
+    setDiceKey(prev => prev + 1); // Перерисовываем кубик для нового броска
   };
   
   return (
@@ -81,7 +79,7 @@ export const DicePanel = () => {
             onChange={(e) => setDiceCount(Number(e.target.value))} 
             min={1}
             max={20}
-            className="w-full mt-1"
+            className="w-full mt-1 text-foreground"
           />
         </div>
         <div>
@@ -90,27 +88,31 @@ export const DicePanel = () => {
             type="number" 
             value={modifier} 
             onChange={(e) => setModifier(Number(e.target.value))} 
-            className="w-full mt-1"
+            className="w-full mt-1 text-foreground"
           />
         </div>
       </div>
       
       <div className="grid grid-cols-4 gap-2 mb-3">
-        <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling}>d4</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling}>d6</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling}>d8</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling}>d10</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling}>d12</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling}>d20</Button>
-        <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling}>d100</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d4')} disabled={isRolling} className="text-foreground">d4</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d6')} disabled={isRolling} className="text-foreground">d6</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d8')} disabled={isRolling} className="text-foreground">d8</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d10')} disabled={isRolling} className="text-foreground">d10</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d12')} disabled={isRolling} className="text-foreground">d12</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d20')} disabled={isRolling} className="text-foreground">d20</Button>
+        <Button variant="outline" size="sm" onClick={() => rollDice('d100')} disabled={isRolling} className="text-foreground">d100</Button>
       </div>
       
-      {isRolling && (
-        <div className="p-2 mb-2 bg-primary/10 rounded-md text-center">
-          <Dices className="inline-block animate-spin text-primary" />
-          <span className="ml-2 text-primary">Бросок...</span>
-        </div>
-      )}
+      {/* 3D Dice Roller */}
+      <div className="h-[150px] mb-4 bg-black/10 rounded-lg overflow-hidden">
+        <DiceRoller3D 
+          key={diceKey}
+          initialDice={diceType as any}
+          hideControls={true}
+          modifier={modifier}
+          onRollComplete={handleDiceResult}
+        />
+      </div>
       
       {diceResult && !isRolling && (
         <div className="p-2 mb-4 bg-primary/10 rounded-md text-center">
