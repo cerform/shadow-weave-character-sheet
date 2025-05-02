@@ -1,16 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { DicePanel } from "@/components/character-sheet/DicePanel";
+import { DicePanel } from '@/components/character-sheet/DicePanel';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const LeftPanelDiceRoller: React.FC = () => {
+const LeftPanelDiceRoller = () => {
   return (
-    <div className="h-full flex flex-col p-4 overflow-y-auto">
-      <h3 className="font-semibold mb-4 text-center">Бросок кубиков</h3>
-      <div className="flex-1 overflow-y-auto">
-        <DicePanel />
+    <ScrollArea className="h-full pr-2">
+      <div className="p-3">
+        <Card className="bg-background/40 backdrop-blur-md border-primary/20 shadow-xl">
+          <div className="p-3">
+            <h3 className="font-bold mb-3 text-lg text-center">Бросок кубиков</h3>
+            <DicePanel />
+          </div>
+        </Card>
       </div>
-    </div>
+    </ScrollArea>
   );
 };
 

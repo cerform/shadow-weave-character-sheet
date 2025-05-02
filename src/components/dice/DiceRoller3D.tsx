@@ -1,75 +1,42 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-// Типы кубиков
-type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
-
-type DiceModelProps = { 
-  diceType: DiceType, 
-  onRoll?: (result: number) => void,
-  color?: string,
-  rolling: boolean,
-  setRolling: (rolling: boolean) => void,
-  modifier?: number,
-  playerName?: string,
-  showResultInScene?: boolean
-};
-
-// Создание геометрии для d4 (тетраэдр с улучшенной геометрией)
-const createD4Geometry = () => {
-  const geometry = new THREE.TetrahedronGeometry(1.2, 0);
-  return geometry;
-};
-
-// Создание геометрии для d6 (куб с закругленными углами)
-const createD6Geometry = () => {
-  const geometry = new THREE.BoxGeometry(1.1, 1.1, 1.1);
-  return geometry;
-};
-
-// Создание геометрии для d8 (октаэдр)
-const createD8Geometry = () => {
-  const geometry = new THREE.OctahedronGeometry(1.1, 0);
-  return geometry;
-};
-
-// Кастомная геометрия для d10 (десятигранная трапецоэдра)
+// Кастомная геометрия для d10 (Pentagonal trapezohedron)
 const createD10Geometry = () => {
-  const geometry = new THREE.BufferGeometry();
-  
-  // Создаем улучшенную пентагональную трапецоэдру для d10
+  // Создаем геометрию для пятиугольной трапецоэдры (Pentagonal trapezohedron)
   const vertices = [];
   const indices = [];
   
   // Верхняя вершина
-  vertices.push(0, 1.2, 0);
+  vertices.push(0, 1, 0);
   
   // Верхний пентагон
   for (let i = 0; i < 5; i++) {
     const angle = (Math.PI * 2 / 5) * i;
     vertices.push(
-      0.85 * Math.cos(angle),
-      0.3,
-      0.85 * Math.sin(angle)
+      0.6 * Math.cos(angle),
+      0.2,
+      0.6 * Math.sin(angle)
     );
   }
   
-  // Нижний пентагон (повернут на 36 градусов)
+  // Нижний пентагон (повернутый на 36 градусов)
   for (let i = 0; i < 5; i++) {
     const angle = (Math.PI * 2 / 5) * (i + 0.5);
     vertices.push(
-      0.85 * Math.cos(angle),
-      -0.3,
-      0.85 * Math.sin(angle)
+      0.6 * Math.cos(angle),
+      -0.2,
+      0.6 * Math.sin(angle)
     );
   }
   
   // Нижняя вершина
-  vertices.push(0, -1.2, 0);
+  vertices.push(0, -1, 0);
   
   // Грани (верхняя половина)
   for (let i = 0; i < 5; i++) {
@@ -85,374 +52,361 @@ const createD10Geometry = () => {
     indices.push(11, i + 6, next + 6);
   }
   
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   
   return geometry;
 };
 
-// Создание геометрии для d12 (додекаэдр)
-const createD12Geometry = () => {
-  const geometry = new THREE.DodecahedronGeometry(1.1, 0);
-  return geometry;
-};
-
-// Создание геометрии для d20 (икосаэдр)
-const createD20Geometry = () => {
-  const geometry = new THREE.IcosahedronGeometry(1.1, 0);
-  return geometry;
-};
-
-// Компонент кубика с индивидуальными геометриями
-function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, modifier = 0, playerName, showResultInScene = false }: DiceModelProps) {
-  const meshRef = useRef<THREE.Mesh>(null!);
-  const [result, setResult] = useState<number | null>(null);
-  const [animationPhase, setAnimationPhase] = useState(0); // 0: initial, 1: rolling, 2: slowing, 3: stopped
-  const [rollStartTime, setRollStartTime] = useState(0);
-  const [rotationSpeed, setRotationSpeed] = useState({ x: 0, y: 0, z: 0 });
+const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = false, forceReroll = false, themeColor = '#ffffff', fixedPosition = false }: { 
+  type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
+  onRoll?: (result: number) => void,
+  modifier?: number,
+  autoRoll?: boolean,
+  hideControls?: boolean,
+  forceReroll?: boolean,
+  themeColor?: string,
+  fixedPosition?: boolean
+}) => {
+  const meshRef = useRef<Mesh>(null!);
+  const initialPositionRef = useRef<Vector3>(new Vector3(0, 3, 0));
+  const targetPositionRef = useRef<Vector3>(new Vector3(0, 0, 0));
+  const throwForceRef = useRef<Vector3>(new Vector3(
+    (Math.random() - 0.5) * 10,
+    0,
+    (Math.random() - 0.5) * 10
+  ));
   
-  // Максимальное значение на кубике
-  const getMaxValue = () => {
-    switch (diceType) {
+  const [rolling, setRolling] = useState(false);
+  const [result, setResult] = useState(0);
+  const [readyToRoll, setReadyToRoll] = useState(true);
+  const [rollPhase, setRollPhase] = useState(0); // 0: initial, 1: rolling, 2: settled
+  
+  // Преобразование HEX цвета в объект Color из Three.js
+  const diceColor = new Color(themeColor);
+  
+  // Определение геометрии и числа граней для кубика
+  const getDiceGeometry = (type: string) => {
+    switch (type) {
+      case 'd4':
+        return new TetrahedronGeometry(1, 0);
+      case 'd6':
+        return new BoxGeometry(1, 1, 1);
+      case 'd8':
+        return new OctahedronGeometry(1, 0);
+      case 'd10':
+        return createD10Geometry();
+      case 'd12':
+        return new DodecahedronGeometry(1, 0);
+      case 'd20':
+        return new IcosahedronGeometry(1, 0);
+      case 'd100':
+        // Для d100 используем также геометрию d10, но с другой логикой результата
+        return createD10Geometry();
+      default:
+        return new BoxGeometry(1, 1, 1);
+    }
+  };
+  
+  const getMaxValue = (type: string) => {
+    switch (type) {
       case 'd4': return 4;
       case 'd6': return 6;
       case 'd8': return 8;
       case 'd10': return 10;
       case 'd12': return 12;
       case 'd20': return 20;
+      case 'd100': return 100;
       default: return 6;
     }
   };
-
-  // Эффект для броска кубика
+  
   useEffect(() => {
-    if (rolling && animationPhase === 0) {
-      setAnimationPhase(1);
-      setRollStartTime(Date.now());
-      setRotationSpeed({
-        x: Math.random() * 4 + 2, // Уменьшена скорость вращения
-        y: Math.random() * 4 + 2,
-        z: Math.random() * 4 + 2
-      });
-      setResult(null);
-      
-      // Случайное начальное положение
-      if (meshRef.current) {
-        meshRef.current.rotation.x = Math.random() * Math.PI * 2;
-        meshRef.current.rotation.y = Math.random() * Math.PI * 2;
-        meshRef.current.rotation.z = Math.random() * Math.PI * 2;
-      }
+    if (autoRoll || forceReroll) {
+      rollDice();
     }
-  }, [rolling, animationPhase]);
-
-  // Анимация кубика с более плавным замедлением
+  }, [autoRoll, forceReroll]);
+  
+  const rollDice = () => {
+    if (!readyToRoll) return;
+    
+    setRolling(true);
+    setRollPhase(1);
+    setReadyToRoll(false);
+    
+    // Сброс позиции и генерация новой силы броска
+    if (meshRef.current) {
+      meshRef.current.position.copy(initialPositionRef.current);
+      throwForceRef.current = new Vector3(
+        (Math.random() - 0.5) * 10,
+        0,
+        (Math.random() - 0.5) * 10
+      );
+    }
+    
+    // Определяем результат броска
+    const maxValue = getMaxValue(type);
+    let newResult = Math.floor(Math.random() * maxValue) + 1;
+    
+    // Для d100, умножаем результат на 10
+    if (type === 'd100') {
+      newResult = newResult * 10;
+    }
+    
+    // Таймер для "остановки" кубика
+    setTimeout(() => {
+      setResult(newResult);
+      setRollPhase(2);
+      
+      if (onRoll) {
+        onRoll(newResult);
+      }
+      
+      // Позволяем бросить кубик снова через небольшую задержку
+      setTimeout(() => {
+        setRolling(false);
+        setReadyToRoll(true);
+        setRollPhase(0);
+      }, 500);
+    }, 1000);
+  };
+  
   useFrame((_, delta) => {
     if (!meshRef.current) return;
-
-    const elapsed = Date.now() - rollStartTime;
     
-    if (animationPhase === 1) {
-      // Быстрое вращение в начале броска
-      meshRef.current.rotation.x += rotationSpeed.x * delta;
-      meshRef.current.rotation.y += rotationSpeed.y * delta;
-      meshRef.current.rotation.z += rotationSpeed.z * delta;
+    if (rolling && rollPhase === 1) {
+      // Когда кубик катится
+      meshRef.current.rotation.x += throwForceRef.current.x * delta;
+      meshRef.current.rotation.y += 5 * delta;
+      meshRef.current.rotation.z += throwForceRef.current.z * delta;
       
-      // Переход к фазе замедления через 1.5 секунд (увеличено время быстрого вращения)
-      if (elapsed > 1500) {
-        setAnimationPhase(2);
-      }
-    } else if (animationPhase === 2) {
-      // Фаза замедления (1.5-3.0 секунды) - увеличено время замедления
-      const slowdownFactor = Math.max(0.1, 1 - (elapsed - 1500) / 1500);
-      
-      meshRef.current.rotation.x += rotationSpeed.x * delta * slowdownFactor;
-      meshRef.current.rotation.y += rotationSpeed.y * delta * slowdownFactor;
-      meshRef.current.rotation.z += rotationSpeed.z * delta * slowdownFactor;
-      
-      // Остановка вращения и определение результата
-      if (elapsed > 3000) {
-        setAnimationPhase(3);
-        
-        // Определяем результат броска
-        const randomValue = Math.floor(Math.random() * getMaxValue()) + 1;
-        setResult(randomValue);
-        
-        // Вызываем колбэк
-        if (onRoll) {
-          onRoll(randomValue);
-        }
-        
-        // Завершаем бросок
-        setTimeout(() => {
-          setRolling(false);
-          setAnimationPhase(0);
-        }, 500);
-      }
+      // Движение к целевой позиции
+      meshRef.current.position.lerp(targetPositionRef.current, 0.1);
+    } else if (rollPhase === 2) {
+      // Замедляем вращение когда кубик "остановился"
+      meshRef.current.rotation.x *= 0.95;
+      meshRef.current.rotation.y *= 0.95;
+      meshRef.current.rotation.z *= 0.95;
     }
   });
-
-  // Создаем геометрию для разных типов кубиков
-  const getDiceGeometry = () => {
-    switch (diceType) {
-      case 'd4':
-        return createD4Geometry();
-      case 'd6':
-        return createD6Geometry();
-      case 'd8':
-        return createD8Geometry();
-      case 'd10':
-        return createD10Geometry();
-      case 'd12':
-        return createD12Geometry();
-      case 'd20':
-        return createD20Geometry();
-      default:
-        return createD6Geometry();
-    }
-  };
-
-  // Добавляем подсветку для выделения граней
-  const edgeLight = new THREE.Color(color).clone().multiplyScalar(1.3);
+  
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.set(0, 2, 5);
+    camera.lookAt(0, 0, 0);
+  }, [camera]);
+  
+  // Создаем материал с цветом темы и улучшенными настройками
+  const diceMaterial = new MeshStandardMaterial({
+    color: diceColor,
+    metalness: 0.7,
+    roughness: 0.3,
+    emissive: new Color(diceColor).multiplyScalar(0.2),
+  });
+  
+  // В случае фиксированной позиции, не отображаем результат на сцене
+  const shouldDisplayResult = !fixedPosition && result > 0 && !rolling;
 
   return (
     <group>
-      <mesh ref={meshRef} position={[0, 0, 0]} castShadow receiveShadow>
-        <primitive object={getDiceGeometry()} />
-        <meshStandardMaterial 
-          color={new THREE.Color(color)} 
-          metalness={0.4} 
-          roughness={0.3}
-          emissive={new THREE.Color(color).multiplyScalar(0.2)}
-          envMapIntensity={0.8}
-          flatShading={false}
-        />
+      <mesh ref={meshRef} position={initialPositionRef.current} castShadow receiveShadow>
+        <primitive object={getDiceGeometry(type)} />
+        <primitive object={diceMaterial} attach="material" />
       </mesh>
       
-      {result !== null && !rolling && showResultInScene && (
-        <Text
-          position={[0, 2, 0]}
-          fontSize={0.8}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.04}
-          outlineColor="#000000"
-        >
-          {result}{modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : ''}
-        </Text>
+      {!hideControls && (
+        <group position={[0, -2, 0]}>
+          <mesh position={[0, 0, 0]} onClick={rollDice} onPointerOver={() => document.body.style.cursor = 'pointer'} onPointerOut={() => document.body.style.cursor = 'default'}>
+            <boxGeometry args={[2.5, 0.5, 1]} />
+            <meshStandardMaterial color={readyToRoll ? "#4CAF50" : "#9E9E9E"} />
+          </mesh>
+          <Text position={[0, 0, 0.6]} fontSize={0.2} color="#FFFFFF">
+            {readyToRoll ? "Бросить" : "..."}
+          </Text>
+        </group>
+      )}
+      
+      {shouldDisplayResult && (
+        <group position={[0, 1.5, 0]}>
+          <Text position={[0, 0, 0]} fontSize={0.5} color={themeColor} anchorX="center" anchorY="middle">
+            {result + (modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : '')}
+          </Text>
+        </group>
       )}
     </group>
   );
-}
+};
 
-// Основной компонент, экспортируемый из файла
-export const DiceRoller3D: React.FC<{
-  initialDice?: DiceType,
+export const DiceRoller3D = ({ 
+  initialDice = 'd20', 
+  hideControls = false, 
+  modifier = 0, 
+  onRollComplete,
+  themeColor = '#ffffff',
+  fixedPosition = false,
+  playerName
+}: {
+  initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   hideControls?: boolean,
   modifier?: number,
   onRollComplete?: (result: number) => void,
   themeColor?: string,
   fixedPosition?: boolean,
-  playerName?: string,
-}> = ({
-  initialDice = 'd20',
-  hideControls = false,
-  modifier = 0,
-  onRollComplete,
-  themeColor,
-  fixedPosition = false,
-  playerName,
+  playerName?: string
 }) => {
-  const [diceType, setDiceType] = useState<DiceType>(initialDice);
-  const [rolling, setRolling] = useState(false);
-  const [result, setResult] = useState<number | null>(null);
+  const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
+  const [roll, setRoll] = useState(false);
+  const [forceReroll, setForceReroll] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const diceColor = themeColor || currentTheme.accent || '#4a9ef5';
-
-  // Обработка выбора типа кубика
-  const handleDiceChange = (type: DiceType) => {
+  const actualThemeColor = themeColor || currentTheme.accent;
+  
+  const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
     setDiceType(type);
+    setForceReroll(prev => !prev); // Reset the dice when changing type
   };
-
-  // Обработка броска кубика
+  
   const handleRoll = () => {
-    if (!rolling) {
-      setRolling(true);
-    }
+    setRoll(true);
+    setForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
   };
-
-  // Обработка результата броска
-  const handleRollComplete = (diceResult: number) => {
-    setResult(diceResult);
+  
+  const handleRollComplete = (result: number) => {
+    setRoll(false);
     if (onRollComplete) {
-      onRollComplete(diceResult);
+      onRollComplete(result);
     }
   };
-
-  // Автоматический бросок при первой загрузке
-  useEffect(() => {
-    if (initialDice && fixedPosition) {
-      setTimeout(() => handleRoll(), 200);
-    }
-  }, [initialDice, fixedPosition]);
-
-  // Определяем цвета для разных типов кубиков - более яркие и различимые цвета
-  const getDiceColor = (type: DiceType) => {
-    // Более яркие и различные цвета для разных типов кубиков
-    switch (type) {
-      case 'd4': return diceType === 'd4' ? '#B0E0E6' : '#90CAD1'; // Светло-голубой
-      case 'd6': return diceType === 'd6' ? '#98FB98' : '#7DCF7D'; // Светло-зеленый
-      case 'd8': return diceType === 'd8' ? '#FFA07A' : '#E08A68'; // Светло-оранжевый
-      case 'd10': return diceType === 'd10' ? '#DDA0DD' : '#C98AC9'; // Светло-фиолетовый
-      case 'd12': return diceType === 'd12' ? '#FFD700' : '#E6C200'; // Золотой
-      case 'd20': return diceType === 'd20' ? '#87CEEB' : '#6BBCE6'; // Небесно-голубой
-      default: return diceColor;
-    }
-  };
-
+  
+  // Кнопка броска внизу для лучшей доступности
+  const buttonBottom = hideControls ? "10px" : "55px";
+  
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <Canvas shadows camera={{ position: [0, 2, 5], fov: 45 }}>
-        <color attach="background" args={['#000000']} />
+      <Canvas shadows>
         <ambientLight intensity={0.5} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        
-        <DiceModel 
-          diceType={diceType} 
-          color={getDiceColor(diceType)}
+        <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+        <Dice 
+          type={diceType} 
           onRoll={handleRollComplete}
-          rolling={rolling}
-          setRolling={setRolling}
           modifier={modifier}
-          playerName={playerName}
-          showResultInScene={false} // Отключаем результат внутри сцены
+          autoRoll={roll}
+          hideControls={hideControls}
+          forceReroll={forceReroll}
+          themeColor={actualThemeColor}
+          fixedPosition={fixedPosition}
         />
-
-        <OrbitControls 
-          enablePan={false} 
-          enableZoom={false} 
-          enableRotate={!fixedPosition}
-          minPolarAngle={Math.PI / 6}
-          maxPolarAngle={Math.PI * 5/6}
-        />
+        <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
-
-      {/* Блок с результатом под сценой */}
-      {result && !rolling && (
-        <div style={{
-          position: 'absolute',
-          bottom: hideControls ? '10px' : '80px',
-          left: '10px',
-          right: '10px',
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          borderRadius: '8px',
-          padding: '10px',
-          textAlign: 'center',
-          color: '#ffffff',
-          fontWeight: 'bold',
-          fontSize: '20px',
-          boxShadow: `0 0 15px ${getDiceColor(diceType)}80`,
-          border: `1px solid ${getDiceColor(diceType)}`,
-          zIndex: 30
-        }}>
-          <span style={{ fontSize: '16px', opacity: 0.8 }}>Результат:</span><br />
-          <span style={{ fontSize: '24px' }}>
-            {result}
-            {modifier !== 0 && (
-              <span style={{ opacity: 0.8 }}>
-                {' '}{modifier > 0 ? '+' : ''}{modifier} = {result + modifier}
-              </span>
-            )}
-          </span>
-        </div>
-      )}
-
+      
       {!hideControls && (
-        <>
-          <div style={{ 
-            position: 'absolute', 
-            bottom: '60px', 
-            left: 0, 
-            width: '100%', 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '8px',
-            background: 'rgba(0,0,0,0.5)',
-            padding: '8px',
-            borderRadius: '8px',
-            zIndex: 10,
-          }}>
-            {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DiceType[]).map((dice) => {
-              const isActive = diceType === dice;
-              const diceSpecificColor = getDiceColor(dice);
-              
-              return (
-                <button 
-                  key={dice}
-                  onClick={() => handleDiceChange(dice)} 
-                  style={{ 
-                    padding: '6px 10px', 
-                    opacity: isActive ? 1 : 0.8,
-                    backgroundColor: isActive ? diceSpecificColor : 'rgba(255,255,255,0.1)',
-                    color: isActive ? 'black' : 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: isActive ? 'bold' : 'normal',
-                    boxShadow: isActive ? `0 0 10px ${diceSpecificColor}` : 'none',
-                    transition: 'all 0.3s ease'
-                  }}
-                >{dice}</button>
-              );
-            })}
-          </div>
-          
+        <div style={{ 
+          position: 'absolute', 
+          bottom: buttonBottom, 
+          left: 0, 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '8px',
+          background: 'rgba(0,0,0,0.2)',
+          padding: '8px',
+          borderRadius: '8px',
+        }}>
           <button 
-            onClick={handleRoll}
-            disabled={rolling}
-            style={{
-              position: 'absolute',
-              bottom: '10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '10px 20px',
-              backgroundColor: rolling ? '#888888' : getDiceColor(diceType),
-              color: 'black',
+            onClick={() => handleDiceChange('d4')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd4' ? 1 : 0.6,
+              backgroundColor: diceType === 'd4' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd4' ? 'black' : 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: rolling ? 'default' : 'pointer',
-              fontWeight: 'bold',
-              boxShadow: rolling ? 'none' : `0 0 15px ${getDiceColor(diceType)}80`,
-              zIndex: 20,
-              opacity: rolling ? 0.7 : 1,
-              transition: 'all 0.3s ease',
-              fontSize: '16px',
-              width: '180px'
+              cursor: 'pointer'
             }}
-          >
-            {rolling ? 'Бросаем...' : `Бросить ${diceType}`}
-          </button>
-        </>
-      )}
-
-      {playerName && (
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.7)',
-          padding: '5px 10px',
-          borderRadius: '4px',
-          color: 'white',
-          fontSize: '14px',
-          fontWeight: 'bold'
-        }}>
-          {playerName}
+          >d4</button>
+          <button 
+            onClick={() => handleDiceChange('d6')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd6' ? 1 : 0.6,
+              backgroundColor: diceType === 'd6' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd6' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d6</button>
+          <button 
+            onClick={() => handleDiceChange('d8')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd8' ? 1 : 0.6,
+              backgroundColor: diceType === 'd8' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd8' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d8</button>
+          <button 
+            onClick={() => handleDiceChange('d10')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd10' ? 1 : 0.6,
+              backgroundColor: diceType === 'd10' ? actualThemeColor : 'rgba(255,255,255,0.1)', 
+              color: diceType === 'd10' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d10</button>
+          <button 
+            onClick={() => handleDiceChange('d12')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd12' ? 1 : 0.6,
+              backgroundColor: diceType === 'd12' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd12' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d12</button>
+          <button 
+            onClick={() => handleDiceChange('d20')} 
+            style={{ 
+              padding: '4px 8px', 
+              opacity: diceType === 'd20' ? 1 : 0.6,
+              backgroundColor: diceType === 'd20' ? actualThemeColor : 'rgba(255,255,255,0.1)',
+              color: diceType === 'd20' ? 'black' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >d20</button>
         </div>
+      )}
+      
+      {!hideControls && (
+        <button 
+          onClick={handleRoll}
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            right: '10px',
+            padding: '8px 16px',
+            backgroundColor: actualThemeColor,
+            color: 'black',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Бросить {diceType}
+        </button>
       )}
     </div>
   );
