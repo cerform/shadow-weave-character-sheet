@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,7 +125,6 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         hp: baseMonster.hp,
         maxHp: baseMonster.hp,
         ac: baseMonster.ac,
-        // Убедимся, что initiative всегда является числом
         initiative: 10, // Инициатива всегда должна быть числом
         conditions: [],
         resources: {},
