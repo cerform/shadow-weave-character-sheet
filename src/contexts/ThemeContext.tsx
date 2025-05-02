@@ -54,11 +54,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
       
       // Дополнительно применяем цвета для фона и текста
-      document.documentElement.style.setProperty('--theme-bg', selectedTheme.primary);
+      document.documentElement.style.setProperty('--theme-bg', themeName === 'default' ? '#2C1B0E' : '#111111');
       document.documentElement.style.setProperty('--theme-fg', selectedTheme.textColor);
       
       // Установим также цвет акцента для компонентов
       document.documentElement.style.setProperty('--theme-accent', selectedTheme.accent);
+      
+      // Добавляем стили для лучшей контрастности в книге заклинаний
+      document.documentElement.style.setProperty('--background-card', 'rgba(0, 0, 0, 0.8)');
     }
   };
 

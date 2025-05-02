@@ -150,8 +150,10 @@
 
 /* End of OBS Layout styles */
 
-/* Классы для тем - применяют общие переменные темы */
+/* Обновленные стили для тем - темная тема по умолчанию для всех классов тем */
 .theme-default, .theme-warlock, .theme-wizard, .theme-druid, .theme-warrior, .theme-bard {
+  --background: 30 50% 5%;
+  --foreground: 30 30% 90%;
   --primary-gradient-value: var(--primary-gradient);
   --secondary-gradient-value: var(--secondary-gradient);
   --accent-color-value: var(--accent-color);
@@ -234,8 +236,8 @@
 
 /* Улучшаем чтение текста */
 .text-muted-foreground {
-  color: var(--muted-text-color, rgba(255, 255, 255, 0.7));
-  opacity: 0.9; /* Повышаем немного непрозрачность для лучшей читаемости */
+  color: var(--muted-text-color, rgba(255, 255, 255, 0.7)) !important;
+  opacity: 0.9; /* Повышаем непрозрачность для лучшей читаемости */
 }
 
 /* Улучшаем контрастность для карточек заклинаний */
@@ -310,72 +312,6 @@ h1, h2, h3, h4, h5, h6 {
 /* Добавляем явный цвет текста для форм и инпутов */
 input, select, textarea {
   color: var(--text-color, #E8DDCB) !important;
-}
-
-/* Улучшаем контраст для текста предпросмотра */
-.preview-text {
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-}
-
-/* Улучшенный контраст для вкладок */
-.data-\[state\=inactive\]\:text-foreground\/70 {
-  color: var(--text-color, #FFFFFF) !important;
-  opacity: 0.8 !important;
-}
-
-.data-\[state\=active\]\:text-foreground {
-  color: var(--text-color, #FFFFFF) !important;
-}
-
-/* Улучшенный контраст для вкладок и кнопок */
-button.data-\[state\=inactive\], 
-button[data-state="inactive"] {
-  color: var(--text-color) !important;
-  opacity: 0.85;
-}
-
-button.data-\[state\=active\],
-button[data-state="active"] {
-  color: var(--text-color) !important;
-  font-weight: 600;
-}
-
-/* Стили для кнопок навигации */
-.navigation-button {
-  color: var(--text-color) !important;
-  border-color: var(--accent-color, #8B5A2B);
-}
-
-.navigation-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Исправляем контраст текста кнопок */
-button, .btn {
-  color: var(--text-color, #E8DDCB) !important;
-}
-
-/* Исправляем контраст текста для меню выбора вкладки */
-.tabsList, .TabsList {
-  color: var(--text-color, #E8DDCB) !important;
-}
-
-/* Исправляем цвет фона и текста для активных вкладок */
-[data-state="active"] {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  color: var(--text-color, #E8DDCB) !important;
-  font-weight: 600;
-}
-
-/* Исправляем цвет фона и текста для неактивных вкладок */
-[data-state="inactive"] {
-  color: var(--text-color, #E8DDCB) !important;
-  opacity: 0.8;
-}
-
-/* Улучшаем контрастность для инпутов */
-input, select, textarea {
-  color: var(--text-color, #E8DDCB) !important;
   background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
@@ -387,6 +323,18 @@ input::placeholder {
 /* Улучшаем контрастность для бейджей */
 .badge {
   color: var(--text-color, #E8DDCB) !important;
+}
+
+/* Стили для книги заклинаний - усиленная читаемость */
+[data-state="active"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: var(--text-color, #FFFFFF) !important;
+  font-weight: 600;
+}
+
+[data-state="inactive"] {
+  color: var(--text-color, #FFFFFF) !important;
+  opacity: 0.8;
 }
 
 /* Стили для токен-селектора */
@@ -456,4 +404,51 @@ input::placeholder {
     rgba(255, 255, 255, 0) 70%
   );
   pointer-events: none;
+}
+
+/* Добавляем стили для книги заклинаний */
+.spell-card {
+  background-color: rgba(30, 30, 30, 0.9) !important;
+  border: 1px solid var(--accent-color, #8B5A2B);
+  color: var(--text-color, #E8DDCB) !important;
+}
+
+.spell-card h3, .spell-card h4 {
+  color: var(--text-color, #E8DDCB) !important;
+}
+
+.spell-card p, .spell-card span {
+  color: var(--text-color, #E8DDCB) !important;
+}
+
+/* Стили для масштабируемой карты */
+.battle-map-container {
+  overflow: auto;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.map-content {
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.map-content.zoomable {
+  transform-origin: 0 0;
+}
+
+/* Кнопки масштабирования */
+.zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }

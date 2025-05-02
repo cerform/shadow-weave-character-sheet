@@ -1,504 +1,252 @@
-
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Token, Initiative } from "@/pages/PlayBattlePage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Sword, Shield, Zap, PlusCircle, MinusCircle, GridIcon, Eye, EyeOff } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useDeviceType } from "@/hooks/use-mobile";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { User, Skull, Crown } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
-// Вспомогательные компоненты и утилиты
-import { useToast } from '@/components/ui/use-toast';
-
-// Типы данных из PlayBattlePage.tsx
-import { Token, Initiative, BattleState } from '@/pages/PlayBattlePage';
-
-// Обновленные типы для LeftPanel
-export interface LeftPanelProps {
+interface LeftPanelProps {
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
   initiative: Initiative[];
-  setInitiative: React.Dispatch<React.SetStateAction<Initiative[]>>;  // Делаем обязательным, а не опциональным
+  setInitiative: React.Dispatch<React.SetStateAction<Initiative[]>>;
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
-  battleState: BattleState;
-  fogOfWar?: boolean;
-  setFogOfWar?: (active: boolean) => void;
-  gridSize?: { rows: number, cols: number };
-  setGridSize?: (size: { rows: number, cols: number }) => void;
+  battleState: {
+    isActive: boolean;
+    round: number;
+    currentInitiativeIndex: number;
+  };
+  fogOfWar: boolean;
+  setFogOfWar: React.Dispatch<React.SetStateAction<boolean>>;
+  gridSize: { rows: number; cols: number };
+  setGridSize: React.Dispatch<React.SetStateAction<{ rows: number; cols: number }>>;
 }
 
-export const LeftPanel: React.FC<LeftPanelProps> = ({
+const LeftPanel: React.FC<LeftPanelProps> = ({
   tokens,
   setTokens,
   initiative,
-  setInitiative, // Используем параметр напрямую
+  setInitiative,
   selectedTokenId,
   onSelectToken,
   battleState,
-  fogOfWar = false,
-  setFogOfWar = () => {},
-  gridSize = { rows: 10, cols: 20 }, // По умолчанию большая сетка
-  setGridSize = () => {}
+  fogOfWar,
+  setFogOfWar,
+  gridSize,
+  setGridSize,
 }) => {
+  const [isAddingMonster, setIsAddingMonster] = useState(false);
+  const [monsterName, setMonsterName] = useState("");
+  const [monsterHP, setMonsterHP] = useState("");
+  const [monsterAC, setMonsterAC] = useState("");
+  const [monsterType, setMonsterType] = useState<"monster" | "boss">("monster");
   const { toast } = useToast();
-  const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(null);
-  const [monsterQuantity, setMonsterQuantity] = useState(1);
-  const [newMonsterName, setNewMonsterName] = useState('');
-  const deviceType = useDeviceType();
-  
-  // Состояния для настроек сетки
-  const [tempRows, setTempRows] = useState(gridSize.rows.toString());
-  const [tempCols, setTempCols] = useState(gridSize.cols.toString());
 
-  // Обработчики для управления боевым порядком
-  const startCombat = () => {
-    if (tokens.length < 1) {
+  // Функция для добавления токена
+  const onAddToken = (newToken: Token) => {
+    setTokens((prev) => [...prev, newToken]);
+
+    // Add to initiative if battle is active
+    if (battleState.isActive) {
+      const roll = Math.floor(Math.random() * 20) + 1 + Math.floor(newToken.initiative);
+      const newInitiative: Initiative = {
+        id: Date.now(),
+        tokenId: newToken.id,
+        name: newToken.name,
+        roll,
+        isActive: false,
+      };
+
+      const updatedInitiative = [...initiative, newInitiative].sort((a, b) => b.roll - a.roll);
+      setInitiative(updatedInitiative);
+    }
+  };
+
+  // Функция для добавления монстра из полей формы
+  const addMonster = () => {
+    if (!monsterName || !monsterHP || !monsterAC) {
       toast({
         title: "Ошибка",
-        description: "Добавьте хотя бы одного участника в бой",
+        description: "Заполните все поля",
         variant: "destructive",
       });
       return;
     }
 
-    // Сортируем участников по инициативе (от большей к меньшей)
-    const sortedCombatants = [...initiative].sort(
-      (a, b) => b.roll - a.roll
-    );
-
-    // Используем setInitiative напрямую, так как он теперь обязательный параметр
-    setInitiative(sortedCombatants);
-    battleState.currentInitiativeIndex = 0;
-    battleState.isActive = true;
-
-    toast({
-      title: "Бой начался!",
-      description: `Ход ${sortedCombatants[0]?.name || "первого участника"}`,
-    });
-  };
-
-  const endCombat = () => {
-    battleState.isActive = false;
-    battleState.currentInitiativeIndex = -1;
-    toast({
-      title: "Бой завершен",
-      description: "Инициатива сброшена",
-    });
-  };
-
-  const nextTurn = () => {
-    if (initiative.length === 0) return;
-    
-    let nextIndex = (battleState.currentInitiativeIndex + 1) % initiative.length;
-    battleState.currentInitiativeIndex = nextIndex;
-    
-    toast({
-      title: "Следующий ход",
-      description: `Ход ${initiative[nextIndex]?.name || "следующего участника"}`,
-    });
-  };
-  
-  // Обработчик изменения размера сетки
-  const updateGridSize = () => {
-    const rows = parseInt(tempRows, 10);
-    const cols = parseInt(tempCols, 10);
-    
-    if (isNaN(rows) || isNaN(cols) || rows < 5 || cols < 5) {
-      toast({
-        title: "Неверный размер сетки",
-        description: "Укажите корректный размер (минимум 5x5)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setGridSize({ rows, cols });
-    toast({
-      title: "Размер сетки обновлен",
-      description: `Новый размер сетки: ${rows}x${cols}`,
-    });
-  };
-
-  // Добавление монстра в бой
-  const addMonster = (monster: any | null = null) => {
-    // Если не выбран монстр из списка и не введено имя монстра, показываем ошибку
-    if (!monster && (!newMonsterName || newMonsterName.trim() === '')) {
-      toast({
-        title: "Ошибка",
-        description: "Выберите монстра из списка или введите имя нового",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Подготовка нового монстра
-    const baseMonster = monster || {
-      id: `custom-${Date.now()}`,
-      name: newMonsterName,
-      type: "Неизвестно",
-      hp: 10,
-      ac: 10,
-      cr: "0",
-      abilities: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 }
+    const newToken: Token = {
+      id: Date.now(),
+      name: monsterName,
+      type: monsterType as "monster" | "boss",
+      img: monsterType === "boss" 
+        ? "/assets/tokens/boss1.png"
+        : "/assets/tokens/monster1.png",
+      x: 100 + Math.random() * 200,
+      y: 100 + Math.random() * 200,
+      hp: parseInt(monsterHP), // Исправлено: преобразуем строку в число
+      maxHp: parseInt(monsterHP), // Исправлено: преобразуем строку в число
+      ac: parseInt(monsterAC), // Исправлено: преобразуем строку в число
+      initiative: 10, // Исправлено: используем числовое значение для инициативы
+      conditions: [],
+      resources: {},
+      visible: true,
+      size: monsterType === "boss" ? 1.5 : 1
     };
 
-    // Добавление указанного количества монстров
-    const newTokens: Token[] = [];
+    onAddToken(newToken);
     
-    for (let i = 0; i < monsterQuantity; i++) {
-      newTokens.push({
-        id: Date.now() + i,
-        name: monsterQuantity > 1 ? `${baseMonster.name} ${i + 1}` : baseMonster.name,
-        type: 'monster',
-        img: '/images/tokens/monster.png',
-        x: 0,
-        y: 0,
-        hp: typeof baseMonster.hp === 'string' ? parseInt(baseMonster.hp, 10) : baseMonster.hp,
-        maxHp: typeof baseMonster.hp === 'string' ? parseInt(baseMonster.hp, 10) : baseMonster.hp,
-        ac: typeof baseMonster.ac === 'string' ? parseInt(baseMonster.ac, 10) : baseMonster.ac,
-        initiative: 10, // Явно используем число для инициативы
-        conditions: [],
-        resources: {},
-        visible: true,
-        size: 1 // Добавляем размер токена
-      });
-    }
-    
-    setTokens([...tokens, ...newTokens]);
-    
-    // Сброс полей формы
-    setSelectedMonsterId(null);
-    setMonsterQuantity(1);
-    setNewMonsterName('');
+    // Сбрасываем форму
+    setMonsterName("");
+    setMonsterHP("");
+    setMonsterAC("");
+    setIsAddingMonster(false);
     
     toast({
-      title: "Монстр добавлен",
-      description: `${monsterQuantity} ${baseMonster.name} добавлен в бой`,
-    });
-  };
-
-  // Удаление участника из боя
-  const removeToken = (id: number) => {
-    setTokens(tokens.filter(c => c.id !== id));
-    
-    // Если удаляем активного участника, переходим к следующему
-    if (battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === id) {
-      nextTurn();
-    }
-  };
-
-  // Обновление хитпоинтов участника
-  const updateTokenHP = (id: number, change: number) => {
-    setTokens(tokens.map(c => {
-      if (c.id === id) {
-        const newHP = Math.max(0, Math.min(c.maxHp, c.hp + change));
-        return { ...c, hp: newHP };
-      }
-      return c;
-    }));
-  };
-
-  // Функция для отображения списка участников боя для мобильной версии
-  const renderTokensMobile = () => {
-    if (tokens.length === 0) {
-      return (
-        <div className="text-center p-4 text-muted-foreground">
-          Нет участников боя. Добавьте персонажей или монстров.
-        </div>
-      );
-    }
-
-    return tokens.map((token, index) => {
-      const isCurrentTurn = battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === token.id;
-      
-      return (
-        <div 
-          key={token.id}
-          className={`p-2 border rounded-md mb-2 ${isCurrentTurn ? 'bg-primary/10 border-primary' : ''}`}
-        >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <img 
-                src={token.img} 
-                alt={token.name} 
-                className={`w-6 h-6 rounded-full object-cover`}
-              />
-              <div className="font-medium text-sm line-clamp-1">{token.name}</div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 w-6 p-0"
-              onClick={() => removeToken(token.id)}
-            >
-              ✕
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-1 mt-1">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">HP</div>
-              <div className="flex items-center justify-center">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-full p-0"
-                  onClick={() => updateTokenHP(token.id, -1)}
-                >
-                  -
-                </Button>
-                <span className="mx-1 text-xs">
-                  {token.hp}/{token.maxHp}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-full p-0"
-                  onClick={() => updateTokenHP(token.id, 1)}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">AC</div>
-              <div className="text-xs">{token.ac}</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Иниц.</div>
-              <div className="text-xs">{token.initiative}</div>
-            </div>
-          </div>
-          
-          {token.conditions.length > 0 && (
-            <div className="mt-1">
-              <div className="text-xs text-muted-foreground">Состояния:</div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {token.conditions.map((condition, i) => (
-                  <Badge key={i} variant="outline" className="text-[10px] px-1 py-0">
-                    {condition}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    });
-  };
-
-  // Функция для отображения списка участников боя для десктопа
-  const renderTokensDesktop = () => {
-    if (tokens.length === 0) {
-      return (
-        <div className="text-center p-4 text-muted-foreground">
-          Нет участников боя. Добавьте персонажей или монстров.
-        </div>
-      );
-    }
-
-    return tokens.map((token, index) => {
-      const isCurrentTurn = battleState.isActive && initiative[battleState.currentInitiativeIndex]?.tokenId === token.id;
-      
-      return (
-        <div 
-          key={token.id}
-          className={`p-3 border rounded-md mb-2 ${isCurrentTurn ? 'bg-primary/10 border-primary' : ''}`}
-        >
-          <div className="flex justify-between items-center">
-            <div className="font-medium">{token.name}</div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => removeToken(token.id)}
-            >
-              ✕
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">HP</div>
-              <div className="flex items-center justify-center mt-1">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-6 w-6 rounded-full"
-                  onClick={() => updateTokenHP(token.id, -1)}
-                >
-                  <MinusCircle className="h-3 w-3" />
-                </Button>
-                <span className="mx-2">
-                  {token.hp}/{token.maxHp}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-6 w-6 rounded-full"
-                  onClick={() => updateTokenHP(token.id, 1)}
-                >
-                  <PlusCircle className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">AC</div>
-              <div className="mt-1">{token.ac}</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Инициатива</div>
-              <div className="mt-1">{token.initiative}</div>
-            </div>
-          </div>
-          
-          {token.conditions.length > 0 && (
-            <div className="mt-2">
-              <div className="text-xs text-muted-foreground mb-1">Состояния:</div>
-              <div className="flex flex-wrap gap-1">
-                {token.conditions.map((condition, i) => (
-                  <Badge key={i} variant="outline">
-                    {condition}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
+      title: `${monsterType === "boss" ? "Босс" : "Монстр"} добавлен`,
+      description: `${newToken.name} добавлен на поле боя`,
     });
   };
 
   return (
-    <Card className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col p-0">
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold">Участники боя</h3>
-      </div>
-      
-      <div className="p-2 border-b">
-        <div className="flex space-x-1">
-          <Button 
-            onClick={battleState.isActive ? endCombat : startCombat} 
-            variant={battleState.isActive ? "destructive" : "default"}
-            className="flex-1"
-            size={deviceType === "mobile" ? "sm" : "default"}
-          >
-            {battleState.isActive ? "Завершить" : "Начать бой"}
-          </Button>
-          
-          {battleState.isActive && (
-            <Button 
-              onClick={nextTurn} 
-              variant="outline"
-              size={deviceType === "mobile" ? "sm" : "default"}
-            >
-              Следующий
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <div className="p-2 border-b">
-        <h4 className="text-sm font-medium mb-2">Настройки сетки и тумана войны</h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Туман войны</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => setFogOfWar(!fogOfWar)}
-            >
-              {fogOfWar ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-              {fogOfWar ? "Выключить" : "Включить"}
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">Управление битвой</h2>
+
+      {/* Добавление монстра */}
+      <div>
+        <Button onClick={() => setIsAddingMonster(!isAddingMonster)}>
+          {isAddingMonster ? "Скрыть форму" : "Добавить Монстра"}
+        </Button>
+
+        {isAddingMonster && (
+          <div className="mt-2 space-y-2">
+            <Input
+              type="text"
+              placeholder="Имя монстра"
+              value={monsterName}
+              onChange={(e) => setMonsterName(e.target.value)}
+            />
             <Input
               type="number"
-              value={tempRows}
-              onChange={(e) => setTempRows(e.target.value)}
-              className="w-16"
-              placeholder="Строки"
-              min={5}
+              placeholder="HP"
+              value={monsterHP}
+              onChange={(e) => setMonsterHP(e.target.value)}
             />
-            <span className="text-sm">×</span>
             <Input
               type="number"
-              value={tempCols}
-              onChange={(e) => setTempCols(e.target.value)}
-              className="w-16"
-              placeholder="Столбцы"
-              min={5}
+              placeholder="AC"
+              value={monsterAC}
+              onChange={(e) => setMonsterAC(e.target.value)}
             />
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={updateGridSize}
+            <select
+              value={monsterType}
+              onChange={(e) => setMonsterType(e.target.value as "monster" | "boss")}
+              className="w-full p-2 border rounded"
             >
-              <GridIcon className="h-4 w-4 mr-1" />
-              Обновить
+              <option value="monster">Монстр</option>
+              <option value="boss">Босс</option>
+            </select>
+            <Button onClick={addMonster} className="w-full">
+              Добавить
             </Button>
           </div>
-        </div>
+        )}
       </div>
-      
-      <div className="flex-1 overflow-y-auto p-2">
-        {deviceType === "mobile" ? renderTokensMobile() : renderTokensDesktop()}
-      </div>
-      
-      <div className="p-2 border-t">
-        <h4 className="text-sm font-medium mb-2">Добавить монстра</h4>
-        <div className="space-y-2">
-          <div>
-            <Input
-              placeholder="Имя нового монстра..."
-              value={newMonsterName}
-              onChange={(e) => setNewMonsterName(e.target.value)}
-              className="mb-2"
-              size={deviceType === "mobile" ? "sm" : "default"}
-            />
-            
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                min="1"
-                max="20"
-                value={monsterQuantity}
-                onChange={(e) => setMonsterQuantity(Number(e.target.value) || 1)}
-                className="w-20"
-                size={deviceType === "mobile" ? "sm" : "default"}
-              />
-              
-              <Button 
-                variant="default" 
-                className="flex-1"
-                size={deviceType === "mobile" ? "sm" : "default"}
-                onClick={() => addMonster()}
+
+      {/* Список токенов */}
+      <div>
+        <h3 className="font-medium">Токены на поле ({tokens.length})</h3>
+        <ScrollArea className="h-64">
+          <div className="space-y-2">
+            {tokens.map((token) => (
+              <div
+                key={token.id}
+                className={`flex items-center justify-between p-2 rounded ${
+                  selectedTokenId === token.id ? "bg-primary/20 border border-primary" : "bg-card"
+                }`}
+                onClick={() => onSelectToken(token.id)}
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Добавить
-              </Button>
-            </div>
+                <div className="flex items-center gap-2">
+                  <img
+                    src={token.img}
+                    alt={token.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <div className="text-sm">
+                    <div>{token.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      HP: {token.hp}/{token.maxHp} AC: {token.ac}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <Separator />
-          
-          <div className="max-h-40 overflow-y-auto">
-            {/* Список монстров будет добавлен позже */}
-            <div className="text-center p-4 text-muted-foreground">
-              Нет доступных монстров в базе данных
-            </div>
+        </ScrollArea>
+      </div>
+
+      {/* Инициатива */}
+      <div>
+        <h3 className="font-medium">Инициатива</h3>
+        <ScrollArea className="h-64">
+          <div className="space-y-2">
+            {initiative.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-center justify-between p-2 rounded ${
+                  item.isActive ? "bg-primary/20 border border-primary" : "bg-card"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
+                    {item.roll}
+                  </div>
+                  <div className="text-sm">{item.name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Настройки тумана войны */}
+      <div>
+        <h3 className="font-medium">Туман войны</h3>
+        <label className="inline-flex items-center space-x-2">
+          <input
+            type="checkbox"
+            className="h-5 w-5 border rounded"
+            checked={fogOfWar}
+            onChange={(e) => setFogOfWar(e.target.checked)}
+          />
+          <span>Включить</span>
+        </label>
+      </div>
+
+      {/* Настройки размера сетки */}
+      <div>
+        <h3 className="font-medium">Размер сетки</h3>
+        <div className="flex gap-2">
+          <div>
+            <label className="block text-sm font-medium">Строки</label>
+            <Input
+              type="number"
+              value={gridSize.rows}
+              onChange={(e) => setGridSize({ ...gridSize, rows: parseInt(e.target.value) })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Столбцы</label>
+            <Input
+              type="number"
+              value={gridSize.cols}
+              onChange={(e) => setGridSize({ ...gridSize, cols: parseInt(e.target.value) })}
+            />
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
+
+export default LeftPanel;

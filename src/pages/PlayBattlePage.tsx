@@ -118,7 +118,7 @@ const PlayBattlePage = () => {
   const [revealRadius, setRevealRadius] = useState<number>(3);
   const [gridVisible, setGridVisible] = useState<boolean>(true);
   const [gridOpacity, setGridOpacity] = useState<number>(0.5);
-  const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 20, cols: 30});
+  const [gridSize, setGridSize] = useState<{rows: number, cols: number}>({rows: 30, cols: 40}); // Увеличили размер сетки
 
   // Обработчики для управления боем
   const startBattle = () => {
@@ -532,7 +532,7 @@ const PlayBattlePage = () => {
                 onResetFogOfWar={resetFogOfWar}
               />
               
-              <h3 className="font-medium mb-4">Кубики</h3>
+              <h3 className="font-medium mb-4">��убики</h3>
               <div className="h-64">
                 <DiceRoller3D />
               </div>
