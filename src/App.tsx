@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
+import React from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeProvider as CustomThemeProvider } from "@/contexts/ThemeContext";
 import Index from './pages/Index';
 import Home from './pages/Home';
@@ -17,14 +17,10 @@ import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import GameRoomPage from './pages/GameRoomPage';
 import NotFound from './pages/NotFound';
+import PlayerSessionPage from './pages/PlayerSessionPage';
 
 function App() {
   const location = useLocation();
-  const [isCharacterPage, setIsCharacterPage] = useState(false);
-
-  useEffect(() => {
-    setIsCharacterPage(location.pathname === '/character-sheet' || location.pathname === '/sheet');
-  }, [location]);
 
   return (
     <ThemeProvider
@@ -51,6 +47,7 @@ function App() {
                 <Route path="/dm/session" element={<DMSessionPage />} />
                 <Route path="/dm/battle" element={<PlayBattlePage />} />
                 <Route path="/scene" element={<PlayBattlePage />} />
+                <Route path="/player/session" element={<PlayerSessionPage />} />
                 <Route path="/session/:roomCode" element={<GameRoomPage />} />
                 <Route path="/room/:roomCode" element={<GameRoomPage />} />
                 <Route path="/join" element={<Home />} />

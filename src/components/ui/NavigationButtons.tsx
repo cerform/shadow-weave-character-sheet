@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Scroll, Map, Dices, Users } from "lucide-react";
 import { useTheme } from '@/hooks/use-theme';
@@ -61,7 +61,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => navigate('/dm/battle')}
+        onClick={() => navigate('/battle')}
         className="flex items-center gap-2"
         style={{
           color: currentTheme.textColor,

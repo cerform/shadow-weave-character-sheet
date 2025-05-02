@@ -34,6 +34,7 @@ const LightingSystem: React.FC<LightingSystemProps> = ({
           style={{ 
             backgroundColor: 'black', 
             opacity: 1 - ambientLightLevel,
+            pointerEvents: 'none'
           }}
         />
       )}
@@ -57,6 +58,7 @@ const LightingSystem: React.FC<LightingSystemProps> = ({
               width: effectiveRadius * 2,
               height: effectiveRadius * 2,
               background: `radial-gradient(circle, ${light.color} 0%, ${light.color}50 70%, ${light.color}00 100%)`,
+              pointerEvents: 'none'
             }}
           />
         );
