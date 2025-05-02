@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { LightSource } from '@/types/battle'; 
 
@@ -10,6 +11,7 @@ interface FogOfWarProps {
   tokenPositions?: {id: number, x: number, y: number, visible: boolean, type: string}[];
   isDM?: boolean;
   isDynamicLighting?: boolean;
+  imageSize?: { width: number, height: number };
 }
 
 const FogOfWar: React.FC<FogOfWarProps> = ({ 
@@ -20,7 +22,8 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
   lightSources = [],
   tokenPositions = [],
   isDM = false,
-  isDynamicLighting = false
+  isDynamicLighting = false,
+  imageSize
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({width: 0, height: 0});
@@ -33,8 +36,8 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
         const container = canvasRef.current.parentElement;
         if (container) {
           setDimensions({
-            width: container.clientWidth,
-            height: container.clientHeight
+            width: imageSize?.width || container.clientWidth,
+            height: imageSize?.height || container.clientHeight
           });
         }
       }
@@ -49,7 +52,7 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [imageSize]);
 
   // Основная функция рендеринга тумана и освещения
   useEffect(() => {
@@ -333,13 +336,18 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
   return (
     <canvas 
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full z-10 cursor-crosshair"
+      className="absolute inset-0 z-10 cursor-crosshair"
       width={dimensions.width}
       height={dimensions.height}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      style={{
+        width: imageSize?.width ? imageSize.width + 'px' : '100%',
+        height: imageSize?.height ? imageSize.height + 'px' : '100%',
+        objectFit: 'contain'
+      }}
     />
   );
 };

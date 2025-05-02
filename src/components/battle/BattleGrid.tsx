@@ -6,13 +6,17 @@ interface BattleGridProps {
   visible: boolean;
   opacity: number;
   color?: string;
+  imageSize?: { width: number, height: number };
+  containerSize?: { width: number, height: number };
 }
 
 const BattleGrid: React.FC<BattleGridProps> = ({
   gridSize,
   visible,
   opacity,
-  color = '#aaadb0'
+  color = '#aaadb0',
+  imageSize,
+  containerSize
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -20,12 +24,26 @@ const BattleGrid: React.FC<BattleGridProps> = ({
   // Устанавливаем размер канваса
   useEffect(() => {
     const updateCanvasSize = () => {
-      const parent = canvasRef.current?.parentElement;
-      if (parent) {
+      if (imageSize && imageSize.width > 0 && imageSize.height > 0) {
+        // Если известны размеры изображения, используем их
         setCanvasSize({
-          width: parent.clientWidth,
-          height: parent.clientHeight
+          width: imageSize.width,
+          height: imageSize.height
         });
+      } else {
+        // Иначе берем размер контейнера
+        const parent = canvasRef.current?.parentElement;
+        if (parent) {
+          setCanvasSize({
+            width: parent.clientWidth,
+            height: parent.clientHeight
+          });
+        } else if (containerSize) {
+          setCanvasSize({
+            width: containerSize.width,
+            height: containerSize.height
+          });
+        }
       }
     };
     
@@ -35,7 +53,7 @@ const BattleGrid: React.FC<BattleGridProps> = ({
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, []);
+  }, [imageSize, containerSize]);
   
   // Рисуем сетку
   useEffect(() => {
@@ -98,9 +116,14 @@ const BattleGrid: React.FC<BattleGridProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-10 pointer-events-none w-full h-full"
+      className="absolute inset-0 z-10 pointer-events-none"
       width={canvasSize.width}
       height={canvasSize.height}
+      style={{
+        width: imageSize?.width ? imageSize.width + 'px' : '100%',
+        height: imageSize?.height ? imageSize.height + 'px' : '100%',
+        objectFit: 'contain'
+      }}
     />
   );
 };

@@ -62,6 +62,26 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [spacePressed, setSpacePressed] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  
+  // Отслеживаем размер контейнера
+  useEffect(() => {
+    const updateContainerSize = () => {
+      if (mapContainerRef.current) {
+        setContainerSize({
+          width: mapContainerRef.current.clientWidth,
+          height: mapContainerRef.current.clientHeight
+        });
+      }
+    };
+    
+    updateContainerSize();
+    window.addEventListener('resize', updateContainerSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateContainerSize);
+    };
+  }, []);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
@@ -333,6 +353,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
               gridSize={gridSize}
               visible={true}
               opacity={gridOpacity}
+              imageSize={imageSize}
+              containerSize={containerSize}
             />
           </div>
         )}
@@ -348,6 +370,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
               tokenPositions={tokenPositions}
               isDM={isDM}
               isDynamicLighting={isDynamicLighting}
+              imageSize={imageSize}
             />
           </div>
         )}
