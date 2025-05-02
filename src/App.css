@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -220,4 +221,65 @@
   pointer-events: none;
   stroke: rgba(255, 255, 255, 0.3);
   stroke-width: 1;
+}
+
+/* Формы кубиков */
+.clip-path-triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.clip-path-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.clip-path-pentagon {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+.clip-path-dodecagon {
+  clip-path: polygon(
+    30% 0%, 70% 0%, 
+    100% 30%, 100% 70%, 
+    70% 100%, 30% 100%, 
+    0% 70%, 0% 30%
+  );
+}
+
+.clip-path-icosahedron {
+  clip-path: polygon(50% 0%, 80% 30%, 80% 70%, 50% 100%, 20% 70%, 20% 30%);
+}
+
+/* Анимация для подсказок */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Стили для скрываемой панели управления */
+.hidden-panel {
+  transition: all 0.3s ease;
+}
+
+.hidden-panel.collapsed {
+  transform: translateX(calc(100% - 40px));
+}
+
+/* Улучшаем стиль контейнера для 3D-кубиков */
+.dice-container {
+  position: relative;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  height: 100%;
+}
+
+.dice-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
 }

@@ -97,7 +97,31 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     if (e.ctrlKey) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 2.5));
+      const newZoom = Math.min(Math.max(zoom + delta, 0.5), 2.5);
+      setZoom(newZoom);
+      
+      // Центрирование зума относительно курсора
+      if (mapContainerRef.current && mapContentRef.current) {
+        const container = mapContainerRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - container.left;
+        const mouseY = e.clientY - container.top;
+        
+        // Вычисляем новую позицию для центрирования зума по курсору
+        const zoomFactor = newZoom / zoom;
+        
+        // Корректируем позицию только если изменение зума значительное
+        if (Math.abs(zoomFactor - 1) > 0.01) {
+          setMapPosition(prev => {
+            const dx = mouseX - container.width / 2;
+            const dy = mouseY - container.height / 2;
+            
+            return {
+              x: prev.x - dx * (zoomFactor - 1) / zoom,
+              y: prev.y - dy * (zoomFactor - 1) / zoom
+            };
+          });
+        }
+      }
     }
   };
 
@@ -141,7 +165,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [spacePressed]);
+  }, [spacePressed, zoom]);
 
   // Улучшаем обработку контекстного меню для перетаскивания правой кнопкой мыши
   useEffect(() => {
@@ -172,12 +196,49 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        content.style.width = `${Math.max(containerWidth * 2, img.width * 1.5)}px`;
-        content.style.height = `${Math.max(containerHeight * 2, img.height * 1.5)}px`;
+        // Делаем карту больше контейнера, чтобы обеспечить скроллинг
+        const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
+        const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
+        
+        content.style.width = `${mapWidth}px`;
+        content.style.height = `${mapHeight}px`;
+        
+        // Центрируем карту
+        setMapPosition({ 
+          x: (containerWidth - mapWidth) / 2,
+          y: (containerHeight - mapHeight) / 2
+        });
       };
       img.src = background;
     }
   }, [background]);
+  
+  // Добавляем функцию для центрирования карты
+  const centerMap = () => {
+    const container = mapContainerRef.current;
+    const content = mapContentRef.current;
+    
+    if (container && content) {
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      const contentWidth = content.clientWidth;
+      const contentHeight = content.clientHeight;
+      
+      setMapPosition({
+        x: (containerWidth - contentWidth * zoom) / 2,
+        y: (containerHeight - contentHeight * zoom) / 2
+      });
+    }
+  };
+  
+  // Центрируем карту при первом рендере
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      centerMap();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div 
@@ -189,10 +250,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         className={`map-content zoomable relative overflow-hidden ${spacePressed ? 'grab' : ''}`}
         ref={mapContentRef}
         style={{ 
-          transform: `scale(${zoom}) translate(${mapPosition.x}px, ${mapPosition.y}px)`,
+          transform: `scale(${zoom}) translate(${mapPosition.x / zoom}px, ${mapPosition.y / zoom}px)`,
           transformOrigin: 'center center',
-          height: '100%',
-          width: '100%',
           cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default')
         }}
         onMouseDown={handleMouseDown}
@@ -225,7 +284,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           
         {/* Туман войны как отдельный слой */}
         {fogOfWar && (
-          <div className="fog-of-war-container absolute inset-0 pointer-events-none">
+          <div className="fog-of-war-container absolute inset-0">
             <FogOfWar
               gridSize={gridSize}
               revealedCells={revealedCells}
@@ -234,11 +293,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
             />
           </div>
         )}
-      </div>
-      
-      {/* Подсказка о перетаскивании */}
-      <div className="absolute top-4 left-4 bg-background/70 p-2 rounded text-xs z-10 backdrop-blur-sm">
-        Используйте среднюю кнопку мыши, правую кнопку, пробел+ЛКМ или Ctrl+ЛКМ для перемещения карты
       </div>
     </div>
   );

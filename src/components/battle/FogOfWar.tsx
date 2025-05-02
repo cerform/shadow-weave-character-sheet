@@ -51,34 +51,77 @@ const FogOfWar: React.FC<FogOfWarProps> = ({ gridSize, revealedCells, onRevealCe
       }
     }
     
-    // Добавляем полупрозрачную границу для плавного перехода между раскрытыми и нераскрытыми ячейками
+    // Добавляем плавную границу для перехода между раскрытыми и нераскрытыми ячейками
     for (let row = 0; row < gridSize.rows; row++) {
       for (let col = 0; col < gridSize.cols; col++) {
         const key = `${row}-${col}`;
         if (revealedCells[key]) {
+          const x = col * cellWidth;
+          const y = row * cellHeight;
+          const borderWidth = Math.min(cellWidth, cellHeight) * 0.3; // Ширина размытия
+          
           // Проверяем соседние ячейки и добавляем градиент, если они скрыты
-          const checkNeighbor = (r: number, c: number, gx: number, gy: number, gw: number, gh: number) => {
-            if (r >= 0 && r < gridSize.rows && c >= 0 && c < gridSize.cols) {
-              const nKey = `${r}-${c}`;
+          const directions = [
+            {r: -1, c: 0, side: 'top'},    // верх
+            {r: 1, c: 0, side: 'bottom'},  // низ
+            {r: 0, c: -1, side: 'left'},   // лево
+            {r: 0, c: 1, side: 'right'},   // право
+            {r: -1, c: -1, side: 'topLeft'},     // верхний левый угол
+            {r: -1, c: 1, side: 'topRight'},     // верхний правый угол
+            {r: 1, c: -1, side: 'bottomLeft'},   // нижний левый угол
+            {r: 1, c: 1, side: 'bottomRight'}    // нижний правый угол
+          ];
+          
+          directions.forEach(dir => {
+            const nr = row + dir.r;
+            const nc = col + dir.c;
+            
+            if (nr >= 0 && nr < gridSize.rows && nc >= 0 && nc < gridSize.cols) {
+              const nKey = `${nr}-${nc}`;
               if (!revealedCells[nKey]) {
-                const gradient = ctx.createLinearGradient(gx, gy, gx + gw, gy + gh);
-                gradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                let gx = x, gy = y, gx2 = x, gy2 = y;
+                const gradient = ctx.createRadialGradient(
+                  x + cellWidth/2, y + cellHeight/2, 0,  // внутренняя точка градиента
+                  x + cellWidth/2, y + cellHeight/2, cellWidth * 0.7  // внешняя точка градиента
+                );
+                
+                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.4)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+                
+                ctx.save();
                 ctx.fillStyle = gradient;
-                ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight);
+                
+                // Создаем маску для градиента, чтобы он отображался только на границе с туманом
+                ctx.beginPath();
+                
+                if (dir.side === 'top') {
+                  ctx.rect(x, y, cellWidth, borderWidth);
+                } else if (dir.side === 'bottom') {
+                  ctx.rect(x, y + cellHeight - borderWidth, cellWidth, borderWidth);
+                } else if (dir.side === 'left') {
+                  ctx.rect(x, y, borderWidth, cellHeight);
+                } else if (dir.side === 'right') {
+                  ctx.rect(x + cellWidth - borderWidth, y, borderWidth, cellHeight);
+                } else if (dir.side === 'topLeft') {
+                  ctx.rect(x, y, borderWidth, borderWidth);
+                } else if (dir.side === 'topRight') {
+                  ctx.rect(x + cellWidth - borderWidth, y, borderWidth, borderWidth);
+                } else if (dir.side === 'bottomLeft') {
+                  ctx.rect(x, y + cellHeight - borderWidth, borderWidth, borderWidth);
+                } else if (dir.side === 'bottomRight') {
+                  ctx.rect(x + cellWidth - borderWidth, y + cellHeight - borderWidth, borderWidth, borderWidth);
+                }
+                
+                ctx.clip();
+                ctx.fillRect(x - cellWidth, y - cellHeight, cellWidth * 3, cellHeight * 3);
+                ctx.restore();
               }
             }
-          };
-          
-          // Проверяем соседей по всем направлениям
-          checkNeighbor(row - 1, col, col * cellWidth, row * cellHeight, 0, -cellHeight); // верх
-          checkNeighbor(row + 1, col, col * cellWidth, row * cellHeight, 0, cellHeight); // низ
-          checkNeighbor(row, col - 1, col * cellWidth, row * cellHeight, -cellWidth, 0); // лево
-          checkNeighbor(row, col + 1, col * cellWidth, row * cellHeight, cellWidth, 0); // право
+          });
         }
       }
     }
-    
   }, [active, gridSize, revealedCells]);
   
   // Обработчик клика для раскрытия ячеек
@@ -107,7 +150,7 @@ const FogOfWar: React.FC<FogOfWarProps> = ({ gridSize, revealedCells, onRevealCe
   return (
     <canvas 
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full z-10 cursor-pointer"
+      className="absolute inset-0 w-full h-full z-10 cursor-crosshair"
       onClick={handleClick}
     />
   );
