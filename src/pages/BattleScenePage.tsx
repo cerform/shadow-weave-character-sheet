@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import OBSLayout from "@/components/OBSLayout";
 import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
@@ -9,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, X, User, Skull, Crown, Home, Scroll, Book, Pause, Play, ArrowLeft } from "lucide-react";
 import TokenSelector from "@/components/battle/TokenSelector";
 import BattleMap from "@/components/battle/BattleMap";
-import { VisibleArea } from "@/types/socket";
+import { VisibleArea } from "@/types/battle";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import { useTheme } from "@/hooks/use-theme";
@@ -276,7 +275,7 @@ const BattleScenePage = () => {
   return (
     <OBSLayout>
       {/* Верхняя панель управления */}
-      <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-10 p-2 border-b flex justify-between items-center">
+      <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-2 border-b flex justify-between items-center">
         <div className="flex gap-2">
           <Button 
             variant="outline" 
@@ -312,300 +311,308 @@ const BattleScenePage = () => {
         </div>
       </div>
       
-      {/* Левая панель */}
-      <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto" style={{marginTop: "40px"}}>
-        <Tabs defaultValue="tokens">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="tokens">Токены</TabsTrigger>
-            <TabsTrigger value="monsters">Монстры</TabsTrigger>
-            <TabsTrigger value="initiative">Инициатива</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="tokens" className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={() => handleAddToken("player")}
-                className="flex justify-center items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
-              >
-                <User size={16} />
-                Добавить Игрока
-              </Button>
-              <Button
-                onClick={() => handleAddToken("monster")}
-                className="flex justify-center items-center gap-2 bg-red-500 hover:bg-red-600 text-white"
-              >
-                <Skull size={16} />
-                Добавить Моба
-              </Button>
-              <Button
-                onClick={() => handleAddToken("boss")}
-                className="flex justify-center items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white"
-              >
-                <Crown size={16} />
-                Добавить Босса
-              </Button>
-              <Button
-                onClick={rollInitiative}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white"
-              >
-                Бросить Инициативу
-              </Button>
-              
-              {battleActive && (
+      {/* Основная трехколоночная разметка */}
+      <div className="grid grid-cols-[250px_1fr_300px] h-full pt-[56px] w-full">
+        {/* Левая панель */}
+        <div className="overflow-y-auto bg-background/95 text-foreground">
+          <Tabs defaultValue="tokens">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="tokens">Токены</TabsTrigger>
+              <TabsTrigger value="monsters">Монстры</TabsTrigger>
+              <TabsTrigger value="initiative">Инициатива</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="tokens" className="space-y-4">
+              <div className="flex flex-col gap-2">
                 <Button
-                  onClick={nextTurn}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  onClick={() => handleAddToken("player")}
+                  className="flex justify-center items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
                 >
-                  Следующий ход
+                  <User size={16} />
+                  Добавить Игрока
                 </Button>
-              )}
-            </div>
-
-            {/* Список токенов */}
-            <div className="space-y-2">
-              <h3 className="font-medium">Токены на поле ({tokens.length})</h3>
-              {tokens.map(token => (
-                <div 
-                  key={token.id} 
-                  className={`flex items-center justify-between p-2 rounded ${
-                    selectedTokenId === token.id ? 'bg-primary/20 border border-primary' : 'bg-card'
-                  }`}
-                  onClick={() => setSelectedTokenId(token.id)}
+                <Button
+                  onClick={() => handleAddToken("monster")}
+                  className="flex justify-center items-center gap-2 bg-red-500 hover:bg-red-600 text-white"
                 >
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={token.img} 
-                      alt={token.name} 
-                      className="w-8 h-8 rounded-full object-cover"
-                      style={{
-                        borderColor: token.type === "boss"
-                            ? "#ff5555"
-                            : token.type === "monster"
-                            ? "#ff9955"
-                            : "#55ff55",
-                        borderWidth: 2
-                      }}
-                    />
-                    <div className="text-sm">
-                      <div>{token.name}</div>
-                      <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp} AC: {token.ac}</div>
+                  <Skull size={16} />
+                  Добавить Моба
+                </Button>
+                <Button
+                  onClick={() => handleAddToken("boss")}
+                  className="flex justify-center items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white"
+                >
+                  <Crown size={16} />
+                  Добавить Босса
+                </Button>
+                <Button
+                  onClick={rollInitiative}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                >
+                  Бросить Инициативу
+                </Button>
+                
+                {battleActive && (
+                  <Button
+                    onClick={nextTurn}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Следующий ход
+                  </Button>
+                )}
+              </div>
+
+              {/* Список токенов */}
+              <div className="space-y-2">
+                <h3 className="font-medium">Токены на поле ({tokens.length})</h3>
+                {tokens.map(token => (
+                  <div 
+                    key={token.id} 
+                    className={`flex items-center justify-between p-2 rounded ${
+                      selectedTokenId === token.id ? 'bg-primary/20 border border-primary' : 'bg-card'
+                    }`}
+                    onClick={() => setSelectedTokenId(token.id)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={token.img} 
+                        alt={token.name} 
+                        className="w-8 h-8 rounded-full object-cover"
+                        style={{
+                          borderColor: token.type === "boss"
+                              ? "#ff5555"
+                              : token.type === "monster"
+                              ? "#ff9955"
+                              : "#55ff55",
+                          borderWidth: 2
+                        }}
+                      />
+                      <div className="text-sm">
+                        <div>{token.name}</div>
+                        <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp} AC: {token.ac}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}>-</Button>
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}>+</Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}>
-                      <X size={14} />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              
-              {tokens.length === 0 && (
-                <div className="text-center p-4 text-muted-foreground">
-                  Добавьте токены на игровое поле, используя кнопки выше
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="monsters" className="space-y-4">
-            <h3 className="font-medium mb-2">Библиотека монстров</h3>
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="grid grid-cols-2 gap-2">
-                {monsterTokens.map((monster, index) => (
-                  <div key={index} className="bg-card p-2 rounded border">
-                    <img src={monster.img} alt={monster.name} className="w-full h-20 object-cover rounded mb-2" />
-                    <div className="text-center text-sm font-medium mb-1">{monster.name}</div>
-                    <div className="text-xs text-center mb-2">HP: {monster.hp} | AC: {monster.ac}</div>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handleAddPresetMonster(monster)}
-                      className="w-full"
-                    >
-                      Добавить
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, -1);}}>-</Button>
+                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); updateTokenHP(token.id, 1);}}>+</Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => {e.stopPropagation(); removeToken(token.id);}}>
+                        <X size={14} />
+                      </Button>
+                    </div>
                   </div>
                 ))}
+                
+                {tokens.length === 0 && (
+                  <div className="text-center p-4 text-muted-foreground">
+                    Добавьте токены на игровое поле, используя кнопки выше
+                  </div>
+                )}
               </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="initiative" className="space-y-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium">Порядок инициативы</h3>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={rollInitiative}>Перебросить</Button>
-                <Button size="sm" onClick={nextTurn}>Следующий</Button>
-              </div>
-            </div>
+            </TabsContent>
             
-            <div className="space-y-1">
-              {initiative.map((item, index) => {
-                const token = tokens.find(t => t.id === item.tokenId);
+            <TabsContent value="monsters" className="space-y-4">
+              <h3 className="font-medium mb-2">Библиотека монстров</h3>
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {monsterTokens.map((monster, index) => (
+                    <div key={index} className="bg-card p-2 rounded border">
+                      <img src={monster.img} alt={monster.name} className="w-full h-20 object-cover rounded mb-2" />
+                      <div className="text-center text-sm font-medium mb-1">{monster.name}</div>
+                      <div className="text-xs text-center mb-2">HP: {monster.hp} | AC: {monster.ac}</div>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleAddPresetMonster(monster)}
+                        className="w-full"
+                      >
+                        Добавить
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            
+            <TabsContent value="initiative" className="space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium">Порядок инициативы</h3>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={rollInitiative}>Перебросить</Button>
+                  <Button size="sm" onClick={nextTurn}>Следующий</Button>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                {initiative.map((item, index) => {
+                  const token = tokens.find(t => t.id === item.tokenId);
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`flex items-center gap-2 p-2 rounded ${
+                        item.isActive ? "bg-primary/20 border border-primary" : "bg-card"
+                      }`}
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
+                        {item.roll}
+                      </div>
+                      
+                      {token && (
+                        <img src={token.img} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
+                      )}
+                      
+                      <div className="flex-1 truncate">{item.name}</div>
+                      
+                      {item.isActive && (
+                        <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                          Текущий ход
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {initiative.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Нет инициативы. Добавьте токены и нажмите "Бросить Инициативу".
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Центральная пустая зона (сцена боя) */}
+        <div className="relative w-full h-full overflow-hidden">
+          <BattleMap
+            tokens={tokens as any}
+            setTokens={setTokens as any}
+            background={background}
+            setBackground={setBackground}
+            onUpdateTokenPosition={updateTokenPosition}
+            onSelectToken={setSelectedTokenId}
+            selectedTokenId={selectedTokenId}
+            initiative={initiative}
+            battleActive={battleActive}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+
+        {/* Правая панель */}
+        <div className="overflow-y-auto bg-background/95 text-foreground p-4">
+          {selectedTokenId ? (
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">Выбранный токен</h3>
+              {(() => {
+                const token = tokens.find(t => t.id === selectedTokenId);
+                if (!token) return null;
+                
                 return (
-                  <div 
-                    key={item.id} 
-                    className={`flex items-center gap-2 p-2 rounded ${
-                      item.isActive ? "bg-primary/20 border border-primary" : "bg-card"
-                    }`}
-                  >
-                    <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
-                      {item.roll}
+                  <div className="bg-muted/10 p-3 rounded-lg border space-y-3">
+                    <div className="flex gap-3 items-center">
+                      <img 
+                        src={token.img} 
+                        alt={token.name} 
+                        className="w-12 h-12 rounded-full object-cover"
+                        style={{
+                          borderColor: token.type === "boss"
+                              ? "#ff5555"
+                              : token.type === "monster"
+                              ? "#ff9955"
+                              : "#55ff55",
+                          borderWidth: 2
+                        }}
+                      />
+                      <div>
+                        <div className="font-medium">{token.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {token.type === "player" ? "Игрок" : 
+                           token.type === "boss" ? "Босс" : "Монстр"}
+                        </div>
+                      </div>
                     </div>
                     
-                    {token && (
-                      <img src={token.img} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
-                    )}
-                    
-                    <div className="flex-1 truncate">{item.name}</div>
-                    
-                    {item.isActive && (
-                      <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                        Текущий ход
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Здоровье</div>
+                        <div className="flex gap-1 items-center">
+                          <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, -1)}>-</Button>
+                          <div className="flex-1 text-center">{token.hp}/{token.maxHp}</div>
+                          <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, 1)}>+</Button>
+                        </div>
                       </div>
-                    )}
+                      <div>
+                        <div className="text-xs text-muted-foreground">Класс защиты</div>
+                        <div className="flex gap-1 items-center">
+                          <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
+                            setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac - 1} : t));
+                          }}>-</Button>
+                          <div className="flex-1 text-center">{token.ac}</div>
+                          <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
+                            setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac + 1} : t));
+                          }}>+</Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">Состояния</div>
+                      <div className="flex flex-wrap gap-1">
+                        {["Оглушен", "Отравлен", "Парализован", "Испуган"].map(condition => {
+                          const isActive = token.conditions?.includes(condition);
+                          return (
+                            <Button 
+                              key={condition}
+                              size="sm"
+                              variant={isActive ? "default" : "outline"}
+                              className={`text-xs py-1 px-2 h-auto ${isActive ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                              onClick={() => {
+                                if (isActive) {
+                                  removeCondition(token.id, condition);
+                                } else {
+                                  addCondition(token.id, condition);
+                                }
+                              }}
+                            >
+                              {condition}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 );
-              })}
-              
-              {initiative.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  Нет инициативы. Добавьте токены и нажмите "Бросить Инициативу".
-                </div>
-              )}
+              })()}
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Центральная пустая зона (сцена боя) */}
-      <div className="obs-center" style={{marginTop: "40px"}}>
-        <BattleMap
-          tokens={tokens as any}
-          setTokens={setTokens as any}
-          background={background}
-          setBackground={setBackground}
-          onUpdateTokenPosition={updateTokenPosition}
-          onSelectToken={setSelectedTokenId}
-          selectedTokenId={selectedTokenId}
-          initiative={initiative}
-          battleActive={battleActive}
-        />
-      </div>
-
-      {/* Правая панель */}
-      <div className="obs-right p-4 bg-background/95 text-foreground overflow-y-auto" style={{marginTop: "40px"}}>
-        {selectedTokenId ? (
-          <div className="mb-4">
-            <h3 className="font-medium mb-2">Выбранный токен</h3>
-            {(() => {
-              const token = tokens.find(t => t.id === selectedTokenId);
-              if (!token) return null;
-              
-              return (
-                <div className="bg-muted/10 p-3 rounded-lg border space-y-3">
-                  <div className="flex gap-3 items-center">
-                    <img 
-                      src={token.img} 
-                      alt={token.name} 
-                      className="w-12 h-12 rounded-full object-cover"
-                      style={{
-                        borderColor: token.type === "boss"
-                            ? "#ff5555"
-                            : token.type === "monster"
-                            ? "#ff9955"
-                            : "#55ff55",
-                        borderWidth: 2
-                      }}
-                    />
-                    <div>
-                      <div className="font-medium">{token.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {token.type === "player" ? "Игрок" : 
-                         token.type === "boss" ? "Босс" : "Монстр"}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="text-xs text-muted-foreground">Здоровье</div>
-                      <div className="flex gap-1 items-center">
-                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, -1)}>-</Button>
-                        <div className="flex-1 text-center">{token.hp}/{token.maxHp}</div>
-                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, 1)}>+</Button>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Класс защиты</div>
-                      <div className="flex gap-1 items-center">
-                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
-                          setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac - 1} : t));
-                        }}>-</Button>
-                        <div className="flex-1 text-center">{token.ac}</div>
-                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
-                          setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac + 1} : t));
-                        }}>+</Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">Состояния</div>
-                    <div className="flex flex-wrap gap-1">
-                      {["Оглушен", "Отравлен", "Парализован", "Испуган"].map(condition => {
-                        const isActive = token.conditions?.includes(condition);
-                        return (
-                          <Button 
-                            key={condition}
-                            size="sm"
-                            variant={isActive ? "default" : "outline"}
-                            className={`text-xs py-1 px-2 h-auto ${isActive ? 'bg-red-500 hover:bg-red-600' : ''}`}
-                            onClick={() => {
-                              if (isActive) {
-                                removeCondition(token.id, condition);
-                              } else {
-                                addCondition(token.id, condition);
-                              }
-                            }}
-                          >
-                            {condition}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+          ) : null}
+          
+          <h3 className="font-medium mb-4">Кубики</h3>
+          <div className="h-96">
+            <DiceRoller3D />
           </div>
-        ) : null}
-        
-        <h3 className="font-medium mb-4">Кубики</h3>
-        <div className="h-96">
-          <DiceRoller3D />
-        </div>
-        
-        <div className="mt-4 p-4 border rounded bg-muted/10">
-          <h3 className="font-medium mb-2">Чат</h3>
-          <div className="h-48 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
-            <div className="text-sm">
-              <div className="mb-1">
-                <span className="font-medium">DM:</span> Добро пожаловать в приключение!
-              </div>
-              <div className="mb-1">
-                <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
-              </div>
-              <div className="mb-1">
-                <span className="font-medium">DM:</span> Бросаем инициативу...
+          
+          <div className="mt-4 p-4 border rounded bg-muted/10">
+            <h3 className="font-medium mb-2">Чат</h3>
+            <div className="h-48 bg-muted/20 rounded mb-2 p-2 overflow-y-auto">
+              <div className="text-sm">
+                <div className="mb-1">
+                  <span className="font-medium">DM:</span> Добро пожаловать в приключение!
+                </div>
+                <div className="mb-1">
+                  <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
+                </div>
+                <div className="mb-1">
+                  <span className="font-medium">DM:</span> Бросаем инициативу...
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Input placeholder="Сообщение..." className="text-foreground" />
-            <Button>Отправить</Button>
+            <div className="flex gap-2">
+              <Input placeholder="Сообщение..." className="text-foreground" />
+              <Button>Отправить</Button>
+            </div>
           </div>
         </div>
       </div>
@@ -620,7 +627,7 @@ const BattleScenePage = () => {
       
       {/* Индикатор паузы */}
       {sessionPaused && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center">
           <div className="text-center p-8 bg-background/80 backdrop-blur-md rounded-xl border">
             <Pause className="w-20 h-20 mx-auto mb-4 text-primary" />
             <h2 className="text-2xl font-bold mb-2">Сессия на паузе</h2>

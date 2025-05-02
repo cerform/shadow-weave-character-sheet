@@ -448,9 +448,9 @@ const PlayBattlePage = () => {
   );
 
   return (
-    <div className="h-screen w-screen grid grid-rows-[auto_1fr_auto] grid-cols-[250px_1fr_300px] text-foreground bg-background overflow-hidden">
+    <div className="h-screen w-screen grid grid-cols-[250px_1fr_300px] grid-rows-[auto_1fr_auto] overflow-hidden bg-background text-foreground">
       {/* Верхняя панель - на всю ширину */}
-      <div className="col-span-3 border-b bg-muted/10">
+      <div className="col-span-3 border-b bg-muted/10 z-10">
         <TopPanel
           battleState={battleState}
           onStartBattle={startBattle}
@@ -467,10 +467,10 @@ const PlayBattlePage = () => {
       </div>
       
       {/* Центральная часть - карта боя */}
-      <div className="relative overflow-hidden" ref={mapRef}>
+      <div className="relative overflow-hidden w-full h-full">
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={addToken} // This is correct - passing the addToken function
+          setTokens={addToken}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -486,9 +486,9 @@ const PlayBattlePage = () => {
           gridOpacity={mapSettings.gridOpacity}
           zoom={mapSettings.zoom}
           isDM={isDM}
-          // Добавляем новые параметры для освещения
           lightSources={mapSettings.lightSources}
           isDynamicLighting={mapSettings.isDynamicLighting}
+          className="w-full h-full"
         />
       </div>
       

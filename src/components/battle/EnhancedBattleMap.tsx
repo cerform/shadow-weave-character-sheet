@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -30,6 +31,7 @@ interface EnhancedBattleMapProps {
   // Добавляем параметры для освещения
   lightSources?: LightSource[];
   isDynamicLighting?: boolean;
+  className?: string; // Добавляем className для дополнительных стилей
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -52,7 +54,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   isDM = true,
   // Добавляем параметры для освещения
   lightSources = [],
-  isDynamicLighting = false
+  isDynamicLighting = false,
+  className = ""
 }) => {
   // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -108,7 +111,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey && isDM) { // Проверяем isDM
       e.preventDefault();
-      // Здесь боль��е не меняем zoom локально, а используем внешнюю функцию
+      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
       // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
       
       // Центрирование зума относительно курсора
@@ -189,7 +192,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     };
   }, [isDragging]);
 
-  // Сделать карту больше, чтобы заполнить пространство и обеспечить полноценный скроллинг
+  // Улучшенная функция для масштабирования карты пропорционально
   useEffect(() => {
     const container = mapContainerRef.current;
     const content = mapContentRef.current;
@@ -198,26 +201,36 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       // Загрузка изображения для получения его размеров
       const img = new Image();
       img.onload = () => {
-        // Установить минимальные размеры карты, учитывая размер контейнера и изображения
+        // Получаем размеры контейнера
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // ��елаем карту больше контейнера, чтобы обеспечить скроллинг
-        const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
-        const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
+        // Размеры изображения
+        const imgWidth = img.width;
+        const imgHeight = img.height;
         
+        // Вычисляем масштаб для содержания изображения
+        const scaleX = containerWidth / imgWidth;
+        const scaleY = containerHeight / imgHeight;
+        const scale = Math.min(scaleX, scaleY);
+        
+        // Применяем размеры, учитывая масштабирование
+        const mapWidth = Math.max(containerWidth, imgWidth * scale);
+        const mapHeight = Math.max(containerHeight, imgHeight * scale);
+        
+        // Устанавливаем размеры контента карты для правильного отображения
         content.style.width = `${mapWidth}px`;
         content.style.height = `${mapHeight}px`;
         
         // Центрируем карту
         setMapPosition({ 
-          x: (containerWidth - mapWidth) / 2,
-          y: (containerHeight - mapHeight) / 2
+          x: (containerWidth - mapWidth * zoom) / 2,
+          y: (containerHeight - mapHeight * zoom) / 2
         });
       };
       img.src = background;
     }
-  }, [background]);
+  }, [background, zoom]);
   
   // Добавляем функцию для центрирования карты
   const centerMap = () => {
@@ -268,17 +281,20 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
 
   return (
     <div 
-      className="battle-map-container h-full relative" 
+      className={`battle-map-container h-full w-full relative overflow-hidden ${className}`}
       ref={mapContainerRef}
       onContextMenu={(e) => e.preventDefault()}
     >
       <div 
-        className={`map-content zoomable relative overflow-hidden ${spacePressed ? 'grab' : ''}`}
+        className={`map-content zoomable relative w-full h-full ${spacePressed ? 'grab' : ''}`}
         ref={mapContentRef}
         style={{ 
           transform: `scale(${zoom}) translate(${mapPosition.x / zoom}px, ${mapPosition.y / zoom}px)`,
           transformOrigin: 'center center',
-          cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default')
+          cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default'),
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -287,7 +303,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          // Просто передаем setTokens без преобразования, теперь BattleMap принимает оба типа
           setTokens={setTokens}
           background={background}
           setBackground={setBackground}
@@ -296,6 +311,11 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           selectedTokenId={selectedTokenId}
           initiative={initiative}
           battleActive={battleActive}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
         />
         
         {/* Сетка только внутри карты боя */}

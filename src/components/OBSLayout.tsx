@@ -44,7 +44,7 @@ export default function OBSLayout({
       }}
     >
       {topPanelContent && (
-        <div className="col-span-3 border-b bg-muted/10">
+        <div className="col-span-3 border-b bg-muted/10 z-10">
           {topPanelContent}
         </div>
       )}
@@ -55,7 +55,7 @@ export default function OBSLayout({
         </div>
       )}
       
-      <div className="flex-1 relative overflow-hidden">
+      <div className="w-full h-full relative overflow-hidden">
         {children}
       </div>
       
