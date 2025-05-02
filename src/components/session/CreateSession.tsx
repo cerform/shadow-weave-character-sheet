@@ -1,7 +1,12 @@
 
 import React, { useState } from "react";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { useSessionStore } from "@/stores/sessionStore";
 import { socketService } from "@/services/socket";
-import { useTheme } from "@/contexts/ThemeContext";
 
 interface CreateSessionProps {
   onRoomCreated: (roomCode: string) => void;
@@ -9,36 +14,85 @@ interface CreateSessionProps {
 
 const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
   const [nickname, setNickname] = useState("");
+  const [sessionName, setSessionName] = useState("");
   const { theme } = useTheme();
+  const { createSession } = useSessionStore();
+  const { toast } = useToast();
 
   const handleCreate = () => {
     if (!nickname.trim()) {
-      alert("Введите ваше имя!");
+      toast({
+        title: "Ошибка",
+        description: "Введите ваше имя!",
+        variant: "destructive"
+      });
       return;
     }
-    socketService.connect("", nickname);
-    socketService.on("roomCreated", ({ roomCode }: { roomCode: string }) => {
-      onRoomCreated(roomCode);
-    });
+    
+    if (!sessionName.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Введите название сессии!",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Создаем сессию через SessionStore
+      const newSession = createSession(sessionName);
+      
+      // Подключаемся к сокетам, если используются
+      socketService.connect(newSession.code, nickname);
+      
+      // Вызываем колбэк с кодом комнаты
+      onRoomCreated(newSession.code);
+      
+      toast({
+        title: "Сессия создана",
+        description: `Код комнаты: ${newSession.code}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка при создании сессии",
+        description: error instanceof Error ? error.message : "Неизвестная ошибка",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <div className={`p-4 border rounded shadow bg-card/30 backdrop-blur-sm border-primary/20`}>
-      <h2 className="text-xl font-bold mb-2 text-primary">Создать сессию</h2>
-      <input
-        type="text"
-        placeholder="Ваш никнейм"
-        value={nickname}
-        onChange={(e) => setNickname(e.target.value)}
-        className="border p-2 mb-2 w-full bg-background text-foreground"
-      />
-      <button
-        onClick={handleCreate}
-        className="bg-primary hover:bg-primary/80 text-primary-foreground py-2 px-4 rounded w-full"
-      >
-        Создать
-      </button>
-    </div>
+    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+      <CardHeader>
+        <CardTitle className="text-primary">Создать сессию</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Input
+            type="text"
+            placeholder="Ваш никнейм"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            className="border p-2 w-full bg-background text-foreground"
+          />
+        </div>
+        <div className="space-y-2">
+          <Input
+            type="text"
+            placeholder="Название сессии"
+            value={sessionName}
+            onChange={(e) => setSessionName(e.target.value)}
+            className="border p-2 w-full bg-background text-foreground"
+          />
+        </div>
+        <Button
+          onClick={handleCreate}
+          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
+        >
+          Создать
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

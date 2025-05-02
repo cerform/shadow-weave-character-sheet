@@ -5,3 +5,10 @@ export interface VisibleArea {
   radius: number;
   tokenId: number;
 }
+
+// Добавляем привязку к SessionStore
+export interface TokenOwner {
+  userId: string;
+  userName: string;
+}
+
