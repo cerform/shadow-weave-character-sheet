@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Book, Search, ArrowLeft, BookOpen } from "lucide-react";
+import { Book, Search, ArrowLeft, BookOpen, Check, X } from "lucide-react";
 import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -48,10 +48,11 @@ interface SpellData {
 const SpellBookViewer = () => {
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeLevel, setActiveLevel] = useState<string>("all");
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeSchool, setActiveSchool] = useState<string>("all");
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);
+  const [activeClass, setActiveClass] = useState<string[]>([]);
 
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -91,6 +92,31 @@ const SpellBookViewer = () => {
     return schoolColors[school] || "bg-gray-800 text-white";
   };
 
+  // Извлекаем уникальные классы из заклинаний
+  const extractClasses = (): string[] => {
+    const classesSet = new Set<string>();
+    
+    allSpells.forEach(spell => {
+      if (typeof spell.classes === 'string') {
+        // Если classes - строка, разделяем её по запятым
+        spell.classes.split(',').forEach(cls => 
+          classesSet.add(cls.trim())
+        );
+      } else if (Array.isArray(spell.classes)) {
+        // Если classes - массив, добавляем каждый элемент
+        spell.classes.forEach(cls => {
+          if (typeof cls === 'string') {
+            classesSet.add(cls.trim());
+          }
+        });
+      }
+    });
+    
+    return Array.from(classesSet).sort();
+  };
+
+  const allClasses = extractClasses();
+
   useEffect(() => {
     // Convert CharacterSpell[] to SpellData[]
     if (allSpells && allSpells.length > 0) {
@@ -127,15 +153,35 @@ const SpellBookViewer = () => {
       );
     }
 
-    // Фильтруем по уровню
-    if (activeLevel !== 'all') {
-      const level = parseInt(activeLevel);
-      result = result.filter(spell => spell.level === level);
+    // Фильтруем по уровням (если выбраны уровни)
+    if (activeLevel.length > 0) {
+      result = result.filter(spell => activeLevel.includes(spell.level));
     }
 
-    // Фильтруем по школе
-    if (activeSchool !== 'all') {
-      result = result.filter(spell => spell.school === activeSchool);
+    // Фильтруем по школам (если выбраны школы)
+    if (activeSchool.length > 0) {
+      result = result.filter(spell => activeSchool.includes(spell.school));
+    }
+
+    // Фильтруем по классам (если выбраны классы)
+    if (activeClass.length > 0) {
+      result = result.filter(spell => {
+        if (typeof spell.classes === 'string') {
+          // Проверяем, содержит ли строка классов хотя бы один из выбранных классов
+          return activeClass.some(cls => 
+            spell.classes.toLowerCase().includes(cls.toLowerCase())
+          );
+        } else if (Array.isArray(spell.classes)) {
+          // Проверяем, содержит ли массив классов хотя бы один из выбранных классов
+          return spell.classes.some(spellClass => {
+            if (typeof spellClass !== 'string') return false;
+            return activeClass.some(cls => 
+              spellClass.toLowerCase() === cls.toLowerCase()
+            );
+          });
+        }
+        return false;
+      });
     }
 
     // Convert CharacterSpell[] to SpellData[]
@@ -146,7 +192,7 @@ const SpellBookViewer = () => {
     }));
     
     setFilteredSpells(convertedSpells);
-  }, [searchTerm, activeLevel, activeSchool]);
+  }, [searchTerm, activeLevel, activeSchool, activeClass]);
 
   const handleOpenSpell = (spell: SpellData) => {
     setSelectedSpell(spell);
@@ -155,6 +201,43 @@ const SpellBookViewer = () => {
 
   const handleClose = () => {
     setIsModalOpen(false);
+  };
+
+  const toggleLevel = (level: number) => {
+    setActiveLevel(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+  };
+
+  const toggleSchool = (school: string) => {
+    setActiveSchool(prev => {
+      if (prev.includes(school)) {
+        return prev.filter(s => s !== school);
+      } else {
+        return [...prev, school];
+      }
+    });
+  };
+
+  const toggleClass = (className: string) => {
+    setActiveClass(prev => {
+      if (prev.includes(className)) {
+        return prev.filter(c => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+  };
+
+  const clearFilters = () => {
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setSearchTerm('');
   };
 
   const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
@@ -216,55 +299,85 @@ const SpellBookViewer = () => {
                 />
                 <Search className="h-4 w-4 absolute top-3 left-2 text-muted-foreground" />
               </div>
+              
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-medium mb-2">Фильтры:</h4>
+                {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearFilters} 
+                    className="text-xs flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" /> Сбросить
+                  </Button>
+                )}
+              </div>
+              
               <div>
                 <h4 className="text-sm font-medium mb-2">Уровень:</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge
-                    className={`cursor-pointer ${activeLevel === 'all' ? 'bg-primary' : 'bg-secondary'}`}
-                    onClick={() => setActiveLevel('all')}
-                  >
-                    Все
-                  </Badge>
                   {allLevels.map(level => (
                     <Badge
                       key={level}
-                      className={`cursor-pointer ${activeLevel === level.toString() 
+                      className={`cursor-pointer ${activeLevel.includes(level) 
                         ? getBadgeColor(level)
                         : 'bg-secondary'}`}
-                      onClick={() => setActiveLevel(level.toString())}
+                      onClick={() => toggleLevel(level)}
                       style={{
-                        backgroundColor: activeLevel === level.toString() ? currentTheme.accent : undefined,
-                        color: activeLevel === level.toString() ? currentTheme.textColor : undefined
+                        backgroundColor: activeLevel.includes(level) ? currentTheme.accent : undefined,
+                        color: activeLevel.includes(level) ? currentTheme.textColor : undefined,
+                        borderColor: activeLevel.includes(level) ? currentTheme.accent : undefined
                       }}
                     >
                       {level === 0 ? "Заговор" : `${level}-й`}
+                      {activeLevel.includes(level) && <Check className="ml-1 h-3 w-3" />}
                     </Badge>
                   ))}
                 </div>
               </div>
+              
               <div>
                 <h4 className="text-sm font-medium mb-2">Школа:</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge
-                    className={`cursor-pointer ${activeSchool === 'all' ? 'bg-primary' : 'bg-secondary'}`}
-                    onClick={() => setActiveSchool('all')}
-                  >
-                    Все
-                  </Badge>
                   {allSchools.map(school => (
                     <Badge
                       key={school}
-                      className={`cursor-pointer ${activeSchool === school 
+                      className={`cursor-pointer ${activeSchool.includes(school) 
                         ? getSchoolBadgeColor(school)
                         : 'bg-secondary'}`}
-                      onClick={() => setActiveSchool(school)}
+                      onClick={() => toggleSchool(school)}
                       style={{
-                        backgroundColor: activeSchool === school ? currentTheme.accent : undefined,
-                        color: activeSchool === school ? currentTheme.textColor : undefined,
-                        borderColor: activeSchool === school ? currentTheme.accent : undefined
+                        backgroundColor: activeSchool.includes(school) ? currentTheme.accent : undefined,
+                        color: activeSchool.includes(school) ? currentTheme.textColor : undefined,
+                        borderColor: activeSchool.includes(school) ? currentTheme.accent : undefined
                       }}
                     >
                       {school}
+                      {activeSchool.includes(school) && <Check className="ml-1 h-3 w-3" />}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Класс:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {allClasses.map(className => (
+                    <Badge
+                      key={className}
+                      className={`cursor-pointer ${activeClass.includes(className) 
+                        ? 'bg-primary'
+                        : 'bg-secondary'}`}
+                      onClick={() => toggleClass(className)}
+                      style={{
+                        backgroundColor: activeClass.includes(className) ? currentTheme.accent : undefined,
+                        color: activeClass.includes(className) ? currentTheme.textColor : undefined,
+                        borderColor: activeClass.includes(className) ? currentTheme.accent : undefined
+                      }}
+                    >
+                      {className}
+                      {activeClass.includes(className) && <Check className="ml-1 h-3 w-3" />}
                     </Badge>
                   ))}
                 </div>
@@ -294,7 +407,7 @@ const SpellBookViewer = () => {
                       >
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-lg font-bold">{spell.name}</h4>
+                            <h4 className="text-lg font-bold text-foreground" style={{color: currentTheme.textColor}}>{spell.name}</h4>
                             <Badge
                               className={getBadgeColor(spell.level)}
                               style={{

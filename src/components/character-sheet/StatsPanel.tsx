@@ -61,32 +61,6 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
       
       {character && (
         <div className="mt-6 space-y-3">
-          <h4 className="font-medium text-sm mb-2" style={{ color: currentTheme.textColor }}>
-            Спасброски
-          </h4>
-          {abilities.map(({ key, name, rus }) => {
-            const proficient = character.savingThrowProficiencies?.[key] || false;
-            const score = character?.abilities?.[key] || 10;
-            const baseModifier = Math.floor((score - 10) / 2);
-            const profBonus = character.level ? Math.ceil(1 + (character.level / 4)) : 2;
-            const modifier = proficient ? baseModifier + profBonus : baseModifier;
-            const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
-            const isPositive = modifier >= 0;
-            
-            return (
-              <div key={`save-${key}`} className="grid grid-cols-6 items-center">
-                <div className="col-span-3 text-sm" style={{ color: currentTheme.textColor }}>
-                  {rus}
-                </div>
-                <div className="col-span-3">
-                  <span className={`px-2 py-1 rounded ${isPositive ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"}`}>
-                    {modifierText} {proficient && '⭐'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="bg-black/20 p-3 rounded text-center">
               <div className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>Класс брони</div>
