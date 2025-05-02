@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, BookOpen, Home, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, BookOpen, Home, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import SpellCard from '@/components/spell-detail/SpellCard';
 import { CharacterSpell } from '@/types/character';
 import ThemeSelector from '@/components/ThemeSelector';
@@ -19,6 +19,7 @@ const SpellbookPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [spells, setSpells] = useState<CharacterSpell[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
   const [filters, setFilters] = useState({
     level: null as number | null,
     school: null as string | null,
@@ -69,6 +70,23 @@ const SpellbookPage: React.FC = () => {
     setSpells(loadedSpells);
   }, []);
   
+  // Управление выбором уровней заклинаний
+  const toggleLevel = (level: number) => {
+    setSelectedLevels(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+    // Сбросить одиночный фильтр по уровню
+    setFilters(prev => ({...prev, level: null}));
+    // Установить активную вкладку на "all" при множественном выборе
+    if (activeTab !== 'all') {
+      setActiveTab('all');
+    }
+  };
+  
   // Фильтрация заклинаний
   const filteredSpells = spells.filter(spell => {
     // Поиск по тексту
@@ -84,7 +102,12 @@ const SpellbookPage: React.FC = () => {
       }
     }
     
-    // Фильтр по уровню
+    // Фильтр по выбранным уровням
+    if (selectedLevels.length > 0 && !selectedLevels.includes(spell.level)) {
+      return false;
+    }
+    
+    // Фильтр по уровню (одиночный)
     if (filters.level !== null && spell.level !== filters.level) {
       return false;
     }
@@ -113,7 +136,9 @@ const SpellbookPage: React.FC = () => {
       school: null,
       class: null,
     });
+    setSelectedLevels([]);
     setSearchTerm('');
+    setActiveTab('all');
   };
   
   // Считаем количество заклинаний для каждого уровня
@@ -121,6 +146,15 @@ const SpellbookPage: React.FC = () => {
     acc[spell.level] = (acc[spell.level] || 0) + 1;
     return acc;
   }, {} as Record<number, number>);
+  
+  // Обработчик выбора вкладки по уровню
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value !== 'all') {
+      // При выборе вкладки по уровню, сбрасываем множественный выбор уровней
+      setSelectedLevels([]);
+    }
+  };
   
   return (
     <div className="container p-4">
@@ -168,6 +202,37 @@ const SpellbookPage: React.FC = () => {
         </div>
       </div>
       
+      {/* Отображение текущих фильтров по уровням */}
+      {selectedLevels.length > 0 && (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span style={textStyle}>Выбранные уровни:</span>
+            {selectedLevels.sort((a, b) => a - b).map(level => (
+              <Badge 
+                key={`selected-${level}`} 
+                className="flex items-center gap-1 cursor-pointer"
+                style={{
+                  backgroundColor: currentTheme.accent,
+                  color: currentTheme.textColor,
+                }}
+                onClick={() => toggleLevel(level)}
+              >
+                {level === 0 ? 'Заговор' : `${level} уровень`}
+                <X className="h-3 w-3" />
+              </Badge>
+            ))}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setSelectedLevels([])}
+              style={{color: currentTheme.accent}}
+            >
+              Очистить
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
           <Card className="mb-6" style={cardStyle}>
@@ -185,16 +250,13 @@ const SpellbookPage: React.FC = () => {
                     <Badge
                       key={level}
                       className={`cursor-pointer ${
-                        filters.level === level 
+                        selectedLevels.includes(level) 
                           ? 'bg-primary text-primary-foreground' 
                           : 'bg-secondary hover:bg-secondary/80'
                       }`}
-                      onClick={() => setFilters(prev => ({
-                        ...prev, 
-                        level: prev.level === level ? null : level
-                      }))}
+                      onClick={() => toggleLevel(level)}
                       style={{
-                        backgroundColor: filters.level === level 
+                        backgroundColor: selectedLevels.includes(level) 
                           ? currentTheme.accent 
                           : 'rgba(0, 0, 0, 0.4)',
                         color: currentTheme.textColor,
@@ -267,7 +329,7 @@ const SpellbookPage: React.FC = () => {
         </div>
         
         <div className="md:col-span-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="mb-4" style={{borderColor: `${currentTheme.accent}50`}}>
               {['all', '0', '1', '2', '3', '4', '5'].map(tab => (
                 <TabsTrigger 
@@ -289,7 +351,9 @@ const SpellbookPage: React.FC = () => {
                   <div className="flex items-center gap-2" style={textStyle}>
                     <BookOpen className="h-5 w-5" />
                     {activeTab === 'all' 
-                      ? 'Все заклинания' 
+                      ? (selectedLevels.length > 0 
+                          ? `Заклинания (уровни: ${selectedLevels.sort((a, b) => a - b).join(', ')})` 
+                          : 'Все заклинания')
                       : activeTab === '0' 
                         ? 'Заговоры' 
                         : `Заклинания ${activeTab}-го уровня`}

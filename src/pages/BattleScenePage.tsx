@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import OBSLayout from "@/components/OBSLayout";
 import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
@@ -5,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, X, User, Skull, Crown, Home, Scroll, Book } from "lucide-react";
+import { Plus, X, User, Skull, Crown, Home, Scroll, Book, Pause, Play, ArrowLeft } from "lucide-react";
 import TokenSelector from "@/components/battle/TokenSelector";
 import BattleMap from "@/components/battle/BattleMap";
 import { VisibleArea } from "@/types/socket";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
+import { useToast } from "@/components/ui/use-toast";
 
 // Типы токенов: игрок, моб или босс
 interface Token {
@@ -26,6 +30,7 @@ interface Token {
   initiative: number;
   conditions: string[];
   resources: { [key: string]: number };
+  size?: number; // Размер токена
   visible: boolean;
 }
 
@@ -49,6 +54,10 @@ const monsterTokens = [
 
 const BattleScenePage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  
   const [background, setBackground] = useState<string | null>(null);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [zoom, setZoom] = useState(1);
@@ -58,6 +67,7 @@ const BattleScenePage = () => {
   const [tokenType, setTokenType] = useState<"player" | "monster" | "boss">("player");
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [battleActive, setBattleActive] = useState(false);
+  const [sessionPaused, setSessionPaused] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
 
   // Обработчик выбора токена из селектора
@@ -75,6 +85,7 @@ const BattleScenePage = () => {
       initiative: Math.floor(Math.random() * 20) + 1,
       conditions: [],
       resources: {},
+      size: 1, // Стандартный размер
       visible: true
     };
     
@@ -94,6 +105,11 @@ const BattleScenePage = () => {
     );
     
     setTokenSelectorOpen(false);
+    
+    toast({
+      title: "Токен добавлен",
+      description: `${newToken.name} добавлен на поле боя.`
+    });
   };
 
   const handleAddPresetMonster = (monster: typeof monsterTokens[0]) => {
@@ -110,6 +126,7 @@ const BattleScenePage = () => {
       initiative: Math.floor(Math.random() * 20) + 1,
       conditions: [],
       resources: {},
+      size: 1, // Стандартный размер
       visible: true
     };
     
@@ -127,6 +144,11 @@ const BattleScenePage = () => {
     setInitiative(prev => 
       [...prev, newInitiative].sort((a, b) => b.roll - a.roll)
     );
+    
+    toast({
+      title: "Монстр добавлен",
+      description: `${monster.name} добавлен на поле боя`
+    });
   };
 
   const handleAddToken = (type: Token["type"]) => {
@@ -152,6 +174,11 @@ const BattleScenePage = () => {
     if (selectedTokenId === id) {
       setSelectedTokenId(null);
     }
+    
+    toast({
+      title: "Токен удален",
+      description: "Токен был удален с поля боя"
+    });
   };
 
   const rollInitiative = () => {
@@ -175,6 +202,11 @@ const BattleScenePage = () => {
       });
       setInitiative(newInitiative);
       setBattleActive(true);
+      
+      toast({
+        title: "Инициатива брошена",
+        description: `${sorted[0].name} ходит первым с результатом ${sorted[0].roll}`
+      });
     }
   };
 
@@ -190,6 +222,12 @@ const BattleScenePage = () => {
       init.isActive = index === nextTurnIndex;
     });
     setInitiative(newInitiative);
+    
+    const nextToken = tokens.find(t => t.id === newInitiative[nextTurnIndex].tokenId);
+    toast({
+      title: "Следующий ход",
+      description: `Теперь ходит ${nextToken?.name || 'Неизвестный'}`
+    });
   };
 
   const addCondition = (tokenId: number, condition: string) => {
@@ -216,15 +254,66 @@ const BattleScenePage = () => {
       return token;
     }));
   };
+  
+  const handlePauseSession = () => {
+    setSessionPaused(!sessionPaused);
+    toast({
+      title: sessionPaused ? "Сессия продолжена" : "Сессия на паузе",
+      description: sessionPaused ? "Игра продолжается" : "Вы поставили игру на паузу"
+    });
+  };
+  
+  const handleEndSession = () => {
+    if (window.confirm("Вы уверены, что хотите завершить сессию? Все данные будут потеряны.")) {
+      navigate("/");
+      toast({
+        title: "Сессия завершена", 
+        description: "Вы вернулись на главную страницу"
+      });
+    }
+  };
 
   return (
     <OBSLayout>
-      {/* Левая ��анель */}
-      <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto">
-        <div className="mb-4">
-          <NavigationButtons className="flex-col items-stretch" />
+      {/* Верхняя панель управления */}
+      <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-10 p-2 border-b flex justify-between items-center">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={() => navigate("/")}
+          >
+            <Home size={16} />
+            Главная
+          </Button>
+          <Button 
+            variant={sessionPaused ? "default" : "outline"}
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={handlePauseSession}
+          >
+            {sessionPaused ? <Play size={16} /> : <Pause size={16} />}
+            {sessionPaused ? "Продолжить" : "Пауза"}
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={handleEndSession}
+          >
+            <ArrowLeft size={16} />
+            Завершить сессию
+          </Button>
         </div>
-        
+        <div className="text-lg font-semibold">D&D Сцена боя</div>
+        <div className="flex gap-2">
+          <NavigationButtons className="!flex-row" />
+        </div>
+      </div>
+      
+      {/* Левая панель */}
+      <div className="obs-left p-4 bg-background/95 text-foreground overflow-y-auto" style={{marginTop: "40px"}}>
         <Tabs defaultValue="tokens">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="tokens">Токены</TabsTrigger>
@@ -284,7 +373,19 @@ const BattleScenePage = () => {
                   onClick={() => setSelectedTokenId(token.id)}
                 >
                   <div className="flex items-center gap-2">
-                    <img src={token.img} alt={token.name} className="w-8 h-8 rounded-full object-cover" />
+                    <img 
+                      src={token.img} 
+                      alt={token.name} 
+                      className="w-8 h-8 rounded-full object-cover"
+                      style={{
+                        borderColor: token.type === "boss"
+                            ? "#ff5555"
+                            : token.type === "monster"
+                            ? "#ff9955"
+                            : "#55ff55",
+                        borderWidth: 2
+                      }}
+                    />
                     <div className="text-sm">
                       <div>{token.name}</div>
                       <div className="text-xs text-muted-foreground">HP: {token.hp}/{token.maxHp} AC: {token.ac}</div>
@@ -371,7 +472,7 @@ const BattleScenePage = () => {
               
               {initiative.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  Нет инициативы. Добавьте токены и нажмите "Броси��ь Инициативу".
+                  Нет инициативы. Добавьте токены и нажмите "Бросить Инициативу".
                 </div>
               )}
             </div>
@@ -380,7 +481,7 @@ const BattleScenePage = () => {
       </div>
 
       {/* Центральная пустая зона (сцена боя) */}
-      <div className="obs-center">
+      <div className="obs-center" style={{marginTop: "40px"}}>
         <BattleMap
           tokens={tokens as any}
           setTokens={setTokens as any}
@@ -395,7 +496,93 @@ const BattleScenePage = () => {
       </div>
 
       {/* Правая панель */}
-      <div className="obs-right p-4 bg-background/95 text-foreground overflow-y-auto">
+      <div className="obs-right p-4 bg-background/95 text-foreground overflow-y-auto" style={{marginTop: "40px"}}>
+        {selectedTokenId ? (
+          <div className="mb-4">
+            <h3 className="font-medium mb-2">Выбранный токен</h3>
+            {(() => {
+              const token = tokens.find(t => t.id === selectedTokenId);
+              if (!token) return null;
+              
+              return (
+                <div className="bg-muted/10 p-3 rounded-lg border space-y-3">
+                  <div className="flex gap-3 items-center">
+                    <img 
+                      src={token.img} 
+                      alt={token.name} 
+                      className="w-12 h-12 rounded-full object-cover"
+                      style={{
+                        borderColor: token.type === "boss"
+                            ? "#ff5555"
+                            : token.type === "monster"
+                            ? "#ff9955"
+                            : "#55ff55",
+                        borderWidth: 2
+                      }}
+                    />
+                    <div>
+                      <div className="font-medium">{token.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {token.type === "player" ? "Игрок" : 
+                         token.type === "boss" ? "Босс" : "Монстр"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Здоровье</div>
+                      <div className="flex gap-1 items-center">
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, -1)}>-</Button>
+                        <div className="flex-1 text-center">{token.hp}/{token.maxHp}</div>
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateTokenHP(token.id, 1)}>+</Button>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Класс защиты</div>
+                      <div className="flex gap-1 items-center">
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
+                          setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac - 1} : t));
+                        }}>-</Button>
+                        <div className="flex-1 text-center">{token.ac}</div>
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => {
+                          setTokens(prev => prev.map(t => t.id === token.id ? {...t, ac: t.ac + 1} : t));
+                        }}>+</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Состояния</div>
+                    <div className="flex flex-wrap gap-1">
+                      {["Оглушен", "Отравлен", "Парализован", "Испуган"].map(condition => {
+                        const isActive = token.conditions?.includes(condition);
+                        return (
+                          <Button 
+                            key={condition}
+                            size="sm"
+                            variant={isActive ? "default" : "outline"}
+                            className={`text-xs py-1 px-2 h-auto ${isActive ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                            onClick={() => {
+                              if (isActive) {
+                                removeCondition(token.id, condition);
+                              } else {
+                                addCondition(token.id, condition);
+                              }
+                            }}
+                          >
+                            {condition}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : null}
+        
         <h3 className="font-medium mb-4">Кубики</h3>
         <div className="h-96">
           <DiceRoller3D />
@@ -430,6 +617,20 @@ const BattleScenePage = () => {
         onTokenSelect={handleTokenSelect}
         tokenType={tokenType}
       />
+      
+      {/* Индикатор паузы */}
+      {sessionPaused && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+          <div className="text-center p-8 bg-background/80 backdrop-blur-md rounded-xl border">
+            <Pause className="w-20 h-20 mx-auto mb-4 text-primary" />
+            <h2 className="text-2xl font-bold mb-2">Сессия на паузе</h2>
+            <p className="mb-6 text-muted-foreground">Вы поставили игру на паузу</p>
+            <Button onClick={handlePauseSession} size="lg">
+              <Play className="w-5 h-5 mr-2" /> Продолжить игру
+            </Button>
+          </div>
+        </div>
+      )}
     </OBSLayout>
   );
 };

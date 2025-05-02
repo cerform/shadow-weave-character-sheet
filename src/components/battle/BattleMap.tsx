@@ -1,9 +1,13 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse, Eye, EyeOff } from "lucide-react";
+import { Upload, Grid, ZoomIn, ZoomOut, Eraser, Image, Mouse, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { Token, Initiative } from "@/pages/PlayBattlePage";
 import { VisibleArea } from "@/types/socket";
+import { Slider } from "@/components/ui/slider";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface BattleMapProps {
   tokens: Token[];
@@ -40,13 +44,21 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const [startDragPos, setStartDragPos] = useState({ x: 0, y: 0 });
   const [dragPath, setDragPath] = useState<{ x: number, y: number }[]>([]);
   const [dragConstraints, setDragConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
+  const [isMapLocked, setIsMapLocked] = useState(false);
+  const [selectedTokenSize, setSelectedTokenSize] = useState(1); // Размер выбранного токена
   
   // Новые состояния для тумана войны
   const [fogOfWar, setFogOfWar] = useState<boolean>(false);
   const [showPlayerView, setShowPlayerView] = useState<boolean>(false);
   const [visibleAreas, setVisibleAreas] = useState<VisibleArea[]>([]);
+  const [fogBrushSize, setFogBrushSize] = useState(100);
+  const [fogDrawMode, setFogDrawMode] = useState<"reveal" | "hide">("reveal");
   const fogCanvasRef = useRef<HTMLCanvasElement>(null);
   const playerViewRef = useRef<HTMLDivElement>(null);
+  
+  // Добавляем использование темы
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // Обновление размеров поля для ограничения перетаскивания
   useEffect(() => {
@@ -76,6 +88,30 @@ const BattleMap: React.FC<BattleMapProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [mapRef.current]);
+  
+  // Обновляем размер токена при его выборе
+  useEffect(() => {
+    if (selectedTokenId) {
+      const token = tokens.find(t => t.id === selectedTokenId);
+      if (token && token.size) {
+        setSelectedTokenSize(token.size);
+      } else {
+        setSelectedTokenSize(1);
+      }
+    }
+  }, [selectedTokenId, tokens]);
+  
+  // Функция для изменения размера выбранного токена
+  const handleTokenResize = (newSize: number) => {
+    if (selectedTokenId) {
+      setSelectedTokenSize(newSize);
+      setTokens(prev => prev.map(token => 
+        token.id === selectedTokenId 
+          ? { ...token, size: newSize }
+          : token
+      ));
+    }
+  };
 
   // Обработчик для drag-n-drop изображений напрямую в карту
   const handleMapDrop = (e: React.DragEvent) => {
@@ -167,6 +203,38 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
   };
 
+  // Обработчик клика для тумана войны
+  const handleMapClick = (e: React.MouseEvent) => {
+    if (mapTool !== "fog" || !mapRef.current || !fogCanvasRef.current) return;
+    
+    const rect = mapRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - mapOffset.x) / zoom;
+    const y = (e.clientY - rect.top - mapOffset.y) / zoom;
+    
+    // Создаем видимую область тумана войны
+    if (fogDrawMode === "reveal") {
+      // Добавляем новую область видимости
+      const newArea: VisibleArea = {
+        x,
+        y,
+        radius: fogBrushSize,
+        tokenId: -1 // Специальный ID для областей, созданных вручную
+      };
+      
+      setVisibleAreas([...visibleAreas, newArea]);
+    } else {
+      // Удаляем области, находящиеся рядом с кликом
+      const updatedAreas = visibleAreas.filter(area => {
+        const dx = area.x - x;
+        const dy = area.y - y;
+        const distance = Math.sqrt(dx*dx + dy*dy);
+        return distance > fogBrushSize / 2; // Удаляем все области в радиусе кисти
+      });
+      
+      setVisibleAreas(updatedAreas);
+    }
+  };
+
   // Обновление видимых областей для тумана войны
   const updateVisibleArea = (x: number, y: number, tokenId: number) => {
     // Удаляем старую область для этого токена, если она есть
@@ -229,7 +297,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     });
     
     // Возвращаем обратно режим отрисовки
-    ctx.globalCompositeOperation = "source-over";
+    ctx.globalCompositeOperation = "source-over" as GlobalCompositeOperation;
   };
 
   // Изменение зума колесом мыши
@@ -244,6 +312,9 @@ const BattleMap: React.FC<BattleMapProps> = ({
 
   // Начало перетаскивания карты средней кнопкой мыши или с инструментом перемещения
   const handleMapDragStart = (e: React.MouseEvent) => {
+    // Только если карта не заблокирована
+    if (isMapLocked) return;
+    
     // Только средняя кнопка мыши (button: 1) или если выбран инструмент перемещения
     if (e.button === 1 || mapTool === "select") {
       setIsDraggingMap(true);
@@ -253,7 +324,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
 
   // Перетаскивание карты
   const handleMapDrag = (e: React.MouseEvent) => {
-    if (!isDraggingMap) return;
+    if (!isDraggingMap || isMapLocked) return;
 
     const dx = e.clientX - startDragPos.x;
     const dy = e.clientY - startDragPos.y;
@@ -469,7 +540,67 @@ const BattleMap: React.FC<BattleMapProps> = ({
           >
             {fogOfWar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
+          <Button
+            variant={isMapLocked ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setIsMapLocked(!isMapLocked)}
+            title={isMapLocked ? "Разблокировать карту" : "Заблокировать карту"}
+          >
+            {isMapLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+          </Button>
         </div>
+
+        {/* Центральные элементы управления для тумана войны */}
+        {mapTool === "fog" && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-foreground">Режим:</span>
+            <Button
+              variant={fogDrawMode === "reveal" ? "default" : "outline"}
+              size="sm"
+              className="h-8"
+              onClick={() => setFogDrawMode("reveal")}
+            >
+              Раскрыть
+            </Button>
+            <Button
+              variant={fogDrawMode === "hide" ? "default" : "outline"}
+              size="sm"
+              className="h-8"
+              onClick={() => setFogDrawMode("hide")}
+            >
+              Скрыть
+            </Button>
+            <span className="text-sm text-foreground ml-2">Размер:</span>
+            <div className="w-32">
+              <Slider
+                value={[fogBrushSize]}
+                min={20}
+                max={300}
+                step={10}
+                onValueChange={(values) => setFogBrushSize(values[0])}
+              />
+            </div>
+            <span className="text-sm text-foreground">{fogBrushSize}px</span>
+          </div>
+        )}
+
+        {/* Контролы для размера токена */}
+        {selectedTokenId !== null && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-foreground">Размер токена:</span>
+            <div className="w-32">
+              <Slider
+                value={[selectedTokenSize]}
+                min={0.5}
+                max={3}
+                step={0.1}
+                onValueChange={(values) => handleTokenResize(values[0])}
+              />
+            </div>
+            <span className="text-sm text-foreground">{selectedTokenSize.toFixed(1)}x</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-1">
           <Button
@@ -534,9 +665,10 @@ const BattleMap: React.FC<BattleMapProps> = ({
             onWheel={handleWheel}
             onMouseDown={handleMapDragStart}
             onMouseMove={handleMapDrag}
+            onClick={handleMapClick}
             onDrop={handleMapDrop}
             onDragOver={handleMapDragOver}
-            style={{ cursor: isDraggingMap ? "grabbing" : mapTool === "select" ? "grab" : "default" }}
+            style={{ cursor: isDraggingMap ? "grabbing" : isMapLocked ? "not-allowed" : mapTool === "select" ? "grab" : mapTool === "fog" ? "crosshair" : "default" }}
           >
             <div
               className="absolute inset-0"
@@ -576,6 +708,10 @@ const BattleMap: React.FC<BattleMapProps> = ({
                   (init) => init.tokenId === token.id && init.isActive
                 );
                 
+                // Получаем размер токена или используем значение по умолчанию
+                const tokenSize = token.size || 1;
+                const sizeInPixels = 12 * tokenSize;
+                
                 return (
                   <motion.div
                     key={token.id}
@@ -588,7 +724,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       transform: `scale(${zoom})`,
                       transformOrigin: "top left",
                     }}
-                    drag={mapTool === "select"}
+                    drag={mapTool === "select" && !isMapLocked}
                     dragMomentum={false}
                     dragSnapToOrigin={false}
                     dragElastic={0.1}
@@ -616,18 +752,30 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       <img
                         src={token.img}
                         alt={token.name}
-                        className={`w-12 h-12 object-cover rounded-full border-2 token-image-container ${
+                        className={`object-cover rounded-full border-2 token-image-container ${
                           token.type === "boss"
                             ? "token-boss"
                             : token.type === "monster"
                             ? "token-monster"
                             : "token-player"
                         }`}
+                        style={{
+                          width: `${sizeInPixels}px`,
+                          height: `${sizeInPixels}px`,
+                          borderColor: token.type === "boss"
+                            ? "#ff5555"
+                            : token.type === "monster"
+                            ? "#ff9955"
+                            : "#55ff55",
+                        }}
                       />
 
                       {/* HP Bar */}
                       {token.hp !== undefined && token.maxHp !== undefined && (
-                        <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
+                        <div 
+                          className="bg-gray-700 rounded-full h-1 mt-1"
+                          style={{width: `${sizeInPixels}px`}}
+                        >
                           <div
                             className={`h-1 rounded-full ${
                               token.hp > token.maxHp * 0.6
@@ -642,13 +790,26 @@ const BattleMap: React.FC<BattleMapProps> = ({
                       )}
 
                       {/* Имя токена */}
-                      <div className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate max-w-[90px]">
+                      <div 
+                        className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate"
+                        style={{
+                          maxWidth: `${sizeInPixels * 2}px`,
+                          fontSize: `${8 * Math.min(1, tokenSize)}px`
+                        }}
+                      >
                         {token.name}
                       </div>
                       
                       {/* Индикаторы состояний */}
                       {token.conditions && token.conditions.length > 0 && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        <div 
+                          className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
+                          style={{
+                            width: `${Math.max(4, 4 * tokenSize)}px`,
+                            height: `${Math.max(4, 4 * tokenSize)}px`,
+                            fontSize: `${7 * Math.min(1, tokenSize)}px`
+                          }}
+                        >
                           {token.conditions.length}
                         </div>
                       )}
@@ -697,6 +858,14 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 className="absolute inset-0 pointer-events-none z-20"
               />
             )}
+            
+            {/* Индикатор блокировки карты */}
+            {isMapLocked && (
+              <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded flex items-center gap-1 text-sm">
+                <Lock className="h-3 w-3" />
+                Карта заблокирована
+              </div>
+            )}
           </div>
         </div>
         
@@ -726,25 +895,28 @@ const BattleMap: React.FC<BattleMapProps> = ({
                     const dy = token.y - area.y;
                     return Math.sqrt(dx*dx + dy*dy) <= area.radius;
                   }))
-                  .map(token => (
-                    <div 
-                      key={`player-view-${token.id}`}
-                      className="absolute"
-                      style={{
-                        left: `${Number(token.x) / 5}px`,
-                        top: `${Number(token.y) / 5}px`,
-                        width: '10px',
-                        height: '10px',
-                      }}
-                    >
-                      <div className={`
-                        w-full h-full rounded-full border 
-                        ${token.type === 'player' ? 'bg-green-500 border-green-300' : 
-                          token.type === 'boss' ? 'bg-red-500 border-red-300' : 
-                          'bg-yellow-500 border-yellow-300'}
-                      `}></div>
-                    </div>
-                  ))}
+                  .map(token => {
+                    const tokenSize = token.size || 1;
+                    return (
+                      <div 
+                        key={`player-view-${token.id}`}
+                        className="absolute"
+                        style={{
+                          left: `${Number(token.x) / 5}px`,
+                          top: `${Number(token.y) / 5}px`,
+                          width: `${2 + 8 * tokenSize}px`,
+                          height: `${2 + 8 * tokenSize}px`,
+                        }}
+                      >
+                        <div className={`
+                          w-full h-full rounded-full border 
+                          ${token.type === 'player' ? 'bg-green-500 border-green-300' : 
+                            token.type === 'boss' ? 'bg-red-500 border-red-300' : 
+                            'bg-yellow-500 border-yellow-300'}
+                        `}></div>
+                      </div>
+                    );
+                  })}
               </div>
               
               {/* Туман войны для режима игрока */}
@@ -752,7 +924,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 {visibleAreas.map((area, index) => (
                   <div 
                     key={`visible-area-${index}`}
-                    className="absolute rounded-full bg-radial-gradient"
+                    className="absolute rounded-full"
                     style={{
                       left: `${area.x / 5 - area.radius / 5}px`,
                       top: `${area.y / 5 - area.radius / 5}px`,
