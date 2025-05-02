@@ -183,13 +183,55 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           <ThemeSelector />
         </div>
       
-        <CharacterHeader 
-          character={character} 
-          onCharacterSave={handleCharacterSave} 
-          onCharacterExport={handleExportToPdf}
-          onJoinSession={() => setShowSessionDialog(true)}
-          theme={currentTheme}
-        />
+        <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
+              {character ? character.name : 'Новый персонаж'}
+            </CardTitle>
+            <CardDescription style={{ color: currentTheme.mutedTextColor }}>
+              {character ? (
+                <>
+                  {character.className || ''} {character.race ? `, ${character.race}` : ''} 
+                  {character.level ? `, Уровень ${character.level}` : ''}
+                </>
+              ) : 'Создайте своего персонажа'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <Button 
+                onClick={handleCharacterSave} 
+                className="mr-2"
+                style={{
+                  backgroundColor: currentTheme.accent,
+                  color: currentTheme.buttonText
+                }}
+              >
+                Сохранить
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleExportToPdf}
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor
+                }}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Экспорт в PDF
+              </Button>
+            </div>
+            <Button 
+              onClick={() => setShowSessionDialog(true)}
+              style={{
+                backgroundColor: currentTheme.accent,
+                color: currentTheme.buttonText
+              }}
+            >
+              Присоединиться к сессии
+            </Button>
+          </CardContent>
+        </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="md:col-span-1 space-y-4">
@@ -392,63 +434,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         )}
       </div>
     </div>
-  );
-};
-
-interface CharacterHeaderProps {
-  character: Character | null;
-  onCharacterSave: () => void;
-  onCharacterExport: () => void;
-  onJoinSession: () => void;
-  theme: any;
-}
-
-const CharacterHeader: React.FC<CharacterHeaderProps> = ({ character, onCharacterSave, onCharacterExport, onJoinSession, theme }) => {
-  return (
-    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-      <CardHeader>
-        <CardTitle style={{ color: theme.textColor }}>
-          {character ? character.name : 'Новый персонаж'}
-        </CardTitle>
-        <CardDescription style={{ color: theme.mutedTextColor }}>
-          {character ? `${character.className || ''}, ${character.race || ''}, Уровень ${character.level || 1}` : 'Создайте своего персонажа'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-between items-center">
-        <div>
-          <Button 
-            onClick={onCharacterSave} 
-            className="mr-2"
-            style={{
-              backgroundColor: theme.accent,
-              color: theme.buttonText
-            }}
-          >
-            Сохранить
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={onCharacterExport}
-            style={{
-              borderColor: theme.accent,
-              color: theme.textColor
-            }}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Экспорт в PDF
-          </Button>
-        </div>
-        <Button 
-          onClick={onJoinSession}
-          style={{
-            backgroundColor: theme.accent,
-            color: theme.buttonText
-          }}
-        >
-          Присоединиться к сессии
-        </Button>
-      </CardContent>
-    </Card>
   );
 };
 
