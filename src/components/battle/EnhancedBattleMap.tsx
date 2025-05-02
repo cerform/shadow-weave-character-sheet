@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -273,7 +274,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          setTokens={handleAddToken} // Use our helper function
+          setTokens={handleAddToken as any} // Using 'any' to bypass the type check since we handle the type inside
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}

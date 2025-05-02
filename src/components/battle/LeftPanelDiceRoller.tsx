@@ -21,6 +21,12 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
+  // Dummy function for onClose that's required by DiceRoller3DFixed
+  const handleClose = () => {
+    // This is just a placeholder since we're not actually closing anything in this context
+    console.log("DiceRoller close button clicked (no action needed)");
+  };
+  
   return (
     <Card className="w-full h-full bg-background/90 backdrop-blur-sm">
       <ScrollArea className="h-[calc(100vh-120px)] px-2">
@@ -101,6 +107,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
               themeColor={currentTheme.accent}
               playerName={playerName}
               diceCount={diceCount}
+              onClose={handleClose} // Add the required onClose prop
             />
           </div>
           
