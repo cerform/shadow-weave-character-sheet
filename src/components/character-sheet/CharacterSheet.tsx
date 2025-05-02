@@ -8,7 +8,7 @@ import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
-import { Save, Printer, Book, User2, AlertTriangle } from 'lucide-react';
+import { Save, Printer, Book, User2, AlertTriangle, Sword, MapPin, Shield } from 'lucide-react';
 import { SpellPanel } from './SpellPanel';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
   const [characterName, setCharacterName] = useState(character?.name || 'Новый персонаж');
   const [characterClass, setCharacterClass] = useState(character?.className || 'Выберите класс');
   const [activeTab, setActiveTab] = useState('abilities');
+  const [battleMapVisible, setBattleMapVisible] = useState(false);
 
   // Обновляет HP персонажа в контексте при изменении в UI
   const handleHpChange = (newHp: number) => {
@@ -60,6 +61,10 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
 
   const handlePrint = () => {
     window.print();
+  };
+  
+  const toggleBattleMap = () => {
+    setBattleMapVisible(!battleMapVisible);
   };
 
   // Функция для расчета опыта до следующего уровня
@@ -118,6 +123,72 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
             <ThemeSelector />
           </div>
         </header>
+        
+        {/* Главный блок "Магия Теней" - увеличенный */}
+        <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-3xl font-bold text-primary">Магия Теней</div>
+            <div className="flex gap-2">
+              <Button onClick={toggleBattleMap} variant="outline" size="sm" className="gap-1">
+                <MapPin className="size-4" />
+                {battleMapVisible ? "Скрыть карту" : "Показать карту"}
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Sword className="size-4" />
+                Начать бой
+              </Button>
+            </div>
+          </div>
+          
+          {/* Область для боевой карты - увеличенная */}
+          <div className={`transition-all duration-300 ${battleMapVisible ? 'h-[500px]' : 'h-[300px]'} bg-black/30 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden`}>
+            {!battleMapVisible ? (
+              <div className="text-center text-primary/80 p-6">
+                <div className="text-2xl font-semibold mb-3">Область визуализации</div>
+                <p className="max-w-2xl mx-auto">
+                  Здесь будет отображаться карта боя, визуализация заклинаний и ключевых сцен.
+                  Мастер подземелий управляет содержимым этой области.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Имитация поля боя */}
+                <div className="absolute inset-0 grid grid-cols-20 grid-rows-15 opacity-20">
+                  {Array.from({ length: 300 }).map((_, i) => (
+                    <div key={i} className="border border-primary/50"></div>
+                  ))}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-primary/80">
+                    <p className="text-lg">Ожидание действий Мастера...</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Панель быстрого доступа к действиям */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              <Sword className="size-4" /> Атака
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              <Shield className="size-4" /> Защита
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              Заклинание
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              Движение
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              Предмет
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+              Бонусное
+            </Button>
+          </div>
+        </Card>
         
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-4">
           {/* Left sidebar */}
@@ -198,17 +269,6 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
           
           {/* Center content */}
           <div className="flex flex-col space-y-4">
-            {/* Блок "Магия Теней" - вернули в центр экрана над вкладками */}
-            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-              <div className="flex flex-col items-center justify-center py-6">
-                <div className="text-3xl font-bold text-primary mb-3">Магия Теней</div>
-                <p className="text-center text-primary/80 text-lg max-w-2xl">
-                  Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
-                  В этой области будут происходить интерактивные события во время игры.
-                </p>
-              </div>
-            </Card>
-            
             <CharacterTabs activeTab={activeTab} setActiveTab={setActiveTab} />
             
             {activeTab === 'spells' && (
@@ -218,15 +278,40 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
             {activeTab === 'combat' && (
               <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-primary">Боевая сцена</h3>
-                  <div className="h-96 bg-primary/5 rounded-lg flex items-center justify-center">
-                    <p className="text-primary/70">Здесь будет отображаться боевая карта</p>
+                  <h3 className="text-lg font-semibold text-primary">Боевые характеристики</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-primary/5 rounded-lg text-center">
+                      <div className="text-sm text-primary/70 mb-1">КЗ</div>
+                      <div className="text-2xl font-bold text-primary">{character.ac || 10}</div>
+                    </div>
+                    <div className="p-4 bg-primary/5 rounded-lg text-center">
+                      <div className="text-sm text-primary/70 mb-1">Инициатива</div>
+                      <div className="text-2xl font-bold text-primary">+{character.initiative || 0}</div>
+                    </div>
+                    <div className="p-4 bg-primary/5 rounded-lg text-center">
+                      <div className="text-sm text-primary/70 mb-1">Скорость</div>
+                      <div className="text-2xl font-bold text-primary">{character.speed || 30} футов</div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <Button variant="outline">Атака</Button>
-                    <Button variant="outline">Движение</Button>
-                    <Button variant="outline">Заклинание</Button>
-                    <Button variant="outline">Бонусное действие</Button>
+                  <h3 className="text-lg font-semibold text-primary mt-4">Оружие и атаки</h3>
+                  <div className="space-y-3">
+                    {character.weapons ? (
+                      character.weapons.map((weapon: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-primary/5 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-primary">{weapon.name}</span>
+                            <span className="text-primary">+{weapon.attackBonus} к атаке</span>
+                          </div>
+                          <div className="text-sm text-primary/70 mt-1">
+                            Урон: {weapon.damage} ({weapon.damageType})
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-primary/50">
+                        <p>Нет доступного оружия</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
