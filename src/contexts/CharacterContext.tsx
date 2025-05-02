@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -282,6 +281,7 @@ export function CharacterProvider({ children }: Props) {
       value={{ 
         characters, 
         character, 
+        setCharacter,  // This line was missing! Adding it back
         clearCharacter, 
         updateCharacter,
         saveCharacter,
