@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { LeftPanel } from "@/components/battle/LeftPanel";
+import LeftPanel from "@/components/battle/LeftPanel";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
 import BattleMap from "@/components/battle/BattleMap";
 import RightPanel from "@/components/battle/RightPanel";
@@ -201,7 +201,7 @@ const PlayBattlePage = () => {
       };
     });
     
-    // Сортируем по результату инициативы (от большего к меньшему)
+    // Сортируем по результату инициативы (от большег�� к меньшему)
     const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
     
     // Устанавливаем первого участника активным
