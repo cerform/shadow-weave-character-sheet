@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -20,9 +19,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useNavigate } from 'react-router-dom';
 import { spells as allSpells } from '@/data/spells';
+import { CharacterSpell } from '@/types/character';
 
+// Define the SpellData interface to match the structure of our spells
 interface SpellData {
-  id?: string;
+  id?: string | number;
   name: string;
   name_en?: string;
   level: number;
@@ -32,10 +33,15 @@ interface SpellData {
   components: string;
   duration: string;
   description: string;
-  classes?: string;
+  classes?: string | string[];
   source?: string;
   isRitual?: boolean;
   isConcentration?: boolean;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
 }
 
 const SpellBookViewer = () => {
@@ -85,9 +91,15 @@ const SpellBookViewer = () => {
   };
 
   useEffect(() => {
-    // Используем заклинания из импортированного модуля вместо загрузки из файла
+    // Convert CharacterSpell[] to SpellData[]
     if (allSpells && allSpells.length > 0) {
-      setFilteredSpells(allSpells);
+      const convertedSpells: SpellData[] = allSpells.map(spell => ({
+        ...spell,
+        // Ensure properties match the SpellData interface
+        isRitual: spell.ritual || false,
+        isConcentration: spell.concentration || false
+      }));
+      setFilteredSpells(convertedSpells);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
       setFilteredSpells([]);
@@ -104,7 +116,7 @@ const SpellBookViewer = () => {
         spell => 
           spell.name.toLowerCase().includes(term) || 
           (spell.description && spell.description.toLowerCase().includes(term)) ||
-          (spell.classes && typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term))
+          (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term))
       );
     }
 
@@ -119,7 +131,14 @@ const SpellBookViewer = () => {
       result = result.filter(spell => spell.school === activeSchool);
     }
 
-    setFilteredSpells(result);
+    // Convert CharacterSpell[] to SpellData[]
+    const convertedSpells: SpellData[] = result.map(spell => ({
+      ...spell,
+      isRitual: spell.ritual || false,
+      isConcentration: spell.concentration || false
+    }));
+    
+    setFilteredSpells(convertedSpells);
   }, [searchTerm, activeLevel, activeSchool]);
 
   const handleOpenSpell = (spell: SpellData) => {
@@ -289,12 +308,12 @@ const SpellBookViewer = () => {
                             >
                               {spell.school}
                             </Badge>
-                            {spell.ritual && (
+                            {(spell.isRitual || spell.ritual) && (
                               <Badge variant="outline" className="ml-2 border-accent">
                                 Ритуал
                               </Badge>
                             )}
-                            {spell.concentration && (
+                            {(spell.isConcentration || spell.concentration) && (
                               <Badge variant="outline" className="ml-2 border-accent">
                                 Концентрация
                               </Badge>
