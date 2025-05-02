@@ -1,8 +1,81 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CharacterSheet } from "@/types/character";
 
-export const useCreationStep = (isMagicClass: boolean, characterClass: string) => {
+interface UseCreationStepProps {
+  isMagicClass: boolean;
+  characterClass: string;
+  character: CharacterSheet;
+}
+
+export const useCreationStep = ({ isMagicClass, characterClass, character }: UseCreationStepProps) => {
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
+
+  // Эффект для обновления состояния завершенности шагов при изменении персонажа
+  useEffect(() => {
+    const newCompletedSteps = { ...completedSteps };
+    
+    // Проверяем базовую информацию (имя, раса, класс)
+    if (character.name && character.race && character.class) {
+      newCompletedSteps[0] = true;
+    } else {
+      newCompletedSteps[0] = false;
+    }
+    
+    // Проверяем характеристики
+    if (character.abilities && 
+        Object.values(character.abilities).every(score => score >= 3 && score <= 30)) {
+      newCompletedSteps[1] = true;
+    } else {
+      newCompletedSteps[1] = false;
+    }
+    
+    // Проверка уровня
+    if (character.level && character.level >= 1 && character.level <= 20) {
+      newCompletedSteps[2] = true;
+    } else {
+      newCompletedSteps[2] = false;
+    }
+    
+    // Проверка навыков
+    if (character.skills && character.skills.length > 0) {
+      newCompletedSteps[3] = true;
+    } else {
+      newCompletedSteps[3] = false;
+    }
+    
+    // Проверка специализации
+    if (character.subclass) {
+      newCompletedSteps[4] = true;
+    } else {
+      newCompletedSteps[4] = false;
+    }
+    
+    // Проверка заклинаний (только для магических классов)
+    if (!isMagicClass || (character.spells && character.spells.length > 0)) {
+      newCompletedSteps[5] = true;
+    } else {
+      newCompletedSteps[5] = false;
+    }
+    
+    // Проверка снаряжения
+    if (character.equipment && character.equipment.length > 0) {
+      newCompletedSteps[6] = true;
+    } else {
+      newCompletedSteps[6] = false;
+    }
+    
+    // Характеристики персонажа (личность, внешность и т.д.)
+    if (character.personalityTraits || character.ideals || 
+        character.bonds || character.flaws) {
+      newCompletedSteps[7] = true;
+    } else {
+      newCompletedSteps[7] = false;
+    }
+    
+    setCompletedSteps(newCompletedSteps);
+  }, [character, isMagicClass]);
 
   const nextStep = () => {
     // Шаг 4 - выбор специализации
@@ -29,5 +102,21 @@ export const useCreationStep = (isMagicClass: boolean, characterClass: string) =
     }
   };
 
-  return { currentStep, nextStep, prevStep, setCurrentStep };
+  const isStepCompleted = (step: number): boolean => {
+    return !!completedSteps[step];
+  };
+  
+  const canProceedToNextStep = (): boolean => {
+    // Проверяем, завершен ли текущий шаг
+    return isStepCompleted(currentStep);
+  };
+
+  return { 
+    currentStep, 
+    nextStep, 
+    prevStep, 
+    setCurrentStep, 
+    isStepCompleted,
+    canProceedToNextStep 
+  };
 };
