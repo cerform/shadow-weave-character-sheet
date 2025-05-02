@@ -1,54 +1,30 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Physics, RigidBody } from '@react-three/rapier';
-import { useGLTF, Text, Environment, Center, OrbitControls } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 // Типы кубиков
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+
 type DiceModelProps = { 
-  position?: [number, number, number], 
-  onRoll?: (result: number) => void,
   diceType: DiceType, 
+  onRoll?: (result: number) => void,
   color?: string,
   rolling: boolean,
   setRolling: (rolling: boolean) => void,
-  forceReroll?: boolean,
   modifier?: number,
 };
 
-// Используем готовые модели для каждого типа кубика
-function DiceModel({ position = [0, 0, 0], diceType, onRoll, color = '#ffffff', rolling, setRolling, forceReroll, modifier = 0 }: DiceModelProps) {
-  const rigidBodyRef = useRef<any>(null);
+// Компонент кубика с использованием базовой геометрии
+function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, modifier = 0 }: DiceModelProps) {
+  const meshRef = useRef<THREE.Mesh>(null!);
   const [result, setResult] = useState<number | null>(null);
-  const [lastPosition, setLastPosition] = useState<[number, number, number]>([0, 0, 0]);
-  const [staticTimer, setStaticTimer] = useState<NodeJS.Timeout | null>(null);
-  const [rollKey, setRollKey] = useState(0);
-  const [isStatic, setIsStatic] = useState(false);
-
-  // Загружаем модель кубика
-  const modelPath = `/models/dice/${diceType.replace('d', '')}.glb`;
-  const { scene } = useGLTF(modelPath);
-  const diceModel = scene.clone();
-
-  // Определяем материал для кубика
-  const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(color),
-    metalness: 0.1,
-    roughness: 0.5,
-  });
-
-  // Применяем материал ко всем мешам в модели
-  diceModel.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.material = material;
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
+  const [animationPhase, setAnimationPhase] = useState(0); // 0: initial, 1: rolling, 2: stopped
+  const [rollStartTime, setRollStartTime] = useState(0);
 
   // Максимальное значение на кубике
   const getMaxValue = () => {
@@ -63,133 +39,90 @@ function DiceModel({ position = [0, 0, 0], diceType, onRoll, color = '#ffffff', 
     }
   };
 
-  // Определяем результат броска на основе ориентации кубика
-  const determineResult = () => {
-    if (!rigidBodyRef.current) return 1;
-    
-    const diceRotation = rigidBodyRef.current.rotation();
-    let value = 1;
-
-    // Для разных типов кубиков разные правила определения результата
+  // Получаем геометрию в зависимости от типа кубика
+  const getDiceGeometry = () => {
     switch (diceType) {
       case 'd4':
-        // Для d4 определяем по вершине, которая направлена вверх
-        if (diceRotation.x > 1) value = 1;
-        else if (diceRotation.y > 1) value = 2;
-        else if (diceRotation.z > 1) value = 3;
-        else value = 4;
-        break;
+        return new THREE.TetrahedronGeometry(1);
       case 'd6':
-        // Для d6 определяем по грани, которая направлена вверх
-        if (Math.abs(diceRotation.x) > Math.abs(diceRotation.y) && Math.abs(diceRotation.x) > Math.abs(diceRotation.z)) {
-          value = diceRotation.x > 0 ? 6 : 1;
-        } else if (Math.abs(diceRotation.y) > Math.abs(diceRotation.x) && Math.abs(diceRotation.y) > Math.abs(diceRotation.z)) {
-          value = diceRotation.y > 0 ? 5 : 2;
-        } else {
-          value = diceRotation.z > 0 ? 4 : 3;
-        }
-        break;
+        return new THREE.BoxGeometry(1, 1, 1);
+      case 'd8':
+        return new THREE.OctahedronGeometry(1);
+      case 'd10':
+        // Для d10 используем конусную геометрию как приближение
+        return new THREE.ConeGeometry(1, 2, 10);
+      case 'd12':
+        return new THREE.DodecahedronGeometry(1);
       case 'd20':
-        // Для d20 просто выбираем случайное число, так как сложно определить ориентацию
-        value = Math.floor(Math.random() * 20) + 1;
-        break;
+        return new THREE.IcosahedronGeometry(1);
       default:
-        // Для остальных кубиков тоже используем случайное число
-        value = Math.floor(Math.random() * getMaxValue()) + 1;
+        return new THREE.BoxGeometry(1, 1, 1);
     }
-
-    return value;
   };
 
   // Эффект для броска кубика
   useEffect(() => {
-    if (rolling) {
-      setRolling(true);
+    if (rolling && animationPhase === 0) {
+      setAnimationPhase(1);
+      setRollStartTime(Date.now());
+      setRotation({
+        x: Math.random() * 10,
+        y: Math.random() * 10,
+        z: Math.random() * 10
+      });
       setResult(null);
-      setIsStatic(false);
+    }
+  }, [rolling]);
 
-      // Применяем случайный импульс для броска
-      if (rigidBodyRef.current) {
-        rigidBodyRef.current.setTranslation({ x: 0, y: 3, z: 0 }, true);
-        rigidBodyRef.current.setRotation({ x: Math.random(), y: Math.random(), z: Math.random(), w: Math.random() }, true);
-        
-        const impulseX = (Math.random() - 0.5) * 2;
-        const impulseY = Math.random() * 3 + 3;
-        const impulseZ = (Math.random() - 0.5) * 2;
-        
-        rigidBodyRef.current.applyImpulse({ x: impulseX, y: impulseY, z: impulseZ }, true);
-        rigidBodyRef.current.applyTorqueImpulse({ x: impulseX * 2, y: impulseY * 0.5, z: impulseZ * 2 }, true);
-      }
+  // Анимация кубика
+  useFrame(() => {
+    if (!meshRef.current) return;
+
+    if (animationPhase === 1) {
+      // Анимация броска
+      meshRef.current.rotation.x += 0.2;
+      meshRef.current.rotation.y += 0.3;
+      meshRef.current.rotation.z += 0.1;
       
-      // Сбрасываем статический таймер
-      if (staticTimer) {
-        clearTimeout(staticTimer);
-      }
-    }
-  }, [rolling, forceReroll, rollKey]);
-
-  // Обработка остановки кубика
-  useEffect(() => {
-    const handleSettled = () => {
-      if (isStatic && rolling) {
-        const finalResult = determineResult();
-        setResult(finalResult);
-        setRolling(false);
+      // Проверяем, не пора ли остановить анимацию
+      const elapsed = Date.now() - rollStartTime;
+      if (elapsed > 1000) {
+        setAnimationPhase(2);
         
+        // Определяем результат броска
+        const randomValue = Math.floor(Math.random() * getMaxValue()) + 1;
+        setResult(randomValue);
+        
+        // Вызываем колбэк
         if (onRoll) {
-          onRoll(finalResult);
+          setTimeout(() => onRoll(randomValue), 500);
         }
+        
+        // Останавливаем бросок
+        setTimeout(() => {
+          setRolling(false);
+          setAnimationPhase(0);
+        }, 500);
       }
-    };
-
-    if (isStatic) {
-      const timer = setTimeout(handleSettled, 500);
-      return () => clearTimeout(timer);
+    } else if (animationPhase === 2) {
+      // Замедление вращения
+      meshRef.current.rotation.x *= 0.95;
+      meshRef.current.rotation.y *= 0.95;
+      meshRef.current.rotation.z *= 0.95;
     }
-  }, [isStatic, rolling]);
-
-  // Проверка на прекращение движения кубика
-  useEffect(() => {
-    const checkForStatic = () => {
-      if (rigidBodyRef.current) {
-        const linVel = rigidBodyRef.current.linvel();
-        const speed = Math.sqrt(linVel.x ** 2 + linVel.y ** 2 + linVel.z ** 2);
-        
-        const angVel = rigidBodyRef.current.angvel();
-        const angSpeed = Math.sqrt(angVel.x ** 2 + angVel.y ** 2 + angVel.z ** 2);
-        
-        const pos = rigidBodyRef.current.translation();
-        const currentPos: [number, number, number] = [pos.x, pos.y, pos.z];
-        
-        const posChange = Math.sqrt(
-          (currentPos[0] - lastPosition[0]) ** 2 +
-          (currentPos[1] - lastPosition[1]) ** 2 +
-          (currentPos[2] - lastPosition[2]) ** 2
-        );
-        
-        setLastPosition(currentPos);
-        
-        if (rolling && speed < 0.1 && angSpeed < 0.1 && posChange < 0.01) {
-          setIsStatic(true);
-        } else {
-          setIsStatic(false);
-        }
-      }
-    };
-
-    const interval = setInterval(checkForStatic, 200);
-    return () => clearInterval(interval);
-  }, [rolling, lastPosition]);
+  });
 
   return (
-    <RigidBody 
-      ref={rigidBodyRef} 
-      colliders="hull" 
-      position={position} 
-      restitution={0.5}
-      friction={0.5}
-    >
-      <primitive object={diceModel} scale={[0.7, 0.7, 0.7]} />
+    <group>
+      <mesh ref={meshRef} position={[0, 0, 0]} castShadow>
+        {getDiceGeometry()}
+        <meshStandardMaterial 
+          color={color} 
+          metalness={0.5} 
+          roughness={0.2}
+          emissive={new THREE.Color(color).multiplyScalar(0.2)}
+        />
+      </mesh>
       
       {result !== null && !rolling && (
         <Text
@@ -204,7 +137,7 @@ function DiceModel({ position = [0, 0, 0], diceType, onRoll, color = '#ffffff', 
           {result}{modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier}) = ${result + modifier}` : ''}
         </Text>
       )}
-    </RigidBody>
+    </group>
   );
 }
 
@@ -228,7 +161,6 @@ export const DiceRoller3D: React.FC<{
 }) => {
   const [diceType, setDiceType] = useState<DiceType>(initialDice);
   const [rolling, setRolling] = useState(false);
-  const [forceReroll, setForceReroll] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -237,7 +169,6 @@ export const DiceRoller3D: React.FC<{
   // Обработка выбора типа кубика
   const handleDiceChange = (type: DiceType) => {
     setDiceType(type);
-    setForceReroll(prev => !prev);
   };
 
   // Обработка броска кубика
@@ -270,28 +201,15 @@ export const DiceRoller3D: React.FC<{
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
         
-        <Physics gravity={[0, -9.81, 0]}>
-          <DiceModel 
-            position={[0, 3, 0]} 
-            diceType={diceType} 
-            color={diceColor}
-            onRoll={handleRollComplete}
-            rolling={rolling}
-            setRolling={setRolling}
-            forceReroll={forceReroll}
-            modifier={modifier}
-          />
-          
-          {/* Пол для физики */}
-          <RigidBody type="fixed" position={[0, -1, 0]} restitution={0.5}>
-            <mesh receiveShadow>
-              <boxGeometry args={[10, 0.5, 10]} />
-              <meshStandardMaterial color="#111111" opacity={0.2} transparent />
-            </mesh>
-          </RigidBody>
-        </Physics>
+        <DiceModel 
+          diceType={diceType} 
+          color={diceColor}
+          onRoll={handleRollComplete}
+          rolling={rolling}
+          setRolling={setRolling}
+          modifier={modifier}
+        />
 
-        <Environment preset="studio" />
         <OrbitControls 
           enablePan={false} 
           enableZoom={false} 
@@ -376,11 +294,3 @@ export const DiceRoller3D: React.FC<{
     </div>
   );
 };
-
-// Предзагрузка моделей для оптимизации
-useGLTF.preload('/models/dice/4.glb');
-useGLTF.preload('/models/dice/6.glb');
-useGLTF.preload('/models/dice/8.glb');
-useGLTF.preload('/models/dice/10.glb');
-useGLTF.preload('/models/dice/12.glb');
-useGLTF.preload('/models/dice/20.glb');
