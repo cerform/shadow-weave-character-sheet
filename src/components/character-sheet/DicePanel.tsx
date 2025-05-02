@@ -238,8 +238,8 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             })}
           </div>
           
-          {/* Отделенный от кнопок 3D кубик */}
-          <div className="h-[300px] mb-4 bg-black/70 rounded-lg overflow-hidden relative">
+          {/* 3D кубик в центре */}
+          <div className="h-[220px] mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -303,17 +303,17 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             <div className="mb-3">
               <label className="text-sm font-medium text-white mb-1 block">Выбрать токен:</label>
               <Select 
+                value={selectedTokenId?.toString() || ""}
                 onValueChange={(value) => {
-                  const tokenId = parseInt(value);
-                  if (!isNaN(tokenId)) {
-                    // Находим токен по id и используем его имя как имя игрока
-                    const token = tokens.find((t: any) => t.id === tokenId);
-                    if (token && token.id === tokenId) {
+                  if (value === "dm") {
+                    setSelectedTokenId(null);
+                  } else {
+                    const tokenId = parseInt(value);
+                    if (!isNaN(tokenId)) {
                       setSelectedTokenId(tokenId);
                     }
                   }
                 }}
-                value={selectedTokenId?.toString() || ""}
               >
                 <SelectTrigger className="w-full bg-black/50 border-white/20 text-white">
                   <SelectValue placeholder="Выберите токен" />
@@ -343,8 +343,8 @@ export const DicePanel: React.FC<DicePanelProps> = ({
             </div>
           )}
           
-          {/* Модификаторы и причина броска */}
-          <div className="grid grid-cols-2 gap-2 mb-2">
+          {/* Модификаторы и причина броска - изменяем расположение */}
+          <div className="grid grid-cols-1 gap-3 mb-2">
             <div>
               <label className="text-sm font-medium text-white mb-1 block">Причина броска:</label>
               <Select

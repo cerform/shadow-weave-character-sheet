@@ -189,12 +189,16 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
       meshRef.current.rotation.x *= 0.95;
       meshRef.current.rotation.y *= 0.95;
       meshRef.current.rotation.z *= 0.95;
+    } else {
+      // Добавляем небольшое вращение в неактивном состоянии для эффекта "живости"
+      meshRef.current.rotation.y += 0.005;
     }
   });
   
+  // Центрирование камеры на кубике
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 2, 5);
+    camera.position.set(0, 0, 5); // Изменено с (0, 2, 5) для лучшего центрирования
     camera.lookAt(0, 0, 0);
   }, [camera]);
   
@@ -280,8 +284,8 @@ export const DiceRoller3D = ({
     }
   };
   
-  // Кнопка броска внизу для лучшей доступности
-  const buttonBottom = hideControls ? "10px" : "55px";
+  // Убираем кнопки управления dice из внутреннего компонента 3D кубика,
+  // теперь они будут отображаться в отдельном блоке снаружи
   
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -293,121 +297,13 @@ export const DiceRoller3D = ({
           onRoll={handleRollComplete}
           modifier={modifier}
           autoRoll={roll}
-          hideControls={hideControls}
+          hideControls={true} // Всегда скрываем внутренние контролы
           forceReroll={forceReroll}
           themeColor={actualThemeColor}
           fixedPosition={fixedPosition}
         />
         <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
-      
-      {!hideControls && (
-        <div style={{ 
-          position: 'absolute', 
-          bottom: buttonBottom, 
-          left: 0, 
-          width: '100%', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '8px',
-          background: 'rgba(0,0,0,0.2)',
-          padding: '8px',
-          borderRadius: '8px',
-        }}>
-          <button 
-            onClick={() => handleDiceChange('d4')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd4' ? 1 : 0.6,
-              backgroundColor: diceType === 'd4' ? actualThemeColor : 'rgba(255,255,255,0.1)',
-              color: diceType === 'd4' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d4</button>
-          <button 
-            onClick={() => handleDiceChange('d6')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd6' ? 1 : 0.6,
-              backgroundColor: diceType === 'd6' ? actualThemeColor : 'rgba(255,255,255,0.1)',
-              color: diceType === 'd6' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d6</button>
-          <button 
-            onClick={() => handleDiceChange('d8')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd8' ? 1 : 0.6,
-              backgroundColor: diceType === 'd8' ? actualThemeColor : 'rgba(255,255,255,0.1)',
-              color: diceType === 'd8' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d8</button>
-          <button 
-            onClick={() => handleDiceChange('d10')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd10' ? 1 : 0.6,
-              backgroundColor: diceType === 'd10' ? actualThemeColor : 'rgba(255,255,255,0.1)', 
-              color: diceType === 'd10' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d10</button>
-          <button 
-            onClick={() => handleDiceChange('d12')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd12' ? 1 : 0.6,
-              backgroundColor: diceType === 'd12' ? actualThemeColor : 'rgba(255,255,255,0.1)',
-              color: diceType === 'd12' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d12</button>
-          <button 
-            onClick={() => handleDiceChange('d20')} 
-            style={{ 
-              padding: '4px 8px', 
-              opacity: diceType === 'd20' ? 1 : 0.6,
-              backgroundColor: diceType === 'd20' ? actualThemeColor : 'rgba(255,255,255,0.1)',
-              color: diceType === 'd20' ? 'black' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >d20</button>
-        </div>
-      )}
-      
-      {!hideControls && (
-        <button 
-          onClick={handleRoll}
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            right: '10px',
-            padding: '8px 16px',
-            backgroundColor: actualThemeColor,
-            color: 'black',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          Бросить {diceType}
-        </button>
-      )}
     </div>
   );
 };

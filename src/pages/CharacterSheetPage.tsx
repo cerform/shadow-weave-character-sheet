@@ -20,14 +20,14 @@ const CharacterSheetPage = () => {
               <Dices className="h-10 w-10" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/90 border-white/20">
-            <SheetHeader>
+          <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/90 border-white/20 p-0 pt-4">
+            <SheetHeader className="px-6">
               <SheetTitle className="text-white text-2xl">Кубики</SheetTitle>
               <SheetDescription className="text-white/70 text-base">
                 Используйте виртуальные кубики для бросков
               </SheetDescription>
             </SheetHeader>
-            <div className="py-4 h-[calc(100vh-120px)] overflow-y-auto">
+            <div className="py-2 h-[calc(100vh-120px)] overflow-y-auto px-4">
               <DicePanel />
             </div>
           </SheetContent>
