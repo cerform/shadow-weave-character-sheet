@@ -26,9 +26,21 @@ export const ThemeSelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="relative">
           <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
           <span className="sr-only">Изменить тему</span>
+          <div 
+            className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
+            style={{
+              backgroundColor: 
+                activeTheme === 'amethyst' ? '#9b87f5' : 
+                activeTheme === 'emerald' ? '#10B981' : 
+                activeTheme === 'ruby' ? '#EA384D' : 
+                activeTheme === 'sapphire' ? '#33C3F0' : 
+                activeTheme === 'topaz' ? '#FCD34D' : 
+                activeTheme === 'obsidian' ? '#222222' : '#8B5A2B'
+            }}
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

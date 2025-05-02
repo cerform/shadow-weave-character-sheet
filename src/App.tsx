@@ -24,6 +24,7 @@ import { ThemeContext, Theme } from "@/contexts/ThemeContext";
 import { SocketProvider } from "@/contexts/SocketContext";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { UserThemeProvider } from "@/contexts/UserThemeContext";
 
 function App() {
   const [theme, setTheme] = React.useState<Theme>("default");
@@ -32,31 +33,34 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <ThemeContext.Provider value={{ theme, setTheme }}>
         <AuthProvider>
-          <CharacterProvider>
-            <SocketProvider>
-              <SessionProvider>
-                <Router>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/character-creation" element={<CharacterCreationPage />} />
-                    <Route path="/sheet" element={<CharacterSheetPage />} />
-                    <Route path="/spellbook" element={<SpellbookPage />} />
-                    <Route path="/battle" element={<PlayBattlePage />} />
-                    <Route path="/join-session" element={<JoinSessionPage />} />
-                    <Route path="/create-session" element={<CreateSessionPage />} />
-                    <Route path="/join/:sessionCode?" element={<JoinGamePage />} />
-                    <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
-                    <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-                    <Route path="/player-session" element={<PlayerSessionPage />} />
-                    <Route path="/handbook" element={<HandbookPage />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Router>
-                <Toaster />
-              </SessionProvider>
-            </SocketProvider>
-          </CharacterProvider>
+          <UserThemeProvider>
+            <CharacterProvider>
+              <SocketProvider>
+                <SessionProvider>
+                  <Router>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/character-creation" element={<CharacterCreationPage />} />
+                      <Route path="/sheet" element={<CharacterSheetPage />} />
+                      <Route path="/spellbook" element={<SpellbookPage />} />
+                      <Route path="/battle" element={<PlayBattlePage />} />
+                      <Route path="/join-session" element={<JoinSessionPage />} />
+                      <Route path="/create-session" element={<CreateSessionPage />} />
+                      <Route path="/join/:sessionCode?" element={<JoinGamePage />} />
+                      <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
+                      <Route path="/dm" element={<DMDashboardPage />} />
+                      <Route path="/dm/battle" element={<PlayBattlePage />} />
+                      <Route path="/player-session" element={<PlayerSessionPage />} />
+                      <Route path="/handbook" element={<HandbookPage />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Router>
+                  <Toaster />
+                </SessionProvider>
+              </SocketProvider>
+            </CharacterProvider>
+          </UserThemeProvider>
         </AuthProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
