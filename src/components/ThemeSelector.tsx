@@ -19,9 +19,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSessionStore } from "@/stores/sessionStore";
 
 const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
+  const { userType, username } = useSessionStore();
   const isMobile = useIsMobile();
 
   const themeIcons = {
@@ -33,11 +35,17 @@ const ThemeSelector = () => {
     'bard': <Feather className="h-4 w-4 mr-1" />
   };
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme as any);
+  };
+
   // Мобильная версия с дропдаун-меню
   if (isMobile) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <label className="text-sm font-semibold text-foreground">Тема:</label>
+        <label className="text-sm font-semibold text-foreground">
+          {userType === 'player' && username ? `Тема ${username}:` : 'Тема:'}
+        </label>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2 w-full">
@@ -49,7 +57,7 @@ const ThemeSelector = () => {
             {Object.entries(themes).map(([key, value]) => (
               <DropdownMenuItem
                 key={key}
-                onClick={() => setTheme(key as any)}
+                onClick={() => handleThemeChange(key)}
                 className="flex items-center gap-2"
               >
                 {themeIcons[key as keyof typeof themeIcons]}
@@ -66,14 +74,16 @@ const ThemeSelector = () => {
   // Десктопная версия с кнопками
   return (
     <div className="flex flex-col items-center gap-2">
-      <label className="text-sm font-semibold text-foreground">Выберите тему:</label>
+      <label className="text-sm font-semibold text-foreground">
+        {userType === 'player' && username ? `Тема ${username}:` : 'Выберите тему:'}
+      </label>
       <div className="flex flex-wrap gap-1 justify-center">
         {Object.entries(themes).map(([key, value]) => (
           <Button
             key={key}
             variant={theme === key ? "default" : "outline"}
             size="sm"
-            onClick={() => setTheme(key as any)}
+            onClick={() => handleThemeChange(key)}
             className={`flex items-center ${theme === key ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'}`}
           >
             {themeIcons[key as keyof typeof themeIcons]}

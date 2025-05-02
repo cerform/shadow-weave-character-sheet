@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Dices } from 'lucide-react';
 import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
+import { useSessionStore } from '@/stores/sessionStore';
 
 interface LeftPanelDiceRollerProps {
   playerName?: string;
@@ -18,19 +19,22 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
   const [diceCount, setDiceCount] = useState<number>(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const { theme } = useTheme();
+  const { username } = useSessionStore();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [showDiceRoller, setShowDiceRoller] = useState<boolean>(false);
   
-  // Dummy function for onClose that's required by DiceRoller3DFixed
+  // Function for closing the dice roller modal
   const handleClose = () => {
-    // Закрываем окно броска кубиков
     setShowDiceRoller(false);
   };
 
-  // Функция для броска кубика
+  // Function for rolling dice
   const handleRollDice = () => {
     setShowDiceRoller(true);
   };
+  
+  // Use the username from the session if no playerName is provided
+  const displayName = playerName || username || 'Игрок';
   
   return (
     <Card className="w-full h-full bg-background/90 backdrop-blur-sm">
@@ -124,7 +128,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
               initialDice={diceType}
               modifier={modifier} 
               themeColor={currentTheme.accent}
-              playerName={playerName}
+              playerName={displayName}
               diceCount={diceCount}
               onClose={handleClose}
             />

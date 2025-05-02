@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { themes } from "@/lib/themes";
+import { useSessionStore } from "@/stores/sessionStore";
 
 export type Theme = 'default' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
 
@@ -12,20 +13,40 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>("default");
+  const { playerTheme, setPlayerTheme, userType, currentSession, username } = useSessionStore();
+  const [theme, setThemeState] = useState<Theme>(playerTheme as Theme || "default");
 
+  // On initial load, check if the user has a theme preference in the session
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as Theme;
-    if (storedTheme && Object.keys(themes).includes(storedTheme)) {
-      setTheme(storedTheme);
+    if (userType === 'player' && currentSession && username) {
+      const playerData = currentSession.players.find(p => p.name === username);
+      if (playerData?.theme && Object.keys(themes).includes(playerData.theme)) {
+        setThemeState(playerData.theme as Theme);
+      } else if (playerTheme && Object.keys(themes).includes(playerTheme)) {
+        setThemeState(playerTheme as Theme);
+      }
+    } else {
+      // If not a player in a session, check localStorage
+      const storedTheme = localStorage.getItem("theme") as Theme;
+      if (storedTheme && Object.keys(themes).includes(storedTheme)) {
+        setThemeState(storedTheme);
+      }
     }
-  }, []);
+  }, [userType, currentSession, username, playerTheme]);
 
+  // Update theme in Zustand store and apply to UI
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    setPlayerTheme(newTheme);
+    
+    // Store in localStorage regardless of the user type
+    localStorage.setItem("theme", newTheme);
+  };
+
+  // Apply the theme whenever it changes
   useEffect(() => {
     // Применение темы при изменении
     applyTheme(theme);
-    // Сохраняем выбранную тему в localStorage
-    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const applyTheme = (themeName: Theme) => {

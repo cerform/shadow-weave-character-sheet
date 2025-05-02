@@ -7,30 +7,58 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
-import { useTheme } from '@/contexts/ThemeContext'; // Updated import
-import { useSession, DMSession } from '@/contexts/SessionContext';
+import { useTheme } from '@/hooks/use-theme';
 import { Copy, Users, ArrowLeft, Plus, RefreshCw } from 'lucide-react';
+import { useSessionStore } from '@/stores/sessionStore';
 
 const DMSessionPage = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams();
   const { theme } = useTheme();
-  const { sessions, updateSession, endSession } = useSession();
+  const { sessions, updateSession, endSession, setUserType } = useSessionStore();
   
-  const [session, setSession] = useState<DMSession | null>(null);
+  const [session, setSession] = useState(useSessionStore.getState().sessions.find(s => s.id === sessionId) || null);
   const [notes, setNotes] = useState('');
   
+  // Subscribe to session store changes
   useEffect(() => {
+    const unsubscribe = useSessionStore.subscribe(
+      (state) => state.sessions,
+      (sessions) => {
+        const foundSession = sessions.find(s => s.id === sessionId);
+        if (foundSession) {
+          setSession(foundSession);
+        } else {
+          toast.error('Сессия не найдена');
+          navigate('/dm');
+        }
+      }
+    );
+    
+    // Initial check for session
     if (sessionId) {
       const foundSession = sessions.find(s => s.id === sessionId);
       if (foundSession) {
         setSession(foundSession);
+        setUserType('dm');
       } else {
         toast.error('Сессия не найдена');
         navigate('/dm');
       }
     }
-  }, [sessionId, sessions, navigate]);
+    
+    return unsubscribe;
+  }, [sessionId, sessions, navigate, setUserType]);
+  
+  // Load notes from localStorage
+  useEffect(() => {
+    if (session) {
+      const savedNotes = localStorage.getItem(`dnd-session-notes-${session.id}`);
+      if (savedNotes) {
+        setNotes(savedNotes);
+      }
+    }
+  }, [session]);
   
   const handleCopySessionCode = () => {
     if (session) {
@@ -60,20 +88,10 @@ const DMSessionPage = () => {
   
   const handleSaveNotes = () => {
     if (session) {
-      // Store notes in localStorage for this session
       localStorage.setItem(`dnd-session-notes-${session.id}`, notes);
       toast.success('Заметки сохранены');
     }
   };
-  
-  useEffect(() => {
-    if (session) {
-      const savedNotes = localStorage.getItem(`dnd-session-notes-${session.id}`);
-      if (savedNotes) {
-        setNotes(savedNotes);
-      }
-    }
-  }, [session]);
   
   if (!session) {
     return (
