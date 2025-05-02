@@ -21,6 +21,7 @@ import { RestPanel } from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
 import { SpellSlotsPopover } from './SpellSlotsPopover';
 import LevelUpPanel from './LevelUpPanel';
+import { SkillsPanel } from './SkillsPanel';
 
 interface CharacterSheetProps {
   character: Character | null;
@@ -327,11 +328,16 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             )}
           </div>
           
-          <div className="md:col-span-2">
-            <CharacterTabs 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-            />
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-1">
+              <SkillsPanel character={character} />
+            </div>
+            <div className="md:col-span-2">
+              <CharacterTabs 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+              />
+            </div>
           </div>
         </div>
         

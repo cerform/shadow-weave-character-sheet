@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -41,7 +40,7 @@ export interface SorceryPoints {
 
 export interface Character {
   id: string;
-  userId?: string; // ID владельца персонажа
+  userId?: string; 
   name: string;
   race: string;
   subrace?: string; 
@@ -57,14 +56,19 @@ export interface Character {
   equipment?: string[];
   languages?: string[];
   proficiencies?: string[];
+  // Добавляем владение навыками
+  skillProficiencies?: {
+    [skillName: string]: boolean;
+  };
   maxHp?: number;
   currentHp?: number;
-  // Добавляем поле для отслеживания очков чародея и метамагии
   sorceryPoints?: SorceryPoints;
-  // Добавлено поле для отслеживания темы персонажа
   theme?: string;
   createdAt: string;
   updatedAt: string;
+  savingThrowProficiencies?: {
+    [ability: string]: boolean;
+  };
 }
 
 // Контекст и его тип
