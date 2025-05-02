@@ -8,7 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { DiceRoller3D } from '../dice/DiceRoller3D';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type DiceRollRecord = {
   id: number;
@@ -150,7 +150,7 @@ export const DicePanel = () => {
         </TabsList>
         
         <TabsContent value="dice" className="mt-0">
-          <div className="h-[200px] mb-3 bg-black/70 rounded-lg overflow-hidden relative">
+          <div className="h-[250px] mb-3 bg-black/70 rounded-lg overflow-hidden relative">
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}
@@ -162,23 +162,29 @@ export const DicePanel = () => {
             />
           </div>
 
-          {lastRollResult !== null && !isRolling && (
-            <div className="mb-4 p-3 bg-black/70 rounded-lg border text-center"
-                 style={{ borderColor: getDiceColor(diceType) }}>
+          {(lastRollResult !== null || isRolling) && (
+            <div className="mb-4 p-4 bg-black/80 rounded-lg border text-center"
+                 style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType) }}>
               <div className="text-sm text-white/70 mb-1">Результат</div>
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-xl font-bold">{lastRollResult}</span>
-                {modifier !== 0 && (
-                  <>
-                    <span className="text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
-                    <span className="text-xl font-bold" style={{ color: getDiceColor(diceType) }}>
-                      = {lastRollResult + modifier}
-                    </span>
-                  </>
-                )}
-              </div>
-              {reason && (
-                <div className="text-sm text-white/70 mt-1">{reason}</div>
+              {isRolling ? (
+                <div className="text-2xl font-bold animate-pulse">Бросаем...</div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-3xl font-bold">{lastRollResult}</span>
+                    {modifier !== 0 && (
+                      <>
+                        <span className="text-xl text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
+                        <span className="text-3xl font-bold" style={{ color: getDiceColor(diceType) }}>
+                          = {lastRollResult + modifier}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {reason && (
+                    <div className="text-sm text-white/70 mt-1">{reason}</div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -249,8 +255,8 @@ export const DicePanel = () => {
               backgroundColor: isRolling ? '#888888' : getDiceColor(diceType),
               color: 'black',
               boxShadow: `0 4px 12px ${getDiceColor(diceType)}40`,
-              height: '45px',
-              fontSize: '16px',
+              height: '55px',
+              fontSize: '18px',
               fontWeight: 'bold'
             }}
           >
@@ -259,7 +265,7 @@ export const DicePanel = () => {
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
-          <div className="max-h-[380px] overflow-y-auto rounded-md bg-black/50 border border-white/10">
+          <div className="max-h-[450px] overflow-y-auto rounded-md bg-black/50 border border-white/10">
             {rollsHistory.length > 0 ? rollsHistory.map((roll) => (
               <div 
                 key={roll.id} 
