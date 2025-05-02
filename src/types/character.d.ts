@@ -44,3 +44,15 @@ export interface CharacterSheet {
   appearance: string;
   backstory: string;
 }
+
+// Интерфейс для подклассов персонажей
+export interface CharacterSubclass {
+  name: string;
+  className: string;
+  description: string;
+  features: {
+    level: number;
+    name: string;
+    description: string;
+  }[];
+}
