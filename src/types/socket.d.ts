@@ -116,7 +116,7 @@ export interface Token {
   name: string;
   position: { x: number; y: number };
   img: string;
-  type: 'character' | 'monster' | 'npc';
+  type: 'character' | 'monster' | 'npc' | 'player' | 'boss';
   size: number; // размер токена
   ownerId: string;
   health?: {
@@ -124,4 +124,7 @@ export interface Token {
     max: number;
   };
   visible: boolean;
+  hp?: number;
+  maxHp?: number;
+  conditions?: string[];
 }

@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import { CharacterSheet } from '@/types/character';
 import html2pdf from 'html2pdf.js';
@@ -352,6 +351,9 @@ function generateCharacterSheetHTML(character: CharacterSheet): string {
     </style>
   `;
   
+  // Безопасно используем свойство subrace
+  const subraceText = character.subrace ? `(${character.subrace})` : '';
+  
   // HTML для листа персонажа
   return `<!DOCTYPE html>
 <html lang="ru">
@@ -365,7 +367,7 @@ function generateCharacterSheetHTML(character: CharacterSheet): string {
     <div class="header">
       <h1>Лист персонажа D&D 5 редакции</h1>
       <h2>${character.name}</h2>
-      <p>${character.race} ${character.subrace ? `(${character.subrace})` : ''}, ${character.class} ${character.subclass ? `(${character.subclass})` : ''}, Уровень ${character.level}</p>
+      <p>${character.race} ${subraceText}, ${character.class} ${character.subclass ? `(${character.subclass})` : ''}, Уровень ${character.level}</p>
     </div>
 
     <div class="section">

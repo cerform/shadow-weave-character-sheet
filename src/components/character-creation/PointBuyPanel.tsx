@@ -45,20 +45,20 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
           
           return (
             <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
+              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
               <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
               <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
               
               <div className="flex justify-center gap-2">
                 <Button
-                  onClick={() => decrementStat(stat)}
+                  onClick={() => decrementStat(key)}
                   disabled={value <= 8}
                   size="sm"
                 >
                   -
                 </Button>
                 <Button
-                  onClick={() => incrementStat(stat)}
+                  onClick={() => incrementStat(key)}
                   disabled={value >= 15 || pointsLeft < getPointCost(value + 1)}
                   size="sm"
                 >

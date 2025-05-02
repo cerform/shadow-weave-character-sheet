@@ -29,7 +29,7 @@ export const StandardArrayPanel: React.FC<StandardArrayPanelProps> = ({
           
           return (
             <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
+              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
               <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
               <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
             </div>

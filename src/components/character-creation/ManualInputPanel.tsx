@@ -48,13 +48,13 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
           
           return (
             <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
+              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
               
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Button 
                   size="sm"
                   variant="outline"
-                  onClick={() => adjustStat(stat, -1)}
+                  onClick={() => adjustStat(key, -1)}
                   disabled={stats[stat] <= 1}
                 >
                   -
@@ -63,7 +63,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                 <Input
                   type="number"
                   value={value}
-                  onChange={(e) => handleInputChange(stat, e.target.value)}
+                  onChange={(e) => handleInputChange(key, e.target.value)}
                   min={1}
                   max={30}
                   className="w-16 text-center"
@@ -72,7 +72,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                 <Button 
                   size="sm"
                   variant="outline"
-                  onClick={() => adjustStat(stat, 1)}
+                  onClick={() => adjustStat(key, 1)}
                   disabled={stats[stat] >= 30}
                 >
                   +

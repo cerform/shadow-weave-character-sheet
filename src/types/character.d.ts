@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   name: string;
   level: number;
@@ -18,8 +17,9 @@ export interface CharacterSpell {
 export interface CharacterSheet {
   name: string;
   race: string;
+  subrace?: string; // Добавляем опциональное поле subrace
   class: string;
-  subclass: string;
+  subclass?: string;
   level: number;
   background: string;
   alignment: string;

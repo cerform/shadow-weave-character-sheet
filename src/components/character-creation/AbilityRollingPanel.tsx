@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dices } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -71,7 +71,7 @@ export const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
           
           return (
             <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(stat)}</h3>
+              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
               <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
               <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
               
@@ -88,7 +88,7 @@ export const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
                       size="sm"
                       variant={isAssignedToThisStat ? "default" : "outline"}
                       disabled={isAssigned && !isAssignedToThisStat}
-                      onClick={() => onAssignDiceToStat(stat, index)}
+                      onClick={() => onAssignDiceToStat(key, index)}
                     >
                       {total}
                     </Button>
@@ -98,7 +98,7 @@ export const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
               
               {onRollSingleAbility && (
                 <Button
-                  onClick={() => onRollSingleAbility(stat)}
+                  onClick={() => onRollSingleAbility(key)}
                   size="sm"
                   className="mt-2 w-full"
                 >

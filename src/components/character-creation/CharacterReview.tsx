@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Check, Download, FileText, FileArrowDown } from "lucide-react";
+import { Check, Download, FileText, ArrowDown } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
 import { downloadCharacterPDF, downloadCharacterHTMLPDF } from "@/utils/characterPdfGenerator";
 
@@ -355,7 +355,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
           variant="outline"
           className="flex items-center gap-2"
         >
-          <FileArrowDown className="h-4 w-4" />
+          <ArrowDown className="h-4 w-4" />
           Скачать PDF (HTML)
         </Button>
         <Button
