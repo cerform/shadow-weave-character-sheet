@@ -12,14 +12,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary/80 text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background/50 hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background/20 hover:bg-accent/30 hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "bg-secondary/80 text-secondary-foreground hover:bg-secondary/90",
+        ghost: "hover:bg-accent/30 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -48,20 +48,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const { theme } = useTheme();
     const currentTheme = themes[theme as keyof typeof themes];
     
-    // Определяем стили для контраста текста на основе выбранной темы
-    const textColorClass = 
-      variant === 'outline' || variant === 'ghost' || variant === 'link' 
-        ? `text-[${currentTheme.textColor}]` 
-        : '';
-    
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), textColorClass)}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         style={{
-          // Устанавливаем явно цвет текста для кнопок
-          ...(variant === 'outline' || variant === 'ghost' || variant === 'link' ? 
-            { color: currentTheme.textColor } : {})
+          color: currentTheme.textColor,
+          borderColor: variant === 'outline' ? currentTheme.accent : undefined,
         }}
         {...props}
       />

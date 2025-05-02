@@ -20,7 +20,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       <Button 
         variant="outline" 
         onClick={() => navigate('/')}
-        className="flex items-center gap-2 text-foreground border-primary/30 hover:bg-primary/20"
+        className="flex items-center gap-2"
+        style={{
+          color: currentTheme.textColor,
+          borderColor: currentTheme.accent,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        }}
       >
         <Home className="size-4" />
         На главную
@@ -29,7 +34,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       <Button 
         variant="outline" 
         onClick={() => navigate('/handbook')}
-        className="flex items-center gap-2 text-foreground border-primary/30 hover:bg-primary/20"
+        className="flex items-center gap-2"
+        style={{
+          color: currentTheme.textColor,
+          borderColor: currentTheme.accent,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        }}
       >
         <BookOpen className="size-4" />
         Руководство
@@ -38,7 +48,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       <Button 
         variant="outline" 
         onClick={() => navigate('/spellbook')}
-        className="flex items-center gap-2 text-foreground border-primary/30 hover:bg-primary/20"
+        className="flex items-center gap-2"
+        style={{
+          color: currentTheme.textColor,
+          borderColor: currentTheme.accent,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        }}
       >
         <Scroll className="size-4" />
         Книга заклинаний
@@ -47,7 +62,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       <Button 
         variant="outline" 
         onClick={() => navigate('/dm/battle')}
-        className="flex items-center gap-2 text-foreground border-primary/30 hover:bg-primary/20"
+        className="flex items-center gap-2"
+        style={{
+          color: currentTheme.textColor,
+          borderColor: currentTheme.accent,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        }}
       >
         <Map className="size-4" />
         Боевая карта
@@ -56,7 +76,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       <Button 
         variant="outline" 
         onClick={() => navigate('/character-creation')}
-        className="flex items-center gap-2 text-foreground border-primary/30 hover:bg-primary/20"
+        className="flex items-center gap-2"
+        style={{
+          color: currentTheme.textColor,
+          borderColor: currentTheme.accent,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        }}
       >
         <Users className="size-4" />
         Создание персонажа

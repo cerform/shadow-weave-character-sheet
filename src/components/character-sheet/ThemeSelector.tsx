@@ -23,24 +23,28 @@ export const ThemeSelector = () => {
   
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">Тема оформления</p>
+      <p className="text-sm font-medium" style={{ color: themes[theme as keyof typeof themes].textColor }}>Тема оформления</p>
       <div className="flex flex-wrap gap-2 justify-center">
         {Object.keys(themes).map((themeId) => {
-          // Определяем цвета контраста для каждой темы
-          const bgColor = theme === themeId ? 
-            'bg-primary text-primary-foreground' : 
-            'bg-muted text-foreground border border-border';
+          const currentThemeObj = themes[themeId as keyof typeof themes];
+          const isSelected = theme === themeId;
             
           return (
             <Button 
               key={themeId}
-              variant={theme === themeId ? "default" : "outline"} 
+              variant={isSelected ? "default" : "outline"} 
               size="sm"
               onClick={() => handleThemeChange(themeId)}
-              className={`flex items-center ${bgColor}`}
+              style={{
+                color: currentThemeObj.textColor,
+                backgroundColor: isSelected 
+                  ? `rgba(${currentThemeObj.accent}, 0.7)` 
+                  : 'rgba(0, 0, 0, 0.2)',
+                borderColor: currentThemeObj.accent
+              }}
             >
               {themeIcons[themeId as keyof typeof themeIcons]}
-              <span className="text-current">{themes[themeId as keyof typeof themes].name}</span>
+              <span>{themes[themeId as keyof typeof themes].name}</span>
             </Button>
           );
         })}

@@ -48,6 +48,8 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
       timestamp: new Date(),
     },
   ]);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
 
   const sendMessage = () => {
     if (!chatMessage.trim()) return;
@@ -68,7 +70,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
     <div className="h-52 border-t border-border">
       <Tabs defaultValue="chat">
         <div className="flex justify-between items-center px-2 pt-1">
-          <TabsList>
+          <TabsList style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', borderColor: currentTheme.accent }}>
             <TabsTrigger value="chat" className="flex items-center">
               <MessageSquare className="w-4 h-4 mr-1" /> Чат
             </TabsTrigger>
@@ -86,13 +88,17 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
               variant={showWebcams ? "default" : "outline"}
               onClick={() => setShowWebcams(!showWebcams)}
               className="h-7"
+              style={{ 
+                color: currentTheme.textColor,
+                backgroundColor: showWebcams ? `rgba(${currentTheme.accent}, 0.7)` : 'rgba(0, 0, 0, 0.2)'
+              }}
             >
               {showWebcams ? <Camera className="w-3 h-3" /> : <CameraOff className="w-3 h-3" />}
             </Button>
-            <Button size="sm" variant="outline" className="h-7">
+            <Button size="sm" variant="outline" className="h-7" style={{ color: currentTheme.textColor }}>
               <Mic className="w-3 h-3" />
             </Button>
-            <Button size="sm" variant="outline" className="h-7">
+            <Button size="sm" variant="outline" className="h-7" style={{ color: currentTheme.textColor }}>
               <Clock className="w-3 h-3" />
             </Button>
           </div>

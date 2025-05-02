@@ -11,16 +11,25 @@ const Tabs = TabsPrimitive.Root
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-foreground",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
+  
+  return (
+    <TabsPrimitive.List
+      ref={ref}
+      className={cn(
+        "inline-flex h-10 items-center justify-center rounded-md bg-background/30 p-1 text-foreground",
+        className
+      )}
+      style={{
+        backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.3)'}`,
+        borderColor: `${currentTheme.accent || 'rgb(139, 90, 43)'}`
+      }}
+      {...props}
+    />
+  )
+})
 TabsList.displayName = TabsPrimitive.List.displayName
 
 const TabsTrigger = React.forwardRef<
@@ -35,11 +44,14 @@ const TabsTrigger = React.forwardRef<
       ref={ref}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-        // Улучшаем контрастность для неактивных вкладок, используя цвета из темы
-        `data-[state=inactive]:text-[${currentTheme.tabInactiveText}] data-[state=inactive]:hover:text-foreground`,
+        "data-[state=active]:bg-background/50 data-[state=active]:text-foreground data-[state=active]:shadow-sm",
         className
       )}
+      style={{
+        "--tab-inactive-text": currentTheme.textColor,
+        "--tab-active-text": currentTheme.textColor,
+        "--tab-active-bg": "rgba(0, 0, 0, 0.3)",
+      } as React.CSSProperties}
       {...props}
     />
   )
