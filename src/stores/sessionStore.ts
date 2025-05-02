@@ -12,7 +12,7 @@ export interface Player {
 export interface SavedMap {
   id: string;
   name: string;
-  createdAt: number;
+  createdAt: number;  // Изменяем тип с string на number
   background: string | null;
   tokens: Token[];
   fogOfWar: boolean;
@@ -21,7 +21,7 @@ export interface SavedMap {
   gridSettings: {
     visible: boolean;
     opacity: number;
-    size: { rows: number; cols: number };
+    size: { rows: number; cols: number };  // Убедимся что это правильный тип
   };
 }
 
@@ -228,7 +228,7 @@ export const useSessionStore = create<SessionState>()(
         const newMap: SavedMap = {
           ...mapData,
           id: Date.now().toString(),
-          createdAt: new Date().toISOString()
+          createdAt: Date.now()  // используем number вместо строки
         };
         
         const savedMaps = session.savedMaps || [];
@@ -308,7 +308,7 @@ export interface LightSource {
 export interface SavedMap {
   id: string;
   name: string;
-  createdAt: number;
+  createdAt: number;  // Изменяем тип с string на number
   background: string | null;
   tokens: Token[];
   fogOfWar: boolean;
@@ -317,6 +317,6 @@ export interface SavedMap {
   gridSettings: {
     visible: boolean;
     opacity: number;
-    size: { rows: number; cols: number };
+    size: { rows: number; cols: number };  // Убедимся что это правильный тип
   };
 }

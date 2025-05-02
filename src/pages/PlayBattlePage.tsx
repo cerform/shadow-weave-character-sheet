@@ -207,7 +207,7 @@ const PlayBattlePage = () => {
       gridSettings: {
         visible: mapSettings.gridVisible,
         opacity: mapSettings.gridOpacity,
-        size: mapSettings.gridSize
+        size: mapSettings.gridSize  // Теперь это объект { rows, cols }
       }
     };
     
@@ -252,7 +252,7 @@ const PlayBattlePage = () => {
       if (mapData.gridSettings) {
         setGridVisible(mapData.gridSettings.visible);
         setGridOpacity(mapData.gridSettings.opacity);
-        setGridSize(mapData.gridSettings.size);
+        setGridSize(mapData.gridSettings.size);  // Передаем объект { rows, cols }
       }
       
       // Загружаем туман войны
@@ -426,7 +426,7 @@ const PlayBattlePage = () => {
           setMapBackground(reader.result as string);
           toast({
             title: "Фон карты загружен",
-            description: "Новый фон карты у��пешно применен",
+            description: "Новый фон карты у��пешно прим��нен",
           });
         };
         reader.readAsDataURL(file);
