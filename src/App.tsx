@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
+import { SessionProvider } from './contexts/SessionContext'; // Import SessionProvider
 import { Toaster } from './components/ui/sonner'; // Добавляем тостер
 
 import PlayBattlePage from './pages/PlayBattlePage';
@@ -22,25 +23,27 @@ function App() {
     <ThemeProvider defaultTheme="default">
       <AuthProvider>
         <CharacterProvider>
-          <Router>
-            <Routes>
-              <Route path="/battle" element={<PlayBattlePage />} />
-              <Route path="/spellbook" element={<SpellbookPage />} />
-              <Route path="/handbook" element={<HandbookPage />} />
-              <Route path="/create-character" element={<CharacterCreationPage />} />
-              <Route path="/character-creation" element={<CharacterCreationPage />} />
-              <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-              <Route path="/dm" element={<DMDashboardPage />} />
-              <Route path="/auth" element={<AuthPage />} /> 
-              <Route path="/join" element={<JoinSessionPage />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/sheet" element={<CharacterSheetPage />} /> {/* Добавляем путь к листу персонажа */}
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
-          
-          <Toaster position="top-center" />
+          <SessionProvider> {/* Add SessionProvider here */}
+            <Router>
+              <Routes>
+                <Route path="/battle" element={<PlayBattlePage />} />
+                <Route path="/spellbook" element={<SpellbookPage />} />
+                <Route path="/handbook" element={<HandbookPage />} />
+                <Route path="/create-character" element={<CharacterCreationPage />} />
+                <Route path="/character-creation" element={<CharacterCreationPage />} />
+                <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                <Route path="/dm" element={<DMDashboardPage />} />
+                <Route path="/auth" element={<AuthPage />} /> 
+                <Route path="/join" element={<JoinSessionPage />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/sheet" element={<CharacterSheetPage />} /> {/* Добавляем путь к листу персонажа */}
+                <Route path="/" element={<Index />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
+            
+            <Toaster position="top-center" />
+          </SessionProvider> {/* Close SessionProvider */}
         </CharacterProvider>
       </AuthProvider>
     </ThemeProvider>
