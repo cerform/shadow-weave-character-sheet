@@ -1,5 +1,5 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CharacterHeader } from './CharacterHeader';
@@ -8,12 +8,15 @@ import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
-import { Save, Printer, Book, User2, AlertTriangle, Sword, MapPin, Shield } from 'lucide-react';
+import { Save, Printer, Book, User2, AlertTriangle, Sword, MapPin, Shield, Map, Grid3X3, ZoomIn, ZoomOut, Move } from 'lucide-react';
 import { SpellPanel } from './SpellPanel';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from "@/hooks/use-toast";
 import { RestPanel } from './RestPanel';
 import { Progress } from "@/components/ui/progress";
+import { useSocket } from '@/contexts/SocketContext';
+import { useSession } from '@/contexts/SessionContext';
+import { useSessionStore } from '@/stores/sessionStore';
 
 interface CharacterSheetProps {
   character?: any;
@@ -23,6 +26,9 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
   const { theme } = useTheme();
   const { character: contextCharacter, updateCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
+  const { isConnected, sessionData, sendChatMessage, sendRoll } = useSocket();
+  const { currentSession, sessions } = useSession();
+  const sessionStore = useSessionStore();
   
   // Используем персонажа из пропсов, если он передан, иначе из контекста
   const character = propCharacter || contextCharacter;
@@ -33,7 +39,142 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
   const [characterClass, setCharacterClass] = useState(character?.className || 'Выберите класс');
   const [activeTab, setActiveTab] = useState('abilities');
   const [battleMapVisible, setBattleMapVisible] = useState(false);
+  
+  // Состояния для поля боя
+  const [mapZoom, setMapZoom] = useState(1);
+  const [gridVisible, setGridVisible] = useState(true);
+  const [gridSize, setGridSize] = useState(30); // размер клетки в пикселях
+  const [tokens, setTokens] = useState<any[]>([]);
+  const [selectedToken, setSelectedToken] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
+  const [battleInProgress, setBattleInProgress] = useState(false);
+  const [currentTurn, setCurrentTurn] = useState(0);
+  const [initiative, setInitiative] = useState<{id: number, name: string, initiative: number}[]>([]);
+  
+  // Функции для управления сеткой и масштабированием
+  const handleZoomIn = () => {
+    setMapZoom(prev => Math.min(prev + 0.1, 2));
+  };
+  
+  const handleZoomOut = () => {
+    setMapZoom(prev => Math.max(prev - 0.1, 0.5));
+  };
+  
+  const handleResetZoom = () => {
+    setMapZoom(1);
+  };
+  
+  // Функция для перемещения карты
+  const handleMoveMap = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 50; // шаг перемещения в пикселях
+    
+    switch (direction) {
+      case 'up':
+        setMapPosition(prev => ({ ...prev, y: prev.y + step }));
+        break;
+      case 'down':
+        setMapPosition(prev => ({ ...prev, y: prev.y - step }));
+        break;
+      case 'left':
+        setMapPosition(prev => ({ ...prev, x: prev.x + step }));
+        break;
+      case 'right':
+        setMapPosition(prev => ({ ...prev, x: prev.x - step }));
+        break;
+    }
+  };
 
+  // Функции для боевой системы
+  const startBattle = () => {
+    if (!battleInProgress) {
+      // Определяем инициативу для всех персонажей
+      const battleInitiative = tokens.map(token => ({
+        id: token.id,
+        name: token.name,
+        initiative: Math.floor(Math.random() * 20) + 1 + (token.dexModifier || 0)
+      })).sort((a, b) => b.initiative - a.initiative);
+      
+      setInitiative(battleInitiative);
+      setCurrentTurn(0);
+      setBattleInProgress(true);
+      
+      toast({
+        title: "Бой начался",
+        description: `Первым ходит: ${battleInitiative[0]?.name || 'Никто'}`,
+      });
+      
+      // Отправляем сообщение в чат сессии, если подключены
+      if (isConnected && sessionData) {
+        sendChatMessage("Бой начался!");
+      }
+    }
+  };
+  
+  const nextTurn = () => {
+    if (battleInProgress && initiative.length > 0) {
+      const nextTurnIndex = (currentTurn + 1) % initiative.length;
+      setCurrentTurn(nextTurnIndex);
+      
+      toast({
+        title: "Следующий ход",
+        description: `Ход игрока: ${initiative[nextTurnIndex]?.name}`,
+      });
+      
+      // Отправляем сообщение в чат сессии, если подключены
+      if (isConnected && sessionData) {
+        sendChatMessage(`Ход переходит к ${initiative[nextTurnIndex]?.name}`);
+      }
+    }
+  };
+  
+  const endBattle = () => {
+    if (battleInProgress) {
+      setBattleInProgress(false);
+      setInitiative([]);
+      
+      toast({
+        title: "Бой окончен",
+        description: "Битва завершилась",
+      });
+      
+      // Отправляем сообщение в чат сессии, если подключены
+      if (isConnected && sessionData) {
+        sendChatMessage("Бой завершен!");
+      }
+    }
+  };
+  
+  // Функция добавления персонажа на поле боя
+  const addToken = (type: 'player' | 'enemy' | 'npc') => {
+    const newToken = {
+      id: Date.now(),
+      type,
+      name: type === 'player' ? character?.name || 'Игрок' : type === 'enemy' ? 'Враг' : 'NPC',
+      x: 150 + Math.random() * 100,
+      y: 150 + Math.random() * 100,
+      hp: type === 'player' ? (character?.currentHp || 20) : 10,
+      maxHp: type === 'player' ? (character?.maxHp || 20) : 10,
+      dexModifier: type === 'player' ? Math.floor((character?.abilities?.DEX || 10) - 10) / 2 : 0,
+      color: type === 'player' ? '#3b82f6' : type === 'enemy' ? '#ef4444' : '#10b981'
+    };
+    
+    setTokens(prev => [...prev, newToken]);
+    
+    toast({
+      title: "Токен добавлен",
+      description: `${newToken.name} (${type}) добавлен на поле боя`,
+    });
+  };
+  
+  // Функция для удаления токена
+  const removeToken = (id: number) => {
+    setTokens(prev => prev.filter(token => token.id !== id));
+    if (selectedToken === id) {
+      setSelectedToken(null);
+    }
+  };
+  
   // Обновляет HP персонажа в контексте при изменении в UI
   const handleHpChange = (newHp: number) => {
     setCurrentHp(newHp);
@@ -43,6 +184,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
     }
   };
 
+  // Сохранение персонажа и сессии
   const handleSaveCharacter = () => {
     if (!contextCharacter) {
       toast({
@@ -51,6 +193,28 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
         variant: "destructive"
       });
       return;
+    }
+    
+    // Сохраняем персонажа в локальное хранилище
+    const savedCharacters = JSON.parse(localStorage.getItem('dnd-characters') || '[]');
+    const characterExists = savedCharacters.findIndex((c: any) => c.id === character.id);
+    
+    if (characterExists >= 0) {
+      savedCharacters[characterExists] = character;
+    } else {
+      savedCharacters.push({
+        ...character,
+        id: character.id || Date.now().toString(),
+        createdAt: character.createdAt || new Date().toISOString()
+      });
+    }
+    
+    localStorage.setItem('dnd-characters', JSON.stringify(savedCharacters));
+    
+    // Обновляем информацию в сессии, если подключены
+    if (isConnected && sessionData) {
+      // Обновляем персонажа в сессии
+      sendChatMessage(`Персонаж ${character.name} обновлен`);
     }
     
     toast({
@@ -93,6 +257,29 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
     
     return Math.min(100, Math.max(0, Math.floor((currentProgress / xpNeeded) * 100)));
   };
+  
+  // Проверка и создание сессии при монтировании компонента
+  useEffect(() => {
+    // Проверяем, есть ли текущая сессия
+    const checkAndUpdateSession = () => {
+      // Если нет активной сессии, но есть сохраненные сессии, загружаем последнюю
+      if (!sessionStore.currentSession && sessionStore.sessions.length > 0) {
+        const lastSession = sessionStore.sessions[sessionStore.sessions.length - 1];
+        // Устанавливаем последнюю сессию как текущую
+        if (lastSession) {
+          const currentUser = lastSession.users.find(u => u.isDM);
+          if (currentUser) {
+            sessionStore.setCurrentUser(currentUser);
+            // Обновляем состояние currentSession
+            const updatedSession = { ...lastSession, lastActive: new Date().toISOString() };
+            sessionStore.updateCurrentSession(updatedSession);
+          }
+        }
+      }
+    };
+    
+    checkAndUpdateSession();
+  }, [sessionStore]);
 
   if (!character) {
     return (
@@ -133,15 +320,30 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
                 <MapPin className="size-4" />
                 {battleMapVisible ? "Скрыть карту" : "Показать карту"}
               </Button>
-              <Button variant="outline" size="sm" className="gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1"
+                onClick={battleInProgress ? endBattle : startBattle}
+              >
                 <Sword className="size-4" />
-                Начать бой
+                {battleInProgress ? "Завершить бой" : "Начать бой"}
               </Button>
+              {battleInProgress && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={nextTurn}
+                >
+                  Следующий ход
+                </Button>
+              )}
             </div>
           </div>
           
           {/* Область для боевой карты - увеличенная */}
-          <div className={`transition-all duration-300 ${battleMapVisible ? 'h-[500px]' : 'h-[300px]'} bg-black/30 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden`}>
+          <div className={`transition-all duration-300 ${battleMapVisible ? 'h-[500px]' : 'h-[300px]'} bg-black/30 rounded-lg mb-4 relative overflow-hidden`}>
             {!battleMapVisible ? (
               <div className="text-center text-primary/80 p-6">
                 <div className="text-2xl font-semibold mb-3">Область визуализации</div>
@@ -149,20 +351,172 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
                   Здесь будет отображаться карта боя, визуализация заклинаний и ключевых сцен.
                   Мастер подземелий управляет содержимым этой области.
                 </p>
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    className="mx-2"
+                    onClick={() => {
+                      setBattleMapVisible(true);
+                      addToken('player');
+                    }}
+                  >
+                    Мой персонаж
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="mx-2"
+                    onClick={() => {
+                      setBattleMapVisible(true);
+                      toast({
+                        title: "Ожидание DM",
+                        description: "Ожидание действий Мастера подземелий...",
+                      });
+                    }}
+                  >
+                    Присоединиться к бою
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
-                {/* Имитация поля боя */}
-                <div className="absolute inset-0 grid grid-cols-20 grid-rows-15 opacity-20">
-                  {Array.from({ length: 300 }).map((_, i) => (
-                    <div key={i} className="border border-primary/50"></div>
+                {/* Боевая карта с сеткой */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    transform: `scale(${mapZoom}) translate(${mapPosition.x}px, ${mapPosition.y}px)`,
+                    transformOrigin: 'center',
+                    transition: 'transform 0.2s ease'
+                  }}
+                >
+                  {/* Фон карты */}
+                  <div className="absolute inset-0 bg-[url('/assets/battlemap-background.jpg')] bg-cover bg-center opacity-40"></div>
+                  
+                  {/* Сетка */}
+                  {gridVisible && (
+                    <div className="absolute inset-0 grid grid-cols-[repeat(30,1fr)] grid-rows-[repeat(20,1fr)] opacity-30">
+                      {Array.from({ length: 600 }).map((_, i) => (
+                        <div key={i} className="border border-primary/50"></div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Токены на поле боя */}
+                  {tokens.map(token => (
+                    <div 
+                      key={token.id}
+                      className={`absolute rounded-full flex items-center justify-center cursor-pointer
+                                ${selectedToken === token.id ? 'ring-4 ring-yellow-400' : ''}`}
+                      style={{
+                        left: token.x,
+                        top: token.y,
+                        width: 40,
+                        height: 40,
+                        backgroundColor: token.color,
+                        transform: `translate(-50%, -50%)`,
+                        zIndex: selectedToken === token.id ? 10 : 1,
+                      }}
+                      onClick={() => setSelectedToken(token.id)}
+                    >
+                      <span className="text-white font-bold text-sm">{token.name.substring(0, 2)}</span>
+                      
+                      {/* Индикатор HP */}
+                      <div className="absolute -bottom-6 left-0 w-full h-1 bg-gray-700 rounded-full">
+                        <div 
+                          className="h-full rounded-full bg-green-500"
+                          style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
+                        ></div>
+                      </div>
+                      
+                      {/* Индикатор текущего хода */}
+                      {battleInProgress && initiative[currentTurn]?.id === token.id && (
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                          <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-yellow-500 animate-bounce"></div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-primary/80">
-                    <p className="text-lg">Ожидание действий Мастера...</p>
+                
+                {/* Элементы управления картой */}
+                <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                  <Button size="icon" variant="outline" onClick={handleZoomIn}>
+                    <ZoomIn className="size-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={handleZoomOut}>
+                    <ZoomOut className="size-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={handleResetZoom}>
+                    <Map className="size-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={() => setGridVisible(!gridVisible)}>
+                    <Grid3X3 className="size-4" />
+                  </Button>
+                </div>
+                
+                {/* Кнопки перемещения карты */}
+                <div className="absolute bottom-4 left-4 grid grid-cols-3 gap-1">
+                  <div></div>
+                  <Button size="icon" variant="outline" onClick={() => handleMoveMap('up')}>
+                    <Move className="size-4 rotate-0" />
+                  </Button>
+                  <div></div>
+                  <Button size="icon" variant="outline" onClick={() => handleMoveMap('left')}>
+                    <Move className="size-4 -rotate-90" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={handleResetZoom}>
+                    <Map className="size-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" onClick={() => handleMoveMap('right')}>
+                    <Move className="size-4 rotate-90" />
+                  </Button>
+                  <div></div>
+                  <Button size="icon" variant="outline" onClick={() => handleMoveMap('down')}>
+                    <Move className="size-4 rotate-180" />
+                  </Button>
+                  <div></div>
+                </div>
+                
+                {/* Панель добавления токенов */}
+                <div className="absolute top-4 left-4">
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => addToken('player')}>
+                      + Игрок
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => addToken('enemy')}>
+                      + Враг
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => addToken('npc')}>
+                      + NPC
+                    </Button>
+                    {selectedToken !== null && (
+                      <Button size="sm" variant="destructive" onClick={() => removeToken(selectedToken)}>
+                        Удалить
+                      </Button>
+                    )}
                   </div>
                 </div>
+                
+                {/* Информация о выбранном токене */}
+                {selectedToken !== null && (
+                  <div className="absolute top-4 right-4 bg-background/80 p-2 rounded-lg">
+                    <h4 className="font-bold">{tokens.find(t => t.id === selectedToken)?.name}</h4>
+                    <p>HP: {tokens.find(t => t.id === selectedToken)?.hp}/{tokens.find(t => t.id === selectedToken)?.maxHp}</p>
+                  </div>
+                )}
+                
+                {/* Информация об инициативе */}
+                {battleInProgress && initiative.length > 0 && (
+                  <div className="absolute top-16 right-4 bg-background/80 p-2 rounded-lg">
+                    <h4 className="font-bold">Инициатива</h4>
+                    <ul className="text-sm">
+                      {initiative.map((item, index) => (
+                        <li key={item.id} className={index === currentTurn ? 'font-bold text-yellow-400' : ''}>
+                          {item.name}: {item.initiative}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -175,7 +529,26 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
             <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
               <Shield className="size-4" /> Защита
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center justify-center gap-1"
+              onClick={() => {
+                if (isConnected) {
+                  sendRoll("1d20", "Проверка на заклинание");
+                  toast({
+                    title: "Бросок кубика",
+                    description: "Кубик брошен для проверки заклинания",
+                  });
+                } else {
+                  toast({
+                    title: "Нет подключения",
+                    description: "Вы не подключены к сессии",
+                    variant: "destructive"
+                  });
+                }
+              }}
+            >
               Заклинание
             </Button>
             <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
