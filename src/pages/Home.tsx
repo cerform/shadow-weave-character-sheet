@@ -23,7 +23,7 @@ const Home: React.FC = () => {
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-8" 
       style={{ 
-        background: `linear-gradient(135deg, rgba(${currentTheme.backgroundStart}, 0.9), rgba(${currentTheme.backgroundEnd}, 0.8))`,
+        background: `linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8))`,
         backgroundSize: "cover"
       }}
     >

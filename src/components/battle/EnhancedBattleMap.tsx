@@ -9,8 +9,8 @@ import { Token, Initiative } from '@/stores/battleStore';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
-  // Fixed: Changed type to accept either token add function or state setter
-  setTokens: ((token: Token) => void) | React.Dispatch<React.SetStateAction<Token[]>>;
+  // Исправляем тип, чтобы поддерживать оба варианта функций
+  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((newToken: Token) => void);
   background: string | null;
   setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -101,7 +101,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey && isDM) { // Проверяем isDM
       e.preventDefault();
-      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
+      // Здесь боль��е не меняем zoom локально, а используем внешнюю функцию
       // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
       
       // Центрирование зума относительно курсора
@@ -195,7 +195,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // Делаем карту больше контейнера, чтобы обеспечить скроллинг
+        // ��елаем карту больше контейнера, чтобы обеспечить скроллинг
         const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
         const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
         
@@ -260,7 +260,12 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          setTokens={setTokens} // We pass the prop as is, no type conversion needed now
+          // Используем преобразование для совместимости типов
+          setTokens={
+            typeof setTokens === 'function' && setTokens.length === 1
+            ? setTokens as (token: Token) => void
+            : setTokens as React.Dispatch<React.SetStateAction<Token[]>>
+          }
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}

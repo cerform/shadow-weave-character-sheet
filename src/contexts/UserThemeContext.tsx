@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
 import { useTheme } from '@/hooks/use-theme';
+import { Theme } from './ThemeContext';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
@@ -16,7 +17,8 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // При изменении текущего пользователя, применяем его тему
   useEffect(() => {
     if (currentUser?.themePreference) {
-      setTheme(currentUser.themePreference);
+      // Преобразуем строковую тему в тип Theme
+      setTheme(currentUser.themePreference as Theme);
     }
   }, [currentUser?.id, currentUser?.themePreference, setTheme]);
   
@@ -24,10 +26,11 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const setUserTheme = (theme: string) => {
     if (currentUser) {
       updateUserTheme(currentUser.id, theme);
-      setTheme(theme);
+      // Преобразуем строковую тему в тип Theme
+      setTheme(theme as Theme);
     } else {
       // Если пользователь не в системе, просто меняем тему
-      setTheme(theme);
+      setTheme(theme as Theme);
     }
   };
   

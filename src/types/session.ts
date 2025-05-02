@@ -1,6 +1,5 @@
 
-import { Character } from './character';
-
+// Удаляем неправильный импорт Character
 export interface User {
   id: string;
   name: string;
