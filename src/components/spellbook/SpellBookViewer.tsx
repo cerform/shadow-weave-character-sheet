@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -116,7 +117,10 @@ const SpellBookViewer = () => {
         spell => 
           spell.name.toLowerCase().includes(term) || 
           (spell.description && spell.description.toLowerCase().includes(term)) ||
-          (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term))
+          (spell.classes && (
+            (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term)) ||
+            (Array.isArray(spell.classes) && spell.classes.some(cls => cls.toLowerCase().includes(term)))
+          ))
       );
     }
 
