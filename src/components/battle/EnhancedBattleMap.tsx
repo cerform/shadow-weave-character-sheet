@@ -2,10 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
+import AreaEffects from './AreaEffects';
+import LightingSystem from './LightingSystem';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 // Import types from store instead of page
 import { Token, Initiative } from '@/stores/battleStore';
+import { AreaEffect, LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
@@ -26,6 +29,10 @@ interface EnhancedBattleMapProps {
   gridOpacity?: number;
   zoom?: number;
   isDM?: boolean;
+  // Добавленные поля для эффектов и освещения
+  areaEffects?: AreaEffect[];
+  lightSources?: LightSource[];
+  onMapClick?: (x: number, y: number) => void;
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
@@ -45,7 +52,10 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   gridVisible = true,
   gridOpacity = 0.5,
   zoom = 1,
-  isDM = true
+  isDM = true,
+  areaEffects = [],
+  lightSources = [],
+  onMapClick
 }) => {
   // We will use the external zoom prop instead of local state
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -101,7 +111,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey && isDM) { // Проверяем isDM
       e.preventDefault();
-      // Здесь больше не меняем zoom локально, а используем внешнюю функцию
+      // Здесь больш�� не меняем zoom локально, а используем внешнюю функцию
       // Вместо этого мы должны вызвать колбэк для изменения зума, если он предоставлен
       
       // Центрирование зума относительно курсора
@@ -195,7 +205,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // Делаем карту б��льше контейнера, чтобы обеспечить скроллинг
+        // Д��лаем карту б��льше контейнера, чтобы обеспечить скроллинг
         const mapWidth = Math.max(containerWidth * 2, img.width * 1.5);
         const mapHeight = Math.max(containerHeight * 2, img.height * 1.5);
         
@@ -252,6 +262,19 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
   };
 
+  // Обработчик клика на карту для добавления эффектов области
+  const handleMapClick = (e: React.MouseEvent) => {
+    if (!onMapClick) return;
+    
+    // Получаем координаты клика относительно контейнера
+    if (mapContentRef.current) {
+      const rect = mapContentRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / zoom;
+      const y = (e.clientY - rect.top) / zoom;
+      onMapClick(x, y);
+    }
+  };
+
   return (
     <div 
       className="battle-map-container h-full relative" 
@@ -270,6 +293,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onClick={handleMapClick}
       >
         <BattleMap
           tokens={tokens}
@@ -283,6 +307,29 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           battleActive={battleActive}
         />
         
+        {/* Отрисовка эффектов области */}
+        {areaEffects.map(effect => (
+          <AreaEffects
+            key={effect.id}
+            type={effect.type}
+            x={effect.x}
+            y={effect.y}
+            size={effect.size}
+            color={effect.color}
+            opacity={effect.opacity}
+            rotation={effect.rotation}
+          />
+        ))}
+        
+        {/* Освещение карты */}
+        {lightSources && lightSources.length > 0 && (
+          <LightingSystem
+            lightSources={lightSources}
+            isDaytime={false}
+            globalIllumination={0.1}
+          />
+        )}
+        
         {/* Сетка только внутри карты боя */}
         {gridVisible && (
           <div className="battle-grid-container absolute inset-0 pointer-events-none">
@@ -294,7 +341,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           </div>
         )}
           
-        {/* Туман войны как отдельный слой */}
+        {/* Туман войны как отдель��ый слой */}
         {fogOfWar && (
           <div className="fog-of-war-container absolute inset-0">
             <FogOfWar

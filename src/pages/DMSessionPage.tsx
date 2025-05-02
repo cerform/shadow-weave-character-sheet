@@ -29,6 +29,7 @@ const DMSessionPage = () => {
         if (foundSession) {
           setSession(foundSession);
         } else {
+          // Исправлено: передаем только один аргумент в toast
           toast('Сессия не найдена');
           navigate('/dm');
         }
@@ -42,6 +43,7 @@ const DMSessionPage = () => {
         setSession(foundSession);
         setUserType('dm');
       } else {
+        // Исправлено: передаем только один аргумент в toast
         toast('Сессия не найдена');
         navigate('/dm');
       }

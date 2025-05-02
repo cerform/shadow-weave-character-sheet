@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -13,17 +12,17 @@ export interface Player {
 export interface SavedMap {
   id: string;
   name: string;
-  background?: string;
-  tokens: any[];
-  fogOfWar?: boolean;
-  revealedCells?: Record<string, boolean>;
-  lighting?: LightSource[];
-  gridSettings?: {
+  createdAt: number;
+  background: string | null;
+  tokens: Token[];
+  fogOfWar: boolean;
+  revealedCells: { [key: string]: boolean };
+  lighting: LightSource[];
+  gridSettings: {
     visible: boolean;
     opacity: number;
-    size: number;
+    size: { rows: number; cols: number };
   };
-  createdAt: string;
 }
 
 export interface LightSource {
@@ -291,3 +290,33 @@ export const useSessionStore = create<SessionState>()(
     }
   )
 );
+
+import { Token, MapSettings } from './battleStore';
+
+// Экспортируем тип LightSource для использования в PlayBattlePage
+export interface LightSource {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  type: 'torch' | 'lantern' | 'daylight';
+  color: string;
+  intensity: number;
+}
+
+// Обновляем тип SavedMap для соответствия с используемыми данными
+export interface SavedMap {
+  id: string;
+  name: string;
+  createdAt: number;
+  background: string | null;
+  tokens: Token[];
+  fogOfWar: boolean;
+  revealedCells: { [key: string]: boolean };
+  lighting: LightSource[];
+  gridSettings: {
+    visible: boolean;
+    opacity: number;
+    size: { rows: number; cols: number };
+  };
+}

@@ -426,7 +426,7 @@ const PlayBattlePage = () => {
           setMapBackground(reader.result as string);
           toast({
             title: "Фон карты загружен",
-            description: "Новый фон карты успешно применен",
+            description: "Новый фон карты у��пешно применен",
           });
         };
         reader.readAsDataURL(file);
@@ -582,7 +582,7 @@ const PlayBattlePage = () => {
             onMapClick={(x, y) => {
               // Если выбран тип эффекта области, добавляем его при клике
               if (currentAreaEffectType) {
-                const newEffect = {
+                const newEffect: AreaEffect = {
                   id: Date.now().toString(),
                   type: currentAreaEffectType,
                   x,
