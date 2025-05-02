@@ -1,42 +1,48 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { DiceRoller3D } from '@/components/character-sheet/DiceRoller3D';
+import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface DiceRollModalProps {
   open: boolean;
   onClose: () => void;
-  onRoll: (formula: string, reason?: string) => void;
+  onRoll: (formula: string, reason?: string, playerName?: string) => void;
+  playerName?: string;
 }
 
-type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
+type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
 
-const DICE_TYPES: DiceType[] = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+const DICE_TYPES: DiceType[] = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
 
-export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
+export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayerName }: DiceRollModalProps) {
   const [formula, setFormula] = useState('1d20');
   const [reason, setReason] = useState('');
+  const [playerName, setPlayerName] = useState(defaultPlayerName || '');
   const [selectedDice, setSelectedDice] = useState<DiceType>('d20');
   const [quantity, setQuantity] = useState(1);
   const [modifier, setModifier] = useState(0);
-  const [lastDieResult, setLastDieResult] = useState<number | null>(null);
+  const [diceResult, setDiceResult] = useState<number | null>(null);
   const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // При открытии модала, сбрасываем ключ для принудительной перерисовки
   useEffect(() => {
     if (open) {
       setKey(prev => prev + 1);
+      setDiceResult(null);
     }
-  }, [open]);
+  }, [open, selectedDice]);
 
   const handleDiceSelect = (dice: DiceType) => {
     setSelectedDice(dice);
     updateFormula(quantity, dice, modifier);
-    setKey(prev => prev + 1); // Перерисовываем кубик при смене типа
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,19 +69,21 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
   };
 
   const handleRoll = () => {
-    onRoll(formula, reason);
+    onRoll(formula, reason, playerName);
     onClose();
   };
 
   // Обработчик результата броска кубика из 3D компонента
   const handleRollComplete = (value: number) => {
-    setLastDieResult(value);
+    setDiceResult(value);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[450px] bg-card/90 backdrop-blur-lg">
-        <h2 className="text-lg font-semibold text-center mb-4 text-foreground">Бросок кубиков</h2>
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold text-center text-foreground">Бросок кубиков</DialogTitle>
+        </DialogHeader>
         
         <Tabs defaultValue="builder" className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
@@ -86,7 +94,7 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
           <TabsContent value="builder" className="space-y-4">
             <div>
               <Label className="text-foreground">Тип кубика</Label>
-              <div className="grid grid-cols-7 gap-2 mt-2">
+              <div className="grid grid-cols-6 gap-2 mt-2">
                 {DICE_TYPES.map((dice) => (
                   <Button
                     key={dice}
@@ -94,6 +102,9 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
                     variant={selectedDice === dice ? "default" : "outline"}
                     onClick={() => handleDiceSelect(dice)}
                     className="flex items-center justify-center p-0 h-10"
+                    style={{
+                      backgroundColor: selectedDice === dice ? currentTheme.accent : undefined
+                    }}
                   >
                     {dice}
                   </Button>
@@ -143,7 +154,18 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
           </TabsContent>
         </Tabs>
         
-        <div className="mt-4">
+        <div>
+          <Label htmlFor="playerName" className="text-foreground">Имя игрока</Label>
+          <Input
+            id="playerName"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            placeholder="Введите имя персонажа"
+            className="text-foreground"
+          />
+        </div>
+        
+        <div>
           <Label htmlFor="reason" className="text-foreground">Причина броска (необязательно)</Label>
           <Input
             id="reason"
@@ -156,17 +178,25 @@ export function DiceRollModal({ open, onClose, onRoll }: DiceRollModalProps) {
         
         <div className="h-[200px] w-full">
           <DiceRoller3D 
-            key={key} // Принудительное пересоздание компонента
+            key={key}
             initialDice={selectedDice} 
             onRollComplete={handleRollComplete}
             hideControls={true} 
             modifier={modifier}
+            playerName={playerName}
           />
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Отмена</Button>
-          <Button onClick={handleRoll}>Бросить {formula}</Button>
+          <Button 
+            onClick={handleRoll}
+            style={{
+              backgroundColor: currentTheme.accent,
+            }}
+          >
+            Бросить {formula}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
