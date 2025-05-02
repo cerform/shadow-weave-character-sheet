@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -218,7 +217,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
                 В бой!
               </Button>
             </DialogContent>
-          </DialogDialog>
+          </Dialog>
         )}
       </div>
     </div>
