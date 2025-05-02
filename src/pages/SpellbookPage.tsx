@@ -1,257 +1,270 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Filter, Search, BookOpen } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { getAllSpellNames, getSpellDetails } from '@/data/spells';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { CharacterSpell } from '@/types/character';
-
-// Импортируем компоненты для отображения заклинаний
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Filter, BookOpen } from 'lucide-react';
 import SpellCard from '@/components/spell-detail/SpellCard';
-import SpellDetailModal from '@/components/spell-detail/SpellDetailModal';
+import { CharacterSpell } from '@/types/character';
+import ThemeSelector from '@/components/ThemeSelector';
 
-// Импортируем данные о заклинаниях
-import { spells } from '@/data/spells';
-
-const SpellbookPage = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClass, setSelectedClass] = useState<string>('all');
-  const [selectedSchool, setSelectedSchool] = useState<string>('all');
+const SpellbookPage: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [spells, setSpells] = useState<CharacterSpell[]>([]);
+  const [filters, setFilters] = useState({
+    level: null as number | null,
+    school: null as string | null,
+    class: null as string | null,
+  });
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
-  // Создаем уникальный список классов из всех заклинаний
-  const allClasses = ['all', ...new Set(spells.flatMap(spell => spell.classes))].sort();
+  useEffect(() => {
+    // Загружаем все заклинания при монтировании компонента
+    const allSpellNames = getAllSpellNames();
+    const loadedSpells = allSpellNames.map(name => {
+      const details = getSpellDetails(name);
+      return {
+        id: name.toLowerCase().replace(/\s+/g, '-'),
+        name,
+        level: details?.level || 0,
+        school: details?.school || '',
+        castingTime: details?.castingTime || '',
+        range: details?.range || '',
+        components: details?.components || '',
+        duration: details?.duration || '',
+        description: details?.description || '',
+        higherLevels: details?.higherLevels || '',
+        classes: details?.classes || [],
+        ritual: (details?.components || '').includes('Р'),
+        concentration: (details?.duration || '').includes('концентрация'),
+      };
+    });
+    
+    setSpells(loadedSpells);
+  }, []);
   
-  // Создаем уникальный список школ магии
-  const allSchools = ['all', ...new Set(spells.map(spell => spell.school))].sort();
-  
-  // Фильтруем заклинания по активным фильтрам
+  // Фильтрация заклинаний
   const filteredSpells = spells.filter(spell => {
-    // Фильтр по уровню (активная вкладка)
-    if (activeTab !== 'all' && spell.level !== parseInt(activeTab, 10)) {
+    // Поиск по тексту
+    if (searchTerm && !spell.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Фильтр по активной вкладке (уровню)
+    if (activeTab !== 'all') {
+      const tabLevel = parseInt(activeTab);
+      if (spell.level !== tabLevel) {
+        return false;
+      }
+    }
+    
+    // Фильтр по уровню
+    if (filters.level !== null && spell.level !== filters.level) {
+      return false;
+    }
+    
+    // Фильтр по школе магии
+    if (filters.school && spell.school !== filters.school) {
       return false;
     }
     
     // Фильтр по классу
-    if (selectedClass !== 'all' && !spell.classes.includes(selectedClass)) {
-      return false;
-    }
-    
-    // Фильтр по школе
-    if (selectedSchool !== 'all' && spell.school !== selectedSchool) {
-      return false;
-    }
-    
-    // Поиск по запросу
-    if (searchQuery && !spell.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (filters.class && !spell.classes.includes(filters.class)) {
       return false;
     }
     
     return true;
   });
   
-  // Группируем заклинания по уровням для отображения
-  const groupedSpellsByLevel: { [key: string]: CharacterSpell[] } = filteredSpells.reduce((acc, spell) => {
-    const level = spell.level === 0 ? 'cantrip' : `level-${spell.level}`;
-    if (!acc[level]) {
-      acc[level] = [];
-    }
-    acc[level].push(spell);
-    return acc;
-  }, {} as { [key: string]: CharacterSpell[] });
+  // Получаем все уникальные школы магии и классы для фильтров
+  const uniqueSchools = Array.from(new Set(spells.map(spell => spell.school))).sort();
+  const uniqueClasses = Array.from(new Set(spells.flatMap(spell => spell.classes))).sort();
   
-  // Открыть модальное окно с деталями заклинания
-  const openSpellDetail = (spell: CharacterSpell) => {
-    setSelectedSpell(spell);
-    setIsDetailModalOpen(true);
+  // Обработчик сброса фильтров
+  const resetFilters = () => {
+    setFilters({
+      level: null,
+      school: null,
+      class: null,
+    });
+    setSearchTerm('');
   };
   
-  // Обработка изменения размера экрана для адаптивности
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Считаем количество заклинаний для каждого уровня
+  const countByLevel = spells.reduce((acc, spell) => {
+    acc[spell.level] = (acc[spell.level] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>);
   
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Верхняя панель с навигацией */}
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            onClick={() => navigate('/')} 
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            На главную
-          </Button>
-          <h1 className="text-2xl font-bold">Книга заклинаний</h1>
-          <div className="w-[100px]" /> {/* Пустой блок для выравнивания */}
+    <div className="container p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Книга заклинаний</h1>
+        <div className="flex gap-2">
+          <ThemeSelector />
+        </div>
+      </div>
+      
+      <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex-1 min-w-[300px]">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Поиск заклинания..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
         
-        {/* Панель фильтров и поиска */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Фильтры
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={resetFilters}
+            className="text-primary-foreground border-primary"
+          >
+            Сбросить фильтры
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="md:col-span-1">
+          <Card className="mb-6 border border-primary/30 bg-background/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Фильтры
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium block mb-2">Поиск</label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Название заклинания..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
+                <h3 className="text-sm font-medium mb-2">Уровень</h3>
+                <div className="flex flex-wrap gap-1">
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => (
+                    <Badge
+                      key={level}
+                      className={`cursor-pointer ${
+                        filters.level === level 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                      }`}
+                      onClick={() => setFilters(prev => ({
+                        ...prev, 
+                        level: prev.level === level ? null : level
+                      }))}
+                    >
+                      {level === 0 ? 'Заг.' : level}
+                      <span className="ml-1 opacity-75">({countByLevel[level] || 0})</span>
+                    </Badge>
+                  ))}
                 </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium block mb-2">Класс</label>
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите класс" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allClasses.map((className) => (
-                      <SelectItem key={className} value={className}>
-                        {className === 'all' ? 'Все классы' : className}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h3 className="text-sm font-medium mb-2">Школа магии</h3>
+                <div className="flex flex-wrap gap-1">
+                  {uniqueSchools.map((school) => (
+                    <Badge
+                      key={school}
+                      className={`cursor-pointer ${
+                        filters.school === school 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                      }`}
+                      onClick={() => setFilters(prev => ({
+                        ...prev, 
+                        school: prev.school === school ? null : school
+                      }))}
+                    >
+                      {school}
+                    </Badge>
+                  ))}
+                </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium block mb-2">Школа магии</label>
-                <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите школу" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allSchools.map((school) => (
-                      <SelectItem key={school} value={school}>
-                        {school === 'all' ? 'Все школы' : school}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h3 className="text-sm font-medium mb-2">Класс</h3>
+                <div className="flex flex-wrap gap-1">
+                  {uniqueClasses.map((className) => (
+                    <Badge
+                      key={className}
+                      className={`cursor-pointer ${
+                        filters.class === className 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                      }`}
+                      onClick={() => setFilters(prev => ({
+                        ...prev, 
+                        class: prev.class === className ? null : className
+                      }))}
+                    >
+                      {className}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
         
-        {/* Табы по уровням заклинаний */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="w-full overflow-x-auto flex-nowrap">
-            <TabsTrigger value="all" className="flex-shrink-0">Все</TabsTrigger>
-            <TabsTrigger value="0" className="flex-shrink-0">Заговоры</TabsTrigger>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-              <TabsTrigger key={level} value={level.toString()} className="flex-shrink-0">
-                {level}-й уровень
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        
-        {/* Список заклинаний с результатами */}
-        <div className="space-y-8">
-          {activeTab === 'all' ? (
-            // Показываем все уровни с заголовками
-            Object.entries(groupedSpellsByLevel)
-              .sort(([a], [b]) => {
-                if (a === 'cantrip') return -1;
-                if (b === 'cantrip') return 1;
-                return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]);
-              })
-              .map(([levelKey, levelSpells]) => {
-                const levelName = levelKey === 'cantrip' 
-                  ? 'Заговоры' 
-                  : `${levelKey.split('-')[1]}-й уровень`;
-                
-                return levelSpells.length > 0 ? (
-                  <div key={levelKey}>
-                    <div className="flex items-center mb-2">
-                      <h2 className="text-lg font-semibold">{levelName}</h2>
-                      <div className="ml-2 flex items-center">
-                        <Badge variant="secondary">
-                          {levelSpells.length}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {levelSpells.map(spell => (
-                        <SpellCard 
-                          key={spell.name} 
-                          spell={spell}
-                          compact={isMobile}
-                        />
-                      ))}
-                    </div>
+        <div className="md:col-span-3">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4 border-primary/30">
+              <TabsTrigger value="all" className="text-primary-foreground">Все</TabsTrigger>
+              <TabsTrigger value="0" className="text-primary-foreground">Заговоры</TabsTrigger>
+              <TabsTrigger value="1" className="text-primary-foreground">1-й</TabsTrigger>
+              <TabsTrigger value="2" className="text-primary-foreground">2-й</TabsTrigger>
+              <TabsTrigger value="3" className="text-primary-foreground">3-й</TabsTrigger>
+              <TabsTrigger value="4" className="text-primary-foreground">4-й</TabsTrigger>
+              <TabsTrigger value="5" className="text-primary-foreground">5+</TabsTrigger>
+            </TabsList>
+            
+            <Card className="border-primary/30 bg-background/80">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    {activeTab === 'all' 
+                      ? 'Все заклинания' 
+                      : activeTab === '0' 
+                        ? 'Заговоры' 
+                        : `Заклинания ${activeTab}-го уровня`}
                   </div>
-                ) : null;
-              })
-          ) : (
-            // Показываем только выбранный уровень
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredSpells.map(spell => (
-                <SpellCard 
-                  key={spell.name} 
-                  spell={spell}
-                  compact={isMobile}
-                />
-              ))}
-            </div>
-          )}
-          
-          {filteredSpells.length === 0 && (
-            <div className="text-center py-20">
-              <BookOpen className="mx-auto h-16 w-16 text-muted-foreground opacity-30" />
-              <p className="text-muted-foreground mt-4">Нет заклинаний, соответствующих выбранным фильтрам</p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedClass('all');
-                  setSelectedSchool('all');
-                  setActiveTab('all');
-                }}
-                className="mt-2"
-              >
-                Сбросить фильтры
-              </Button>
-            </div>
-          )}
+                  <span className="text-sm font-normal">
+                    {filteredSpells.length} заклинаний
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {filteredSpells.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-muted-foreground">Заклинания не найдены</p>
+                    <Button 
+                      variant="link" 
+                      onClick={resetFilters}
+                      className="mt-2"
+                    >
+                      Сбросить фильтры
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredSpells.map(spell => (
+                      <SpellCard key={spell.id} spell={spell} compact />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </Tabs>
         </div>
       </div>
-      
-      {/* Модальное окно с подробной информацией о заклинании */}
-      <SpellDetailModal 
-        spell={selectedSpell} 
-        isOpen={isDetailModalOpen}
-        setIsOpen={setIsDetailModalOpen}
-      />
     </div>
   );
 };

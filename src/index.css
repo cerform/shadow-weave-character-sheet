@@ -44,6 +44,7 @@
     --theme-bg: #333333;
     --theme-fg: #ffffff;
     --theme-accent: #8E9196;
+    --text-color: #FFFFFF;
   }
 
   .dark {
@@ -177,6 +178,7 @@
   --foreground: 270 100% 90%;
   --primary: 270 100% 50%;
   --card: 270 30% 10%;
+  color: var(--text-color, #E9D8FD);
 }
 
 .theme-wizard {
@@ -184,6 +186,7 @@
   --foreground: 200 100% 90%;  
   --primary: 200 100% 50%;
   --card: 200 30% 10%;
+  color: var(--text-color, #DBEAFE);
 }
 
 .theme-druid {
@@ -191,6 +194,7 @@
   --foreground: 120 100% 90%;
   --primary: 140 100% 50%;
   --card: 120 30% 10%;
+  color: var(--text-color, #D1FAE5);
 }
 
 .theme-warrior {
@@ -198,6 +202,7 @@
   --foreground: 0 100% 90%;
   --primary: 0 100% 50%;
   --card: 0 30% 10%;
+  color: var(--text-color, #FEE2E2);
 }
 
 .theme-bard {
@@ -205,4 +210,41 @@
   --foreground: 40 100% 90%;
   --primary: 40 100% 50%;
   --card: 40 30% 10%;
+  color: var(--text-color, #FEF3C7);
 }
+
+.theme-default {
+  color: var(--text-color, #FFFFFF);
+}
+
+/* Улучшение контрастности для элементов UI */
+.bg-card, .bg-background {
+  background-color: rgba(20, 20, 20, 0.8);
+}
+
+.text-foreground {
+  color: var(--text-color, #FFFFFF);
+}
+
+/* Улучшаем чтение текста */
+.text-muted-foreground {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Улучшаем контрастность для карточек заклинаний */
+[data-theme] .card {
+  border: 1px solid var(--accent-color, #8E9196);
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Стили для заголовков */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-color, #FFFFFF);
+}
+
+/* Улучшенные стили для бейджей */
+.badge {
+  border: 1px solid var(--accent-color, #8E9196);
+  color: var(--text-color, #FFFFFF);
+}
+

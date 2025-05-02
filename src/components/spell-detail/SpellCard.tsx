@@ -48,12 +48,12 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, compact = false }) => {
   return (
     <>
       <Card 
-        className="mb-2 cursor-pointer hover:shadow-md transition-shadow"
+        className="mb-2 cursor-pointer hover:shadow-md transition-shadow border border-primary/30"
         onClick={compact ? openDetailModal : toggleExpand}
       >
         <CardHeader className="py-3 px-4">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-base sm:text-lg">
+            <CardTitle className="text-base sm:text-lg text-white">
               {spell.name}
             </CardTitle>
             <div className="flex gap-2 items-center">
@@ -70,13 +70,13 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, compact = false }) => {
                 )}
               </div>
               {!compact && (
-                <div className="cursor-pointer p-1">
+                <div className="cursor-pointer p-1 text-white">
                   {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-white/80">
             <Badge className={`${getSchoolColor(spell.school).split(' ')[0]} text-white text-xs`}>
               {spell.school}
             </Badge>
@@ -86,7 +86,7 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, compact = false }) => {
         
         {!compact && isExpanded && (
           <CardContent className="py-2 px-4">
-            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+            <div className="grid grid-cols-2 gap-2 text-sm mb-3 text-white/90">
               <div>
                 <span className="font-semibold">Время:</span> {spell.castingTime}
               </div>
@@ -101,10 +101,10 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, compact = false }) => {
               </div>
             </div>
             
-            <div className="text-sm">
+            <div className="text-sm text-white/90">
               <p className="line-clamp-4">{spell.description}</p>
               <button 
-                className="text-primary hover:underline mt-2"
+                className="text-primary hover:underline mt-2 font-bold"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowDetailModal(true);

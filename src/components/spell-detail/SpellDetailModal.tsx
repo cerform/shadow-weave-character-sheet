@@ -42,9 +42,9 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-black/80 border-primary/30 text-white">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center justify-between">
+          <DialogTitle className="text-2xl font-bold flex items-center justify-between text-white">
             {spell.name}
             <div className="flex gap-2">
               {spell.ritual && (
@@ -59,7 +59,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               )}
             </div>
           </DialogTitle>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-white/80">
             <Badge className={`${getSchoolColor(spell.school)} text-white`}>
               {spell.school}
             </Badge>
@@ -69,53 +69,53 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-sm text-white">
               <span className="font-semibold">Время накладывания:</span> {spell.castingTime}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Ruler className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <Ruler className="h-4 w-4 text-primary" />
+            <span className="text-sm text-white">
               <span className="font-semibold">Дистанция:</span> {spell.range}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Box className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <Box className="h-4 w-4 text-primary" />
+            <span className="text-sm text-white">
               <span className="font-semibold">Компоненты:</span> {spell.components}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-sm text-white">
               <span className="font-semibold">Длительность:</span> {spell.duration}
             </span>
           </div>
           
           <div className="flex items-center gap-2 col-span-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-sm text-white">
               <span className="font-semibold">Классы:</span> {spell.classes.join(", ")}
             </span>
           </div>
         </div>
         
         <div className="mt-4">
-          <div className="prose dark:prose-invert max-w-none">
-            <h4 className="text-lg font-semibold">Описание</h4>
-            <p className="whitespace-pre-line">{spell.description}</p>
+          <div className="prose dark:prose-invert max-w-none text-white">
+            <h4 className="text-lg font-semibold text-white">Описание</h4>
+            <p className="whitespace-pre-line text-white/90">{spell.description}</p>
             
             {spell.higherLevels && (
               <>
-                <h4 className="text-lg font-semibold flex items-center gap-2">
+                <h4 className="text-lg font-semibold flex items-center gap-2 text-white">
                   <Award className="h-4 w-4" />
                   На более высоких уровнях
                 </h4>
-                <p className="whitespace-pre-line">{spell.higherLevels}</p>
+                <p className="whitespace-pre-line text-white/90">{spell.higherLevels}</p>
               </>
             )}
           </div>
