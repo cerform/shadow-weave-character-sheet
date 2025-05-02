@@ -21,9 +21,10 @@ import { RestPanel } from './RestPanel';
 
 interface CharacterSheetProps {
   character: Character | null;
+  isDM?: boolean; // Добавляем опциональный параметр для проверки, является ли пользователь мастером
 }
 
-const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
+const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false }) => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [showCombatDialog, setShowCombatDialog] = useState(false);
   const [sessionCode, setSessionCode] = useState('');
@@ -64,7 +65,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
         ['Class', character.className || ''],
         ['Race', character.race || ''],
         ['Level', character.level?.toString() || '1'],
-        ['Experience', (character.level || 0).toString()], // Using level as a fallback since "experience" property doesn't exist
+        ['Experience', (character.level || 0).toString()], 
         ['Alignment', character.alignment || ''],
       ],
     });
@@ -160,7 +161,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
             <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
-          <Button onClick={() => setShowCombatDialog(true)} className="ml-2">В бой!</Button>
+          {/* Отображаем кнопку "В бой!" только если пользователь - Мастер Подземелий */}
+          {isDM && (
+            <Button onClick={() => setShowCombatDialog(true)} className="ml-2">В бой!</Button>
+          )}
         </div>
         
         {/* Диалог подключения к сессии */}
@@ -191,29 +195,31 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character }) => {
           </DialogContent>
         </Dialog>
         
-        {/* Диалог для боя */}
-        <Dialog open={showCombatDialog} onOpenChange={setShowCombatDialog}>
-          <DialogContent className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20">
-            <DialogHeader>
-              <DialogTitle>Начать бой</DialogTitle>
-              <DialogDescription>
-                Вы готовы к бою!
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <p>Вы уверены, что хотите начать бой?</p>
-            </div>
-            <Button onClick={() => {
-              toast({
-                title: "В бой!",
-                description: "Начинаем бой!",
-              });
-              setShowCombatDialog(false);
-            }}>
-              В бой!
-            </Button>
-          </DialogContent>
-        </Dialog>
+        {/* Диалог для боя (только для Мастера) */}
+        {isDM && (
+          <Dialog open={showCombatDialog} onOpenChange={setShowCombatDialog}>
+            <DialogContent className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20">
+              <DialogHeader>
+                <DialogTitle>Начать бой</DialogTitle>
+                <DialogDescription>
+                  Вы готовы к бою!
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <p>Вы уверены, что хотите начать бой?</p>
+              </div>
+              <Button onClick={() => {
+                toast({
+                  title: "В бой!",
+                  description: "Начинаем бой!",
+                });
+                setShowCombatDialog(false);
+              }}>
+                В бой!
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
