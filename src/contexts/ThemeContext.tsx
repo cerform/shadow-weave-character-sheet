@@ -45,6 +45,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Применяем CSS переменные из темы
     const selectedTheme = themes[themeName];
     if (selectedTheme) {
+      // Основные цвета темы
       document.documentElement.style.setProperty('--primary-gradient', selectedTheme.primary);
       document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondary);
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
@@ -53,15 +54,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--contrast-color', selectedTheme.contrastColor);
       document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
       
-      // Дополнительно применяем цвета для фона и текста
-      document.documentElement.style.setProperty('--theme-bg', themeName === 'default' ? '#2C1B0E' : '#111111');
-      document.documentElement.style.setProperty('--theme-fg', selectedTheme.textColor);
+      // Фон для всех страниц, учитывая тему
+      document.documentElement.style.setProperty('--background-color', themeName === 'default' ? '#1A1105' : '#0A0A0A');
+      document.documentElement.style.setProperty('--background-card', 'rgba(0, 0, 0, 0.8)');
       
-      // Установим также цвет акцента для компонентов
+      // Цвета текста и акцента для всего приложения
+      document.documentElement.style.setProperty('--theme-bg', themeName === 'default' ? '#1A1105' : '#0A0A0A');
+      document.documentElement.style.setProperty('--theme-fg', selectedTheme.textColor);
       document.documentElement.style.setProperty('--theme-accent', selectedTheme.accent);
       
-      // Добавляем стили для лучшей контрастности в книге заклинаний
-      document.documentElement.style.setProperty('--background-card', 'rgba(0, 0, 0, 0.8)');
+      // Основные цвета Tailwind для приложения
+      document.documentElement.style.setProperty('--background', themeName === 'default' ? '26 10% 5%' : '0 0% 5%');
+      document.documentElement.style.setProperty('--foreground', '0 0% 98%');
+      document.documentElement.style.setProperty('--card', '0 0% 3%');
+      document.documentElement.style.setProperty('--card-foreground', '0 0% 98%');
+      document.documentElement.style.setProperty('--primary', selectedTheme.accent.replace('#', ''));
+      document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
+      
+      // Обеспечиваем читабельность на всех страницах
+      document.body.style.backgroundColor = themeName === 'default' ? '#1A1105' : '#0A0A0A';
+      document.body.style.color = selectedTheme.textColor;
     }
   };
 

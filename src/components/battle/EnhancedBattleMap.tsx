@@ -6,6 +6,8 @@ import BattleGrid from './BattleGrid';
 import { Initiative, Token } from '@/pages/PlayBattlePage';
 import { ZoomIn, ZoomOut, Scale } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface EnhancedBattleMapProps {
   tokens: Token[];
@@ -48,6 +50,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // Увеличение масштаба
   const handleZoomIn = () => {
@@ -65,15 +69,17 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     setMapPosition({ x: 0, y: 0 });
   };
   
-  // Функционал перетаскивания карты
-  const startDrag = (e: React.MouseEvent) => {
-    if (e.button !== 1) return; // Только средняя кнопка мыши
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    e.preventDefault();
+  // Улучшенный функционал перетаскивания карты - теперь работает с правой кнопкой мыши или через зажатие пробела
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Средняя кнопка мыши или правая
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+      e.preventDefault();
+    }
   };
   
-  const onDrag = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
@@ -85,11 +91,60 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     e.preventDefault();
   };
   
-  const endDrag = () => {
+  const handleMouseUp = () => {
     setIsDragging(false);
   };
 
-  // Сделать карту больше, чтобы заполнить пространство
+  // Добавляем обработчик клавиши пробел для входа в режим перетаскивания
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isDragging) {
+        // Включаем режим перетаскивания при нажатии пробела
+        document.body.style.cursor = 'grab';
+        const container = mapContainerRef.current;
+        if (container) {
+          container.style.cursor = 'grab';
+        }
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        // Выключаем режим перетаскивания при отпускании пробела
+        document.body.style.cursor = 'default';
+        const container = mapContainerRef.current;
+        if (container) {
+          container.style.cursor = 'default';
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isDragging]);
+
+  // Улучшаем обработку контекстного меню для перетаскивания правой кнопкой мыши
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      // Предотвращаем появление контекстного меню при перетаскивании карты
+      if (isDragging || mapContainerRef.current?.contains(e.target as Node)) {
+        e.preventDefault();
+      }
+    };
+    
+    window.addEventListener('contextmenu', handleContextMenu);
+    
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [isDragging]);
+
+  // Сделать карту больше, чтобы заполнить пространство и обеспечить полноценный скроллинг
   useEffect(() => {
     const container = mapContainerRef.current;
     const content = mapContentRef.current;
@@ -98,33 +153,37 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       // Загрузка изображения для получения его размеров
       const img = new Image();
       img.onload = () => {
-        // Рассчитываем размер, чтобы заполнить контейнер
+        // Установить минимальные размеры карты, учитывая размер контейнера и изображения
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         
-        // Установить минимальные размеры карты
-        content.style.width = `${Math.max(containerWidth, img.width)}px`;
-        content.style.height = `${Math.max(containerHeight, img.height)}px`;
+        content.style.width = `${Math.max(containerWidth, img.width * 1.2)}px`;
+        content.style.height = `${Math.max(containerHeight, img.height * 1.2)}px`;
       };
       img.src = background;
     }
   }, [background]);
 
   return (
-    <div className="battle-map-container h-full" ref={mapContainerRef}>
+    <div 
+      className="battle-map-container h-full relative" 
+      ref={mapContainerRef}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div 
-        className="map-content zoomable relative" 
+        className="map-content zoomable relative overflow-hidden" 
         ref={mapContentRef}
         style={{ 
           transform: `scale(${zoom}) translate(${mapPosition.x}px, ${mapPosition.y}px)`,
           transformOrigin: 'center center',
           height: '100%',
-          width: '100%'
+          width: '100%',
+          cursor: isDragging ? 'grabbing' : 'default'
         }}
-        onMouseDown={startDrag}
-        onMouseMove={onDrag}
-        onMouseUp={endDrag}
-        onMouseLeave={endDrag}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         <BattleMap
           tokens={tokens}
@@ -139,28 +198,37 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         />
         
         {/* Сетка только внутри карты боя */}
-        <div className="battle-grid-container absolute inset-0 pointer-events-none">
-          <BattleGrid 
-            gridSize={gridSize}
-            visible={gridVisible}
-            opacity={gridOpacity}
-          />
+        {gridVisible && (
+          <div className="battle-grid-container absolute inset-0 pointer-events-none">
+            <BattleGrid 
+              gridSize={gridSize}
+              visible={true}
+              opacity={gridOpacity}
+            />
+          </div>
+        )}
           
-          <FogOfWar
-            gridSize={gridSize}
-            revealedCells={revealedCells}
-            onRevealCell={onRevealCell}
-            active={fogOfWar}
-          />
-        </div>
+        {/* Туман войны как отдельный слой */}
+        {fogOfWar && (
+          <div className="fog-of-war-container absolute inset-0 pointer-events-none">
+            <FogOfWar
+              gridSize={gridSize}
+              revealedCells={revealedCells}
+              onRevealCell={onRevealCell}
+              active={fogOfWar}
+            />
+          </div>
+        )}
       </div>
       
+      {/* Улучшенная панель управления картой */}
       <div className="zoom-controls absolute bottom-4 right-4 flex gap-2 z-10 bg-background/80 p-2 rounded-lg shadow-lg backdrop-blur">
         <Button 
           size="icon" 
           variant="secondary" 
           onClick={handleZoomIn} 
           title="Увеличить"
+          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
         >
           <ZoomIn size={16} />
         </Button>
@@ -169,6 +237,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           variant="secondary" 
           onClick={handleZoomOut} 
           title="Уменьшить"
+          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
         >
           <ZoomOut size={16} />
         </Button>
@@ -177,9 +246,15 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           variant="secondary" 
           onClick={handleResetZoom} 
           title="Сбросить масштаб"
+          style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
         >
           <Scale size={16} />
         </Button>
+      </div>
+      
+      {/* Подсказка о перетаскивании */}
+      <div className="absolute top-4 left-4 bg-background/70 p-2 rounded text-xs z-10 backdrop-blur-sm">
+        Используйте среднюю кнопку мыши, правую кнопку, или Ctrl+ЛКМ для перемещения карты
       </div>
     </div>
   );

@@ -130,8 +130,50 @@
 
 /* Улучшаем контрастность для предысторий и других элементов */
 .bg-card, .bg-background {
-  background-color: rgba(40, 40, 40, 0.8);
+  background-color: rgba(20, 20, 20, 0.8);
 }
 .text-foreground {
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Глобальные стили для боевой сцены */
+.battle-map-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-content {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+/* Стили для перетаскивания */
+.grabbing {
+  cursor: grabbing !important;
+}
+
+.grab {
+  cursor: grab !important;
+}
+
+/* Улучшаем стили для кубиков */
+.dice-button {
+  transition: all 0.2s ease;
+  font-weight: bold;
+  border-width: 2px;
+}
+
+.dice-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dice-result {
+  animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }

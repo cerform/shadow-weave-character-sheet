@@ -71,8 +71,8 @@ export const DicePanel = () => {
       <h3 className="text-lg font-semibold mb-4 text-foreground">Кубики</h3>
       
       <div className="mt-4">
-        {/* 3D Dice Roller - перемещено вверх для лучшей видимости */}
-        <div className="h-[180px] mb-4 bg-black/10 rounded-lg overflow-hidden">
+        {/* 3D Dice Roller - центрируем компонент */}
+        <div className="h-[180px] mb-4 bg-black/20 rounded-lg overflow-hidden flex items-center justify-center">
           <DiceRoller3D 
             key={diceKey}
             initialDice={diceType as any}
@@ -83,13 +83,13 @@ export const DicePanel = () => {
           />
         </div>
         
-        {/* Строка кнопок-кубиков */}
+        {/* Строка кнопок-кубиков с улучшенным стилем */}
         <div className="grid grid-cols-6 gap-2 mb-3">
           <Button 
             variant={diceType === 'd4' ? "default" : "outline"} 
             onClick={() => rollDice('d4')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd4' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd4' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d4
           </Button>
@@ -97,7 +97,7 @@ export const DicePanel = () => {
             variant={diceType === 'd6' ? "default" : "outline"} 
             onClick={() => rollDice('d6')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd6' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd6' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d6
           </Button>
@@ -105,7 +105,7 @@ export const DicePanel = () => {
             variant={diceType === 'd8' ? "default" : "outline"} 
             onClick={() => rollDice('d8')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd8' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd8' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d8
           </Button>
@@ -113,7 +113,7 @@ export const DicePanel = () => {
             variant={diceType === 'd10' ? "default" : "outline"} 
             onClick={() => rollDice('d10')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd10' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd10' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d10
           </Button>
@@ -121,7 +121,7 @@ export const DicePanel = () => {
             variant={diceType === 'd12' ? "default" : "outline"} 
             onClick={() => rollDice('d12')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd12' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd12' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d12
           </Button>
@@ -129,7 +129,7 @@ export const DicePanel = () => {
             variant={diceType === 'd20' ? "default" : "outline"} 
             onClick={() => rollDice('d20')} 
             disabled={isRolling} 
-            className={`text-foreground ${diceType === 'd20' ? 'bg-primary text-primary-foreground' : ''}`}
+            className={`${diceType === 'd20' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:text-primary hover:border-primary'}`}
           >
             d20
           </Button>
@@ -145,7 +145,7 @@ export const DicePanel = () => {
               onChange={(e) => setDiceCount(Number(e.target.value))} 
               min={1}
               max={20}
-              className="w-full mt-1 text-foreground"
+              className="w-full mt-1 text-foreground bg-black/20 border-primary/30"
             />
           </div>
           <div>
@@ -154,7 +154,7 @@ export const DicePanel = () => {
               type="number" 
               value={modifier} 
               onChange={(e) => setModifier(Number(e.target.value))} 
-              className="w-full mt-1 text-foreground"
+              className="w-full mt-1 text-foreground bg-black/20 border-primary/30"
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export const DicePanel = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={resetRoll} 
-                className="w-full text-primary"
+                className="w-full text-primary border-primary/30 hover:bg-primary/10"
               >
                 Бросить снова
               </Button>
@@ -199,7 +199,7 @@ export const DicePanel = () => {
         )}
       </div>
       
-      <Separator className="my-2" />
+      <Separator className="my-2 bg-primary/20" />
       
       <div className="mt-2">
         <h4 className="text-sm font-medium mb-1 text-foreground">История бросков</h4>
