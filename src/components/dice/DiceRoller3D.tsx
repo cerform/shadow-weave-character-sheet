@@ -39,27 +39,6 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
     }
   };
 
-  // Получаем геометрию в зависимости от типа кубика
-  const getDiceGeometry = () => {
-    switch (diceType) {
-      case 'd4':
-        return new THREE.TetrahedronGeometry(1);
-      case 'd6':
-        return new THREE.BoxGeometry(1, 1, 1);
-      case 'd8':
-        return new THREE.OctahedronGeometry(1);
-      case 'd10':
-        // Для d10 используем конусную геометрию как приближение
-        return new THREE.ConeGeometry(1, 2, 10);
-      case 'd12':
-        return new THREE.DodecahedronGeometry(1);
-      case 'd20':
-        return new THREE.IcosahedronGeometry(1);
-      default:
-        return new THREE.BoxGeometry(1, 1, 1);
-    }
-  };
-
   // Эффект для броска кубика
   useEffect(() => {
     if (rolling && animationPhase === 0) {
@@ -72,7 +51,7 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
       });
       setResult(null);
     }
-  }, [rolling]);
+  }, [rolling, animationPhase]);
 
   // Анимация кубика
   useFrame(() => {
@@ -112,10 +91,30 @@ function DiceModel({ diceType, onRoll, color = '#ffffff', rolling, setRolling, m
     }
   });
 
+  // Создаем геометрию для разных типов кубиков
+  const renderDiceGeometry = () => {
+    switch (diceType) {
+      case 'd4':
+        return <tetrahedronGeometry args={[1]} />;
+      case 'd6':
+        return <boxGeometry args={[1, 1, 1]} />;
+      case 'd8':
+        return <octahedronGeometry args={[1]} />;
+      case 'd10':
+        return <coneGeometry args={[1, 2, 10]} />;
+      case 'd12':
+        return <dodecahedronGeometry args={[1]} />;
+      case 'd20':
+        return <icosahedronGeometry args={[1]} />;
+      default:
+        return <boxGeometry args={[1, 1, 1]} />;
+    }
+  };
+
   return (
     <group>
       <mesh ref={meshRef} position={[0, 0, 0]} castShadow>
-        {getDiceGeometry()}
+        {renderDiceGeometry()}
         <meshStandardMaterial 
           color={color} 
           metalness={0.5} 
