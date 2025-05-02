@@ -67,13 +67,13 @@ const matchesFilters = (
 
 // Получаем доступные уровни заклинаний для класса и уровня
 const getAvailableSpellLevels = (characterClass: string, level: number = 1): number[] => {
-  // Для первого уровня у большинства заклинателей доступны заговоры (0) и заклинания 1 уровня
+  // Всем заклинателям на первом уровне доступны заговоры (0) и заклинания 1 уровня
   if (['Бард', 'Волшебник', 'Жрец', 'Друид', 'Чародей', 'Колдун', 'Чернокнижник'].includes(characterClass)) {
     if (level >= 3) return [0, 1, 2]; // С 3 уровня - доступ к заклинаниям 2 уровня
     return [0, 1]; // Заговоры и 1 уровень для начинающих
   }
   
-  // Полузаклинатели (следопыты, паладины) получают заклинания позже
+  // Полузаклинатели (следопыты, паладины) получают заклинания со второго уровня
   if (['Следопыт', 'Паладин'].includes(characterClass)) {
     if (level >= 5) return [1, 2]; // С 5 уровня - доступ к заклинаниям 2 уровня
     if (level >= 2) return [1]; // С 2 уровня - доступ к заклинаниям 1 уровня
@@ -86,7 +86,20 @@ const getAvailableSpellLevels = (characterClass: string, level: number = 1): num
     return [];
   }
   
-  return [0, 1]; // По умолчанию возвращаем массив с заговорами и 1 уровнем
+  // Для классов Варвар и Монах, которые обычно не имеют заклинаний по умолчанию, 
+  // но могут получить их через особенности подклассов или фиты
+  if (['Варвар', 'Монах'].includes(characterClass)) {
+    if (level >= 3) return [0]; // С 3 уровня некоторые подклассы могут получать заговоры
+    return [];
+  }
+  
+  return []; // По умолчанию возвращаем пустой массив, если класс не имеет заклинаний
+};
+
+// Проверяет, имеет ли класс заклинания
+const hasSpells = (characterClass: string, level: number = 1): boolean => {
+  const availableLevels = getAvailableSpellLevels(characterClass, level);
+  return availableLevels.length > 0;
 };
 
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
@@ -145,6 +158,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return getAvailableSpellLevels(character.class);
   }, [character.class]);
   
+  // Проверка, имеет ли текущий класс заклинания
+  const classHasSpells = useMemo(() => {
+    return hasSpells(character.class);
+  }, [character.class]);
+  
   // Обработчик добавления заклинания
   const handleAddSpell = (spellName: string) => {
     if (!character.spells.includes(spellName)) {
@@ -160,6 +178,24 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     const updatedSpells = character.spells.filter(s => s !== spellName);
     updateCharacter({ spells: updatedSpells });
   };
+
+  // Если класс не имеет заклинаний, показываем сообщение и кнопку "Далее"
+  if (!classHasSpells) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Заклинания</h2>
+        <p className="text-muted-foreground">Ваш класс ({character.class}) не использует заклинания на данном уровне.</p>
+        
+        <NavigationButtons 
+          allowNext={true}
+          nextStep={nextStep} 
+          prevStep={prevStep}
+          nextLabel="Далее"
+          prevLabel="Назад"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -180,8 +216,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         
         <div className="w-full md:w-48">
           <Select
-            value={levelFilter?.toString() || ""}
-            onValueChange={(value) => setLevelFilter(value ? Number(value) : null)}
+            value={levelFilter?.toString() || "all"}
+            onValueChange={(value) => setLevelFilter(value === "all" ? null : Number(value))}
           >
             <SelectTrigger>
               <SelectValue placeholder="Уровень" />

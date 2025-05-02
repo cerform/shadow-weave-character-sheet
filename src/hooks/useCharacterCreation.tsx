@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Character, AbilityScores, SpellSlots, Spell, SorceryPoints } from "@/contexts/CharacterContext";
 
@@ -177,7 +176,7 @@ export const useCharacterCreation = () => {
       "Обнаружение магии": 1,
       "Маскировка": 1,
       "Понимание языков": 1,
-      "Огненный Снаряд": 0,
+      "Огненн��й Снаряд": 0,
       "Рука Магнуса": 0,
       "Ядовитое Облако": 3
     };
@@ -196,8 +195,22 @@ export const useCharacterCreation = () => {
 
   // Определение, является ли класс заклинательным
   const isMagicClass = (className: string) => {
-    const magicClasses = ['Волшебник', 'Чародей', 'Чернокнижник', 'Бард', 'Жрец', 'Друид', 'Паладин', 'Следопыт'];
-    return magicClasses.includes(className);
+    // Полные заклинатели
+    const fullCasters = [
+      'Волшебник', 'Чародей', 'Чернокнижник', 
+      'Бард', 'Жрец', 'Друид'
+    ];
+    
+    // Полузаклинатели
+    const halfCasters = ['Паладин', 'Следопыт'];
+    
+    // Треть-заклинатели (через подклассы)
+    const thirdCasters = ['Воин', 'Плут']; // Мистический рыцарь, Мистический ловкач
+    
+    // Классы, которые могут получить заклинания через определенные пути
+    const potentialCasters = ['Монах', 'Варвар']; // Путь четырех стихий, некоторые тотемы
+    
+    return [...fullCasters, ...halfCasters, ...thirdCasters, ...potentialCasters].includes(className);
   };
 
   // Получение модификатора характеристики

@@ -1,461 +1,373 @@
 
-import React, { useState, useRef } from "react";
+// В LeftPanel.tsx нужно исправить ошибку с типом initiative, чтобы оно всегда было числом
+import React, { useState } from 'react';
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Users, 
-  Skull, 
-  Crown, 
-  Plus, 
-  X, 
-  Heart, 
-  ArrowUp, 
-  ArrowDown,
-  Shield,
-  Settings,
-  Image,
-  Link
-} from "lucide-react";
-import { Token, Initiative, BattleState } from "@/pages/PlayBattlePage";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs as DialogTabs, TabsContent as DialogTabsContent, TabsList as DialogTabsList, TabsTrigger as DialogTabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Sword, Shield, ZapFast, PlusCircle, MinusCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
-interface LeftPanelProps {
-  tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
-  initiative: Initiative[];
-  selectedTokenId: number | null;
-  onSelectToken: (id: number | null) => void;
-  battleState: BattleState;
+// Вспомогательные компоненты и утилиты
+import { MonsterCard } from './MonsterCard';
+import { useToast } from '@/hooks/use-toast';
+
+// Типы данных
+interface Condition {
+  name: string;
+  duration: number | null;
 }
 
-// Фэнтези монстры с тематическими изображениями
-const monsterTemplates = [
-  { name: "Гоблин", hp: 7, ac: 15, img: "https://i.pinimg.com/564x/28/fc/99/28fc99a02d54689d8ef6e89bb530e3e3.jpg", type: "monster" },
-  { name: "Орк", hp: 15, ac: 13, img: "https://i.pinimg.com/564x/02/88/e5/0288e5bd8af3b8591591544c9330a9c5.jpg", type: "monster" },
-  { name: "Тролль", hp: 84, ac: 15, img: "https://i.pinimg.com/564x/33/87/aa/3387aa658b4c2b407041e60459c5500f.jpg", type: "boss" },
-  { name: "Дракон", hp: 178, ac: 19, img: "https://i.pinimg.com/564x/a3/aa/c7/a3aac7acf9b0217b2bf8d98a0b17e4ac.jpg", type: "boss" },
-  { name: "Скелет", hp: 13, ac: 13, img: "https://i.pinimg.com/564x/5b/2e/07/5b2e07e8c4ded603b7364753d7b52126.jpg", type: "monster" },
-  { name: "Слайм", hp: 22, ac: 11, img: "https://i.pinimg.com/564x/d5/21/b8/d521b828da5ca7be029c67300ebb3919.jpg", type: "monster" },
-  { name: "Вампир", hp: 144, ac: 16, img: "https://i.pinimg.com/564x/be/e4/d0/bee4d0d3fc9f816feff453754bcdab0a.jpg", type: "boss" },
-  { name: "Минотавр", hp: 76, ac: 14, img: "https://i.pinimg.com/564x/88/6e/a2/886ea2e87a346e23c75231d12fef5feb.jpg", type: "boss" }
-];
+interface Combatant {
+  id: string;
+  name: string;
+  type: 'character' | 'monster' | 'npc';
+  hp: number;
+  maxHp: number;
+  ac: number;
+  initiative: number; // Убедимся что тип всегда number, не string
+  conditions: Condition[];
+  resources?: Record<string, { current: number; max: number }>;
+  visible: boolean;
+}
 
-const LeftPanel: React.FC<LeftPanelProps> = ({ 
-  tokens, 
-  setTokens, 
-  initiative, 
-  selectedTokenId, 
-  onSelectToken,
-  battleState
+interface Monster {
+  id: string;
+  name: string;
+  type: string;
+  hp: number;
+  ac: number;
+  cr: string;
+  abilities: Record<string, number>;
+}
+
+interface LeftPanelProps {
+  combatants: Combatant[];
+  setCombatants: React.Dispatch<React.SetStateAction<Combatant[]>>;
+  monsters: Monster[];
+  currentTurn: number;
+  setCurrentTurn: React.Dispatch<React.SetStateAction<number>>;
+  isCombatActive: boolean;
+  setIsCombatActive: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const LeftPanel: React.FC<LeftPanelProps> = ({
+  combatants,
+  setCombatants,
+  monsters,
+  currentTurn,
+  setCurrentTurn,
+  isCombatActive,
+  setIsCombatActive,
 }) => {
-  const [newTokenName, setNewTokenName] = useState("");
-  const [showAddMenu, setShowAddMenu] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [newTokenType, setNewTokenType] = useState<Token["type"]>("player");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleAddToken = (type: Token["type"]) => {
-    setNewTokenType(type);
-    setImageDialogOpen(true);
-  };
-  
-  const createToken = (imageUrl: string) => {
-    if (!newTokenName || !imageUrl) return;
-    
-    const newToken: Token = {
-      id: Date.now(),
-      name: newTokenName,
-      type: newTokenType,
-      img: imageUrl,
-      x: 100 + Math.random() * 300,
-      y: 100 + Math.random() * 300,
-      hp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
-      maxHp: newTokenType === "boss" ? 100 : newTokenType === "monster" ? 20 : 30,
-      ac: newTokenType === "boss" ? 17 : newTokenType === "monster" ? 13 : 15,
-      initiative: Math.floor(Math.random() * 5), // Ensure initiative is always a number
-      conditions: [],
-      resources: {},
-      visible: true
-    };
-    
-    setTokens(prev => [...prev, newToken]);
-    setNewTokenName("");
-    setImageUrl("");
-    setShowAddMenu(false);
-    setImageDialogOpen(false);
-  };
-  
-  const handleAddMonsterTemplate = (monster: typeof monsterTemplates[0]) => {
-    const newToken: Token = {
-      id: Date.now(),
-      name: monster.name,
-      type: monster.type as Token["type"],
-      img: monster.img,
-      x: 100 + Math.random() * 300,
-      y: 100 + Math.random() * 300,
-      hp: monster.hp,
-      maxHp: monster.hp,
-      ac: monster.ac,
-      // Fix: Ensure initiative is always a number by parsing to number or using default 0
-      initiative: Math.floor(Math.random() * 5),
-      conditions: [],
-      resources: {},
-      visible: true
-    };
-    
-    setTokens(prev => [...prev, newToken]);
-  };
-  
-  const handleUpdateTokenHP = (id: number, change: number) => {
-    setTokens(tokens.map(token => 
-      token.id === id 
-        ? { ...token, hp: Math.max(0, Math.min(token.maxHp, token.hp + change)) } 
-        : token
-    ));
-  };
-  
-  const handleRemoveToken = (id: number) => {
-    setTokens(tokens.filter(token => token.id !== id));
+  const { toast } = useToast();
+  const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(null);
+  const [monsterQuantity, setMonsterQuantity] = useState(1);
+  const [newMonsterName, setNewMonsterName] = useState('');
+
+  // Обработчики для управления боевым порядком
+  const startCombat = () => {
+    if (combatants.length < 1) {
+      toast({
+        title: "Ошибка",
+        description: "Добавьте хотя бы одного участника в бой",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Сортируем участников по инициативе (от большей к меньшей)
+    const sortedCombatants = [...combatants].sort(
+      (a, b) => b.initiative - a.initiative
+    );
+
+    setCombatants(sortedCombatants);
+    setCurrentTurn(0);
+    setIsCombatActive(true);
+
+    toast({
+      title: "Бой начался!",
+      description: `Ход ${sortedCombatants[0]?.name || "первого участника"}`,
+    });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImageUrl(result);
-      };
-      reader.readAsDataURL(file);
+  const endCombat = () => {
+    setIsCombatActive(false);
+    setCurrentTurn(0);
+    toast({
+      title: "Бой завершен",
+      description: "Инициатива сброшена",
+    });
+  };
+
+  const nextTurn = () => {
+    if (combatants.length === 0) return;
+    
+    const nextTurn = (currentTurn + 1) % combatants.length;
+    setCurrentTurn(nextTurn);
+    
+    toast({
+      title: "Следующий ход",
+      description: `Ход ${combatants[nextTurn]?.name || "следующего участника"}`,
+    });
+  };
+
+  // Добавление монстра в бой
+  const addMonster = (monster: Monster | null = null) => {
+    // Если не выбран монстр из списка и не введено имя монстра, показываем ошибку
+    if (!monster && (!newMonsterName || newMonsterName.trim() === '')) {
+      toast({
+        title: "Ошибка",
+        description: "Выберите монстра из списка или введите имя нового",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Подготовка нового монстра
+    const baseMonster = monster || {
+      id: `custom-${Date.now()}`,
+      name: newMonsterName,
+      type: "Неизвестно",
+      hp: 10,
+      ac: 10,
+      cr: "0",
+      abilities: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 }
+    };
+
+    // Добавление указанного количества монстров
+    const newCombatants: Combatant[] = [];
+    
+    for (let i = 0; i < monsterQuantity; i++) {
+      newCombatants.push({
+        id: `${baseMonster.id}-${Date.now()}-${i}`,
+        name: monsterQuantity > 1 ? `${baseMonster.name} ${i + 1}` : baseMonster.name,
+        type: 'monster',
+        hp: baseMonster.hp,
+        maxHp: baseMonster.hp,
+        ac: baseMonster.ac,
+        // Fix: Ensure initiative is always a number by parsing to number or using default 0
+        initiative: Math.floor(Math.random() * 20) + 1,
+        conditions: [],
+        resources: {},
+        visible: true
+      });
+    }
+    
+    setCombatants([...combatants, ...newCombatants]);
+    
+    // Сброс полей формы
+    setSelectedMonsterId(null);
+    setMonsterQuantity(1);
+    setNewMonsterName('');
+    
+    toast({
+      title: "Монстр добавлен",
+      description: `${monsterQuantity} ${baseMonster.name} добавлен в бой`,
+    });
+  };
+
+  // Удаление участника из боя
+  const removeCombatant = (id: string) => {
+    setCombatants(combatants.filter(c => c.id !== id));
+    
+    // Если удаляем активного участника, переходим к следующему
+    if (isCombatActive && combatants[currentTurn]?.id === id) {
+      nextTurn();
     }
   };
 
-  return (
-    <div className="w-64 bg-muted/5 border-r border-border flex flex-col">
-      <Tabs defaultValue="creatures">
-        <TabsList className="w-full">
-          <TabsTrigger value="creatures" className="flex-1">Существа</TabsTrigger>
-          <TabsTrigger value="initiative" className="flex-1">Инициатива</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="creatures" className="p-2 flex flex-col h-[calc(100vh-13rem-56px-3.5rem)]">
-          <div className="flex justify-between mb-2">
-            <h3 className="font-medium">Участники ({tokens.length})</h3>
-            <Button size="sm" variant="ghost" onClick={() => setShowAddMenu(!showAddMenu)}>
-              <Plus className="h-4 w-4" />
+  // Обновление хитпоинтов участника
+  const updateCombatantHP = (id: string, change: number) => {
+    setCombatants(combatants.map(c => {
+      if (c.id === id) {
+        const newHP = Math.max(0, Math.min(c.maxHp, c.hp + change));
+        return { ...c, hp: newHP };
+      }
+      return c;
+    }));
+  };
+
+  // Функция для отображения списка участников боя
+  const renderCombatants = () => {
+    if (combatants.length === 0) {
+      return (
+        <div className="text-center p-4 text-muted-foreground">
+          Нет участников боя. Добавьте персонажей или монстров.
+        </div>
+      );
+    }
+
+    return combatants.map((combatant, index) => {
+      const isCurrentTurn = isCombatActive && index === currentTurn;
+      
+      return (
+        <div 
+          key={combatant.id}
+          className={`p-3 border rounded-md mb-2 ${isCurrentTurn ? 'bg-primary/10 border-primary' : ''}`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="font-medium">{combatant.name}</div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => removeCombatant(combatant.id)}
+            >
+              ✕
             </Button>
           </div>
           
-          {showAddMenu && (
-            <div className="mb-2 p-2 border rounded-md bg-muted/10">
-              <Input
-                size="sm"
-                placeholder="Имя существа..."
-                value={newTokenName}
-                onChange={(e) => setNewTokenName(e.target.value)}
-                className="mb-2"
-              />
-              <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">HP</div>
+              <div className="flex items-center justify-center mt-1">
                 <Button 
-                  size="sm" 
                   variant="outline" 
-                  className="flex flex-col h-auto py-1"
-                  onClick={() => handleAddToken("player")}
+                  size="icon" 
+                  className="h-6 w-6 rounded-full"
+                  onClick={() => updateCombatantHP(combatant.id, -1)}
                 >
-                  <Users className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Игрок</span>
+                  <MinusCircle className="h-3 w-3" />
                 </Button>
+                <span className="mx-2">
+                  {combatant.hp}/{combatant.maxHp}
+                </span>
                 <Button 
-                  size="sm" 
                   variant="outline" 
-                  className="flex flex-col h-auto py-1"
-                  onClick={() => handleAddToken("monster")}
+                  size="icon" 
+                  className="h-6 w-6 rounded-full"
+                  onClick={() => updateCombatantHP(combatant.id, 1)}
                 >
-                  <Skull className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Монстр</span>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="flex flex-col h-auto py-1"
-                  onClick={() => handleAddToken("boss")}
-                >
-                  <Crown className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Босс</span>
+                  <PlusCircle className="h-3 w-3" />
                 </Button>
               </div>
             </div>
-          )}
-          
-          <ScrollArea className="flex-1">
-            <div className="space-y-1">
-              {tokens.map((token) => (
-                <div 
-                  key={token.id}
-                  className={`p-2 border rounded-md ${
-                    selectedTokenId === token.id ? "bg-primary/20 border-primary" : "bg-card"
-                  } cursor-pointer`}
-                  onClick={() => onSelectToken(token.id)}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="relative">
-                      <img 
-                        src={token.img} 
-                        alt={token.name}
-                        className={`w-8 h-8 rounded-full object-cover border-2 ${
-                          token.type === "boss"
-                            ? "border-red-500"
-                            : token.type === "monster"
-                            ? "border-yellow-500"
-                            : "border-green-500"
-                        }`} 
-                      />
-                      {token.conditions.length > 0 && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                          {token.conditions.length}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{token.name}</div>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <Shield className="w-3 h-3 mr-1" /> КД: {token.ac}
-                      </div>
-                    </div>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-6 w-6 text-destructive hover:text-destructive"
-                      onClick={(e) => { e.stopPropagation(); handleRemoveToken(token.id); }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-3 h-3 text-red-500" />
-                      <span className="text-xs">{token.hp}/{token.maxHp}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        size="icon" 
-                        variant="outline" 
-                        className="h-5 w-5 p-0"
-                        onClick={(e) => { e.stopPropagation(); handleUpdateTokenHP(token.id, -1); }}
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="outline" 
-                        className="h-5 w-5 p-0"
-                        onClick={(e) => { e.stopPropagation(); handleUpdateTokenHP(token.id, 1); }}
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {tokens.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  Нет участников. Добавьте игроков и монстров.
-                </div>
-              )}
+            
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">AC</div>
+              <div className="mt-1">{combatant.ac}</div>
             </div>
-
-            <div className="mt-4">
-              <h3 className="font-medium mb-2">Шаблоны монстров</h3>
-              <div className="grid grid-cols-2 gap-1">
-                {monsterTemplates.map((monster, idx) => (
-                  <Button 
-                    key={idx}
-                    size="sm"
-                    variant="outline"
-                    className="h-auto py-1 px-2 flex flex-col items-center justify-center"
-                    onClick={() => handleAddMonsterTemplate(monster)}
-                  >
-                    <img 
-                      src={monster.img} 
-                      alt={monster.name}
-                      className="w-6 h-6 rounded-full mb-1 object-cover" 
-                    />
-                    <span className="text-xs">{monster.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-        
-        <TabsContent value="initiative" className="p-2 flex flex-col h-[calc(100vh-13rem-56px-3.5rem)]">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium">Порядок инициативы</h3>
-            <div className="text-sm text-muted-foreground">
-              {battleState.isActive && `Раунд ${battleState.round}`}
+            
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Инициатива</div>
+              <div className="mt-1">{combatant.initiative}</div>
             </div>
           </div>
           
-          <ScrollArea className="flex-1">
-            {initiative.length > 0 ? (
-              <div className="space-y-1">
-                {initiative.map((item, index) => {
-                  const token = tokens.find(t => t.id === item.tokenId);
-                  return (
-                    <div 
-                      key={item.id} 
-                      className={`flex items-center gap-2 p-2 rounded-md ${
-                        item.isActive ? "bg-primary/20 border border-primary" : "bg-card border border-transparent"
-                      } cursor-pointer`}
-                      onClick={() => token && onSelectToken(token.id)}
-                    >
-                      <div className="w-6 h-6 flex items-center justify-center bg-primary/10 rounded-full font-medium">
-                        {item.roll}
-                      </div>
-                      
-                      {token && (
-                        <img src={token.img} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
-                      )}
-                      
-                      <div className="flex-1 truncate">{item.name}</div>
-                      
-                      {item.isActive && (
-                        <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                          Текущий ход
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+          {combatant.conditions.length > 0 && (
+            <div className="mt-2">
+              <div className="text-xs text-muted-foreground mb-1">Состояния:</div>
+              <div className="flex flex-wrap gap-1">
+                {combatant.conditions.map((condition, i) => (
+                  <Badge key={i} variant="outline">
+                    {condition.name}
+                    {condition.duration && ` (${condition.duration})`}
+                  </Badge>
+                ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                {tokens.length === 0 
-                  ? "Сначала добавьте участников" 
-                  : "Нажмите 'Начать бой' для броска инициативы"}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+
+  return (
+    <Card className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col p-0">
+      <div className="p-4 border-b">
+        <h3 className="text-lg font-semibold">Участники боя</h3>
+      </div>
+      
+      <div className="p-4 border-b">
+        <div className="flex space-x-2">
+          <Button 
+            onClick={isCombatActive ? endCombat : startCombat} 
+            variant={isCombatActive ? "destructive" : "default"}
+            className="flex-1"
+          >
+            {isCombatActive ? "Завершить бой" : "Начать бой"}
+          </Button>
+          
+          {isCombatActive && (
+            <Button onClick={nextTurn} variant="outline">
+              Следующий ход
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4">
+        {renderCombatants()}
+      </div>
+      
+      <div className="p-4 border-t">
+        <h4 className="text-sm font-medium mb-2">Добавить монстра</h4>
+        <div className="space-y-3">
+          <div>
+            <Input
+              placeholder="Имя нового монстра..."
+              value={newMonsterName}
+              onChange={(e) => setNewMonsterName(e.target.value)}
+              className="mb-2"
+            />
+            
+            <div className="flex items-center space-x-2">
+              <Input
+                type="number"
+                min="1"
+                max="20"
+                value={monsterQuantity}
+                onChange={(e) => setMonsterQuantity(Number(e.target.value) || 1)}
+                className="w-20"
+              />
+              
+              <Button 
+                variant="default" 
+                className="flex-1"
+                onClick={() => addMonster()}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Добавить
+              </Button>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="max-h-40 overflow-y-auto">
+            {monsters.map(monster => (
+              <div 
+                key={monster.id}
+                className="p-2 hover:bg-muted/50 rounded cursor-pointer flex justify-between items-center"
+                onClick={() => {
+                  setSelectedMonsterId(monster.id === selectedMonsterId ? null : monster.id);
+                  setNewMonsterName(monster.name);
+                }}
+              >
+                <div className="flex items-center">
+                  <Checkbox 
+                    checked={monster.id === selectedMonsterId}
+                    onCheckedChange={() => {
+                      setSelectedMonsterId(monster.id === selectedMonsterId ? null : monster.id);
+                      setNewMonsterName(monster.name);
+                    }}
+                    className="mr-2"
+                  />
+                  <span>{monster.name}</span>
+                </div>
+                <Badge variant="outline">CR {monster.cr}</Badge>
+              </div>
+            ))}
+            
+            {monsters.length === 0 && (
+              <div className="text-center p-4 text-muted-foreground">
+                Нет доступных монстров в базе данных
               </div>
             )}
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="p-2 bg-muted/10 border-t border-border mt-auto">
-        <Button variant="outline" size="sm" className="w-full">
-          <Settings className="w-3 h-3 mr-1" /> Настройки сцены
-        </Button>
+          </div>
+        </div>
       </div>
-
-      {/* Модальное окно для выбора изображения */}
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Выбор изображения для {newTokenName || "токена"}</DialogTitle>
-          </DialogHeader>
-          
-          <DialogTabs defaultValue="upload" className="w-full">
-            <DialogTabsList className="grid grid-cols-2 w-full">
-              <DialogTabsTrigger value="upload">Загрузить</DialogTabsTrigger>
-              <DialogTabsTrigger value="url">По ссылке</DialogTabsTrigger>
-            </DialogTabsList>
-            
-            <DialogTabsContent value="upload" className="space-y-4 py-4">
-              <div className="flex flex-col items-center gap-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full"
-                >
-                  <Image className="mr-2 h-4 w-4" />
-                  Выбрать файл
-                </Button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  ref={fileInputRef}
-                />
-                
-                {imageUrl && (
-                  <div className="relative w-32 h-32 border rounded">
-                    <img 
-                      src={imageUrl} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                )}
-                
-                <Button 
-                  disabled={!imageUrl || !newTokenName} 
-                  onClick={() => createToken(imageUrl)}
-                  className="w-full"
-                >
-                  Создать
-                </Button>
-              </div>
-            </DialogTabsContent>
-            
-            <DialogTabsContent value="url" className="space-y-4 py-4">
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Имя
-                  </label>
-                  <Input
-                    id="name"
-                    value={newTokenName}
-                    onChange={(e) => setNewTokenName(e.target.value)}
-                    placeholder="Имя существа"
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <label htmlFor="imageUrl" className="text-sm font-medium">
-                    URL изображения
-                  </label>
-                  <Input
-                    id="imageUrl"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-                
-                {imageUrl && (
-                  <div className="relative w-32 h-32 mx-auto border rounded">
-                    <img 
-                      src={imageUrl} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://placehold.co/100x100?text=Ошибка";
-                      }}
-                    />
-                  </div>
-                )}
-                
-                <Button 
-                  disabled={!imageUrl || !newTokenName} 
-                  onClick={() => createToken(imageUrl)}
-                  className="w-full"
-                >
-                  <Link className="mr-2 h-4 w-4" />
-                  Создать
-                </Button>
-              </div>
-            </DialogTabsContent>
-          </DialogTabs>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </Card>
   );
 };
-
-export default LeftPanel;
