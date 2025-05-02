@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
@@ -198,7 +199,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   // Центрирование камеры на кубике
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 0, 5); // Изменено с (0, 2, 5) для лучшего центрирования
+    camera.position.set(0, 0, 5); // Задаем оптимальную позицию камеры
     camera.lookAt(0, 0, 0);
   }, [camera]);
   
@@ -215,7 +216,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
 
   return (
     <group>
-      <mesh ref={meshRef} position={initialPositionRef.current} castShadow receiveShadow>
+      <mesh ref={meshRef} position={[0, 0, 0]} castShadow receiveShadow>
         <primitive object={getDiceGeometry(type)} />
         <primitive object={diceMaterial} attach="material" />
       </mesh>

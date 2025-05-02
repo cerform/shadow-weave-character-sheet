@@ -35,6 +35,7 @@ interface DicePanelProps {
   selectedTokenId?: number | null;
   tokens?: any[];
   setSelectedTokenId?: (id: number | null) => void;
+  compactMode?: boolean;
 }
 
 // Предопределенные причины бросков
@@ -53,7 +54,8 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   useDmMode = false,
   selectedTokenId = null,
   tokens = [],
-  setSelectedTokenId = () => {}
+  setSelectedTokenId = () => {},
+  compactMode = false
 }) => {
   const [diceCount] = useState(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
@@ -202,6 +204,9 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     }
   };
   
+  // Вычисляем высоту для 3D кубика в зависимости от режима
+  const diceContainerHeight = compactMode ? '200px' : '220px';
+  
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <Tabs defaultValue="dice" className="w-full">
@@ -239,7 +244,10 @@ export const DicePanel: React.FC<DicePanelProps> = ({
           </div>
           
           {/* 3D кубик в центре */}
-          <div className="h-[220px] mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center">
+          <div 
+            className="mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
+            style={{ height: diceContainerHeight }}
+          >
             <DiceRoller3D 
               initialDice={diceType}
               hideControls={true}

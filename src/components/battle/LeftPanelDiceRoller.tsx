@@ -42,6 +42,7 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({
               tokens={tokens} 
               selectedTokenId={selectedTokenId}
               setSelectedTokenId={setSelectedTokenId}
+              compactMode={true}
             />
           </div>
         </Card>
