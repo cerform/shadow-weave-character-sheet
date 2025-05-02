@@ -11,7 +11,7 @@ import { Paintbrush } from "lucide-react";
 import { useUserTheme } from '@/contexts/UserThemeContext';
 
 export const ThemeSelector = () => {
-  const { setUserTheme } = useUserTheme();
+  const { setUserTheme, activeTheme } = useUserTheme();
   
   const themes = [
     { name: "amethyst", label: "Аметист" },
@@ -36,8 +36,22 @@ export const ThemeSelector = () => {
           <DropdownMenuItem
             key={theme.name}
             onClick={() => setUserTheme(theme.name)}
+            className={activeTheme === theme.name ? "bg-primary/20" : ""}
           >
-            {theme.label}
+            <div className="flex items-center gap-2">
+              <div 
+                className="h-3 w-3 rounded-full" 
+                style={{
+                  backgroundColor: theme.name === 'amethyst' ? '#9b87f5' : 
+                                  theme.name === 'emerald' ? '#10B981' : 
+                                  theme.name === 'ruby' ? '#EA384D' : 
+                                  theme.name === 'sapphire' ? '#33C3F0' : 
+                                  theme.name === 'topaz' ? '#FCD34D' : 
+                                  theme.name === 'obsidian' ? '#222222' : '#8B5A2B'
+                }}
+              />
+              {theme.label} {activeTheme === theme.name && '✓'}
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

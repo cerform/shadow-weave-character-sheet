@@ -1,41 +1,59 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
-import { useTheme } from '@/hooks/use-theme';
 import { Theme } from './ThemeContext';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
+  activeTheme: string;
 }
 
 const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
 
 export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, updateUserTheme } = useSessionStore();
-  const { setTheme } = useTheme();
+  const [activeTheme, setActiveTheme] = useState('default');
   
-  // При изменении текущего пользователя, применяем его тему
   useEffect(() => {
-    if (currentUser?.themePreference) {
-      // Преобразуем строковую тему в тип Theme
-      setTheme(currentUser.themePreference as Theme);
+    // При монтировании проверяем сохраненную тему в localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setActiveTheme(savedTheme);
+      // Применяем тему к документу
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.body.classList.add(`theme-${savedTheme}`);
     }
-  }, [currentUser?.id, currentUser?.themePreference, setTheme]);
+    
+    // Если есть пользовательская тема, применяем ее
+    if (currentUser?.themePreference) {
+      setActiveTheme(currentUser.themePreference);
+      // Применяем тему к документу
+      document.documentElement.setAttribute('data-theme', currentUser.themePreference);
+      document.body.classList.add(`theme-${currentUser.themePreference}`);
+    }
+  }, [currentUser?.id, currentUser?.themePreference]);
   
   // Функция для изменения темы пользователя
   const setUserTheme = (theme: string) => {
+    // Удаляем старые классы тем
+    document.body.classList.remove(`theme-${activeTheme}`);
+    
+    // Применяем новую тему
+    document.body.classList.add(`theme-${theme}`);
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Сохраняем новую тему
+    setActiveTheme(theme);
+    localStorage.setItem('theme', theme);
+    
+    // Если пользователь авторизован, сохраняем также в его профиле
     if (currentUser) {
       updateUserTheme(currentUser.id, theme);
-      // Преобразуем строковую тему в тип Theme
-      setTheme(theme as Theme);
-    } else {
-      // Если пользователь не в системе, просто меняем тему
-      setTheme(theme as Theme);
     }
   };
   
   return (
-    <UserThemeContext.Provider value={{ setUserTheme }}>
+    <UserThemeContext.Provider value={{ setUserTheme, activeTheme }}>
       {children}
     </UserThemeContext.Provider>
   );

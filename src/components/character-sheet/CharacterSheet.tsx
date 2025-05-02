@@ -1,4 +1,3 @@
-
 import React, { useState, useContext, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { ResourcePanel } from './ResourcePanel';
 import { CharacterTabs } from './CharacterTabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeSelector } from './ThemeSelector';
-import { Save, Printer, Book, User2, AlertTriangle, Sword, MapPin, Shield, Map, Grid3X3, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import { Save, Printer, Book, User2, AlertTriangle, Sword, MapPin, Shield, Map, Grid3X3, ZoomIn, ZoomOut, Move, Users } from 'lucide-react';
 import { SpellPanel } from './SpellPanel';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +16,17 @@ import { Progress } from "@/components/ui/progress";
 import { useSocket } from '@/contexts/SocketContext';
 import { useSession } from '@/contexts/SessionContext';
 import { useSessionStore } from '@/stores/sessionStore';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 
 interface CharacterSheetProps {
   character?: any;
@@ -27,8 +37,15 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
   const { character: contextCharacter, updateCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
   const { isConnected, sessionData, sendChatMessage, sendRoll } = useSocket();
-  const { currentSession, sessions } = useSession();
+  const { currentSession } = useSession();
   const sessionStore = useSessionStore();
+  const navigate = useNavigate();
+  
+  // Диалог подключения к сессии
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [sessionCode, setSessionCode] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
   
   // Используем персонажа из пропсов, если он передан, иначе из контекста
   const character = propCharacter || contextCharacter;
@@ -51,6 +68,54 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
   const [battleInProgress, setBattleInProgress] = useState(false);
   const [currentTurn, setCurrentTurn] = useState(0);
   const [initiative, setInitiative] = useState<{id: number, name: string, initiative: number}[]>([]);
+  
+  // Функция для обработки подключения к сессии по коду
+  const handleJoinSession = () => {
+    if (!sessionCode.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Введите код сессии",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!playerName.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Введите ваше имя",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsJoining(true);
+    
+    // Присоединение к сессии через sessionStore
+    const joined = sessionStore.joinSession(sessionCode, playerName, character?.id);
+    
+    if (joined) {
+      toast({
+        title: "Успешно",
+        description: `Вы присоединились к сессии`
+      });
+      
+      // Сохраняем выбранного персонажа как последнего выбранного
+      if (character?.id) {
+        localStorage.setItem('last-selected-character', character.id);
+      }
+      
+      // Переходим на страницу игровой сессии
+      navigate('/player-session');
+    } else {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось присоединиться к сессии. Проверьте код сессии.",
+        variant: "destructive"
+      });
+      setIsJoining(false);
+    }
+  };
   
   // Функции для управления сеткой и масштабированием
   const handleZoomIn = () => {
@@ -210,6 +275,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
     }
     
     localStorage.setItem('dnd-characters', JSON.stringify(savedCharacters));
+    localStorage.setItem('last-selected-character', character.id);
     
     // Обновляем информацию в сессии, если подключены
     if (isConnected && sessionData) {
@@ -287,7 +353,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Персонаж не выбран</h3>
           <p className="text-muted-foreground mb-4">Создайте нового персонажа или выберите существующего</p>
-          <Button>Создать персонажа</Button>
+          <Button onClick={() => navigate("/character-creation")}>Создать персонажа</Button>
         </div>
       </div>
     );
@@ -299,6 +365,10 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
         <header className="mb-4 flex flex-col md:flex-row justify-between items-center bg-card/30 backdrop-blur-sm border-primary/20 rounded-lg p-4">
           <h1 className="text-2xl font-bold text-primary">{character.name} — {character.className}</h1>
           <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <Button onClick={() => setJoinDialogOpen(true)} variant="outline" className="gap-2">
+              <Users className="size-4" />
+              {isConnected ? 'Подключено' : 'Подключиться к сессии'}
+            </Button>
             <Button onClick={handleSaveCharacter} variant="outline" className="gap-2">
               <Save className="size-4" />
               Сохранить
@@ -775,6 +845,44 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
           </div>
         </div>
       </div>
+      
+      {/* Диалог подключения к сессии */}
+      <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Подключение к игровой сессии</DialogTitle>
+            <DialogDescription>
+              Введите код сессии, который вам предоставил Мастер Подземелий.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sessionCode">Код сессии</Label>
+              <Input 
+                id="sessionCode" 
+                placeholder="Например: AB12CD"
+                value={sessionCode}
+                onChange={(e) => setSessionCode(e.target.value.toUpperCase())} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="playerName">Ваше имя</Label>
+              <Input 
+                id="playerName" 
+                placeholder="Как вас будут видеть другие игроки"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)} 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleJoinSession} disabled={isJoining}>
+              {isJoining ? 'Подключение...' : 'Подключиться'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
