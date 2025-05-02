@@ -1,3 +1,4 @@
+
 // В LeftPanel.tsx нужно исправить ошибку с типом initiative, чтобы оно всегда было числом
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
@@ -127,7 +128,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
         initiative: 10,
         conditions: [],
         resources: {},
-        visible: true
+        visible: true,
+        size: 1 // Добавляем размер токена
       });
     }
     
