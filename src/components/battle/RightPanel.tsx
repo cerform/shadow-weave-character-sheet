@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
@@ -60,7 +61,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   isDM = true // По умолчанию true
 }) => {
   const [tokenName, setTokenName] = useState('');
-  const [tokenType, setTokenType] = useState('monster');
+  const [tokenType, setTokenType] = useState<"player" | "monster" | "npc" | "boss">("monster");
   const [gridRowsInput, setGridRowsInput] = useState(gridSize.rows);
   const [gridColsInput, setGridColsInput] = useState(gridSize.cols);
   const { theme } = useTheme();
@@ -75,12 +76,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
         x: Math.floor(Math.random() * 500),
         y: Math.floor(Math.random() * 500),
         img: tokenType === 'player' ? '/assets/tokens/player.png' : '/assets/tokens/monster.png',
-        width: 50,
-        height: 50,
-        initiative: 0,
-        hp: { current: 20, max: 20 },
+        hp: 20,
+        maxHp: 20,
         ac: 10,
-        conditions: []
+        initiative: 0,
+        conditions: [],
+        resources: {},
+        visible: true,
+        size: 1
       };
       
       onAddToken(newToken);

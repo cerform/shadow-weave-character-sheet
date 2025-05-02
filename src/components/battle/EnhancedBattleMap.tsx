@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -11,7 +12,7 @@ interface EnhancedBattleMapProps {
   tokens: Token[];
   setTokens: (token: Token) => void; // Исправленный тип для setTokens
   background: string | null;
-  setBackground: React.Dispatch<React.SetStateAction<string | null>>;
+  setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
   onSelectToken: (id: number | null) => void;
   selectedTokenId: number | null;

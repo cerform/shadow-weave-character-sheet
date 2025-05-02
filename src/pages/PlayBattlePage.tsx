@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
@@ -497,18 +496,26 @@ const PlayBattlePage = () => {
         <ScrollArea className="h-full pr-2">
           {selectedTokenId !== null ? (
             <RightPanel
-              selectedTokenId={selectedTokenId}
               tokens={tokens}
-              updateToken={updateToken}
+              selectedTokenId={selectedTokenId}
+              onSelectToken={selectToken}
+              onAddToken={addToken}
+              onRemoveToken={removeToken}
+              onStartBattle={startBattle}
+              onEndBattle={pauseBattle}
+              onRollInitiative={nextTurn}
+              initiative={initiative}
+              battleActive={battleState.isActive}
               fogOfWar={mapSettings.fogOfWar}
-              setFogOfWar={setFogOfWar}
-              revealRadius={mapSettings.revealRadius}
-              setRevealRadius={setRevealRadius}
+              onToggleFogOfWar={() => setFogOfWar(!mapSettings.fogOfWar)}
+              onRevealAllFog={() => {}} // Добавим пустую функцию для примера
+              onResetFog={resetFogOfWar}
               gridVisible={mapSettings.gridVisible}
-              setGridVisible={setGridVisible}
-              gridOpacity={mapSettings.gridOpacity}
-              setGridOpacity={setGridOpacity}
-              onResetFogOfWar={resetFogOfWar}
+              onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
+              onUpdateGridSettings={setGridSize}
+              gridSize={mapSettings.gridSize}
+              zoom={mapSettings.zoom}
+              onZoomChange={setZoom}
               isDM={isDM}
             />
           ) : (
