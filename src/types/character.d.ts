@@ -1,5 +1,5 @@
-
 export interface CharacterSpell {
+  id?: number;
   name: string;
   level: number;
   school: string;
@@ -9,9 +9,12 @@ export interface CharacterSpell {
   duration: string;
   description: string;
   higherLevels?: string;
-  classes: string[];
-  ritual?: boolean;
   concentration?: boolean;
+  ritual?: boolean;
+  classes?: string[];
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
 }
 
 // Adding the CharacterSheet interface for use in useCharacterCreation and the PDF generator
