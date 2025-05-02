@@ -133,7 +133,18 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
               onHpChange={handleHpChange}
             />
             
-            {/* Заменяем блок с кубиками на информацию о прогрессе персонажа */}
+            {/* Блок "Магия Теней" - переместили сюда из центрального контента */}
+            <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+              <div className="flex flex-col items-center justify-center">
+                <div className="text-3xl font-bold text-primary mb-3">Магия Теней</div>
+                <p className="text-center text-primary/80 text-sm">
+                  Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
+                  В этой области будут происходить интерактивные события во время игры.
+                </p>
+              </div>
+            </Card>
+            
+            {/* Блок с прогрессом персонажа */}
             <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
               <h3 className="text-lg font-semibold mb-2 text-primary">Прогресс</h3>
               
@@ -204,17 +215,7 @@ const CharacterSheet = ({ character: propCharacter }: CharacterSheetProps) => {
               <SpellPanel />
             )}
             
-            {activeTab === 'abilities' && (
-              <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="text-4xl font-bold text-primary mb-4">Магия Теней</div>
-                  <p className="text-center max-w-md text-primary/80">
-                    Визуализация заклинаний, битв и ключевых сцен будет отображаться здесь.
-                    В этой области будут происходить интерактивные события во время игры.
-                  </p>
-                </div>
-              </Card>
-            )}
+            {/* Убрали блок "Магия Теней" отсюда, переместив его в боковую панель */}
             
             {activeTab === 'combat' && (
               <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
