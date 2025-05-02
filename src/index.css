@@ -518,3 +518,20 @@ input::placeholder {
   flex-direction: column;
   gap: 5px;
 }
+
+/* Добавляем новый эффект свечения для выбранных токенов */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px 2px rgba(255, 204, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(255, 204, 0, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 5px 2px rgba(255, 204, 0, 0.5);
+  }
+}
+
+.shadow-glow {
+  animation: glow 2s infinite;
+}

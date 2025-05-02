@@ -3,14 +3,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
 import BattleGrid from './BattleGrid';
+import Token from './Token';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Token, Initiative } from '@/stores/battleStore';
+import { Token as TokenType, Initiative } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
-  tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((newToken: Token) => void);
+  tokens: TokenType[];
+  setTokens: React.Dispatch<React.SetStateAction<TokenType[]>> | ((newToken: TokenType) => void);
   background: string | null;
   setBackground: (url: string | null) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
@@ -84,6 +85,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   }, []);
   
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Начало перемещения карты только если нажата средняя кнопка мыши, правая кнопка мыши,
+    // или левая кнопка мыши с зажатой клавишей пробела или Ctrl
     if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
@@ -119,27 +122,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     }
   };
 
-  const handleWheel = (e: WheelEvent) => {
-    if (e.ctrlKey && isDM) {
-      e.preventDefault();
-      if (mapContainerRef.current && mapContentRef.current) {
-        const container = mapContainerRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - container.left;
-        const mouseY = e.clientY - container.top;
-        
-        setMapPosition(prev => {
-          const dx = mouseX - container.width / 2;
-          const dy = mouseY - container.height / 2;
-          
-          return {
-            x: prev.x - dx * 0.1,
-            y: prev.y - dy * 0.1
-          };
-        });
-      }
-    }
-  };
-
+  // Обработка нажатия клавиш для включения режима перемещения карты
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !spacePressed) {
@@ -166,20 +149,13 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
-    const container = mapContainerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-    }
-    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (container) {
-        container.removeEventListener('wheel', handleWheel);
-      }
     };
-  }, [spacePressed, isDM]);
+  }, [spacePressed]);
 
+  // Отключение контекстного меню для карты
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       if (isDragging || mapContainerRef.current?.contains(e.target as Node)) {
@@ -235,6 +211,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     img.src = background;
   }, [background, zoom]);
 
+  // Центрирование карты
   const centerMap = () => {
     if (!background || !mapContainerRef.current) return;
     
@@ -300,6 +277,18 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return light;
   });
   
+  // Обработчик клика по карте (снятие выделения с токенов)
+  const handleMapClick = (e: React.MouseEvent) => {
+    // Отменяем снятие выделения если перетаскивали карту
+    if (isDragging) return;
+    
+    // Отменяем снятие выделения если клик был не по основной области карты
+    const target = e.target as HTMLElement;
+    if (target.closest('.token')) return;
+    
+    onSelectToken(null);
+  };
+  
   // Вычисляем размер контента карты на основе размера изображения
   const contentStyle = background && imageSize.width > 0 && imageSize.height > 0
     ? {
@@ -334,19 +323,18 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onClick={handleMapClick}
       >
-        <BattleMap
-          tokens={tokens}
-          setTokens={setTokens}
-          background={background}
-          setBackground={setBackground}
-          onUpdateTokenPosition={onUpdateTokenPosition}
-          onSelectToken={onSelectToken}
-          selectedTokenId={selectedTokenId}
-          initiative={initiative}
-          battleActive={battleActive}
-        />
+        {/* Фоновая карта */}
+        {background && (
+          <img 
+            src={background}
+            alt="Battle map"
+            className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
+          />
+        )}
         
+        {/* Сетка */}
         {gridVisible && (
           <div className="battle-grid-container absolute inset-0 pointer-events-none">
             <BattleGrid 
@@ -358,7 +346,23 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
             />
           </div>
         )}
+        
+        {/* Токены */}
+        {tokens.map(token => (
+          <Token 
+            key={token.id}
+            token={token}
+            isSelected={selectedTokenId === token.id}
+            gridSize={gridSize}
+            imageSize={imageSize}
+            zoom={zoom}
+            onSelect={onSelectToken}
+            onUpdatePosition={onUpdateTokenPosition}
+            isDM={isDM}
+          />
+        ))}
           
+        {/* Туман войны */}
         {fogOfWar && (
           <div className="fog-of-war-container absolute inset-0">
             <FogOfWar
