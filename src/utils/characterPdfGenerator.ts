@@ -6,7 +6,7 @@ export const downloadCharacterPDF = (character: CharacterSheet) => {
   const doc = new jsPDF();
   
   // Добавляем шрифт для кириллицы
-  doc.addFont('https://cdn.jsdelivr.net/npm/@fontsource/roboto@5/files/roboto-cyrillic-400-normal.woff', 'Roboto', 'normal');
+  doc.addFont('https://cdn.jsdelivr.net/npm/@fontsource/roboto@5/files/roboto-cyrillic-400-normal.woff', 'Roboto');
   doc.setFont('Roboto');
   
   // Стили

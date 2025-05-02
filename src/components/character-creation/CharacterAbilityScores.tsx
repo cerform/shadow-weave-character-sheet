@@ -12,6 +12,7 @@ interface CharacterAbilityScoresProps {
   nextStep: () => void;
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll";
+  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll") => void;
   diceResults: number[][];
   getModifier: (score: number) => string;
   rollAllAbilities: () => void;
@@ -26,6 +27,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   nextStep,
   prevStep,
   abilitiesMethod,
+  setAbilitiesMethod,
   diceResults,
   getModifier,
   rollAllAbilities,

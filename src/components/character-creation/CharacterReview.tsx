@@ -1,10 +1,10 @@
-
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterContext, Character } from "@/contexts/CharacterContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Check, Download, FileText } from "lucide-react";
+import { CharacterSheet } from "@/types/character";
 import { downloadCharacterPDF } from "@/utils/characterPdfGenerator";
 
 type Props = {
@@ -140,51 +140,35 @@ export default function CharacterReview({ character, prevStep }: Props) {
       return;
     }
     
-    // Преобразуем character в формат Character для PDF
-    const abilities = {
-      STR: character.stats.strength,
-      DEX: character.stats.dexterity,
-      CON: character.stats.constitution,
-      INT: character.stats.intelligence,
-      WIS: character.stats.wisdom,
-      CHA: character.stats.charisma,
-    };
-    
-    const conModifier = Math.floor((character.stats.constitution - 10) / 2);
-    let baseHp = 0;
-    
-    switch(character.class) {
-      case "Варвар": baseHp = 12; break;
-      case "Воин": 
-      case "Паладин":
-      case "Следопыт": baseHp = 10; break;
-      case "Жрец":
-      case "Друид":
-      case "Монах":
-      case "Плут": baseHp = 8; break;
-      case "Волшебник":
-      case "Чародей": baseHp = 6; break;
-      default: baseHp = 8;
-    }
-    
-    const maxHp = baseHp + conModifier;
-    
-    const charForPdf: Character = {
+    // Преобразуем character в формат CharacterSheet для PDF
+    const charForPdf: CharacterSheet = {
       name: character.name,
-      race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
-      className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
+      race: character.race,
+      class: character.class,
+      subclass: character.subclass,
       level: 1,
-      abilities: abilities,
-      spells: character.spells || [],
-      spellSlots: {},
-      maxHp: maxHp,
-      currentHp: maxHp,
-      gender: character.gender,
-      alignment: character.alignment,
       background: character.background,
-      equipment: character.equipment,
-      languages: character.languages,
-      proficiencies: character.proficiencies,
+      alignment: character.alignment,
+      abilities: {
+        strength: character.stats.strength,
+        dexterity: character.stats.dexterity,
+        constitution: character.stats.constitution,
+        intelligence: character.stats.intelligence,
+        wisdom: character.stats.wisdom,
+        charisma: character.stats.charisma
+      },
+      skills: [],
+      languages: character.languages || [],
+      equipment: character.equipment || [],
+      spells: character.spells || [],
+      proficiencies: character.proficiencies || [],
+      features: [],
+      personalityTraits: '',
+      ideals: '',
+      bonds: '',
+      flaws: '',
+      appearance: '',
+      backstory: character.background || ''
     };
     
     // Скачиваем PDF

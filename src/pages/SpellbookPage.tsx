@@ -16,7 +16,7 @@ import SpellCard from '@/components/spell-detail/SpellCard';
 import SpellDetailModal from '@/components/spell-detail/SpellDetailModal';
 
 // Импортируем данные о заклинаниях
-import spells from '@/data/spells';
+import { spells } from '@/data/spells';
 
 const SpellbookPage = () => {
   const navigate = useNavigate();
@@ -133,7 +133,7 @@ const SpellbookPage = () => {
                     <SelectValue placeholder="Выберите класс" />
                   </SelectTrigger>
                   <SelectContent>
-                    {allClasses.map(className => (
+                    {allClasses.map((className) => (
                       <SelectItem key={className} value={className}>
                         {className === 'all' ? 'Все классы' : className}
                       </SelectItem>
@@ -149,7 +149,7 @@ const SpellbookPage = () => {
                     <SelectValue placeholder="Выберите школу" />
                   </SelectTrigger>
                   <SelectContent>
-                    {allSchools.map(school => (
+                    {allSchools.map((school) => (
                       <SelectItem key={school} value={school}>
                         {school === 'all' ? 'Все школы' : school}
                       </SelectItem>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import CharacterRaceSelection from "./CharacterRaceSelection";
 import CharacterClassSelection from "./CharacterClassSelection";
@@ -85,8 +84,8 @@ const CharacterCreationContent: React.FC<Props> = ({
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
-            method={abilitiesMethod}
-            setMethod={setAbilitiesMethod}
+            abilitiesMethod={abilitiesMethod}
+            setAbilitiesMethod={setAbilitiesMethod}
             diceResults={diceResults}
             getModifier={getModifier}
             rollAllAbilities={rollAllAbilities}
