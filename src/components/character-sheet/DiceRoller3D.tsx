@@ -1,8 +1,8 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide } from 'three';
+import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute } from 'three';
 import { OrbitControls, Text } from '@react-three/drei';
+import * as THREE from 'three';
 
 // Кастомная геометрия для d10 (Pentagonal trapezohedron)
 const createD10Geometry = () => {
@@ -50,8 +50,8 @@ const createD10Geometry = () => {
     indices.push(11, i + 6, next + 6);
   }
   
-  const geometry = new BoxGeometry(1, 1, 1);
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   
@@ -233,6 +233,7 @@ export const DiceRoller3D = ({ initialDice = 'd20', hideControls = false, modifi
   
   const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
     setDiceType(type);
+    setForceReroll(prev => !prev); // Reset the dice when changing type
   };
   
   const handleRoll = () => {

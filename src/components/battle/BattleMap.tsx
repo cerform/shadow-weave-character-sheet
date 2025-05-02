@@ -90,7 +90,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
         reader.readAsDataURL(file);
       }
     } else if (e.dataTransfer.getData('text').includes('data:image')) {
-      // Поддержка drag-n-drop изображений из других источников
+      // Подде��жка drag-n-drop изображений из других источников
       setBackground(e.dataTransfer.getData('text'));
     }
   };
@@ -207,7 +207,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     ctx.fillRect(0, 0, mapRect.width, mapRect.height);
     
     // Очищаем области видимости
-    ctx.globalCompositeOperation = "destination-out" as GlobalCompositeOperation;
+    ctx.globalCompositeOperation = "destination-out";
     visibleAreas.forEach(area => {
       const scaledX = area.x * zoom + mapOffset.x;
       const scaledY = area.y * zoom + mapOffset.y;
