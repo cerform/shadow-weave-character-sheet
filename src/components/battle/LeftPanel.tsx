@@ -424,3 +424,4 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     </Card>
   );
 };
+
