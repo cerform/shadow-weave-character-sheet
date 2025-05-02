@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -311,11 +310,6 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           selectedTokenId={selectedTokenId}
           initiative={initiative}
           battleActive={battleActive}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
         />
         
         {/* Сетка только внутри карты боя */}

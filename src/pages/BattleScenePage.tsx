@@ -493,11 +493,6 @@ const BattleScenePage = () => {
             selectedTokenId={selectedTokenId}
             initiative={initiative}
             battleActive={battleActive}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
           />
         </div>
 
@@ -605,7 +600,7 @@ const BattleScenePage = () => {
                   <span className="font-medium text-green-500">Игрок 1:</span> Спасибо, готов начать!
                 </div>
                 <div className="mb-1">
-                  <span className="font-medium">DM:</span> Бросаем инициативу...
+                  <span className="font-medium">DM:</span> Бросаем и��ициативу...
                 </div>
               </div>
             </div>
