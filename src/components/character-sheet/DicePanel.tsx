@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,32 +161,31 @@ export const DicePanel = () => {
             />
           </div>
 
-          {(lastRollResult !== null || isRolling) && (
-            <div className="mb-4 p-4 bg-black/80 rounded-lg border text-center"
-                 style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType) }}>
-              <div className="text-sm text-white/70 mb-1">Результат</div>
-              {isRolling ? (
-                <div className="text-2xl font-bold animate-pulse">Бросаем...</div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-3xl font-bold">{lastRollResult}</span>
-                    {modifier !== 0 && (
-                      <>
-                        <span className="text-xl text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
-                        <span className="text-3xl font-bold" style={{ color: getDiceColor(diceType) }}>
-                          = {lastRollResult + modifier}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {reason && (
-                    <div className="text-sm text-white/70 mt-1">{reason}</div>
+          {/* Результат броска - теперь только один блок */}
+          <div className="mb-4 p-4 bg-black/80 rounded-lg border text-center"
+               style={{ borderColor: isRolling ? '#888888' : getDiceColor(diceType) }}>
+            <div className="text-sm text-white/70 mb-1">Результат</div>
+            {isRolling ? (
+              <div className="text-2xl font-bold animate-pulse">Бросаем...</div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl font-bold">{lastRollResult}</span>
+                  {modifier !== 0 && (
+                    <>
+                      <span className="text-xl text-white/70">{modifier > 0 ? '+' : ''}{modifier}</span>
+                      <span className="text-3xl font-bold" style={{ color: getDiceColor(diceType) }}>
+                        = {lastRollResult !== null ? lastRollResult + modifier : ''}
+                      </span>
+                    </>
                   )}
                 </div>
-              )}
-            </div>
-          )}
+                {reason && (
+                  <div className="text-sm text-white/70 mt-1">{reason}</div>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="mb-3">
             <label className="text-sm font-medium text-white mb-1 block">Имя игрока:</label>
