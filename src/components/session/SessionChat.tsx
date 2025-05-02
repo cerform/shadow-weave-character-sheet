@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import { socket, ChatMessage } from "@/services/socket";
+import { socket, type ChatMessage } from "@/services/socket";
 
 interface SessionChatProps {
   roomCode: string;
@@ -36,7 +37,7 @@ const SessionChat: React.FC<SessionChatProps> = ({ roomCode }) => {
       <div className="h-48 overflow-y-auto bg-gray-100 p-2 rounded mb-2">
         {messages.map((msg, idx) => (
           <div key={idx}>
-            <strong>{msg.nickname}:</strong> {msg.message}
+            <strong>{msg.username || msg.userId}:</strong> {msg.message}
           </div>
         ))}
       </div>

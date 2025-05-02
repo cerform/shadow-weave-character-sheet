@@ -2,22 +2,35 @@
 import { io, Socket } from 'socket.io-client';
 import { ChatMessage, SessionData, Token, InitiativeOrder } from '@/types/socket';
 
+// Экспортируем типы для использования в компонентах
+export type { ChatMessage, SessionData, Token, InitiativeOrder };
+export interface DiceResult {
+  nickname: string;
+  diceType: string;
+  result: number;
+}
+
 // Define the server URL - default to localhost in development
 const SERVER_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-server.com'
   : 'http://localhost:3001';
 
+// Создаем экземпляр сокета
+export const socket = io(SERVER_URL, {
+  autoConnect: false
+});
+
 class SocketIOService {
-  private socket: Socket | null = null;
+  private socketInstance: Socket | null = null;
   private listeners: { [key: string]: Function[] } = {};
 
   // Initialize the socket connection
   connect(sessionCode: string, playerName: string, characterId?: string) {
-    if (this.socket) {
+    if (this.socketInstance) {
       this.disconnect();
     }
 
-    this.socket = io(SERVER_URL, {
+    this.socketInstance = io(SERVER_URL, {
       query: {
         sessionCode,
         playerName,
@@ -26,68 +39,68 @@ class SocketIOService {
     });
 
     this.setupListeners();
-    return this.socket;
+    return this.socketInstance;
   }
 
   // Disconnect the socket
   disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+    if (this.socketInstance) {
+      this.socketInstance.disconnect();
+      this.socketInstance = null;
       this.listeners = {};
     }
   }
 
   // Setup default listeners
   private setupListeners() {
-    if (!this.socket) return;
+    if (!this.socketInstance) return;
 
-    this.socket.on('connect', () => {
+    this.socketInstance.on('connect', () => {
       this.emit('connection_established');
     });
 
-    this.socket.on('disconnect', () => {
+    this.socketInstance.on('disconnect', () => {
       this.emit('connection_lost');
     });
 
-    this.socket.on('error', (error) => {
+    this.socketInstance.on('error', (error) => {
       this.emit('socket_error', error);
     });
 
     // Session specific events
-    this.socket.on('session_update', (data: SessionData) => {
+    this.socketInstance.on('session_update', (data: SessionData) => {
       this.emit('session_update', data);
     });
 
-    this.socket.on('chat_message', (message: ChatMessage) => {
+    this.socketInstance.on('chat_message', (message: ChatMessage) => {
       this.emit('chat_message', message);
     });
 
-    this.socket.on('token_update', (token: Token) => {
+    this.socketInstance.on('token_update', (token: Token) => {
       this.emit('token_update', token);
     });
 
-    this.socket.on('initiative_update', (initiative: InitiativeOrder[]) => {
+    this.socketInstance.on('initiative_update', (initiative: InitiativeOrder[]) => {
       this.emit('initiative_update', initiative);
     });
   }
 
   // Send chat message
   sendChatMessage(message: string) {
-    if (!this.socket) return;
-    this.socket.emit('chat_message', { message });
+    if (!this.socketInstance) return;
+    this.socketInstance.emit('chat_message', { message });
   }
 
   // Send dice roll
   sendRoll(formula: string, reason?: string) {
-    if (!this.socket) return;
-    this.socket.emit('roll_dice', { formula, reason });
+    if (!this.socketInstance) return;
+    this.socketInstance.emit('roll_dice', { formula, reason });
   }
 
   // Update token position or attributes
   updateToken(token: Partial<Token> & { id: string }) {
-    if (!this.socket) return;
-    this.socket.emit('update_token', token);
+    if (!this.socketInstance) return;
+    this.socketInstance.emit('update_token', token);
   }
 
   // Add listener for events
@@ -113,12 +126,12 @@ class SocketIOService {
 
   // Check if connected
   isConnected() {
-    return this.socket?.connected || false;
+    return this.socketInstance?.connected || false;
   }
 
   // Get socket id
   getSocketId() {
-    return this.socket?.id;
+    return this.socketInstance?.id;
   }
 }
 
