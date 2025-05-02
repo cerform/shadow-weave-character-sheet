@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,13 +74,18 @@ export const DicePanel: React.FC<DicePanelProps> = ({
   };
   
   useEffect(() => {
+    // Используем правильные методы из объекта socket
     if (socket) {
-      socket.on('receive-roll', (data: any) => {
+      const handleRoll = (data: any) => {
         setRollHistory((prev) => [...prev, data]);
-      });
+      };
+      
+      // Подписываемся на события через контекст
+      socket.on && socket.on('receive-roll', handleRoll);
       
       return () => {
-        socket.off('receive-roll');
+        // Отписываемся при размонтировании
+        socket.off && socket.off('receive-roll', handleRoll);
       };
     }
   }, [socket]);
@@ -105,8 +111,10 @@ export const DicePanel: React.FC<DicePanelProps> = ({
     
     setRollHistory((prev) => [...prev, rollData]);
     
-    if (socket) {
-      socket.emit('roll-dice', rollData);
+    if (socket && socket.sendRoll) {
+      // Используем правильный метод отправки через контекст
+      const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
+      socket.sendRoll(formula, reason);
     }
     
     toast({
