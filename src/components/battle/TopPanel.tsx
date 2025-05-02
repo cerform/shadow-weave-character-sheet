@@ -108,11 +108,13 @@ const TopPanel: React.FC<TopPanelProps> = ({
             )}
           </>
         )}
+      </div>
 
+      <div className="flex items-center gap-2">
         {/* Новая группа кнопок управления картой */}
-        <div className="flex items-center gap-1 border-l border-muted pl-2 ml-2">
+        <div className="flex items-center gap-1 border-l border-muted pl-2 mr-2">
           {/* Сетка */}
-          {onToggleGrid && (
+          {isDM && onToggleGrid && (
             <Button 
               variant={gridVisible ? "default" : "outline"} 
               size="icon" 
@@ -138,7 +140,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           )}
           
           {/* Зум */}
-          {onZoomIn && onZoomOut && (
+          {isDM && onZoomIn && onZoomOut && (
             <>
               <Button 
                 variant="outline" 
@@ -179,10 +181,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </Button>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center">
-        <div className="mr-4 font-semibold">
+        
+        <div className="font-semibold">
           {battleState.round > 0 && (
             <span>Раунд: {battleState.round}</span>
           )}
