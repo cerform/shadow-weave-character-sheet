@@ -13,6 +13,8 @@ import {
   Clock, 
   BookOpen
 } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface BottomPanelProps {
   showWebcams: boolean;

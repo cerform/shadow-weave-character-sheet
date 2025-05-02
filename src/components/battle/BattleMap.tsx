@@ -191,7 +191,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     }
   }, [tokens, fogOfWar, visibleAreas]);
   
-  // ��трисовка тумана войны на холсте
+  // ��трисовк�� тумана войны на холсте
   const redrawFogOfWar = () => {
     if (!fogCanvasRef.current || !mapRef.current) return;
     
@@ -207,8 +207,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     ctx.fillRect(0, 0, mapRect.width, mapRect.height);
     
     // Очищаем области видимости
-    // @ts-ignore - игнорируем типизацию для destination-out
-    ctx.globalCompositeOperation = "destination-out";
+    ctx.globalCompositeOperation = "destination-out" as GlobalCompositeOperation;
     visibleAreas.forEach(area => {
       const scaledX = area.x * zoom + mapOffset.x;
       const scaledY = area.y * zoom + mapOffset.y;

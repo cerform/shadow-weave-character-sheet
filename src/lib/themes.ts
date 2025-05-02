@@ -9,7 +9,8 @@ export const themes = {
     textColor: '#E8DDCB', // Warm light color for text
     contrastColor: '#000000',
     mutedTextColor: '#A89B8C',
-    tabInactiveText: '#D1C7B7' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#D1C7B7', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   },
   warlock: {
     primary: 'from-purple-700 to-purple-900',
@@ -20,7 +21,8 @@ export const themes = {
     textColor: '#E9D8FD',
     contrastColor: '#000000',
     mutedTextColor: '#C9B6ED',
-    tabInactiveText: '#DBC8FF' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#DBC8FF', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   },
   wizard: {
     primary: 'from-blue-500 to-blue-700',
@@ -31,7 +33,8 @@ export const themes = {
     textColor: '#DBEAFE',
     contrastColor: '#000000',
     mutedTextColor: '#B4CDEC',
-    tabInactiveText: '#C5DEFF' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#C5DEFF', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   },
   druid: {
     primary: 'from-green-600 to-green-800',
@@ -42,7 +45,8 @@ export const themes = {
     textColor: '#D1FAE5',
     contrastColor: '#000000',
     mutedTextColor: '#A3DBC7',
-    tabInactiveText: '#B8ECD6' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#B8ECD6', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   },
   warrior: {
     primary: 'from-red-600 to-red-800',
@@ -53,7 +57,8 @@ export const themes = {
     textColor: '#FEE2E2',
     contrastColor: '#000000',
     mutedTextColor: '#F1BDBD',
-    tabInactiveText: '#FFC7C7' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#FFC7C7', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   },
   bard: {
     primary: 'from-amber-500 to-amber-700',
@@ -64,6 +69,7 @@ export const themes = {
     textColor: '#FEF3C7',
     contrastColor: '#000000',
     mutedTextColor: '#EDDEAF',
-    tabInactiveText: '#FFF0B3' // Улучшенный контраст для неактивных вкладок
+    tabInactiveText: '#FFF0B3', // Улучшенный контраст для неактивных вкладок
+    cardBackground: 'rgba(0, 0, 0, 0.3)'
   }
 };
