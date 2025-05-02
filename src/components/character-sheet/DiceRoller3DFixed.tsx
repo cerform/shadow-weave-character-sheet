@@ -97,6 +97,10 @@ const DiceNumbers = ({ type, position, visible }: {
   position: Vector3,
   visible: boolean 
 }) => {
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const textColor = currentTheme.accent || "#ffffff";
+  
   if (!visible) return null;
   
   // Для разных типов кубиков разные конфигурации чисел
@@ -114,7 +118,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             4
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0.5, -0.2, 0.5]} 
@@ -126,7 +130,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             1
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[-0.5, -0.2, 0.5]} 
@@ -138,7 +142,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             2
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0, -0.2, -0.7]} 
@@ -150,14 +154,13 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             3
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
         </group>
       );
     case 'd6':
       return (
         <group position={position}>
-          {/* Цифры на гранях d6 */}
           <Text3D 
             position={[0, 0, 0.51]} 
             size={0.4}
@@ -167,7 +170,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             1
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0.51, 0, 0]} 
@@ -179,7 +182,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             2
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0, 0.51, 0]} 
@@ -191,7 +194,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             3
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0, -0.51, 0]} 
@@ -203,7 +206,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             4
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[-0.51, 0, 0]} 
@@ -215,7 +218,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             5
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0, 0, -0.51]} 
@@ -227,7 +230,99 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             6
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+        </group>
+      );
+    case 'd8':
+      return (
+        <group position={position}>
+          <Text3D 
+            position={[0, 0.7, 0]} 
+            size={0.3}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            8
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+          <Text3D 
+            position={[0.5, 0, 0.5]} 
+            size={0.3}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            rotation={[0, Math.PI/4, 0]}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            2
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+          <Text3D 
+            position={[-0.5, 0, 0.5]} 
+            size={0.3}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            rotation={[0, -Math.PI/4, 0]}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            4
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+          <Text3D 
+            position={[0, 0, -0.7]} 
+            size={0.3}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            rotation={[0, Math.PI, 0]}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            6
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+          <Text3D 
+            position={[0, -0.7, 0]} 
+            size={0.3}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            rotation={[Math.PI, 0, 0]}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            1
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+        </group>
+      );
+    case 'd12':
+      return (
+        <group position={position}>
+          <Text3D 
+            position={[0, 0.6, 0]} 
+            size={0.2}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            12
+            <meshStandardMaterial color={textColor} />
+          </Text3D>
+          <Text3D 
+            position={[0, -0.6, 0]} 
+            size={0.2}
+            height={0.05}
+            curveSegments={4}
+            bevelEnabled={false}
+            rotation={[Math.PI, 0, 0]}
+            font="/fonts/helvetiker_bold.typeface.json"
+          >
+            1
+            <meshStandardMaterial color={textColor} />
           </Text3D>
         </group>
       );
@@ -243,7 +338,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             20
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
           <Text3D 
             position={[0, 0, -1.1]} 
@@ -255,7 +350,7 @@ const DiceNumbers = ({ type, position, visible }: {
             font="/fonts/helvetiker_bold.typeface.json"
           >
             1
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={textColor} />
           </Text3D>
         </group>
       );
@@ -590,6 +685,7 @@ export const DiceRoller3D = ({
           background: 'rgba(0,0,0,0.5)',
           padding: '8px',
           borderRadius: '8px',
+          zIndex: 10,
         }}>
           {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
             <button 
@@ -626,7 +722,8 @@ export const DiceRoller3D = ({
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: 'bold',
-            boxShadow: `0 0 15px ${actualThemeColor}80`
+            boxShadow: `0 0 15px ${actualThemeColor}80`,
+            zIndex: 20,
           }}
         >
           Бросить {diceType}
