@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -319,11 +318,61 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           cursor: isDragging ? 'grabbing' : (spacePressed ? 'grab' : 'default'),
           ...contentStyle
         }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onClick={handleMapClick}
+        onMouseDown={(e) => {
+          // Начало перемещения карты только если нажата средняя кнопка мыши, правая кнопка мыши,
+          // или левая кнопка мыши с зажатой клавишей пробела или Ctrl
+          if (e.button === 1 || e.button === 2 || (e.button === 0 && (spacePressed || e.ctrlKey))) {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX, y: e.clientY });
+            e.preventDefault();
+            
+            if (mapContentRef.current) {
+              mapContentRef.current.classList.add('grabbing');
+            }
+            document.body.classList.add('grabbing');
+          }
+        }}
+        onMouseMove={(e) => {
+          if (!isDragging) return;
+          const dx = e.clientX - dragStart.x;
+          const dy = e.clientY - dragStart.y;
+          setMapPosition(prev => ({
+            x: prev.x + dx,
+            y: prev.y + dy
+          }));
+          setDragStart({ x: e.clientX, y: e.clientY });
+          e.preventDefault();
+        }}
+        onMouseUp={() => {
+          if (isDragging) {
+            setIsDragging(false);
+            
+            if (mapContentRef.current) {
+              mapContentRef.current.classList.remove('grabbing');
+            }
+            document.body.classList.remove('grabbing');
+          }
+        }}
+        onMouseLeave={() => {
+          if (isDragging) {
+            setIsDragging(false);
+            
+            if (mapContentRef.current) {
+              mapContentRef.current.classList.remove('grabbing');
+            }
+            document.body.classList.remove('grabbing');
+          }
+        }}
+        onClick={(e) => {
+          // Отменяем снятие выделения если перетаскивали карту
+          if (isDragging) return;
+          
+          // Отменяем снятие выделения если клик был не по основной области карты
+          const target = e.target as HTMLElement;
+          if (target.closest('.token')) return;
+          
+          onSelectToken(null);
+        }}
       >
         {/* Фоновая карта */}
         {background && (
@@ -334,9 +383,9 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           />
         )}
         
-        {/* Сетка */}
+        {/* Сетка - перемещена поверх фоновой карты */}
         {gridVisible && (
-          <div className="battle-grid-container absolute inset-0 pointer-events-none">
+          <div className="battle-grid-container absolute inset-0 pointer-events-none z-20">
             <BattleGrid 
               gridSize={gridSize}
               visible={true}
@@ -364,13 +413,13 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           
         {/* Туман войны */}
         {fogOfWar && (
-          <div className="fog-of-war-container absolute inset-0">
+          <div className="fog-of-war-container absolute inset-0 z-30">
             <FogOfWar
               gridSize={gridSize}
               revealedCells={revealedCells}
               onRevealCell={onRevealCell}
               active={fogOfWar}
-              lightSources={updatedLightSources}
+              lightSources={lightSources}
               tokenPositions={tokenPositions}
               isDM={isDM}
               isDynamicLighting={isDynamicLighting}

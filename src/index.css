@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -176,11 +177,11 @@
 
 /* Обеспечиваем, что фиксированные элементы верхний z-index и не затрагиваются сеткой */
 .battle-grid-container {
-  z-index: 10;
+  z-index: 20;
 }
 
 .fog-of-war-container {
-  z-index: 20;
+  z-index: 30;
 }
 
 .dice-container, 

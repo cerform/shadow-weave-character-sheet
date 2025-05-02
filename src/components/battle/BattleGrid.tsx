@@ -116,7 +116,7 @@ const BattleGrid: React.FC<BattleGridProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-10 pointer-events-none"
+      className="absolute inset-0 z-20 pointer-events-none"
       width={canvasSize.width}
       height={canvasSize.height}
       style={{
