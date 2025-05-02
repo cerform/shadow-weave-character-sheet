@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/use-theme';
-import { Copy, Users, ArrowLeft, Plus, RefreshCw } from 'lucide-react';
+import { Users, ArrowLeft, Plus, RefreshCw, Copy } from 'lucide-react';
 import { useSessionStore } from '@/stores/sessionStore';
 
 const DMSessionPage = () => {
@@ -29,7 +29,7 @@ const DMSessionPage = () => {
         if (foundSession) {
           setSession(foundSession);
         } else {
-          toast.error('Сессия не найдена');
+          toast('Сессия не найдена');
           navigate('/dm');
         }
       }
@@ -42,7 +42,7 @@ const DMSessionPage = () => {
         setSession(foundSession);
         setUserType('dm');
       } else {
-        toast.error('Сессия не найдена');
+        toast('Сессия не найдена');
         navigate('/dm');
       }
     }
