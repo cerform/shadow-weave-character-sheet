@@ -13,7 +13,7 @@ const SpellbookPage: React.FC = () => {
     <div 
       className="min-h-screen py-4" 
       style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}10, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
         color: currentTheme.textColor
       }}
     >

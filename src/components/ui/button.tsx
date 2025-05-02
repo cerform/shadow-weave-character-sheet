@@ -55,8 +55,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // Добавляем стили для улучшения контрастности в зависимости от темы
     const style = {
-      color: variant === 'default' ? currentTheme.buttonText || '#FFFFFF' : undefined,
-      borderColor: variant === 'outline' ? currentTheme.accent : undefined,
+      ...props.style,
+      color: variant === 'default' ? currentTheme.buttonText || '#FFFFFF' : props.style?.color || currentTheme.buttonText,
+      borderColor: variant === 'outline' ? props.style?.borderColor || currentTheme.accent : props.style?.borderColor,
+      backgroundColor: variant === 'default' && !props.style?.backgroundColor ? currentTheme.accent : props.style?.backgroundColor,
     };
     
     return (

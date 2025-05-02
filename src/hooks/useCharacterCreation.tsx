@@ -60,7 +60,7 @@ export const useCharacterCreation = () => {
     }
     
     // Проверяем подклассы, дающие магию
-    if (magicSubclasses.includes(character.subclass)) {
+    if (magicSubclasses.includes(character.subclass || '')) {
       return true;
     }
     
@@ -110,6 +110,25 @@ export const useCharacterCreation = () => {
     const level = Math.min(20, Math.max(1, character.level || 1));
     return xpByLevel[level - 1];
   };
+  
+  // Обработчик для изменения уровня персонажа
+  const handleLevelChange = (level: number) => {
+    if (level >= 1 && level <= 20) {
+      // Обновляем уровень в состоянии персонажа
+      updateCharacter({ level });
+      
+      // Опционально: здесь можно добавить логику изменения доступных
+      // заклинаний, особенностей класса и подкласса в зависимости от уровня
+      
+      console.log(`Уровень персонажа изменен на ${level}`);
+    } else {
+      toast({
+        title: "Некорректный уровень",
+        description: "Уровень должен быть от 1 до 20",
+        variant: "destructive"
+      });
+    }
+  };
 
   return { 
     character, 
@@ -119,6 +138,7 @@ export const useCharacterCreation = () => {
     getModifier,
     getAvailableSubclassFeatures,
     getClassFeatures,
-    getRequiredXP
+    getRequiredXP,
+    handleLevelChange // Добавляем новый метод
   };
 };

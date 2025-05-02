@@ -31,6 +31,7 @@ type Props = {
       wisdom: number;
       charisma: number;
     };
+    level: number; // Добавляем уровень в пропсы
     background: string;
   };
   prevStep: () => void;
@@ -67,6 +68,9 @@ export default function CharacterReview({ character, prevStep }: Props) {
       }
     }
 
+    // Используем уровень из character, или по умолчанию 1
+    const level = character.level || 1;
+
     // Convert character stats to the abilities format expected by the Character interface
     const abilities = {
       STR: character.stats.strength,
@@ -77,46 +81,90 @@ export default function CharacterReview({ character, prevStep }: Props) {
       CHA: character.stats.charisma,
     };
     
-    // Create spell slots based on class
+    // Create spell slots based on class and level
     const spellSlots: Record<number, { max: number; used: number }> = {};
     
     if (["Волшебник", "Чародей", "Чернокнижник", "Бард", "Жрец", "Друид"].includes(character.class)) {
-      spellSlots[1] = { max: 2, used: 0 };
-      spellSlots[2] = { max: 0, used: 0 };
-      spellSlots[3] = { max: 0, used: 0 };
+      // Создаем слоты заклинаний в зависимости от уровня
+      if (level >= 1) spellSlots[1] = { max: level >= 3 ? 4 : (level === 2 ? 3 : 2), used: 0 };
+      if (level >= 3) spellSlots[2] = { max: level >= 4 ? 3 : 2, used: 0 };
+      if (level >= 5) spellSlots[3] = { max: level >= 6 ? 3 : 2, used: 0 };
+      if (level >= 7) spellSlots[4] = { max: level >= 9 ? 3 : (level === 8 ? 2 : 1), used: 0 };
+      if (level >= 9) spellSlots[5] = { max: level >= 18 ? 3 : (level >= 10 ? 2 : 1), used: 0 };
+      if (level >= 11) spellSlots[6] = { max: level >= 19 ? 2 : 1, used: 0 };
+      if (level >= 13) spellSlots[7] = { max: level >= 20 ? 2 : 1, used: 0 };
+      if (level >= 15) spellSlots[8] = { max: 1, used: 0 };
+      if (level >= 17) spellSlots[9] = { max: 1, used: 0 };
     }
     
     if (["Паладин", "Следопыт"].includes(character.class)) {
-      spellSlots[1] = { max: 1, used: 0 };
+      // Полузаклинатели начинают с 2-го уровня
+      if (level >= 2) spellSlots[1] = { max: level >= 3 ? 3 : 2, used: 0 };
+      if (level >= 5) spellSlots[2] = { max: level >= 7 ? 3 : 2, used: 0 };
+      if (level >= 9) spellSlots[3] = { max: level >= 11 ? 3 : 2, used: 0 };
+      if (level >= 13) spellSlots[4] = { max: level >= 15 ? 3 : 2, used: 0 };
+      if (level >= 17) spellSlots[5] = { max: level >= 19 ? 3 : 2, used: 0 };
     }
 
-    // Calculate HP based on class and Constitution
+    // Calculate HP based on class, Constitution and level
     const conModifier = Math.floor((character.stats.constitution - 10) / 2);
     let baseHp = 0;
     
-    // Base HP by class
+    // Base HP by class (первый уровень - максимальный хит-дайс + модификатор ТЕЛ)
     switch(character.class) {
-      case "Варвар": baseHp = 12; break;
+      case "Варвар": baseHp = 12 + conModifier; break;
       case "Воин": 
       case "Паладин":
-      case "Следопыт": baseHp = 10; break;
+      case "Следопыт": baseHp = 10 + conModifier; break;
       case "Жрец":
       case "Друид":
       case "Монах":
-      case "Плут": baseHp = 8; break;
+      case "Плут": baseHp = 8 + conModifier; break;
       case "Волшебник":
-      case "Чародей": baseHp = 6; break;
-      default: baseHp = 8;
+      case "Чародей": baseHp = 6 + conModifier; break;
+      default: baseHp = 8 + conModifier;
     }
     
-    const maxHp = baseHp + conModifier;
+    // Добавляем HP за каждый уровень выше 1-го
+    let hitDiceValue = 0;
+    switch(character.class) {
+      case "Варвар": hitDiceValue = 12; break;
+      case "Воин":
+      case "Паладин":
+      case "Следопыт": hitDiceValue = 10; break;
+      case "Жрец":
+      case "Друид":
+      case "Монах":
+      case "Плут": hitDiceValue = 8; break;
+      case "Волшебник":
+      case "Чародей": hitDiceValue = 6; break;
+      default: hitDiceValue = 8;
+    }
+    
+    // За каждый уровень после первого добавляем среднее значение кубика + модификатор ТЕЛ
+    for (let i = 1; i < level; i++) {
+      const levelHP = Math.max(1, Math.floor(hitDiceValue / 2) + 1 + conModifier);
+      baseHp += levelHP;
+    }
+    
+    // Минимум 1 HP
+    const maxHp = Math.max(1, baseHp);
+    
+    // Очки чародея для соответствующего класса
+    let sorceryPoints = undefined;
+    if (character.class === "Чародей" && level > 1) {
+      sorceryPoints = {
+        current: level,
+        max: level
+      };
+    }
     
     // Create the character object with the correct format for the Character interface
     const charObj: Partial<Character> = {
       name: character.name,
       race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
-      level: 1,
+      level: level,
       abilities: abilities,
       spells: character.spells || [],
       spellSlots: spellSlots,
@@ -128,6 +176,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       equipment: character.equipment || [],
       languages: character.languages || [],
       proficiencies: character.proficiencies || [],
+      sorceryPoints: sorceryPoints,
       theme: localStorage.getItem('theme') || undefined
     };
 
@@ -166,7 +215,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       subrace: character.subrace,
       class: character.class,
       subclass: character.subclass,
-      level: 1,
+      level: character.level || 1,
       background: character.background,
       alignment: character.alignment,
       abilities: {
@@ -209,7 +258,7 @@ export default function CharacterReview({ character, prevStep }: Props) {
       subrace: character.subrace,
       class: character.class,
       subclass: character.subclass,
-      level: 1,
+      level: character.level || 1,
       background: character.background,
       alignment: character.alignment,
       abilities: {

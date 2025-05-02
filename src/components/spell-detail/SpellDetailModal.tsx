@@ -23,23 +23,27 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClos
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto bg-black/90 border-accent p-0"
+        className="sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto"
         style={{
           backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.9)'}`,
           borderColor: currentTheme.accent,
+          boxShadow: `0 0 15px ${currentTheme.accent}80`
         }}
         onInteractOutside={onClose}
       >
         <DialogHeader className="px-6 pt-6 pb-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold" style={{color: currentTheme.textColor}}>
+            <DialogTitle 
+              className="text-2xl font-bold" 
+              style={{color: currentTheme.textColor}}
+            >
               {spell.name}
             </DialogTitle>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-foreground"
+              style={{color: currentTheme.textColor}}
             >
               <X className="h-5 w-5" />
             </Button>

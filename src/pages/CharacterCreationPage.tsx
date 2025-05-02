@@ -1,10 +1,11 @@
 
 import React, { useState } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { themes } from "@/lib/themes";
 
 // Custom hooks
 import { useCharacterCreation } from "@/hooks/useCharacterCreation";
@@ -25,7 +26,7 @@ const CharacterCreationPage = () => {
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll">("standard");
   
   // Custom hooks
-  const { character, updateCharacter, isMagicClass, getModifier } = useCharacterCreation();
+  const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
   
   // Fix: Update the hook call to match the expected parameters
@@ -34,6 +35,10 @@ const CharacterCreationPage = () => {
     characterClass: character.class,
     character: character
   });
+
+  // Тема для отображения
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   // Навигация на главную
   const goToHomePage = () => {
@@ -47,29 +52,31 @@ const CharacterCreationPage = () => {
 
   // Навигация в руководство игрока
   const goToHandbook = () => {
-    navigate('/library');
+    navigate('/handbook');
   };
   
-  // Сохраняем уровень персонажа при изменении
-  const handleLevelChange = (level: number) => {
-    if (level >= 1 && level <= 20) {
-      console.log("Уровень персонажа изменен на:", level);
-      updateCharacter({ level });
-    }
-  };
-
   // Переход к последнему шагу (обзор персонажа)
   const goToFinalReview = () => {
     setCurrentStep(10);
   };
 
   return (
-    <div className={`p-6 min-h-screen bg-background text-foreground theme-${theme}`}>
+    <div 
+      className="p-6 min-h-screen"
+      style={{ 
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        color: currentTheme.textColor
+      }}
+    >
       <div className="flex justify-between items-center mb-4">
         <Button 
           onClick={goToHomePage} 
           variant="outline" 
           className="flex items-center gap-2"
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
         >
           <ArrowLeft className="h-4 w-4" />
           На главную
@@ -79,13 +86,22 @@ const CharacterCreationPage = () => {
           onClick={goToHandbook} 
           variant="outline" 
           className="flex items-center gap-2"
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
         >
           <BookOpen className="h-4 w-4" />
           Руководство игрока
         </Button>
       </div>
 
-      <h1 className="text-3xl font-bold mb-8 text-center">Создание персонажа</h1>
+      <h1 
+        className="text-3xl font-bold mb-8 text-center"
+        style={{ color: currentTheme.textColor }}
+      >
+        Создание персонажа
+      </h1>
 
       {/* Отображение прогресса по шагам */}
       <CreationStepDisplay 
@@ -96,7 +112,14 @@ const CharacterCreationPage = () => {
       />
 
       {/* Основная область контента */}
-      <div className="max-w-4xl mx-auto bg-card p-6 rounded-lg shadow-lg">
+      <div 
+        className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg"
+        style={{ 
+          backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
+          borderColor: currentTheme.accent,
+          boxShadow: `0 0 10px ${currentTheme.accent}30`
+        }}
+      >
         <CharacterCreationContent 
           currentStep={currentStep}
           character={character}

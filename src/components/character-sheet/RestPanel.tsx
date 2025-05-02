@@ -2,13 +2,18 @@
 import React, { useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { Clock } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 export const RestPanel = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   const handleShortRest = () => {
     if (!character) {
@@ -20,17 +25,16 @@ export const RestPanel = () => {
       return;
     }
 
-    // Определяем максимальные Hit Dice, которые можно восстановить
-    const maxHitDiceRecovery = Math.floor(character.level / 2);
-    
-    // Расчитываем восстановление здоровья
-    // При коротком отдыхе игрок может потратить Hit Dice для восстановления здоровья
-    // Но базовое восстановление равно модификатору телосложения (минимум 1)
+    // Определяем модификатор телосложения
     const conModifier = character.abilities?.CON 
       ? Math.floor((character.abilities.CON - 10) / 2) 
       : 0;
     
-    const hpRecovery = Math.max(1, conModifier + 1);
+    // При коротком отдыхе игрок может потратить Hit Dice для восстановления здоровья
+    // Здесь мы даем фиксированное восстановление для простоты
+    const hpRecovery = Math.max(1, conModifier);
+    
+    // Проверяем, чтобы не превысить максимальное HP
     const newCurrentHp = Math.min(
       character.maxHp || 0, 
       (character.currentHp || 0) + hpRecovery
@@ -84,7 +88,7 @@ export const RestPanel = () => {
       };
     }
     
-    // Обновляем персонажа
+    // Обновляем персонажа БЕЗ изменения темы
     updateCharacter({
       currentHp: fullHp,
       spellSlots: updatedSpellSlots,
@@ -100,18 +104,29 @@ export const RestPanel = () => {
 
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h3 className="text-lg font-semibold mb-4 text-primary">Отдых</h3>
+      <h3 className="text-lg font-semibold mb-4" 
+          style={{ color: currentTheme.textColor }}>
+        Отдых
+      </h3>
       
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium mb-2 text-primary/90">Короткий отдых (1 час)</h4>
-          <p className="text-sm text-muted-foreground mb-2">
+          <h4 className="text-sm font-medium mb-2" 
+              style={{ color: currentTheme.textColor || '#FFFFFF' }}>
+            Короткий отдых (1 час)
+          </h4>
+          <p className="text-sm mb-2"
+             style={{ color: currentTheme.mutedTextColor || '#DDDDDD' }}>
             Восстанавливает часть здоровья и позволяет использовать Hit Dice.
           </p>
           <Button 
             variant="outline" 
             className="w-full"
             onClick={handleShortRest}
+            style={{
+              color: currentTheme.buttonText || '#FFFFFF',
+              borderColor: currentTheme.accent
+            }}
           >
             <Clock className="mr-2 h-4 w-4" />
             Короткий отдых
@@ -119,13 +134,21 @@ export const RestPanel = () => {
         </div>
         
         <div>
-          <h4 className="text-sm font-medium mb-2 text-primary/90">Длинный отдых (8 часов)</h4>
-          <p className="text-sm text-muted-foreground mb-2">
+          <h4 className="text-sm font-medium mb-2"
+              style={{ color: currentTheme.textColor || '#FFFFFF' }}>
+            Длинный отдых (8 часов)
+          </h4>
+          <p className="text-sm mb-2"
+             style={{ color: currentTheme.mutedTextColor || '#DDDDDD' }}>
             Полностью восстанавливает здоровье и ячейки заклинаний.
           </p>
           <Button 
             className="w-full"
             onClick={handleLongRest}
+            style={{
+              color: currentTheme.buttonText || '#FFFFFF',
+              backgroundColor: currentTheme.accent
+            }}
           >
             <Clock className="mr-2 h-4 w-4" />
             Длинный отдых

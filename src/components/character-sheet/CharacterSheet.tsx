@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Character } from '@/contexts/CharacterContext';
+import React, { useState, useContext } from 'react';
+import { Character, CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import { FileText } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import NavigationButtons from "@/components/ui/NavigationButtons";
@@ -19,6 +20,8 @@ import { CharacterTabs } from './CharacterTabs';
 import { ResourcePanel } from './ResourcePanel';
 import { RestPanel } from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
+import { SpellSlotsPopover } from './SpellSlotsPopover';
+import LevelUpPanel from './LevelUpPanel';
 
 interface CharacterSheetProps {
   character: Character | null;
@@ -26,17 +29,18 @@ interface CharacterSheetProps {
 }
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false }) => {
+  const { updateCharacter } = useContext(CharacterContext);
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [showCombatDialog, setShowCombatDialog] = useState(false);
   const [sessionCode, setSessionCode] = useState('');
   const [activeTab, setActiveTab] = useState("abilities");
   const { toast } = useToast();
   const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   const { joinSession } = useSession();
   const navigate = useNavigate();
   
-  const bgColor = theme === "dark" ? "#1E1E1E" : "#FFFFFF";
-
   const handleCharacterSave = () => {
     toast({
       title: "Персонаж сохранен!",
@@ -112,15 +116,67 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
   };
 
   const handleHpChange = (newHp: number) => {
-    // Здесь будет обновление значения HP персонажа
+    if (!character) return;
+    
+    updateCharacter({
+      currentHp: newHp
+    });
+    
     toast({
       title: "Здоровье обновлено",
       description: `Текущее здоровье: ${newHp}`,
     });
   };
+  
+  // Обработчики для слотов заклинаний
+  const handleUseSpellSlot = (level: number) => {
+    if (!character || !character.spellSlots) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (!slotInfo || slotInfo.used >= slotInfo.max) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used + 1
+    };
+    
+    updateCharacter({ spellSlots: updatedSpellSlots });
+    
+    toast({
+      title: "Слот заклинания использован",
+      description: `Использован слот ${level} уровня`,
+    });
+  };
+  
+  const handleRestoreSpellSlot = (level: number) => {
+    if (!character || !character.spellSlots) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (!slotInfo || slotInfo.used <= 0) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used - 1
+    };
+    
+    updateCharacter({ spellSlots: updatedSpellSlots });
+    
+    toast({
+      title: "Слот заклинания восстановлен",
+      description: `Восстановлен слот ${level} уровня`,
+    });
+  };
 
   return (
-    <div className={`min-h-screen bg-[${bgColor}] text-${theme === "dark" ? "white" : "black"}`}>
+    <div 
+      className="min-h-screen py-4"
+      style={{ 
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        color: currentTheme.textColor
+      }}
+    >
       <div className="container mx-auto py-4 px-2">
     
         {/* Добавляем навигационные кнопки вверху страницы */}
@@ -137,6 +193,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           onCharacterSave={handleCharacterSave} 
           onCharacterExport={handleExportToPdf}
           onJoinSession={() => setShowSessionDialog(true)}
+          theme={currentTheme}
         />
         
         {/* Основной интерфейс листа персонажа */}
@@ -144,12 +201,99 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           {/* Левая колонка */}
           <div className="md:col-span-1 space-y-4">
             <StatsPanel character={character} />
+            
             <ResourcePanel 
               currentHp={character?.currentHp || 0}
               maxHp={character?.maxHp || 0}
               onHpChange={handleHpChange}
+              theme={currentTheme}
             />
+            
+            {/* Добавляем панель для управления уровнем */}
+            <LevelUpPanel />
+            
             <RestPanel />
+            
+            {/* Добавляем поповер для управления слотами заклинаний */}
+            {character?.spellSlots && Object.keys(character.spellSlots).length > 0 && (
+              <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+                <h3 className="text-lg font-semibold mb-4" style={{ color: currentTheme.textColor }}>
+                  Магия
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <SpellSlotsPopover 
+                    spellSlots={character.spellSlots}
+                    onUseSlot={handleUseSpellSlot}
+                    onRestoreSlot={handleRestoreSpellSlot}
+                  />
+                  
+                  {/* Если персонаж - чародей, показываем очки чародейства */}
+                  {character.className?.toLowerCase().includes('чародей') && character.sorceryPoints && (
+                    <Card className="p-3 w-full mt-2 bg-card/50">
+                      <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.textColor }}>
+                        Очки чародейства
+                      </h4>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-lg font-bold" style={{ color: currentTheme.textColor }}>
+                            {character.sorceryPoints.current}
+                          </span>
+                          <span style={{ color: currentTheme.mutedTextColor }}>
+                            /{character.sorceryPoints.max}
+                          </span>
+                        </div>
+                        <div className="space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (character.sorceryPoints && character.sorceryPoints.current < character.sorceryPoints.max) {
+                                updateCharacter({
+                                  sorceryPoints: {
+                                    ...character.sorceryPoints,
+                                    current: character.sorceryPoints.current + 1
+                                  }
+                                });
+                              }
+                            }}
+                            disabled={character.sorceryPoints.current >= character.sorceryPoints.max}
+                            style={{
+                              borderColor: currentTheme.accent,
+                              color: character.sorceryPoints.current >= character.sorceryPoints.max ? 
+                                `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                            }}
+                          >
+                            +
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (character.sorceryPoints && character.sorceryPoints.current > 0) {
+                                updateCharacter({
+                                  sorceryPoints: {
+                                    ...character.sorceryPoints,
+                                    current: character.sorceryPoints.current - 1
+                                  }
+                                });
+                              }
+                            }}
+                            disabled={character.sorceryPoints.current <= 0}
+                            style={{
+                              borderColor: currentTheme.accent,
+                              color: character.sorceryPoints.current <= 0 ? 
+                                `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                            }}
+                          >
+                            -
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              </Card>
+            )}
           </div>
           
           {/* Центральная и правая колонки (на мобильном будут снизу) */}
@@ -175,27 +319,46 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         
         {/* Диалог подключения к сессии */}
         <Dialog open={showSessionDialog} onOpenChange={setShowSessionDialog}>
-          <DialogContent className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20">
+          <DialogContent 
+            className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20"
+            style={{
+              backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
+              borderColor: currentTheme.accent
+            }}
+          >
             <DialogHeader>
-              <DialogTitle>Присоединиться к сессии</DialogTitle>
-              <DialogDescription>
+              <DialogTitle style={{ color: currentTheme.textColor }}>
+                Присоединиться к сессии
+              </DialogTitle>
+              <DialogDescription style={{ color: currentTheme.mutedTextColor }}>
                 Введите код сессии, чтобы присоединиться к игре.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="sessionCode" className="text-right">
+                <Label htmlFor="sessionCode" className="text-right" style={{ color: currentTheme.textColor }}>
                   Код сессии
                 </Label>
                 <Input 
                   id="sessionCode" 
                   value={sessionCode}
                   onChange={(e) => setSessionCode(e.target.value)}
-                  className="col-span-3" 
+                  className="col-span-3"
+                  style={{
+                    backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.5)'}`,
+                    color: currentTheme.textColor,
+                    borderColor: currentTheme.accent
+                  }}
                 />
               </div>
             </div>
-            <Button onClick={handleJoinSession}>
+            <Button 
+              onClick={handleJoinSession}
+              style={{
+                backgroundColor: currentTheme.accent,
+                color: currentTheme.buttonText
+              }}
+            >
               Присоединиться
             </Button>
           </DialogContent>
@@ -204,23 +367,39 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         {/* Диалог для боя (только для Мастера) */}
         {isDM && (
           <Dialog open={showCombatDialog} onOpenChange={setShowCombatDialog}>
-            <DialogContent className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20">
+            <DialogContent 
+              className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20"
+              style={{
+                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
+                borderColor: currentTheme.accent
+              }}
+            >
               <DialogHeader>
-                <DialogTitle>Начать бой</DialogTitle>
-                <DialogDescription>
+                <DialogTitle style={{ color: currentTheme.textColor }}>
+                  Начать бой
+                </DialogTitle>
+                <DialogDescription style={{ color: currentTheme.mutedTextColor }}>
                   Вы готовы к бою!
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <p>Вы уверены, что хотите начать бой?</p>
+                <p style={{ color: currentTheme.textColor }}>
+                  Вы уверены, что хотите начать бой?
+                </p>
               </div>
-              <Button onClick={() => {
-                toast({
-                  title: "В бой!",
-                  description: "Начинаем бой!",
-                });
-                setShowCombatDialog(false);
-              }}>
+              <Button 
+                onClick={() => {
+                  toast({
+                    title: "В бой!",
+                    description: "Начинаем бой!",
+                  });
+                  setShowCombatDialog(false);
+                }}
+                style={{
+                  backgroundColor: currentTheme.accent,
+                  color: currentTheme.buttonText
+                }}
+              >
                 В бой!
               </Button>
             </DialogContent>
@@ -236,28 +415,53 @@ interface CharacterHeaderProps {
   onCharacterSave: () => void;
   onCharacterExport: () => void;
   onJoinSession: () => void;
+  theme: any;
 }
 
-const CharacterHeader: React.FC<CharacterHeaderProps> = ({ character, onCharacterSave, onCharacterExport, onJoinSession }) => {
+const CharacterHeader: React.FC<CharacterHeaderProps> = ({ character, onCharacterSave, onCharacterExport, onJoinSession, theme }) => {
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
       <CardHeader>
-        <CardTitle>
+        <CardTitle style={{ color: theme.textColor }}>
           {character ? character.name : 'Новый персонаж'}
         </CardTitle>
-        <CardDescription>
-          {character ? `Класс: ${character.className || ''}, Раса: ${character.race || ''}` : 'Создайте своего персонажа'}
+        <CardDescription style={{ color: theme.mutedTextColor }}>
+          {character ? `${character.className || ''}, ${character.race || ''}, Уровень ${character.level || 1}` : 'Создайте своего персонажа'}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex justify-between items-center">
         <div>
-          <Button onClick={onCharacterSave} className="mr-2">Сохранить</Button>
-          <Button variant="outline" onClick={onCharacterExport}>
+          <Button 
+            onClick={onCharacterSave} 
+            className="mr-2"
+            style={{
+              backgroundColor: theme.accent,
+              color: theme.buttonText
+            }}
+          >
+            Сохранить
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={onCharacterExport}
+            style={{
+              borderColor: theme.accent,
+              color: theme.textColor
+            }}
+          >
             <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
         </div>
-        <Button onClick={onJoinSession}>Присоединиться к сессии</Button>
+        <Button 
+          onClick={onJoinSession}
+          style={{
+            backgroundColor: theme.accent,
+            color: theme.buttonText
+          }}
+        >
+          Присоединиться к сессии
+        </Button>
       </CardContent>
     </Card>
   );
