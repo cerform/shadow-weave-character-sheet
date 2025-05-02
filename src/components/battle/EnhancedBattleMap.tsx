@@ -260,12 +260,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       >
         <BattleMap
           tokens={tokens}
-          // Используем преобразование для совместимости типов
-          setTokens={
-            typeof setTokens === 'function' && setTokens.length === 1
-            ? setTokens as (token: Token) => void
-            : setTokens as React.Dispatch<React.SetStateAction<Token[]>>
-          }
+          // Просто передаем setTokens без преобразования, теперь BattleMap принимает оба типа
+          setTokens={setTokens}
           background={background}
           setBackground={setBackground}
           onUpdateTokenPosition={onUpdateTokenPosition}

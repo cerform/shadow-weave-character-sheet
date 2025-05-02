@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -10,7 +11,8 @@ import { motion } from 'framer-motion';
 
 interface BattleMapProps {
   tokens: Token[];
-  setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
+  // Обновляем тип, чтобы он поддерживал обе сигнатуры функций
+  setTokens: React.Dispatch<React.SetStateAction<Token[]>> | ((token: Token) => void);
   background: string | null;
   setBackground: React.Dispatch<React.SetStateAction<string | null>>;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
