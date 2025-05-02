@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
-import { ArrowLeft, Mail, Google, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Shield, Github } from "lucide-react";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -175,7 +174,7 @@ const AuthPage: React.FC = () => {
                     className="w-full"
                     disabled={isLoading}
                   >
-                    <Google className="mr-2 h-4 w-4" />
+                    <Github className="mr-2 h-4 w-4" />
                     Google
                   </Button>
                 </form>
@@ -253,7 +252,7 @@ const AuthPage: React.FC = () => {
                     className="w-full"
                     disabled={isLoading}
                   >
-                    <Google className="mr-2 h-4 w-4" />
+                    <Github className="mr-2 h-4 w-4" />
                     Google
                   </Button>
                 </form>

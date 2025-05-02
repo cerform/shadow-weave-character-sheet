@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Download, FileText, ArrowDown } from "lucide-react";
 import { CharacterSheet } from "@/types/character";
 import { downloadCharacterPDF, downloadCharacterHTMLPDF } from "@/utils/characterPdfGenerator";
+import { v4 as uuidv4 } from 'uuid';
 
 type Props = {
   character: {
@@ -96,9 +97,11 @@ export default function CharacterReview({ character, prevStep }: Props) {
     }
     
     const maxHp = baseHp + conModifier;
+    const now = new Date().toISOString();
     
     // Create the character object with the correct format for the Character interface
     const charObj: Character = {
+      id: uuidv4(), // Generate a valid id
       name: character.name,
       race: character.race + (character.subrace ? ` (${character.subrace})` : ""),
       className: character.class + (character.subclass ? ` (${character.subclass})` : ""),
@@ -114,7 +117,9 @@ export default function CharacterReview({ character, prevStep }: Props) {
       equipment: character.equipment,
       languages: character.languages,
       proficiencies: character.proficiencies,
-      theme: localStorage.getItem('theme') || undefined
+      theme: localStorage.getItem('theme') || undefined,
+      createdAt: now,  // Add required createdAt property
+      updatedAt: now   // Add required updatedAt property
     };
 
     // Сохраняем персонажа в контексте
