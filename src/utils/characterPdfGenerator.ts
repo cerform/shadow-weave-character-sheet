@@ -1225,6 +1225,3 @@ export const downloadCharacterPDF = (character: Character): void => {
     console.error("Ошибка при сохранении PDF:", error);
   }
 };
-
-// Создаем фиктивный импорт для файла шрифтов (будет создан ниже)
-
