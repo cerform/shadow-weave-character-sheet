@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -9,6 +10,32 @@ export interface Player {
   theme?: string; // Theme preference for each player
 }
 
+export interface SavedMap {
+  id: string;
+  name: string;
+  background?: string;
+  tokens: any[];
+  fogOfWar?: boolean;
+  revealedCells?: Record<string, boolean>;
+  lighting?: LightSource[];
+  gridSettings?: {
+    visible: boolean;
+    opacity: number;
+    size: number;
+  };
+  createdAt: string;
+}
+
+export interface LightSource {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  type: 'torch' | 'lantern' | 'daylight';
+  color: string;
+  intensity: number;
+}
+
 export interface DMSession {
   id: string;
   name: string;
@@ -16,6 +43,7 @@ export interface DMSession {
   players: Player[];
   createdAt: string;
   description?: string;
+  savedMaps?: SavedMap[];
 }
 
 interface SessionState {
@@ -33,6 +61,11 @@ interface SessionState {
   setUserType: (type: 'dm' | 'player' | null) => void;
   setUsername: (name: string | null) => void;
   setPlayerTheme: (theme: string) => void;
+  
+  // Map saving/loading
+  saveMap: (sessionId: string, mapData: Omit<SavedMap, 'id' | 'createdAt'>) => SavedMap | null;
+  loadMap: (sessionId: string, mapId: string) => SavedMap | null;
+  deleteMap: (sessionId: string, mapId: string) => void;
 }
 
 // Generate a random 6 character code
@@ -56,7 +89,8 @@ export const useSessionStore = create<SessionState>()(
           code: generateSessionCode(),
           players: [],
           createdAt: new Date().toISOString(),
-          description
+          description,
+          savedMaps: []
         };
         
         set((state) => ({
@@ -182,6 +216,74 @@ export const useSessionStore = create<SessionState>()(
             });
           }
         }
+      },
+
+      // Новые функции для работы с картами
+      saveMap: (sessionId, mapData) => {
+        const { sessions } = get();
+        const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+        
+        if (sessionIndex === -1) return null;
+        
+        const session = sessions[sessionIndex];
+        const newMap: SavedMap = {
+          ...mapData,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString()
+        };
+        
+        const savedMaps = session.savedMaps || [];
+        const updatedSession = {
+          ...session,
+          savedMaps: [...savedMaps, newMap]
+        };
+        
+        set((state) => {
+          const updatedSessions = [...state.sessions];
+          updatedSessions[sessionIndex] = updatedSession;
+          
+          return {
+            sessions: updatedSessions,
+            currentSession: state.currentSession?.id === sessionId ? updatedSession : state.currentSession
+          };
+        });
+        
+        return newMap;
+      },
+      
+      loadMap: (sessionId, mapId) => {
+        const { sessions } = get();
+        const session = sessions.find(s => s.id === sessionId);
+        
+        if (!session || !session.savedMaps) return null;
+        
+        const map = session.savedMaps.find(m => m.id === mapId);
+        return map || null;
+      },
+      
+      deleteMap: (sessionId, mapId) => {
+        const { sessions } = get();
+        const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+        
+        if (sessionIndex === -1 || !sessions[sessionIndex].savedMaps) return;
+        
+        const session = sessions[sessionIndex];
+        const updatedMaps = session.savedMaps!.filter(m => m.id !== mapId);
+        
+        const updatedSession = {
+          ...session,
+          savedMaps: updatedMaps
+        };
+        
+        set((state) => {
+          const updatedSessions = [...state.sessions];
+          updatedSessions[sessionIndex] = updatedSession;
+          
+          return {
+            sessions: updatedSessions,
+            currentSession: state.currentSession?.id === sessionId ? updatedSession : state.currentSession
+          };
+        });
       }
     }),
     {
