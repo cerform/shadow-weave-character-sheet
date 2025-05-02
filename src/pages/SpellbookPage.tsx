@@ -1,18 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAllSpellNames, getSpellDetails } from '@/data/spells';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, BookOpen } from 'lucide-react';
+import { Search, Filter, BookOpen, Home, ChevronLeft, ChevronRight } from 'lucide-react';
 import SpellCard from '@/components/spell-detail/SpellCard';
 import { CharacterSpell } from '@/types/character';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const SpellbookPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [spells, setSpells] = useState<CharacterSpell[]>([]);
   const [filters, setFilters] = useState({
@@ -21,6 +25,25 @@ const SpellbookPage: React.FC = () => {
     class: null as string | null,
   });
   const [activeTab, setActiveTab] = useState('all');
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
+  
+  // Стили для текста с улучшенной контрастностью
+  const textStyle = { 
+    color: currentTheme.textColor,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.5)'
+  };
+  
+  const mutedTextStyle = {
+    color: currentTheme.mutedTextColor,
+    textShadow: '0px 1px 1px rgba(0, 0, 0, 0.4)'
+  };
+  
+  // Стили для карточек
+  const cardStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderColor: `${currentTheme.accent}30`
+  };
   
   useEffect(() => {
     // Загружаем все заклинания при монтировании компонента
@@ -102,7 +125,7 @@ const SpellbookPage: React.FC = () => {
   return (
     <div className="container p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Книга заклинаний</h1>
+        <h1 className="text-2xl md:text-3xl font-bold" style={textStyle}>Книга заклинаний</h1>
         <div className="flex gap-2">
           <ThemeSelector />
         </div>
@@ -115,13 +138,18 @@ const SpellbookPage: React.FC = () => {
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="flex-1 min-w-[300px]">
           <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-2 top-2.5 h-5 w-5" style={{color: currentTheme.mutedTextColor}} />
             <Input
               type="text"
               placeholder="Поиск заклинания..."
               className="pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                color: currentTheme.textColor,
+                borderColor: `${currentTheme.accent}50`,
+                backgroundColor: 'rgba(0, 0, 0, 0.2)'
+              }}
             />
           </div>
         </div>
@@ -130,7 +158,10 @@ const SpellbookPage: React.FC = () => {
           <Button 
             variant="outline" 
             onClick={resetFilters}
-            className="text-primary-foreground border-primary"
+            style={{
+              color: currentTheme.textColor,
+              borderColor: currentTheme.accent
+            }}
           >
             Сбросить фильтры
           </Button>
@@ -139,16 +170,16 @@ const SpellbookPage: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
-          <Card className="mb-6 border border-primary/30 bg-background/80">
+          <Card className="mb-6" style={cardStyle}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2" style={textStyle}>
                 <Filter className="h-5 w-5" />
                 Фильтры
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium mb-2">Уровень</h3>
+                <h3 className="text-sm font-medium mb-2" style={textStyle}>Уровень</h3>
                 <div className="flex flex-wrap gap-1">
                   {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => (
                     <Badge
@@ -156,12 +187,18 @@ const SpellbookPage: React.FC = () => {
                       className={`cursor-pointer ${
                         filters.level === level 
                           ? 'bg-primary text-primary-foreground' 
-                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                          : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       onClick={() => setFilters(prev => ({
                         ...prev, 
                         level: prev.level === level ? null : level
                       }))}
+                      style={{
+                        backgroundColor: filters.level === level 
+                          ? currentTheme.accent 
+                          : 'rgba(0, 0, 0, 0.4)',
+                        color: currentTheme.textColor,
+                      }}
                     >
                       {level === 0 ? 'Заг.' : level}
                       <span className="ml-1 opacity-75">({countByLevel[level] || 0})</span>
@@ -171,7 +208,7 @@ const SpellbookPage: React.FC = () => {
               </div>
               
               <div>
-                <h3 className="text-sm font-medium mb-2">Школа магии</h3>
+                <h3 className="text-sm font-medium mb-2" style={textStyle}>Школа магии</h3>
                 <div className="flex flex-wrap gap-1">
                   {uniqueSchools.map((school) => (
                     <Badge
@@ -179,12 +216,18 @@ const SpellbookPage: React.FC = () => {
                       className={`cursor-pointer ${
                         filters.school === school 
                           ? 'bg-primary text-primary-foreground' 
-                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                          : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       onClick={() => setFilters(prev => ({
                         ...prev, 
                         school: prev.school === school ? null : school
                       }))}
+                      style={{
+                        backgroundColor: filters.school === school 
+                          ? currentTheme.accent 
+                          : 'rgba(0, 0, 0, 0.4)',
+                        color: currentTheme.textColor,
+                      }}
                     >
                       {school}
                     </Badge>
@@ -193,7 +236,7 @@ const SpellbookPage: React.FC = () => {
               </div>
               
               <div>
-                <h3 className="text-sm font-medium mb-2">Класс</h3>
+                <h3 className="text-sm font-medium mb-2" style={textStyle}>Класс</h3>
                 <div className="flex flex-wrap gap-1">
                   {uniqueClasses.map((className) => (
                     <Badge
@@ -201,12 +244,18 @@ const SpellbookPage: React.FC = () => {
                       className={`cursor-pointer ${
                         filters.class === className 
                           ? 'bg-primary text-primary-foreground' 
-                          : 'bg-secondary hover:bg-secondary/80 text-white'
+                          : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       onClick={() => setFilters(prev => ({
                         ...prev, 
                         class: prev.class === className ? null : className
                       }))}
+                      style={{
+                        backgroundColor: filters.class === className 
+                          ? currentTheme.accent 
+                          : 'rgba(0, 0, 0, 0.4)',
+                        color: currentTheme.textColor,
+                      }}
                     >
                       {className}
                     </Badge>
@@ -219,20 +268,25 @@ const SpellbookPage: React.FC = () => {
         
         <div className="md:col-span-3">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4 border-primary/30">
-              <TabsTrigger value="all" className="text-primary-foreground">Все</TabsTrigger>
-              <TabsTrigger value="0" className="text-primary-foreground">Заговоры</TabsTrigger>
-              <TabsTrigger value="1" className="text-primary-foreground">1-й</TabsTrigger>
-              <TabsTrigger value="2" className="text-primary-foreground">2-й</TabsTrigger>
-              <TabsTrigger value="3" className="text-primary-foreground">3-й</TabsTrigger>
-              <TabsTrigger value="4" className="text-primary-foreground">4-й</TabsTrigger>
-              <TabsTrigger value="5" className="text-primary-foreground">5+</TabsTrigger>
+            <TabsList className="mb-4" style={{borderColor: `${currentTheme.accent}50`}}>
+              {['all', '0', '1', '2', '3', '4', '5'].map(tab => (
+                <TabsTrigger 
+                  key={tab} 
+                  value={tab} 
+                  style={{color: currentTheme.textColor}}
+                >
+                  {tab === 'all' ? 'Все' : 
+                   tab === '0' ? 'Заговоры' : 
+                   tab === '5' ? '5+' : 
+                   `${tab}-й`}
+                </TabsTrigger>
+              ))}
             </TabsList>
             
-            <Card className="border-primary/30 bg-background/80">
+            <Card style={cardStyle}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" style={textStyle}>
                     <BookOpen className="h-5 w-5" />
                     {activeTab === 'all' 
                       ? 'Все заклинания' 
@@ -240,7 +294,7 @@ const SpellbookPage: React.FC = () => {
                         ? 'Заговоры' 
                         : `Заклинания ${activeTab}-го уровня`}
                   </div>
-                  <span className="text-sm font-normal">
+                  <span className="text-sm font-normal" style={mutedTextStyle}>
                     {filteredSpells.length} заклинаний
                   </span>
                 </CardTitle>
@@ -248,11 +302,12 @@ const SpellbookPage: React.FC = () => {
               <CardContent>
                 {filteredSpells.length === 0 ? (
                   <div className="py-8 text-center">
-                    <p className="text-muted-foreground">Заклинания не найдены</p>
+                    <p style={mutedTextStyle}>Заклинания не найдены</p>
                     <Button 
                       variant="link" 
                       onClick={resetFilters}
                       className="mt-2"
+                      style={{color: currentTheme.accent}}
                     >
                       Сбросить фильтры
                     </Button>
@@ -272,6 +327,28 @@ const SpellbookPage: React.FC = () => {
             </Card>
           </Tabs>
         </div>
+      </div>
+
+      {/* Навигационные кнопки внизу */}
+      <div className="flex justify-between mt-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/handbook')} 
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Руководство игрока
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/character-creation')} 
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
+        >
+          Создание персонажа
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

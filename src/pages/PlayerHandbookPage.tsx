@@ -79,11 +79,30 @@ import {
 import { CharacterSpell } from '@/types/character';
 import { spells, getSpellsByLevel } from '@/data/spells';
 import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const PlayerHandbookPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
+  
+  // Стили для текста с улучшенной контрастностью
+  const textStyle = { 
+    color: currentTheme.textColor,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.5)'
+  };
+  
+  const mutedTextStyle = {
+    color: currentTheme.mutedTextColor,
+    textShadow: '0px 1px 1px rgba(0, 0, 0, 0.4)'
+  };
+  
+  // Стили для карточек
+  const cardStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderColor: `${currentTheme.accent}30`
+  };
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
@@ -122,7 +141,7 @@ const PlayerHandbookPage: React.FC = () => {
       filteredSpells = filteredSpells.filter(spell => spell.level === level);
     }
     
-    // Прим��няем поиск по тексту
+    // Применяем поиск по тексту
     if (searchTerm) {
       const searchTermLower = searchTerm.toLowerCase();
       filteredSpells = filteredSpells.filter(spell => {
@@ -205,11 +224,11 @@ const PlayerHandbookPage: React.FC = () => {
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2" style={textStyle}>
           <Book className="h-6 w-6" />
           Книга заклинаний D&D 5e
         </h1>
-        <p className="text-muted-foreground">
+        <p style={mutedTextStyle}>
           Полная библиотека заклинаний мира D&D 5e
         </p>
       </div>
@@ -222,6 +241,7 @@ const PlayerHandbookPage: React.FC = () => {
             variant="outline" 
             onClick={() => navigate(link.path)} 
             className="flex items-center gap-2"
+            style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
           >
             {link.icon}
             {link.name}
@@ -233,50 +253,69 @@ const PlayerHandbookPage: React.FC = () => {
         {/* Основная область с заклинаниями */}
         <div className="col-span-4">
           {/* Фильтры и поиск */}
-          <Card className="mb-6">
+          <Card className="mb-6" style={cardStyle}>
             <CardHeader>
-              <CardTitle>Поиск заклинаний</CardTitle>
-              <CardDescription>Фильтрация и сортировка</CardDescription>
+              <CardTitle style={textStyle}>Поиск заклинаний</CardTitle>
+              <CardDescription style={mutedTextStyle}>Фильтрация и сортировка</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4" style={{color: currentTheme.mutedTextColor}} />
                   <Input
                     type="search"
                     placeholder="Поиск заклинаний..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
+                    style={{
+                      color: currentTheme.textColor,
+                      borderColor: `${currentTheme.accent}50`,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                    }}
                   />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="class" className="mb-2 block">Класс:</Label>
+                    <Label htmlFor="class" className="mb-2 block" style={textStyle}>Класс:</Label>
                     <Select value={selectedClass} onValueChange={setSelectedClass}>
-                      <SelectTrigger>
+                      <SelectTrigger style={{
+                        color: currentTheme.textColor,
+                        borderColor: `${currentTheme.accent}50`,
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                      }}>
                         <SelectValue placeholder="Все классы" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все классы</SelectItem>
+                      <SelectContent style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: currentTheme.accent
+                      }}>
+                        <SelectItem value="Все" style={{color: currentTheme.textColor}}>Все классы</SelectItem>
                         {spellClasses.map(cls => (
-                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                          <SelectItem key={cls} value={cls} style={{color: currentTheme.textColor}}>{cls}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="school" className="mb-2 block">Школа магии:</Label>
+                    <Label htmlFor="school" className="mb-2 block" style={textStyle}>Школа магии:</Label>
                     <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-                      <SelectTrigger>
+                      <SelectTrigger style={{
+                        color: currentTheme.textColor,
+                        borderColor: `${currentTheme.accent}50`,
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                      }}>
                         <SelectValue placeholder="Все школы" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Все">Все школы</SelectItem>
+                      <SelectContent style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: currentTheme.accent
+                      }}>
+                        <SelectItem value="Все" style={{color: currentTheme.textColor}}>Все школы</SelectItem>
                         {spellSchools.map(school => (
-                          <SelectItem key={school} value={school}>{school}</SelectItem>
+                          <SelectItem key={school} value={school} style={{color: currentTheme.textColor}}>{school}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -285,28 +324,42 @@ const PlayerHandbookPage: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="sortBy" className="mb-2 block">Сортировать по:</Label>
+                    <Label htmlFor="sortBy" className="mb-2 block" style={textStyle}>Сортировать по:</Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
+                      <SelectTrigger style={{
+                        color: currentTheme.textColor,
+                        borderColor: `${currentTheme.accent}50`,
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                      }}>
                         <SelectValue placeholder="Имени" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="name">Имени</SelectItem>
-                        <SelectItem value="level">Уровню</SelectItem>
-                        <SelectItem value="school">Школе магии</SelectItem>
+                      <SelectContent style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: currentTheme.accent
+                      }}>
+                        <SelectItem value="name" style={{color: currentTheme.textColor}}>Имени</SelectItem>
+                        <SelectItem value="level" style={{color: currentTheme.textColor}}>Уровню</SelectItem>
+                        <SelectItem value="school" style={{color: currentTheme.textColor}}>Школе магии</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="sortOrder" className="mb-2 block">Порядок сортировки:</Label>
+                    <Label htmlFor="sortOrder" className="mb-2 block" style={textStyle}>Порядок сортировки:</Label>
                     <Select value={sortOrder} onValueChange={setSortOrder}>
-                      <SelectTrigger>
+                      <SelectTrigger style={{
+                        color: currentTheme.textColor,
+                        borderColor: `${currentTheme.accent}50`,
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                      }}>
                         <SelectValue placeholder="По возрастанию" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="asc">По возрастанию</SelectItem>
-                        <SelectItem value="desc">По убыванию</SelectItem>
+                      <SelectContent style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: currentTheme.accent
+                      }}>
+                        <SelectItem value="asc" style={{color: currentTheme.textColor}}>По возрастанию</SelectItem>
+                        <SelectItem value="desc" style={{color: currentTheme.textColor}}>По убыванию</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -318,56 +371,64 @@ const PlayerHandbookPage: React.FC = () => {
           {/* Табы с уровнями заклинаний - обновленные стили для лучшей контрастности */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList className="grid grid-cols-6 lg:grid-cols-11">
-              <TabsTrigger value="all" className="text-foreground data-[state=inactive]:text-foreground/70">Все</TabsTrigger>
-              <TabsTrigger value="0" className="text-foreground data-[state=inactive]:text-foreground/70">Заговоры</TabsTrigger>
-              <TabsTrigger value="1" className="text-foreground data-[state=inactive]:text-foreground/70">1 круг</TabsTrigger>
-              <TabsTrigger value="2" className="text-foreground data-[state=inactive]:text-foreground/70">2 круг</TabsTrigger>
-              <TabsTrigger value="3" className="text-foreground data-[state=inactive]:text-foreground/70">3 круг</TabsTrigger>
-              <TabsTrigger value="4" className="text-foreground data-[state=inactive]:text-foreground/70">4 круг</TabsTrigger>
-              <TabsTrigger value="5" className="text-foreground data-[state=inactive]:text-foreground/70">5 круг</TabsTrigger>
-              <TabsTrigger value="6" className="text-foreground data-[state=inactive]:text-foreground/70">6 круг</TabsTrigger>
-              <TabsTrigger value="7" className="text-foreground data-[state=inactive]:text-foreground/70">7 круг</TabsTrigger>
-              <TabsTrigger value="8" className="text-foreground data-[state=inactive]:text-foreground/70">8 круг</TabsTrigger>
-              <TabsTrigger value="9" className="text-foreground data-[state=inactive]:text-foreground/70">9 круг</TabsTrigger>
+              {['all', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(tab => (
+                <TabsTrigger 
+                  key={tab} 
+                  value={tab} 
+                  className="text-foreground data-[state=inactive]:text-foreground/70"
+                  style={{color: currentTheme.textColor}}
+                >
+                  {tab === 'all' ? 'Все' : 
+                   tab === '0' ? 'Заговоры' : 
+                   `${tab} круг`}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
           
           {/* Таблица заклинаний */}
-          <Card>
+          <Card style={cardStyle}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>
+                <CardTitle style={textStyle}>
                   {activeTab === 'all' 
                     ? 'Все заклинания' 
                     : activeTab === '0' 
                       ? 'Заговоры' 
                       : `Заклинания ${activeTab} круга`}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription style={mutedTextStyle}>
                   Найдено: {filteredSpells.length} заклинаний
                 </CardDescription>
               </div>
               <Select value={itemsPerPage.toString()} onValueChange={v => setItemsPerPage(parseInt(v))}>
-                <SelectTrigger className="w-auto">
+                <SelectTrigger className="w-auto" style={{
+                  color: currentTheme.textColor,
+                  borderColor: `${currentTheme.accent}50`,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                }}>
                   <SelectValue placeholder="15 на странице" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 на странице</SelectItem>
-                  <SelectItem value="25">25 на странице</SelectItem>
-                  <SelectItem value="50">50 на странице</SelectItem>
-                  <SelectItem value="100">100 на странице</SelectItem>
+                <SelectContent style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderColor: currentTheme.accent
+                }}>
+                  <SelectItem value="15" style={{color: currentTheme.textColor}}>15 на странице</SelectItem>
+                  <SelectItem value="25" style={{color: currentTheme.textColor}}>25 на странице</SelectItem>
+                  <SelectItem value="50" style={{color: currentTheme.textColor}}>50 на странице</SelectItem>
+                  <SelectItem value="100" style={{color: currentTheme.textColor}}>100 на странице</SelectItem>
                 </SelectContent>
               </Select>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className="rounded-md border" style={{borderColor: `${currentTheme.accent}30`}}>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40%]">Название</TableHead>
-                      <TableHead className="w-[15%]">Уровень</TableHead>
-                      <TableHead className="w-[20%] hidden sm:table-cell">Школа</TableHead>
-                      <TableHead className="hidden lg:table-cell">Классы</TableHead>
+                    <TableRow style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}}>
+                      <TableHead className="w-[40%]" style={textStyle}>Название</TableHead>
+                      <TableHead className="w-[15%]" style={textStyle}>Уровень</TableHead>
+                      <TableHead className="w-[20%] hidden sm:table-cell" style={textStyle}>Школа</TableHead>
+                      <TableHead className="hidden lg:table-cell" style={textStyle}>Классы</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -375,19 +436,33 @@ const PlayerHandbookPage: React.FC = () => {
                       paginatedSpells.map((spell) => (
                         <TableRow 
                           key={spell.name} 
-                          className="cursor-pointer hover:bg-accent"
+                          className="cursor-pointer hover:bg-accent/20"
                           onClick={() => handleSpellClick(spell)}
                         >
-                          <TableCell className="font-medium">{spell.name}</TableCell>
-                          <TableCell>{spell.level === 0 ? 'Заговор' : `${spell.level} круг`}</TableCell>
-                          <TableCell className="hidden sm:table-cell">{spell.school}</TableCell>
+                          <TableCell className="font-medium" style={textStyle}>{spell.name}</TableCell>
+                          <TableCell style={textStyle}>
+                            {spell.level === 0 ? 'Заговор' : `${spell.level} круг`}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell" style={textStyle}>{spell.school}</TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <div className="flex flex-wrap gap-1">
                               {spell.classes.slice(0, 3).map((cls) => (
-                                <Badge key={cls} variant="outline">{cls}</Badge>
+                                <Badge key={cls} variant="outline" style={{
+                                  color: currentTheme.textColor,
+                                  borderColor: currentTheme.accent,
+                                  backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                                }}>
+                                  {cls}
+                                </Badge>
                               ))}
                               {spell.classes.length > 3 && (
-                                <Badge variant="outline">+{spell.classes.length - 3}</Badge>
+                                <Badge variant="outline" style={{
+                                  color: currentTheme.textColor,
+                                  borderColor: currentTheme.accent,
+                                  backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                                }}>
+                                  +{spell.classes.length - 3}
+                                </Badge>
                               )}
                             </div>
                           </TableCell>
@@ -395,7 +470,7 @@ const PlayerHandbookPage: React.FC = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center py-6" style={mutedTextStyle}>
                           Заклинания не найдены
                         </TableCell>
                       </TableRow>
@@ -412,13 +487,14 @@ const PlayerHandbookPage: React.FC = () => {
                       <PaginationPrevious 
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                        style={{color: currentTheme.textColor}}
                       />
                     </PaginationItem>
                     
                     {/* Первая страница */}
                     {currentPage > 3 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => setCurrentPage(1)}>
+                        <PaginationLink onClick={() => setCurrentPage(1)} style={{color: currentTheme.textColor}}>
                           1
                         </PaginationLink>
                       </PaginationItem>
@@ -427,14 +503,14 @@ const PlayerHandbookPage: React.FC = () => {
                     {/* Многоточие в начале */}
                     {currentPage > 4 && (
                       <PaginationItem>
-                        <PaginationEllipsis />
+                        <PaginationEllipsis style={{color: currentTheme.textColor}} />
                       </PaginationItem>
                     )}
                     
                     {/* Предыдущая страница */}
                     {currentPage > 1 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => setCurrentPage(currentPage - 1)}>
+                        <PaginationLink onClick={() => setCurrentPage(currentPage - 1)} style={{color: currentTheme.textColor}}>
                           {currentPage - 1}
                         </PaginationLink>
                       </PaginationItem>
@@ -442,13 +518,16 @@ const PlayerHandbookPage: React.FC = () => {
                     
                     {/* Текущая страница */}
                     <PaginationItem>
-                      <PaginationLink isActive>{currentPage}</PaginationLink>
+                      <PaginationLink isActive style={{
+                        backgroundColor: currentTheme.accent,
+                        color: 'black'
+                      }}>{currentPage}</PaginationLink>
                     </PaginationItem>
                     
                     {/* Следующая страница */}
                     {currentPage < totalPages && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => setCurrentPage(currentPage + 1)}>
+                        <PaginationLink onClick={() => setCurrentPage(currentPage + 1)} style={{color: currentTheme.textColor}}>
                           {currentPage + 1}
                         </PaginationLink>
                       </PaginationItem>
@@ -457,14 +536,14 @@ const PlayerHandbookPage: React.FC = () => {
                     {/* Многоточие в конце */}
                     {currentPage < totalPages - 3 && (
                       <PaginationItem>
-                        <PaginationEllipsis />
+                        <PaginationEllipsis style={{color: currentTheme.textColor}} />
                       </PaginationItem>
                     )}
                     
                     {/* Последняя страница */}
                     {currentPage < totalPages - 2 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => setCurrentPage(totalPages)}>
+                        <PaginationLink onClick={() => setCurrentPage(totalPages)} style={{color: currentTheme.textColor}}>
                           {totalPages}
                         </PaginationLink>
                       </PaginationItem>
@@ -474,6 +553,7 @@ const PlayerHandbookPage: React.FC = () => {
                       <PaginationNext 
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                        style={{color: currentTheme.textColor}}
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -485,84 +565,42 @@ const PlayerHandbookPage: React.FC = () => {
 
         {/* Боковая панель с настройками */}
         <div className="col-span-1 space-y-6 mt-6 lg:mt-0">
-          <Card>
+          <Card style={cardStyle}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2" style={textStyle}>
                 <Settings className="h-5 w-5" />
                 Настройки отображения
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showDescription">Описание</Label>
-                <Switch 
-                  id="showDescription" 
-                  checked={showDescription} 
-                  onCheckedChange={setShowDescription} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showComponents">Компоненты</Label>
-                <Switch 
-                  id="showComponents" 
-                  checked={showComponents} 
-                  onCheckedChange={setShowComponents} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showCastingTime">Время накладывания</Label>
-                <Switch 
-                  id="showCastingTime" 
-                  checked={showCastingTime} 
-                  onCheckedChange={setShowCastingTime} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showRange">Дистанция</Label>
-                <Switch 
-                  id="showRange" 
-                  checked={showRange} 
-                  onCheckedChange={setShowRange} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showDuration">Длительность</Label>
-                <Switch 
-                  id="showDuration" 
-                  checked={showDuration} 
-                  onCheckedChange={setShowDuration} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showClasses">Классы</Label>
-                <Switch 
-                  id="showClasses" 
-                  checked={showClasses} 
-                  onCheckedChange={setShowClasses} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showHigherLevels">На высших уровнях</Label>
-                <Switch 
-                  id="showHigherLevels" 
-                  checked={showHigherLevels} 
-                  onCheckedChange={setShowHigherLevels} 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showSchool">Школа магии</Label>
-                <Switch 
-                  id="showSchool" 
-                  checked={showSchool} 
-                  onCheckedChange={setShowSchool} 
-                />
-              </div>
+              {[
+                { id: "showDescription", label: "Описание", state: showDescription, setState: setShowDescription },
+                { id: "showComponents", label: "Компоненты", state: showComponents, setState: setShowComponents },
+                { id: "showCastingTime", label: "Время накладывания", state: showCastingTime, setState: setShowCastingTime },
+                { id: "showRange", label: "Дистанция", state: showRange, setState: setShowRange },
+                { id: "showDuration", label: "Длительность", state: showDuration, setState: setShowDuration },
+                { id: "showClasses", label: "Классы", state: showClasses, setState: setShowClasses },
+                { id: "showHigherLevels", label: "На высших уровнях", state: showHigherLevels, setState: setShowHigherLevels },
+                { id: "showSchool", label: "Школа магии", state: showSchool, setState: setShowSchool }
+              ].map(setting => (
+                <div key={setting.id} className="flex items-center justify-between">
+                  <Label htmlFor={setting.id} style={textStyle}>{setting.label}</Label>
+                  <Switch 
+                    id={setting.id} 
+                    checked={setting.state} 
+                    onCheckedChange={setting.setState}
+                    style={{
+                      backgroundColor: setting.state ? currentTheme.accent : 'rgba(0, 0, 0, 0.4)'
+                    }}
+                  />
+                </div>
+              ))}
             </CardContent>
           </Card>
           
-          <Card>
+          <Card style={cardStyle}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2" style={textStyle}>
                 <Info className="h-5 w-5" />
                 Справка
               </CardTitle>
@@ -570,8 +608,8 @@ const PlayerHandbookPage: React.FC = () => {
             <CardContent>
               <Accordion type="single" collapsible>
                 <AccordionItem value="schools">
-                  <AccordionTrigger>Школы магии</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger style={textStyle}>Школы магии</AccordionTrigger>
+                  <AccordionContent style={textStyle}>
                     <ul className="list-disc list-inside space-y-1">
                       <li><strong>Воплощение</strong> - создание энергии и стихийных эффектов</li>
                       <li><strong>Ограждение</strong> - защитные чары и барьеры</li>
@@ -584,9 +622,10 @@ const PlayerHandbookPage: React.FC = () => {
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
+                
                 <AccordionItem value="components">
-                  <AccordionTrigger>Компоненты заклинаний</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger style={textStyle}>Компоненты заклинаний</AccordionTrigger>
+                  <AccordionContent style={textStyle}>
                     <ul className="list-disc list-inside space-y-1">
                       <li><strong>В (Вербальный)</strong> - требует произношения мистических слов</li>
                       <li><strong>С (Соматический)</strong> - требует особых жестов руками</li>
@@ -594,9 +633,10 @@ const PlayerHandbookPage: React.FC = () => {
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
+                
                 <AccordionItem value="classes">
-                  <AccordionTrigger>Классы заклинателей</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger style={textStyle}>Классы заклинателей</AccordionTrigger>
+                  <AccordionContent style={textStyle}>
                     <ul className="list-disc list-inside space-y-1">
                       <li><strong>Полные заклинатели:</strong> Бард, Волшебник, Жрец, Друид, Чародей, Колдун, Чернокнижник</li>
                       <li><strong>Полузаклинатели:</strong> Паладин, Следопыт</li>
@@ -604,15 +644,17 @@ const PlayerHandbookPage: React.FC = () => {
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
+                
                 <AccordionItem value="rituals">
-                  <AccordionTrigger>Ритуальные заклинания</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger style={textStyle}>Ритуальные заклинания</AccordionTrigger>
+                  <AccordionContent style={textStyle}>
                     <p>Заклинания с пометкой "ритуал" можно накладывать без использования ячеек заклинаний, но время накладывания увеличивается на 10 минут. Для этого требуется специальная особенность класса, позволяющая накладывать ритуалы.</p>
                   </AccordionContent>
                 </AccordionItem>
+                
                 <AccordionItem value="concentration">
-                  <AccordionTrigger>Концентрация</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger style={textStyle}>Концентрация</AccordionTrigger>
+                  <AccordionContent style={textStyle}>
                     <p>Заклинания, требующие концентрации, прерываются, если вы начинаете концентрироваться на другом заклинании, получаете урон или теряете сознание. Нельзя концентрироваться более чем на одном заклинании одновременно.</p>
                   </AccordionContent>
                 </AccordionItem>
@@ -628,6 +670,7 @@ const PlayerHandbookPage: React.FC = () => {
           variant="outline" 
           onClick={() => navigate('/handbook')} 
           className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
         >
           <ChevronLeft className="h-4 w-4" />
           Руководство игрока
@@ -636,6 +679,7 @@ const PlayerHandbookPage: React.FC = () => {
           variant="outline" 
           onClick={() => navigate('/character-creation')} 
           className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
         >
           Создание персонажа
           <ChevronRight className="h-4 w-4" />
@@ -644,45 +688,59 @@ const PlayerHandbookPage: React.FC = () => {
 
       {/* Модальное окно с деталями заклинания */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent>
+        <DrawerContent style={{backgroundColor: 'rgba(0, 0, 0, 0.85)', borderColor: currentTheme.accent}}>
           <DrawerHeader>
-            <DrawerTitle className="text-xl">
+            <DrawerTitle className="text-xl" style={textStyle}>
               {selectedSpell?.name}
-              {selectedSpell && <Badge className="ml-2">{selectedSpell.level === 0 ? 'Заговор' : `${selectedSpell.level} круг`}</Badge>}
+              {selectedSpell && (
+                <Badge className="ml-2" style={{
+                  backgroundColor: currentTheme.accent,
+                  color: 'black'
+                }}>
+                  {selectedSpell.level === 0 ? 'Заговор' : `${selectedSpell.level} круг`}
+                </Badge>
+              )}
             </DrawerTitle>
-            <DrawerDescription className="flex items-center gap-1">
+            <DrawerDescription className="flex items-center gap-1" style={mutedTextStyle}>
               <span>{selectedSpell?.school}</span>
-              {selectedSpell?.ritual && <Badge variant="outline" className="ml-2">Ритуал</Badge>}
+              {selectedSpell?.ritual && (
+                <Badge variant="outline" className="ml-2" style={{
+                  color: currentTheme.textColor,
+                  borderColor: currentTheme.accent
+                }}>
+                  Ритуал
+                </Badge>
+              )}
             </DrawerDescription>
           </DrawerHeader>
           
           <div className="px-4 pb-4">
-            <div className="grid gap-4 p-2 rounded-md bg-background/50">
+            <div className="grid gap-4 p-2 rounded-md" style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}}>
               {showCastingTime && selectedSpell?.castingTime && (
                 <div>
-                  <h4 className="font-semibold text-sm">Время накладывания:</h4>
-                  <p className="text-muted-foreground text-sm">{selectedSpell.castingTime}</p>
+                  <h4 className="font-semibold text-sm" style={textStyle}>Время накладывания:</h4>
+                  <p className="text-sm" style={mutedTextStyle}>{selectedSpell.castingTime}</p>
                 </div>
               )}
               
               {showRange && selectedSpell?.range && (
                 <div>
-                  <h4 className="font-semibold text-sm">Дистанция:</h4>
-                  <p className="text-muted-foreground text-sm">{selectedSpell.range}</p>
+                  <h4 className="font-semibold text-sm" style={textStyle}>Дистанция:</h4>
+                  <p className="text-sm" style={mutedTextStyle}>{selectedSpell.range}</p>
                 </div>
               )}
               
               {showComponents && selectedSpell?.components && (
                 <div>
-                  <h4 className="font-semibold text-sm">Компоненты:</h4>
-                  <p className="text-muted-foreground text-sm">{selectedSpell.components}</p>
+                  <h4 className="font-semibold text-sm" style={textStyle}>Компоненты:</h4>
+                  <p className="text-sm" style={mutedTextStyle}>{selectedSpell.components}</p>
                 </div>
               )}
               
               {showDuration && selectedSpell?.duration && (
                 <div>
-                  <h4 className="font-semibold text-sm">Длительность:</h4>
-                  <p className="text-muted-foreground text-sm">
+                  <h4 className="font-semibold text-sm" style={textStyle}>Длительность:</h4>
+                  <p className="text-sm" style={mutedTextStyle}>
                     {selectedSpell.concentration ? 'Концентрация, ' : ''}
                     {selectedSpell.duration}
                   </p>
@@ -690,27 +748,33 @@ const PlayerHandbookPage: React.FC = () => {
               )}
             </div>
             
-            <Separator className="my-4" />
+            <Separator className="my-4" style={{backgroundColor: `${currentTheme.accent}50`}} />
             
             {showDescription && selectedSpell?.description && (
               <div className="mb-4 text-sm">
-                <p className="whitespace-pre-line">{selectedSpell.description}</p>
+                <p className="whitespace-pre-line" style={textStyle}>{selectedSpell.description}</p>
               </div>
             )}
             
             {showHigherLevels && selectedSpell?.higherLevels && (
               <div className="mb-4">
-                <h4 className="font-semibold mb-1">На более высоком уровне:</h4>
-                <p className="text-sm">{selectedSpell.higherLevels}</p>
+                <h4 className="font-semibold mb-1" style={textStyle}>На более высоком уровне:</h4>
+                <p className="text-sm" style={textStyle}>{selectedSpell.higherLevels}</p>
               </div>
             )}
             
             {showClasses && selectedSpell?.classes && (
               <div className="mb-4">
-                <h4 className="font-semibold mb-1">Классы:</h4>
+                <h4 className="font-semibold mb-1" style={textStyle}>Классы:</h4>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {selectedSpell.classes.map(cls => (
-                    <Badge key={cls} variant="outline">{cls}</Badge>
+                    <Badge key={cls} variant="outline" style={{
+                      color: currentTheme.textColor,
+                      borderColor: currentTheme.accent,
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                    }}>
+                      {cls}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -719,7 +783,12 @@ const PlayerHandbookPage: React.FC = () => {
           
           <DrawerFooter>
             <DrawerClose asChild>
-              <Button variant="outline" className="w-full">Закрыть</Button>
+              <Button variant="outline" className="w-full" style={{
+                color: currentTheme.textColor,
+                borderColor: currentTheme.accent
+              }}>
+                Закрыть
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>

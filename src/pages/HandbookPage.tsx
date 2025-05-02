@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,21 +17,35 @@ import { Button } from "@/components/ui/button";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const HandbookPage: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes];
 
-  const cardBgClass = `bg-card border border-${theme}-500/10 hover:border-${theme}-500/30 transition-all duration-300`;
+  // Используем стили темы для улучшения контрастности
+  const cardBgClass = "bg-card border border-primary/10 hover:border-primary/30 transition-all duration-300";
+  
+  // Стили для текста с улучшенной контрастностью
+  const textStyle = { 
+    color: currentTheme.textColor,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.5)'
+  };
+  
+  const mutedTextStyle = {
+    color: currentTheme.mutedTextColor,
+    textShadow: '0px 1px 1px rgba(0, 0, 0, 0.4)'
+  };
 
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2" style={textStyle}>
           <BookOpen className="size-6" />
           Руководство игрока D&D 5e
         </h1>
-        <p className="text-muted-foreground">
+        <p style={mutedTextStyle} className="text-muted-foreground">
           Основная информация для игроков Dungeons & Dragons 5-й редакции
         </p>
       </div>
@@ -44,17 +59,37 @@ const HandbookPage: React.FC = () => {
 
       <Tabs defaultValue="races" className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto">
-          <TabsTrigger value="races" className="text-foreground data-[state=inactive]:text-foreground/70">Расы</TabsTrigger>
-          <TabsTrigger value="classes" className="text-foreground data-[state=inactive]:text-foreground/70">Классы</TabsTrigger>
-          <TabsTrigger value="equipment" className="text-foreground data-[state=inactive]:text-foreground/70">Снаряжение</TabsTrigger>
-          <TabsTrigger value="rules" className="text-foreground data-[state=inactive]:text-foreground/70">Правила</TabsTrigger>
+          <TabsTrigger 
+            value="races" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Расы
+          </TabsTrigger>
+          <TabsTrigger 
+            value="classes" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Классы
+          </TabsTrigger>
+          <TabsTrigger 
+            value="equipment" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Снаряжение
+          </TabsTrigger>
+          <TabsTrigger 
+            value="rules" 
+            style={{color: currentTheme.textColor}}
+            className="data-[state=inactive]:text-foreground/70">
+            Правила
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="races" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Расы D&D 5e</CardTitle>
-              <CardDescription>
+              <CardTitle style={textStyle}>Расы D&D 5e</CardTitle>
+              <CardDescription style={mutedTextStyle}>
                 Выберите основную расу вашего персонажа
               </CardDescription>
             </CardHeader>
@@ -63,18 +98,18 @@ const HandbookPage: React.FC = () => {
                 {races.map((race) => (
                   <Card key={race.name} className={cardBgClass}>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{race.name}</CardTitle>
+                      <CardTitle className="text-lg" style={textStyle}>{race.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-muted-foreground text-sm mb-2">{race.description}</p>
-                      <h4 className="text-sm font-medium">Особенности:</h4>
-                      <ul className="list-disc pl-5 text-sm mb-2">
+                      <p className="text-sm mb-2" style={mutedTextStyle}>{race.description}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Особенности:</h4>
+                      <ul className="list-disc pl-5 text-sm mb-2" style={textStyle}>
                         {race.features.map((feature, i) => (
                           <li key={i}>{feature}</li>
                         ))}
                       </ul>
-                      <h4 className="text-sm font-medium">Прирост характеристик:</h4>
-                      <p className="text-sm">{race.abilityScores}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Прирост характеристик:</h4>
+                      <p className="text-sm" style={textStyle}>{race.abilityScores}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -86,8 +121,8 @@ const HandbookPage: React.FC = () => {
         <TabsContent value="classes" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Классы D&D 5e</CardTitle>
-              <CardDescription>
+              <CardTitle style={textStyle}>Классы D&D 5e</CardTitle>
+              <CardDescription style={mutedTextStyle}>
                 Основные классы персонажей
               </CardDescription>
             </CardHeader>
@@ -96,18 +131,18 @@ const HandbookPage: React.FC = () => {
                 {classes.map((classItem) => (
                   <Card key={classItem.name} className={cardBgClass}>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{classItem.name}</CardTitle>
+                      <CardTitle className="text-lg" style={textStyle}>{classItem.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-muted-foreground text-sm mb-2">{classItem.description}</p>
-                      <h4 className="text-sm font-medium">Основные умения:</h4>
-                      <ul className="list-disc pl-5 text-sm mb-2">
+                      <p className="text-sm mb-2" style={mutedTextStyle}>{classItem.description}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Основные умения:</h4>
+                      <ul className="list-disc pl-5 text-sm mb-2" style={textStyle}>
                         {classItem.features.map((feature, i) => (
                           <li key={i}>{feature}</li>
                         ))}
                       </ul>
-                      <h4 className="text-sm font-medium">Хиты:</h4>
-                      <p className="text-sm">{classItem.hitDice}</p>
+                      <h4 className="text-sm font-medium" style={textStyle}>Хиты:</h4>
+                      <p className="text-sm" style={textStyle}>{classItem.hitDice}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -119,17 +154,17 @@ const HandbookPage: React.FC = () => {
         <TabsContent value="equipment" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Снаряжение</CardTitle>
-              <CardDescription>Оружие, доспехи и снаряжение</CardDescription>
+              <CardTitle style={textStyle}>Снаряжение</CardTitle>
+              <CardDescription style={mutedTextStyle}>Оружие, доспехи и снаряжение</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Оружие</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Оружие</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       В D&D доступно разнообразное оружие, каждое со своими характеристиками и особенностями. 
                       Оружие делится на простое и воинское, а также на рукопашное и дальнобойное.
                     </p>
@@ -138,10 +173,10 @@ const HandbookPage: React.FC = () => {
                 
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Доспехи</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Доспехи</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       Доспехи предоставляют защиту вашему персонажу. Они подразделяются на лёгкие, средние и тяжёлые.
                       Вид доспеха, который может носить ваш персонаж, зависит от его класса и характеристик.
                     </p>
@@ -150,10 +185,10 @@ const HandbookPage: React.FC = () => {
                 
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Приключенческое снаряжение</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Приключенческое снаряжение</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       Включает в себя всё необходимое для приключений: верёвки, фонари, инструменты для взлома, 
                       наборы для лечения, рационы, палатки и многое другое.
                     </p>
@@ -167,17 +202,17 @@ const HandbookPage: React.FC = () => {
         <TabsContent value="rules" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Основные правила</CardTitle>
-              <CardDescription>Базовые механики игры</CardDescription>
+              <CardTitle style={textStyle}>Основные правила</CardTitle>
+              <CardDescription style={mutedTextStyle}>Базовые механики игры</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Проверки характеристик</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Проверки характеристик</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       Проверки характеристик определяют успех или неудачу в действиях персонажа.
                       Игрок бросает d20, добавляет соответствующий модификатор характеристики и сравнивает результат со сложностью (DC).
                     </p>
@@ -186,10 +221,10 @@ const HandbookPage: React.FC = () => {
                 
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Боевая система</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Боевая система</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       Бой в D&D проходит в пошаговом режиме. Каждый участник действует в своём ходе согласно инициативе.
                       На своём ходе персонаж может совершить действие, бонусное действие, перемещение и реакцию.
                     </p>
@@ -198,10 +233,10 @@ const HandbookPage: React.FC = () => {
                 
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Отдых</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Отдых</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       В игре существует два типа отдыха: короткий (1 час) и долгий (8 часов).
                       Во время отдыха персонажи восстанавливают здоровье и ресурсы.
                     </p>
@@ -210,10 +245,10 @@ const HandbookPage: React.FC = () => {
                 
                 <Card className={cardBgClass}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Опыт и уровни</CardTitle>
+                    <CardTitle className="text-lg" style={textStyle}>Опыт и уровни</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm">
+                    <p className="text-sm" style={textStyle}>
                       Персонажи получают опыт за победу над врагами и выполнение заданий.
                       Накопив достаточно опыта, персонаж повышает свой уровень, что даёт новые способности и увеличивает характеристики.
                     </p>
@@ -225,12 +260,12 @@ const HandbookPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Улучшенная навигация внизу страницы */}
       <div className="flex justify-between mt-6">
         <Button 
           variant="outline" 
           onClick={() => navigate('/')} 
-          className="flex items-center gap-2 text-foreground"
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
         >
           <ChevronLeft className="h-4 w-4" />
           На главную
@@ -238,7 +273,8 @@ const HandbookPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={() => navigate('/spellbook')} 
-          className="flex items-center gap-2 text-foreground"
+          className="flex items-center gap-2"
+          style={{color: currentTheme.textColor, borderColor: currentTheme.accent}}
         >
           Книга заклинаний
           <ChevronRight className="h-4 w-4" />
@@ -254,7 +290,7 @@ const races = [
     name: "Человек",
     description: "Люди — самая распространённая раса в мирах D&D, адаптируемые и честолюбивые.",
     features: ["Универсальный", "Разнообразный", "Амбициозный"],
-    abilityScores: "+1 к�� всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
+    abilityScores: "+1 ко всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
   },
   {
     name: "Эльф",
