@@ -1,3 +1,4 @@
+
 // В LeftPanel.tsx нужно исправить ошибку с типом initiative, чтобы оно всегда было числом
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export interface LeftPanelProps {
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
   initiative: Initiative[];
+  setInitiative?: React.Dispatch<React.SetStateAction<Initiative[]>>;  // Делаем опциональным
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
   battleState: BattleState;
@@ -28,6 +30,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   tokens,
   setTokens,
   initiative,
+  setInitiative, // Добавляем в параметры
   selectedTokenId,
   onSelectToken,
   battleState
@@ -53,7 +56,10 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
       (a, b) => b.roll - a.roll
     );
 
-    setInitiative(sortedCombatants);
+    // Используем setInitiative только если он был передан
+    if (setInitiative) {
+      setInitiative(sortedCombatants);
+    }
     battleState.currentInitiativeIndex = 0;
     battleState.isActive = true;
 

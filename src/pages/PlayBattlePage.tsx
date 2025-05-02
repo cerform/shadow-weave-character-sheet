@@ -179,6 +179,7 @@ const PlayBattlePage = () => {
           tokens={tokens} 
           setTokens={setTokens} 
           initiative={initiative}
+          setInitiative={setInitiative}
           selectedTokenId={selectedTokenId}
           onSelectToken={handleSelectToken}
           battleState={battleState}
