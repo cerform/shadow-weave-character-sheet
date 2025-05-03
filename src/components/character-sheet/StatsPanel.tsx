@@ -46,7 +46,7 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
               <div className="col-span-3 text-sm font-medium" style={{ color: currentTheme.textColor }}>
                 {rus}
               </div>
-              <div className="col-span-1 text-center bg-black/20 py-1 rounded" style={{ color: currentTheme.abilityScoreColor }}>
+              <div className="col-span-1 text-center bg-black/30 py-1 rounded" style={{ color: currentTheme.textColor || 'white' }}>
                 {score}
               </div>
               <div className={`col-span-2 text-center py-1 rounded ${isPositiveModifier ? "bg-green-900/30" : "bg-red-900/30"}`}>
@@ -62,30 +62,30 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
       {character && (
         <div className="mt-6 space-y-3">
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="bg-black/20 p-3 rounded text-center">
-              <div className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>Класс брони</div>
-              <div className="text-xl font-bold" style={{ color: currentTheme.textColor }}>
+            <div className="bg-black/30 p-3 rounded text-center">
+              <div className="text-xs mb-1" style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.7)' }}>Класс брони</div>
+              <div className="text-xl font-bold" style={{ color: currentTheme.textColor || 'white' }}>
                 {character.armorClass || 10}
               </div>
             </div>
-            <div className="bg-black/20 p-3 rounded text-center">
-              <div className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>Инициатива</div>
-              <div className="text-xl font-bold" style={{ color: currentTheme.textColor }}>
+            <div className="bg-black/30 p-3 rounded text-center">
+              <div className="text-xs mb-1" style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.7)' }}>Инициатива</div>
+              <div className="text-xl font-bold" style={{ color: currentTheme.textColor || 'white' }}>
                 {getModifier(character?.abilities?.DEX || 10)}
               </div>
             </div>
           </div>
           
           <div className="mt-2">
-            <div className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>Скорость</div>
-            <div className="text-sm" style={{ color: currentTheme.textColor }}>
+            <div className="text-xs mb-1" style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.7)' }}>Скорость</div>
+            <div className="text-sm" style={{ color: currentTheme.textColor || 'white' }}>
               {character.speed || 30} футов
             </div>
           </div>
           
           <div className="mt-2">
-            <div className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>Грузоподъёмность</div>
-            <div className="text-sm" style={{ color: currentTheme.textColor }}>
+            <div className="text-xs mb-1" style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.7)' }}>Грузоподъёмность</div>
+            <div className="text-sm" style={{ color: currentTheme.textColor || 'white' }}>
               {(character?.abilities?.STR || 10) * 15} фунтов
             </div>
           </div>
