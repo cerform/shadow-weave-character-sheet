@@ -2,6 +2,8 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import { firebaseAuthService } from '@/services/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
 
 // Типы для пользователя и контекста
 export interface User {
@@ -11,6 +13,7 @@ export interface User {
   isDM: boolean;
   characters?: string[]; // ID сохраненных персонажей
   createdAt: string;
+  firebaseUid?: string; // ID пользователя в Firebase
 }
 
 interface AuthContextType {
@@ -33,6 +36,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_STORAGE_KEY = 'dnd-users';
 const CURRENT_USER_KEY = 'dnd-current-user';
 
+// Функция для конвертации Firebase User в нашего User
+const createUserFromFirebase = (firebaseUser: FirebaseUser, isDM: boolean = false, username?: string): User => {
+  return {
+    id: uuidv4(),
+    email: firebaseUser.email || 'anonymous@user.com',
+    username: username || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+    isDM,
+    characters: [],
+    createdAt: new Date().toISOString(),
+    firebaseUid: firebaseUser.uid
+  };
+};
+
 export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -46,13 +62,47 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       setUsers(JSON.parse(storedUsers));
     }
     
-    // Проверка сохраненной сессии
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
+    // Слушатель изменения состояния аутентификации в Firebase
+    const unsubscribe = firebaseAuthService.onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        // Проверяем, есть ли пользователь в локальном хранилище
+        const storedUsers = localStorage.getItem(USER_STORAGE_KEY);
+        let usersList: User[] = [];
+        
+        if (storedUsers) {
+          usersList = JSON.parse(storedUsers);
+          const existingUser = usersList.find(u => u.firebaseUid === firebaseUser.uid);
+          
+          if (existingUser) {
+            setCurrentUser(existingUser);
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(existingUser));
+          } else {
+            // Если пользователь есть в Firebase, но нет в локальном хранилище,
+            // создаем нового пользователя
+            const newUser = createUserFromFirebase(firebaseUser);
+            usersList.push(newUser);
+            setUsers(usersList);
+            setCurrentUser(newUser);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(usersList));
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+          }
+        } else {
+          // Если нет списка пользователей, создаем новый
+          const newUser = createUserFromFirebase(firebaseUser);
+          setUsers([newUser]);
+          setCurrentUser(newUser);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify([newUser]));
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+        }
+      } else {
+        // Если в Firebase нет пользователя, очищаем текущего пользователя
+        setCurrentUser(null);
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
+      setIsInitializing(false);
+    });
     
-    setIsInitializing(false);
+    return () => unsubscribe(); // Отписка при размонтировании
   }, []);
   
   // Сохранение пользователей при изменениях
@@ -62,107 +112,92 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     }
   }, [users]);
   
-  // Сохранение текущего пользователя
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
-    }
-  }, [currentUser]);
-  
-  // Логин
+  // Логин с email и паролем
   const login = async (email: string, password: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Имитация асинхронности
-      setTimeout(() => {
-        // Поиск пользователя по email
-        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        if (!user) {
-          reject(new Error('Пользователь не найден'));
-          return;
-        }
+    try {
+      const firebaseUser = await firebaseAuthService.loginWithEmail(email, password);
+      
+      if (firebaseUser) {
+        // Поиск пользователя в локальном хранилище по Firebase UID
+        const existingUser = users.find(u => u.firebaseUid === firebaseUser.uid);
         
-        // В реальном приложении здесь была бы проверка пароля
-        // Это простая имитация для примера
-        setCurrentUser(user);
-        resolve();
-      }, 600);
-    });
+        if (existingUser) {
+          setCurrentUser(existingUser);
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(existingUser));
+        } else {
+          // Если пользователя нет в локальном хранилище, создаем нового
+          const newUser = createUserFromFirebase(firebaseUser);
+          const updatedUsers = [...users, newUser];
+          setUsers(updatedUsers);
+          setCurrentUser(newUser);
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка авторизации:", error);
+      throw error;
+    }
   };
   
   // Регистрация
   const register = async (email: string, password: string, username: string, isDM: boolean): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Имитация асинхронности
-      setTimeout(() => {
-        // Проверка, не существует ли уже пользователь с таким email
-        if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-          reject(new Error('Пользователь с таким email уже существует'));
-          return;
-        }
-        
+    try {
+      const firebaseUser = await firebaseAuthService.registerWithEmail(email, password);
+      
+      if (firebaseUser) {
         // Создание нового пользователя
-        const newUser: User = {
-          id: uuidv4(),
-          email,
-          username,
-          isDM,
-          characters: [],
-          createdAt: new Date().toISOString()
-        };
+        const newUser = createUserFromFirebase(firebaseUser, isDM, username);
         
         // Добавление в список пользователей
-        setUsers(prevUsers => [...prevUsers, newUser]);
-        
-        // Устанавливаем как текущего пользователя
+        const updatedUsers = [...users, newUser];
+        setUsers(updatedUsers);
         setCurrentUser(newUser);
-        resolve();
-      }, 600);
-    });
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+      }
+    } catch (error) {
+      console.error("Ошибка регистрации:", error);
+      throw error;
+    }
   };
   
-  // Вход через Google (имитация)
+  // Вход через Google
   const googleLogin = async (isDM: boolean): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Имитация входа через Google OAuth
-      try {
-        // Генерируем уникальный email, чтобы избежать дубликатов
-        const randomId = Math.floor(Math.random() * 10000);
-        const email = `user${randomId}@gmail.com`;
+    try {
+      const firebaseUser = await firebaseAuthService.loginWithGoogle();
+      
+      if (firebaseUser) {
+        // Проверка, существует ли уже пользователь
+        const existingUser = users.find(u => u.firebaseUid === firebaseUser.uid);
         
-        // Проверка, существует ли пользователь
-        let user = users.find(u => u.email === email);
-        
-        if (!user) {
-          // Создание нового пользователя
-          user = {
-            id: uuidv4(),
-            email,
-            username: `User ${randomId}`,
-            isDM,
-            characters: [],
-            createdAt: new Date().toISOString()
-          };
-          
-          setUsers(prevUsers => [...prevUsers, user!]);
+        if (existingUser) {
+          setCurrentUser(existingUser);
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(existingUser));
+        } else {
+          // Если пользователя нет, создаем нового
+          const newUser = createUserFromFirebase(firebaseUser, isDM);
+          const updatedUsers = [...users, newUser];
+          setUsers(updatedUsers);
+          setCurrentUser(newUser);
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
         }
-        
-        setCurrentUser(user);
-        resolve();
-      } catch (error) {
-        reject(error);
       }
-    });
+    } catch (error) {
+      console.error("Ошибка при входе через Google:", error);
+      throw error;
+    }
   };
   
   // Выход
   const logout = async (): Promise<void> => {
-    return new Promise(resolve => {
+    try {
+      await firebaseAuthService.logout();
       setCurrentUser(null);
+      localStorage.removeItem(CURRENT_USER_KEY);
       toast.success("Вы успешно вышли из системы");
-      resolve();
-    });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      throw error;
+    }
   };
   
   // Обновление данных пользователя
@@ -177,6 +212,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       ));
       
       setCurrentUser(updatedUser);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
       resolve();
     });
   };
@@ -204,6 +240,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       ));
       
       setCurrentUser(updatedUser);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
       resolve();
     });
   };
@@ -225,6 +262,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       ));
       
       setCurrentUser(updatedUser);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
       resolve();
     });
   };
