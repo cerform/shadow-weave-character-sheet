@@ -44,17 +44,17 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {Object.entries(abilityScores).map(([ability, value]) => (
           <div key={ability} className="space-y-1">
-            <Label htmlFor={ability} className="capitalize text-foreground">
+            <Label htmlFor={ability} className="capitalize text-white">
               {ability}
             </Label>
             <Input
               id={ability}
               type="number"
-              value={value.toString()} // Исправляем ошибку TypeScript, преобразуя number в string
+              value={value.toString()}
               min="3"
               max={maxAbilityScore}
               onChange={(e) => handleAbilityChange(ability as keyof CharacterSheet['abilities'], e.target.value)}
-              className="text-foreground"
+              className="text-white bg-black/50 border-white/30"
             />
           </div>
         ))}
@@ -65,7 +65,7 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
           type="button"
           variant="outline"
           onClick={resetScores}
-          className="text-foreground"
+          className="text-white bg-black/50 hover:bg-white/20"
         >
           Сбросить
         </Button>

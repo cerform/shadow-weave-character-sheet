@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -153,9 +154,41 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   
   // Вычисляем высоту для 3D кубика в зависимости от режима
   const diceContainerHeight = compactMode ? '200px' : '220px';
+
+  // Стили для улучшения контрастности
+  const buttonStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    color: '#FFFFFF',
+    border: `1px solid ${currentTheme.accent}`,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
+  };
+  
+  const selectedButtonStyle = {
+    backgroundColor: currentTheme.accent,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+  };
+  
+  const inputStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    color: '#FFFFFF',
+    border: `1px solid ${currentTheme.accent}60`
+  };
+  
+  const counterStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    color: '#FFFFFF',
+    border: `1px solid ${currentTheme.accent}60`
+  };
+  
+  const textStyle = {
+    color: '#FFFFFF',
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 1)'
+  };
   
   return (
-    <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
+    <Card className="p-4 bg-black/80 backdrop-blur-sm border-white/20">
       <div className="space-y-4">
         {/* Кнопки типов кубиков в ряд */}
         <div className="grid grid-cols-6 gap-1">
@@ -164,7 +197,8 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               key={dice}
               size="sm"
               variant={diceType === dice ? "default" : "outline"}
-              className={`h-10 px-2 flex items-center justify-center ${diceType === dice ? 'bg-primary text-white' : 'bg-background/50 text-white'}`}
+              className={`h-10 px-2 flex items-center justify-center ${diceType === dice ? 'font-semibold' : ''}`}
+              style={diceType === dice ? selectedButtonStyle : buttonStyle}
               onClick={() => setDiceType(dice as any)}
             >
               {dice}
@@ -177,22 +211,24 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {/* Количество кубиков */}
             <div className="flex items-center gap-1">
-              <Label className="text-xs text-white font-medium">Кол-во:</Label>
+              <Label className="text-xs text-white font-medium" style={textStyle}>Кол-во:</Label>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8 text-white bg-background/50" 
+                className="px-2 h-8 w-8" 
+                style={buttonStyle}
                 onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
               >
                 <Minus size={14} />
               </Button>
-              <div className="flex items-center border rounded px-2 min-w-[30px] justify-center bg-background/50 text-white">
-                <span className="text-sm">{diceCount}</span>
+              <div className="flex items-center border rounded px-2 min-w-[30px] justify-center" style={counterStyle}>
+                <span className="text-sm text-white">{diceCount}</span>
               </div>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8 text-white bg-background/50" 
+                className="px-2 h-8 w-8" 
+                style={buttonStyle}
                 onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
               >
                 <Plus size={14} />
@@ -201,22 +237,24 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             
             {/* Модификатор броска */}
             <div className="flex items-center gap-1 ml-2">
-              <Label className="text-xs text-white font-medium">Мод:</Label>
+              <Label className="text-xs text-white font-medium" style={textStyle}>Мод:</Label>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8 text-white bg-background/50" 
+                className="px-2 h-8 w-8" 
+                style={buttonStyle} 
                 onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
               >
                 <Minus size={14} />
               </Button>
-              <div className="flex items-center border rounded px-2 min-w-[40px] justify-center bg-background/50 text-white">
-                <span className="text-sm">{modifier >= 0 ? '+' : ''}{modifier}</span>
+              <div className="flex items-center border rounded px-2 min-w-[40px] justify-center" style={counterStyle}>
+                <span className="text-sm text-white">{modifier >= 0 ? '+' : ''}{modifier}</span>
               </div>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8 text-white bg-background/50" 
+                className="px-2 h-8 w-8" 
+                style={buttonStyle}
                 onClick={() => setModifier(prev => Math.min(20, prev + 1))}
               >
                 <Plus size={14} />
@@ -227,16 +265,17 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               <Label 
                 htmlFor="roll-reason" 
                 className="text-xs mb-1 block text-white font-medium"
+                style={textStyle}
               >
                 Причина броска:
               </Label>
               <Select value={rollReason} onValueChange={setRollReason}>
-                <SelectTrigger className="h-8 w-[150px] text-xs bg-background/50 text-white">
+                <SelectTrigger className="h-8 w-[150px] text-xs text-white" style={inputStyle}>
                   <SelectValue placeholder="Выберите причину" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-black/90 text-white border-white/30">
                   {diceRollReasons.map((reason) => (
-                    <SelectItem key={reason.value} value={reason.value}>
+                    <SelectItem key={reason.value} value={reason.value} className="text-white hover:bg-white/10">
                       {reason.label}
                     </SelectItem>
                   ))}
@@ -251,14 +290,19 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               placeholder="Опишите причину броска..."
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
-              className="h-8 text-xs mt-1 text-white bg-background/50"
+              className="h-8 text-xs mt-1"
+              style={inputStyle}
             />
           )}
           
           {/* Градиентные кубики в центре */}
           <div 
-            className="mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
-            style={{ height: diceContainerHeight, zIndex: fixedPosition ? 1 : 'auto' }}
+            className="mb-4 bg-black/90 rounded-lg overflow-hidden relative flex items-center justify-center" 
+            style={{ 
+              height: diceContainerHeight, 
+              zIndex: fixedPosition ? 1 : 'auto',
+              border: `1px solid ${currentTheme.accent}40`
+            }}
           >
             <div className="relative w-full h-full flex items-center justify-center">
               <GradientDice 
@@ -272,11 +316,16 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           </div>
           
           <Button 
-            className="w-full bg-primary text-white hover:bg-primary/80"
+            className="w-full bg-primary hover:bg-primary/80"
+            style={{ 
+              backgroundColor: currentTheme.accent,
+              color: '#FFFFFF',
+              textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
+            }}
             onClick={handleRoll}
           >
             <Dices className="mr-2" size={16} />
-            Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''} от имени {characterName}
+            Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
           </Button>
         </div>
         
@@ -284,24 +333,24 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
         {rollHistory.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-white">
+              <h4 className="text-sm font-medium text-white" style={textStyle}>
                 Ваши броски
               </h4>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 text-xs text-white hover:bg-primary/20"
+                className="h-6 text-xs text-white hover:bg-white/10"
                 onClick={() => setRollHistory([])}
               >
                 Очистить
               </Button>
             </div>
-            <ScrollArea className="h-32 rounded border p-2 bg-black/30 border-white/10 text-white">
+            <ScrollArea className="h-32 rounded border p-2 bg-black/90 border-white/30">
               <div className="space-y-2">
                 {rollHistory.map((roll, index) => (
                   <div 
                     key={index} 
-                    className="text-sm p-1 border-b border-dashed flex justify-between items-center border-white/20"
+                    className="text-sm p-1 border-b border-dashed flex justify-between items-center border-white/30"
                   >
                     <div className="text-white">
                       <span className="font-medium">{roll.diceCount}{roll.diceType}</span>
@@ -309,14 +358,14 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                         <span>{roll.modifier > 0 ? ' +' : ' '}{roll.modifier}</span>
                       )}
                       {roll.reason && (
-                        <span className="text-white/70 ml-1">
+                        <span className="text-white/80 ml-1">
                           ({roll.reason})
                         </span>
                       )}
                     </div>
                     <Badge 
                       variant="outline"
-                      className="border-white/30 text-white"
+                      className="border-white/50 text-white bg-black/50"
                     >
                       {Array.isArray(roll.rolls) 
                         ? roll.rolls.join(', ') 

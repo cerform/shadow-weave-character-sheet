@@ -18,19 +18,21 @@ export const FloatingDiceButton = () => {
         <SheetTrigger asChild>
           <Button 
             size="lg" 
-            className="rounded-full h-16 w-16 p-0 shadow-lg" 
+            className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 
             style={{ 
               backgroundColor: `${currentTheme.accent}`,
-              color: currentTheme.textColor
+              color: '#FFFFFF',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
             }}
           >
             <Dices className="h-8 w-8" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/90 border-white/20 p-0 pt-4">
+        <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/95 border-white/30 p-0 pt-4">
           <SheetHeader className="px-6">
             <SheetTitle className="text-white text-2xl">Кубики</SheetTitle>
-            <SheetDescription className="text-white/70 text-base">
+            <SheetDescription className="text-white/90 text-base">
               Используйте виртуальные кубики для бросков
             </SheetDescription>
           </SheetHeader>
