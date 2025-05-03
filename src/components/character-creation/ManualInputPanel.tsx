@@ -1,9 +1,7 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { Label } from "@/components/ui/label";
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 interface ManualInputPanelProps {
   stats: {[key: string]: number};
@@ -17,35 +15,13 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   stats,
   updateStat,
   getModifier,
-  maxAbilityScore = 20,
+  maxAbilityScore = ABILITY_SCORE_CAPS.BASE_CAP,
   level = 1
 }) => {
-  const { theme } = useTheme();
-  // Добавляем защиту от undefined
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
-  const handleInputChange = (stat: string, value: string) => {
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 1 && numValue <= maxAbilityScore) {
-      updateStat(stat, numValue);
-    }
-  };
-  
-  const adjustStat = (stat: string, amount: number) => {
-    const currentValue = stats[stat as keyof typeof stats];
-    const newValue = currentValue + amount;
-    if (newValue >= 1 && newValue <= maxAbilityScore) {
-      updateStat(stat, newValue);
-    }
-  };
-  
   return (
     <div>
-      <p className="mb-4 text-muted-foreground">
-        Введите значения характеристик вручную 
-        (от 1 до {maxAbilityScore}
-        {maxAbilityScore > 20 ? ` для вашего уровня ${level}` : ''}).
+      <p className="text-sm text-muted-foreground mb-4">
+        Введите значения характеристик вручную. Значение от 1 до {maxAbilityScore} (максимум для вашего уровня).
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -57,37 +33,26 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
           return (
             <div key={key} className="p-4 border rounded text-center">
               <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
+              <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
+              <div className="text-xl mb-3 text-accent">{modifier}</div>
               
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  onClick={() => adjustStat(key, -1)}
-                  disabled={stats[stat] <= 1}
-                >
-                  -
-                </Button>
-                
+              <div>
+                <Label htmlFor={`${key}-input`} className="text-sm text-muted-foreground">
+                  Значение (1-{maxAbilityScore})
+                </Label>
                 <Input
                   type="number"
+                  id={`${key}-input`}
                   value={value}
-                  onChange={(e) => handleInputChange(key, e.target.value)}
-                  min={1}
-                  max={maxAbilityScore}
-                  className="w-16 text-center"
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value, 10);
+                    if (!isNaN(newValue) && newValue >= 1 && newValue <= maxAbilityScore) {
+                      updateStat(stat, newValue);
+                    }
+                  }}
+                  className="text-center"
                 />
-                
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  onClick={() => adjustStat(key, 1)}
-                  disabled={stats[stat] >= maxAbilityScore}
-                >
-                  +
-                </Button>
               </div>
-              
-              <div className="text-xl" style={{ color: currentTheme.accent }}>{modifier}</div>
             </div>
           );
         })}

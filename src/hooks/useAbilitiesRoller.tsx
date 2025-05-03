@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { ABILITY_SCORE_CAPS } from '@/types/character';
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 export type AbilityMethod = 'pointbuy' | 'standard' | 'roll' | 'manual';
 

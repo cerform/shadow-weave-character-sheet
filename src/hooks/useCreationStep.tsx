@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { CharacterSheet } from "@/types/character";
+import { CharacterSheet } from "@/types/character.d";
 
 interface UseCreationStepProps {
   isMagicClass: boolean;

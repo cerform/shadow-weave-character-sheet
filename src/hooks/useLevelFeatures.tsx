@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet } from '@/types/character.d';
 import { useToast } from "@/hooks/use-toast";
 
 // Интерфейс для доступных функций на определенном уровне
