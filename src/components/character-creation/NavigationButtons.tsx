@@ -24,7 +24,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = "Далее"
 }) => {
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
-  const { isMobile } = useDeviceType() === "mobile";
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === "mobile";
   
   return (
     <div className="flex justify-between pt-6">
