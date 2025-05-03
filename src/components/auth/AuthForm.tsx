@@ -19,7 +19,7 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, googleLogin } = useAuth(); // Changed from loginWithGoogle to googleLogin
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -52,7 +52,8 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     
     try {
       setLoading(true);
-      await register(email, password, name);
+      // Added the 4th parameter (isDM) as required by the register function
+      await register(email, password, name, false);
       toast.success('Регистрация успешна');
       navigate(redirectTo);
     } catch (error: any) {
@@ -65,7 +66,8 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      await loginWithGoogle();
+      // Changed from loginWithGoogle to googleLogin and added isDM parameter
+      await googleLogin(false);
       toast.success('Вход с Google выполнен успешно');
       navigate(redirectTo);
     } catch (error: any) {
