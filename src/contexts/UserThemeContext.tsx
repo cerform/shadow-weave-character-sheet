@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
-import { Theme, useTheme } from './ThemeContext';
+import { Theme, useTheme } from '@/contexts/ThemeContext';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;

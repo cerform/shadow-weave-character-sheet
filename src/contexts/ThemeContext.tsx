@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature';
+export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,7 +13,7 @@ const defaultThemeContext: ThemeContextType = {
   setTheme: () => {},
 };
 
-const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
+export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
 
 export const useTheme = () => useContext(ThemeContext);
 
