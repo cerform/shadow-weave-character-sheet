@@ -5,22 +5,35 @@ import { useCharacter } from '@/contexts/CharacterContext';
 export const FeaturesTab = () => {
   const { character } = useCharacter();
   
-  // Разделяем особенности на категории
-  const classFeatures = character?.features?.filter(f => 
+  // Используем proficiencies вместо features и проверяем наличие свойства
+  const classFeatures = character?.proficiencies?.filter(f => 
     f.includes('Дополнительная атака') || 
     f.includes('класс') || 
     f.includes('Архетип:')
   ) || [];
   
-  const raceFeatures = character?.features?.filter(f => 
+  const raceFeatures = character?.proficiencies?.filter(f => 
     f.includes('раса') || 
     f.includes('Темное зрение') || 
     f.includes('Эльфийская проницательность')
   ) || [];
   
-  const otherFeatures = character?.features?.filter(f => 
+  const otherFeatures = character?.proficiencies?.filter(f => 
     !classFeatures.includes(f) && !raceFeatures.includes(f)
   ) || [];
+
+  // Получаем подкласс из className, если есть формат "Класс: Подкласс"
+  const getSubclass = (): string | undefined => {
+    if (!character?.className) return undefined;
+    
+    const parts = character.className.split(':');
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    return undefined;
+  };
+
+  const subclass = getSubclass();
 
   return (
     <div className="space-y-4">
@@ -69,13 +82,13 @@ export const FeaturesTab = () => {
           </div>
         </div>
         
-        {(otherFeatures.length > 0 || character?.subclass) && (
+        {(otherFeatures.length > 0 || subclass) && (
           <div className="p-4 bg-primary/5 rounded-lg">
             <h4 className="font-semibold mb-2">Черты и другие особенности</h4>
             <div className="space-y-3">
-              {character?.subclass && (
+              {subclass && (
                 <div>
-                  <h5 className="font-medium">Архетип: {character.subclass}</h5>
+                  <h5 className="font-medium">Архетип: {subclass}</h5>
                 </div>
               )}
               {otherFeatures.map((feature, index) => (
@@ -83,7 +96,7 @@ export const FeaturesTab = () => {
                   <h5 className="font-medium">{feature}</h5>
                 </div>
               ))}
-              {otherFeatures.length === 0 && !character?.subclass && (
+              {otherFeatures.length === 0 && !subclass && (
                 <div>
                   <h5 className="font-medium">Мастер легкого оружия</h5>
                   <p className="text-sm">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
