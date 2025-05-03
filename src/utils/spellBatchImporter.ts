@@ -127,3 +127,53 @@ export function importSpellsFromText(
     return existingSpells;
   }
 }
+
+// Добавляем функцию processSpellBatch
+export function processSpellBatch(rawText: string): any[] {
+  try {
+    // Разбиваем текст по строкам
+    const lines = rawText.split('\n').filter(line => line.trim().length > 0);
+    
+    // Анализируем каждую строку
+    return lines.map(line => {
+      // Регулярное выражение для поиска уровня заклинания [число]
+      const levelMatch = line.match(/\[(\d+)\]/);
+      const level = levelMatch ? parseInt(levelMatch[1]) : 0;
+      
+      // Извлекаем имя заклинания - всё после [число] до компонентов
+      let name = line.replace(/\[\d+\]/, '').trim();
+      
+      // Проверяем наличие компонентов в конце строки (обычно буквы В, С, М)
+      const componentsMatch = name.match(/\s([ВСМ]+|[VSM]+)$/i);
+      let components = {
+        verbal: false,
+        somatic: false,
+        material: false,
+        ritual: false,
+        concentration: false
+      };
+      
+      if (componentsMatch) {
+        const componentStr = componentsMatch[1];
+        name = name.replace(componentsMatch[0], '').trim();
+        
+        // Определяем компоненты
+        components.verbal = /[ВV]/i.test(componentStr);
+        components.somatic = /[СS]/i.test(componentStr);
+        components.material = /[МM]/i.test(componentStr);
+        // Проверяем дополнительные метки
+        components.ritual = /[Р]/i.test(componentStr);
+        components.concentration = /[К]/i.test(componentStr);
+      }
+      
+      return {
+        name,
+        level,
+        components
+      };
+    });
+  } catch (error) {
+    console.error("Ошибка при обработке заклинаний:", error);
+    return [];
+  }
+}

@@ -1,7 +1,7 @@
 
 export interface Session {
   id: string;
-  campaignId?: string; // Добавляем ID кампании
+  campaignId?: string;
   title: string;
   description: string;
   dmId: string;
@@ -19,4 +19,15 @@ export interface Session {
   lastActivity?: string;
   createdAt: string;
   code?: string;
+  name?: string; // Добавляем поле name
+  users?: User[]; // Добавляем поле users
+}
+
+// Добавляем интерфейс User
+export interface User {
+  id: string;
+  name: string;
+  themePreference: string;
+  isOnline: boolean;
+  isDM: boolean;
 }

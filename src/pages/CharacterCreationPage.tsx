@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -63,7 +62,7 @@ const CharacterCreationPage = () => {
 
   // Обертка для setAbilitiesMethod для соответствия типам
   const handleSetAbilitiesMethod = (method: "pointbuy" | "standard" | "roll" | "manual") => {
-    setAbilitiesMethod(method as any); // Используем any для совместимости
+    setAbilitiesMethod(method as any);
   };
 
   // Функция-обертка для обеспечения правильной сигнатуры в rollSingleAbility
@@ -80,7 +79,7 @@ const CharacterCreationPage = () => {
   // Обертка для getModifier для возвращения string
   const getModifierString = (score: number): string => {
     const mod = getModifier(score);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
+    return typeof mod === 'string' ? mod : (mod >= 0 ? `+${mod}` : `${mod}`);
   };
 
   return (

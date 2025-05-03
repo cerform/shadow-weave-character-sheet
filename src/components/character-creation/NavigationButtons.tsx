@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 
 interface NavigationButtonsProps {
-  allowNext?: boolean; // Сделаем опциональным
-  disableNext?: boolean; // Добавляем новое свойство
+  allowNext?: boolean;
+  disableNext?: boolean; // Добавлено для CharacterSpellSelection
   nextStep: () => void;
   prevStep: () => void;
   isFirstStep?: boolean;
