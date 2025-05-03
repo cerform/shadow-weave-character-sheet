@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Book, ArrowLeft, BookOpen } from "lucide-react";
 import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
 import NavigationButtons from "@/components/ui/NavigationButtons";
-import ThemeSelector from "@/components/ThemeSelector";
+import { ThemeSelector } from "@/components/character-sheet/ThemeSelector"; // Изменено на унифицированный ThemeSelector
 import { useNavigate } from 'react-router-dom';
 import { useSpellbook } from '@/hooks/useSpellbook';
 import SpellFilters from './SpellFilters';
@@ -66,7 +66,7 @@ const SpellBookViewer: React.FC = () => {
         </div>
       </div>
       
-      <div className="mb-4">
+      <div className="mb-4 flex justify-end">
         <ThemeSelector />
       </div>
       

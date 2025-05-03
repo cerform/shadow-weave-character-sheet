@@ -129,8 +129,8 @@ export const useSpellbook = () => {
           (spell.classes && (
             (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term)) ||
             (Array.isArray(spell.classes) && (spell.classes as string[]).some(cls => {
-              // Check that cls is a string before calling toLowerCase
-              return typeof cls === 'string' && cls.toLowerCase().includes(term);
+              if (typeof cls !== 'string') return false;
+              return cls.toLowerCase().includes(term);
             }))
           ))
       );
@@ -153,22 +153,20 @@ export const useSpellbook = () => {
           // Check if the classes string contains any of the selected classes
           const spellClassesStr = spell.classes;
           return activeClass.some(cls => {
-            // Add type check before calling toLowerCase
-            if (typeof spellClassesStr === 'string') {
-              return spellClassesStr.toLowerCase().includes(cls.toLowerCase());
+            if (typeof spellClassesStr !== 'string' || typeof cls !== 'string') {
+              return false;
             }
-            return false;
+            return spellClassesStr.toLowerCase().includes(cls.toLowerCase());
           });
         } else if (Array.isArray(spell.classes)) {
           // Check if the classes array contains any of the selected classes
           return (spell.classes as string[]).some(spellClass => {
             if (typeof spellClass !== 'string') return false;
             return activeClass.some(cls => {
-              // Add type check before calling toLowerCase
-              if (typeof spellClass === 'string' && typeof cls === 'string') {
-                return spellClass.toLowerCase().includes(cls.toLowerCase());
+              if (typeof spellClass !== 'string' || typeof cls !== 'string') {
+                return false;
               }
-              return false;
+              return spellClass.toLowerCase().includes(cls.toLowerCase());
             });
           });
         }

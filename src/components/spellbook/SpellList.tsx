@@ -53,44 +53,56 @@ const SpellList: React.FC<SpellListProps> = ({
               key={spell.id || `spell-${index}`} 
               className="spell-card border border-accent hover:border-primary cursor-pointer transition-all"
               onClick={() => handleOpenSpell(spell)}
-              style={{backgroundColor: `${currentTheme.cardBackground}`}}
+              style={{
+                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
+              }}
             >
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-bold text-foreground" style={{color: currentTheme.textColor}}>{spell.name}</h4>
+                  <h4 className="text-lg font-bold" style={{color: currentTheme.textColor}}>{spell.name}</h4>
                   <Badge
-                    className={getBadgeColor(spell.level)}
+                    variant="outline"
                     style={{
                       backgroundColor: currentTheme.accent,
-                      color: currentTheme.textColor,
+                      color: currentTheme.textColor || 'white',
                       borderColor: currentTheme.accent
                     }}
                   >
                     {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
                   </Badge>
                 </div>
-                <div className="flex items-center text-sm text-muted-foreground mb-2">
+                <div className="flex items-center text-sm mb-2">
                   <Badge
-                    className={getSchoolBadgeColor(spell.school)}
+                    variant="outline"
                     style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
                       borderColor: currentTheme.accent
                     }}
                   >
                     {spell.school}
                   </Badge>
                   {(spell.isRitual || spell.ritual) && (
-                    <Badge variant="outline" className="ml-2 border-accent">
+                    <Badge variant="outline" className="ml-2" style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}>
                       Ритуал
                     </Badge>
                   )}
                   {(spell.isConcentration || spell.concentration) && (
-                    <Badge variant="outline" className="ml-2 border-accent">
+                    <Badge variant="outline" className="ml-2" style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}>
                       Концентрация
                     </Badge>
                   )}
                 </div>
                 <Separator className="my-2 bg-accent/30" />
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
                   <div>
                     <span className="font-semibold">Время накладывания:</span> {spell.castingTime}
                   </div>
@@ -105,7 +117,7 @@ const SpellList: React.FC<SpellListProps> = ({
                   </div>
                 </div>
                 {spell.classes && (
-                  <div className="mt-2 text-sm">
+                  <div className="mt-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
                     <span className="font-semibold">Классы:</span> {formatClasses(spell.classes)}
                   </div>
                 )}
