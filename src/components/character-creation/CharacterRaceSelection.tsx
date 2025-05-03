@@ -81,7 +81,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               ) : undefined}
               subOptions={hasSubraces && isSelected ? (
                 <div>
-                  <p className="text-sm font-medium mb-2 text-white">Доступные подрасы:</p>
+                  <p className="text-sm font-medium mb-2 text-white text-shadow-sm">Доступные подрасы:</p>
                   <SelectionSubOptionsContainer>
                     {race.subRaces?.map((subrace) => {
                       const isSubraceSelected = selectedSubrace === subrace;

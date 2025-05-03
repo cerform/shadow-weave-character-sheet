@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { 
@@ -93,12 +94,8 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
   };
 
   // Классы для кнопок
-  const baseButtonClass = "transition-all duration-200 hover:bg-white/20";
-  const selectedButtonClass = baseButtonClass + " text-black font-bold bg-accent border-2 border-white shadow-lg";
-  const normalButtonClass = baseButtonClass + " text-white bg-black/60 border border-accent";
-
-  // Классы для текста списков
-  const listItemClass = "text-white text-shadow";
+  const getNormalButtonClass = "transition-all duration-200 hover:bg-white/20 text-white bg-black/60 border border-accent";
+  const getSelectedButtonClass = "transition-all duration-200 font-semibold shadow-lg ring-2 ring-white text-black font-bold bg-accent";
 
   return (
     <div>
@@ -109,8 +106,8 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
       
       <Card className="mb-8" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderColor: currentTheme.accent }}>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold mb-2 text-white">Языки (максимум 3)</h3>
-          <p className="mb-4 text-white">
+          <h3 className="text-xl font-semibold mb-2 text-white text-shadow">Языки (максимум 3)</h3>
+          <p className="mb-4 text-white text-shadow-sm">
             Выберите языки, которыми владеет ваш персонаж.
           </p>
           
@@ -121,16 +118,16 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={lang}
                 selected={selectedLanguages.includes(lang)}
                 onClick={() => toggleLanguage(lang)}
-                className={selectedLanguages.includes(lang) ? selectedButtonClass : normalButtonClass}
+                className={selectedLanguages.includes(lang) ? getSelectedButtonClass : getNormalButtonClass}
               />
             ))}
           </SelectionSubOptionsContainer>
           
           <div className="mb-6">
-            <h4 className="font-medium mb-1 text-white">Выбранные языки:</h4>
+            <h4 className="font-medium mb-1 text-white text-shadow-sm">Выбранные языки:</h4>
             <ul className="list-disc pl-5">
               {selectedLanguages.map((lang, idx) => (
-                <li key={idx} className={listItemClass}>{lang}</li>
+                <li key={idx} className="text-white text-shadow-sm">{lang}</li>
               ))}
             </ul>
           </div>
@@ -139,8 +136,8 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
       
       <Card className="mb-8" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderColor: currentTheme.accent }}>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold mb-2 text-white">Навыки (максимум 4)</h3>
-          <p className="mb-4 text-white">
+          <h3 className="text-xl font-semibold mb-2 text-white text-shadow">Навыки (максимум 4)</h3>
+          <p className="mb-4 text-white text-shadow-sm">
             Выберите навыки, которыми владеет ваш персонаж.
           </p>
           
@@ -151,17 +148,17 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={prof}
                 selected={selectedProficiencies.includes(prof)}
                 onClick={() => toggleProficiency(prof)}
-                className={selectedProficiencies.includes(prof) ? selectedButtonClass : normalButtonClass}
+                className={selectedProficiencies.includes(prof) ? getSelectedButtonClass : getNormalButtonClass}
               />
             ))}
           </SelectionSubOptionsContainer>
           
           <div>
-            <h4 className="font-medium mb-1 text-white">Выбранные навыки:</h4>
+            <h4 className="font-medium mb-1 text-white text-shadow-sm">Выбранные навыки:</h4>
             <ul className="list-disc pl-5">
               {selectedProficiencies.length > 0 ? (
                 selectedProficiencies.map((prof, idx) => (
-                  <li key={idx} className={listItemClass}>{prof}</li>
+                  <li key={idx} className="text-white text-shadow-sm">{prof}</li>
                 ))
               ) : (
                 <li className="text-gray-400 italic">Не выбрано навыков</li>

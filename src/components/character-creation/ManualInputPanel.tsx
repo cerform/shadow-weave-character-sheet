@@ -47,10 +47,10 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {Object.entries(abilityScores).map(([ability, value]) => (
           <div key={ability} className="space-y-1">
-            <Label htmlFor={ability} className="capitalize text-white">
+            <Label htmlFor={ability} className="capitalize text-white font-medium text-shadow">
               {ability}
               {getModifier && (
-                <span className="ml-2 text-white">
+                <span className="ml-2 text-white font-bold">
                   {getModifier(value)}
                 </span>
               )}

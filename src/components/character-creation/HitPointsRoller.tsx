@@ -171,10 +171,10 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     
     return (
       <div className="mt-4 space-y-2">
-        <p className="text-sm font-medium text-white">История бросков:</p>
+        <p className="text-sm font-medium text-white text-shadow-sm">История бросков:</p>
         <div className="flex flex-wrap gap-2">
           {rolls.map((roll, index) => (
-            <Badge key={index} variant="outline">
+            <Badge key={index} variant="outline" className="text-white border-white/30 bg-black/50">
               Кубик {index + 1}: {roll}
             </Badge>
           ))}
@@ -190,40 +190,43 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     <>
       <Card className="shadow-lg border border-primary/20">
         <CardHeader className="bg-primary/10">
-          <CardTitle className="text-xl">Очки здоровья (HP)</CardTitle>
+          <CardTitle className="text-xl text-white font-bold text-shadow">Очки здоровья (HP)</CardTitle>
         </CardHeader>
         
-        <CardContent className="p-4 md:p-6">
+        <CardContent className="p-4 md:p-6 bg-black/90">
           <div className="mb-6 space-y-4">
-            <p className="text-sm text-white">
+            <p className="text-sm text-white text-shadow-sm">
               На 1 уровне ваше HP равно максимуму кубика хит-поинтов вашего класса ({getFirstLevelHp(characterClass)}) + 
               модификатор Телосложения ({constitutionModifier >= 0 ? '+' : ''}{constitutionModifier}).
             </p>
             
-            <p className="text-sm text-white">
+            <p className="text-sm text-white text-shadow-sm">
               На каждом следующем уровне вы можете либо бросить кубик и добавить модификатор Телосложения,
               либо взять среднее значение + модификатор Телосложения.
             </p>
             
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-white text-shadow-sm">
               Ваш уровень: {level}, необходимо бросить {level > 1 ? level - 1 : 0} кубиков.
             </p>
           </div>
           
-          {/* Добавляем стандартный компонент для бросков кубиков */}
-          {level > 1 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-bold mb-2 text-white">Бросок кубиков для HP</h3>
-              <p className="text-sm mb-4 text-white">
-                Вы можете использовать кубик {hitDice} для бросков здоровья:
-              </p>
-              <PlayerDicePanel compactMode={true} fixedPosition={false} />
-            </div>
-          )}
+          {/* Добавляем компонент для бросков кубиков с фиксированной причиной HP */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold mb-2 text-white text-shadow-sm">Бросок кубиков для HP</h3>
+            <p className="text-sm mb-4 text-white text-shadow-sm">
+              Используйте кубик {hitDice} для броска здоровья класса {characterClass}:
+            </p>
+            <PlayerDicePanel 
+              compactMode={true} 
+              fixedPosition={false} 
+              reason="hp"
+              characterClass={characterClass}
+            />
+          </div>
           
           {hitPoints > 0 && (
             <div className="mt-6 text-center">
-              <h3 className="text-2xl font-bold text-white">Итоговое HP: {hitPoints}</h3>
+              <h3 className="text-2xl font-bold text-white text-shadow">Итоговое HP: {hitPoints}</h3>
             </div>
           )}
           
@@ -234,7 +237,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           <Button 
             onClick={rollHitPoints}
             disabled={isRolling}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto text-white"
             variant="default"
           >
             Бросить автоматически
@@ -243,7 +246,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           <Button 
             onClick={takeAverageHp}
             disabled={isRolling}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto text-white bg-black/70 hover:bg-white/20 border border-white/30"
             variant="outline"
           >
             Взять среднее значение
