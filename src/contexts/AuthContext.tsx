@@ -2,7 +2,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { firebaseAuthService } from '@/services/firebase';
+import { firebaseAuth } from '@/services/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 
 // Типы для пользователя и контекста
@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     }
     
     // Слушатель изменения состояния аутентификации в Firebase
-    const unsubscribe = firebaseAuthService.onAuthStateChanged((firebaseUser) => {
+    const unsubscribe = firebaseAuth.onAuthStateChanged((firebaseUser) => {
       if (firebaseUser) {
         // Проверяем, есть ли пользователь в локальном хранилище
         const storedUsers = localStorage.getItem(USER_STORAGE_KEY);
@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Логин с email и паролем
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      const firebaseUser = await firebaseAuthService.loginWithEmail(email, password);
+      const firebaseUser = await firebaseAuth.loginWithEmail(email, password);
       
       if (firebaseUser) {
         // Поиск пользователя в локальном хранилище по Firebase UID
@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Регистрация
   const register = async (email: string, password: string, username: string, isDM: boolean): Promise<void> => {
     try {
-      const firebaseUser = await firebaseAuthService.registerWithEmail(email, password);
+      const firebaseUser = await firebaseAuth.registerWithEmail(email, password);
       
       if (firebaseUser) {
         // Создание нового пользователя
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Вход через Google
   const googleLogin = async (isDM: boolean): Promise<void> => {
     try {
-      const firebaseUser = await firebaseAuthService.loginWithGoogle();
+      const firebaseUser = await firebaseAuth.loginWithGoogle();
       
       if (firebaseUser) {
         // Проверка, существует ли уже пользователь
@@ -190,7 +190,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Выход
   const logout = async (): Promise<void> => {
     try {
-      await firebaseAuthService.logout();
+      await firebaseAuth.logout();
       setCurrentUser(null);
       localStorage.removeItem(CURRENT_USER_KEY);
       toast.success("Вы успешно вышли из системы");

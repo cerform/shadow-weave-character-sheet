@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -20,4 +20,55 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { auth, db, storage };
+// Firebase Auth Service
+const firebaseAuth = {
+  registerWithEmail: async (email: string, password: string) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error("Ошибка при регистрации:", error);
+      throw error;
+    }
+  },
+
+  loginWithEmail: async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error("Ошибка при авторизации:", error);
+      throw error;
+    }
+  },
+
+  loginWithGoogle: async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (error) {
+      console.error("Ошибка при входе через Google:", error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      throw error;
+    }
+  },
+
+  onAuthStateChanged: (callback: any) => {
+    return onAuthStateChanged(auth, callback);
+  },
+
+  getCurrentUser: () => {
+    return auth.currentUser;
+  }
+};
+
+export { auth, db, storage, firebaseAuth };
