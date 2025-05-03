@@ -2,9 +2,13 @@
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Card, CardContent } from "@/components/ui/card";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 export const AbilitiesTab = () => {
   const { character } = useCharacter();
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   // Расчет модификатора из значения характеристики
   const getModifier = (score: number) => {
@@ -32,84 +36,134 @@ export const AbilitiesTab = () => {
     return isProficient ? baseModifier + proficiencyBonus : baseModifier;
   };
 
+  // Словарь русских названий характеристик
+  const abilityNames = {
+    STR: "Сила",
+    DEX: "Ловкость",
+    CON: "Телосложение",
+    INT: "Интеллект",
+    WIS: "Мудрость",
+    CHA: "Харизма"
+  };
+
   return (
-    <div className="space-y-8 pb-6 mt-8">
-      <Card className="border border-primary/30 bg-card/20">
+    <div className="space-y-12 pb-6 mt-12">
+      <Card 
+        className="border border-primary/30" 
+        style={{
+          backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
+          boxShadow: `0 0 10px ${currentTheme.accent}40`
+        }}
+      >
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold mb-6">Характеристики персонажа</h3>
+          <h3 
+            className="text-xl font-semibold mb-6" 
+            style={{ color: currentTheme.textColor || '#FFFFFF' }}
+          >
+            Характеристики персонажа
+          </h3>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Сила</div>
-              <div className="text-4xl font-bold my-1">{abilities.STR}</div>
-              <div className="text-md text-primary">{getModifier(abilities.STR)}</div>
-            </div>
-            
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Ловкость</div>
-              <div className="text-4xl font-bold my-1">{abilities.DEX}</div>
-              <div className="text-md text-primary">{getModifier(abilities.DEX)}</div>
-            </div>
-            
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Телосложение</div>
-              <div className="text-4xl font-bold my-1">{abilities.CON}</div>
-              <div className="text-md text-primary">{getModifier(abilities.CON)}</div>
-            </div>
-            
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Интеллект</div>
-              <div className="text-4xl font-bold my-1">{abilities.INT}</div>
-              <div className="text-md text-primary">{getModifier(abilities.INT)}</div>
-            </div>
-            
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Мудрость</div>
-              <div className="text-4xl font-bold my-1">{abilities.WIS}</div>
-              <div className="text-md text-primary">{getModifier(abilities.WIS)}</div>
-            </div>
-            
-            <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <div className="text-lg font-medium">Харизма</div>
-              <div className="text-4xl font-bold my-1">{abilities.CHA}</div>
-              <div className="text-md text-primary">{getModifier(abilities.CHA)}</div>
-            </div>
+            {Object.entries(abilities).map(([key, value]) => {
+              const abilityKey = key as keyof typeof abilityNames;
+              const modifier = getModifier(value);
+              const isPositive = !modifier.includes('-');
+              
+              return (
+                <div 
+                  key={key} 
+                  className="p-4 rounded-lg text-center border"
+                  style={{
+                    backgroundColor: `${currentTheme.accent}15`,
+                    borderColor: `${currentTheme.accent}40`,
+                    boxShadow: `inset 0 0 8px ${currentTheme.accent}30`
+                  }}
+                >
+                  <div 
+                    className="text-lg font-medium mb-1"
+                    style={{ color: currentTheme.textColor }}
+                  >
+                    {abilityNames[abilityKey]}
+                  </div>
+                  <div 
+                    className="text-4xl font-bold my-1"
+                    style={{ color: currentTheme.textColor }}
+                  >
+                    {value}
+                  </div>
+                  <div 
+                    className="text-md"
+                    style={{ 
+                      color: isPositive ? '#4ade80' : '#f87171',
+                      textShadow: `0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
+                    }}
+                  >
+                    {modifier}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
       
-      <Card className="border border-primary/30 bg-card/20 mt-8">
+      <Card 
+        className="border border-primary/30" 
+        style={{
+          backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
+          boxShadow: `0 0 10px ${currentTheme.accent}40`
+        }}
+      >
         <CardContent className="p-6">
-          <h4 className="text-xl font-semibold mb-4">Спасброски</h4>
+          <h4 
+            className="text-xl font-semibold mb-6"
+            style={{ color: currentTheme.textColor || '#FFFFFF' }}
+          >
+            Спасброски
+          </h4>
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Сила</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('STR', abilities.STR))}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Ловкость</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('DEX', abilities.DEX))}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Телосложение</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('CON', abilities.CON))}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Интеллект</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('INT', abilities.INT))}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Мудрость</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('WIS', abilities.WIS))}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b border-primary/20">
-              <span className="font-medium">Харизма</span>
-              <span className="text-lg">{getModifier(getSavingThrowMod('CHA', abilities.CHA))}</span>
-            </div>
+            {Object.entries(abilities).map(([key, value]) => {
+              const abilityKey = key as keyof typeof abilityNames;
+              const modifier = getModifier(getSavingThrowMod(key, value));
+              const isProficient = character?.savingThrowProficiencies?.[key] || false;
+              
+              return (
+                <div 
+                  key={key} 
+                  className="flex justify-between items-center p-3 border-b"
+                  style={{ borderColor: `${currentTheme.accent}30` }}
+                >
+                  <span 
+                    className={`font-medium ${isProficient ? 'font-bold' : ''}`}
+                    style={{ 
+                      color: currentTheme.textColor,
+                      textShadow: isProficient ? `0 0 5px ${currentTheme.accent}80` : 'none'
+                    }}
+                  >
+                    {abilityNames[abilityKey]}
+                    {isProficient && 
+                      <span className="ml-2 px-1 py-0.5 text-xs rounded-full" 
+                        style={{ backgroundColor: `${currentTheme.accent}40` }}
+                      >
+                        +{proficiencyBonus}
+                      </span>
+                    }
+                  </span>
+                  <span 
+                    className="text-lg"
+                    style={{ 
+                      color: modifier.includes('-') ? '#f87171' : '#4ade80',
+                      textShadow: `0 0 5px ${modifier.includes('-') ? '#f8717160' : '#4ade8060'}`
+                    }}
+                  >
+                    {modifier}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
     </div>
   );
 };
-
