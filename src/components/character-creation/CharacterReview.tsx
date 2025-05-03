@@ -68,68 +68,68 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
   };
 
   return (
-    <div className="p-6 bg-card rounded-lg shadow-md max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center">Проверка персонажа</h2>
-      <p className="text-muted-foreground mb-6 text-center">
+    <div className="p-6 bg-black/80 rounded-lg shadow-md max-w-4xl mx-auto text-white">
+      <h2 className="text-2xl font-bold mb-4 text-center text-white">Проверка персонажа</h2>
+      <p className="text-gray-200 mb-6 text-center">
         Проверьте информацию о персонаже перед сохранением
       </p>
       
       <div className="space-y-8">
         {/* Основная информация */}
         <section>
-          <h3 className="text-xl font-semibold mb-2">Основная информация</h3>
-          <Separator className="mb-4" />
+          <h3 className="text-xl font-semibold mb-2 text-white">Основная информация</h3>
+          <Separator className="mb-4 bg-gray-500" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <p><span className="font-medium">Имя:</span> {character.name || "Не указано"}</p>
-              <p><span className="font-medium">Раса:</span> {character.race || "Не указана"}</p>
-              {character.subrace && <p><span className="font-medium">Подраса:</span> {character.subrace}</p>}
-              <p><span className="font-medium">Пол:</span> {character.gender || "Не указан"}</p>
-              <p><span className="font-medium">Мировоззрение:</span> {character.alignment || "Не указано"}</p>
+              <p><span className="font-medium text-gray-200">Имя:</span> <span className="text-white">{character.name || "Не указано"}</span></p>
+              <p><span className="font-medium text-gray-200">Раса:</span> <span className="text-white">{character.race || "Не указана"}</span></p>
+              {character.subrace && <p><span className="font-medium text-gray-200">Подраса:</span> <span className="text-white">{character.subrace}</span></p>}
+              <p><span className="font-medium text-gray-200">Пол:</span> <span className="text-white">{character.gender || "Не указан"}</span></p>
+              <p><span className="font-medium text-gray-200">Мировоззрение:</span> <span className="text-white">{character.alignment || "Не указано"}</span></p>
             </div>
             <div className="space-y-2">
-              <p><span className="font-medium">Класс:</span> {character.class || "Не указан"}</p>
-              {character.subclass && <p><span className="font-medium">Подкласс:</span> {character.subclass}</p>}
-              <p><span className="font-medium">Уровень:</span> {character.level || 1}</p>
-              <p><span className="font-medium">Предыстория:</span> {character.background || "Не указана"}</p>
+              <p><span className="font-medium text-gray-200">Класс:</span> <span className="text-white">{character.class || "Не указан"}</span></p>
+              {character.subclass && <p><span className="font-medium text-gray-200">Подкласс:</span> <span className="text-white">{character.subclass}</span></p>}
+              <p><span className="font-medium text-gray-200">Уровень:</span> <span className="text-white">{character.level || 1}</span></p>
+              <p><span className="font-medium text-gray-200">Предыстория:</span> <span className="text-white">{character.background || "Не указана"}</span></p>
             </div>
           </div>
         </section>
         
         {/* Характеристики */}
         <section>
-          <h3 className="text-xl font-semibold mb-2">Характеристики</h3>
-          <Separator className="mb-4" />
+          <h3 className="text-xl font-semibold mb-2 text-white">Характеристики</h3>
+          <Separator className="mb-4 bg-gray-500" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Сила</p>
-              <p className="text-2xl font-bold">{character.abilities.strength}</p>
-              <p className="text-sm">{getModifier(character.abilities.strength)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Сила</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.strength}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.strength)}</p>
             </div>
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Ловкость</p>
-              <p className="text-2xl font-bold">{character.abilities.dexterity}</p>
-              <p className="text-sm">{getModifier(character.abilities.dexterity)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Ловкость</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.dexterity}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.dexterity)}</p>
             </div>
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Телосложение</p>
-              <p className="text-2xl font-bold">{character.abilities.constitution}</p>
-              <p className="text-sm">{getModifier(character.abilities.constitution)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Телосложение</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.constitution}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.constitution)}</p>
             </div>
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Интеллект</p>
-              <p className="text-2xl font-bold">{character.abilities.intelligence}</p>
-              <p className="text-sm">{getModifier(character.abilities.intelligence)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Интеллект</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.intelligence}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.intelligence)}</p>
             </div>
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Мудрость</p>
-              <p className="text-2xl font-bold">{character.abilities.wisdom}</p>
-              <p className="text-sm">{getModifier(character.abilities.wisdom)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Мудрость</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.wisdom}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.wisdom)}</p>
             </div>
-            <div className="bg-background p-3 rounded-md text-center">
-              <p className="text-sm text-muted-foreground">Харизма</p>
-              <p className="text-2xl font-bold">{character.abilities.charisma}</p>
-              <p className="text-sm">{getModifier(character.abilities.charisma)}</p>
+            <div className="bg-gray-900 p-3 rounded-md text-center">
+              <p className="text-sm text-gray-300">Харизма</p>
+              <p className="text-2xl font-bold text-white">{character.abilities.charisma}</p>
+              <p className="text-sm text-white">{getModifier(character.abilities.charisma)}</p>
             </div>
           </div>
         </section>
@@ -137,11 +137,11 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         {/* Навыки и владения */}
         {character.proficiencies && character.proficiencies.length > 0 && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">Владения</h3>
-            <Separator className="mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-white">Владения</h3>
+            <Separator className="mb-4 bg-gray-500" />
             <div className="flex flex-wrap gap-2">
               {character.proficiencies.map((prof, index) => (
-                <span key={index} className="bg-primary/10 text-primary px-2 py-1 rounded text-sm">
+                <span key={index} className="bg-blue-900 text-white px-2 py-1 rounded text-sm">
                   {prof}
                 </span>
               ))}
@@ -152,11 +152,11 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         {/* Языки */}
         {character.languages && character.languages.length > 0 && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">Языки</h3>
-            <Separator className="mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-white">Языки</h3>
+            <Separator className="mb-4 bg-gray-500" />
             <div className="flex flex-wrap gap-2">
               {character.languages.map((lang, index) => (
-                <span key={index} className="bg-secondary/10 text-secondary px-2 py-1 rounded text-sm">
+                <span key={index} className="bg-cyan-900 text-white px-2 py-1 rounded text-sm">
                   {lang}
                 </span>
               ))}
@@ -167,11 +167,11 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         {/* Снаряжение */}
         {character.equipment && character.equipment.length > 0 && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">Снаряжение</h3>
-            <Separator className="mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-white">Снаряжение</h3>
+            <Separator className="mb-4 bg-gray-500" />
             <div className="flex flex-wrap gap-2">
               {character.equipment.map((item, index) => (
-                <span key={index} className="bg-accent/10 text-accent-foreground px-2 py-1 rounded text-sm">
+                <span key={index} className="bg-gray-800 text-white px-2 py-1 rounded text-sm">
                   {item}
                 </span>
               ))}
@@ -182,11 +182,11 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         {/* Заклинания */}
         {character.spells && character.spells.length > 0 && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">Заклинания</h3>
-            <Separator className="mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-white">Заклинания</h3>
+            <Separator className="mb-4 bg-gray-500" />
             <div className="flex flex-wrap gap-2">
               {character.spells.map((spell, index) => (
-                <span key={index} className="bg-destructive/10 text-destructive px-2 py-1 rounded text-sm">
+                <span key={index} className="bg-purple-900 text-white px-2 py-1 rounded text-sm">
                   {spell}
                 </span>
               ))}
@@ -197,31 +197,31 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         {/* Личные черты */}
         {(character.personalityTraits || character.ideals || character.bonds || character.flaws) && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">Личностные черты</h3>
-            <Separator className="mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-white">Личностные черты</h3>
+            <Separator className="mb-4 bg-gray-500" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {character.personalityTraits && (
                 <div>
-                  <p className="font-medium">Черты характера:</p>
-                  <p className="text-muted-foreground">{character.personalityTraits}</p>
+                  <p className="font-medium text-gray-200">Черты характера:</p>
+                  <p className="text-white">{character.personalityTraits}</p>
                 </div>
               )}
               {character.ideals && (
                 <div>
-                  <p className="font-medium">Идеалы:</p>
-                  <p className="text-muted-foreground">{character.ideals}</p>
+                  <p className="font-medium text-gray-200">Идеалы:</p>
+                  <p className="text-white">{character.ideals}</p>
                 </div>
               )}
               {character.bonds && (
                 <div>
-                  <p className="font-medium">Привязанности:</p>
-                  <p className="text-muted-foreground">{character.bonds}</p>
+                  <p className="font-medium text-gray-200">Привязанности:</p>
+                  <p className="text-white">{character.bonds}</p>
                 </div>
               )}
               {character.flaws && (
                 <div>
-                  <p className="font-medium">Слабости:</p>
-                  <p className="text-muted-foreground">{character.flaws}</p>
+                  <p className="font-medium text-gray-200">Слабости:</p>
+                  <p className="text-white">{character.flaws}</p>
                 </div>
               )}
             </div>
@@ -230,13 +230,13 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
       </div>
       
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={prevStep}>
+        <Button variant="outline" onClick={prevStep} className="text-white border-white hover:bg-gray-800">
           Назад
         </Button>
         <Button 
           onClick={handleSaveCharacter} 
           disabled={isSaving}
-          className="flex gap-2"
+          className="flex gap-2 bg-green-700 hover:bg-green-800 text-white"
         >
           {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
           {isSaving ? 'Сохранение...' : 'Сохранить персонажа'}

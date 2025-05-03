@@ -435,6 +435,7 @@ input::placeholder {
 .badge {
   color: var(--text-color, #FFFFFF) !important;
   background-color: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid var(--accent-color, #8B5A2B) !important;
 }
 
 /* Стили для книги заклинаний - усиленная читаемость */
@@ -489,7 +490,7 @@ input::placeholder {
   background-color: rgba(var(--primary), 0.05);
 }
 
-/* Стили для тумана в��йны */
+/* Стили для тумана войны */
 .fog-of-war-toggle .light {
   color: var(--text-color, #FFFFFF);
   opacity: 0.7;
@@ -807,3 +808,30 @@ h1, h2, h3, h4, h5, h6, .heading, .title, .card-title, .text-heading {
 .subclass-description, .class-description, .archetype-description {
   color: #FFFFFF !important;
 }
+
+/* Улучшенная контрастность для страниц с темным фоном */
+.text-contrast-high {
+  color: #FFFFFF !important; 
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.text-contrast-medium {
+  color: #E0E0E0 !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Улучшение стилей фона для карточек на темном фоне */
+.card-dark {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Улучшения для панелей характеристик */
+.stat-box-dark {
+  background-color: rgba(30, 30, 30, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Усиление контраста для текста в инпутах */
+input, select, textarea {
+  color: #FFFFFF !important
