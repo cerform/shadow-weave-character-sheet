@@ -18,24 +18,21 @@ export const parseSpellEntry = (entry: string): {
     concentration: boolean;
   };
 } | null => {
-  // Соответствие шаблону [0] Название АБВ
-  const match = entry.trim().match(/\[(\d+)\]\s+(.+?)\s+([КВСМР]*)\.?\s*$/);
+  // Проверяем формат записи заклинания
+  const match = entry.trim().match(/\[(\d+)\]\s+(.+?)\s*([КВСМР]*)\.?\s*$/);
   
   if (!match) return null;
   
   const level = parseInt(match[1], 10);
   const name = match[2].trim();
-  const componentCode = match[3] || '';
+  const componentCode = (match[3] || '').trim();
   
   const components = parseComponents(componentCode);
   
   return {
     name,
     level,
-    components: {
-      ...components,
-      concentration: componentCode.includes('К') || componentCode.includes('K')
-    }
+    components
   };
 };
 

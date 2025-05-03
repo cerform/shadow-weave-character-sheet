@@ -31,10 +31,14 @@ export const buildComponentString = (components: {
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
 }): string => {
   let result = '';
   if (components.verbal) result += 'В';
   if (components.somatic) result += 'С';
   if (components.material) result += 'М';
+  if (components.ritual) result += 'Р';
+  if (components.concentration) result += 'К';
   return result || '';
 };

@@ -14,8 +14,8 @@ import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 
-// Import level0 correctly - using default import
-import level0 from './level0';
+// Import level0 correctly
+import { level0 } from './level0';
 
 // Объединяем все заклинания
 export const spells: CharacterSpell[] = [
@@ -69,7 +69,7 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
       return spell.classes.toLowerCase().includes(classNameLower);
     }
     
-    // Если classes это массив
+    // Если classes это массив строк
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(cls => {
         if (typeof cls === 'string') {
