@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -42,6 +42,8 @@ function App() {
               <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
               <Route path="/characters" element={<CharactersListPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              {/* Добавляем перенаправление с /character-creation на /create-character */}
+              <Route path="/character-creation" element={<Navigate to="/create-character" replace />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
