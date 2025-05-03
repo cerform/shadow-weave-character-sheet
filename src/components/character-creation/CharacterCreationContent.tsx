@@ -152,7 +152,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         );
       case 6: // Выбор заклинаний
         if (!isMagicClass) {
-          nextStep(); // Пропускаем этот шаг для немагических классов
+          setTimeout(() => nextStep(), 0); // Пропускаем этот шаг для немагических классов
           return null;
         }
         return (

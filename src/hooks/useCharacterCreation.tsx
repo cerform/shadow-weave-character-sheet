@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
@@ -47,32 +48,69 @@ export const useCharacterCreation = () => {
 
   // Обновляем функцию для конвертации CharacterSheet в Character (для контекста персонажа)
   const convertToCharacter = (sheet: CharacterSheet): Character => {
+    // Расчет максимального HP на основе класса и уровня
+    const calculateMaxHp = (): number => {
+      // Базовое значение в зависимости от класса
+      const baseHpByClass: {[key: string]: number} = {
+        "Варвар": 12,
+        "Воин": 10,
+        "Паладин": 10,
+        "Следопыт": 10,
+        "Монах": 8,
+        "Плут": 8,
+        "Бард": 8,
+        "Жрец": 8,
+        "Друид": 8,
+        "Волшебник": 6,
+        "Чародей": 6,
+        "Колдун": 8
+      };
+      
+      const baseHp = baseHpByClass[sheet.class] || 8; // По умолчанию 8, если класс не найден
+      const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
+      
+      // HP первого уровня = максимум хитов кости + модификатор телосложения
+      let maxHp = baseHp + constitutionMod;
+      
+      // Для каждого уровня выше первого добавляем среднее значение кости хитов + модификатор телосложения
+      if (sheet.level > 1) {
+        maxHp += ((baseHp / 2 + 1) + constitutionMod) * (sheet.level - 1);
+      }
+      
+      return Math.round(maxHp);
+    };
+    
+    // Вычисляем максимальные хиты
+    const maxHp = sheet.maxHp || calculateMaxHp();
+    
+    console.log("Конвертирование CharacterSheet в Character:", sheet.name);
+    
     return {
       id: sheet.id || "",
       userId: sheet.userId,
-      name: sheet.name,
-      race: sheet.race,
-      subrace: sheet.subrace,
-      className: sheet.class,
-      level: sheet.level,
+      name: sheet.name || "Безымянный",
+      race: sheet.race || "",
+      subrace: sheet.subrace || "",
+      className: sheet.class || "",
+      level: sheet.level || 1,
       abilities: {
-        STR: sheet.abilities.strength,
-        DEX: sheet.abilities.dexterity,
-        CON: sheet.abilities.constitution,
-        INT: sheet.abilities.intelligence,
-        WIS: sheet.abilities.wisdom,
-        CHA: sheet.abilities.charisma
+        STR: sheet.abilities.strength || 10,
+        DEX: sheet.abilities.dexterity || 10,
+        CON: sheet.abilities.constitution || 10,
+        INT: sheet.abilities.intelligence || 10,
+        WIS: sheet.abilities.wisdom || 10,
+        CHA: sheet.abilities.charisma || 10
       },
       spells: sheet.spells || [],
       spellSlots: {}, // Заполнять при необходимости
-      gender: sheet.gender,
-      alignment: sheet.alignment,
-      background: sheet.background,
+      gender: sheet.gender || "",
+      alignment: sheet.alignment || "",
+      background: sheet.background || "",
       equipment: sheet.equipment || [],
       languages: sheet.languages || [],
       proficiencies: sheet.proficiencies || [],
-      maxHp: sheet.maxHp,
-      currentHp: sheet.currentHp,
+      maxHp: maxHp,
+      currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     } as Character;

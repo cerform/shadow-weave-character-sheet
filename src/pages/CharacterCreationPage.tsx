@@ -75,7 +75,7 @@ const CharacterCreationPage = () => {
   // Навигация на главную
   const goToHomePage = () => {
     // Показываем предупреждение, если процесс создания не завершен
-    if (currentStep < 10) {
+    if (currentStep < steps.length - 1) {
       const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
       if (!confirmed) return;
     }
@@ -89,7 +89,7 @@ const CharacterCreationPage = () => {
   
   // Переход к последнему шагу (обзор персонажа)
   const goToFinalReview = () => {
-    setCurrentStep(10);
+    setCurrentStep(steps.length - 1);
   };
 
   // Обертка для setAbilitiesMethod для соответствия типам

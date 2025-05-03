@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CharacterSheet } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
@@ -37,8 +38,21 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     try {
       setIsSaving(true);
       
+      // Проверяем, что у персонажа есть имя
+      if (!character.name?.trim()) {
+        toast({
+          title: "Ошибка сохранения",
+          description: "Пожалуйста, укажите имя персонажа перед сохранением",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+      
       // Преобразуем CharacterSheet в Character перед сохранением
       const characterToSave = convertToCharacter(character);
+      
+      console.log("Сохраняемый персонаж:", characterToSave);
       
       // Используем функцию сохранения из контекста персонажа
       const savedCharacter = await saveCharacter(characterToSave);
@@ -49,12 +63,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
       toast({
         title: "Персонаж сохранен",
         description: `${character.name} успешно сохранен`,
-        variant: "default",
       });
       
       // Переход на страницу персонажа
       setTimeout(() => {
-        navigate('/character-sheet');
+        // Переходим на страницу списка персонажей
+        navigate('/characters');
       }, 1500);
       
     } catch (error) {
@@ -96,6 +110,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     );
   };
 
+  // Исправим проблему с отображением персонажа в табах
   return (
     <div>
       <div className="mb-6">
@@ -360,7 +375,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           disabled={isExporting}
           style={{
             borderColor: currentTheme.accent,
-            color: currentTheme.accent
+            color: currentTheme.textColor
           }}
         >
           <FileDown className="mr-2 h-4 w-4" /> {isExporting ? 'Генерация PDF...' : 'Экспорт в PDF'}
