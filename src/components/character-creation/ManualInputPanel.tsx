@@ -9,10 +9,10 @@ interface ManualInputPanelProps {
   abilityScores: CharacterSheet['abilities'];
   setAbilityScores: (scores: CharacterSheet['abilities']) => void;
   maxAbilityScore: number;
-  level?: number; // Add level prop (optional)
-  stats?: CharacterSheet['abilities']; // Add stats prop (optional)
-  updateStat?: (stat: keyof CharacterSheet['abilities'], value: number) => void; // Add updateStat prop (optional)
-  getModifier?: (score: number) => string; // Add getModifier prop (optional)
+  level?: number;
+  stats?: CharacterSheet['abilities']; // Добавляем опциональное свойство stats
+  updateStat?: (stat: keyof CharacterSheet['abilities'], value: number) => void;
+  getModifier?: (score: number) => string;
 }
 
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
@@ -24,7 +24,7 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   getModifier,
   level
 }) => {
-  // Use either the passed stats or the abilityScores
+  // Используем stats или abilityScores в зависимости от того, что передано
   const scores = stats || abilityScores;
   
   const handleAbilityChange = (ability: keyof CharacterSheet['abilities'], value: string) => {
@@ -33,7 +33,7 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
       return;
     }
     
-    // Use updateStat if provided, otherwise use setAbilityScores
+    // Используем updateStat если он предоставлен, иначе используем setAbilityScores
     if (updateStat) {
       updateStat(ability, numValue);
     } else {

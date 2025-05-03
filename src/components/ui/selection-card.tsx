@@ -103,7 +103,7 @@ export const SelectionSubOption: React.FC<{
   selected?: boolean;
   onClick?: () => void;
   className?: string;
-  style?: React.CSSProperties; // Add the style prop here
+  style?: React.CSSProperties; // Добавлен пропс style
 }> = ({ label, selected = false, onClick, className, style }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -122,7 +122,7 @@ export const SelectionSubOption: React.FC<{
       style={{
         backgroundColor: selected ? currentTheme.accent : undefined,
         color: selected ? '#fff' : undefined,
-        ...style // Apply any custom styles passed as prop
+        ...style // Применяем пользовательские стили
       }}
     >
       {label}

@@ -1,14 +1,15 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Token as TokenType } from '@/stores/battleStore';
+import TokenHealthBar from './TokenHealthBar';
 
 interface TokenProps {
   token: TokenType;
   isSelected: boolean;
-  gridSize: { rows: number, cols: number };
-  imageSize: { width: number, height: number };
+  gridSize: { rows: number; cols: number };
+  imageSize: { width: number; height: number };
   zoom: number;
-  onSelect: (id: number) => void;
+  onSelect: (id: number | null) => void;
   onUpdatePosition: (id: number, x: number, y: number) => void;
   isDM: boolean;
 }
@@ -23,183 +24,139 @@ const Token: React.FC<TokenProps> = ({
   onUpdatePosition,
   isDM
 }) => {
-  const tokenRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [tokenPos, setTokenPos] = useState({ x: token.x, y: token.y });
+  // Состояние для перетаскивания
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
   
-  // Рассчитываем размер ячейки сетки
-  const cellWidth = imageSize.width / gridSize.cols;
-  const cellHeight = imageSize.height / gridSize.rows;
-  
-  // Синхронизируем позицию с props
-  useEffect(() => {
-    setTokenPos({ x: token.x, y: token.y });
-  }, [token.x, token.y]);
-  
-  // Определяем размер токена в зависимости от его размера
-  const tokenSize = token.size * cellWidth;
-  
-  // Обработчик начала перетаскивания
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Разрешаем перемещать токены игроков только игрокам и всем токенам DM-у
-    if (!isDM && token.type !== 'player') return;
-    
-    e.preventDefault();
+  // Обработчик клика по токену
+  const handleTokenClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // Выбираем токен при клике
     onSelect(token.id);
-    
-    // Если это правый клик или клавиша Shift, не начинаем перетаскивание
-    if (e.button === 2 || e.shiftKey) return;
-    
-    setIsDragging(true);
-    setStartPos({
-      x: e.clientX,
-      y: e.clientY
-    });
   };
   
-  // Обработчик перемещения при перетаскивании
+  // Обработчики для перетаскивания
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isDM && token.type !== 'player') {
+      return; // Только DM может двигать не-игровые токены
+    }
+    
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: (e.clientX - rect.left) - rect.width / 2,
+      y: (e.clientY - rect.top) - rect.height / 2
+    });
+    setIsDragging(true);
+    
+    // Добавляем обработчики на документ, чтобы отслеживать перемещение даже вне токена
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
     
-    const dx = (e.clientX - startPos.x) / zoom;
-    const dy = (e.clientY - startPos.y) / zoom;
+    const containerRect = document.querySelector('.battle-map-container')?.getBoundingClientRect();
+    if (!containerRect) return;
     
-    // Обновляем локальное положение токена для плавного перемещения
-    setTokenPos({
-      x: token.x + dx,
-      y: token.y + dy
-    });
+    // Вычисляем новые координаты с учетом смещения и зума
+    const x = (e.clientX - containerRect.left) / zoom - dragOffset.x;
+    const y = (e.clientY - containerRect.top) / zoom - dragOffset.y;
     
-    // Устанавливаем новые координаты начала для следующего перемещения
-    setStartPos({
-      x: e.clientX,
-      y: e.clientY
-    });
-    
-    // Обновляем координаты в родительском компоненте
-    onUpdatePosition(token.id, token.x + dx, token.y + dy);
+    // Обновляем позицию токена
+    onUpdatePosition(token.id, x, y);
   };
   
-  // Обработчик окончания перетаскивания
   const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      
-      // Привязка к сетке после перетаскивания (опционально)
-      if (false) { // Если нужно привязывать к сетке, замените на true
-        const gridX = Math.round(tokenPos.x / cellWidth) * cellWidth;
-        const gridY = Math.round(tokenPos.y / cellHeight) * cellHeight;
-        
-        setTokenPos({ x: gridX, y: gridY });
-        onUpdatePosition(token.id, gridX, gridY);
-      }
-    }
+    setIsDragging(false);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
   
-  // Добавляем глобальные обработчики при начале перетаскивания
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, startPos]);
+  // Размер токена с учетом масштаба
+  const tokenSize = 30 * (token.size || 1);
   
-  // Получаем цвет рамки в зависимости от типа токена
-  const getBorderColor = () => {
-    if (isSelected) return 'border-yellow-400 shadow-glow';
-    
-    switch (token.type) {
-      case 'boss':
-        return 'border-red-500';
-      case 'monster':
-        return 'border-orange-400';
-      case 'player':
-        return 'border-green-400';
-      case 'npc':
-        return 'border-blue-400';
-      default:
-        return 'border-white';
-    }
-  };
-  
-  // Получаем класс для индикатора здоровья
-  const getHealthBarColor = () => {
-    const healthPercent = token.hp / token.maxHp;
-    if (healthPercent <= 0.3) return 'bg-red-500';
-    if (healthPercent <= 0.6) return 'bg-yellow-500';
-    return 'bg-green-500';
-  }
-  
-  // Вычисляем правильное положение токена с учетом его размера
-  const positionStyle = {
-    left: `${tokenPos.x}px`,
-    top: `${tokenPos.y}px`,
+  // Стиль для токена
+  const tokenStyle: React.CSSProperties = {
+    left: `${token.x}px`,
+    top: `${token.y}px`,
     width: `${tokenSize}px`,
     height: `${tokenSize}px`,
-    // Центрируем токен на указанных координатах
-    transform: `translate(-50%, -50%)`
+    transform: 'translate(-50%, -50%)',
+    borderRadius: '50%',
+    overflow: 'hidden',
+    zIndex: isSelected ? 100 : 10,
+    cursor: (isDM || token.type === 'player') ? 'pointer' : 'default',
+    boxShadow: isSelected ? '0 0 0 2px gold, 0 0 10px rgba(255, 215, 0, 0.7)' : 'none',
+    border: isSelected ? '2px solid gold' : '1px solid rgba(0, 0, 0, 0.3)'
+  };
+  
+  // Стиль для инициативы
+  const initiativeStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '-10px',
+    right: '-10px',
+    backgroundColor: '#f59e0b',
+    color: '#ffffff',
+    borderRadius: '50%',
+    width: '20px',
+    height: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)'
+  };
+  
+  // Стиль для типа токена
+  const typeStyle: React.CSSProperties = {
+    position: 'absolute',
+    bottom: '-10px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: token.type === 'player' ? '#3b82f6' : 
+                    token.type === 'boss' ? '#ef4444' : '#9333ea',
+    color: '#ffffff',
+    borderRadius: '4px',
+    padding: '1px 4px',
+    fontSize: '8px',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
   };
   
   return (
     <div
-      ref={tokenRef}
-      className={`absolute rounded-full border-2 ${getBorderColor()} cursor-pointer transition-shadow
-                 ${isDragging ? 'cursor-grabbing z-30' : 'cursor-grab z-20'}
-                 ${isSelected ? 'z-30' : ''}`}
-      style={positionStyle}
+      className="absolute token select-none"
+      style={tokenStyle}
+      onClick={handleTokenClick}
       onMouseDown={handleMouseDown}
-      onContextMenu={(e) => e.preventDefault()}
     >
-      {/* Изображение токена */}
+      {/* HP бар над токеном */}
+      {token.hp !== undefined && token.maxHp !== undefined && (
+        <TokenHealthBar
+          currentHP={token.hp}
+          maxHP={token.maxHp}
+          width={tokenSize}
+          showValue={isSelected && isDM}
+        />
+      )}
+      
       <img
         src={token.img}
         alt={token.name}
-        className="w-full h-full object-cover rounded-full"
+        className="w-full h-full object-cover pointer-events-none"
         draggable={false}
       />
       
-      {/* Индикатор выделения */}
-      {isSelected && (
-        <div className="absolute -inset-1 rounded-full border-2 border-yellow-400 animate-pulse opacity-50 pointer-events-none" />
+      {/* Отображаем значение инициативы, если оно есть */}
+      {token.initiative !== undefined && (
+        <div style={initiativeStyle}>{token.initiative}</div>
       )}
       
-      {/* Показатель здоровья */}
-      <div className="absolute -bottom-5 left-0 w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${getHealthBarColor()}`}
-          style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
-        />
-      </div>
-      
-      {/* Надпись с именем (если токен выбран) */}
-      {isSelected && (
-        <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/70 text-white text-xs rounded whitespace-nowrap">
-          {token.name}
-        </div>
-      )}
-      
-      {/* Значение здоровья (если токен выбран) */}
-      {isSelected && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-0.5 bg-black/70 text-white text-xs rounded whitespace-nowrap">
-          {token.hp}/{token.maxHp}
-        </div>
-      )}
-      
-      {/* Индикатор защиты (AC) для DM или владельца токена */}
-      {(isDM || token.type === 'player') && (
-        <div className="absolute -top-4 -right-4 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs border-2 border-blue-700">
-          {token.ac}
-        </div>
-      )}
+      {/* Тип токена */}
+      <div style={typeStyle}>{token.type}</div>
     </div>
   );
 };
