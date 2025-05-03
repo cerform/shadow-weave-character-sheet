@@ -7,7 +7,9 @@ interface NavigationButtonsProps {
   prevStep: () => void;
   allowNext: boolean;
   isFirstStep?: boolean;
-  hideNextButton?: boolean; // Добавляем свойство hideNextButton
+  hideNextButton?: boolean;
+  disableNext?: boolean; // Добавляем свойство disableNext
+  nextLabel?: string; // Добавляем свойство nextLabel
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -15,8 +17,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   prevStep,
   allowNext,
   isFirstStep = false,
-  hideNextButton = false // Устанавливаем значение по умолчанию
+  hideNextButton = false,
+  disableNext, // Добавляем новые параметры
+  nextLabel = "Далее" // Добавляем со значением по умолчанию
 }) => {
+  // Используем либо disableNext, либо !allowNext для определения состояния кнопки
+  const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
+  
   return (
     <div className="flex justify-between pt-6">
       <Button 
@@ -27,13 +34,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         Назад
       </Button>
       
-      {!hideNextButton && ( // Проверяем, нужно ли скрыть кнопку "Далее"
+      {!hideNextButton && (
         <Button 
           variant="default" 
           onClick={nextStep}
-          disabled={!allowNext}
+          disabled={isNextDisabled}
         >
-          Далее
+          {nextLabel}
         </Button>
       )}
     </div>
