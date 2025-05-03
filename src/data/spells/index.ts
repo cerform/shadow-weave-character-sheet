@@ -3,12 +3,6 @@ import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
 import { level3 } from "./level3";
-import { level3_combat } from "./level3_combat";
-import { level3_divination } from "./level3_divination";
-import { level3_enchant } from "./level3_enchant";
-import { level3_illusion } from "./level3_illusion";
-import { level3_more } from "./level3_more";
-import { level3_utility } from "./level3_utility";
 import { level4 } from "./level4";
 // Fix the import names to match the actual exports
 import { level4Part2 } from "./level4_part2";
@@ -26,12 +20,6 @@ export const spells: CharacterSpell[] = [
   ...level1,
   ...level2,
   ...level3,
-  ...level3_combat,
-  ...level3_divination,
-  ...level3_enchant,
-  ...level3_illusion,
-  ...level3_more,
-  ...level3_utility,
   ...level4,
   // Fixed variable names to match imports
   ...level4Part2,
