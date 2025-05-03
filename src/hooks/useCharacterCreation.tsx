@@ -45,7 +45,7 @@ export const useCharacterCreation = () => {
     backstory: ""
   });
 
-  // Добавляем функцию для конвертации CharacterSheet в Character (для контекста персонажа)
+  // Обновляем функцию для конвертации CharacterSheet в Character (для контекста персонажа)
   const convertToCharacter = (sheet: CharacterSheet): Character => {
     return {
       id: sheet.id || "",
@@ -63,14 +63,14 @@ export const useCharacterCreation = () => {
         WIS: sheet.abilities.wisdom,
         CHA: sheet.abilities.charisma
       },
-      spells: sheet.spells,
+      spells: sheet.spells || [],
       spellSlots: {}, // Заполнять при необходимости
       gender: sheet.gender,
       alignment: sheet.alignment,
       background: sheet.background,
-      equipment: sheet.equipment,
-      languages: sheet.languages,
-      proficiencies: sheet.proficiencies,
+      equipment: sheet.equipment || [],
+      languages: sheet.languages || [],
+      proficiencies: sheet.proficiencies || [],
       maxHp: sheet.maxHp,
       currentHp: sheet.currentHp,
       createdAt: new Date().toISOString(),
@@ -106,7 +106,7 @@ export const useCharacterCreation = () => {
       "Путь Четырех Стихий" // для Монаха
     ];
 
-    // Проверяем основной класс
+    // Проверяем основно�� класс
     if (magicClasses.includes(character.class)) {
       return true;
     }
@@ -205,7 +205,7 @@ export const useCharacterCreation = () => {
       updateCharacter({ level });
       
       // Опционально: здесь можно добавить логику изменения доступных
-      // заклинаний, особенностей класса и подкласса в зависимости от уровня
+      // заклинаний, особ��нностей класса и подкласса в зависимости от уровня
       
       console.log(`Уровень персонажа изменен на ${level}`);
     } else {
@@ -242,6 +242,6 @@ export const useCharacterCreation = () => {
     handleLevelChange,
     getTotalLevel,
     getAllClasses,
-    convertToCharacter // Экспортируем новый метод
+    convertToCharacter // Экспортируем обновленный метод
   };
 };

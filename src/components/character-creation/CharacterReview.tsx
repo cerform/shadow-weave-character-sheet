@@ -10,6 +10,7 @@ import { themes } from '@/lib/themes';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -27,6 +28,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { saveCharacter } = useCharacter(); // Используем контекст персонажа
+  const { convertToCharacter } = useCharacterCreation(); // Импортируем функцию конвертации
   
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
@@ -35,8 +37,11 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     try {
       setIsSaving(true);
       
+      // Преобразуем CharacterSheet в Character перед сохранением
+      const characterToSave = convertToCharacter(character);
+      
       // Используем функцию сохранения из контекста персонажа
-      const savedCharacter = await saveCharacter(character);
+      const savedCharacter = await saveCharacter(characterToSave);
       
       // Установим флаг успешного сохранения
       setSaveSuccess(true);
