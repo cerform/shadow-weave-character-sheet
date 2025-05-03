@@ -147,7 +147,7 @@ const SpellBookViewer = () => {
           (spell.classes && (
             (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term)) ||
             (Array.isArray(spell.classes) && spell.classes.some(cls => {
-              // Additional check to ensure cls is a string before calling toLowerCase
+              // Проверяем, что cls это строка перед вызовом toLowerCase
               return typeof cls === 'string' && cls.toLowerCase().includes(term);
             }))
           ))
@@ -169,7 +169,7 @@ const SpellBookViewer = () => {
       result = result.filter(spell => {
         if (typeof spell.classes === 'string') {
           // Проверяем, содержит ли строка классов хотя бы один из выбранных классов
-          const spellClassesStr = spell.classes as string;
+          const spellClassesStr = spell.classes;
           return activeClass.some(cls => 
             spellClassesStr.toLowerCase().includes(cls.toLowerCase())
           );
