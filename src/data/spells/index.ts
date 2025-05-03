@@ -10,8 +10,8 @@ import { level3_illusion } from "./level3_illusion";
 import { level3_more } from "./level3_more";
 import { level3_utility } from "./level3_utility";
 import { level4 } from "./level4";
-import { level4_part2 } from "./level4_part2";
-import { level4_part3 } from "./level4_part3";
+import { level4Part2 } from "./level4_part2";
+import { level4Part3 } from "./level4_part3";
 import { level5 } from "./level5";
 import { level6 } from "./level6";
 import { level7 } from "./level7";
@@ -32,8 +32,8 @@ export const spells: CharacterSpell[] = [
   ...(level3_more || []),
   ...(level3_utility || []),
   ...(level4 || []),
-  ...(level4_part2 || []),
-  ...(level4_part3 || []),
+  ...(level4Part2 || []),
+  ...(level4Part3 || []),
   ...(level5 || []),
   ...(level6 || []),
   ...(level7 || []),
@@ -52,6 +52,8 @@ export const getSpellsByLevel = (level: number): CharacterSpell[] => {
 // Get spells by class
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter((spell) => {
+    if (!spell) return false;
+    
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(
         (c) => typeof c === 'string' && c.toLowerCase() === className.toLowerCase()
@@ -66,14 +68,14 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
 // Get spell details by name
 export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
   return spells.find(
-    (spell) => spell.name.toLowerCase() === spellName.toLowerCase()
+    (spell) => spell && spell.name && spell.name.toLowerCase() === spellName.toLowerCase()
   );
 };
 
 // Get spells by school
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(
-    (spell) => spell.school.toLowerCase() === school.toLowerCase()
+    (spell) => spell && spell.school && spell.school.toLowerCase() === school.toLowerCase()
   );
 };
 
@@ -92,6 +94,8 @@ export const getAllSpellSchools = (): string[] => {
 export const getAllSpellcastingClasses = (): string[] => {
   const classes = new Set<string>();
   spells.forEach((spell) => {
+    if (!spell || !spell.classes) return;
+    
     if (Array.isArray(spell.classes)) {
       spell.classes.forEach((c) => {
         if (typeof c === 'string') {

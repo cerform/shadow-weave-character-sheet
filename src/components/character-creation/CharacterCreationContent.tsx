@@ -15,11 +15,43 @@ import CharacterLevelSelection from './CharacterLevelSelection';
 import CharacterLanguagesSelection from './CharacterLanguagesSelection';
 import CreationStepDisplay from './CreationStepDisplay';
 import { CharacterSheet } from '@/types/character';
+import { steps } from '@/config/characterCreationSteps';
 
-const CharacterCreationContent: React.FC = () => {
-  const { character, updateCharacter } = useCharacterCreation();
-  const { currentStep, nextStep, prevStep } = useCreationStep();
+interface CharacterCreationContentProps {
+  currentStep: number;
+  character: any;
+  updateCharacter: (updates: any) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
+  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
+  diceResults: number[];
+  getModifier: (abilityScore: number) => number;
+  rollAllAbilities: () => void;
+  rollSingleAbility: (index: number) => void;
+  abilityScorePoints: number;
+  isMagicClass: boolean;
+  rollsHistory: Record<string, number[]>;
+  onLevelChange: (level: number) => void;
+}
 
+const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
+  currentStep,
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep,
+  abilitiesMethod,
+  setAbilitiesMethod,
+  diceResults,
+  getModifier,
+  rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints,
+  isMagicClass,
+  rollsHistory,
+  onLevelChange
+}) => {
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
     switch (currentStep) {
@@ -29,6 +61,7 @@ const CharacterCreationContent: React.FC = () => {
             character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
+            prevStep={prevStep}
           />
         );
       case 2: // Выбор расы
@@ -56,6 +89,7 @@ const CharacterCreationContent: React.FC = () => {
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
+            onLevelChange={onLevelChange}
           />
         );
       case 5: // Характеристики
@@ -65,6 +99,14 @@ const CharacterCreationContent: React.FC = () => {
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
+            abilitiesMethod={abilitiesMethod}
+            setAbilitiesMethod={setAbilitiesMethod}
+            diceResults={diceResults}
+            getModifier={getModifier}
+            rollAllAbilities={rollAllAbilities}
+            rollSingleAbility={rollSingleAbility}
+            abilityScorePoints={abilityScorePoints}
+            rollsHistory={rollsHistory}
           />
         );
       case 6: // Выбор подкласса
@@ -97,7 +139,7 @@ const CharacterCreationContent: React.FC = () => {
       case 9: // Выбор заклинаний
         return (
           <CharacterSpellSelection
-            character={character as any}
+            character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
@@ -128,7 +170,12 @@ const CharacterCreationContent: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <CreationStepDisplay currentStep={currentStep} />
+        <CreationStepDisplay 
+          steps={steps} 
+          currentStep={currentStep}
+          isMagicClass={isMagicClass}
+          characterClass={character.class}
+        />
       </div>
       <div>
         {renderCreationStep()}
