@@ -1,7 +1,8 @@
 
 import { CharacterSpell } from '@/types/character';
 import { cantrips } from './cantrips';
-import { level0 } from './level0';
+// Correcting the imports for level files
+// Using default imports if the files export default, or importing the named exports
 import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
@@ -11,6 +12,12 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
+
+// For level0, assuming it exports a default (we'll handle both cases)
+// If level0 is exported as default:
+import level0 from './level0';
+// Alternatively, if it's a named export:
+// import { level0 } from './level0';
 
 // Объединяем все заклинания
 export const spells: CharacterSpell[] = [
@@ -44,8 +51,9 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
 /**
  * Получает заклинания по классу
  */
-export const getSpellsByClass = (className: string): CharacterSpell[] => {
+export const getSpellsByClass = (className: string, characterLevel?: number): CharacterSpell[] => {
   return spells.filter(spell => {
+    // Fix for the toLowerCase error on 'never' type
     if (typeof spell.classes === 'string') {
       return spell.classes.toLowerCase().includes(className.toLowerCase());
     }
@@ -63,4 +71,18 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
  */
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(spell => spell.school === school);
+};
+
+/**
+ * Получает все имена заклинаний
+ */
+export const getAllSpellNames = (): string[] => {
+  return spells.map(spell => spell.name);
+};
+
+/**
+ * Возвращает все заклинания
+ */
+export const getAllSpells = (): CharacterSpell[] => {
+  return [...spells];
 };

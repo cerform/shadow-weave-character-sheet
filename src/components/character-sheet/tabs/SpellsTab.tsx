@@ -3,7 +3,7 @@ import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails, getSpellsByLevels, getSpellsByLevel } from "@/data/spells";
+import { getSpellDetails, getSpellsByLevel } from "@/data/spells"; // Removing getSpellsByLevels since it doesn't exist
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Book, Plus, Search, Filter, XCircle } from "lucide-react"; 
 import { Separator } from '@/components/ui/separator';

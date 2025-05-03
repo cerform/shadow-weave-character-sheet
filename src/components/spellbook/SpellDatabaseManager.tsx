@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { processSpellBatch } from '@/utils/spellBatchImporter';
 import { useToast } from '@/components/ui/use-toast';
 import { CharacterSpell } from '@/types/character';
-import { getAllSpells } from '@/data/spells';
+import { spells } from '@/data/spells'; // Import directly from spells
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +17,9 @@ const SpellDatabaseManager: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setAllSpells(getAllSpells());
+    setAllSpells(spells); // Use the imported spells array directly
   }, []);
-
+  
   const handleImport = () => {
     if (!rawData.trim()) {
       toast({

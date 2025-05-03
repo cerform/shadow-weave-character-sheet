@@ -5,14 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CharacterContext } from '@/contexts/CharacterContext';
-import { useToast } from "@/hooks/use-toast"; // Исправляем импорт на правильный путь
-import { Wand, ZapOff, Book, Info, Search } from "lucide-react"; // Добавляем импорт Search из lucide-react
+import { useToast } from "@/hooks/use-toast"; 
+import { Wand, ZapOff, Book, Info, Search } from "lucide-react";
 import { DicePanel } from './DicePanel';
-import { getSpellDetails, getAllSpellNames } from '@/data/spells';
+import { getSpellDetails, getAllSpells } from '@/data/spells';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input"; // Добавляем импорт Input
+import { Input } from "@/components/ui/input";
 
 export const SpellPanel = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -188,7 +188,7 @@ export const SpellPanel = () => {
     // Получаем очки чародея за ячейку (по уровню ячейки)
     const pointsGained = spellLevel;
     
-    // Обновляем количество использованных ячеек
+    // Обновляем к��личество использованных ячеек
     const updatedSpellSlots = { ...character.spellSlots };
     updatedSpellSlots[spellLevel] = { 
       ...updatedSpellSlots[spellLevel], 
@@ -499,7 +499,7 @@ export const SpellPanel = () => {
 
   // Фильтрация заклинаний для диалога добавления
   const getFilteredSpells = () => {
-    let allSpells = getAllSpellNames();
+    let allSpells = getAllSpells().map(spell => spell.name);
     
     // Фильтр по поисковому запросу
     if (searchTerm) {

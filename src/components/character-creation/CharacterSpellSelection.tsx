@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { getSpellsByClass, getSpellDetails } from '@/data/spells'; 
 import { Input } from "@/components/ui/input";
@@ -185,8 +184,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   
   // Получаем список заклинаний для класса персонажа
   const classSpells = useMemo(() => {
-    return getSpellsByClass(character.class, characterLevel);
-  }, [character.class, characterLevel]);
+    return getSpellsByClass(character.class);
+  }, [character.class]);
   
   // Получаем доступные уровни заклинаний для текущего класса и уровня
   const availableSpellLevels = useMemo(() => {
