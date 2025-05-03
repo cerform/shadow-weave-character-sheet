@@ -42,7 +42,7 @@ const ProtectedUserRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   
   if (!isAuthenticated) {
-    return <Navigate to="/auth?redirect=profile" replace />;
+    return <Navigate to="/auth?redirectTo=profile" replace />;
   }
   
   return children;
@@ -66,6 +66,7 @@ function App() {
                   <Route path="/player-session" element={<PlayerSessionPage />} />
                   <Route path="/handbook" element={<HandbookPage />} />
                   <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/register" element={<AuthPage />} />
                   
                   {/* Защищенный маршрут для профиля пользователя */}
                   <Route path="/profile" element={<ProtectedUserRoute><ProfilePage /></ProtectedUserRoute>} />

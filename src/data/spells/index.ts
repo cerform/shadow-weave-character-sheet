@@ -46,13 +46,13 @@ export const spellLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 // Get spells by level
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  return spells.filter((spell) => spell.level === level);
+  return spells.filter((spell) => spell && spell.level === level);
 };
 
 // Get spells by class
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter((spell) => {
-    if (!spell) return false;
+    if (!spell || !spell.classes) return false;
     
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(

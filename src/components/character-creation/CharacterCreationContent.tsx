@@ -157,8 +157,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 11: // Просмотр и завершение
         return (
           <CharacterReview 
-            character={character} 
-            updateCharacter={updateCharacter}
+            character={character}
             prevStep={prevStep}
           />
         );
