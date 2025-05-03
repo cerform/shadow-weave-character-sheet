@@ -4,13 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SelectionCard, SelectionCardGrid } from "@/components/ui/selection-card";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, BookOpen } from "lucide-react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import { subclassData } from "@/data/subclasses";
 
 // Компонент для улучшенного отображения особенностей подклассов
 const FeatureItem = ({ title, level, description }: { title: string; level: number; description: string }) => (
@@ -24,73 +23,6 @@ const FeatureItem = ({ title, level, description }: { title: string; level: numb
     <p className="text-sm text-white/90">{description}</p>
   </div>
 );
-
-// Данные для отображения архетипов
-const subclassData: Record<string, any> = {
-  "Воин": {
-    "Мастер боя": {
-      description: "Мастера боя - непревзойденные воины, которые совершенствуют свои боевые навыки до уровня искусства. Применяя особые приемы, они расширяют свои возможности в бою.",
-      features: [
-        {
-          title: "Боевое превосходство",
-          level: 3,
-          description: "Вы изучаете приёмы, называемые манёврами, которые усиливаются костями превосходства."
-        },
-        {
-          title: "Немало повидавший",
-          level: 7,
-          description: "Вы можете добавить половину бонуса мастерства (с округлением вниз) ко всем проверкам Силы, Ловкости и Телосложения, если они ещё не используют бонус мастерства."
-        },
-        {
-          title: "Дополнительный приём",
-          level: 10,
-          description: "Вы изучаете дополнительный боевой приём."
-        }
-      ]
-    },
-    "Чемпион": {
-      description: "Чемпионы воплощают в себе чистое военное совершенство. Они улучшают свои физические способности и мастерство в бою до сверхчеловеческого уровня.",
-      features: [
-        {
-          title: "Улучшенный критический удар",
-          level: 3,
-          description: "Ваши атаки оружием совершают критическое попадание при выпадении на к20 значения 19 или 20."
-        },
-        {
-          title: "Выдающийся атлет",
-          level: 7,
-          description: "Вы добавляете половину бонуса мастерства (округляя вверх) к проверкам Силы, Ловкости или Телосложения, которые ещё не имеют вашего бонуса мастерства."
-        },
-        {
-          title: "Дополнительный боевой стиль",
-          level: 10,
-          description: "Вы изучаете ещё один вариант умения Боевой стиль, доступного для класса воина."
-        }
-      ]
-    },
-    "Рыцарь эльдрича": {
-      description: "Рыцари эльдрича сочетают боевую доблесть воина с изучением магии. Они используют магические способности для усиления своих боевых приёмов.",
-      features: [
-        {
-          title: "Использование заклинаний",
-          level: 3,
-          description: "Вы можете накладывать заклинания мага. Ваша основная характеристика для заклинаний — Интеллект."
-        },
-        {
-          title: "Связь оружия",
-          level: 3,
-          description: "Вы проводите ритуал связывания с оружием. Его можно призывать как бонусное действие, и нельзя разоружить."
-        },
-        {
-          title: "Военная магия",
-          level: 7,
-          description: "Когда вы используете ваше действие для накладывания заклинания, вы можете совершить одну атаку оружием как бонусное действие."
-        }
-      ]
-    }
-  },
-  // Другие классы и их архетипы можно добавить здесь
-};
 
 interface CharacterSubclassSelectionProps {
   character: any;
@@ -123,8 +55,10 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   const availableSubclasses = getAvailableSubclasses();
   
   const handleNext = () => {
-    if (selectedSubclass) {
-      updateCharacter({ subclass: selectedSubclass });
+    if (selectedSubclass || availableSubclasses.length === 0) {
+      if (selectedSubclass) {
+        updateCharacter({ subclass: selectedSubclass });
+      }
       nextStep();
     } else {
       toast({
@@ -142,6 +76,15 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   };
   
   const subclassInfo = getSubclassInfo();
+  
+  // Если для класса нет доступных подклассов, сразу переходим к следующему шагу
+  if (availableSubclasses.length === 0) {
+    // Добавляем setTimeout, чтобы не блокировать рендеринг
+    setTimeout(() => {
+      nextStep();
+    }, 0);
+    return null;
+  }
 
   return (
     <div className="space-y-8">
@@ -210,7 +153,7 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
       )}
       
       <NavigationButtons
-        allowNext={!!selectedSubclass}
+        allowNext={!!selectedSubclass || availableSubclasses.length === 0}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}

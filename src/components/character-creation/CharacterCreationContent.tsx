@@ -17,6 +17,9 @@ import CharacterSubclassSelection from './CharacterSubclassSelection';
 import { CharacterSheet } from '@/types/character.d';
 import { steps } from '@/config/characterCreationSteps';
 
+// Импорт даннных о подклассах для проверки их наличия
+import { subclassData } from '@/data/subclasses';
+
 interface CharacterCreationContentProps {
   currentStep: number;
   character: CharacterSheet;
@@ -54,6 +57,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   onLevelChange,
   maxAbilityScore
 }) => {
+  // Проверка, есть ли подклассы для выбранного класса
+  const hasSubclasses = () => {
+    if (!character.class) return false;
+    const classSubclasses = subclassData[character.class];
+    return classSubclasses && Object.keys(classSubclasses).length > 0;
+  };
+
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
     switch (currentStep) {
@@ -76,6 +86,11 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         );
       case 2: // Выбор архетипа (подкласса)
+        // Если нет подклассов для выбранного класса, автоматически переходим к следующему шагу
+        if (!hasSubclasses()) {
+          setTimeout(() => nextStep(), 0);
+          return null;
+        }
         return (
           <CharacterSubclassSelection
             character={character}
