@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -98,7 +99,8 @@ const SpellBookViewer = () => {
     allSpells.forEach(spell => {
       if (typeof spell.classes === 'string') {
         // Если classes - строка, разделяем её по запятым
-        spell.classes.split(',').forEach(cls => 
+        const classesString = spell.classes as string;
+        classesString.split(',').forEach(cls => 
           classesSet.add(cls.trim())
         );
       } else if (Array.isArray(spell.classes)) {
@@ -176,7 +178,7 @@ const SpellBookViewer = () => {
           return spell.classes.some(spellClass => {
             if (typeof spellClass !== 'string') return false;
             return activeClass.some(cls => 
-              spellClass.toLowerCase() === cls.toLowerCase()
+              spellClass.toLowerCase().includes(cls.toLowerCase())
             );
           });
         }
