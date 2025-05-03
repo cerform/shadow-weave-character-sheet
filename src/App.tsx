@@ -15,11 +15,12 @@ import CharacterCreationPage from './pages/CharacterCreationPage';
 import JoinSessionPage from './pages/JoinSessionPage';
 import DMSessionPage from './pages/DMSessionPage';
 import PlayerSessionPage from './pages/PlayerSessionPage';
-import SpellBookPage from './pages/SpellBookPage';
+import SpellbookPage from './pages/SpellbookPage';  // Исправлен регистр буквы 'b'
 import HandbookPage from './pages/HandbookPage';
 import CharactersListPage from './pages/CharactersListPage';
-import BattlePage from './pages/BattlePage';
-import NotFoundPage from './pages/NotFoundPage';
+import PlayBattlePage from './pages/PlayBattlePage';  // Переименован импорт на существующий файл
+import NotFound from './pages/NotFound';  // Исправлен импорт на существующий файл
+
 import AppDiceButton from './AppDiceButton';
 
 const App = () => {
@@ -38,11 +39,11 @@ const App = () => {
                   <Route path="/join" element={<JoinSessionPage />} />
                   <Route path="/dm" element={<DMSessionPage />} />
                   <Route path="/play" element={<PlayerSessionPage />} />
-                  <Route path="/spellbook" element={<SpellBookPage />} />
+                  <Route path="/spellbook" element={<SpellbookPage />} />
                   <Route path="/handbook" element={<HandbookPage />} />
                   <Route path="/characters" element={<CharactersListPage />} />
-                  <Route path="/battle" element={<BattlePage />} />
-                  <Route path="*" element={<NotFoundPage />} />
+                  <Route path="/battle" element={<PlayBattlePage />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
                 <AppDiceButton />
                 <Toaster />
