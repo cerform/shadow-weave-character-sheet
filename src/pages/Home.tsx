@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   FileUp, Plus, Users, Book, BookOpen, User, Swords, 
   Home as HomeIcon, UserPlus, LogIn, LogOut, Search, Filter, 
-  Edit, Download, Upload, DiceIcon
+  Edit, Download, Upload, Dices
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -499,7 +498,7 @@ const Home = () => {
                     className="w-full hover:scale-102 transition-transform"
                     style={{backgroundColor: currentTheme.accent}}
                   >
-                    <DiceIcon className="mr-2 h-4 w-4" />
+                    <Dices className="mr-2 h-4 w-4" />
                     Присоединиться к сессии
                   </Button>
                   
@@ -572,7 +571,7 @@ const Home = () => {
                   }}
                 >
                   <div className="mb-4">
-                    <DiceIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <Dices className="mx-auto h-12 w-12 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">{isAuthenticated ? 
                     "У вас пока нет сохраненных персонажей" : 

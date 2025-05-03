@@ -15,7 +15,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
-  const { currentUser, updateUserProfile } = useAuth();
+  const { currentUser, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [username, setUsername] = useState<string>("");
@@ -31,7 +31,10 @@ const ProfilePage = () => {
     if (currentUser) {
       setUsername(currentUser.username || "");
       setEmail(currentUser.email || "");
-      setAvatarUrl(currentUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`);
+      // Используем аватар из URL или генерируем на основе имени пользователя
+      setAvatarUrl(
+        `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`
+      );
     }
   }, [currentUser]);
 
@@ -70,11 +73,10 @@ const ProfilePage = () => {
 
   const handleSaveProfile = () => {
     if (currentUser) {
-      updateUserProfile({
+      updateUser({
         ...currentUser,
         username,
-        email,
-        avatarUrl
+        email
       });
       
       toast({

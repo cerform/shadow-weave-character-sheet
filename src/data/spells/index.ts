@@ -1,4 +1,3 @@
-
 import { cantrips } from "./cantrips";
 import { level1Spells } from "./level1";
 import { level2Spells } from "./level2";
@@ -101,4 +100,9 @@ export const getAllSpellcastingClasses = (): string[] => {
     }
   });
   return Array.from(classes).sort();
+};
+
+// Экспорт всех заклинаний для совместимости с существующим кодом
+export const getAllSpells = (): CharacterSpell[] => {
+  return spells;
 };
