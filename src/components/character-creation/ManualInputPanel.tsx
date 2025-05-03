@@ -9,15 +9,12 @@ interface ManualInputPanelProps {
   abilityScores: CharacterSheet['abilities'];
   setAbilityScores: (scores: CharacterSheet['abilities']) => void;
   maxAbilityScore: number;
-  getModifier?: (score: number) => string;
-  level?: number;
 }
 
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   abilityScores,
   setAbilityScores,
-  maxAbilityScore,
-  getModifier
+  maxAbilityScore
 }) => {
   const handleAbilityChange = (ability: keyof CharacterSheet['abilities'], value: string) => {
     const numValue = parseInt(value) || 0;
@@ -47,13 +44,8 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {Object.entries(abilityScores).map(([ability, value]) => (
           <div key={ability} className="space-y-1">
-            <Label htmlFor={ability} className="capitalize text-white font-medium text-shadow">
+            <Label htmlFor={ability} className="capitalize text-white">
               {ability}
-              {getModifier && (
-                <span className="ml-2 text-white font-bold">
-                  {getModifier(value)}
-                </span>
-              )}
             </Label>
             <Input
               id={ability}

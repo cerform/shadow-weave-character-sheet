@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
@@ -250,10 +251,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         
         {abilitiesMethod === "manual" && (
           <ManualInputPanel 
-            abilityScores={stats}
-            setAbilityScores={(newStats) => setStats(newStats)}
+            stats={stats}
+            updateStat={updateStat}
             getModifier={getModifier}
             maxAbilityScore={maxStatValue}
+            level={character.level}
           />
         )}
       </div>

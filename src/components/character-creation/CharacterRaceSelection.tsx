@@ -52,9 +52,20 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     }
   };
   
-  // Классы для компонентов подрас
-  const subraceNormalClass = "transition-all duration-200 hover:bg-white/20 text-white bg-black/60 border border-accent";
-  const subraceSelectedClass = "transition-all duration-200 font-semibold shadow-lg ring-2 ring-white text-black font-bold bg-accent";
+  // Стили для подрасы
+  const subraceButtonStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    color: '#FFFFFF',
+    border: `1px solid ${currentTheme.accent || '#50FF50'}`,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
+  };
+
+  const selectedSubraceButtonStyle = {
+    backgroundColor: currentTheme.accent || '#50FF50',
+    color: '#000000',
+    fontWeight: 'bold',
+    boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+  };
   
   return (
     <div className="space-y-6">
@@ -81,7 +92,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               ) : undefined}
               subOptions={hasSubraces && isSelected ? (
                 <div>
-                  <p className="text-sm font-medium mb-2 text-white text-shadow-sm">Доступные подрасы:</p>
+                  <p className="text-sm font-medium mb-2 text-white">Доступные подрасы:</p>
                   <SelectionSubOptionsContainer>
                     {race.subRaces?.map((subrace) => {
                       const isSubraceSelected = selectedSubrace === subrace;
@@ -91,7 +102,13 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                           label={subrace}
                           selected={isSubraceSelected}
                           onClick={() => handleSubraceSelect(subrace)}
-                          className={isSubraceSelected ? subraceSelectedClass : subraceNormalClass}
+                          style={isSubraceSelected ? selectedSubraceButtonStyle : subraceButtonStyle}
+                          className={`
+                            transition-all duration-200
+                            ${isSubraceSelected 
+                              ? 'font-semibold shadow-lg ring-2 ring-white' 
+                              : 'hover:bg-white/20'}
+                          `}
                         />
                       );
                     })}

@@ -61,12 +61,22 @@ const Index = () => {
     navigate("/sheet");
   };
 
+  // Update the navigation links to include new pages
+  const menuItems = [
+    { title: "Главная", path: "/home", icon: Home },
+    { title: "Создание персонажа", path: "/character-creation", icon: UserPlus },
+    { title: "Лист персонажа", path: "/character-sheet", icon: FileText },
+    { title: "Книга заклинаний", path: "/spellbook", icon: BookOpen },
+    { title: "Боевая карта", path: "/battle", icon: Swords },
+    { title: "Панель мастера", path: "/dm", icon: Crown },
+  ];
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="container px-4 py-8 mx-auto">
         <header className="text-center mb-6">
-          <h1 className="text-4xl font-bold mb-2 text-white text-shadow-lg">Dungeons & Dragons 5e</h1>
-          <h2 className="text-2xl text-white text-shadow mb-4">Создай своего героя</h2>
+          <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
+          <h2 className="text-2xl text-muted-foreground mb-4">Создай своего героя</h2>
           <div className="flex justify-center">
             <ThemeSelector />
           </div>
@@ -80,7 +90,7 @@ const Index = () => {
                 <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`} />
                 <AvatarFallback>{currentUser?.username.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <p className="font-medium text-lg mb-1 text-white text-shadow">
+              <p className="font-medium text-lg mb-1">
                 {currentUser?.username}
                 {currentUser?.isDM && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
@@ -88,14 +98,14 @@ const Index = () => {
                   </span>
                 )}
               </p>
-              <p className="text-sm text-white/80 mb-3 text-shadow-sm">{currentUser?.email}</p>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1 bg-black/50 text-white hover:bg-white/20 border-white/30">
+              <p className="text-sm text-muted-foreground mb-3">{currentUser?.email}</p>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
                 <LogOut className="h-3.5 w-3.5" />
                 Выйти
               </Button>
             </div>
           ) : (
-            <Button onClick={() => navigate("/auth")} className="flex items-center gap-2 bg-primary text-white hover:bg-primary/80">
+            <Button onClick={() => navigate("/auth")} className="flex items-center gap-2">
               <LogIn className="h-4 w-4" />
               Войти в аккаунт
             </Button>
@@ -105,31 +115,31 @@ const Index = () => {
         <main className="max-w-6xl mx-auto">
           {/* Заголовки разделов в одну строку с отступами */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mb-6">
-            <h3 className="text-2xl font-bold text-white text-shadow">Игрок</h3>
-            <h3 className="text-2xl font-bold text-white text-shadow mt-6 md:mt-0">Мастер Подземелий</h3>
+            <h3 className="text-2xl font-bold">Игрок</h3>
+            <h3 className="text-2xl font-bold mt-6 md:mt-0">Мастер Подземелий</h3>
           </div>
           
           {/* Основная сетка карточек */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             {/* Колонка игрока */}
             <div className="grid grid-cols-1 gap-4">
-              <Card className="bg-black/50 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white text-shadow">
+                  <CardTitle className="flex items-center gap-2">
                     <User className="size-5" />
                     Персонаж
                   </CardTitle>
-                  <CardDescription className="text-white/80 text-shadow-sm">
+                  <CardDescription>
                     Создайте или управляйте персонажами
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => navigate("/character-creation")} className="w-full gap-2 bg-primary text-white hover:bg-primary/80">
+                  <Button onClick={() => navigate("/character-creation")} className="w-full gap-2">
                     <Plus className="size-4" />
                     Создать персонажа
                   </Button>
                   
-                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2 bg-black/50 text-white hover:bg-white/20 border-white/30">
+                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
                     <FileUp className="size-4" />
                     Загрузить персонажа (JSON)
                   </Button>
@@ -144,7 +154,7 @@ const Index = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setPdfImportDialogOpen(true)}
-                    className="w-full gap-2 bg-black/50 text-white hover:bg-white/20 border-white/30"
+                    className="w-full gap-2"
                   >
                     <FileUp className="size-4" />
                     Импорт из PDF
@@ -152,18 +162,18 @@ const Index = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-black/50 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white text-shadow">
+                  <CardTitle className="flex items-center gap-2">
                     <Swords className="size-5" />
                     Играть
                   </CardTitle>
-                  <CardDescription className="text-white/80 text-shadow-sm">
+                  <CardDescription>
                     Присоединяйтесь к игровым сессиям
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/join")} className="w-full bg-primary text-white hover:bg-primary/80">
+                  <Button onClick={() => navigate("/join")} className="w-full">
                     Присоединиться к сессии
                   </Button>
                 </CardContent>
@@ -172,53 +182,53 @@ const Index = () => {
             
             {/* Колонка мастера */}
             <div className="grid grid-cols-1 gap-4">
-              <Card className="bg-black/50 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white text-shadow">
+                  <CardTitle className="flex items-center gap-2">
                     <Users className="size-5" />
                     Управление сессиями
                   </CardTitle>
-                  <CardDescription className="text-white/80 text-shadow-sm">
+                  <CardDescription>
                     Создавайте и управляйте игровыми сессиями
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/dm")} className="w-full bg-primary text-white hover:bg-primary/80">
+                  <Button onClick={() => navigate("/dm")} className="w-full">
                     Панель мастера
                   </Button>
                 </CardContent>
               </Card>
 
               {/* Две отдельные карточки для Руководства и Книги заклинаний */}
-              <Card className="bg-black/50 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white text-shadow">
+                  <CardTitle className="flex items-center gap-2">
                     <BookOpen className="size-5" />
                     Руководство игрока
                   </CardTitle>
-                  <CardDescription className="text-white/80 text-shadow-sm">
+                  <CardDescription>
                     Правила и описание мира D&D 5e
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/handbook")} className="w-full bg-primary text-white hover:bg-primary/80">
+                  <Button onClick={() => navigate("/handbook")} className="w-full">
                     Открыть руководство
                   </Button>
                 </CardContent>
               </Card>
               
-              <Card className="bg-black/50 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white text-shadow">
+                  <CardTitle className="flex items-center gap-2">
                     <Book className="size-5" />
                     Книга заклинаний
                   </CardTitle>
-                  <CardDescription className="text-white/80 text-shadow-sm">
+                  <CardDescription>
                     Полный список заклинаний D&D 5e
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/spellbook")} className="w-full bg-primary text-white hover:bg-primary/80">
+                  <Button onClick={() => navigate("/spellbook")} className="w-full">
                     Открыть книгу заклинаний
                   </Button>
                 </CardContent>
@@ -228,7 +238,7 @@ const Index = () => {
 
           {/* Раздел "Недавние персонажи" */}
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-white text-shadow">
+            <h3 className="text-xl font-semibold mb-4">
               {isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}
             </h3>
             
@@ -237,7 +247,7 @@ const Index = () => {
                 {userCharacters.map((char) => (
                   <Card 
                     key={char.id} 
-                    className="bg-black/50 backdrop-blur-sm hover:bg-black/60 transition-colors cursor-pointer"
+                    className="bg-card/30 backdrop-blur-sm hover:bg-card/40 transition-colors cursor-pointer"
                     onClick={() => loadCharacter(char)}
                   >
                     <CardContent className="p-4">
@@ -247,8 +257,8 @@ const Index = () => {
                           <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h4 className="font-medium text-white text-shadow-sm">{char.name}</h4>
-                          <p className="text-xs text-white/70 text-shadow-sm">
+                          <h4 className="font-medium">{char.name}</h4>
+                          <p className="text-xs text-muted-foreground">
                             {char.race}, {char.className} {char.level} уровня
                           </p>
                         </div>
@@ -258,7 +268,7 @@ const Index = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-black/50 backdrop-blur-sm rounded-lg p-6 text-center text-white/80 text-shadow-sm">
+              <div className="bg-card/30 backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground">
                 {isAuthenticated ? 
                   "У вас пока нет сохраненных персонажей" : 
                   "Создайте персонажа или войдите в аккаунт, чтобы увидеть своих персонажей"
@@ -268,16 +278,16 @@ const Index = () => {
           </div>
         </main>
 
-        <footer className="text-center mt-12 text-sm text-white/60 text-shadow-sm">
+        <footer className="text-center mt-12 text-sm text-muted-foreground">
           <p>D&D 5e Character Sheet Creator © 2025</p>
         </footer>
       </div>
 
       {/* Диалоговое окно для импорта PDF */}
       <Dialog open={pdfImportDialogOpen} onOpenChange={setPdfImportDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-black/70 text-white border-primary/30">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white text-shadow">Импорт персонажа из PDF</DialogTitle>
+            <DialogTitle>Импорт персонажа из PDF</DialogTitle>
           </DialogHeader>
           <PdfCharacterImport />
         </DialogContent>
