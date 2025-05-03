@@ -49,19 +49,28 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
  */
 export const getSpellsByClass = (className: string, characterLevel?: number): CharacterSpell[] => {
   return spells.filter(spell => {
-    // Improved type checking to avoid toLowerCase on 'never' type
+    // Проверяем, что classes существует
+    if (!spell.classes) {
+      return false;
+    }
+    
+    // Если classes это строка
     if (typeof spell.classes === 'string') {
       return spell.classes.toLowerCase().includes(className.toLowerCase());
     }
+    
+    // Если classes это массив
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(cls => {
-        // Extra safety check before using toLowerCase
+        // Убедимся, что элемент массива это строка, прежде чем вызывать toLowerCase()
         if (typeof cls === 'string') {
           return cls.toLowerCase().includes(className.toLowerCase());
         }
         return false;
       });
     }
+    
+    // Если не строка и не массив, возвращаем false
     return false;
   });
 };
