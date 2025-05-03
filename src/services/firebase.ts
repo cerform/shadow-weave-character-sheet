@@ -1,4 +1,3 @@
-
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, User as FirebaseUser } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
@@ -22,7 +21,8 @@ const googleProvider = new GoogleAuthProvider();
 
 // Добавляем дополнительные параметры для Google Auth
 googleProvider.setCustomParameters({ 
-  prompt: 'select_account' 
+  prompt: 'select_account',
+  client_id: '815261687102-lcroivjh0ta2t3a7thpsgvgus34akp9b.apps.googleusercontent.com'
 });
 
 // Инициализация Firebase Analytics
@@ -71,7 +71,7 @@ export const firebaseAuthService = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
-      console.log("Начинаем вход через Google...");
+      console.log("Начинаем вход через Google со следующими параметрами:", googleProvider);
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Успешный вход через Google:", result);
       toast.success("Вход через Google выполнен успешно!");
@@ -83,6 +83,12 @@ export const firebaseAuthService = {
         message = "Ошибка конфигурации Firebase. Пожалуйста, попробуйте позже или используйте другой метод входа";
       } else if (error.code === 'auth/popup-closed-by-user') {
         message = "Окно авторизации было закрыто. Попробуйте еще раз.";
+      } else if (error.code === 'auth/popup-blocked') {
+        message = "Всплывающее окно заблокировано браузером. Пожалуйста, разрешите всплывающие окна для этого сайта и попробуйте снова.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        message = "Запрос на открытие всплывающего окна был отменен. Попробуйте снова.";
+      } else if (error.code === 'auth/internal-error') {
+        message = "Внутренняя ошибка Firebase. Пожалуйста, попробуйте позже.";
       }
       toast.error(message);
       throw error;

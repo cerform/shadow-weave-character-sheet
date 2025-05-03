@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -9,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
-import { ArrowLeft, LogIn, UserPlus } from "lucide-react";
+import { ArrowLeft, LogIn, UserPlus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,24 +46,32 @@ const AuthPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate, redirectTo]);
   
+  // Состояние ошибок
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  
   // Обработчики изменения полей формы
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginForm(prev => ({ ...prev, [name]: value }));
+    setLoginError(null);
   };
   
   const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === "checkbox" ? checked : value;
     setRegisterForm(prev => ({ ...prev, [name]: fieldValue }));
+    setRegisterError(null);
   };
   
   // Обработчик входа
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
     
     if (!loginForm.email || !loginForm.password) {
-      toast.error("Пожалуйста, заполните все поля");
+      setLoginError("Пожалуйста, заполните все поля");
       return;
     }
     
@@ -71,8 +79,9 @@ const AuthPage: React.FC = () => {
       setIsSubmitting(true);
       await login(loginForm.email, loginForm.password);
       navigate(redirectTo);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ошибка входа:", error);
+      setLoginError(error.message || "Произошла ошибка при входе. Проверьте данные и попробуйте снова.");
     } finally {
       setIsSubmitting(false);
     }
@@ -81,9 +90,10 @@ const AuthPage: React.FC = () => {
   // Обработчик регистрации
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setRegisterError(null);
     
     if (!registerForm.email || !registerForm.password || !registerForm.username) {
-      toast.error("Пожалуйста, заполните все обязательные поля");
+      setRegisterError("Пожалуйста, заполните все обязательные поля");
       return;
     }
     
@@ -96,8 +106,9 @@ const AuthPage: React.FC = () => {
         registerForm.isDM
       );
       navigate(redirectTo);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ошибка регистрации:", error);
+      setRegisterError(error.message || "Произошла ошибка при регистрации. Проверьте данные и попробуйте снова.");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,11 +117,15 @@ const AuthPage: React.FC = () => {
   // Обработчик входа через Google
   const handleGoogleLogin = async (isDM: boolean) => {
     try {
+      setGoogleError(null);
       setIsSubmitting(true);
+      console.log("Начинаем вход через Google на странице...");
       await googleLogin(isDM);
       navigate(redirectTo);
-    } catch (error) {
-      console.error("Ошибка входа через Google:", error);
+    } catch (error: any) {
+      console.error("Ошибка входа через Google на странице:", error);
+      setGoogleError(error.message || "Произошла ошибка при входе через Google.");
+      setTimeout(() => setIsSubmitting(false), 1000); // Небольшая задержка для корректного визуального восприятия
     } finally {
       setIsSubmitting(false);
     }
@@ -156,6 +171,12 @@ const AuthPage: React.FC = () => {
                 <CardDescription>
                   Войдите, чтобы получить доступ к своим персонажам и игровым сессиям
                 </CardDescription>
+                {loginError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{loginError}</AlertDescription>
+                  </Alert>
+                )}
               </CardHeader>
               
               <CardContent className="space-y-4">
@@ -216,6 +237,13 @@ const AuthPage: React.FC = () => {
                   </svg>
                   Войти через Google
                 </Button>
+                
+                {googleError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{googleError}</AlertDescription>
+                  </Alert>
+                )}
               </CardFooter>
             </form>
           </TabsContent>
@@ -227,6 +255,12 @@ const AuthPage: React.FC = () => {
                 <CardDescription>
                   Создайте аккаунт, чтобы сохранять персонажей и присоединяться к игровым сессиям
                 </CardDescription>
+                {registerError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{registerError}</AlertDescription>
+                  </Alert>
+                )}
               </CardHeader>
               
               <CardContent className="space-y-4">
@@ -314,6 +348,13 @@ const AuthPage: React.FC = () => {
                   </svg>
                   Регистрация через Google
                 </Button>
+                
+                {googleError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{googleError}</AlertDescription>
+                  </Alert>
+                )}
                 
                 <div className="text-center text-xs text-muted-foreground mt-2">
                   Регистрируясь, вы соглашаетесь с нашими условиями использования и политикой конфиденциальности
