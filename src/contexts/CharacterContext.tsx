@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -66,6 +67,7 @@ export interface Character {
   };
   maxHp?: number;
   currentHp?: number;
+  temporaryHp?: number; // Добавляем поле для временного HP
   sorceryPoints?: SorceryPoints;
   theme?: string;
   createdAt: string;
