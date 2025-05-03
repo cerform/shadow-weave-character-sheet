@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useDeviceType } from '@/hooks/use-mobile';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
@@ -8,8 +10,8 @@ interface NavigationButtonsProps {
   allowNext: boolean;
   isFirstStep?: boolean;
   hideNextButton?: boolean;
-  disableNext?: boolean; // Добавляем свойство disableNext
-  nextLabel?: string; // Добавляем свойство nextLabel
+  disableNext?: boolean; 
+  nextLabel?: string;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -18,11 +20,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   allowNext,
   isFirstStep = false,
   hideNextButton = false,
-  disableNext, // Добавляем новые параметры
-  nextLabel = "Далее" // Добавляем со значением по умолчанию
+  disableNext,
+  nextLabel = "Далее"
 }) => {
-  // Используем либо disableNext, либо !allowNext для определения состояния кнопки
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
+  const { isMobile } = useDeviceType() === "mobile";
   
   return (
     <div className="flex justify-between pt-6">
@@ -30,8 +32,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         variant="outline" 
         onClick={prevStep}
         disabled={isFirstStep}
+        className="flex items-center gap-2"
       >
-        Назад
+        <ArrowLeft className="size-4" />
+        {!isMobile && "Назад"}
       </Button>
       
       {!hideNextButton && (
@@ -39,8 +43,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           variant="default" 
           onClick={nextStep}
           disabled={isNextDisabled}
+          className="flex items-center gap-2"
         >
-          {nextLabel}
+          {!isMobile && nextLabel}
+          <ArrowRight className="size-4" />
         </Button>
       )}
     </div>

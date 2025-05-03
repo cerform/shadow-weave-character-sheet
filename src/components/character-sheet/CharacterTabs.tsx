@@ -12,6 +12,7 @@ import { PlayerHandbookTab } from './tabs/PlayerHandbookTab';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useDeviceType } from "@/hooks/use-mobile";
+import { Sword, Wand, BookOpen, User, GraduationCap, Book } from "lucide-react";
 
 interface CharacterTabsProps {
   activeTab: string;
@@ -28,14 +29,41 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} mb-6 gap-2`}>
-          <TabsTrigger value="abilities" className="text-xs py-2">Характерис.</TabsTrigger>
-          <TabsTrigger value="combat" className="text-xs py-2">Атаки</TabsTrigger>
-          <TabsTrigger value="spells" className="text-xs py-2">Заклинания</TabsTrigger>
-          <TabsTrigger value="features" className="text-xs py-2">Особенности</TabsTrigger>
-          <TabsTrigger value="background" className="text-xs py-2">Предыстор.</TabsTrigger>
-          <TabsTrigger value="handbook" className="text-xs py-2">Справочник</TabsTrigger>
-          <TabsTrigger value="playerhandbook" className="text-xs py-2 col-span-full">Руководство игрока</TabsTrigger>
+        <TabsList className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-3'} mb-6 gap-2`}>
+          <TabsTrigger value="abilities" className="text-xs py-2 flex items-center justify-center gap-1">
+            <User className="size-3" />
+            {!isMobile && "Характерис."}
+          </TabsTrigger>
+          
+          <TabsTrigger value="combat" className="text-xs py-2 flex items-center justify-center gap-1">
+            <Sword className="size-3" />
+            {!isMobile && "Атаки"}
+          </TabsTrigger>
+          
+          <TabsTrigger value="spells" className="text-xs py-2 flex items-center justify-center gap-1">
+            <Wand className="size-3" />
+            {!isMobile && "Заклинания"}
+          </TabsTrigger>
+          
+          <TabsTrigger value="features" className="text-xs py-2 flex items-center justify-center gap-1">
+            <GraduationCap className="size-3" />
+            {!isMobile && "Особенности"}
+          </TabsTrigger>
+          
+          <TabsTrigger value="background" className="text-xs py-2 flex items-center justify-center gap-1">
+            <User className="size-3" />
+            {!isMobile && "Предыстор."}
+          </TabsTrigger>
+          
+          <TabsTrigger value="handbook" className="text-xs py-2 flex items-center justify-center gap-1">
+            <Book className="size-3" />
+            {!isMobile && "Справочник"}
+          </TabsTrigger>
+          
+          <TabsTrigger value="playerhandbook" className="text-xs py-2 flex items-center justify-center gap-1 col-span-full">
+            <BookOpen className="size-3" />
+            {!isMobile && "Руководство игрока"}
+          </TabsTrigger>
         </TabsList>
         
         <ScrollArea className={`${isMobile ? 'h-[calc(100vh-300px)]' : 'h-[calc(100vh-280px)]'}`}>

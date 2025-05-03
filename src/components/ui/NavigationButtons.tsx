@@ -26,6 +26,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const buttonStyle = {
     color: currentTheme.buttonText || '#FFFFFF',
     borderColor: currentTheme.accent,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)'
   };
   
   return (
@@ -37,7 +38,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Home className={isMobile ? "size-3" : "size-4"} />
+        <Home className={isMobile ? "size-4" : "size-4"} />
         {isMobile ? "" : "На главную"}
       </Button>
       
@@ -48,8 +49,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <BookOpen className={isMobile ? "size-3" : "size-4"} />
-        {isMobile ? "Рук-во" : "Руководство игрока"}
+        <BookOpen className={isMobile ? "size-4" : "size-4"} />
+        {isMobile ? "" : "Руководство игрока"}
       </Button>
       
       <Button 
@@ -59,8 +60,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Scroll className={isMobile ? "size-3" : "size-4"} />
-        {isMobile ? "Заклинания" : "Книга заклинаний"}
+        <Scroll className={isMobile ? "size-4" : "size-4"} />
+        {isMobile ? "" : "Книга заклинаний"}
       </Button>
       
       {/* Показывать кнопку боевой карты только Мастерам */}
@@ -72,8 +73,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}
         >
-          <Map className={isMobile ? "size-3" : "size-4"} />
-          {isMobile ? "Карта" : "Боевая карта"}
+          <Map className={isMobile ? "size-4" : "size-4"} />
+          {isMobile ? "" : "Боевая карта"}
         </Button>
       )}
       
@@ -84,8 +85,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Users className={isMobile ? "size-3" : "size-4"} />
-        {isMobile ? "Персонаж" : "Создание персонажа"}
+        <Users className={isMobile ? "size-4" : "size-4"} />
+        {isMobile ? "" : "Создание персонажа"}
       </Button>
     </div>
   );
