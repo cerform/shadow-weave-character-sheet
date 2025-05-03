@@ -1,5 +1,8 @@
 
 import React, { useRef, useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Text, OrbitControls, Environment } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface GradientDiceProps {
   diceType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
@@ -7,20 +10,76 @@ interface GradientDiceProps {
   rolling?: boolean;
   result?: number | null;
   showNumber?: boolean;
+  color1?: string;
+  color2?: string;
 }
 
-const GradientDice: React.FC<GradientDiceProps> = ({
-  diceType,
-  size = 120,
-  rolling = false,
-  result = null,
-  showNumber = true
+// Компонент 3D-кубика с градиентом
+const Dice3D = ({ 
+  diceType, 
+  rolling, 
+  result, 
+  showNumber,
+  color1 = "#9b87f5",
+  color2 = "#d946ef"
+}: {
+  diceType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+  rolling?: boolean;
+  result?: number | null;
+  showNumber?: boolean;
+  color1?: string;
+  color2?: string;
 }) => {
-  const diceRef = useRef<HTMLDivElement>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
-  const [rollState, setRollState] = useState<'idle' | 'rolling' | 'stopped'>('idle');
 
-  // Получаем количество граней для типа кубика
+  // Создаем градиентный материал
+  const gradientMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      color1: { value: new THREE.Color(color1) },
+      color2: { value: new THREE.Color(color2) }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 color1;
+      uniform vec3 color2;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = vec4(mix(color1, color2, vUv.y), 0.9);
+      }
+    `,
+    transparent: true,
+    side: THREE.DoubleSide,
+  });
+  
+  // Получаем геометрию для выбранного типа кубика
+  const getDiceGeometry = () => {
+    switch (diceType) {
+      case 'd4':
+        return new THREE.TetrahedronGeometry(1, 0);
+      case 'd6':
+        return new THREE.BoxGeometry(1, 1, 1);
+      case 'd8':
+        return new THREE.OctahedronGeometry(1, 0);
+      case 'd10':
+        // Используем додекаэдр для d10 как приближение
+        return new THREE.DodecahedronGeometry(1, 0);
+      case 'd12':
+        return new THREE.DodecahedronGeometry(1, 0);
+      case 'd20':
+        return new THREE.IcosahedronGeometry(1, 0);
+      default:
+        return new THREE.IcosahedronGeometry(1, 0);
+    }
+  };
+  
+  // Получаем число граней для выбранного типа кубика
   const getFacesCount = () => {
     switch (diceType) {
       case 'd4': return 4;
@@ -29,50 +88,127 @@ const GradientDice: React.FC<GradientDiceProps> = ({
       case 'd10': return 10;
       case 'd12': return 12;
       case 'd20': return 20;
-      default: return 6;
+      default: return 20;
     }
   };
-
-  // Генерируем случайный поворот для анимации броска
-  const getRandomRotation = () => ({
-    x: Math.random() * 360,
-    y: Math.random() * 360,
-    z: Math.random() * 360
-  });
-
-  // Запускаем бросок кубика
+  
+  // Генерация случайного вращения для анимации
   useEffect(() => {
     if (rolling) {
-      setRollState('rolling');
-      
-      // Анимируем вращение
       const rollInterval = setInterval(() => {
-        setRotation(getRandomRotation());
-      }, 50);
-
-      // Останавливаем анимацию через некоторое время
+        setRotation({
+          x: Math.random() * Math.PI * 2,
+          y: Math.random() * Math.PI * 2,
+          z: Math.random() * Math.PI * 2
+        });
+      }, 100);
+      
+      // Останавливаем анимацию через 800мс
       setTimeout(() => {
         clearInterval(rollInterval);
-        setRollState('stopped');
       }, 800);
     }
   }, [rolling]);
-
-  // CSS классы для стилей кубика
-  const getDiceClasses = () => {
-    let classes = 'dice-3d';
-    if (rollState === 'rolling') classes += ' rolling';
-    return classes;
+  
+  // Создаем позиции для текста на гранях
+  const getFacePositions = () => {
+    switch (diceType) {
+      case 'd4':
+        return [
+          [0, 0.7, 0],
+          [0.7, -0.3, 0],
+          [-0.3, -0.3, 0.6],
+          [-0.3, -0.3, -0.6]
+        ];
+      case 'd6':
+        return [
+          [0, 0, 0.51],  // front
+          [0.51, 0, 0],  // right
+          [0, 0, -0.51], // back
+          [-0.51, 0, 0], // left
+          [0, 0.51, 0],  // top
+          [0, -0.51, 0]  // bottom
+        ];
+      case 'd8':
+        // Генерируем позиции для восьмигранника
+        return Array.from({ length: 8 }, (_, i) => {
+          const phi = Math.acos(-1 + (2 * i) / 8);
+          const theta = Math.sqrt(8 * Math.PI) * phi;
+          return [
+            0.7 * Math.cos(theta) * Math.sin(phi),
+            0.7 * Math.sin(theta) * Math.sin(phi),
+            0.7 * Math.cos(phi)
+          ];
+        });
+      case 'd10':
+      case 'd12':
+      case 'd20':
+        // Для многогранных кубиков генерируем позиции равномерно по сфере
+        const facesCount = getFacesCount();
+        return Array.from({ length: facesCount }, (_, i) => {
+          const y = 1 - (i / (facesCount - 1)) * 2;
+          const radius = Math.sqrt(1 - y * y);
+          const theta = ((i % (facesCount / 2)) / (facesCount / 2)) * Math.PI * 2;
+          const x = Math.cos(theta) * radius;
+          const z = Math.sin(theta) * radius;
+          return [x * 0.7, y * 0.7, z * 0.7];
+        });
+      default:
+        return [];
+    }
   };
 
-  // Полупрозрачный градиент для кубиков
-  const gradientStyle = {
-    background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.9), rgba(217, 70, 239, 0.9))',
-    boxShadow: '0 0 15px rgba(155, 135, 245, 0.6)',
-    WebkitBackfaceVisibility: 'visible' as const,
-    backfaceVisibility: 'visible' as const,
-  };
+  return (
+    <group rotation={[rotation.x, rotation.y, rotation.z]}>
+      <mesh ref={meshRef} material={gradientMaterial}>
+        <primitive object={getDiceGeometry()} attach="geometry" />
+      </mesh>
+      
+      {/* Отображение числа в центре, если есть результат */}
+      {result !== null && showNumber && !rolling && (
+        <Text
+          position={[0, 0, 0]}
+          fontSize={0.8}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.05}
+          outlineColor="#000000"
+        >
+          {result}
+        </Text>
+      )}
+      
+      {/* Числа на гранях (опционально) */}
+      {/* 
+      {!rolling && getFacePositions().map((position, i) => (
+        <Text
+          key={i}
+          position={position}
+          fontSize={0.2}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.02}
+          outlineColor="#000000"
+        >
+          {i + 1}
+        </Text>
+      ))}
+      */}
+    </group>
+  );
+};
 
+const GradientDice: React.FC<GradientDiceProps> = ({
+  diceType,
+  size = 120,
+  rolling = false,
+  result = null,
+  showNumber = true,
+  color1 = "#9b87f5",
+  color2 = "#d946ef"
+}) => {
   return (
     <div 
       className="dice-wrapper" 
@@ -84,46 +220,27 @@ const GradientDice: React.FC<GradientDiceProps> = ({
         margin: '0 auto'
       }}
     >
-      <div
-        ref={diceRef}
-        className={getDiceClasses()}
-        style={{
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`,
-          transition: rollState === 'rolling' ? 'none' : 'transform 0.5s ease-out',
-          transformStyle: 'preserve-3d',
-        }}
-      >
-        <div className="dice-model">
-          <img 
-            src={`/assets/dice-models/${diceType}.png`} 
-            alt={`${diceType} dice`}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain'
-            }}
-          />
-        </div>
-
-        {result !== null && showNumber && !rolling && (
-          <div className="dice-result" style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: 'white',
-            fontSize: `${size / 3}px`,
-            fontWeight: 'bold',
-            textShadow: '0 0 5px rgba(0,0,0,0.5)',
-            zIndex: 5
-          }}>
-            {result}
-          </div>
-        )}
-      </div>
+      <Canvas shadows>
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+        <Environment preset="city" />
+        
+        <Dice3D 
+          diceType={diceType}
+          rolling={rolling}
+          result={result}
+          showNumber={showNumber}
+          color1={color1}
+          color2={color2}
+        />
+        
+        <OrbitControls 
+          enablePan={false} 
+          enableZoom={false}
+          autoRotate={!rolling && !result}
+          autoRotateSpeed={2}
+        />
+      </Canvas>
     </div>
   );
 };
