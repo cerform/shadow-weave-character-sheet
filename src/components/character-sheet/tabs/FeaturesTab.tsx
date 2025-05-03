@@ -30,7 +30,7 @@ export const FeaturesTab = () => {
     !classFeatures.includes(f) && !raceFeatures.includes(f)
   ) || [];
 
-  // Получаем подкласс из className или class, если есть формат "Класс: Подкласс"
+  // Получаем подкласс из className, если есть формат "Класс: Подкласс"
   const getSubclass = (): string | undefined => {
     // Проверяем наличие строк с соответствующими полями
     const characterClassName = character?.className || '';
@@ -64,7 +64,7 @@ export const FeaturesTab = () => {
       <h3 className="text-lg font-semibold border-b border-primary/20 pb-2 mb-4">Особенности и умения</h3>
       
       <div className="space-y-6">
-        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
           <h4 className="font-semibold mb-3 flex items-center">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
@@ -90,13 +90,13 @@ export const FeaturesTab = () => {
                   <span className="mr-2">⚔️</span> 
                   Скрытая атака
                 </h5>
-                <p className="text-sm opacity-80 ml-6">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
+                <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
               </div>
             )}
           </div>
         </div>
         
-        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
           <h4 className="font-semibold mb-3 flex items-center">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
@@ -123,21 +123,21 @@ export const FeaturesTab = () => {
                     <span className="mr-2">👁️</span> 
                     Темное зрение
                   </h5>
-                  <p className="text-sm opacity-80 ml-6">Вы можете видеть в темноте на расстоянии 60 футов.</p>
+                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы можете видеть в темноте на расстоянии 60 футов.</p>
                 </div>
                 <div className="border-b border-primary/10 pb-2">
                   <h5 className="font-medium flex items-center">
                     <span className="mr-2">🔮</span> 
                     Эльфийская проницательность
                   </h5>
-                  <p className="text-sm opacity-80 ml-6">Вы владеете навыком Восприятие.</p>
+                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы владеете навыком Восприятие.</p>
                 </div>
               </>
             )}
           </div>
         </div>
         
-        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
           <h4 className="font-semibold mb-3 flex items-center">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
@@ -149,7 +149,7 @@ export const FeaturesTab = () => {
           </h4>
           <div className="space-y-3 pl-8">
             {subclass && (
-              <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+              <div className="mb-4 p-3 bg-black/60 rounded-lg">
                 <div className="flex items-center justify-between">
                   <h5 className="font-medium flex items-center">
                     <span className="mr-2">⭐</span>
@@ -184,7 +184,7 @@ export const FeaturesTab = () => {
                     <span className="mr-2">⚔️</span> 
                     Мастер легкого оружия
                   </h5>
-                  <p className="text-sm opacity-80 ml-6">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
+                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
                 </div>
               )
             )}

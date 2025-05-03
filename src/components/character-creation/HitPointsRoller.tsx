@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useToast } from '@/hooks/use-toast';
-import SimpleDiceRenderer from '@/components/dice/SimpleDiceRenderer';
+import SimpleDiceRenderer from '../dice/SimpleDiceRenderer';
 
 interface HitPointsRollerProps {
   characterClass: string;
@@ -16,305 +15,168 @@ interface HitPointsRollerProps {
   initialHp?: number;
 }
 
-export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
+// Карта соответствия классов и их кубиков здоровья
+const CLASS_HIT_DICE: Record<string, number> = {
+  'Варвар': 12,
+  'Воин': 10,
+  'Паладин': 10,
+  'Следопыт': 10,
+  'Монах': 8,
+  'Плут': 8,
+  'Друид': 8,
+  'Бард': 8,
+  'Жрец': 8,
+  'Колдун': 8,
+  'Волшебник': 6,
+  'Чародей': 6,
+};
+
+const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
   characterClass,
   level,
   constitutionModifier,
   onHitPointsRolled,
   initialHp
 }) => {
-  const [isRolling, setIsRolling] = useState(false);
-  const [hitPoints, setHitPoints] = useState<number>(initialHp || 0);
-  const [rolls, setRolls] = useState<number[]>([]);
-  const [currentDiceResult, setCurrentDiceResult] = useState<number | null>(null);
-  
+  const [diceValue, setDiceValue] = useState<number | null>(null);
+  const [rollState, setRollState] = useState<'waiting' | 'rolling' | 'rolled'>('waiting');
+  const [finalHp, setFinalHp] = useState<number | null>(initialHp || null);
   const { theme } = useTheme();
-  const { toast } = useToast();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Определение типа кубика HP в зависимости от класса
-  const getHitDice = (className: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' => {
-    // Приведем имя класса к нижнему регистру для более надежного сравнения
-    const normalizedClassName = className.toLowerCase().trim();
-    
-    if (normalizedClassName.includes('варвар')) return "d12";
-    
-    if (
-      normalizedClassName.includes('воин') || 
-      normalizedClassName.includes('паладин') || 
-      normalizedClassName.includes('следопыт')
-    ) return "d10";
-    
-    if (
-      normalizedClassName.includes('бард') || 
-      normalizedClassName.includes('жрец') || 
-      normalizedClassName.includes('друид') || 
-      normalizedClassName.includes('монах') || 
-      normalizedClassName.includes('плут') || 
-      normalizedClassName.includes('колдун')
-    ) return "d8";
-    
-    if (
-      normalizedClassName.includes('волшебник') || 
-      normalizedClassName.includes('чародей')
-    ) return "d6";
-    
-    // Если класс не распознан, возвращаем d8 как базовое значение
-    console.warn(`Неизвестный класс для определения кубика хитов: ${className}, используем d8`);
-    return "d8";
+  // Определяем тип кубика здоровья для класса
+  const getHitDieType = (): number => {
+    return CLASS_HIT_DICE[characterClass] || 8; // По умолчанию d8, если класс не найден
   };
 
-  // Максимум на первом уровне
-  const getFirstLevelHp = (className: string): number => {
-    const normalizedClassName = className.toLowerCase().trim();
-    
-    if (normalizedClassName.includes('варвар')) return 12;
-    
-    if (
-      normalizedClassName.includes('воин') || 
-      normalizedClassName.includes('паладин') || 
-      normalizedClassName.includes('следопыт')
-    ) return 10;
-    
-    if (
-      normalizedClassName.includes('бард') || 
-      normalizedClassName.includes('жрец') || 
-      normalizedClassName.includes('друид') || 
-      normalizedClassName.includes('монах') || 
-      normalizedClassName.includes('плут') || 
-      normalizedClassName.includes('колдун')
-    ) return 8;
-    
-    if (
-      normalizedClassName.includes('волшебник') || 
-      normalizedClassName.includes('чародей')
-    ) return 6;
-    
-    // Если класс не распознан, возвращаем 8 как базовое значение
-    console.warn(`Неизвестный класс для определения первого уровня HP: ${className}, используем 8`);
-    return 8;
-  };
-  
-  // Вычисляем итоговые HP
-  const calculateFinalHp = (rollsArray: number[]) => {
-    const firstLevelHp = getFirstLevelHp(characterClass) + constitutionModifier;
-    const additionalHp = rollsArray.reduce((sum, roll) => sum + roll + constitutionModifier, 0);
-    const total = firstLevelHp + additionalHp;
-    
-    setHitPoints(total);
-    onHitPointsRolled(total);
-    
-    toast({
-      title: "Очки здоровья вычислены!",
-      description: `Итоговое HP: ${total}`,
-    });
+  const hitDie = getHitDieType();
+
+  // Для первого уровня максимальное значение кубика + модификатор Телосложения
+  const getFirstLevelHp = (): number => {
+    return hitDie + constitutionModifier;
   };
 
-  // Функция для броска кубиков и расчета HP
-  const rollHitPoints = () => {
-    setIsRolling(true);
-    setRolls([]);
-    setCurrentDiceResult(null);
+  // Для каждого уровня после первого: кубик + модификатор Телосложения
+  const calculateTotalHp = (diceRoll: number): number => {
+    const firstLevelHp = getFirstLevelHp();
     
-    // На 1 уровне HP = максимум кубика + модификатор Телосложения
-    const firstLevelHp = getFirstLevelHp(characterClass) + constitutionModifier;
-    
-    // Если персонаж только 1 уровня, сразу устанавливаем HP
     if (level === 1) {
-      setHitPoints(firstLevelHp);
-      onHitPointsRolled(firstLevelHp);
-      setIsRolling(false);
-      
-      toast({
-        title: "Очки здоровья вычислены!",
-        description: `На 1 уровне ваше HP: ${firstLevelHp}`,
-      });
+      return firstLevelHp;
     } else {
-      // На каждом уровне после первого кидаем кубик и добавляем модификатор Телосложения
-      let newRolls = [];
-      let totalAdditionalHp = 0;
+      // Для уровней выше 1-го используем бросок кубика + модификатор Телосложения
+      return firstLevelHp + diceRoll + constitutionModifier;
+    }
+  };
+
+  // Обработчик броска кубика
+  const handleRoll = () => {
+    setRollState('rolling');
+    setDiceValue(null);
+
+    // Эмулируем задержку броска
+    setTimeout(() => {
+      const roll = Math.floor(Math.random() * hitDie) + 1;
+      setDiceValue(roll);
+      setRollState('rolled');
       
-      for (let i = 1; i < level; i++) {
-        const hitDice = getHitDice(characterClass);
-        const diceMax = parseInt(hitDice.substring(1));
-        const roll = Math.floor(Math.random() * diceMax) + 1;
-        newRolls.push(roll);
-        totalAdditionalHp += roll + constitutionModifier;
-        
-        // Устанавливаем последний бросок для отображения в визуализации
-        if (i === level - 1) {
-          setCurrentDiceResult(roll);
-        }
-      }
-      
-      const totalHp = firstLevelHp + totalAdditionalHp;
-      
-      setRolls(newRolls);
-      setHitPoints(totalHp);
+      const totalHp = calculateTotalHp(roll);
+      setFinalHp(totalHp);
       onHitPointsRolled(totalHp);
-      setIsRolling(false);
-      
-      toast({
-        title: "Очки здоровья вычислены!",
-        description: `Итоговое HP: ${totalHp}`,
-      });
-    }
+    }, 1500);
   };
 
-  // Функция для взятия среднего значения
-  const takeAverageHp = () => {
-    const hitDice = getHitDice(characterClass);
-    const firstLevelHp = getFirstLevelHp(characterClass) + constitutionModifier;
-    const diceMax = parseInt(hitDice.substring(1));
-    
-    // На 1 уровне HP = максимум кубика + модификатор Телосложения
-    let totalHp = firstLevelHp;
-    
-    // Начиная со 2 уровня, берем среднее значение
-    if (level > 1) {
-      const averageRoll = Math.ceil(diceMax / 2); // Среднее значение кубика
-      // Для каждого уровня после первого добавляем среднее + модификатор Телосложения
-      totalHp += (level - 1) * (averageRoll + constitutionModifier);
-    }
-    
-    setHitPoints(totalHp);
-    setRolls([]);
-    setCurrentDiceResult(null);
-    
-    // Отправляем результат родительскому компоненту
-    onHitPointsRolled(totalHp);
-    
-    toast({
-      title: "Взято среднее значение",
-      description: `Итоговое HP: ${totalHp}`,
-    });
+  // Для текстового представления типа кубика
+  const getDiceText = (dieType: number): string => {
+    return `d${dieType}`;
   };
-
-  // Отображение результатов бросков
-  const renderRollsHistory = () => {
-    if (rolls.length === 0) return null;
-    
-    return (
-      <div className="mt-4 space-y-2 bg-black/20 p-3 rounded-lg">
-        <p className="text-sm font-medium">История бросков:</p>
-        <div className="flex flex-wrap gap-2">
-          {rolls.map((roll, index) => (
-            <Badge key={index} variant="outline" className="bg-black/30 text-white">
-              Уровень {index + 2}: {roll} {constitutionModifier >= 0 ? '+' : ''}{constitutionModifier} = {roll + constitutionModifier}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Вычисляем какой дайс использовать для класса персонажа
-  const hitDice = getHitDice(characterClass);
 
   return (
-    <>
-      <Card className="shadow-lg border border-primary/20">
-        <CardHeader className="bg-primary/10 border-b border-primary/20">
-          <CardTitle className="text-xl flex justify-between items-center">
-            <span>Очки здоровья (HP)</span>
-            <Badge variant="outline" className="ml-2 text-sm">
-              Класс: {characterClass}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="p-4 md:p-6 space-y-6">
-          <div className="space-y-4 border-b border-primary/10 pb-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold">Кубик хитов:</h3>
-                <p className="text-sm opacity-80">
-                  {hitDice} ({characterClass})
-                </p>
-              </div>
-              <div className="text-right">
-                <h3 className="text-lg font-bold">Мод. телосложения:</h3>
-                <p className="text-sm opacity-80">
-                  {constitutionModifier >= 0 ? '+' : ''}{constitutionModifier}
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-black/20 p-3 rounded-lg text-sm space-y-2">
-              <p>
-                На <strong>1 уровне</strong> ваше HP равно максимуму кубика хит-поинтов вашего класса 
-                (<strong>{getFirstLevelHp(characterClass)}</strong>) + модификатор Телосложения
-                (<strong>{constitutionModifier >= 0 ? '+' : ''}{constitutionModifier}</strong>).
-              </p>
-              
-              <p>
-                На каждом следующем уровне вы можете либо бросить кубик и добавить модификатор Телосложения,
-                либо взять среднее значение + модификатор Телосложения.
-              </p>
-              
-              <p className="font-medium">
-                Ваш уровень: <strong>{level}</strong>, необходимо бросить <strong>{level > 1 ? level - 1 : 0}</strong> кубиков.
-              </p>
-            </div>
+    <Card className="border border-primary/20 shadow-lg">
+      <CardHeader className="bg-primary/5 border-b border-primary/10">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            Очки здоровья (HP)
           </div>
-          
-          {/* Добавляем визуализацию кубика */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center border-b border-primary/10 pb-4">
-            <div className="w-32 h-32">
-              <SimpleDiceRenderer 
-                type={hitDice} 
-                size={128}
-                themeColor={currentTheme.accent}
-                result={currentDiceResult || undefined}
-              />
+          <Badge className="bg-primary/20" variant="outline">
+            Класс: {characterClass}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Кубик хитов:
+              </h4>
+              <div className="text-xl font-bold" style={{ color: currentTheme.accent }}>
+                {getDiceText(hitDie)}
+              </div>
             </div>
-            
-            <div className="text-center md:text-left">
-              <div className="mb-2 font-medium opacity-80">
-                Ваш кубик хитов:
-              </div>
-              <div className="text-3xl font-bold" style={{ color: currentTheme.accent }}>
-                {hitDice}
-              </div>
-              <div className="text-sm opacity-70 mt-1">
-                ({getFirstLevelHp(characterClass)} на первом уровне)
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Мод. телосложения:
+              </h4>
+              <div className="text-xl font-bold" style={{ color: currentTheme.accent }}>
+                {constitutionModifier >= 0 ? `+${constitutionModifier}` : constitutionModifier}
               </div>
             </div>
           </div>
-          
-          {hitPoints > 0 && (
-            <div className="text-center bg-primary/10 p-4 rounded-lg">
-              <h3 className="text-sm font-medium opacity-80">Итоговое HP:</h3>
-              <div className="text-3xl font-bold mt-1" style={{ color: currentTheme.accent, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                {hitPoints}
+
+          {/* Контейнер для рендеринга кубика */}
+          <div className="flex justify-center mt-6 mb-8">
+            <div className="dice-container relative mx-auto" style={{height: "150px", perspective: "400px"}}>
+              {rollState !== 'waiting' && (
+                <SimpleDiceRenderer 
+                  diceType={hitDie} 
+                  value={diceValue || 1}
+                  isRolling={rollState === 'rolling'} 
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Результат броска */}
+          {rollState === 'rolled' && diceValue && (
+            <div className="dice-result-container text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm text-muted-foreground">Результат броска:</p>
+              <div className="text-2xl font-bold mt-1" style={{ color: currentTheme.accent }}>
+                {diceValue}
+              </div>
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground">Итоговое HP:</p>
+                <div className="text-3xl font-bold dice-value">
+                  {finalHp}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {level === 1 
+                    ? `${hitDie} (максимум) + ${constitutionModifier} (модификатор Телосложения)`
+                    : `${getFirstLevelHp()} (1-й уровень) + ${diceValue} (бросок) + ${constitutionModifier} (модификатор)`
+                  }
+                </p>
               </div>
             </div>
           )}
-          
-          {renderRollsHistory()}
-        </CardContent>
-        
-        <CardFooter className="bg-primary/5 border-t border-primary/20 flex flex-col sm:flex-row justify-between gap-3 p-4">
+
+          {/* Кнопка броска */}
           <Button 
-            onClick={rollHitPoints}
-            disabled={isRolling}
-            className="w-full sm:w-auto"
-            variant="default"
+            className="w-full" 
+            onClick={handleRoll}
+            disabled={rollState === 'rolling'}
+            style={{
+              backgroundColor: currentTheme.accent + "20",
+              borderColor: currentTheme.accent,
+              color: currentTheme.accent === '#8B5A2B' || currentTheme.accent === '#F59E0B' ? '#fff' : currentTheme.accent
+            }}
           >
-            Бросить автоматически
+            {rollState === 'rolling' ? 'Бросаем кубик...' : 'Бросить кубик хитов'}
           </Button>
-          
-          <Button 
-            onClick={takeAverageHp}
-            disabled={isRolling}
-            className="w-full sm:w-auto"
-            variant="outline"
-          >
-            Взять среднее значение
-          </Button>
-        </CardFooter>
-      </Card>
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

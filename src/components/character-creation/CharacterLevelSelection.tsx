@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
@@ -95,8 +96,8 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
         description="Уровень определяет силу и способности вашего персонажа. Начинающие игроки обычно начинают с 1 уровня."
       />
       
-      <Card className="border border-primary/20 shadow-lg">
-        <CardHeader className="bg-primary/5 border-b border-primary/10">
+      <Card className="border border-primary/20 shadow-lg bg-black/85">
+        <CardHeader className="bg-primary/10 border-b border-primary/20">
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5" /> 
             Уровень персонажа
@@ -123,7 +124,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   onValueChange={handleLevelChange}
                   className="my-4"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex justify-between text-xs">
                   <span>Новичок</span>
                   <span>Опытный</span>
                   <span>Герой</span>
@@ -147,15 +148,15 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   max={20}
                   value={level.toString()}
                   onChange={handleInputChange}
-                  className="text-center font-bold text-lg"
+                  className="text-center font-bold text-lg bg-black/60"
                 />
               </div>
             </div>
             
-            <div className="flex items-center justify-center py-4 border-y border-primary/10 my-4">
-              <div className="text-center px-8 py-4 bg-primary/5 rounded-lg" style={{ boxShadow: `0 0 20px ${currentTheme.accent}30` }}>
-                <span className="text-sm text-muted-foreground">Текущий уровень</span>
-                <div className="font-bold text-5xl" style={{ color: currentTheme.accent }}>
+            <div className="flex items-center justify-center py-4 border-y border-primary/20 my-4">
+              <div className="text-center px-8 py-4 bg-black/60 rounded-lg shadow-lg" style={{ boxShadow: `0 0 20px ${currentTheme.accent}40` }}>
+                <span className="text-sm">Текущий уровень</span>
+                <div className="font-bold text-5xl" style={{ color: currentTheme.accent, textShadow: "0px 2px 4px rgba(0, 0, 0, 0.8)" }}>
                   {level}
                 </div>
                 {level <= 5 && <span className="text-xs">Начальный уровень</span>}
@@ -166,7 +167,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
             </div>
             
             {statCapAlert && (
-              <Alert variant="default" className="bg-primary/5 border border-primary/20">
+              <Alert variant="default" className="bg-black/70 border border-primary/30">
                 <Shield className="h-4 w-4" />
                 <AlertTitle>Влияние на характеристики</AlertTitle>
                 <AlertDescription>{statCapAlert}</AlertDescription>
@@ -174,25 +175,25 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
             )}
             
             {level >= 5 && (
-              <Alert variant="default" className="bg-primary/10 border-primary/30">
+              <Alert variant="default" className="bg-black/70 border-primary/30">
                 <TrendingUp className="h-4 w-4" />
                 <AlertTitle>Дополнительные очки характеристик</AlertTitle>
                 <AlertDescription>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
                       <span>5 уровень:</span> 
-                      <Badge className="bg-primary/20" variant="outline">+3 очка</Badge>
+                      <Badge className="bg-primary/20 border border-primary/50" variant="outline">+3 очка</Badge>
                     </div>
                     {level >= 10 && (
                       <div className="flex justify-between items-center">
                         <span>10 уровень:</span> 
-                        <Badge className="bg-primary/20" variant="outline">+5 очков</Badge>
+                        <Badge className="bg-primary/20 border border-primary/50" variant="outline">+5 очков</Badge>
                       </div>
                     )}
                     {level >= 15 && (
                       <div className="flex justify-between items-center">
                         <span>15 уровень:</span> 
-                        <Badge className="bg-primary/20" variant="outline">+7 очков</Badge>
+                        <Badge className="bg-primary/20 border border-primary/50" variant="outline">+7 очков</Badge>
                       </div>
                     )}
                   </div>
@@ -228,7 +229,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
       
       {/* Предупреждение если не выбраны обязательные опции */}
       {needsSubclass && !subclassSelected && (
-        <Alert variant="destructive" className="mt-4">
+        <Alert variant="destructive" className="mt-4 bg-red-900/80 border-red-500">
           <Skull className="h-4 w-4" />
           <AlertTitle>Не выбран архетип</AlertTitle>
           <AlertDescription>
