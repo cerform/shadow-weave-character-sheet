@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { DiceBox } from "@3d-dice/dice-box";
+import DiceBox from "@3d-dice/dice-box"; // Изменен с именованного импорта на импорт по умолчанию
 import { Button } from '@/components/ui/button';
 import { Dices } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
