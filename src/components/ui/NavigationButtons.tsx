@@ -29,22 +29,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     backgroundColor: 'rgba(0, 0, 0, 0.7)'
   };
   
-  // Функция для корректной навигации
-  const handleNavigation = (path: string) => {
-    if (path === '/dm/battle' && isDM) {
-      navigate(path);
-    } else if (path === '/dm' && isDM) {
-      navigate('/dm-dashboard'); // Убедимся, что маршрут соответствует компоненту DMDashboardPage
-    } else {
-      navigate(path);
-    }
-  };
-  
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       <Button 
         variant="outline" 
-        onClick={() => handleNavigation('/')}
+        onClick={() => navigate('/')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -55,7 +44,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => handleNavigation('/handbook')}
+        onClick={() => navigate('/handbook')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -66,7 +55,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => handleNavigation('/spellbook')}
+        onClick={() => navigate('/spellbook')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -79,7 +68,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={() => handleNavigation('/dm/battle')}
+          onClick={() => navigate('/dm/battle')}
           className="flex items-center gap-2 font-semibold"
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}
@@ -91,7 +80,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => handleNavigation('/character-creation')}
+        onClick={() => navigate('/character-creation')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -99,19 +88,6 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         <Users className={isMobile ? "size-4" : "size-4"} />
         {!isMobile ? "Создание персонажа" : ""}
       </Button>
-      
-      {isDM && (
-        <Button 
-          variant="outline" 
-          onClick={() => handleNavigation('/dm-dashboard')}
-          className="flex items-center gap-2 font-semibold"
-          size={isMobile ? "sm" : "default"}
-          style={buttonStyle}
-        >
-          <Book className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Панель Мастера" : ""}
-        </Button>
-      )}
     </div>
   );
 };
