@@ -19,7 +19,7 @@ import ThemeSelector from "@/components/ThemeSelector";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
-import { ABILITY_SCORE_CAPS } from "@/types/character";
+import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();

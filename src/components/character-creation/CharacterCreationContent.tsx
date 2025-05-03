@@ -13,7 +13,7 @@ import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
 import CharacterLanguagesSelection from './CharacterLanguagesSelection';
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet } from '@/types/character.d';
 import { steps } from '@/config/characterCreationSteps';
 
 interface CharacterCreationContentProps {
@@ -32,6 +32,7 @@ interface CharacterCreationContentProps {
   isMagicClass: boolean;
   rollsHistory: { ability: string; rolls: number[]; total: number }[];
   onLevelChange: (level: number) => void;
+  maxAbilityScore?: number;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
@@ -49,7 +50,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   abilityScorePoints,
   isMagicClass,
   rollsHistory,
-  onLevelChange
+  onLevelChange,
+  maxAbilityScore
 }) => {
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
@@ -97,6 +99,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             rollSingleAbility={rollSingleAbility}
             abilityScorePoints={abilityScorePoints}
             rollsHistory={rollsHistory}
+            maxAbilityScore={maxAbilityScore}
           />
         );
       case 4: // Мультиклассирование (раньше был выбор подкласса)
