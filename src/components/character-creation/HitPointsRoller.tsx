@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import SimpleDiceRenderer from '../dice/SimpleDiceRenderer';
+import DiceBox3D from '../dice/DiceBox3D';
 
 interface HitPointsRollerProps {
   characterClass: string;
@@ -81,21 +81,20 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     }
   };
 
+  // Обработчик завершения броска кубика
+  const handleDiceRollComplete = (result: number) => {
+    setDiceValue(result);
+    setRollState('rolled');
+    
+    const totalHp = calculateTotalHp(result);
+    setFinalHp(totalHp);
+    onHitPointsRolled(totalHp);
+  };
+
   // Обработчик броска кубика
   const handleRoll = () => {
     setRollState('rolling');
-    setDiceValue(null);
-
-    // Эмулируем задержку броска
-    setTimeout(() => {
-      const roll = Math.floor(Math.random() * hitDie) + 1;
-      setDiceValue(roll);
-      setRollState('rolled');
-      
-      const totalHp = calculateTotalHp(roll);
-      setFinalHp(totalHp);
-      onHitPointsRolled(totalHp);
-    }, 1500);
+    // Обработка результата броска выполнится в handleDiceRollComplete
   };
 
   // Для текстового представления типа кубика
@@ -140,12 +139,19 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           </div>
 
           {/* Контейнер для рендеринга кубика */}
-          <div className="flex justify-center mt-6 mb-8">
-            <div className="dice-container relative mx-auto" style={{height: "150px", perspective: "400px"}}>
+          <div className="flex justify-center">
+            <div className="dice-container relative mx-auto" style={{height: "150px", width: "100%", maxWidth: "300px", perspective: "400px"}}>
               {rollState !== 'waiting' && (
+                <DiceBox3D 
+                  diceType={getDiceTypeForRenderer(hitDie)}
+                  onRollComplete={handleDiceRollComplete}
+                  hideControls={true}
+                  themeColor={currentTheme.accent}
+                />
+              )}
+              {rollState === 'waiting' && (
                 <SimpleDiceRenderer 
                   type={getDiceTypeForRenderer(hitDie)}
-                  result={diceValue || 1}
                   size={150}
                   themeColor={currentTheme.accent}
                 />

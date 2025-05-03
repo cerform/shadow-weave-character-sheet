@@ -2,7 +2,7 @@
 import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { DiceRenderer } from '@/components/dice/DiceRenderer';
+import DiceBox3D from '@/components/dice/DiceBox3D';
 
 interface DiceRoller3DFixedProps {
   initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
@@ -29,7 +29,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   // Преобразуем d100 в d10 для отображения (так как физически d100 — это d10 x 10)
-  const actualDiceType = initialDice === 'd100' ? 'd10' : initialDice;
+  const actualDiceType = initialDice === 'd100' ? 'd10' : initialDice as 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
   
   const handleRollComplete = (result: number) => {
     // Для d100 умножаем результат на 10
@@ -44,15 +44,13 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   };
   
   return (
-    <DiceRenderer
-      defaultDiceType={actualDiceType as any}
-      defaultDiceCount={diceCount}
+    <DiceBox3D
+      diceType={actualDiceType}
+      diceCount={diceCount}
+      modifier={modifier}
       onRollComplete={handleRollComplete}
-      showControls={!hideControls}
-      fixedPosition={fixedPosition}
+      hideControls={hideControls}
       themeColor={themeColor || currentTheme.accent}
-      height="100%"
-      width="100%"
     />
   );
 };
