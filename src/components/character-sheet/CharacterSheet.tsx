@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Character, CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -185,7 +184,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           <ThemeSelector />
         </div>
       
-        <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+        <Card className="bg-card/30 backdrop-blur-sm border-primary/20 mb-4">
           <CardHeader>
             <CardTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
               {character ? character.name : 'Новый персонаж'}
@@ -235,7 +234,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           </CardContent>
         </Card>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
           <div className="md:col-span-2">
             <CharacterTabs 
               activeTab={activeTab} 
@@ -243,7 +242,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             />
           </div>
           
-          <div className="md:col-span-1 space-y-4">
+          <div className="md:col-span-1 space-y-4 mt-4">
             <SkillsPanel character={character} />
           </div>
         </div>

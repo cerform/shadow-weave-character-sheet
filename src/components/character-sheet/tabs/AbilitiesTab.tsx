@@ -47,7 +47,7 @@ export const AbilitiesTab = () => {
   };
 
   return (
-    <div className="space-y-12 pb-6">
+    <div className="space-y-8 pb-6">
       <Card 
         className="border border-primary/30" 
         style={{
@@ -58,7 +58,10 @@ export const AbilitiesTab = () => {
         <CardContent className="p-6">
           <h3 
             className="text-xl font-semibold mb-6" 
-            style={{ color: currentTheme.textColor || '#FFFFFF' }}
+            style={{ 
+              color: currentTheme.textColor || '#FFFFFF',
+              textShadow: `0 0 2px rgba(0,0,0,0.8)` 
+            }}
           >
             Характеристики персонажа
           </h3>
@@ -83,7 +86,7 @@ export const AbilitiesTab = () => {
                     className="text-lg font-medium mb-1"
                     style={{ 
                       color: currentTheme.textColor,
-                      textShadow: `0 0 3px ${currentTheme.accent}70`
+                      textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}70`
                     }}
                   >
                     {abilityNames[abilityKey]}
@@ -92,7 +95,7 @@ export const AbilitiesTab = () => {
                     className="text-4xl font-bold my-1"
                     style={{ 
                       color: currentTheme.textColor,
-                      textShadow: `0 0 5px ${currentTheme.accent}60`
+                      textShadow: `0 0 5px rgba(0,0,0,0.8), 0 0 8px ${currentTheme.accent}60`
                     }}
                   >
                     {value}
@@ -101,7 +104,7 @@ export const AbilitiesTab = () => {
                     className="text-md font-bold"
                     style={{ 
                       color: isPositive ? '#4ade80' : '#f87171',
-                      textShadow: `0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
+                      textShadow: `0 0 5px rgba(0,0,0,0.8), 0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
                     }}
                   >
                     {modifier}
@@ -125,7 +128,7 @@ export const AbilitiesTab = () => {
             className="text-xl font-semibold mb-6"
             style={{ 
               color: currentTheme.textColor || '#FFFFFF',
-              textShadow: `0 0 3px ${currentTheme.accent}70`
+              textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 3px ${currentTheme.accent}70`
             }}
           >
             Спасброски
@@ -147,7 +150,7 @@ export const AbilitiesTab = () => {
                     className={`font-medium ${isProficient ? 'font-bold' : ''}`}
                     style={{ 
                       color: currentTheme.textColor,
-                      textShadow: isProficient ? `0 0 5px ${currentTheme.accent}80` : 'none'
+                      textShadow: `0 0 2px rgba(0,0,0,0.8)${isProficient ? `, 0 0 5px ${currentTheme.accent}80` : ''}`
                     }}
                   >
                     {abilityNames[abilityKey]}
@@ -163,7 +166,7 @@ export const AbilitiesTab = () => {
                     className="text-lg font-bold"
                     style={{ 
                       color: modValue < 0 ? '#f87171' : '#4ade80',
-                      textShadow: `0 0 5px ${modValue < 0 ? '#f8717160' : '#4ade8060'}`
+                      textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 5px ${modValue < 0 ? '#f8717160' : '#4ade8060'}`
                     }}
                   >
                     {modifier}

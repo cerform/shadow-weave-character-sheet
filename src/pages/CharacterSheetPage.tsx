@@ -5,7 +5,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext"; // Добавляем импорт контекста авторизации
+import { useAuth } from "@/contexts/AuthContext"; 
 
 const CharacterSheetPage = () => {
   const [character, setCharacter] = useState<any>(null);
@@ -13,7 +13,7 @@ const CharacterSheetPage = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
-  const { currentUser } = useAuth(); // Получаем информацию о текущем пользователе
+  const { currentUser } = useAuth(); 
   
   // Загрузка персонажа из локального хранилища
   useEffect(() => {
@@ -84,7 +84,7 @@ const CharacterSheetPage = () => {
     <div className="relative">
       <CharacterSheet 
         character={character} 
-        isDM={currentUser?.isDM === true} // Передаем флаг isDM в компонент CharacterSheet
+        isDM={currentUser?.isDM === true}
       />
       
       {isConnected && sessionData && (
