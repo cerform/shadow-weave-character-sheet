@@ -24,7 +24,9 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
       "Колдун": 8
     };
     
-    const baseHp = baseHpByClass[sheet.class] || 8; // По умолчанию 8, если класс не найден
+    // Убедимся, что у нас есть класс перед вычислением HP
+    const characterClass = sheet.class || "Воин"; // По умолчанию "Воин", если класс не указан
+    const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
     const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
     
     // HP первого уровня = максимум хитов кости + модификатор телосложения
@@ -47,8 +49,11 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
   // Определяем слоты заклинаний в зависимости от класса и уровня
   const spellSlots: Record<number, { max: number; used: number }> = {};
   
+  // Определяем класс персонажа, обеспечивая непустое значение
+  const characterClass = sheet.class || "";
+  
   // Заполняем слоты заклинаний для заклинателей
-  if (["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(sheet.class)) {
+  if (["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(characterClass)) {
     // Упрощённая логика слотов заклинаний
     const level = sheet.level;
     
@@ -63,7 +68,7 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     if (level >= 17) spellSlots[9] = { max: Math.min(1, level - 16), used: 0 };
   } 
   // Для полузаклинателей (паладины, следопыты)
-  else if (["Паладин", "Следопыт"].includes(sheet.class)) {
+  else if (["Паладин", "Следопыт"].includes(characterClass)) {
     const level = sheet.level;
     
     if (level >= 2) spellSlots[1] = { max: Math.min(3, level - 1), used: 0 };

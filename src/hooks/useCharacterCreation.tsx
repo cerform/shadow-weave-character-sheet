@@ -4,6 +4,7 @@ import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { convertToCharacter } from "@/utils/characterConverter";
 import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
+import { getCurrentUid } from "@/utils/authHelpers";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -55,6 +56,12 @@ export const useCharacterCreation = () => {
     // Если обновляются stats, также обновляем и abilities для совместимости
     else if (updates.stats) {
       updates.abilities = updates.stats;
+    }
+    
+    // Добавляем userId из текущего авторизованного пользователя, если он доступен
+    const uid = getCurrentUid();
+    if (uid && !character.userId) {
+      updates.userId = uid;
     }
     
     setCharacter(prev => ({ ...prev, ...updates }));

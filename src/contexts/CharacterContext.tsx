@@ -11,6 +11,7 @@ import { useAuth } from './AuthContext';
 import { toast } from "sonner";
 import { auth } from "@/services/firebase"; 
 import { characterService } from "@/services/sessionService";
+import { getCurrentUid } from "@/utils/authHelpers";
 
 // Типы для заклинания и персонажа
 export interface Spell {
@@ -218,6 +219,11 @@ export function CharacterProvider({ children }: Props) {
       // Проверяем, есть ли обновление для класса
       const updatedChar = { ...prev, ...updates, updatedAt: new Date().toISOString() };
       
+      // Убеждаемся, что поле class заполнено
+      if (!updatedChar.class && updatedChar.className) {
+        updatedChar.class = updatedChar.className;
+      }
+      
       // Добавляем очки чародея, если персонаж стал чародеем
       if ((updates.className?.includes('Чародей') || updates.class?.includes('Чародей')) && 
           !prev.className?.includes('Чародей') && !prev.class?.includes('Чародей')) {
@@ -248,9 +254,16 @@ export function CharacterProvider({ children }: Props) {
     const now = new Date().toISOString();
     
     try {
-      // Добавляем userId из текущего пользователя Firebase
-      if (auth.currentUser) {
-        charData.userId = auth.currentUser.uid;
+      // Получаем UID текущего пользователя
+      const uid = getCurrentUid();
+      
+      // Убеждаемся, что поле class заполнено
+      if (!charData.class && charData.className) {
+        charData.class = charData.className;
+      } else if (!charData.class) {
+        // Если ни class, ни className не заполнены, устанавливаем значение по умолчанию
+        charData.class = "Воин";
+        charData.className = "Воин";
       }
       
       // Проверяем, новый это персонаж или обновление существующего
@@ -258,18 +271,19 @@ export function CharacterProvider({ children }: Props) {
         // Обновление существующего персонажа
         const updatedChar = {
           ...charData,
+          userId: uid, // Обновляем userId на случай, если персонаж был создан без авторизации
           updatedAt: now
         } as Character;
         
-        // Убеждаемся, что поле class заполнено
-        if (!updatedChar.class && updatedChar.className) {
-          updatedChar.class = updatedChar.className;
-        }
-        
-        // Сохраняем в Firebase Storage
-        const saved = await characterService.saveCharacter(updatedChar);
-        if (!saved) {
-          throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+        // Сохраняем в Firebase Storage, только если пользователь авторизован
+        if (uid) {
+          const saved = await characterService.saveCharacter(updatedChar);
+          if (!saved) {
+            throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+          }
+        } else {
+          // Если пользователь не авторизован, сохраняем только локально
+          console.warn("Пользователь не авторизован. Персонаж сохранен только локально.");
         }
         
         // Обновляем локальный список
@@ -285,34 +299,34 @@ export function CharacterProvider({ children }: Props) {
         const newChar: Character = {
           ...charData,
           id: uuidv4(),
-          userId: auth.currentUser?.uid, // Привязываем к текущему пользователю
+          userId: uid, // Привязываем к текущему пользователю если авторизован
           createdAt: now,
           updatedAt: now
         };
         
-        // Убеждаемся, что поле class заполнено
-        if (!newChar.class && newChar.className) {
-          newChar.class = newChar.className;
-        }
-        
-        // Сохраняем в Firebase Storage
-        const saved = await characterService.saveCharacter(newChar);
-        if (!saved) {
-          throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+        // Сохраняем в Firebase Storage, только если пользователь авторизован
+        if (uid) {
+          const saved = await characterService.saveCharacter(newChar);
+          if (!saved) {
+            throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+          }
+          
+          // Если есть авторизованный пользователь, добавляем персонажа к нему
+          if (currentUser) {
+            try {
+              await addCharacterToUser(newChar.id);
+              toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
+            } catch (err) {
+              console.error("Ошибка при привязке персонажа к пользователю:", err);
+            }
+          }
+        } else {
+          // Если пользователь не авторизован, сохраняем только локально
+          console.warn("Пользователь не авторизован. Персонаж сохранен только локально.");
         }
         
         // Обновляем локальный список
         setCharacters(prevChars => [...prevChars, newChar]);
-        
-        // Если есть авторизованный пользователь, добавляем персонажа к нему
-        if (currentUser) {
-          try {
-            await addCharacterToUser(newChar.id);
-            toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
-          } catch (err) {
-            console.error("Ошибка при привязке персонажа к пользователю:", err);
-          }
-        }
         
         console.log("Создан новый персонаж:", newChar.name);
         return newChar;
