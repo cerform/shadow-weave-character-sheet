@@ -52,6 +52,29 @@ const storage = getStorage(app);
 // Провайдеры аутентификации
 const googleProvider = new GoogleAuthProvider();
 
+// Функция для форматирования сообщений ошибок Firebase
+const formatFirebaseError = (error: any): string => {
+  const errorCode = error.code || '';
+  
+  // Карта пользовательских сообщений для известных ошибок
+  const errorMessages: {[key: string]: string} = {
+    'auth/user-not-found': 'Пользователь с таким email не найден.',
+    'auth/wrong-password': 'Неверный пароль. Пожалуйста, проверьте пароль и попробуйте еще раз.',
+    'auth/email-already-in-use': 'Этот email уже используется. Пожалуйста, используйте другой email или войдите в систему.',
+    'auth/weak-password': 'Пароль слишком слабый. Используйте более сложный пароль.',
+    'auth/invalid-email': 'Введен некорректный email.',
+    'auth/operation-not-allowed': 'Этот метод входа не включен. Пожалуйста, свяжитесь с администратором.',
+    'auth/account-exists-with-different-credential': 'Этот email уже связан с другим методом входа.',
+    'auth/unauthorized-domain': 'Этот домен не авторизован для использования аутентификации Firebase.',
+    'auth/popup-closed-by-user': 'Окно авторизации было закрыто до завершения процесса.',
+    'auth/cancelled-popup-request': 'Операция отменена из-за нового запроса входа.',
+    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером.'
+  };
+  
+  // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
+  return errorMessages[errorCode] || error.message || 'Произошла неизвестная ошибка при аутентификации.';
+};
+
 // Функции для аутентификации
 const auth = {
   // Текущий пользователь
@@ -63,8 +86,9 @@ const auth = {
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       return userCredential.user;
     } catch (error: any) {
-      console.error('Ошибка при регистрации:', error.message);
-      throw error;
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при регистрации:', formattedError.message);
+      throw formattedError;
     }
   },
 
@@ -74,8 +98,9 @@ const auth = {
       const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
       return userCredential.user;
     } catch (error: any) {
-      console.error('Ошибка при входе:', error.message);
-      throw error;
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при входе:', formattedError.message);
+      throw formattedError;
     }
   },
 
@@ -88,8 +113,9 @@ const auth = {
       const result = await signInWithPopup(firebaseAuth, googleProvider);
       return result.user;
     } catch (error: any) {
-      console.error('Ошибка при входе через Google:', error.message);
-      throw error;
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при входе через Google:', formattedError);
+      throw formattedError;
     }
   },
 
@@ -98,8 +124,9 @@ const auth = {
     try {
       await signOut(firebaseAuth);
     } catch (error: any) {
-      console.error('Ошибка при выходе:', error.message);
-      throw error;
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при выходе:', formattedError.message);
+      throw formattedError;
     }
   },
 

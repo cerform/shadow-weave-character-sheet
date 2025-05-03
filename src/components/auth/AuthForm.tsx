@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from 'sonner';
-import { Loader2, LogIn, Lock, Mail, User } from 'lucide-react';
+import { Loader2, LogIn, Lock, Mail, User, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Props {
   redirectTo?: string;
@@ -19,7 +20,8 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, googleLogin } = useAuth(); // Changed from loginWithGoogle to googleLogin
+  const [googleAuthError, setGoogleAuthError] = useState(false);
+  const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -52,7 +54,6 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     
     try {
       setLoading(true);
-      // Added the 4th parameter (isDM) as required by the register function
       await register(email, password, name, false);
       toast.success('Регистрация успешна');
       navigate(redirectTo);
@@ -66,12 +67,20 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      // Changed from loginWithGoogle to googleLogin and added isDM parameter
+      setGoogleAuthError(false);
       await googleLogin(false);
       toast.success('Вход с Google выполнен успешно');
       navigate(redirectTo);
     } catch (error: any) {
-      toast.error(`Ошибка входа через Google: ${error.message}`);
+      console.error("Ошибка при входе через Google:", error);
+      
+      // Проверяем наличие ошибки неавторизованного домена
+      if (error.code === 'auth/unauthorized-domain') {
+        setGoogleAuthError(true);
+        toast.error('Ошибка: Текущий домен не авторизован в консоли Firebase');
+      } else {
+        toast.error(`Ошибка входа через Google: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,6 +95,15 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {googleAuthError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Домен не авторизован в Firebase. Используйте вход по email или откройте приложение на основном домене.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Вход</TabsTrigger>
