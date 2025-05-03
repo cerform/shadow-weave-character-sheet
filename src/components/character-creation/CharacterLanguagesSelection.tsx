@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { 
@@ -93,26 +92,13 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
     nextStep();
   };
 
-  // Стили для лучшей контрастности
-  const buttonStyle = {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    color: '#FFFFFF',
-    border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
-  };
+  // Классы для кнопок
+  const baseButtonClass = "transition-all duration-200 hover:bg-white/20";
+  const selectedButtonClass = baseButtonClass + " text-black font-bold bg-accent border-2 border-white shadow-lg";
+  const normalButtonClass = baseButtonClass + " text-white bg-black/60 border border-accent";
 
-  const selectedButtonStyle = {
-    backgroundColor: currentTheme.accent || '#50FF50',
-    color: '#000000',
-    fontWeight: 'bold',
-    boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
-  };
-
-  const listItemStyle = {
-    color: '#FFFFFF',
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 1)',
-    fontWeight: 'normal'
-  };
+  // Классы для текста списков
+  const listItemClass = "text-white text-shadow";
 
   return (
     <div>
@@ -135,12 +121,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={lang}
                 selected={selectedLanguages.includes(lang)}
                 onClick={() => toggleLanguage(lang)}
-                style={selectedLanguages.includes(lang) ? selectedButtonStyle : buttonStyle}
-                className={`
-                  transition-all duration-200
-                  hover:bg-white/20
-                  ${selectedLanguages.includes(lang) ? 'text-black font-bold' : 'text-white'}
-                `}
+                className={selectedLanguages.includes(lang) ? selectedButtonClass : normalButtonClass}
               />
             ))}
           </SelectionSubOptionsContainer>
@@ -149,7 +130,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
             <h4 className="font-medium mb-1 text-white">Выбранные языки:</h4>
             <ul className="list-disc pl-5">
               {selectedLanguages.map((lang, idx) => (
-                <li key={idx} className="text-white" style={listItemStyle}>{lang}</li>
+                <li key={idx} className={listItemClass}>{lang}</li>
               ))}
             </ul>
           </div>
@@ -170,12 +151,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={prof}
                 selected={selectedProficiencies.includes(prof)}
                 onClick={() => toggleProficiency(prof)}
-                style={selectedProficiencies.includes(prof) ? selectedButtonStyle : buttonStyle}
-                className={`
-                  transition-all duration-200
-                  hover:bg-white/20
-                  ${selectedProficiencies.includes(prof) ? 'text-black font-bold' : 'text-white'}
-                `}
+                className={selectedProficiencies.includes(prof) ? selectedButtonClass : normalButtonClass}
               />
             ))}
           </SelectionSubOptionsContainer>
@@ -185,7 +161,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
             <ul className="list-disc pl-5">
               {selectedProficiencies.length > 0 ? (
                 selectedProficiencies.map((prof, idx) => (
-                  <li key={idx} className="text-white" style={listItemStyle}>{prof}</li>
+                  <li key={idx} className={listItemClass}>{prof}</li>
                 ))
               ) : (
                 <li className="text-gray-400 italic">Не выбрано навыков</li>
