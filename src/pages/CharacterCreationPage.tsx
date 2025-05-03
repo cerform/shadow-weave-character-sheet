@@ -15,6 +15,7 @@ import { useCreationStep } from "@/hooks/useCreationStep";
 // Components
 import CreationStepDisplay from "@/components/character-creation/CreationStepDisplay";
 import CharacterCreationContent from "@/components/character-creation/CharacterCreationContent";
+import ThemeSelector from "@/components/ThemeSelector";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
@@ -82,26 +83,40 @@ const CharacterCreationPage = () => {
           На главную
         </Button>
 
-        <Button 
-          onClick={goToHandbook} 
-          variant="outline" 
-          className="flex items-center gap-2"
-          style={{
-            borderColor: currentTheme.accent,
-            color: currentTheme.textColor
-          }}
-        >
-          <BookOpen className="h-4 w-4" />
-          Руководство игрока
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={goToHandbook} 
+            variant="outline" 
+            className="flex items-center gap-2"
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor
+            }}
+          >
+            <BookOpen className="h-4 w-4" />
+            Руководство игрока
+          </Button>
+          
+          {/* Only show theme selector in small screens here */}
+          <div className="block sm:hidden">
+            <ThemeSelector />
+          </div>
+        </div>
       </div>
 
-      <h1 
-        className="text-3xl font-bold mb-8 text-center"
-        style={{ color: currentTheme.textColor }}
-      >
-        Создание персонажа
-      </h1>
+      <div className="flex justify-between items-center">
+        <h1 
+          className="text-3xl font-bold mb-8 text-center"
+          style={{ color: currentTheme.textColor }}
+        >
+          Создание персонажа
+        </h1>
+        
+        {/* Show theme selector on larger screens in a more prominent position */}
+        <div className="hidden sm:block mb-8">
+          <ThemeSelector />
+        </div>
+      </div>
 
       {/* Отображение прогресса по шагам */}
       <CreationStepDisplay 
@@ -113,7 +128,7 @@ const CharacterCreationPage = () => {
 
       {/* Основная область контента */}
       <div 
-        className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg"
+        className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"
         style={{ 
           backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
           borderColor: currentTheme.accent,
