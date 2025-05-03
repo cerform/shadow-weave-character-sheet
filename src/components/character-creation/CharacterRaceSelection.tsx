@@ -47,7 +47,8 @@ const CharacterRaceSelection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {races.map((race) => {
           const isSelected = selectedRace === race.name;
-          const hasSubraces = race.subraces && race.subraces.length > 0;
+          // Проверяем, существуют ли подрасы, используя subRaces или subraces
+          const hasSubraces = (race.subRaces && race.subRaces.length > 0) || (race.subRaceDetails && Object.keys(race.subRaceDetails).length > 0);
           
           return (
             <Card 
@@ -70,20 +71,20 @@ const CharacterRaceSelection = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    {race.abilityScoreIncrease && Object.entries(race.abilityScoreIncrease).map(([ability, value]) => (
-                      <TooltipProvider key={ability}>
+                    {race.abilityBonuses && (
+                      <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge variant="outline" className="cursor-help">
-                              {ability} +{value}
+                              {race.abilityBonuses}
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Увеличивает характеристику {ability} на {value}</p>
+                            <p>Бонусы к характеристикам: {race.abilityBonuses}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    ))}
+                    )}
                   </div>
                   
                   <p className="text-sm text-muted-foreground">{race.description}</p>
@@ -92,17 +93,17 @@ const CharacterRaceSelection = () => {
                     <div className="mt-3">
                       <p className="text-sm font-medium mb-2">Доступные подрасы:</p>
                       <div className="flex flex-wrap gap-2">
-                        {race.subraces.map((subrace) => (
+                        {race.subRaces?.map((subrace) => (
                           <Badge 
-                            key={subrace.name}
-                            variant={selectedSubrace === subrace.name ? "default" : "outline"}
+                            key={subrace}
+                            variant={selectedSubrace === subrace ? "default" : "outline"}
                             className="cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleSubraceSelect(subrace.name);
+                              handleSubraceSelect(subrace);
                             }}
                           >
-                            {subrace.name}
+                            {subrace}
                           </Badge>
                         ))}
                       </div>

@@ -1,5 +1,6 @@
+
 import { cantrips } from "./cantrips";
-import { level1Spells } from "./level1";
+import { level1 } from "./level1";
 import { level2Spells } from "./level2";
 import { level3Spells } from "./level3";
 import { level3CombatSpells } from "./level3_combat";
@@ -21,23 +22,23 @@ import { CharacterSpell } from "@/types/character";
 // Combine all spells into one array
 export const spells: CharacterSpell[] = [
   ...cantrips,
-  ...level1Spells,
-  ...level2Spells,
-  ...level3Spells,
-  ...level3CombatSpells,
-  ...level3DivinationSpells,
-  ...level3EnchantSpells,
-  ...level3IllusionSpells,
-  ...level3MoreSpells,
-  ...level3UtilitySpells,
-  ...level4Spells,
-  ...level4Part2Spells,
-  ...level4Part3Spells,
-  ...level5Spells,
-  ...level6Spells,
-  ...level7Spells,
-  ...level8Spells,
-  ...level9Spells,
+  ...level1,
+  ...(level2Spells || []),
+  ...(level3Spells || []),
+  ...(level3CombatSpells || []),
+  ...(level3DivinationSpells || []),
+  ...(level3EnchantSpells || []),
+  ...(level3IllusionSpells || []),
+  ...(level3MoreSpells || []),
+  ...(level3UtilitySpells || []),
+  ...(level4Spells || []),
+  ...(level4Part2Spells || []),
+  ...(level4Part3Spells || []),
+  ...(level5Spells || []),
+  ...(level6Spells || []),
+  ...(level7Spells || []),
+  ...(level8Spells || []),
+  ...(level9Spells || []),
 ];
 
 // Define spell levels
