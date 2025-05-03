@@ -86,10 +86,12 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     let totalHp = firstLevelHp + constitutionModifier;
     const newRolls: number[] = [];
     
-    // Начиная со 2 уровня, кидаем кубики или берем среднее значение
+    // Начиная со 2 уровня, кидаем кубики
     if (level > 1) {
-      for (let i = 2; i <= level; i++) {
-        const roll = Math.floor(Math.random() * parseInt(hitDice.substring(1))) + 1;
+      // Кидаем (level - 1) кубиков, так как на первом уровне максимум
+      for (let i = 0; i < level - 1; i++) {
+        const diceMax = parseInt(hitDice.substring(1));
+        const roll = Math.floor(Math.random() * diceMax) + 1;
         newRolls.push(roll);
         totalHp += roll + constitutionModifier;
       }
@@ -108,13 +110,15 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
   const takeAverageHp = () => {
     const hitDice = getHitDice(characterClass);
     const firstLevelHp = getFirstLevelHp(characterClass);
+    const diceMax = parseInt(hitDice.substring(1));
     
     // На 1 уровне HP = максимум кубика + модификатор Телосложения
     let totalHp = firstLevelHp + constitutionModifier;
     
     // Начиная со 2 уровня, берем среднее значение
     if (level > 1) {
-      const averageRoll = Math.ceil(parseInt(hitDice.substring(1)) / 2) + 1; // Среднее + 1 по правилам
+      const averageRoll = Math.ceil(diceMax / 2); // Среднее значение кубика
+      // Для каждого уровня после первого добавляем среднее + модификатор Телосложения
       totalHp += (level - 1) * (averageRoll + constitutionModifier);
     }
     
@@ -135,7 +139,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
         <div className="flex flex-wrap gap-2">
           {rolls.map((roll, index) => (
             <Badge key={index} variant="outline">
-              Уровень {index + 2}: {roll}
+              Кубик {index + 1}: {roll}
             </Badge>
           ))}
         </div>
@@ -159,6 +163,10 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           <p className="text-sm">
             На каждом следующем уровне вы можете либо бросить кубик и добавить модификатор Телосложения,
             либо взять среднее значение + модификатор Телосложения.
+          </p>
+          
+          <p className="text-sm font-medium">
+            Ваш уровень: {level}, необходимо бросить {level > 1 ? level - 1 : 0} кубиков.
           </p>
         </div>
         
@@ -187,7 +195,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           className="w-full sm:w-auto"
           variant="default"
         >
-          Бросить кубик HP ({getHitDice(characterClass)})
+          Бросить {level > 1 ? level - 1 : 0} кубиков {getHitDice(characterClass)}
         </Button>
         
         <Button 
