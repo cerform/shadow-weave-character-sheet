@@ -1,93 +1,67 @@
 
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import './App.css'
 
-import Home from "@/pages/Home";
-import NotFound from "@/pages/NotFound";
-import CharacterCreationPage from "@/pages/CharacterCreationPage";
-import CharacterSheetPage from "@/pages/CharacterSheetPage";
-import SpellbookPage from "@/pages/SpellbookPage";
-import PlayBattlePage from "@/pages/PlayBattlePage";
-import JoinSessionPage from "@/pages/JoinSessionPage";
-import DMSessionPage from "@/pages/DMSessionPage";
-import DMDashboardPage from "@/pages/DMDashboardPage";
-import CreateSessionPage from "@/pages/CreateSessionPage";
-import JoinGamePage from "@/pages/JoinGamePage";
-import PlayerSessionPage from "@/pages/PlayerSessionPage";
-import HandbookPage from "@/pages/HandbookPage";
-import AuthPage from "@/pages/AuthPage";
-import ProfilePage from "@/pages/ProfilePage";
+import { ThemeProvider } from './contexts/ThemeContext'
+import { UserThemeProvider } from './contexts/UserThemeContext'
+import { CharacterProvider } from './contexts/CharacterContext'
+import { AuthProvider } from './contexts/AuthContext'
+import { SocketProvider } from './contexts/SocketContext'
+import { Toaster } from './components/ui/toaster'
 
-import { CharacterProvider } from "@/contexts/CharacterContext";
-import { SocketProvider } from "@/contexts/SocketContext";
-import { SessionProvider } from "@/contexts/SessionContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import Home from './pages/Home'
+import DMDashboardPage from './pages/DMDashboardPage'
+import CharacterCreationPage from './pages/CharacterCreationPage'
+import CharacterSheetPage from './pages/CharacterSheetPage'
+import AuthPage from './pages/AuthPage'
+import BattleScenePage from './pages/BattleScenePage'
+import PlayerHandbookPage from './pages/PlayerHandbookPage'
+import SpellbookPage from './pages/SpellbookPage'
+import PlayBattlePage from './pages/PlayBattlePage'
+import DMSessionPage from './pages/DMSessionPage'
+import JoinSessionPage from './pages/JoinSessionPage'
+import CreateSessionPage from './pages/CreateSessionPage'
+import PlayerSessionPage from './pages/PlayerSessionPage'
 
-// Компонент-обертка для защищенных DM маршрутов
-const ProtectedDMRoute = ({ children }) => {
-  const { currentUser } = useAuth();
-  
-  if (!currentUser?.isDM) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
-};
-
-// Компонент-обертка для защищенных пользовательских маршрутов
-const ProtectedUserRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/auth?redirectTo=profile" replace />;
-  }
-  
-  return children;
-};
+// Добавляем компонент с плавающей кнопкой кубиков
+import AppDiceButton from './AppDiceButton'
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <CharacterProvider>
-          <SocketProvider>
-            <SessionProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <UserThemeProvider>
+          <CharacterProvider>
+            <SocketProvider>
               <Router>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/character-creation" element={<CharacterCreationPage />} />
-                  <Route path="/sheet" element={<CharacterSheetPage />} />
+                  <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                  <Route path="/create-character" element={<CharacterCreationPage />} />
+                  <Route path="/character-sheet" element={<CharacterSheetPage />} />
+                  <Route path="/handbook" element={<PlayerHandbookPage />} />
                   <Route path="/spellbook" element={<SpellbookPage />} />
-                  <Route path="/join-session" element={<JoinSessionPage />} />
-                  <Route path="/join/:sessionCode?" element={<JoinGamePage />} />
-                  <Route path="/player-session" element={<PlayerSessionPage />} />
-                  <Route path="/handbook" element={<HandbookPage />} />
                   <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/register" element={<AuthPage />} />
-                  
-                  {/* Защищенный маршрут для профиля пользователя */}
-                  <Route path="/profile" element={<ProtectedUserRoute><ProfilePage /></ProtectedUserRoute>} />
-                  
-                  {/* Защищенные маршруты только для DM */}
-                  <Route path="/battle" element={<ProtectedDMRoute><PlayBattlePage /></ProtectedDMRoute>} />
-                  <Route path="/create-session" element={<ProtectedDMRoute><CreateSessionPage /></ProtectedDMRoute>} />
-                  <Route path="/dm-session/:sessionId" element={<ProtectedDMRoute><DMSessionPage /></ProtectedDMRoute>} />
-                  <Route path="/dm" element={<ProtectedDMRoute><DMDashboardPage /></ProtectedDMRoute>} />
-                  <Route path="/dm/battle" element={<ProtectedDMRoute><PlayBattlePage /></ProtectedDMRoute>} />
-                  
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="/battle" element={<BattleScenePage />} />
+                  <Route path="/play-battle" element={<PlayBattlePage />} />
+                  <Route path="/session/dm" element={<DMSessionPage />} />
+                  <Route path="/session/join" element={<JoinSessionPage />} />
+                  <Route path="/session/create" element={<CreateSessionPage />} />
+                  <Route path="/session/player" element={<PlayerSessionPage />} />
                 </Routes>
+                
+                {/* Плавающая кнопка кубиков */}
+                <AppDiceButton />
+                
+                <Toaster />
               </Router>
-              <Toaster />
-            </SessionProvider>
-          </SocketProvider>
-        </CharacterProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  );
+            </SocketProvider>
+          </CharacterProvider>
+        </UserThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  )
 }
 
-export default App;
+export default App

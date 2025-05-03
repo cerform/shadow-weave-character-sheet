@@ -1,0 +1,191 @@
+
+import { useState, useEffect } from 'react';
+import { CharacterSheet } from '@/types/character';
+import { useToast } from "@/hooks/use-toast";
+
+// Интерфейс для доступных функций на определенном уровне
+export interface LevelFeature {
+  level: number;
+  name: string;
+  description: string;
+  type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
+  options?: string[];
+  className?: string; // Для каких классов доступна эта особенность
+}
+
+export const useLevelFeatures = (character: CharacterSheet) => {
+  const [availableFeatures, setAvailableFeatures] = useState<LevelFeature[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<{[key: string]: string}>({});
+  const { toast } = useToast();
+
+  // Эффект для определения доступных функций на текущем уровне персонажа
+  useEffect(() => {
+    if (!character.class) return;
+    
+    const features: LevelFeature[] = [];
+    const level = character.level || 1;
+
+    // Получаем доступные подклассы (архетипы) для класса
+    if (level >= getSubclassLevel(character.class)) {
+      features.push({
+        level: getSubclassLevel(character.class),
+        name: 'Архетип',
+        description: `Выберите архетип для ${character.class}`,
+        type: 'subclass',
+        className: character.class
+      });
+    }
+
+    // Увеличение характеристик
+    const abilityScoreImprovements = getAbilityScoreImprovementLevels(character.class);
+    for (const abiLevel of abilityScoreImprovements) {
+      if (level >= abiLevel) {
+        features.push({
+          level: abiLevel,
+          name: 'Увеличение характеристик',
+          description: 'Увеличьте одну характеристику на 2 очка или две характеристики на 1 очко каждая',
+          type: 'ability_increase'
+        });
+      }
+    }
+
+    // Дополнительная атака
+    if (hasExtraAttack(character.class) && level >= 5) {
+      features.push({
+        level: 5,
+        name: 'Дополнительная атака',
+        description: 'Вы можете атаковать дважды вместо одного раза, когда в свой ход совершаете действие Атака',
+        type: 'extra_attack'
+      });
+    }
+
+    // Доступ к заклинаниям высоких уровней для заклинателей
+    if (isMagicClass(character.class)) {
+      const spellLevels = getSpellLevelsByCharacterLevel(level);
+      for (const [spellLevel, charLevel] of Object.entries(spellLevels)) {
+        if (level >= charLevel) {
+          features.push({
+            level: charLevel,
+            name: `Заклинания ${spellLevel} уровня`,
+            description: `Вы получаете доступ к заклинаниям ${spellLevel} уровня`,
+            type: 'spell_level'
+          });
+        }
+      }
+    }
+
+    // Сортируем особенности по уровням
+    features.sort((a, b) => a.level - b.level);
+    
+    setAvailableFeatures(features);
+  }, [character.class, character.level]);
+
+  // Функция для выбора особенности
+  const selectFeature = (featureType: string, value: string) => {
+    setSelectedFeatures(prev => ({
+      ...prev,
+      [featureType]: value
+    }));
+
+    toast({
+      title: "Особенность выбрана",
+      description: `Вы выбрали: ${value}`,
+    });
+  };
+
+  // Получаем уровень на котором становится доступен подкласс для выбранного класса
+  const getSubclassLevel = (className: string): number => {
+    switch (className) {
+      case "Воин": return 3;
+      case "Плут": return 3;
+      case "Следопыт": return 3;
+      case "Варвар": return 3;
+      case "Чародей": return 1;
+      case "Колдун": return 1;
+      case "Волшебник": return 2;
+      case "Жрец": return 1;
+      case "Друид": return 2;
+      case "Монах": return 3;
+      case "Паладин": return 3;
+      case "Бард": return 3;
+      default: return 3;
+    }
+  };
+
+  // Получаем уровни, на которых происходит увеличение характеристик для выбранного класса
+  const getAbilityScoreImprovementLevels = (className: string): number[] => {
+    // Для большинства классов: 4, 8, 12, 16, 19
+    const defaultLevels = [4, 8, 12, 16, 19];
+    
+    // Для бойца и плута дополнительные уровни
+    switch (className) {
+      case "Воин": return [4, 6, 8, 12, 14, 16, 19];
+      case "Плут": return [4, 8, 10, 12, 16, 19];
+      default: return defaultLevels;
+    }
+  };
+
+  // Проверяем, имеет ли класс дополнительную атаку
+  const hasExtraAttack = (className: string): boolean => {
+    const classesWithExtraAttack = [
+      "Воин", "Варвар", "Следопыт", "Паладин", "Монах"
+    ];
+    return classesWithExtraAttack.includes(className);
+  };
+
+  // Проверяем, является ли класс магическим
+  const isMagicClass = (className: string): boolean => {
+    const magicClasses = [
+      "Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун", 
+      "Паладин", "Следопыт"
+    ];
+    return magicClasses.includes(className);
+  };
+
+  // Получаем доступные уровни заклинаний в зависимости от уровня персонажа
+  const getSpellLevelsByCharacterLevel = (characterLevel: number): {[key: string]: number} => {
+    return {
+      "1": 1,
+      "2": 3,
+      "3": 5,
+      "4": 7,
+      "5": 9,
+      "6": 11,
+      "7": 13,
+      "8": 15,
+      "9": 17
+    };
+  };
+
+  // Получаем информацию о броске кубика HP в зависимости от класса
+  const getHitDiceInfo = (className: string): {dice: string, average: number} => {
+    switch (className) {
+      case "Варвар":
+        return { dice: "d12", average: 7 };
+      case "Воин":
+      case "Паладин":
+      case "Следопыт":
+        return { dice: "d10", average: 6 };
+      case "Бард":
+      case "Жрец":
+      case "Друид":
+      case "Монах":
+      case "Плут":
+      case "Колдун":
+        return { dice: "d8", average: 5 };
+      case "Волшебник":
+      case "Чародей":
+        return { dice: "d6", average: 4 };
+      default:
+        return { dice: "d8", average: 5 };
+    }
+  };
+
+  return {
+    availableFeatures,
+    selectedFeatures,
+    selectFeature,
+    getHitDiceInfo,
+    getSubclassLevel
+  };
+};
