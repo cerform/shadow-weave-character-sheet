@@ -2,7 +2,7 @@
 import { CharacterSpell } from '@/types/character';
 
 export interface SpellData {
-  id?: string | number;
+  id?: number;
   name: string;
   name_en?: string;
   level: number;

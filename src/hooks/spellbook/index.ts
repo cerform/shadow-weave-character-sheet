@@ -8,7 +8,8 @@ import {
   filterSpellsBySchool,
   filterSpellsByClass,
   extractClasses,
-  formatClasses
+  formatClasses,
+  convertToSpellData
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
 
@@ -31,13 +32,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
   useEffect(() => {
     // Преобразуем CharacterSpell[] в SpellData[]
     if (allSpells && allSpells.length > 0) {
-      const convertedSpells: SpellData[] = allSpells.map(spell => ({
-        ...spell,
-        // Убедимся, что свойства соответствуют интерфейсу SpellData
-        id: spell.id !== undefined ? spell.id : undefined,
-        isRitual: spell.ritual || false,
-        isConcentration: spell.concentration || false
-      }));
+      const convertedSpells: SpellData[] = allSpells.map(convertToSpellData);
       setFilteredSpells(convertedSpells);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
@@ -61,12 +56,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     result = filterSpellsByClass(result, activeClass);
 
     // Преобразуем CharacterSpell[] в SpellData[]
-    const convertedSpells: SpellData[] = result.map(spell => ({
-      ...spell,
-      id: spell.id !== undefined ? spell.id : undefined,
-      isRitual: spell.ritual || false,
-      isConcentration: spell.concentration || false
-    }));
+    const convertedSpells: SpellData[] = result.map(convertToSpellData);
     
     setFilteredSpells(convertedSpells);
   }, [searchTerm, activeLevel, activeSchool, activeClass]);

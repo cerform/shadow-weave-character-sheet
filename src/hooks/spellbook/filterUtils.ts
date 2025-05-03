@@ -1,13 +1,22 @@
 
 import { SpellData } from './types';
+import { CharacterSpell } from '@/types/character';
 
 // Класс типа guard для проверки строк в массиве
 export function isStringArray(value: any): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
 }
 
+// Конвертер из CharacterSpell в SpellData
+export const convertToSpellData = (spell: CharacterSpell): SpellData => ({
+  ...spell,
+  id: spell.id !== undefined ? spell.id : undefined,
+  isRitual: spell.ritual || false,
+  isConcentration: spell.concentration || false
+});
+
 // Функция для фильтрации заклинаний по поисковому запросу
-export const filterSpellsBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: string): CharacterSpell[] => {
   if (searchTerm.trim() === '') {
     return spells;
   }
@@ -26,7 +35,7 @@ export const filterSpellsBySearchTerm = (spells: SpellData[], searchTerm: string
 };
 
 // Функция для фильтрации заклинаний по уровню
-export const filterSpellsByLevel = (spells: SpellData[], activeLevels: number[]): SpellData[] => {
+export const filterSpellsByLevel = (spells: CharacterSpell[], activeLevels: number[]): CharacterSpell[] => {
   if (activeLevels.length === 0) {
     return spells;
   }
@@ -34,7 +43,7 @@ export const filterSpellsByLevel = (spells: SpellData[], activeLevels: number[])
 };
 
 // Функция для фильтрации заклинаний по школе
-export const filterSpellsBySchool = (spells: SpellData[], activeSchools: string[]): SpellData[] => {
+export const filterSpellsBySchool = (spells: CharacterSpell[], activeSchools: string[]): CharacterSpell[] => {
   if (activeSchools.length === 0) {
     return spells;
   }
@@ -42,7 +51,7 @@ export const filterSpellsBySchool = (spells: SpellData[], activeSchools: string[
 };
 
 // Функция для фильтрации заклинаний по классам
-export const filterSpellsByClass = (spells: SpellData[], activeClasses: string[]): SpellData[] => {
+export const filterSpellsByClass = (spells: CharacterSpell[], activeClasses: string[]): CharacterSpell[] => {
   if (activeClasses.length === 0) {
     return spells;
   }
@@ -69,7 +78,7 @@ export const filterSpellsByClass = (spells: SpellData[], activeClasses: string[]
 };
 
 // Извлечение уникальных классов из заклинаний
-export const extractClasses = (spells: SpellData[]): string[] => {
+export const extractClasses = (spells: CharacterSpell[]): string[] => {
   const classesSet = new Set<string>();
   
   spells.forEach(spell => {
