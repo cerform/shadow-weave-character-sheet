@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +33,7 @@ export const FeaturesTab = () => {
   // Получаем подкласс из className или class, если есть формат "Класс: Подкласс"
   const getSubclass = (): string | undefined => {
     // Проверяем наличие строк с соответствующими полями
-    const characterClassName = character?.className || character?.class || '';
+    const characterClassName = character?.className || '';
     
     const parts = characterClassName.split(':');
     if (parts.length > 1) {
