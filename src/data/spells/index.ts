@@ -79,7 +79,6 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
       });
     }
     
-    // Если не строка и не массив, возвращаем false
     return false;
   });
 };
