@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Text, PerspectiveCamera } from '@react-three/drei';
@@ -23,6 +22,7 @@ interface DiceRendererProps {
   height?: string | number;
   width?: string | number;
   className?: string;
+  themeColor?: string; // Added themeColor prop
 }
 
 const DiceModel = ({
@@ -222,7 +222,8 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
   fixedPosition = false,
   height = '300px',
   width = '100%',
-  className = ''
+  className = '',
+  themeColor // Use the added themeColor prop
 }) => {
   const [diceType, setDiceType] = useState<DiceType>(defaultDiceType);
   const [diceCount, setDiceCount] = useState(defaultDiceCount);
@@ -231,7 +232,8 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
   
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const themeColor = currentTheme?.accent || '#ffffff';
+  // Use the provided themeColor or fallback to the current theme
+  const actualThemeColor = themeColor || currentTheme?.accent || '#ffffff';
   
   const handleRollDice = () => {
     setRolling(true);
@@ -264,7 +266,7 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
           diceCount={diceCount}
           rolling={rolling}
           onRollComplete={handleRollComplete}
-          themeColor={themeColor}
+          themeColor={actualThemeColor}
         />
       </Canvas>
       
