@@ -3,15 +3,17 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDf33BOy-8BIgOJFQ-IbhvX2IOi1p5b8r4",
+  apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
   authDomain: "shadow-char.firebaseapp.com",
   projectId: "shadow-char",
-  storageBucket: "shadow-char.appspot.com",
-  messagingSenderId: "855663723625",
-  appId: "1:855663723625:web:2157acfa14c97dd7d22b0e"
+  storageBucket: "shadow-char.firebasestorage.app",
+  messagingSenderId: "815261687102",
+  appId: "1:815261687102:web:5497647ed6ff449a57e06f",
+  measurementId: "G-KQ3M1GQJX2"
 };
 
 // Initialize Firebase
@@ -19,6 +21,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+let analytics;
+
+// Инициализируем аналитику только в браузере, а не при SSR
+if (typeof window !== 'undefined') {
+  analytics = getAnalytics(app);
+}
 
 // Firebase Auth Service
 const firebaseAuth = {
@@ -71,4 +79,4 @@ const firebaseAuth = {
   }
 };
 
-export { auth, db, storage, firebaseAuth };
+export { auth, db, storage, firebaseAuth, analytics };
