@@ -69,9 +69,10 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
       return spell.classes.toLowerCase().includes(classNameLower);
     }
     
-    // Если classes это массив строк
+    // Если classes это массив
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(cls => {
+        // Проверяем, что элемент массива это строка
         if (typeof cls === 'string') {
           return cls.toLowerCase().includes(classNameLower);
         }
