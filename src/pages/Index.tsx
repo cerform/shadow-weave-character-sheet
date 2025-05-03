@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut } from "lucide-react";
+import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
@@ -17,10 +18,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const { characters, getUserCharacters, setCharacter } = useCharacter();
+  const { characters, getUserCharacters, setCharacter, deleteCharacter } = useCharacter();
   
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
+  const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
 
   // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
   useEffect(() => {
@@ -65,6 +67,20 @@ const Index = () => {
   const loadCharacter = (character: any) => {
     setCharacter(character);
     navigate("/sheet");
+  };
+
+  // Функция для удаления персонажа
+  const handleDeleteCharacter = async (characterId: string) => {
+    try {
+      setDeletingCharacterId(characterId);
+      await deleteCharacter(characterId);
+      toast.success("Персонаж успешно удален");
+    } catch (error) {
+      console.error("Ошибка при удалении персонажа:", error);
+      toast.error("Не удалось удалить персонажа");
+    } finally {
+      setDeletingCharacterId(null);
+    }
   };
 
   // Update the navigation links to include new pages
@@ -253,12 +269,11 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userCharacters.map((char) => (
                   <Card 
-                    key={char.id} 
-                    className="bg-card/30 backdrop-blur-sm hover:bg-card/40 transition-colors cursor-pointer"
-                    onClick={() => loadCharacter(char)}
+                    key={char.id}
+                    className="bg-card/30 backdrop-blur-sm hover:bg-card/40 transition-colors"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
+                    <CardContent className="p-4 relative">
+                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => loadCharacter(char)}>
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name}`} />
                           <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -270,6 +285,38 @@ const Index = () => {
                           </p>
                         </div>
                       </div>
+                      
+                      {/* Кнопка удаления с диалогом подтверждения */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-2 right-2 opacity-70 hover:opacity-100 hover:bg-destructive/20"
+                            aria-label="Удалить персонажа"
+                          >
+                            <Trash size={16} className="text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Удалить персонажа?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Вы уверены, что хотите удалить персонажа {char.name}? Это действие нельзя отменить.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction 
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => handleDeleteCharacter(char.id)}
+                              disabled={deletingCharacterId === char.id}
+                            >
+                              {deletingCharacterId === char.id ? "Удаление..." : "Удалить"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </CardContent>
                   </Card>
                 ))}

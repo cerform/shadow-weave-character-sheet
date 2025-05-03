@@ -7,6 +7,7 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
+import { UserThemeProvider } from './contexts/UserThemeContext';
 
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
@@ -26,32 +27,34 @@ import AppDiceButton from './AppDiceButton';
 const App = () => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-      <Router>
-        <AuthProvider>
-          <CharacterProvider>
-            <SessionProvider>
-              <SocketProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/sheet" element={<CharacterSheetPage />} />
-                  <Route path="/character-creation" element={<CharacterCreationPage />} />
-                  <Route path="/join" element={<JoinSessionPage />} />
-                  <Route path="/dm" element={<DMSessionPage />} />
-                  <Route path="/play" element={<PlayerSessionPage />} />
-                  <Route path="/spellbook" element={<SpellbookPage />} />
-                  <Route path="/handbook" element={<HandbookPage />} />
-                  <Route path="/characters" element={<CharactersListPage />} />
-                  <Route path="/battle" element={<PlayBattlePage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <AppDiceButton />
-                <Toaster />
-              </SocketProvider>
-            </SessionProvider>
-          </CharacterProvider>
-        </AuthProvider>
-      </Router>
+      <UserThemeProvider>
+        <Router>
+          <AuthProvider>
+            <CharacterProvider>
+              <SessionProvider>
+                <SocketProvider>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/sheet" element={<CharacterSheetPage />} />
+                    <Route path="/character-creation" element={<CharacterCreationPage />} />
+                    <Route path="/join" element={<JoinSessionPage />} />
+                    <Route path="/dm" element={<DMSessionPage />} />
+                    <Route path="/play" element={<PlayerSessionPage />} />
+                    <Route path="/spellbook" element={<SpellbookPage />} />
+                    <Route path="/handbook" element={<HandbookPage />} />
+                    <Route path="/characters" element={<CharactersListPage />} />
+                    <Route path="/battle" element={<PlayBattlePage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <AppDiceButton />
+                  <Toaster />
+                </SocketProvider>
+              </SessionProvider>
+            </CharacterProvider>
+          </AuthProvider>
+        </Router>
+      </UserThemeProvider>
     </ThemeProvider>
   );
 };
