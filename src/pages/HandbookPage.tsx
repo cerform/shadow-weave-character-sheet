@@ -18,6 +18,8 @@ import NavigationButtons from "@/components/ui/NavigationButtons";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Badge } from "@/components/ui/badge";
+import { races } from "@/data/races";
 
 const HandbookPage: React.FC = () => {
   const navigate = useNavigate();
@@ -99,17 +101,52 @@ const HandbookPage: React.FC = () => {
                   <Card key={race.name} className={cardBgClass}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg" style={textStyle}>{race.name}</CardTitle>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {race.abilityBonuses}
+                        </Badge>
+                        {race.subRaces && race.subRaces.length > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {race.subRaces.length} подрас{race.subRaces.length === 1 ? 'а' : 'ы'}
+                          </Badge>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-sm mb-2" style={mutedTextStyle}>{race.description}</p>
-                      <h4 className="text-sm font-medium" style={textStyle}>Особенности:</h4>
-                      <ul className="list-disc pl-5 text-sm mb-2" style={textStyle}>
-                        {race.features.map((feature, i) => (
-                          <li key={i}>{feature}</li>
+                      <p className="text-sm mb-3" style={mutedTextStyle}>{race.description}</p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex gap-2 text-xs">
+                          <span className="font-medium" style={textStyle}>Размер:</span>
+                          <span style={mutedTextStyle}>{race.size}</span>
+                        </div>
+                        <div className="flex gap-2 text-xs">
+                          <span className="font-medium" style={textStyle}>Скорость:</span>
+                          <span style={mutedTextStyle}>{race.speed}</span>
+                        </div>
+                        <div className="flex gap-2 text-xs">
+                          <span className="font-medium" style={textStyle}>Языки:</span>
+                          <span style={mutedTextStyle}>{race.languages}</span>
+                        </div>
+                      </div>
+                    
+                      {race.subRaces && race.subRaces.length > 0 && (
+                        <div className="mt-3">
+                          <h4 className="text-xs font-medium" style={textStyle}>Подрасы:</h4>
+                          <ul className="list-disc pl-5 text-xs" style={mutedTextStyle}>
+                            {race.subRaces.map((subrace, i) => (
+                              <li key={i}>{subrace}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <h4 className="text-xs font-medium mt-3" style={textStyle}>Расовые черты:</h4>
+                      <ul className="list-disc pl-5 text-xs" style={mutedTextStyle}>
+                        {race.traits.map((trait, i) => (
+                          <li key={i} title={trait.description}>{trait.name}</li>
                         ))}
                       </ul>
-                      <h4 className="text-sm font-medium" style={textStyle}>Прирост характеристик:</h4>
-                      <p className="text-sm" style={textStyle}>{race.abilityScores}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -285,39 +322,6 @@ const HandbookPage: React.FC = () => {
 };
 
 // Данные для демонстрации
-const races = [
-  {
-    name: "Человек",
-    description: "Люди — самая распространённая раса в мирах D&D, адаптируемые и честолюбивые.",
-    features: ["Универсальный", "Разнообразный", "Амбициозный"],
-    abilityScores: "+1 ко всем характеристикам или +1 к двум характеристикам и один дополнительный навык"
-  },
-  {
-    name: "Эльф",
-    description: "Эльфы — магический народ неземной грации, живущий в мире, но не являющийся его частью.",
-    features: ["Тёмное зрение", "Обострённые чувства", "Наследие фей", "Транс"],
-    abilityScores: "+2 к Ловкости"
-  },
-  {
-    name: "Дварф",
-    description: "Отважные и выносливые воины, дварфы известны своей мастерской работой с камнем и металлом.",
-    features: ["Тёмное зрение", "Дварфская выносливость", "Дварфский боевой тренинг", "Знание камня"],
-    abilityScores: "+2 к Телосложению"
-  },
-  {
-    name: "Полурослик",
-    description: "Маленькие исследователи, известные своей смелостью и любопытством.",
-    features: ["Везучий", "Храбрость", "Проворство полурослика"],
-    abilityScores: "+2 к Ловкости"
-  },
-  {
-    name: "Дракорождённый",
-    description: "Гуманоиды с драконьим наследием, способные использовать дыхание дракона.",
-    features: ["Драконье происхождение", "Дыхание дракона", "Сопротивление к урону"],
-    abilityScores: "+2 к Силе, +1 к Харизме"
-  }
-];
-
 const classes = [
   {
     name: "Воин",
@@ -348,6 +352,48 @@ const classes = [
     description: "Свирепый воин, черпающий силу в ярости.",
     features: ["Ярость", "Безрассудное нападение", "Защита без доспехов"],
     hitDice: "1d12 за уровень варвара"
+  },
+  {
+    name: "Бард",
+    description: "Мастер вдохновения и магии, черпающий силу из музыки и слов.",
+    features: ["Бардическое вдохновение", "Мастер на все руки", "Знание заклинаний"],
+    hitDice: "1d8 за уровень барда"
+  },
+  {
+    name: "Друид",
+    description: "Хранитель природы с магическими способностями и возможностью превращаться в зверей.",
+    features: ["Дикий облик", "Круг друидов", "Защитник природы"],
+    hitDice: "1d8 за уровень друида"
+  },
+  {
+    name: "Следопыт",
+    description: "Знаток дикой местности, охотник и следопыт.",
+    features: ["Избранный враг", "Природоведение", "Охотничий стиль"],
+    hitDice: "1d10 за уровень следопыта"
+  },
+  {
+    name: "Колдун",
+    description: "Маг, получивший силу через пакт с могущественным существом.",
+    features: ["Потусторонний покровитель", "Пакт", "Мистические воззвания"],
+    hitDice: "1d8 за уровень колдуна"
+  },
+  {
+    name: "Чародей",
+    description: "Маг с врождённой магической силой в крови.",
+    features: ["Происхождение колдовства", "Волшебные очки", "Метамагия"],
+    hitDice: "1d6 за уровень чародея"
+  },
+  {
+    name: "Паладин",
+    description: "Боец, давший священную клятву и обладающий божественной силой.",
+    features: ["Божественное чувство", "Божественная кара", "Священная клятва"],
+    hitDice: "1d10 за уровень паладина"
+  },
+  {
+    name: "Монах",
+    description: "Мастер боевых искусств, использующий энергию тела и духа.",
+    features: ["Боевые искусства", "Ци", "Защита без доспехов"],
+    hitDice: "1d8 за уровень монаха"
   }
 ];
 

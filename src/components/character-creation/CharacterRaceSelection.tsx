@@ -4,6 +4,7 @@ import NavigationButtons from "@/components/character-creation/NavigationButtons
 import { races } from "@/data/races";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface CharacterRaceSelectionProps {
   character: any;
@@ -21,7 +22,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   const [selectedRace, setSelectedRace] = useState<string>(character.race || "");
   const [selectedSubrace, setSelectedSubrace] = useState<string>(character.subrace || "");
   const [activeTab, setActiveTab] = useState<string>("overview");
-
+  
   // Reset selected subrace when race changes
   useEffect(() => {
     setSelectedSubrace("");
@@ -63,7 +64,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     <div>
       <h2 className="text-2xl font-bold mb-4">Выберите расу</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {races.map((race) => (
           <button
             key={race.name}
@@ -79,6 +80,16 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
           >
             <div className="font-semibold">{race.name}</div>
             <div className="text-sm text-muted-foreground">{race.description.split('.')[0]}.</div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {race.subRaces && race.subRaces.length > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {race.subRaces.length} подрас{race.subRaces.length === 1 ? 'а' : 'ы'}
+                </Badge>
+              )}
+              <Badge className="text-xs bg-primary/20 text-primary-foreground/80">
+                {race.abilityBonuses}
+              </Badge>
+            </div>
           </button>
         ))}
       </div>
@@ -133,7 +144,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                 <div className="space-y-4">
                   {/* Display base race traits */}
                   {selectedRaceData.traits.map((trait, index) => (
-                    <div key={index}>
+                    <div key={index} className="bg-background/50 p-3 rounded-md">
                       <h4 className="font-medium">{trait.name}</h4>
                       <p className="text-sm text-muted-foreground">{trait.description}</p>
                     </div>
@@ -144,7 +155,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                     <div className="mt-4 pt-4 border-t">
                       <h4 className="font-medium text-lg mb-2">Особенности подрасы: {selectedSubrace}</h4>
                       {subraceDetails.traits.map((trait: any, index: number) => (
-                        <div key={`subrace-${index}`} className="mt-2">
+                        <div key={`subrace-${index}`} className="bg-background/50 p-3 rounded-md mt-2">
                           <h5 className="font-medium">{trait.name}</h5>
                           <p className="text-sm text-muted-foreground">{trait.description}</p>
                         </div>
