@@ -85,12 +85,10 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                         label={subrace}
                         selected={selectedSubrace === subrace}
                         onClick={() => handleSubraceSelect(subrace)}
-                        style={{
-                          backgroundColor: selectedSubrace === subrace ? currentTheme.accent : 'transparent',
-                          color: selectedSubrace === subrace ? '#FFFFFF' : currentTheme.textColor,
-                          border: selectedSubrace === subrace ? `2px solid ${currentTheme.accent}` : '1px solid #444',
-                          fontWeight: selectedSubrace === subrace ? 'bold' : 'normal'
-                        }}
+                        className={`
+                          ${selectedSubrace === subrace ? 'bg-primary text-white font-bold border-2 border-primary' : 'border border-gray-400 text-foreground'}
+                          hover:bg-primary/20 transition-colors
+                        `}
                       />
                     ))}
                   </SelectionSubOptionsContainer>

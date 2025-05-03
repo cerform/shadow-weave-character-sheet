@@ -222,7 +222,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
               />
             ) : (
               <div className="text-center">
-                <p className="text-lg mb-4">
+                <p className="text-lg mb-4 text-white">
                   {hitPoints > 0 
                     ? `Итоговое HP: ${hitPoints}` 
                     : "Бросьте кубики для определения HP"}
@@ -262,7 +262,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
           
           {hitPoints > 0 && (
             <div className="mt-6 text-center">
-              <h3 className="text-2xl font-bold">Итоговое HP: {hitPoints}</h3>
+              <h3 className="text-2xl font-bold text-white">Итоговое HP: {hitPoints}</h3>
             </div>
           )}
           
