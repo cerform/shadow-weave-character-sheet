@@ -5,10 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { FloatingDiceButton } from '@/components/dice/FloatingDiceButton';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
+import PlayerDicePanel from '@/components/character-sheet/PlayerDicePanel';
 
 interface HitPointsRollerProps {
   characterClass: string;
@@ -28,8 +26,6 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
   const [isRolling, setIsRolling] = useState(false);
   const [hitPoints, setHitPoints] = useState<number>(initialHp || 0);
   const [rolls, setRolls] = useState<number[]>([]);
-  const [showDiceRoller, setShowDiceRoller] = useState(false);
-  const [currentRollIndex, setCurrentRollIndex] = useState(0);
   
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -80,26 +76,6 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
         return 8;
     }
   };
-
-  // Обработчик результата броска кубика
-  const handleDiceRollComplete = (result: number) => {
-    if (currentRollIndex < level - 1) {
-      // Добавляем результат броска в массив
-      const newRolls = [...rolls];
-      newRolls[currentRollIndex] = result;
-      setRolls(newRolls);
-      
-      // Переходим к следующему броску или заканчиваем
-      if (currentRollIndex < level - 2) {
-        setCurrentRollIndex(currentRollIndex + 1);
-      } else {
-        // Вычисляем итоговые HP после всех бросков
-        calculateFinalHp(newRolls);
-        setShowDiceRoller(false);
-        setCurrentRollIndex(0);
-      }
-    }
-  };
   
   // Вычисляем итоговые HP
   const calculateFinalHp = (rollsArray: number[]) => {
@@ -120,7 +96,6 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
   const rollHitPoints = () => {
     setIsRolling(true);
     setRolls([]);
-    setCurrentRollIndex(0);
     
     // На 1 уровне HP = максимум кубика + модификатор Телосложения
     const firstLevelHp = getFirstLevelHp(characterClass) + constitutionModifier;
@@ -136,8 +111,29 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
         description: `На 1 уровне ваше HP: ${firstLevelHp}`,
       });
     } else {
-      // Если уровень > 1, открываем всплывающее окно для бросков
-      setShowDiceRoller(true);
+      // На каждом уровне после первого кидаем кубик и добавляем модификатор Телосложения
+      let newRolls = [];
+      let totalAdditionalHp = 0;
+      
+      for (let i = 1; i < level; i++) {
+        const hitDice = getHitDice(characterClass);
+        const diceMax = parseInt(hitDice.substring(1));
+        const roll = Math.floor(Math.random() * diceMax) + 1;
+        newRolls.push(roll);
+        totalAdditionalHp += roll + constitutionModifier;
+      }
+      
+      const totalHp = firstLevelHp + totalAdditionalHp;
+      
+      setRolls(newRolls);
+      setHitPoints(totalHp);
+      onHitPointsRolled(totalHp);
+      setIsRolling(false);
+      
+      toast({
+        title: "Очки здоровья вычислены!",
+        description: `Итоговое HP: ${totalHp}`,
+      });
     }
   };
 
@@ -175,7 +171,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     
     return (
       <div className="mt-4 space-y-2">
-        <p className="text-sm font-medium">История бросков:</p>
+        <p className="text-sm font-medium text-white">История бросков:</p>
         <div className="flex flex-wrap gap-2">
           {rolls.map((roll, index) => (
             <Badge key={index} variant="outline">
@@ -187,6 +183,9 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     );
   };
 
+  // Вычисляем какой дайс использовать для класса персонажа
+  const hitDice = getHitDice(characterClass);
+
   return (
     <>
       <Card className="shadow-lg border border-primary/20">
@@ -196,69 +195,31 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
         
         <CardContent className="p-4 md:p-6">
           <div className="mb-6 space-y-4">
-            <p className="text-sm">
+            <p className="text-sm text-white">
               На 1 уровне ваше HP равно максимуму кубика хит-поинтов вашего класса ({getFirstLevelHp(characterClass)}) + 
               модификатор Телосложения ({constitutionModifier >= 0 ? '+' : ''}{constitutionModifier}).
             </p>
             
-            <p className="text-sm">
+            <p className="text-sm text-white">
               На каждом следующем уровне вы можете либо бросить кубик и добавить модификатор Телосложения,
               либо взять среднее значение + модификатор Телосложения.
             </p>
             
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-white">
               Ваш уровень: {level}, необходимо бросить {level > 1 ? level - 1 : 0} кубиков.
             </p>
           </div>
           
-          <div className="bg-black/40 rounded-lg overflow-hidden p-4 h-[200px] flex items-center justify-center">
-            {showDiceRoller ? (
-              <DiceRoller3DFixed
-                initialDice={getHitDice(characterClass)}
-                hideControls={true}
-                modifier={constitutionModifier}
-                onRollComplete={handleDiceRollComplete}
-                themeColor={currentTheme.accent}
-              />
-            ) : (
-              <div className="text-center">
-                <p className="text-lg mb-4 text-white">
-                  {hitPoints > 0 
-                    ? `Итоговое HP: ${hitPoints}` 
-                    : "Бросьте кубики для определения HP"}
-                </p>
-                
-                <Sheet open={showDiceRoller} onOpenChange={setShowDiceRoller}>
-                  <SheetTrigger asChild>
-                    <Button 
-                      onClick={() => level > 1 && rollHitPoints()}
-                      disabled={isRolling}
-                      variant="default"
-                    >
-                      Бросить {level > 1 ? level - 1 : 0} кубиков {getHitDice(characterClass)}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
-                    <SheetHeader className="p-4">
-                      <SheetTitle>Бросок для HP</SheetTitle>
-                      <SheetDescription>
-                        Бросок {currentRollIndex + 1} из {level - 1}
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="h-[80vh]">
-                      <DiceRoller3DFixed
-                        initialDice={getHitDice(characterClass)}
-                        hideControls={false}
-                        modifier={constitutionModifier}
-                        onRollComplete={handleDiceRollComplete}
-                        themeColor={currentTheme.accent}
-                      />
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            )}
-          </div>
+          {/* Добавляем стандартный компонент для бросков кубиков */}
+          {level > 1 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-2 text-white">Бросок кубиков для HP</h3>
+              <p className="text-sm mb-4 text-white">
+                Вы можете использовать кубик {hitDice} для бросков здоровья:
+              </p>
+              <PlayerDicePanel compactMode={true} fixedPosition={false} />
+            </div>
+          )}
           
           {hitPoints > 0 && (
             <div className="mt-6 text-center">
@@ -276,7 +237,7 @@ export const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
             className="w-full sm:w-auto"
             variant="default"
           >
-            Бросить {level > 1 ? level - 1 : 0} кубиков {getHitDice(characterClass)}
+            Бросить автоматически
           </Button>
           
           <Button 

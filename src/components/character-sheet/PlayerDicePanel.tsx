@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSession } from '@/contexts/SessionContext';
 import GradientDice from '@/components/dice/GradientDice';
-import { Dices } from 'lucide-react';
+import { Dices, Plus, Minus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PlayerDicePanelProps {
@@ -165,13 +164,8 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               key={dice}
               size="sm"
               variant={diceType === dice ? "default" : "outline"}
-              className="h-10 px-2 flex items-center justify-center"
+              className={`h-10 px-2 flex items-center justify-center ${diceType === dice ? 'bg-primary text-white' : 'bg-background/50 text-white'}`}
               onClick={() => setDiceType(dice as any)}
-              style={{
-                backgroundColor: diceType === dice ? `rgba(${currentTheme.accent}, 0.7)` : 'rgba(0, 0, 0, 0.2)',
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
             >
               {dice}
             </Button>
@@ -183,82 +177,61 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {/* Количество кубиков */}
             <div className="flex items-center gap-1">
-              <Label className="text-xs" style={{ color: currentTheme.textColor }}>Кол-во:</Label>
+              <Label className="text-xs text-white font-medium">Кол-во:</Label>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8" 
+                className="px-2 h-8 w-8 text-white bg-background/50" 
                 onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              >-</Button>
-              <div 
-                className="flex items-center border rounded px-2 min-w-[30px] justify-center"
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
               >
+                <Minus size={14} />
+              </Button>
+              <div className="flex items-center border rounded px-2 min-w-[30px] justify-center bg-background/50 text-white">
                 <span className="text-sm">{diceCount}</span>
               </div>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8" 
+                className="px-2 h-8 w-8 text-white bg-background/50" 
                 onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              >+</Button>
+              >
+                <Plus size={14} />
+              </Button>
             </div>
             
             {/* Модификатор броска */}
             <div className="flex items-center gap-1 ml-2">
-              <Label className="text-xs" style={{ color: currentTheme.textColor }}>Мод:</Label>
+              <Label className="text-xs text-white font-medium">Мод:</Label>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8" 
+                className="px-2 h-8 w-8 text-white bg-background/50" 
                 onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              >-</Button>
-              <div 
-                className="flex items-center border rounded px-2 min-w-[40px] justify-center"
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
               >
+                <Minus size={14} />
+              </Button>
+              <div className="flex items-center border rounded px-2 min-w-[40px] justify-center bg-background/50 text-white">
                 <span className="text-sm">{modifier >= 0 ? '+' : ''}{modifier}</span>
               </div>
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="px-2 h-8 w-8" 
+                className="px-2 h-8 w-8 text-white bg-background/50" 
                 onClick={() => setModifier(prev => Math.min(20, prev + 1))}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              >+</Button>
+              >
+                <Plus size={14} />
+              </Button>
             </div>
             
             <div className="ml-auto">
               <Label 
                 htmlFor="roll-reason" 
-                className="text-xs mb-1 block"
-                style={{ color: currentTheme.textColor }}
+                className="text-xs mb-1 block text-white font-medium"
               >
                 Причина броска:
               </Label>
               <Select value={rollReason} onValueChange={setRollReason}>
-                <SelectTrigger className="h-8 w-[150px] text-xs">
+                <SelectTrigger className="h-8 w-[150px] text-xs bg-background/50 text-white">
                   <SelectValue placeholder="Выберите причину" />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,11 +251,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               placeholder="Опишите причину броска..."
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
-              className="h-8 text-xs mt-1"
-              style={{
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
+              className="h-8 text-xs mt-1 text-white bg-background/50"
             />
           )}
           
@@ -303,12 +272,8 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           </div>
           
           <Button 
-            className="w-full"
+            className="w-full bg-primary text-white hover:bg-primary/80"
             onClick={handleRoll}
-            style={{
-              backgroundColor: `rgba(${currentTheme.accent}, 0.7)`,
-              color: currentTheme.textColor
-            }}
           >
             <Dices className="mr-2" size={16} />
             Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''} от имени {characterName}
@@ -319,47 +284,39 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
         {rollHistory.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 
-                className="text-sm font-medium"
-                style={{ color: currentTheme.textColor }}
-              >
+              <h4 className="text-sm font-medium text-white">
                 Ваши броски
               </h4>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 text-xs"
+                className="h-6 text-xs text-white hover:bg-primary/20"
                 onClick={() => setRollHistory([])}
-                style={{ color: currentTheme.textColor }}
               >
                 Очистить
               </Button>
             </div>
-            <ScrollArea className="h-32 rounded border p-2" style={{ borderColor: currentTheme.accent, background: 'rgba(0, 0, 0, 0.3)' }}>
+            <ScrollArea className="h-32 rounded border p-2 bg-black/30 border-white/10 text-white">
               <div className="space-y-2">
                 {rollHistory.map((roll, index) => (
                   <div 
                     key={index} 
-                    className="text-sm p-1 border-b border-dashed flex justify-between items-center"
-                    style={{ borderColor: `rgba(${currentTheme.accent}, 0.3)` }}
+                    className="text-sm p-1 border-b border-dashed flex justify-between items-center border-white/20"
                   >
-                    <div style={{ color: currentTheme.textColor }}>
+                    <div className="text-white">
                       <span className="font-medium">{roll.diceCount}{roll.diceType}</span>
                       {roll.modifier !== 0 && (
                         <span>{roll.modifier > 0 ? ' +' : ' '}{roll.modifier}</span>
                       )}
                       {roll.reason && (
-                        <span className="text-muted-foreground ml-1">
+                        <span className="text-white/70 ml-1">
                           ({roll.reason})
                         </span>
                       )}
                     </div>
                     <Badge 
                       variant="outline"
-                      style={{ 
-                        borderColor: currentTheme.accent,
-                        color: currentTheme.textColor
-                      }}
+                      className="border-white/30 text-white"
                     >
                       {Array.isArray(roll.rolls) 
                         ? roll.rolls.join(', ') 
