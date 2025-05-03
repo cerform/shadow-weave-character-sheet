@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -246,10 +245,12 @@ const SpellBookViewer = () => {
 
   // Преобразовываем классы из массива в строку для отображения
   const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return '';
+    
     if (Array.isArray(classes)) {
       return classes.join(', ');
     }
-    return classes || '';
+    return classes;
   };
 
   return (
