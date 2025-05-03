@@ -53,10 +53,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Получаем базовые классы кнопки
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
+    // Проверяем наличие className в props и определяем, имеет ли он класс Details
+    const hasDetailsClass = className?.includes('Details');
+    
     // Добавляем стили для улучшения контрастности в зависимости от темы
     const style = {
       ...props.style,
-      color: variant === 'ghost' && props.className?.includes('Details') 
+      color: variant === 'ghost' && hasDetailsClass
         ? '#FFFFFF' 
         : variant === 'default' 
           ? currentTheme.buttonText || '#FFFFFF' 
