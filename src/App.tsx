@@ -15,22 +15,22 @@ import CharacterCreationPage from './pages/CharacterCreationPage';
 import JoinSessionPage from './pages/JoinSessionPage';
 import DMSessionPage from './pages/DMSessionPage';
 import PlayerSessionPage from './pages/PlayerSessionPage';
-import SpellbookPage from './pages/SpellbookPage';  // Исправлен регистр буквы 'b'
+import SpellbookPage from './pages/SpellbookPage'; 
 import HandbookPage from './pages/HandbookPage';
 import CharactersListPage from './pages/CharactersListPage';
-import PlayBattlePage from './pages/PlayBattlePage';  // Переименован импорт на существующий файл
-import NotFound from './pages/NotFound';  // Исправлен импорт на существующий файл
+import PlayBattlePage from './pages/PlayBattlePage'; 
+import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
 
 const App = () => {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <CharacterProvider>
-          <SessionProvider>
-            <SocketProvider>
-              <Router>
+      <Router>
+        <AuthProvider>
+          <CharacterProvider>
+            <SessionProvider>
+              <SocketProvider>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<AuthPage />} />
@@ -47,11 +47,11 @@ const App = () => {
                 </Routes>
                 <AppDiceButton />
                 <Toaster />
-              </Router>
-            </SocketProvider>
-          </SessionProvider>
-        </CharacterProvider>
-      </AuthProvider>
+              </SocketProvider>
+            </SessionProvider>
+          </CharacterProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 };

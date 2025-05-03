@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useContext,
 } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
@@ -112,7 +113,22 @@ const ACTIVE_CHARACTER_KEY = "dnd-active-character"; // Обновленный �
 export function CharacterProvider({ children }: Props) {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [character, setCharacterState] = useState<Character | null>(null);
-  const { currentUser, addCharacterToUser, removeCharacterFromUser } = useAuth();
+  
+  // Проверяем, находимся ли мы в контексте AuthProvider
+  let currentUser = null;
+  let addCharacterToUser = async () => {};
+  let removeCharacterFromUser = async () => {};
+  
+  try {
+    // Пытаемся использовать AuthContext, если он доступен
+    const authContext = useAuth();
+    currentUser = authContext.currentUser;
+    addCharacterToUser = authContext.addCharacterToUser;
+    removeCharacterFromUser = authContext.removeCharacterFromUser;
+  } catch (error) {
+    console.error("AuthContext не доступен, используем заглушки для функций");
+    // Если контекст не доступен, используем заглушки
+  }
 
   // При старте читаем из localStorage и Firebase Storage
   useEffect(() => {
