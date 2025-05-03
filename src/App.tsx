@@ -19,7 +19,8 @@ import PlayerSessionPage from './pages/PlayerSessionPage';
 import SpellbookPage from './pages/SpellbookPage'; 
 import HandbookPage from './pages/HandbookPage';
 import CharactersListPage from './pages/CharactersListPage';
-import PlayBattlePage from './pages/PlayBattlePage'; 
+import PlayBattlePage from './pages/PlayBattlePage';
+import DMDashboardPage from './pages/DMDashboardPage';
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
@@ -39,12 +40,15 @@ const App = () => {
                     <Route path="/sheet" element={<CharacterSheetPage />} />
                     <Route path="/character-creation" element={<CharacterCreationPage />} />
                     <Route path="/join" element={<JoinSessionPage />} />
-                    <Route path="/dm" element={<DMSessionPage />} />
+                    <Route path="/dm" element={<DMDashboardPage />} />
+                    <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                    <Route path="/dm-session/:id" element={<DMSessionPage />} />
                     <Route path="/play" element={<PlayerSessionPage />} />
                     <Route path="/spellbook" element={<SpellbookPage />} />
                     <Route path="/handbook" element={<HandbookPage />} />
                     <Route path="/characters" element={<CharactersListPage />} />
                     <Route path="/battle" element={<PlayBattlePage />} />
+                    <Route path="/dm/battle" element={<PlayBattlePage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <AppDiceButton />
