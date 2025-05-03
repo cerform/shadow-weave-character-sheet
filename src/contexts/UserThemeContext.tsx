@@ -8,7 +8,7 @@ interface UserThemeContextType {
   activeTheme: string;
 }
 
-const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
+export const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
 
 export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, updateUserTheme } = useSessionStore();

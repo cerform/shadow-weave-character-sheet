@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Paintbrush } from "lucide-react";
-import { useUserTheme } from '@/contexts/UserThemeContext';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 export const ThemeSelector = () => {
   const { setUserTheme, activeTheme } = useUserTheme();

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
@@ -25,7 +25,7 @@ import AppDiceButton from './AppDiceButton';
 
 const App = () => {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="system" storageKey="ui-theme">
       <Router>
         <AuthProvider>
           <CharacterProvider>
