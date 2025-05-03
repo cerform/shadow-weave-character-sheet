@@ -1,4 +1,3 @@
-
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
@@ -107,6 +106,22 @@ export const getAllSpellcastingClasses = (): string[] => {
     }
   });
   return Array.from(classes).sort();
+};
+
+// Исправляем ошибку toLowerCase is not a function
+const spellFilter = (query: string, spell: any) => {
+  if (!query || query.trim() === '') return true;
+  
+  const searchTerm = query.toLowerCase();
+  const name = spell.name ? spell.name.toLowerCase() : '';
+  const description = spell.description ? spell.description.toLowerCase() : '';
+  const school = spell.school ? spell.school.toLowerCase() : '';
+  
+  return (
+    name.includes(searchTerm) ||
+    description.includes(searchTerm) ||
+    school.includes(searchTerm)
+  );
 };
 
 // Экспорт всех заклинаний для совместимости с существующим кодом

@@ -2,21 +2,15 @@
 import React from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { Badge } from "@/components/ui/badge";
-import { Dices, Sparkles, Wand, Leaf, Sword, Feather, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Check, PaintBucket, Palette, Sparkles, Wand, Leaf, Sword, Music } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -28,100 +22,78 @@ const ThemeSelector = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  const themeIcons = {
-    'default': <Dices className="h-4 w-4 mr-1" />,
-    'warlock': <Sparkles className="h-4 w-4 mr-1" />,
-    'wizard': <Wand className="h-4 w-4 mr-1" />,
-    'druid': <Leaf className="h-4 w-4 mr-1" />,
-    'warrior': <Sword className="h-4 w-4 mr-1" />,
-    'bard': <Feather className="h-4 w-4 mr-1" />
-  };
+  const themesList = [
+    { id: 'default', name: 'Стандартная', icon: <PaintBucket size={16} /> },
+    { id: 'warlock', name: 'Чернокнижник', icon: <Sparkles size={16} /> },
+    { id: 'wizard', name: 'Волшебник', icon: <Wand size={16} /> },
+    { id: 'druid', name: 'Друид', icon: <Leaf size={16} /> },
+    { id: 'warrior', name: 'Воин', icon: <Sword size={16} /> },
+    { id: 'bard', name: 'Бард', icon: <Music size={16} /> },
+  ];
 
-  // Стили для кнопок на основе текущей темы
-  const buttonStyle = {
-    color: currentTheme.buttonText || '#FFFFFF',
-    borderColor: currentTheme.accent,
-  };
-
-  const selectedButtonStyle = {
-    backgroundColor: currentTheme.accent,
-    color: currentTheme.buttonText || '#FFFFFF',
-  };
-
-  // Мобильная версия с дропдаун-меню
-  if (isMobile) {
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <label className="text-sm font-semibold" style={{color: currentTheme.textColor}}>Тема:</label>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2 w-full"
-              style={buttonStyle}
-            >
-              {themeIcons[themeKey] || <Dices className="h-4 w-4 mr-1" />}
-              {currentTheme?.name || "Стандартная"}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="center" 
-            className="w-56 bg-black/90 border-accent"
-            style={{
-              backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.9)'}`,
-              borderColor: currentTheme.accent,
-            }}
-          >
-            {Object.entries(themes).map(([key, value]) => (
-              <DropdownMenuItem
-                key={key}
-                onClick={() => setTheme(key as any)}
-                className="flex items-center gap-2"
-                style={{color: currentTheme.textColor}}
-              >
-                {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
-                <span>{value.name}</span>
-                {theme === key && <Check className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  }
-
-  // Десктопная версия с кнопками
   return (
-    <div className="flex flex-col items-center gap-2">
-      <label className="text-sm font-semibold" style={{color: currentTheme.textColor}}>Выберите тему:</label>
-      <div className="flex flex-wrap gap-1 justify-center">
-        {Object.entries(themes).map(([key, value]) => (
-          <Button
-            key={key}
-            variant={theme === key ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTheme(key as any)}
-            className={`flex items-center ${theme === key ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'}`}
-            style={theme === key ? selectedButtonStyle : buttonStyle}
-          >
-            {themeIcons[key as keyof typeof themeIcons] || <Dices className="h-4 w-4 mr-1" />}
-            {value.name}
-          </Button>
-        ))}
-      </div>
-      
-      <div className="mt-2">
-        <Badge 
-          className="bg-primary text-primary-foreground"
-          style={{
-            backgroundColor: currentTheme.accent,
-            color: currentTheme.buttonText || '#FFFFFF',
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="relative"
+          style={{ 
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
           }}
         >
-          {currentTheme?.name || "Стандартная"}
-        </Badge>
-      </div>
-    </div>
+          <Palette className="h-5 w-5" />
+          <span className="sr-only">Сменить тему</span>
+          <span 
+            className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full" 
+            style={{ backgroundColor: currentTheme.accent }}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent 
+        align="end" 
+        className="min-w-[12rem]" 
+        style={{ 
+          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
+          borderColor: currentTheme.accent,
+        }}
+      >
+        <DropdownMenuLabel 
+          style={{ color: currentTheme.textColor }}
+        >
+          Выберите тему
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator style={{ backgroundColor: `${currentTheme.accent}50` }} />
+        {themesList.map((item) => (
+          <DropdownMenuItem 
+            key={item.id} 
+            onClick={() => setTheme(item.id as any)} 
+            className="flex items-center justify-between cursor-pointer"
+            style={{
+              color: currentTheme.textColor,
+              backgroundColor: theme === item.id ? `${currentTheme.accent}20` : 'transparent'
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span 
+                className="flex items-center justify-center h-5 w-5 rounded-full" 
+                style={{ 
+                  backgroundColor: theme === item.id ? currentTheme.accent : 'transparent',
+                  color: theme === item.id ? currentTheme.buttonText : currentTheme.textColor
+                }}
+              >
+                {item.icon}
+              </span>
+              <span>{item.name}</span>
+            </div>
+            {theme === item.id && (
+              <Check size={16} style={{ color: currentTheme.accent }} />
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

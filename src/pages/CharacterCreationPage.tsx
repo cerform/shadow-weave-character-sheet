@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ const CharacterCreationPage = () => {
 
   // Обертка для setAbilitiesMethod для соответствия типам
   const handleSetAbilitiesMethod = (method: "pointbuy" | "standard" | "roll" | "manual") => {
-    setAbilitiesMethod(method as any);
+    setAbilitiesMethod(method);
   };
 
   // Функция-обертка для обеспечения правильной сигнатуры в rollSingleAbility
@@ -139,15 +140,7 @@ const CharacterCreationPage = () => {
         </div>
       </div>
 
-      {/* Отображение прогресса по шагам */}
-      <CreationStepDisplay 
-        steps={steps} 
-        currentStep={currentStep}
-        isMagicClass={isMagicClass()}
-        characterClass={character.class}
-      />
-
-      {/* Основная область контента */}
+      {/* Основная область контента с шагами создания персонажа */}
       <div 
         className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"
         style={{ 

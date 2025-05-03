@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Home, ArrowLeft, ArrowRight, Book, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface NavigationButtonsProps {
   allowNext?: boolean;
@@ -25,8 +26,8 @@ interface NavigationButtonsProps {
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  allowNext = true, // По умолчанию true
-  disableNext = false, // По умолчанию false
+  allowNext = true,
+  disableNext = false,
   nextStep,
   prevStep,
   isFirstStep = false,
@@ -44,6 +45,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   const goHome = () => {
     navigate(homePath);
@@ -61,6 +64,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           onClick={goHome}
           variant="outline"
           className="flex items-center gap-2"
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
         >
           <Home className="size-4" />
           {homeLabel}
@@ -73,6 +80,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           onClick={goToBook}
           variant="outline"
           className="flex items-center gap-2"
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
         >
           <Book className="size-4" />
           {bookLabel}
@@ -85,6 +96,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           onClick={onPdfImportClick}
           variant="outline"
           className="flex items-center gap-2"
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
         >
           <FileUp className="size-4" />
           Импорт из PDF
@@ -97,6 +112,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         disabled={isFirstStep}
         variant="outline"
         className="flex items-center gap-2"
+        style={{
+          borderColor: currentTheme.accent,
+          color: currentTheme.textColor
+        }}
       >
         <ArrowLeft className="size-4" />
         {prevLabel}
@@ -107,6 +126,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         onClick={nextStep}
         disabled={disableNext || !allowNext}
         className="flex items-center gap-2"
+        style={{
+          backgroundColor: currentTheme.accent,
+          color: currentTheme.buttonText
+        }}
       >
         <ArrowRight className="size-4" />
         {nextLabel}

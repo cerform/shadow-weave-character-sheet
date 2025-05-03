@@ -23,6 +23,11 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Фильтруем шаги для немагических классов
+  const visibleSteps = steps.filter((_, index) => 
+    !(index === 5 && !isMagicClass) // Скрываем шаг заклинаний для немагических классов
+  );
+
   return (
     <div className="mb-8">
       <div className="flex flex-wrap justify-center gap-2 relative">
@@ -34,25 +39,22 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
         <div 
           className="absolute h-1 top-4 left-0 bg-primary transition-all duration-500 -z-10"
           style={{ 
-            width: `${(currentStep / (steps.length - 1)) * 100}%`,
+            width: `${(currentStep / (visibleSteps.length - 1)) * 100}%`,
             backgroundColor: currentTheme.accent
           }}
         ></div>
         
         {/* Step circles */}
-        {steps.map((step, index) => {
-          // Skip spell selection step if class is not magical
-          if (index === 5 && !isMagicClass) {
-            return null;
-          }
-
-          const isActive = currentStep === index;
-          const isPast = currentStep > index;
-          const isSpecialStep = index === 4; // Subclass step that changes based on class
+        {visibleSteps.map((step, index) => {
+          // Вычисляем реальный индекс шага в общем массиве шагов
+          const realStepIndex = steps.findIndex(s => s.id === step.id);
+          const isActive = currentStep === realStepIndex;
+          const isPast = currentStep > realStepIndex;
+          const isSpecialStep = realStepIndex === 4; // Subclass step that changes based on class
 
           return (
             <div
-              key={index}
+              key={step.id}
               className={`flex flex-col items-center transition-all duration-300 ${
                 isActive ? "scale-110" : ""
               }`}

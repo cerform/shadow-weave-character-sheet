@@ -13,14 +13,13 @@ import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
 import CharacterLanguagesSelection from './CharacterLanguagesSelection';
-import CreationStepDisplay from './CreationStepDisplay';
 import { CharacterSheet } from '@/types/character';
 import { steps } from '@/config/characterCreationSteps';
 
 interface CharacterCreationContentProps {
   currentStep: number;
-  character: any;
-  updateCharacter: (updates: any) => void;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
   nextStep: () => void;
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
@@ -55,16 +54,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
     switch (currentStep) {
-      case 1: // Базовая информация
-        return (
-          <CharacterBasicInfo 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 2: // Выбор расы
+      case 0: // Выбор расы
         return (
           <CharacterRaceSelection 
             character={character} 
@@ -73,7 +63,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 3: // Выбор класса
+      case 1: // Выбор класса
         return (
           <CharacterClassSelection 
             character={character} 
@@ -82,7 +72,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 4: // Выбор уровня
+      case 2: // Выбор уровня
         return (
           <CharacterLevelSelection
             character={character}
@@ -92,7 +82,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             onLevelChange={onLevelChange}
           />
         );
-      case 5: // Характеристики
+      case 3: // Характеристики
         return (
           <CharacterAbilityScores 
             character={character} 
@@ -109,7 +99,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             rollsHistory={rollsHistory}
           />
         );
-      case 6: // Выбор подкласса
+      case 4: // Выбор подкласса
         return (
           <CharacterSubclassSelection 
             character={character} 
@@ -118,25 +108,11 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Предыстория
-        return (
-          <CharacterBackground 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 8: // Выбор языков
-        return (
-          <CharacterLanguagesSelection 
-            character={character as CharacterSheet}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 9: // Выбор заклинаний
+      case 5: // Выбор заклинаний
+        if (!isMagicClass) {
+          nextStep(); // Пропускаем этот шаг для немагических классов
+          return null;
+        }
         return (
           <CharacterSpellSelection
             character={character}
@@ -145,7 +121,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 10: // Выбор снаряжения
+      case 6: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -154,7 +130,34 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 11: // Просмотр и завершение
+      case 7: // Выбор языков
+        return (
+          <CharacterLanguagesSelection 
+            character={character as CharacterSheet}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 8: // Выбор личностных черт
+        return (
+          <CharacterBasicInfo 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 9: // Предыстория
+        return (
+          <CharacterBackground 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 10: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}
@@ -162,20 +165,23 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         );
       default:
-        return <div>Шаг не найден</div>;
+        return (
+          <div className="p-6 text-center">
+            <h3 className="text-xl font-bold mb-4">Шаг не найден</h3>
+            <p>Выбранный шаг создания персонажа недоступен. Пожалуйста, вернитесь к началу создания.</p>
+            <button 
+              onClick={() => prevStep()}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Вернуться
+            </button>
+          </div>
+        );
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <CreationStepDisplay 
-          steps={steps} 
-          currentStep={currentStep}
-          isMagicClass={isMagicClass}
-          characterClass={character.class}
-        />
-      </div>
       <div>
         {renderCreationStep()}
       </div>
