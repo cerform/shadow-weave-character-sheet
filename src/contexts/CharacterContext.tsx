@@ -46,7 +46,7 @@ export interface Character {
   userId?: string; 
   name: string;
   race: string;
-  class?: string;  // Опциональное поле для совместимости с session.ts
+  class: string;  // Изменено с необязательного (?) на обязательное
   subrace?: string; 
   className: string;
   level: number;
@@ -261,6 +261,11 @@ export function CharacterProvider({ children }: Props) {
           updatedAt: now
         } as Character;
         
+        // Убеждаемся, что поле class заполнено
+        if (!updatedChar.class && updatedChar.className) {
+          updatedChar.class = updatedChar.className;
+        }
+        
         // Сохраняем в Firebase Storage
         const saved = await characterService.saveCharacter(updatedChar);
         if (!saved) {
@@ -284,6 +289,11 @@ export function CharacterProvider({ children }: Props) {
           createdAt: now,
           updatedAt: now
         };
+        
+        // Убеждаемся, что поле class заполнено
+        if (!newChar.class && newChar.className) {
+          newChar.class = newChar.className;
+        }
         
         // Сохраняем в Firebase Storage
         const saved = await characterService.saveCharacter(newChar);

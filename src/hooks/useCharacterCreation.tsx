@@ -184,6 +184,6 @@ export const useCharacterCreation = () => {
     handleLevelChange,
     getTotalLevel,
     getAllClasses,
-    convertToCharacter // Используем импортированную функцию
+    convertToCharacter // При использовании этой функции теперь будет возвращаться Character с обязательным полем class
   };
 };

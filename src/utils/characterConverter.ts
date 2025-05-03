@@ -80,7 +80,7 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     race: sheet.race || "",
     subrace: sheet.subrace || "",
     className: sheet.class || "",
-    class: sheet.class || "",  // Добавляем для совместимости с типом из session.ts
+    class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: sheet.level || 1,
     abilities: {
       STR: sheet.abilities.strength || 10,
