@@ -12,7 +12,7 @@ import { PlayerHandbookTab } from './tabs/PlayerHandbookTab';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useDeviceType } from "@/hooks/use-mobile";
-import { Sword, Wand, BookOpen, User, GraduationCap, Book } from "lucide-react";
+import { Sword, Wand, BookOpen, User, GraduationCap, Book, ScrollText } from "lucide-react";
 import { useCharacter } from '@/contexts/CharacterContext';
 
 interface CharacterTabsProps {
@@ -58,7 +58,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             return (
               <div 
                 key={key} 
-                className="p-3 rounded-lg text-center border"
+                className="p-3 rounded-lg text-center border shadow-md"
                 style={{
                   backgroundColor: `${currentTheme.accent}15`,
                   borderColor: `${currentTheme.accent}40`,
@@ -105,11 +105,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'abilities' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'abilities' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'abilities' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'abilities' ? currentTheme.accent : 'transparent'
             }}
           >
-            <User className="size-3" />
-            {!isMobile && "Характерис."}
+            <User className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Характерис.</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -117,11 +118,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'combat' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'combat' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'combat' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'combat' ? currentTheme.accent : 'transparent'
             }}
           >
-            <Sword className="size-3" />
-            {!isMobile && "Атаки"}
+            <Sword className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Атаки</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -129,11 +131,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'spells' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'spells' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'spells' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'spells' ? currentTheme.accent : 'transparent'
             }}
           >
-            <Wand className="size-3" />
-            {!isMobile && "Заклинания"}
+            <Wand className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Заклинания</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -141,11 +144,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'features' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'features' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'features' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'features' ? currentTheme.accent : 'transparent'
             }}
           >
-            <GraduationCap className="size-3" />
-            {!isMobile && "Особенности"}
+            <GraduationCap className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Особенности</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -153,11 +157,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'background' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'background' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'background' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'background' ? currentTheme.accent : 'transparent'
             }}
           >
-            <User className="size-3" />
-            {!isMobile && "Предыстор."}
+            <ScrollText className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Предыстор.</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -165,11 +170,12 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1"
             style={{
               backgroundColor: activeTab === 'handbook' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'handbook' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'handbook' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'handbook' ? currentTheme.accent : 'transparent'
             }}
           >
-            <Book className="size-3" />
-            {!isMobile && "Справочник"}
+            <Book className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Справочник</span>}
           </TabsTrigger>
           
           <TabsTrigger 
@@ -177,15 +183,16 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             className="text-xs py-2 flex items-center justify-center gap-1 col-span-full mt-1"
             style={{
               backgroundColor: activeTab === 'playerhandbook' ? `${currentTheme.accent}30` : 'transparent',
-              boxShadow: activeTab === 'playerhandbook' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+              boxShadow: activeTab === 'playerhandbook' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none',
+              borderColor: activeTab === 'playerhandbook' ? currentTheme.accent : 'transparent'
             }}
           >
-            <BookOpen className="size-3" />
-            {!isMobile && "Руководство игрока"}
+            <BookOpen className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Руководство игрока</span>}
           </TabsTrigger>
         </TabsList>
         
-        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-460px)]' : 'h-[calc(100vh-440px)]'}`}>
+        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-460px)]' : 'h-[calc(100vh-440px)]'} overflow-y-auto`}>
           <TabsContent value="abilities" className="mt-0">
             <AbilitiesTab />
           </TabsContent>

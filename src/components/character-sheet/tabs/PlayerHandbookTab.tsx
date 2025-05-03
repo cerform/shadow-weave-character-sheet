@@ -27,7 +27,8 @@ export const PlayerHandbookTab = () => {
   
   const cardStyle = {
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderColor: currentTheme.accent
+    borderColor: currentTheme.accent,
+    boxShadow: `0 4px 6px -1px ${currentTheme.accent}20`
   };
   
   return (
@@ -54,27 +55,55 @@ export const PlayerHandbookTab = () => {
 
       <Tabs defaultValue={activeSection} onValueChange={setActiveSection}>
         <TabsList className={`w-full grid ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4'}`}>
-          <TabsTrigger value="basics" className="flex items-center justify-center gap-1">
-            <Book className="size-3" />
-            {!isMobile && "Основы"}
+          <TabsTrigger 
+            value="basics" 
+            className="flex items-center justify-center gap-1"
+            style={{
+              backgroundColor: activeSection === 'basics' ? `${currentTheme.accent}30` : 'transparent', 
+              boxShadow: activeSection === 'basics' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+            }}
+          >
+            <Book className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Основы</span>}
           </TabsTrigger>
-          <TabsTrigger value="classes" className="flex items-center justify-center gap-1">
-            <Sword className="size-3" />
-            {!isMobile && "Классы"}
+          <TabsTrigger 
+            value="classes" 
+            className="flex items-center justify-center gap-1"
+            style={{
+              backgroundColor: activeSection === 'classes' ? `${currentTheme.accent}30` : 'transparent', 
+              boxShadow: activeSection === 'classes' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+            }}
+          >
+            <Sword className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Классы</span>}
           </TabsTrigger>
-          <TabsTrigger value="races" className="flex items-center justify-center gap-1">
-            <Mountain className="size-3" />
-            {!isMobile && "Расы"}
+          <TabsTrigger 
+            value="races" 
+            className="flex items-center justify-center gap-1"
+            style={{
+              backgroundColor: activeSection === 'races' ? `${currentTheme.accent}30` : 'transparent', 
+              boxShadow: activeSection === 'races' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+            }}
+          >
+            <Mountain className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Расы</span>}
           </TabsTrigger>
-          <TabsTrigger value="rules" className="flex items-center justify-center gap-1">
-            <BookOpen className="size-3" />
-            {!isMobile && "Правила"}
+          <TabsTrigger 
+            value="rules" 
+            className="flex items-center justify-center gap-1"
+            style={{
+              backgroundColor: activeSection === 'rules' ? `${currentTheme.accent}30` : 'transparent', 
+              boxShadow: activeSection === 'rules' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
+            }}
+          >
+            <BookOpen className={`${isMobile ? "size-4" : "size-3"}`} />
+            {!isMobile && <span className="truncate">Правила</span>}
           </TabsTrigger>
         </TabsList>
 
-        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-380px)]' : 'h-[calc(100vh-360px)]'} mt-4`}>
-          <TabsContent value="basics" className="space-y-4">
-            <Card style={cardStyle}>
+        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-400px)]' : 'h-[calc(100vh-360px)]'} mt-4`}>
+          <TabsContent value="basics" className="space-y-4 px-1">
+            <Card style={cardStyle} className="rounded-lg border">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-2" style={textStyle}>Основы D&D 5e</h3>
                 <p className="mb-2 text-sm" style={textStyle}>
@@ -95,8 +124,8 @@ export const PlayerHandbookTab = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="classes" className="space-y-4">
-            <Card style={cardStyle}>
+          <TabsContent value="classes" className="space-y-4 px-1">
+            <Card style={cardStyle} className="rounded-lg border">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-2" style={textStyle}>Классы персонажей</h3>
                 <p className="mb-2 text-sm" style={textStyle}>
@@ -120,8 +149,8 @@ export const PlayerHandbookTab = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="races" className="space-y-4">
-            <Card style={cardStyle}>
+          <TabsContent value="races" className="space-y-4 px-1">
+            <Card style={cardStyle} className="rounded-lg border">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-2" style={textStyle}>Расы</h3>
                 <p className="mb-2 text-sm" style={textStyle}>
@@ -142,8 +171,8 @@ export const PlayerHandbookTab = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="rules" className="space-y-4">
-            <Card style={cardStyle}>
+          <TabsContent value="rules" className="space-y-4 px-1">
+            <Card style={cardStyle} className="rounded-lg border">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-2" style={textStyle}>Основные правила</h3>
                 <h4 className="font-medium mt-4 mb-2" style={textStyle}>Бой</h4>
