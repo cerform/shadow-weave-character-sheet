@@ -234,17 +234,17 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           </CardContent>
         </Card>
         
-        {/* Основная сетка с левой панелью и основным контентом */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          {/* Левая панель */}
-          <div className="md:col-span-1 space-y-4">
-            <StatsPanel character={character} />
-            
+        {/* Обновленная сетка с измененным расположением панелей */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-6">
+          {/* Левая панель с ресурсами вверху */}
+          <div className="md:col-span-3 space-y-4">
             <ResourcePanel 
               currentHp={character?.currentHp || 0}
               maxHp={character?.maxHp || 0}
               onHpChange={handleHpChange}
             />
+            
+            <StatsPanel character={character} />
             
             <LevelUpPanel />
             
@@ -330,19 +330,17 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             )}
           </div>
           
-          {/* Основной контент с вкладками и навыками */}
+          {/* Основной контент с вкладками */}
+          <div className="md:col-span-6">
+            <CharacterTabs 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+            />
+          </div>
+          
+          {/* Правая панель с навыками */}
           <div className="md:col-span-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-3">
-                <CharacterTabs 
-                  activeTab={activeTab} 
-                  setActiveTab={setActiveTab} 
-                />
-              </div>
-              <div className="md:col-span-1">
-                <SkillsPanel character={character} />
-              </div>
-            </div>
+            <SkillsPanel character={character} />
           </div>
         </div>
         

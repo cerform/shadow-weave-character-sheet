@@ -48,73 +48,7 @@ export const AbilitiesTab = () => {
 
   return (
     <div className="space-y-8 pb-6">
-      <Card 
-        className="border border-primary/30" 
-        style={{
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
-          boxShadow: `0 0 10px ${currentTheme.accent}40`
-        }}
-      >
-        <CardContent className="p-6">
-          <h3 
-            className="text-xl font-semibold mb-6" 
-            style={{ 
-              color: currentTheme.textColor || '#FFFFFF',
-              textShadow: `0 0 2px rgba(0,0,0,0.8)` 
-            }}
-          >
-            Характеристики персонажа
-          </h3>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {Object.entries(abilities).map(([key, value]) => {
-              const abilityKey = key as keyof typeof abilityNames;
-              const modifier = getModifier(value);
-              const isPositive = !modifier.includes('-');
-              
-              return (
-                <div 
-                  key={key} 
-                  className="p-4 rounded-lg text-center border"
-                  style={{
-                    backgroundColor: `${currentTheme.accent}15`,
-                    borderColor: `${currentTheme.accent}40`,
-                    boxShadow: `inset 0 0 8px ${currentTheme.accent}30`
-                  }}
-                >
-                  <div 
-                    className="text-lg font-medium mb-1"
-                    style={{ 
-                      color: currentTheme.textColor,
-                      textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}70`
-                    }}
-                  >
-                    {abilityNames[abilityKey]}
-                  </div>
-                  <div 
-                    className="text-4xl font-bold my-1"
-                    style={{ 
-                      color: currentTheme.textColor,
-                      textShadow: `0 0 5px rgba(0,0,0,0.8), 0 0 8px ${currentTheme.accent}60`
-                    }}
-                  >
-                    {value}
-                  </div>
-                  <div 
-                    className="text-md font-bold"
-                    style={{ 
-                      color: isPositive ? '#4ade80' : '#f87171',
-                      textShadow: `0 0 5px rgba(0,0,0,0.8), 0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
-                    }}
-                  >
-                    {modifier}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Удален блок "Характеристики персонажа" по просьбе пользователя */}
       
       <Card 
         className="border border-primary/30" 
@@ -174,6 +108,40 @@ export const AbilitiesTab = () => {
                 </div>
               );
             })}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Добавим здесь дополнительную информацию, чтобы заполнить пространство */}
+      <Card 
+        className="border border-primary/30" 
+        style={{
+          backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
+          boxShadow: `0 0 10px ${currentTheme.accent}40`
+        }}
+      >
+        <CardContent className="p-6">
+          <h4 
+            className="text-xl font-semibold mb-6"
+            style={{ 
+              color: currentTheme.textColor || '#FFFFFF',
+              textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 3px ${currentTheme.accent}70`
+            }}
+          >
+            Бонус мастерства
+          </h4>
+          <div className="flex justify-center items-center">
+            <div 
+              className="text-4xl font-bold py-4 px-8 rounded-full"
+              style={{ 
+                backgroundColor: `${currentTheme.accent}20`,
+                color: currentTheme.textColor,
+                textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}80`,
+                boxShadow: `inset 0 0 15px ${currentTheme.accent}40`
+              }}
+            >
+              +{proficiencyBonus}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -13,6 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useDeviceType } from "@/hooks/use-mobile";
 import { Sword, Wand, BookOpen, User, GraduationCap, Book } from "lucide-react";
+import { useCharacter } from '@/contexts/CharacterContext';
 
 interface CharacterTabsProps {
   activeTab: string;
@@ -25,6 +26,23 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   const currentTheme = themes[themeKey] || themes.default;
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
+  const { character } = useCharacter();
+  
+  // Расчет модификатора из значения характеристики
+  const getModifier = (score: number) => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
+
+  // Словарь русских названий характеристик
+  const abilityNames = {
+    STR: "Сила",
+    DEX: "Ловкость",
+    CON: "Телосложение",
+    INT: "Интеллект",
+    WIS: "Мудрость",
+    CHA: "Харизма"
+  };
   
   return (
     <Card 
@@ -35,6 +53,57 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
         borderColor: `${currentTheme.accent}30`
       }}
     >
+      {/* Добавим блок с характеристиками сверху */}
+      <div className="mb-6 pb-4 border-b" style={{ borderColor: `${currentTheme.accent}30` }}>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {Object.entries(character?.abilities || {}).map(([key, value]) => {
+            const abilityKey = key as keyof typeof abilityNames;
+            const modifier = getModifier(value);
+            const isPositive = !modifier.includes('-');
+            
+            return (
+              <div 
+                key={key} 
+                className="p-3 rounded-lg text-center border"
+                style={{
+                  backgroundColor: `${currentTheme.accent}15`,
+                  borderColor: `${currentTheme.accent}40`,
+                  boxShadow: `inset 0 0 8px ${currentTheme.accent}30`
+                }}
+              >
+                <div 
+                  className="text-sm font-medium mb-1"
+                  style={{ 
+                    color: currentTheme.textColor,
+                    textShadow: `0 0 2px rgba(0,0,0,0.8)` 
+                  }}
+                >
+                  {abilityNames[abilityKey]}
+                </div>
+                <div 
+                  className="text-2xl font-bold my-1"
+                  style={{ 
+                    color: currentTheme.textColor,
+                    textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}60`
+                  }}
+                >
+                  {value}
+                </div>
+                <div 
+                  className="text-md font-bold"
+                  style={{ 
+                    color: isPositive ? '#4ade80' : '#f87171',
+                    textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
+                  }}
+                >
+                  {modifier}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-6'} mb-6 gap-2`}>
           <TabsTrigger 
@@ -122,7 +191,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           </TabsTrigger>
         </TabsList>
         
-        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-340px)]' : 'h-[calc(100vh-320px)]'}`}>
+        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-460px)]' : 'h-[calc(100vh-440px)]'}`}>
           <TabsContent value="abilities" className="mt-0">
             <AbilitiesTab />
           </TabsContent>
