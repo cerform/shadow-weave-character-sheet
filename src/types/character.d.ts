@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -70,6 +71,7 @@ export interface CharacterSheet {
   inspiration?: boolean;
   maxHp?: number;  // Добавляем максимальные хиты
   currentHp?: number;  // Добавляем текущие хиты
+  abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
 }
 
 // Интерфейс для подклассов персонажей
@@ -138,3 +140,11 @@ export interface MulticlassRequirements {
     [ability: string]: number;  // Например, { "strength": 13, "charisma": 13 }
   };
 }
+
+// Константы для ограничений характеристик в зависимости от уровня
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,       // Базовое максимальное значение характеристики
+  EPIC_CAP: 22,       // Для персонажей 10+ уровня
+  LEGENDARY_CAP: 24,  // Для персонажей 16+ уровня
+  MYTHIC_CAP: 30      // Абсолютный максимум (для особых случаев)
+};

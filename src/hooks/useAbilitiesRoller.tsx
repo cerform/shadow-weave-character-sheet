@@ -1,5 +1,6 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 
 export type AbilityMethod = 'pointbuy' | 'standard' | 'roll' | 'manual';
 
@@ -13,6 +14,30 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
   
   // История бросков
   const [rollsHistory, setRollsHistory] = useState<{ ability: string; rolls: number[]; total: number }[]>([]);
+  
+  // Максимальное значение характеристики в зависимости от уровня
+  const [maxAbilityScore, setMaxAbilityScore] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
+  
+  // Обновляем максимальное значение характеристик при изменении уровня
+  useEffect(() => {
+    if (level >= 16) {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.LEGENDARY_CAP); // 24 для персонажей 16+ уровня
+    } else if (level >= 10) {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.EPIC_CAP);     // 22 для персонажей 10+ уровня
+    } else {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.BASE_CAP);     // 20 для персонажей до 10 уровня
+    }
+    
+    // Регулируем очки для point buy в зависимости от уровня
+    if (method === 'pointbuy') {
+      let basePoints = 27;
+      // Добавляем дополнительные очки за высокие уровни
+      if (level >= 5) basePoints += 3;
+      if (level >= 10) basePoints += 5;
+      if (level >= 15) basePoints += 7;
+      setAbilityScorePoints(basePoints);
+    }
+  }, [level, method]);
 
   // Функция для броска 4d6, отбрасывая наименьшее значение
   const roll4d6DropLowest = useCallback((): { rolls: number[]; total: number } => {
@@ -85,8 +110,13 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
 
   // Сброс доступных очков для метода pointbuy
   const resetPoints = useCallback(() => {
-    setAbilityScorePoints(27);
-  }, []);
+    let basePoints = 27;
+    // Добавляем дополнительные очки за высокие уровни
+    if (level >= 5) basePoints += 3;
+    if (level >= 10) basePoints += 5;
+    if (level >= 15) basePoints += 7;
+    setAbilityScorePoints(basePoints);
+  }, [level]);
 
   // Обновляем очки при изменении метода
   const updateAbilityPoints = useCallback(() => {
@@ -99,6 +129,7 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
     diceResults,
     abilityScorePoints,
     rollsHistory,
+    maxAbilityScore,
     rollAllAbilities,
     rollSingleAbility,
     resetPoints,

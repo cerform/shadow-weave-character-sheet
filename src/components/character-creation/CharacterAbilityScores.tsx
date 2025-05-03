@@ -6,7 +6,7 @@ import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
-import { CharacterSheet } from "@/types/character";
+import { CharacterSheet, ABILITY_SCORE_CAPS } from "@/types/character";
 
 interface CharacterAbilityScoresProps {
   character: CharacterSheet;
@@ -21,6 +21,7 @@ interface CharacterAbilityScoresProps {
   rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
   abilityScorePoints?: number;
   rollsHistory?: { ability: string, rolls: number[], total: number }[];
+  maxAbilityScore?: number;
 }
 
 const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
@@ -35,7 +36,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   rollAllAbilities,
   rollSingleAbility,
   abilityScorePoints = 27,
-  rollsHistory = []
+  rollsHistory = [],
+  maxAbilityScore
 }) => {
   // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
   const [stats, setStats] = useState({
@@ -46,6 +48,20 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     wisdom: character?.abilities?.wisdom || character?.stats?.wisdom || 10,
     charisma: character?.abilities?.charisma || character?.stats?.charisma || 10,
   });
+  
+  // Определяем максимальное значение для характеристик на основе уровня персонажа
+  const [maxStatValue, setMaxStatValue] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
+  
+  useEffect(() => {
+    // Устанавливаем максимальное значение в зависимости от уровня
+    if (character.level >= 16) {
+      setMaxStatValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
+    } else if (character.level >= 10) {
+      setMaxStatValue(ABILITY_SCORE_CAPS.EPIC_CAP);
+    } else {
+      setMaxStatValue(ABILITY_SCORE_CAPS.BASE_CAP);
+    }
+  }, [character.level]);
 
   const [pointsLeft, setPointsLeft] = useState(abilityScorePoints);
   const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
@@ -99,7 +115,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
 
   // Обработчики для Point Buy
   const incrementStat = (stat: keyof typeof stats) => {
-    if (stats[stat] < 15 && pointsLeft >= getPointCost(stats[stat] + 1)) {
+    if (stats[stat] < Math.min(15, maxStatValue) && pointsLeft >= getPointCost(stats[stat] + 1)) {
       const newPointsLeft = pointsLeft - getPointCost(stats[stat] + 1);
       setPointsLeft(newPointsLeft);
       setStats({ ...stats, [stat]: stats[stat] + 1 });
@@ -154,7 +170,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     // Сохраняем в оба поля abilities и stats для совместимости
     updateCharacter({ 
       abilities: stats,
-      stats: stats 
+      stats: stats,
+      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? abilityScorePoints - pointsLeft : undefined
     });
     nextStep();
   };
@@ -164,7 +181,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     if (abilitiesMethod === "standard") return true;
     if (abilitiesMethod === "pointbuy") return pointsLeft >= 0;
     if (abilitiesMethod === "roll") return Object.values(stats).every(val => val >= 3);
-    if (abilitiesMethod === "manual") return Object.values(stats).every(val => val >= 1 && val <= 30);
+    if (abilitiesMethod === "manual") return Object.values(stats).every(val => val >= 1 && val <= maxStatValue);
     return false;
   };
 
@@ -187,6 +204,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
             getModifier={getModifier}
             getPointCost={getPointCost}
             abilityScorePoints={abilityScorePoints}
+            maxAbilityScore={maxStatValue}
           />
         )}
         
@@ -214,6 +232,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
             stats={stats}
             updateStat={updateStat}
             getModifier={getModifier}
+            maxAbilityScore={maxStatValue}
+            level={character.level}
           />
         )}
       </div>

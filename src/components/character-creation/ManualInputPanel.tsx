@@ -9,12 +9,16 @@ interface ManualInputPanelProps {
   stats: {[key: string]: number};
   updateStat: (stat: string, value: number) => void;
   getModifier: (score: number) => string;
+  maxAbilityScore?: number;
+  level?: number;
 }
 
 export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   stats,
   updateStat,
-  getModifier
+  getModifier,
+  maxAbilityScore = 20,
+  level = 1
 }) => {
   const { theme } = useTheme();
   // Добавляем защиту от undefined
@@ -23,7 +27,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   
   const handleInputChange = (stat: string, value: string) => {
     const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 1 && numValue <= 30) {
+    if (!isNaN(numValue) && numValue >= 1 && numValue <= maxAbilityScore) {
       updateStat(stat, numValue);
     }
   };
@@ -31,7 +35,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   const adjustStat = (stat: string, amount: number) => {
     const currentValue = stats[stat as keyof typeof stats];
     const newValue = currentValue + amount;
-    if (newValue >= 1 && newValue <= 30) {
+    if (newValue >= 1 && newValue <= maxAbilityScore) {
       updateStat(stat, newValue);
     }
   };
@@ -39,7 +43,9 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   return (
     <div>
       <p className="mb-4 text-muted-foreground">
-        Введите значения характеристик вручную (от 1 до 30).
+        Введите значения характеристик вручную 
+        (от 1 до {maxAbilityScore}
+        {maxAbilityScore > 20 ? ` для вашего уровня ${level}` : ''}).
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -67,7 +73,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                   value={value}
                   onChange={(e) => handleInputChange(key, e.target.value)}
                   min={1}
-                  max={30}
+                  max={maxAbilityScore}
                   className="w-16 text-center"
                 />
                 
@@ -75,7 +81,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={() => adjustStat(key, 1)}
-                  disabled={stats[stat] >= 30}
+                  disabled={stats[stat] >= maxAbilityScore}
                 >
                   +
                 </Button>

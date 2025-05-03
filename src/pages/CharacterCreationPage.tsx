@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen } from "lucide-react";
@@ -19,6 +19,7 @@ import ThemeSelector from "@/components/ThemeSelector";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
+import { ABILITY_SCORE_CAPS } from "@/types/character";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,20 @@ const CharacterCreationPage = () => {
     characterClass: character.class,
     character: character
   });
+
+  // Определяем максимальное значение для характеристик на основе уровня
+  const [maxAbilityScore, setMaxAbilityScore] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
+  
+  // Обновляем максимальное значение при изменении уровня
+  useEffect(() => {
+    if (character.level >= 16) {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
+    } else if (character.level >= 10) {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.EPIC_CAP);
+    } else {
+      setMaxAbilityScore(ABILITY_SCORE_CAPS.BASE_CAP);
+    }
+  }, [character.level]);
 
   // Тема для отображения
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -174,6 +189,7 @@ const CharacterCreationPage = () => {
           isMagicClass={isMagicClass()}
           rollsHistory={rollsHistory}
           onLevelChange={handleLevelChange}
+          maxAbilityScore={maxAbilityScore}
         />
       </div>
     </div>

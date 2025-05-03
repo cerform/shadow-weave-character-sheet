@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
 import HitPointsRoller from './HitPointsRoller';
 import LevelBasedFeatures from './LevelBasedFeatures';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
@@ -25,12 +26,24 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   onLevelChange
 }) => {
   const [level, setLevel] = useState(character.level || 1);
+  const [statCapAlert, setStatCapAlert] = useState<string | null>(null);
 
   // Рассчитываем модификатор Телосложения
   const getConModifier = (): number => {
     if (!character.abilities) return 0;
     return Math.floor((character.abilities.constitution - 10) / 2);
   };
+
+  // Обновляем уведомление о влиянии уровня на характеристики
+  useEffect(() => {
+    if (level >= 16) {
+      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${ABILITY_SCORE_CAPS.LEGENDARY_CAP}.`);
+    } else if (level >= 10) {
+      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${ABILITY_SCORE_CAPS.EPIC_CAP}.`);
+    } else {
+      setStatCapAlert(null);
+    }
+  }, [level]);
 
   // Обработчик изменения уровня через слайдер
   const handleLevelChange = (newValue: number[]) => {
@@ -118,6 +131,25 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
               <span className="font-bold text-3xl">{level}</span>
               <span className="text-xl"> уровень</span>
             </div>
+            
+            {statCapAlert && (
+              <Alert>
+                <AlertTitle>Влияние на характеристики</AlertTitle>
+                <AlertDescription>{statCapAlert}</AlertDescription>
+              </Alert>
+            )}
+            
+            {level >= 5 && (
+              <Alert variant="default" className="bg-primary/10 border-primary/30">
+                <AlertTitle>Дополнительные очки характеристик</AlertTitle>
+                <AlertDescription>
+                  При использовании метода Point Buy вам доступны дополнительные очки:
+                  {level >= 15 && ' +15 очков (5 уровень: +3, 10 уровень: +5, 15 уровень: +7)'}
+                  {level >= 10 && level < 15 && ' +8 очков (5 уровень: +3, 10 уровень: +5)'}
+                  {level >= 5 && level < 10 && ' +3 очка (5 уровень)'}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>

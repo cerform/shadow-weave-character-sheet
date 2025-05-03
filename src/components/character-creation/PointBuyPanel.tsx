@@ -12,6 +12,7 @@ interface PointBuyPanelProps {
   getModifier: (score: number) => string;
   getPointCost?: (value: number) => number;
   abilityScorePoints: number;
+  maxAbilityScore?: number;
 }
 
 export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
@@ -21,7 +22,8 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
   decrementStat,
   getModifier,
   getPointCost = () => 1,
-  abilityScorePoints
+  abilityScorePoints,
+  maxAbilityScore = 20
 }) => {
   const { theme } = useTheme();
   // Добавляем защиту от undefined
@@ -35,7 +37,9 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
           Осталось очков: <span className="font-bold">{pointsLeft}</span>
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          Распределите {abilityScorePoints} очков между характеристиками. Значение от 8 до 15.
+          Распределите {abilityScorePoints} очков между характеристиками. 
+          Значение от 8 до {Math.min(15, maxAbilityScore)}
+          {maxAbilityScore > 20 && ` (максимум для вашего уровня: ${maxAbilityScore})`}.
         </p>
       </div>
       
@@ -61,7 +65,7 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
                 </Button>
                 <Button
                   onClick={() => incrementStat(key)}
-                  disabled={value >= 15 || pointsLeft < getPointCost(value + 1)}
+                  disabled={value >= Math.min(15, maxAbilityScore) || pointsLeft < getPointCost(value + 1)}
                   size="sm"
                 >
                   +
