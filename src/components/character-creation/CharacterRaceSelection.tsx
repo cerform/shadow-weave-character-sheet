@@ -1,19 +1,31 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
-import { useCharacterCreation } from "@/hooks/useCharacterCreation";
 import { races } from "@/data/races";
+import { CharacterSheet } from "@/types/character";
 import { 
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip";
+import NavigationButtons from "./NavigationButtons";
 
-const CharacterRaceSelection = () => {
-  const { character, updateCharacter } = useCharacterCreation();
+interface CharacterRaceSelectionProps {
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+}
+
+const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep
+}) => {
   const [selectedRace, setSelectedRace] = useState(character.race || "");
   const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || "");
   const [expandedRace, setExpandedRace] = useState<string | null>(null);
@@ -36,6 +48,12 @@ const CharacterRaceSelection = () => {
       setExpandedRace(race);
     }
   };
+
+  const handleNext = () => {
+    if (selectedRace) {
+      nextStep();
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -44,7 +62,7 @@ const CharacterRaceSelection = () => {
         <p className="text-muted-foreground">Раса определяет внешний вид персонажа и дает врожденные способности.</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {races.map((race) => {
           const isSelected = selectedRace === race.name;
           // Проверяем, существуют ли подрасы, используя subRaces или subraces
@@ -115,6 +133,14 @@ const CharacterRaceSelection = () => {
           );
         })}
       </div>
+      
+      <NavigationButtons
+        allowNext={!!selectedRace}
+        nextStep={handleNext}
+        prevStep={prevStep}
+        isFirstStep={true}
+        disableNext={!selectedRace}
+      />
     </div>
   );
 };

@@ -3,10 +3,11 @@ import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CharacterSheet } from "@/types/character";
 
 interface CharacterLevelSelectionProps {
-  character: any;
-  updateCharacter: (updates: any) => void;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
   nextStep: () => void;
   prevStep: () => void;
   onLevelChange?: (level: number) => void;

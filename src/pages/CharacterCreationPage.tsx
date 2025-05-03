@@ -140,6 +140,15 @@ const CharacterCreationPage = () => {
         </div>
       </div>
 
+      <div className="mb-8">
+        <CreationStepDisplay 
+          steps={steps} 
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          isMagicClass={isMagicClass()}
+        />
+      </div>
+
       {/* Основная область контента с шагами создания персонажа */}
       <div 
         className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"

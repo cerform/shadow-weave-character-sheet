@@ -1,4 +1,3 @@
-
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
@@ -51,15 +50,20 @@ export const getSpellsByLevel = (level: number): CharacterSpell[] => {
 
 // Get spells by class
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  if (!className) return [];
+  
+  // Исправленная строка: проверка на существование className перед вызовом toLowerCase
+  const normalizedClassName = className ? className.toLowerCase() : '';
+  
   return spells.filter((spell) => {
     if (!spell || !spell.classes) return false;
     
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(
-        (c) => typeof c === 'string' && c.toLowerCase() === className.toLowerCase()
+        (c) => typeof c === 'string' && c.toLowerCase() === normalizedClassName
       );
     } else if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase() === className.toLowerCase();
+      return spell.classes.toLowerCase() === normalizedClassName;
     }
     return false;
   });

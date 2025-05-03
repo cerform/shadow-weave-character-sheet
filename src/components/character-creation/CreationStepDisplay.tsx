@@ -1,91 +1,84 @@
 
-import React from "react";
-import { steps } from "@/config/characterCreationSteps";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import React from 'react';
+import { Check, CircleSlash } from 'lucide-react';
 
-interface CreationStepDisplayProps {
-  steps: typeof steps;
-  currentStep: number;
-  isMagicClass: boolean;
-  characterClass?: string;
+interface Step {
+  id: number;
+  name: string;
+  description: string;
+  isOptional?: boolean;
+  isMagicOnly?: boolean;
 }
 
-const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
-  steps,
-  currentStep,
-  isMagicClass,
-  characterClass,
-}) => {
-  const { theme } = useTheme();
-  
-  // Get theme colors for styling
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+interface CreationStepDisplayProps {
+  steps: Step[];
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  isMagicClass?: boolean;
+}
 
-  // Фильтруем шаги для немагических классов
-  const visibleSteps = steps.filter((_, index) => 
-    !(index === 5 && !isMagicClass) // Скрываем шаг заклинаний для немагических классов
+const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({ 
+  steps, 
+  currentStep, 
+  setCurrentStep,
+  isMagicClass = false
+}) => {
+  const handleStepClick = (stepId: number) => {
+    // Не позволяем переходить к шагу для магических классов, если выбран немагический класс
+    if (steps[stepId]?.isMagicOnly && !isMagicClass) {
+      return;
+    }
+    
+    setCurrentStep(stepId);
+  };
+  
+  // Фильтруем шаги, чтобы не показывать шаг для магических классов, если выбран немагический класс
+  const filteredSteps = steps.filter(step => 
+    !step.isMagicOnly || isMagicClass
   );
 
   return (
-    <div className="mb-8">
-      <div className="flex flex-wrap justify-center gap-2 relative">
-        {/* Progress bar */}
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-medium">Прогресс создания</h2>
+        <span className="text-sm text-muted-foreground">
+          Шаг {currentStep + 1} из {filteredSteps.length}
+        </span>
+      </div>
+      
+      {/* Прогресс-бар */}
+      <div className="w-full bg-secondary h-2 rounded-full mb-4 overflow-hidden">
         <div 
-          className="absolute h-1 top-4 left-0 right-0 bg-muted/50 -z-10"
-          style={{ width: "100%" }}
+          className="bg-primary h-full rounded-full transition-all duration-300"
+          style={{ width: `${((currentStep + 1) / filteredSteps.length) * 100}%` }}
         ></div>
-        <div 
-          className="absolute h-1 top-4 left-0 bg-primary transition-all duration-500 -z-10"
-          style={{ 
-            width: `${(currentStep / (visibleSteps.length - 1)) * 100}%`,
-            backgroundColor: currentTheme.accent
-          }}
-        ></div>
-        
-        {/* Step circles */}
-        {visibleSteps.map((step, index) => {
-          // Вычисляем реальный индекс шага в общем массиве шагов
-          const realStepIndex = steps.findIndex(s => s.id === step.id);
-          const isActive = currentStep === realStepIndex;
-          const isPast = currentStep > realStepIndex;
-          const isSpecialStep = realStepIndex === 4; // Subclass step that changes based on class
-
+      </div>
+      
+      {/* Шаги с возможностью перехода */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
+        {filteredSteps.map((step, index) => {
+          const isPast = index < currentStep;
+          const isCurrent = index === currentStep;
+          const isFuture = index > currentStep;
+          
           return (
-            <div
+            <button
               key={step.id}
-              className={`flex flex-col items-center transition-all duration-300 ${
-                isActive ? "scale-110" : ""
-              }`}
+              className={`p-2 rounded-md text-center text-xs sm:text-sm transition-all cursor-pointer
+                ${isCurrent ? 'bg-primary text-primary-foreground font-medium' : ''}
+                ${isPast ? 'bg-primary/20 text-primary' : ''}
+                ${isFuture ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80' : ''}
+                ${step.isOptional ? 'opacity-70' : ''}
+              `}
+              onClick={() => handleStepClick(step.id)}
+              title={step.description}
             >
-              <div
-                className={`rounded-full h-8 w-8 flex items-center justify-center z-10 font-medium transition-all duration-300
-                  ${isActive ? "animate-pulse shadow-glow" : ""}
-                  ${isPast ? "bg-primary" : isActive ? "bg-primary border-2" : "bg-background border"}`}
-                style={{
-                  backgroundColor: isPast ? currentTheme.accent : isActive ? `${currentTheme.accent}30` : '',
-                  borderColor: isActive || isPast ? currentTheme.accent : '',
-                  boxShadow: isActive ? `0 0 8px ${currentTheme.accent}` : 'none'
-                }}
-              >
-                <span className={isPast ? "text-primary-foreground" : ""}>
-                  {index + 1}
-                </span>
+              <div className="flex items-center justify-center gap-1">
+                {isPast && <Check className="w-3 h-3" />}
+                {step.isOptional && <CircleSlash className="w-3 h-3" />}
+                <span>{step.name}</span>
               </div>
-              
-              <div 
-                className={`text-xs mt-1 font-medium text-center max-w-20 transition-all duration-300
-                  ${isActive ? "text-primary underline" : "text-muted-foreground"}`}
-                style={{
-                  color: isActive ? currentTheme.accent : ''
-                }}
-              >
-                {isSpecialStep && characterClass
-                  ? `Выбор ${characterClass}`
-                  : step.name}
-              </div>
-            </div>
+            </button>
           );
         })}
       </div>

@@ -18,12 +18,12 @@ export interface CharacterSpell {
   material?: boolean;
 }
 
-// Adding the CharacterSheet interface for use in useCharacterCreation and the PDF generator
+// Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
-  userId?: string; // Добавляем поле для идентификатора пользователя
-  id?: string; // Добавляем поле для идентификатора персонажа
+  userId?: string; 
+  id?: string; 
   name: string;
-  gender?: string; // Добавляем поле для пола персонажа
+  gender: string; 
   race: string;
   subrace?: string; 
   class: string;
@@ -39,7 +39,7 @@ export interface CharacterSheet {
     wisdom: number;
     charisma: number;
   };
-  stats?: {  // Добавляем опциональное поле stats для совместимости
+  stats?: {  // Поле stats для совместимости
     strength: number;
     dexterity: number;
     constitution: number;
