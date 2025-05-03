@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character';
+import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
