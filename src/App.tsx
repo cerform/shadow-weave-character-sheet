@@ -25,6 +25,7 @@ import JoinSessionPage from './pages/JoinSessionPage'
 import CreateSessionPage from './pages/CreateSessionPage'
 import PlayerSessionPage from './pages/PlayerSessionPage'
 import NotFound from './pages/NotFound'
+import Index from './pages/Index'
 
 // Добавляем компонент с плавающей кнопкой кубиков
 import AppDiceButton from './AppDiceButton'
@@ -40,11 +41,14 @@ function App() {
                 <Router>
                   <div className="app-container">
                     <Routes>
-                      <Route path="/" element={<Home />} />
+                      <Route path="/" element={<Index />} />
+                      <Route path="/home" element={<Home />} />
                       <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                      <Route path="/dm" element={<DMDashboardPage />} />
                       <Route path="/create-character" element={<CharacterCreationPage />} />
                       <Route path="/character-creation" element={<CharacterCreationPage />} />
                       <Route path="/character-sheet" element={<CharacterSheetPage />} />
+                      <Route path="/sheet" element={<CharacterSheetPage />} />
                       <Route path="/handbook" element={<PlayerHandbookPage />} />
                       <Route path="/spellbook" element={<SpellbookPage />} />
                       <Route path="/auth" element={<AuthPage />} />
@@ -52,6 +56,7 @@ function App() {
                       <Route path="/play-battle" element={<PlayBattlePage />} />
                       <Route path="/session/dm" element={<DMSessionPage />} />
                       <Route path="/session/join" element={<JoinSessionPage />} />
+                      <Route path="/join" element={<JoinSessionPage />} />
                       <Route path="/session/create" element={<CreateSessionPage />} />
                       <Route path="/session/player" element={<PlayerSessionPage />} />
                       <Route path="*" element={<NotFound />} />
