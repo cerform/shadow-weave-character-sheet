@@ -24,7 +24,9 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
   abilityScorePoints
 }) => {
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   return (
     <div>
