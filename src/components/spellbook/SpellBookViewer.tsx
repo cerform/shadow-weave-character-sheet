@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -168,9 +169,9 @@ const SpellBookViewer = () => {
       result = result.filter(spell => {
         if (typeof spell.classes === 'string') {
           // Проверяем, содержит ли строка классов хотя бы один из выбранных классов
-          const spellClassesLower = spell.classes.toLowerCase();
+          const spellClassesStr = spell.classes as string;
           return activeClass.some(cls => 
-            spellClassesLower.includes(cls.toLowerCase())
+            spellClassesStr.toLowerCase().includes(cls.toLowerCase())
           );
         } else if (Array.isArray(spell.classes)) {
           // Проверяем, содержит ли массив классов хотя бы один из выбранных классов
