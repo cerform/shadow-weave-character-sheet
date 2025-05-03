@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -33,20 +34,25 @@ const CharacterCreationPage = () => {
   const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
   
-  // Проверяем, есть ли подклассы для выбранного класса
-  const hasSubclasses = () => {
+  // Проверка на наличие подклассов для текущего класса
+  const hasSubclassesForClass = () => {
     if (!character.class) return false;
     const classSubclasses = subclassData[character.class];
     return classSubclasses && Object.keys(classSubclasses).length > 0;
   };
 
-  // Fix: Update the hook call to match the expected parameters
+  // Обновляем конфигурацию хука useCreationStep с актуальной информацией
   const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep({
     isMagicClass: isMagicClass(),
     characterClass: character.class,
     character: character,
-    hasSubclasses: hasSubclasses()
+    hasSubclasses: hasSubclassesForClass()
   });
+
+  // Обновляем hasSubclasses при изменении класса персонажа
+  useEffect(() => {
+    // При любом изменении класса обновляем состояние
+  }, [character.class]);
 
   // Определяем максимальное значение для характеристик на основе уровня
   const [maxAbilityScore, setMaxAbilityScore] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);

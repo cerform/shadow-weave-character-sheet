@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { classes } from "@/data/classes";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
@@ -9,8 +9,6 @@ import {
   SelectionCardGrid 
 } from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
-import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { subclassData } from "@/data/subclasses";
 
@@ -41,7 +39,10 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
   const handleNext = () => {
     if (selectedClass) {
       // Сохраняем текущий класс и сбрасываем подкласс (если был)
-      const updates: any = { class: selectedClass, subclass: undefined };
+      const updates: any = { 
+        class: selectedClass, 
+        subclass: undefined 
+      };
       updateCharacter(updates);
       
       // Показываем подходящую подсказку в зависимости от наличия подклассов
