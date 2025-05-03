@@ -47,7 +47,7 @@ export const AbilitiesTab = () => {
   };
 
   return (
-    <div className="space-y-12 pb-6 mt-12">
+    <div className="space-y-12 pb-6">
       <Card 
         className="border border-primary/30" 
         style={{
@@ -81,18 +81,24 @@ export const AbilitiesTab = () => {
                 >
                   <div 
                     className="text-lg font-medium mb-1"
-                    style={{ color: currentTheme.textColor }}
+                    style={{ 
+                      color: currentTheme.textColor,
+                      textShadow: `0 0 3px ${currentTheme.accent}70`
+                    }}
                   >
                     {abilityNames[abilityKey]}
                   </div>
                   <div 
                     className="text-4xl font-bold my-1"
-                    style={{ color: currentTheme.textColor }}
+                    style={{ 
+                      color: currentTheme.textColor,
+                      textShadow: `0 0 5px ${currentTheme.accent}60`
+                    }}
                   >
                     {value}
                   </div>
                   <div 
-                    className="text-md"
+                    className="text-md font-bold"
                     style={{ 
                       color: isPositive ? '#4ade80' : '#f87171',
                       textShadow: `0 0 5px ${isPositive ? '#4ade8060' : '#f8717160'}`
@@ -117,14 +123,18 @@ export const AbilitiesTab = () => {
         <CardContent className="p-6">
           <h4 
             className="text-xl font-semibold mb-6"
-            style={{ color: currentTheme.textColor || '#FFFFFF' }}
+            style={{ 
+              color: currentTheme.textColor || '#FFFFFF',
+              textShadow: `0 0 3px ${currentTheme.accent}70`
+            }}
           >
             Спасброски
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(abilities).map(([key, value]) => {
               const abilityKey = key as keyof typeof abilityNames;
-              const modifier = getModifier(getSavingThrowMod(key, value));
+              const modValue = getSavingThrowMod(key, value);
+              const modifier = modValue >= 0 ? `+${modValue}` : `${modValue}`;
               const isProficient = character?.savingThrowProficiencies?.[key] || false;
               
               return (
@@ -150,10 +160,10 @@ export const AbilitiesTab = () => {
                     }
                   </span>
                   <span 
-                    className="text-lg"
+                    className="text-lg font-bold"
                     style={{ 
-                      color: modifier.includes('-') ? '#f87171' : '#4ade80',
-                      textShadow: `0 0 5px ${modifier.includes('-') ? '#f8717160' : '#4ade8060'}`
+                      color: modValue < 0 ? '#f87171' : '#4ade80',
+                      textShadow: `0 0 5px ${modValue < 0 ? '#f8717160' : '#4ade8060'}`
                     }}
                   >
                     {modifier}

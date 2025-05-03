@@ -66,7 +66,7 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
                 {rus}
               </div>
               <div 
-                className="col-span-1 text-center py-1 rounded" 
+                className="col-span-1 text-center py-1 rounded font-semibold" 
                 style={{ 
                   backgroundColor: `${currentTheme.accent}20`,
                   color: currentTheme.textColor || 'white',
@@ -76,7 +76,7 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
                 {score}
               </div>
               <div 
-                className={`col-span-2 text-center py-1 rounded`}
+                className={`col-span-2 text-center py-1 rounded font-bold`}
                 style={{ 
                   backgroundColor: isPositiveModifier ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
                   boxShadow: `inset 0 0 5px ${isPositiveModifier ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
@@ -108,7 +108,7 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
             >
               <div 
                 className="text-xs mb-1" 
-                style={{ color: currentTheme.mutedTextColor || 'rgba(255, 255, 255, 0.7)' }}
+                style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
               >
                 Класс брони
               </div>
@@ -131,7 +131,7 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
             >
               <div 
                 className="text-xs mb-1" 
-                style={{ color: currentTheme.mutedTextColor || 'rgba(255, 255, 255, 0.7)' }}
+                style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
               >
                 Инициатива
               </div>
@@ -156,13 +156,16 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
           >
             <div 
               className="text-xs mb-1" 
-              style={{ color: currentTheme.mutedTextColor || 'rgba(255, 255, 255, 0.7)' }}
+              style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
             >
               Скорость
             </div>
             <div 
-              className="text-sm" 
-              style={{ color: currentTheme.textColor || 'white' }}
+              className="text-sm font-medium" 
+              style={{ 
+                color: currentTheme.textColor || 'white',
+                textShadow: `0 0 3px ${currentTheme.accent}40`
+              }}
             >
               {character.speed || 30} футов
             </div>
@@ -177,13 +180,16 @@ export const StatsPanel = ({ character }: StatsPanelProps) => {
           >
             <div 
               className="text-xs mb-1" 
-              style={{ color: currentTheme.mutedTextColor || 'rgba(255, 255, 255, 0.7)' }}
+              style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
             >
               Грузоподъёмность
             </div>
             <div 
-              className="text-sm" 
-              style={{ color: currentTheme.textColor || 'white' }}
+              className="text-sm font-medium" 
+              style={{ 
+                color: currentTheme.textColor || 'white',
+                textShadow: `0 0 3px ${currentTheme.accent}40`
+              }}
             >
               {(character?.abilities?.STR || 10) * 15} фунтов
             </div>

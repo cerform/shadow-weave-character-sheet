@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { Character, CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -235,6 +236,19 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="md:col-span-2">
+            <CharacterTabs 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+            />
+          </div>
+          
+          <div className="md:col-span-1 space-y-4">
+            <SkillsPanel character={character} />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="md:col-span-1 space-y-4">
             <StatsPanel character={character} />
             
@@ -328,16 +342,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             )}
           </div>
           
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-1">
-              <SkillsPanel character={character} />
-            </div>
-            <div className="md:col-span-2">
-              <CharacterTabs 
-                activeTab={activeTab} 
-                setActiveTab={setActiveTab} 
-              />
-            </div>
+          <div className="md:col-span-2">
+            {/* Пустая область для контента вкладок, отображение происходит внутри CharacterTabs */}
           </div>
         </div>
         

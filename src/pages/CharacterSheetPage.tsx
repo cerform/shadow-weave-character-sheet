@@ -1,10 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
-import { PlayerDicePanel } from "@/components/character-sheet/PlayerDicePanel";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Dices } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
@@ -12,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext"; // Добавляем импорт контекста авторизации
 
 const CharacterSheetPage = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [character, setCharacter] = useState<any>(null);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -91,36 +86,6 @@ const CharacterSheetPage = () => {
         character={character} 
         isDM={currentUser?.isDM === true} // Передаем флаг isDM в компонент CharacterSheet
       />
-      
-      <div className="fixed bottom-24 right-6 z-50">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button 
-              size="lg" 
-              className="rounded-full h-18 w-18 p-0 shadow-lg" 
-              style={{ 
-                width: '70px', 
-                height: '70px',
-                backgroundColor: `rgba(${currentTheme.accent}, 0.9)`,
-                color: currentTheme.textColor
-              }}
-            >
-              <Dices className="h-10 w-10" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/90 border-white/20 p-0 pt-4">
-            <SheetHeader className="px-6">
-              <SheetTitle className="text-white text-2xl">Кубики</SheetTitle>
-              <SheetDescription className="text-white/70 text-base">
-                Используйте виртуальные кубики для бросков
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-2 h-[calc(100vh-120px)] overflow-y-auto px-4">
-              <PlayerDicePanel />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
       
       {isConnected && sessionData && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-500/80 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg z-50">
