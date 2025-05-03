@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -69,6 +68,8 @@ export interface CharacterSheet {
   backstory: string;
   xp?: number;
   inspiration?: boolean;
+  maxHp?: number;  // Добавляем максимальные хиты
+  currentHp?: number;  // Добавляем текущие хиты
 }
 
 // Интерфейс для подклассов персонажей

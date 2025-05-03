@@ -14,7 +14,8 @@ export const themes = {
     buttonText: '#FFFFFF',
     buttonBackground: '#8B5A2B',
     statBoxBackground: 'rgba(20, 12, 5, 0.85)',
-    abilityScoreColor: '#FFFFFF'
+    abilityScoreColor: '#FFFFFF',
+    success: '#4caf50'  // Добавляем цвет успеха
   },
   warlock: {
     primary: 'from-purple-700 to-purple-900',
@@ -30,7 +31,8 @@ export const themes = {
     buttonText: '#FFFFFF',
     buttonBackground: '#8B5CF6',
     statBoxBackground: 'rgba(30, 15, 45, 0.85)',
-    abilityScoreColor: '#E4D3FF'
+    abilityScoreColor: '#E4D3FF',
+    success: '#4caf50'  // Добавляем цвет успеха
   },
   wizard: {
     primary: 'from-blue-500 to-blue-700',
@@ -46,7 +48,8 @@ export const themes = {
     buttonText: '#FFFFFF',
     buttonBackground: '#33C3F0',
     statBoxBackground: 'rgba(15, 30, 60, 0.85)',
-    abilityScoreColor: '#D1E9FF'
+    abilityScoreColor: '#D1E9FF',
+    success: '#4caf50'  // Добавляем цвет успеха
   },
   druid: {
     primary: 'from-green-600 to-green-800',
@@ -62,7 +65,8 @@ export const themes = {
     buttonText: '#FFFFFF',
     buttonBackground: '#10B981',
     statBoxBackground: 'rgba(15, 50, 30, 0.85)',
-    abilityScoreColor: '#CEFBE3'
+    abilityScoreColor: '#CEFBE3',
+    success: '#4caf50'  // Добавляем цвет успеха
   },
   warrior: {
     primary: 'from-red-600 to-red-800',
@@ -78,7 +82,8 @@ export const themes = {
     buttonText: '#FFFFFF',
     buttonBackground: '#EA384D',
     statBoxBackground: 'rgba(60, 15, 20, 0.85)',
-    abilityScoreColor: '#FFD0D0'
+    abilityScoreColor: '#FFD0D0',
+    success: '#4caf50'  // Добавляем цвет успеха
   },
   bard: {
     primary: 'from-amber-500 to-amber-700',
@@ -94,6 +99,7 @@ export const themes = {
     buttonText: '#000000', // Черный текст для контраста с желтым
     buttonBackground: '#FCD34D',
     statBoxBackground: 'rgba(60, 45, 10, 0.85)',
-    abilityScoreColor: '#FFF0C0'
+    abilityScoreColor: '#FFF0C0',
+    success: '#4caf50'  // Добавляем цвет успеха
   }
 };

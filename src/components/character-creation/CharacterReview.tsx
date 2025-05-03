@@ -66,7 +66,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
       toast({
         title: "Персонаж сохранен",
         description: `${character.name} успешно сохранен`,
-        variant: "success",
+        // Изменяем variant с "success" на "default"
+        variant: "default",
       });
       
       // Переход на страницу персонажа
@@ -341,7 +342,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           className="flex-1 max-w-md"
           disabled={isSaving || saveSuccess}
           style={{
-            backgroundColor: saveSuccess ? currentTheme.success || 'green' : undefined
+            backgroundColor: saveSuccess ? "#4caf50" : undefined
           }}
         >
           {saveSuccess ? (
