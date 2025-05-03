@@ -51,6 +51,19 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
 
   const hitDie = getHitDieType();
 
+  // Получение строкового представления типа кубика для SimpleDiceRenderer
+  const getDiceTypeForRenderer = (dieValue: number): "d4" | "d6" | "d8" | "d10" | "d12" | "d20" => {
+    switch(dieValue) {
+      case 4: return "d4";
+      case 6: return "d6";
+      case 8: return "d8";
+      case 10: return "d10";
+      case 12: return "d12";
+      case 20: return "d20";
+      default: return "d6"; // Fallback to d6
+    }
+  };
+
   // Для первого уровня максимальное значение кубика + модификатор Телосложения
   const getFirstLevelHp = (): number => {
     return hitDie + constitutionModifier;
@@ -131,7 +144,7 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
             <div className="dice-container relative mx-auto" style={{height: "150px", perspective: "400px"}}>
               {rollState !== 'waiting' && (
                 <SimpleDiceRenderer 
-                  type={`d${hitDie}`}
+                  type={getDiceTypeForRenderer(hitDie)}
                   result={diceValue || 1}
                   size={150}
                   themeColor={currentTheme.accent}
