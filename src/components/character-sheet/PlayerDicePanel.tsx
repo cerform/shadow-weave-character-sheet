@@ -138,20 +138,22 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   };
 
   return (
-    <div className="player-dice-panel flex flex-col gap-4">
-      <div className="dice-controls space-y-4">
+    <div className="player-dice-panel flex flex-col gap-5">
+      <div className="dice-controls space-y-5">
         <div>
-          <Label className="text-sm text-muted-foreground mb-2 block">Тип кубика:</Label>
-          <div className="grid grid-cols-6 gap-1">
+          <Label className="text-base text-white mb-3 block font-medium">Тип кубика:</Label>
+          <div className="grid grid-cols-6 gap-2">
             {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
               <Button
                 key={dice}
                 size="sm"
                 variant={diceType === dice ? "default" : "outline"}
-                className="h-10 text-xs px-0"
+                className="h-12 text-sm px-0 font-bold"
                 onClick={() => setDiceType(dice as any)}
                 style={{
-                  backgroundColor: diceType === dice ? currentTheme.accent : undefined,
+                  backgroundColor: diceType === dice ? currentTheme.accent : 'rgba(255,255,255,0.05)',
+                  color: diceType === dice ? '#FFFFFF' : '#FFFFFF',
+                  boxShadow: diceType === dice ? `0 0 10px ${currentTheme.accent}80` : 'none',
                 }}
               >
                 {dice}
@@ -160,61 +162,61 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center justify-between gap-2 bg-black/10 p-3 rounded-md">
-          <Label className="text-sm whitespace-nowrap">Кол-во:</Label>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-2 bg-white/5 p-4 rounded-md">
+          <Label className="text-base text-white whitespace-nowrap font-medium">Кол-во:</Label>
+          <div className="flex items-center space-x-3">
             <Button 
               size="icon" 
               variant="outline" 
-              className="h-8 w-8" 
+              className="h-10 w-10 text-white border-white/30" 
               onClick={() => setDiceCount(Math.max(1, diceCount - 1))}
             >
-              <Minus className="h-3 w-3" />
+              <Minus className="h-4 w-4" />
             </Button>
-            <span className="w-6 text-center">{diceCount}</span>
+            <span className="w-8 text-xl font-bold text-center text-white">{diceCount}</span>
             <Button 
               size="icon" 
               variant="outline" 
-              className="h-8 w-8" 
+              className="h-10 w-10 text-white border-white/30"
               onClick={() => setDiceCount(Math.min(10, diceCount + 1))}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>
         
-        <div className="flex items-center justify-between gap-2 bg-black/10 p-3 rounded-md">
-          <Label className="text-sm whitespace-nowrap">Модификатор:</Label>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-2 bg-white/5 p-4 rounded-md">
+          <Label className="text-base text-white whitespace-nowrap font-medium">Модификатор:</Label>
+          <div className="flex items-center space-x-3">
             <Button 
               size="icon" 
               variant="outline" 
-              className="h-8 w-8" 
+              className="h-10 w-10 text-white border-white/30"
               onClick={() => setModifier(Math.max(-20, modifier - 1))}
             >
-              <Minus className="h-3 w-3" />
+              <Minus className="h-4 w-4" />
             </Button>
-            <span className="w-8 text-center">{modifier >= 0 ? `+${modifier}` : modifier}</span>
+            <span className="w-10 text-xl font-bold text-center text-white">{modifier >= 0 ? `+${modifier}` : modifier}</span>
             <Button 
               size="icon" 
               variant="outline" 
-              className="h-8 w-8" 
+              className="h-10 w-10 text-white border-white/30"
               onClick={() => setModifier(Math.min(20, modifier + 1))}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>
         
         <div>
-          <Label className="text-sm text-muted-foreground mb-2 block">Причина броска:</Label>
+          <Label className="text-base text-white mb-3 block font-medium">Причина броска:</Label>
           <Select value={rollReason} onValueChange={setRollReason}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/5 border-white/30 text-white h-12">
               <SelectValue placeholder="Выберите причину броска" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-black/90 border-white/30 text-white">
               {diceRollReasons.map((reason) => (
-                <SelectItem key={reason.value} value={reason.value}>
+                <SelectItem key={reason.value} value={reason.value} className="text-white">
                   {reason.label}
                 </SelectItem>
               ))}
@@ -223,7 +225,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
           
           {rollReason === 'other' && (
             <Input 
-              className="mt-2" 
+              className="mt-3 bg-white/5 border-white/30 h-12 text-white" 
               placeholder="Укажите свою причину..." 
               value={customReason} 
               onChange={(e) => setCustomReason(e.target.value)} 
@@ -232,7 +234,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
         </div>
       </div>
       
-      <div className="dice-box-area h-72 bg-black/20 rounded-lg overflow-hidden">
+      <div className="dice-box-area h-80 bg-black/50 rounded-lg overflow-hidden">
         <DiceBox3D
           diceType={diceType}
           diceCount={diceCount}
@@ -244,19 +246,19 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
       
       {rollHistory.length > 0 && (
         <div>
-          <Label className="text-sm text-muted-foreground mb-2 block">История бросков:</Label>
-          <ScrollArea className="h-48 rounded-md border">
-            <div className="p-2 space-y-2">
+          <Label className="text-base text-white mb-3 block font-medium">История бросков:</Label>
+          <ScrollArea className="h-52 rounded-md border border-white/20 bg-black/30">
+            <div className="p-3 space-y-3">
               {rollHistory.slice().reverse().map((roll, index) => (
-                <Card key={index} className="p-2 text-sm bg-background/60">
+                <Card key={index} className="p-3 text-base bg-white/5 border-white/20">
                   <div className="flex justify-between items-center">
                     <div>
-                      <Badge variant="outline" className="mr-2">
+                      <Badge variant="outline" className="mr-2 bg-black/50 text-white border-white/30 font-bold">
                         {roll.diceCount}{roll.diceType}{roll.modifier >= 0 ? '+' + roll.modifier : roll.modifier}
                       </Badge>
-                      <span className="font-medium">{roll.total}</span>
+                      <span className="font-bold text-white text-lg">{roll.total}</span>
                     </div>
-                    <div className="text-muted-foreground text-xs">{roll.reason}</div>
+                    <div className="text-white text-sm font-medium">{roll.reason}</div>
                   </div>
                 </Card>
               ))}
