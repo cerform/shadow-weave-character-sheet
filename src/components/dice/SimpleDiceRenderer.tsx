@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+// Fix import path for GLTFLoader
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -136,8 +137,8 @@ const SimpleDiceRenderer: React.FC<SimpleDiceRendererProps> = ({ type, size = 10
       animate();
     }
 
-    // Animation function
-    const animate = () => {
+    // Define the animation function before using it
+    function animate() {
       const animationId = requestAnimationFrame(animate);
       if (diceObject) {
         diceObject.rotation.y += 0.01;
@@ -145,14 +146,16 @@ const SimpleDiceRenderer: React.FC<SimpleDiceRendererProps> = ({ type, size = 10
       }
       renderer.render(scene, camera);
       
-      // Cleanup function to stop animation when unmounted
-      return () => {
-        cancelAnimationFrame(animationId);
-      };
-    };
+      // Return the animation ID for cleanup
+      return animationId;
+    }
+
+    // Start animation and store the return value for cleanup
+    const animationId = animate();
 
     return () => {
-      cancelAnimationFrame(animate() as number);
+      // Fix type by using explicit type conversion
+      cancelAnimationFrame(animationId as number);
       renderer.dispose();
       while (mount.firstChild) {
         mount.removeChild(mount.firstChild);
