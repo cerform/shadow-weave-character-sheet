@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -52,6 +53,7 @@ export interface Character {
   race?: string;
   subrace?: string;  // Добавляем subrace как поле для совместимости
   alignment?: string;
+  gender?: string;   // Добавляем поле gender
   level?: number;
   experience?: number;
   abilities?: AbilityScores;
