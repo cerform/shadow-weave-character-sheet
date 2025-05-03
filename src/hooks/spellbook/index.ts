@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -34,6 +33,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
       const convertedSpells: SpellData[] = allSpells.map(spell => ({
         ...spell,
         // Убедимся, что свойства соответствуют интерфейсу SpellData
+        id: spell.id as (string | number | undefined),
         isRitual: spell.ritual || false,
         isConcentration: spell.concentration || false
       }));
@@ -62,6 +62,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     // Конвертируем CharacterSpell[] в SpellData[]
     const convertedSpells: SpellData[] = result.map(spell => ({
       ...spell,
+      id: spell.id as (string | number | undefined),
       isRitual: spell.ritual || false,
       isConcentration: spell.concentration || false
     }));
