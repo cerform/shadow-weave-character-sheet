@@ -7,6 +7,11 @@ export function isStringArray(value: any): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
 }
 
+// Проверка, что значение является строкой
+export function isString(value: any): value is string {
+  return typeof value === 'string';
+}
+
 // Конвертер из CharacterSpell в SpellData
 export const convertToSpellData = (spell: CharacterSpell): SpellData => ({
   ...spell,
@@ -22,16 +27,28 @@ export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: s
   }
 
   const term = searchTerm.toLowerCase();
-  return spells.filter(spell => 
-    spell.name.toLowerCase().includes(term) || 
-    (spell.description && spell.description.toLowerCase().includes(term)) ||
-    (spell.classes && (
-      (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(term)) ||
-      (isStringArray(spell.classes) && spell.classes.some(cls => 
-        typeof cls === 'string' && cls.toLowerCase().includes(term)
-      ))
-    ))
-  );
+  return spells.filter(spell => {
+    // Проверка имени заклинания
+    const nameMatch = spell.name.toLowerCase().includes(term);
+    
+    // Проверка описания заклинания
+    const descriptionMatch = spell.description ? spell.description.toLowerCase().includes(term) : false;
+    
+    // Проверка классов заклинания
+    let classesMatch = false;
+    if (spell.classes) {
+      // Если classes - строка
+      if (isString(spell.classes)) {
+        classesMatch = spell.classes.toLowerCase().includes(term);
+      }
+      // Если classes - массив строк
+      else if (isStringArray(spell.classes)) {
+        classesMatch = spell.classes.some(cls => isString(cls) && cls.toLowerCase().includes(term));
+      }
+    }
+    
+    return nameMatch || descriptionMatch || classesMatch;
+  });
 };
 
 // Функция для фильтрации заклинаний по уровню
@@ -57,18 +74,21 @@ export const filterSpellsByClass = (spells: CharacterSpell[], activeClasses: str
   }
 
   return spells.filter(spell => {
+    // Если классы не определены, заклинание не соответствует фильтру
+    if (!spell.classes) return false;
+    
     // Проверка если classes - строка
-    if (typeof spell.classes === 'string') {
+    if (isString(spell.classes)) {
       const spellClassesStr = spell.classes;
       return activeClasses.some(cls => 
-        typeof cls === 'string' && spellClassesStr.toLowerCase().includes(cls.toLowerCase())
+        isString(cls) && spellClassesStr.toLowerCase().includes(cls.toLowerCase())
       );
     } 
     // Проверка если classes - массив строк
     else if (isStringArray(spell.classes)) {
       return spell.classes.some(spellClass => 
         activeClasses.some(cls => 
-          typeof cls === 'string' && typeof spellClass === 'string' && 
+          isString(cls) && isString(spellClass) && 
           spellClass.toLowerCase().includes(cls.toLowerCase())
         )
       );
@@ -82,17 +102,21 @@ export const extractClasses = (spells: CharacterSpell[]): string[] => {
   const classesSet = new Set<string>();
   
   spells.forEach(spell => {
-    if (typeof spell.classes === 'string') {
+    if (spell.classes) {
       // Если classes - строка, разделяем по запятым
-      const classesString = spell.classes;
-      classesString.split(',').forEach(cls => 
-        classesSet.add(cls.trim())
-      );
-    } else if (isStringArray(spell.classes)) {
-      // Если classes - массив строк, добавляем каждый элемент
-      spell.classes.forEach(cls => {
-        classesSet.add(cls.trim());
-      });
+      if (isString(spell.classes)) {
+        const classesString = spell.classes;
+        classesString.split(',').forEach(cls => 
+          classesSet.add(cls.trim())
+        );
+      } else if (isStringArray(spell.classes)) {
+        // Если classes - массив строк, добавляем каждый элемент
+        spell.classes.forEach(cls => {
+          if (isString(cls)) {
+            classesSet.add(cls.trim());
+          }
+        });
+      }
     }
   });
   
