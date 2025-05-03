@@ -14,7 +14,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { getCurrentUid } from "./authHelpers";
-import { CharacterSheet } from "@/types/character";
 import { Character } from "@/contexts/CharacterContext";
 
 // Определение типа данных пользователя из Firestore
@@ -108,9 +107,16 @@ export const addCharacterToUser = async (uid: string, characterId: string) => {
       }
       
       return true;
+    } else {
+      // Если пользователь не существует, создаем его
+      await setDoc(userRef, {
+        characters: [characterId],
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      });
+      return true;
     }
     
-    return false;
   } catch (error) {
     console.error('Ошибка при добавлении персонажа пользователю:', error);
     return false;
@@ -153,7 +159,8 @@ export const saveCharacterToFirestore = async (character: Character) => {
   try {
     const uid = getCurrentUid();
     if (!uid) {
-      throw new Error('Пользователь не авторизован');
+      console.error('Пользователь не авторизован');
+      return false;
     }
     
     // Убедимся, что у персонажа есть userId
@@ -161,12 +168,15 @@ export const saveCharacterToFirestore = async (character: Character) => {
       character.userId = uid;
     }
     
+    console.log("Сохранение персонажа в Firestore:", character.id, character.name);
+    
+    // Сохраняем персонажа в коллекцию 'characters' с ID персонажа (а не пользователя)
     const characterRef = doc(db, 'characters', character.id);
     
     await setDoc(characterRef, {
       ...character,
       userId: uid,
-      updatedAt: serverTimestamp()
+      updatedAt: new Date().toISOString()
     });
     
     // Добавляем персонажа в список пользователя
@@ -201,20 +211,26 @@ export const getCharacterById = async (characterId: string) => {
 
 /**
  * Получение всех персонажей пользователя
+ * @returns Массив персонажей
  */
 export const getUserCharacters = async () => {
   try {
     const uid = getCurrentUid();
     if (!uid) {
-      throw new Error('Пользователь не авторизован');
+      console.error('Пользователь не авторизован');
+      return [];
     }
     
+    console.log("Загрузка персонажей пользователя:", uid);
+    
+    // Получаем персонажей, где userId соответствует текущему пользователю
     const charactersRef = collection(db, 'characters');
     const q = query(charactersRef, where('userId', '==', uid));
     const querySnapshot = await getDocs(q);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
+      console.log("Загружен персонаж:", doc.id);
       characters.push({ id: doc.id, ...doc.data() } as Character);
     });
     
@@ -233,7 +249,8 @@ export const deleteCharacterFromFirestore = async (characterId: string) => {
   try {
     const uid = getCurrentUid();
     if (!uid) {
-      throw new Error('Пользователь не авторизован');
+      console.error('Пользователь не авторизован');
+      return false;
     }
     
     // Получаем персонажа для проверки владельца
@@ -248,7 +265,8 @@ export const deleteCharacterFromFirestore = async (characterId: string) => {
     
     // Проверяем, является ли текущий пользователь владельцем
     if (characterData.userId !== uid) {
-      throw new Error('У вас нет прав на удаление этого персонажа');
+      console.error('У вас нет прав на удаление этого персонажа');
+      return false;
     }
     
     // Удаляем персонажа
@@ -260,6 +278,40 @@ export const deleteCharacterFromFirestore = async (characterId: string) => {
     return true;
   } catch (error) {
     console.error('Ошибка при удалении персонажа:', error);
+    return false;
+  }
+};
+
+/**
+ * Очистка всех персонажей пользователя
+ * @returns Успешность операции
+ */
+export const clearAllUserCharacters = async () => {
+  try {
+    const uid = getCurrentUid();
+    if (!uid) {
+      console.error('Пользователь не авторизован');
+      return false;
+    }
+    
+    // Получаем все персонажи текущего пользователя
+    const charactersRef = collection(db, 'characters');
+    const q = query(charactersRef, where('userId', '==', uid));
+    const querySnapshot = await getDocs(q);
+    
+    // Удаляем все найденные персонажи
+    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    
+    // Очищаем список персонажей в документе пользователя
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      characters: []
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Ошибка при удалении всех персонажей:', error);
     return false;
   }
 };

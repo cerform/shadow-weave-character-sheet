@@ -2,7 +2,7 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
+    
     // Доступ к персонажам
     match /characters/{userId}/{fileName} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -11,6 +11,11 @@ service firebase.storage {
     // Доступ к сессиям мастера
     match /sessions/{dmId}/{fileName} {
       allow read, write: if request.auth != null && request.auth.uid == dmId;
+    }
+
+    // Доступ к пользовательским аватарам
+    match /avatars/{userId}/{fileName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     // Запретить всё остальное

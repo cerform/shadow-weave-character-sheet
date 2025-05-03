@@ -50,6 +50,8 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
   if (!uid) return false;
   
   try {
+    console.log("Синхронизация пользователя с Firestore:", uid);
+    
     // Получаем текущие данные пользователя из Firestore
     const currentData = await getUserData(uid);
     
@@ -65,6 +67,16 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
       updateData.isDM = userData.isDM || false;
       updateData.characters = userData.characters || [];
       updateData.campaigns = userData.campaigns || [];
+    } else {
+      // Если у пользователя уже есть персонажи, сохраняем их
+      if (currentData.characters && Array.isArray(currentData.characters) && currentData.characters.length > 0) {
+        updateData.characters = [...new Set([...currentData.characters, ...(userData.characters || [])])];
+      }
+      
+      // Если у пользователя уже есть кампании, сохраняем их
+      if (currentData.campaigns && Array.isArray(currentData.campaigns) && currentData.campaigns.length > 0) {
+        updateData.campaigns = [...new Set([...currentData.campaigns, ...(userData.campaigns || [])])];
+      }
     }
     
     // Обновляем данные в Firestore

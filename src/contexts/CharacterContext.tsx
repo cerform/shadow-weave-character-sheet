@@ -116,12 +116,14 @@ export function CharacterProvider({ children }: Props) {
 
   // При старте читаем из localStorage и Firebase Storage
   useEffect(() => {
-    // Загружаем персонажей из Storage при первой загрузке
     const loadCharacters = async () => {
       try {
+        console.log("Загрузка персонажей из Firebase...");
         const loadedCharacters = await characterService.getCharacters();
+        
         if (loadedCharacters && loadedCharacters.length > 0) {
-          setCharacters(loadedCharacters as Character[]);
+          console.log("Получены персонажи из Firebase:", loadedCharacters.length);
+          setCharacters(loadedCharacters);
           
           // Если есть сохраненный активный персонаж, пытаемся его найти среди загруженных
           const savedActiveCharacterId = localStorage.getItem(ACTIVE_CHARACTER_KEY);
@@ -130,19 +132,32 @@ export function CharacterProvider({ children }: Props) {
               const activeChar = JSON.parse(savedActiveCharacterId);
               const foundCharacter = loadedCharacters.find(c => c.id === activeChar.id);
               if (foundCharacter) {
-                setCharacterState(foundCharacter as Character);
+                setCharacterState(foundCharacter);
               }
             } catch (e) {
               console.error("Ошибка при чтении активного персонажа из localStorage:", e);
             }
           }
         } else {
-          // Если из Storage ничего не загрузилось, пробуем из localStorage
+          // Если из Firebase ничего не загрузилось, пробуем из localStorage
+          console.log("Персонажи не найдены в Firebase, проверяем localStorage...");
           const savedCharacters = localStorage.getItem(STORAGE_KEY);
           if (savedCharacters) {
             try {
               const parsedChars = JSON.parse(savedCharacters);
-              setCharacters(parsedChars);
+              if (Array.isArray(parsedChars) && parsedChars.length > 0) {
+                console.log("Найдены локальные персонажи:", parsedChars.length);
+                setCharacters(parsedChars);
+                
+                // Сохраняем локальных персонажей в Firebase, если пользователь авторизован
+                const uid = getCurrentUid();
+                if (uid) {
+                  console.log("Синхронизируем локальных персонажей с Firebase...");
+                  for (const char of parsedChars) {
+                    await characterService.saveCharacter({ ...char, userId: uid });
+                  }
+                }
+              }
             } catch (e) {
               console.error("Ошибка при чтении персонажей из localStorage:", e);
             }
@@ -160,11 +175,14 @@ export function CharacterProvider({ children }: Props) {
       } catch (error) {
         console.error("Ошибка при загрузке персонажей:", error);
         
-        // При ошибке загрузки из Storage - используем localStorage
+        // При ошибке загрузки из Firebase - используем localStorage
         const savedCharacters = localStorage.getItem(STORAGE_KEY);
         if (savedCharacters) {
           try {
-            setCharacters(JSON.parse(savedCharacters));
+            const parsedChars = JSON.parse(savedCharacters);
+            if (Array.isArray(parsedChars)) {
+              setCharacters(parsedChars);
+            }
           } catch (e) {
             console.error("Ошибка при чтении персонажей из localStorage:", e);
           }
@@ -177,7 +195,7 @@ export function CharacterProvider({ children }: Props) {
 
   // Сохраняем список персонажей в localStorage при изменении
   useEffect(() => {
-    if (characters.length > 0) {
+    if (Array.isArray(characters) && characters.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
     }
   }, [characters]);
@@ -276,7 +294,7 @@ export function CharacterProvider({ children }: Props) {
         // Обновление существующего персонажа
         const updatedChar = {
           ...charData,
-          userId: uid, // Обновляем userId на случай, если персонаж был создан без авторизации
+          userId: uid || charData.userId, // Обновляем userId на случай, если персонаж был создан без авторизации
           updatedAt: now
         } as Character;
         
@@ -284,11 +302,14 @@ export function CharacterProvider({ children }: Props) {
         if (uid) {
           const saved = await characterService.saveCharacter(updatedChar);
           if (!saved) {
-            throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+            toast.error("Не удалось сохранить персонажа в Firebase");
+          } else {
+            toast.success(`Персонаж ${updatedChar.name} обновлен`);
           }
         } else {
           // Если пользователь не авторизован, сохраняем только локально
           console.warn("Пользователь не авторизован. Персонаж сохранен только локально.");
+          toast.warning("Чтобы сохранить персонажа облачно, войдите в аккаунт");
         }
         
         // Обновляем локальный список
@@ -318,14 +339,15 @@ export function CharacterProvider({ children }: Props) {
         if (uid) {
           const saved = await characterService.saveCharacter(newChar);
           if (!saved) {
-            throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+            toast.error("Не удалось сохранить персонажа в Firebase");
+          } else {
+            toast.success(`Персонаж ${newChar.name} создан`);
           }
           
           // Если есть авторизованный пользователь, добавляем персонажа к нему
           if (currentUser) {
             try {
               await addCharacterToUser(newChar.id);
-              toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
             } catch (err) {
               console.error("Ошибка при привязке персонажа к пользователю:", err);
             }
@@ -333,6 +355,7 @@ export function CharacterProvider({ children }: Props) {
         } else {
           // Если пользователь не авторизован, сохраняем только локально
           console.warn("Пользователь не авторизован. Персонаж сохранен только локально.");
+          toast.warning("Чтобы сохранить персонажа облачно, войдите в аккаунт");
         }
         
         // Обновляем локальный список

@@ -1,0 +1,28 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Правила доступа к персонажам
+    match /characters/{characterId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                  (resource == null || resource.data.userId == request.auth.uid);
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Доступ для DM к сессиям
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+                           resource.data.dmId == request.auth.uid;
+    }
+
+    // Пользователи
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
