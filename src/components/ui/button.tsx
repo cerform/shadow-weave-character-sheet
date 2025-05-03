@@ -54,6 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
     // Проверяем наличие className в props и определяем, имеет ли он класс Details
+    // Использовать props напрямую вместо props.className
     const hasDetailsClass = props.className ? props.className.includes('Details') : false;
     
     // Добавляем стили для улучшения контрастности в зависимости от темы

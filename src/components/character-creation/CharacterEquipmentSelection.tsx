@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet } from '@/types/character.d'; 
 import NavigationButtons from './NavigationButtons';
@@ -98,7 +97,7 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
     return (
       <div className="mb-6">
         <h3 className="font-medium text-lg mb-3">{title}</h3>
-        <SelectionCardGrid cols={3}>
+        <SelectionCardGrid>
           {items.map(item => (
             <SelectionCard
               key={item.name}
