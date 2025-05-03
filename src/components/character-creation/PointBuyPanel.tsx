@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
@@ -26,6 +26,13 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
   maxAbilityScore = 20
 }) => {
   const { theme } = useTheme();
+  const [totalPoints, setTotalPoints] = useState(abilityScorePoints);
+  
+  // Обновляем информацию о доступных очках при изменении входных значений
+  useEffect(() => {
+    setTotalPoints(abilityScorePoints);
+  }, [abilityScorePoints]);
+  
   // Добавляем защиту от undefined
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -34,10 +41,10 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
     <div>
       <div className="mb-4">
         <p className="mb-2 text-foreground">
-          Осталось очков: <span className="font-bold">{pointsLeft}</span>
+          Осталось очков: <span className="font-bold">{pointsLeft}</span> из <span className="font-bold">{totalPoints}</span>
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          Распределите {abilityScorePoints} очков между характеристиками. 
+          Распределите {totalPoints} очков между характеристиками. 
           Значение от 8 до {Math.min(15, maxAbilityScore)}
           {maxAbilityScore > 20 && ` (максимум для вашего уровня: ${maxAbilityScore})`}.
         </p>
@@ -50,16 +57,35 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
           const modifier = getModifier(value);
           
           return (
-            <div key={key} className="p-4 border rounded text-center">
+            <div 
+              key={key} 
+              className="p-4 border rounded text-center"
+              style={{
+                borderColor: currentTheme.accent + '40',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              }}
+            >
               <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
               <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
-              <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
+              <div 
+                className="text-xl mb-3" 
+                style={{ 
+                  color: currentTheme.accent, 
+                  textShadow: '0 0 5px rgba(0, 0, 0, 0.7)' 
+                }}
+              >
+                {modifier}
+              </div>
               
               <div className="flex justify-center gap-2">
                 <Button
                   onClick={() => decrementStat(key)}
                   disabled={value <= 8}
                   size="sm"
+                  style={{
+                    backgroundColor: currentTheme.buttonBackground,
+                    color: currentTheme.buttonText,
+                  }}
                 >
                   -
                 </Button>
@@ -67,6 +93,10 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
                   onClick={() => incrementStat(key)}
                   disabled={value >= Math.min(15, maxAbilityScore) || pointsLeft < getPointCost(value + 1)}
                   size="sm"
+                  style={{
+                    backgroundColor: currentTheme.buttonBackground,
+                    color: currentTheme.buttonText,
+                  }}
                 >
                   +
                 </Button>

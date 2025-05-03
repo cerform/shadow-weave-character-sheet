@@ -31,10 +31,13 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
     // Регулируем очки для point buy в зависимости от уровня
     if (method === 'pointbuy') {
       let basePoints = 27;
+      
       // Добавляем дополнительные очки за высокие уровни
       if (level >= 5) basePoints += 3;
       if (level >= 10) basePoints += 5;
       if (level >= 15) basePoints += 7;
+      
+      console.log(`Уровень ${level}, доступно очков: ${basePoints}`);
       setAbilityScorePoints(basePoints);
     }
   }, [level, method]);
@@ -111,15 +114,18 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
   // Сброс доступных очков для метода pointbuy
   const resetPoints = useCallback(() => {
     let basePoints = 27;
+      
     // Добавляем дополнительные очки за высокие уровни
     if (level >= 5) basePoints += 3;
     if (level >= 10) basePoints += 5;
     if (level >= 15) basePoints += 7;
+    
+    console.log(`Сброс очков. Уровень ${level}, доступно очков: ${basePoints}`);
     setAbilityScorePoints(basePoints);
   }, [level]);
 
   // Обновляем очки при изменении метода
-  const updateAbilityPoints = useCallback(() => {
+  useEffect(() => {
     if (method === 'pointbuy') {
       resetPoints();
     }
@@ -133,7 +139,7 @@ export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => 
     rollAllAbilities,
     rollSingleAbility,
     resetPoints,
-    updateAbilityPoints
+    updateAbilityPoints: resetPoints
   };
 };
 

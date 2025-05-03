@@ -50,11 +50,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondaryGradient);
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
       document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
-      document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
-      document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
-      document.documentElement.style.setProperty('--stat-box-background', selectedTheme.statBoxBackground);
+      document.documentElement.style.setProperty('--text-color', '#FFFFFF'); // Всегда белый для лучшей читаемости
+      document.documentElement.style.setProperty('--muted-text-color', 'rgba(255, 255, 255, 0.8)'); // Полупрозрачный белый
+      document.documentElement.style.setProperty('--stat-box-background', 'rgba(0, 0, 0, 0.7)'); // Полупрозрачный черный
       document.documentElement.style.setProperty('--ability-score-color', selectedTheme.abilityScoreColor);
-      document.documentElement.style.setProperty('--button-text', selectedTheme.buttonText);
+      document.documentElement.style.setProperty('--button-text', '#FFFFFF'); // Всегда белый для кнопок
       document.documentElement.style.setProperty('--button-background', selectedTheme.buttonBackground);
       
       // Фон для всех страниц, учитывая тему
@@ -65,8 +65,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--background', themeName === 'default' ? '26 10% 5%' : '0 0% 5%');
       
       // Улучшаем контрастность для текста
-      const textColor = getContrastColor(selectedTheme.accent);
-      document.documentElement.style.setProperty('--primary-foreground', textColor);
+      document.documentElement.style.setProperty('--primary-foreground', '#FFFFFF');
       document.documentElement.style.setProperty('--foreground', '#FFFFFF');
       
       // Обеспечиваем контраст для всех текстовых элементов
@@ -80,21 +79,41 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       document.documentElement.style.setProperty('--primary', `${h} ${s} ${l}`);
       document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
+      
+      // Добавляем тень для текста для лучшей читаемости
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .theme-${themeName} .text-foreground, 
+        .theme-${themeName} h1, 
+        .theme-${themeName} h2, 
+        .theme-${themeName} h3, 
+        .theme-${themeName} h4, 
+        .theme-${themeName} p, 
+        .theme-${themeName} span, 
+        .theme-${themeName} button, 
+        .theme-${themeName} label,
+        .theme-${themeName} .text-xl,
+        .theme-${themeName} .text-lg,
+        .theme-${themeName} .text-sm {
+          text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        .theme-${themeName} .bg-card,
+        .theme-${themeName} .bg-primary {
+          background-color: rgba(0, 0, 0, 0.6);
+          border-color: ${selectedTheme.accent}40;
+        }
+      `;
+      
+      // Удаляем старые стили и добавляем новые
+      const oldStyle = document.getElementById(`theme-${themeName}-styles`);
+      if (oldStyle) {
+        oldStyle.remove();
+      }
+      
+      style.id = `theme-${themeName}-styles`;
+      document.head.appendChild(style);
     }
-  };
-  
-  // Вспомогательная функция для определения контрастного цвета текста
-  const getContrastColor = (hexColor: string) => {
-    // Преобразуем hex в RGB
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-    
-    // Вычисляем яркость по формуле
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    
-    // Возвращаем белый или черный в зависимости от яркости
-    return brightness > 125 ? '0 0% 0%' : '0 0% 100%';
   };
 
   return (

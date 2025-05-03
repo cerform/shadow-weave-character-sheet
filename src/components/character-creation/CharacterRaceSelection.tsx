@@ -11,6 +11,8 @@ import {
   SelectionSubOption
 } from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface CharacterRaceSelectionProps {
   character: CharacterSheet;
@@ -27,6 +29,11 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
 }) => {
   const [selectedRace, setSelectedRace] = useState(character.race || "");
   const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || "");
+  const { theme } = useTheme();
+  
+  // Добавляем защиту от undefined
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   const handleRaceSelect = (race: string) => {
     setSelectedRace(race);
@@ -78,9 +85,12 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                         label={subrace}
                         selected={selectedSubrace === subrace}
                         onClick={() => handleSubraceSelect(subrace)}
-                        className={`transition-all duration-300 ${selectedSubrace === subrace ? 
-                          'border-primary border-2 bg-primary/20 text-primary-foreground' : 
-                          'border border-border hover:border-primary/60'}`}
+                        style={{
+                          backgroundColor: selectedSubrace === subrace ? currentTheme.accent : 'transparent',
+                          color: selectedSubrace === subrace ? '#FFFFFF' : currentTheme.textColor,
+                          border: selectedSubrace === subrace ? `2px solid ${currentTheme.accent}` : '1px solid #444',
+                          fontWeight: selectedSubrace === subrace ? 'bold' : 'normal'
+                        }}
                       />
                     ))}
                   </SelectionSubOptionsContainer>

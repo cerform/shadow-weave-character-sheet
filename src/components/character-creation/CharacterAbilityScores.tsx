@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { AbilityScoreMethodSelector, AbilityRollMethod } from "./AbilityScoreMethodSelector";
+import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
 import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
 import { CharacterSheet, ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { useToast } from "@/hooks/use-toast";
 
 interface CharacterAbilityScoresProps {
   character: CharacterSheet;
@@ -39,6 +40,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   rollsHistory = [],
   maxAbilityScore
 }) => {
+  const { toast } = useToast();
+  
   // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
   const [stats, setStats] = useState({
     strength: character?.abilities?.strength || character?.stats?.strength || 10,
@@ -61,7 +64,15 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     } else {
       setMaxStatValue(ABILITY_SCORE_CAPS.BASE_CAP);
     }
-  }, [character.level]);
+    
+    // Уведомляем об изменении лимита
+    if (character.level >= 10) {
+      toast({
+        title: "Повышенный лимит характеристик",
+        description: `На уровне ${character.level} максимальное значение характеристики: ${character.level >= 16 ? 24 : 22}`,
+      });
+    }
+  }, [character.level, toast]);
 
   const [pointsLeft, setPointsLeft] = useState(abilityScorePoints);
   const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
@@ -77,6 +88,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   const POINT_COSTS: {[key: number]: number} = {
     8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
   };
+
+  // Обновляем доступные очки при изменении abilityScorePoints
+  useEffect(() => {
+    setPointsLeft(abilityScorePoints);
+  }, [abilityScorePoints]);
 
   useEffect(() => {
     if (abilitiesMethod === "standard") {
@@ -100,6 +116,12 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: 8,
       });
       setPointsLeft(abilityScorePoints);
+      
+      // Уведомляем о доступных очках
+      toast({
+        title: "Доступные очки",
+        description: `У вас ${abilityScorePoints} очков для распределения характеристик`
+      });
     } else if (abilitiesMethod === "roll") {
       // При выборе метода бросков сбрасываем назначенные кости
       setAssignedDice({
@@ -111,7 +133,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: null,
       });
     }
-  }, [abilitiesMethod, abilityScorePoints]);
+  }, [abilitiesMethod, abilityScorePoints, toast]);
 
   // Обработчики для Point Buy
   const incrementStat = (stat: keyof typeof stats) => {
