@@ -6,7 +6,7 @@ import { Home, BookOpen, Scroll, Map, Users, Book } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useDeviceType } from '@/hooks/use-mobile';
+import { useDeviceType } from '@/hooks/use-mobile.tsx';
 
 interface NavigationButtonsProps {
   className?: string;
