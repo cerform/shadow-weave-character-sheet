@@ -1,0 +1,23 @@
+
+{
+  "default": {
+    "background": "transparent",
+    "diceColor": "#7a68ee",
+    "textColor": "#ffffff",
+    "labelColor": "#000000",
+    "outlineColor": "#000000",
+    "spotColor": "#ffffff"
+  },
+  "customGradient": {
+    "background": "transparent",
+    "diceColor": {
+      "type": "gradient",
+      "colors": ["#9b87f5", "#D946EF"],
+      "direction": "to right"
+    },
+    "textColor": "#ffffff",
+    "labelColor": "#ffffff",
+    "outlineColor": "rgba(0,0,0,0.3)",
+    "spotColor": "#ffffff"
+  }
+}

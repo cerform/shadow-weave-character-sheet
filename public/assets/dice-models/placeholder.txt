@@ -1,0 +1,5 @@
+
+Скачайте модели кубиков и поместите их сюда.
+Источник: https://sketchfab.com/3d-models/dnd-dice-set-51a01c6f714944ea95d9a2d24eb24928
+
+Переименуйте модели в dice-models-gltf.gltf или обновите путь в компоненте DiceBox3D.tsx

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import DiceBox from "@3d-dice/dice-box"; // Изменен с именованного импорта на импорт по умолчанию
+import DiceBox from "@3d-dice/dice-box"; // Импорт по умолчанию
 import { Button } from '@/components/ui/button';
 import { Dices } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
@@ -32,6 +32,56 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const actualThemeColor = themeColor || currentTheme.accent;
+  
+  // Создаём градиентную тему на основе цвета темы
+  const createGradientFromTheme = (baseColor: string) => {
+    // Преобразуем HEX в HSL для создания градиента
+    const hexToHSL = (hex: string) => {
+      // Удаляем # если есть
+      hex = hex.replace(/^#/, '');
+      
+      // Парсим RGB значения
+      let r = parseInt(hex.substring(0, 2), 16) / 255;
+      let g = parseInt(hex.substring(2, 4), 16) / 255;
+      let b = parseInt(hex.substring(4, 6), 16) / 255;
+      
+      // Находим min и max
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      
+      let h = 0, s = 0, l = (max + min) / 2;
+      
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        
+        h /= 6;
+      }
+      
+      return [h * 360, s * 100, l * 100];
+    };
+    
+    const hsl = hexToHSL(baseColor.replace('#', ''));
+    // Создаём второй цвет для градиента, меняя оттенок
+    const hsl2 = [
+      (hsl[0] + 40) % 360, // Смещаем оттенок
+      Math.min(hsl[1] + 10, 100), // Увеличиваем насыщенность
+      Math.min(hsl[2] + 15, 90) // Делаем немного светлее
+    ];
+    
+    return {
+      primaryColor: baseColor,
+      secondaryColor: `hsl(${hsl2[0]}, ${hsl2[1]}%, ${hsl2[2]}%)`
+    };
+  };
+  
+  const gradient = createGradientFromTheme(actualThemeColor);
   
   // Условная инициализация DiceBox только для видимых компонентов
   useEffect(() => {
@@ -65,16 +115,32 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
         // Создаем экземпляр DiceBox используя селектор ID
         const diceBox = new DiceBox(`#${canvasId}`, {
           assetPath: "/assets/dice-models/", // Путь к ассетам
+          modelFile: "dice-models-gltf.gltf", // Используем GLTF модель для реалистичных кубиков
           scale: 6,                         // Масштаб кубиков
           theme: "default",                 // Тема по умолчанию
-          themeColor: actualThemeColor,     // Цвет темы
+          themeColor: {
+            background: "transparent", 
+            foreground: "#ffffff",
+            // Используем градиент для кубиков
+            material: {
+              type: "gradient",
+              colors: [gradient.primaryColor, gradient.secondaryColor],
+              direction: "to right"
+            } 
+          },
           gravity: { x: 0, y: 0, z: -9.8 }, // Гравитация
           mass: 1,                          // Масса кубиков
           friction: 0.8,                    // Трение
           shadows: true,                    // Тени
           origin: { x: 0, y: 10, z: 0 },    // Начальная позиция
-          lightIntensity: 1.0,              // Интенсивность света
-          delay: 10                         // Задержка между бросками
+          lightIntensity: 1.5,              // Увеличенная интенсивность света для лучшего эффекта
+          delay: 10,                         // Задержка между бросками
+          // Добавляем настройки освещения для реализма
+          lights: [
+            { type: "ambient", intensity: 0.5 },
+            { type: "directional", intensity: 1.2, position: { x: 5, y: 5, z: 5 } },
+            { type: "point", intensity: 0.7, position: { x: -5, y: 3, z: -5 }, color: gradient.secondaryColor }
+          ]
         });
         
         // Инициализация
@@ -101,7 +167,7 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
         }
       }
     };
-  }, [actualThemeColor]);
+  }, [actualThemeColor, gradient]);
   
   // Обработчик для броска кубиков
   const handleRoll = async () => {
@@ -134,7 +200,7 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   
   return (
     <div className="dice-box-container w-full h-full flex flex-col relative" ref={containerRef}>
-      <div className="dice-canvas-container flex-grow relative overflow-hidden rounded-lg bg-black/20">
+      <div className="dice-canvas-container flex-grow relative overflow-hidden rounded-lg bg-background/30 backdrop-blur-sm">
         <canvas ref={canvasRef} className="w-full h-full" />
         
         {result !== null && !isRolling && (
@@ -150,7 +216,11 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
             className="w-full gap-2" 
             onClick={handleRoll}
             disabled={isRolling}
-            style={{ backgroundColor: actualThemeColor, color: '#000' }}
+            style={{ 
+              background: `linear-gradient(to right, ${gradient.primaryColor}, ${gradient.secondaryColor})`, 
+              color: '#ffffff',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+            }}
           >
             <Dices className="h-4 w-4" />
             {isRolling ? 'Бросаем...' : `Бросить ${diceCount}${diceType}${modifier !== 0 ? (modifier > 0 ? ' +' + modifier : ' ' + modifier) : ''}`}
