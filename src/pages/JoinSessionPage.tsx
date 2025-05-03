@@ -7,41 +7,43 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTheme } from '@/hooks/use-theme';
-import { useSession } from '@/contexts/SessionContext';
+import { useSessionStore } from '@/stores/sessionStore';
 import { ArrowLeft, Shield } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { auth } from '@/services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const JoinSessionPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { joinSession } = useSession();
-  const { currentUser, isAuthenticated } = useAuth();
-  const { characters, getUserCharacters } = useCharacter();
+  const { joinSession, fetchCharacters, characters } = useSessionStore();
   
   const [sessionCode, setSessionCode] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [userCharacters, setUserCharacters] = useState<any[]>([]);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
   
   useEffect(() => {
-    // Перенаправляем неавторизованных пользователей на страницу входа
-    if (!isAuthenticated) {
-      toast.warning('Для присоединения к сессии необходимо войти в аккаунт');
-      navigate('/auth');
-      return;
-    }
+    // Проверяем авторизацию
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Пользователь авторизован
+        setPlayerName(user.displayName || '');
+      } else {
+        // Пользователь не авторизован
+        navigate('/auth');
+        toast.warning('Для присоединения к сессии необходимо войти в аккаунт');
+      }
+      setIsAuthLoading(false);
+    });
     
-    // Устанавливаем имя игрока из профиля
-    if (currentUser) {
-      setPlayerName(currentUser.username);
-    }
+    // Загружаем персонажей
+    fetchCharacters();
     
-    // Загружаем персонажей пользователя
-    setUserCharacters(getUserCharacters());
-  }, [isAuthenticated, currentUser, navigate, getUserCharacters]);
+    return () => unsubscribe();
+  }, [navigate, fetchCharacters]);
   
-  const handleJoinSession = () => {
+  const handleJoinSession = async () => {
     if (!sessionCode.trim()) {
       toast.error('Введите код сессии');
       return;
@@ -52,27 +54,36 @@ const JoinSessionPage = () => {
       return;
     }
     
-    if (!selectedCharacter && userCharacters.length > 0) {
+    if (!selectedCharacter && characters.length > 0) {
       toast.error('Выберите персонажа');
       return;
     }
     
     // Найти выбранного персонажа
-    const character = userCharacters.find(c => c.id === selectedCharacter) || null;
+    const character = characters.find(c => c.id === selectedCharacter);
     
-    // Пытаемся присоединиться к сессии
-    const joined = joinSession(sessionCode, {
-      name: playerName,
-      character
-    });
-    
-    if (joined) {
-      toast.success('Вы присоединились к сессии!');
-      navigate('/play');
-    } else {
-      toast.error('Сессия не найдена. Проверьте код и попробуйте снова.');
+    try {
+      setIsJoining(true);
+      // Пытаемся присоединиться к сессии
+      const joined = await joinSession(sessionCode, playerName, character);
+      
+      if (joined) {
+        navigate('/play');
+      }
+    } catch (error) {
+      console.error("Ошибка при присоединении к сессии:", error);
+    } finally {
+      setIsJoining(false);
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Проверка авторизации...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
@@ -117,15 +128,15 @@ const JoinSessionPage = () => {
             
             <div>
               <label className="text-sm font-medium block mb-1">Выберите персонажа</label>
-              {userCharacters.length > 0 ? (
+              {characters.length > 0 ? (
                 <Select value={selectedCharacter} onValueChange={setSelectedCharacter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите персонажа" />
                   </SelectTrigger>
                   <SelectContent>
-                    {userCharacters.map((character) => (
+                    {characters.map((character) => (
                       <SelectItem key={character.id} value={character.id}>
-                        {character.name} ({character.race}, {character.className})
+                        {character.name} ({character.race}, {character.class})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -146,10 +157,10 @@ const JoinSessionPage = () => {
             
             <Button 
               onClick={handleJoinSession} 
-              disabled={!sessionCode.trim() || !playerName.trim() || (!selectedCharacter && userCharacters.length > 0)}
+              disabled={!sessionCode.trim() || !playerName.trim() || (!selectedCharacter && characters.length > 0) || isJoining}
               className="w-full"
             >
-              Присоединиться
+              {isJoining ? "Присоединение..." : "Присоединиться"}
             </Button>
           </CardContent>
         </Card>

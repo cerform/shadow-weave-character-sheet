@@ -7,30 +7,62 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
-import { useTheme } from '@/contexts/ThemeContext'; // Updated import
-import { useSession, DMSession } from '@/contexts/SessionContext';
-import { Copy, Users, ArrowLeft, Plus, RefreshCw } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { useSessionStore } from '@/stores/sessionStore';
+import { Copy, Users, ArrowLeft, Plus, RefreshCw, Trash, Link } from 'lucide-react';
+import { sessionService } from '@/services/sessionService';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const DMSessionPage = () => {
   const navigate = useNavigate();
-  const { sessionId } = useParams();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const { theme } = useTheme();
-  const { sessions, updateSession, endSession } = useSession();
+  const { sessions, fetchSessions, endSession, currentUser } = useSessionStore();
   
-  const [session, setSession] = useState<DMSession | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
-  useEffect(() => {
-    if (sessionId) {
-      const foundSession = sessions.find(s => s.id === sessionId);
-      if (foundSession) {
-        setSession(foundSession);
+  // Функция для загрузки данных сессии
+  const loadSession = async () => {
+    if (!sessionId) return;
+    
+    try {
+      setIsLoading(true);
+      const sessionData = await sessionService.getSessionById(sessionId);
+      
+      if (sessionData) {
+        setSession(sessionData);
+        
+        // Если есть заметки, загружаем последнюю
+        if (sessionData.notes && sessionData.notes.length > 0) {
+          const lastNote = sessionData.notes[sessionData.notes.length - 1];
+          setNotes(lastNote.content);
+        }
       } else {
         toast.error('Сессия не найдена');
-        navigate('/dm');
+        navigate('/dm-dashboard');
       }
+    } catch (error) {
+      console.error('Ошибка при загрузке сессии:', error);
+      toast.error('Ошибка при загрузке сессии');
+    } finally {
+      setIsLoading(false);
     }
-  }, [sessionId, sessions, navigate]);
+  };
+  
+  useEffect(() => {
+    loadSession();
+    fetchSessions();
+  }, [sessionId, fetchSessions]);
+  
+  // Проверка, что пользователь имеет права на доступ к сессии
+  useEffect(() => {
+    if (!isLoading && session && currentUser && session.dmId !== currentUser.id) {
+      toast.error('У вас нет доступа к этой сессии');
+      navigate('/dm-dashboard');
+    }
+  }, [session, currentUser, isLoading, navigate]);
   
   const handleCopySessionCode = () => {
     if (session) {
@@ -39,45 +71,51 @@ const DMSessionPage = () => {
     }
   };
   
-  const handleEndSession = () => {
+  const handleCopySessionLink = () => {
     if (session) {
-      endSession(session.id);
-      toast.success('Сессия завершена');
-      navigate('/dm');
+      const sessionLink = `${window.location.origin}/join/${session.code}`;
+      navigator.clipboard.writeText(sessionLink);
+      toast.success('Ссылка на сессию скопирована!');
     }
   };
   
-  const handleRefreshCode = () => {
+  const handleEndSession = async () => {
     if (session) {
-      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      updateSession({
-        id: session.id,
-        code: newCode
-      });
-      toast.success('Код сессии обновлен');
-    }
-  };
-  
-  const handleSaveNotes = () => {
-    if (session) {
-      // Store notes in localStorage for this session
-      localStorage.setItem(`dnd-session-notes-${session.id}`, notes);
-      toast.success('Заметки сохранены');
-    }
-  };
-  
-  useEffect(() => {
-    if (session) {
-      const savedNotes = localStorage.getItem(`dnd-session-notes-${session.id}`);
-      if (savedNotes) {
-        setNotes(savedNotes);
+      const success = await endSession(session.id);
+      if (success) {
+        navigate('/dm-dashboard');
       }
     }
-  }, [session]);
+  };
   
-  if (!session) {
+  const handleRefreshCode = async () => {
+    if (session) {
+      const newCode = await sessionService.updateSessionCode(session.id);
+      if (newCode) {
+        setSession({...session, code: newCode});
+        toast.success('Код сессии обновлен');
+      }
+    }
+  };
+  
+  const handleSaveNotes = async () => {
+    if (session) {
+      try {
+        const success = await sessionService.saveSessionNotes(session.id, notes);
+        if (success) {
+          toast.success('Заметки сохранены');
+          // Перезагружаем сессию, чтобы получить обновленные заметки
+          loadSession();
+        }
+      } catch (error) {
+        toast.error('Ошибка при сохранении заметок');
+      }
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+      <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
         <div className="flex justify-center items-center h-screen">
           <p>Загрузка сессии...</p>
         </div>
@@ -85,12 +123,22 @@ const DMSessionPage = () => {
     );
   }
 
+  if (!session) {
+    return (
+      <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
+        <div className="flex justify-center items-center h-screen">
+          <p>Сессия не найдена</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 ${theme}`}>
+    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="max-w-7xl mx-auto">
         <header className="mb-6 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center">
-            <Button variant="ghost" onClick={() => navigate('/dm')} className="mr-2">
+            <Button variant="ghost" onClick={() => navigate('/dm-dashboard')} className="mr-2">
               <ArrowLeft className="size-4" />
             </Button>
             <h1 className="text-2xl font-bold">{session.name}</h1>
@@ -109,17 +157,42 @@ const DMSessionPage = () => {
             <Button 
               variant="outline" 
               className="gap-2"
+              onClick={handleCopySessionLink}
+            >
+              <Link className="size-4" />
+              Ссылка
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="gap-2"
               onClick={handleRefreshCode}
             >
               <RefreshCw className="size-4" />
             </Button>
             
-            <Button 
-              variant="destructive"
-              onClick={handleEndSession}
-            >
-              Завершить сессию
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash className="mr-2 h-4 w-4" />
+                  Завершить сессию
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Завершить сессию?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Вы действительно хотите завершить эту сессию? Все данные сессии будут удалены.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleEndSession} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Завершить
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </header>
 
@@ -139,7 +212,7 @@ const DMSessionPage = () => {
               <div className="md:col-span-2">
                 <h2 className="text-xl font-semibold mb-4">Участники сессии</h2>
                 
-                {session.players.length === 0 ? (
+                {(!session.users || session.users.length <= 1) ? (
                   <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
                     <CardContent className="flex flex-col items-center justify-center py-12">
                       <Users className="size-12 text-muted-foreground mb-4" />
@@ -149,41 +222,39 @@ const DMSessionPage = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {session.players.map((player) => (
-                      <Card key={player.id} className="bg-card/30 backdrop-blur-sm border-primary/20">
+                    {session.users.filter((user: any) => !user.isDM).map((user: any) => (
+                      <Card key={user.id} className="bg-card/30 backdrop-blur-sm border-primary/20">
                         <CardHeader>
                           <CardTitle className="flex justify-between">
-                            <span>{player.name}</span>
-                            <span className={player.connected ? "text-green-500" : "text-red-500"}>
-                              {player.connected ? "В сети" : "Не в сети"}
+                            <span>{user.name}</span>
+                            <span className={user.isOnline ? "text-green-500" : "text-red-500"}>
+                              {user.isOnline ? "В сети" : "Не в сети"}
                             </span>
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-2">
-                            <div>
-                              <span className="text-muted-foreground">Персонаж:</span>
-                              <span className="ml-2">{player.character?.name || "Неизвестно"}</span>
+                          {user.character ? (
+                            <div className="space-y-2">
+                              <div>
+                                <span className="text-muted-foreground">Персонаж:</span>
+                                <span className="ml-2">{user.character.name}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Класс:</span>
+                                <span className="ml-2">{user.character.class}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Раса:</span>
+                                <span className="ml-2">{user.character.race}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Уровень:</span>
+                                <span className="ml-2">{user.character.level}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Класс:</span>
-                              <span className="ml-2">{player.character?.class || "Неизвестно"}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Раса:</span>
-                              <span className="ml-2">{player.character?.race || "Неизвестно"}</span>
-                            </div>
-                            <div className="flex justify-end">
-                              <Button 
-                                size="sm" 
-                                onClick={() => {
-                                  // View character sheet logic
-                                }}
-                              >
-                                Просмотр персонажа
-                              </Button>
-                            </div>
-                          </div>
+                          ) : (
+                            <p className="text-muted-foreground">Персонаж не выбран</p>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -221,7 +292,7 @@ const DMSessionPage = () => {
                     </div>
                     <div>
                       <span className="text-muted-foreground block mb-1">Игроков:</span>
-                      <span>{session.players.length}</span>
+                      <span>{session.users ? session.users.filter((user: any) => !user.isDM).length : 0}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -246,6 +317,7 @@ const DMSessionPage = () => {
             </div>
           </TabsContent>
           
+          {/* Оставляем остальные табы без изменений */}
           <TabsContent value="combat">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">

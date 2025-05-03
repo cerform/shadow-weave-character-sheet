@@ -2,7 +2,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Session, User } from '../types/session';
+import { Session, User, Character } from '../types/session';
+import { sessionService, characterService } from '../services/sessionService';
+import { auth } from '../services/firebase';
+import { toast } from 'sonner';
 
 interface SessionStore {
   // Состояние
@@ -11,12 +14,14 @@ interface SessionStore {
   currentUser: User | null;
   loading: boolean;
   error: string | null;
+  characters: Character[];
   
   // Методы для управления сессиями
-  createSession: (name: string, description?: string) => Session;
-  joinSession: (code: string, userName: string) => boolean;
+  createSession: (name: string, description?: string) => Promise<Session>;
+  joinSession: (code: string, userName: string, character?: Character) => Promise<boolean>;
   leaveSession: () => void;
-  endSession: (sessionId: string) => void;
+  endSession: (sessionId: string) => Promise<boolean>;
+  fetchSessions: () => Promise<void>;
   
   // Методы для управления пользователями
   setCurrentUser: (user: User) => void;
@@ -25,8 +30,13 @@ interface SessionStore {
   
   // Методы для работы с текущей сессией
   updateCurrentSession: (updates: Partial<Session>) => void;
-  addUserToSession: (sessionId: string, user: User) => void;
+  addUserToSession: (sessionId: string, user: User) => Promise<boolean>;
   removeUserFromSession: (sessionId: string, userId: string) => void;
+  
+  // Методы для работы с персонажами
+  fetchCharacters: () => void;
+  deleteCharacter: (characterId: string) => boolean;
+  clearAllCharacters: () => boolean;
 }
 
 export const useSessionStore = create<SessionStore>()(
@@ -38,85 +48,110 @@ export const useSessionStore = create<SessionStore>()(
       currentUser: null,
       loading: false,
       error: null,
+      characters: [],
       
       // Методы для управления сессиями
-      createSession: (name: string, description?: string) => {
-        const newUser: User = {
-          id: uuidv4(),
-          name: 'Мастер',
-          themePreference: 'dark',
-          isOnline: true,
-          isDM: true,
-        };
+      createSession: async (name: string, description?: string) => {
+        set({ loading: true, error: null });
         
-        const sessionCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const newSession: Session = {
-          id: uuidv4(),
-          title: name,
-          name: name,
-          description: description || "",
-          code: sessionCode,
-          dmId: newUser.id,
-          users: [newUser],
-          players: [],
-          startTime: new Date().toISOString(),
-          isActive: true,
-          notes: [],
-          createdAt: new Date().toISOString(),
-          lastActivity: new Date().toISOString(),
-        };
-        
-        set((state) => ({
-          sessions: [...state.sessions, newSession],
-          currentSession: newSession,
-          currentUser: newUser,
-        }));
-        
-        return newSession;
+        try {
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            throw new Error("Пользователь не авторизован");
+          }
+          
+          const session = await sessionService.createSession(name, description);
+          if (!session) {
+            throw new Error("Ошибка при создании сессии");
+          }
+          
+          // Обновляем состояние
+          set(state => ({
+            sessions: [...state.sessions, session],
+            currentSession: session,
+            currentUser: {
+              id: currentUser.uid,
+              name: currentUser.displayName || 'Мастер',
+              themePreference: 'dark',
+              isOnline: true,
+              isDM: true
+            },
+            loading: false
+          }));
+          
+          toast.success("Сессия успешно создана");
+          return session;
+        } catch (error: any) {
+          set({ loading: false, error: error.message });
+          toast.error(error.message);
+          throw error;
+        }
       },
       
-      joinSession: (code: string, userName: string) => {
-        const session = get().sessions.find(
-          (s) => s.code.toLowerCase() === code.toLowerCase()
-        );
+      fetchSessions: async () => {
+        set({ loading: true, error: null });
         
-        if (!session) {
-          set({ error: 'Сессия не найдена' });
-          return false;
+        try {
+          const sessions = await sessionService.getUserSessions();
+          set({ sessions, loading: false });
+        } catch (error: any) {
+          set({ loading: false, error: error.message });
+          toast.error("Не удалось загрузить сессии");
         }
+      },
+      
+      joinSession: async (code: string, userName: string, character?: Character) => {
+        set({ loading: true, error: null });
         
-        const newUser: User = {
-          id: uuidv4(),
-          name: userName,
-          themePreference: 'dark',
-          isOnline: true,
-          isDM: false,
-        };
-        
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === session.id) {
-              return {
-                ...s,
-                users: [...(s.users || []), newUser],
-                lastActivity: new Date().toISOString(),
-              };
-            }
-            return s;
+        try {
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            toast.error("Пользователь не авторизован");
+            set({ loading: false, error: "Пользователь не авторизован" });
+            return false;
+          }
+          
+          // Получаем сессию по коду
+          const session = await sessionService.getSessionByCode(code);
+          if (!session) {
+            toast.error("Сессия с таким кодом не найдена");
+            set({ loading: false, error: "Сессия не найдена" });
+            return false;
+          }
+          
+          // Создаем пользователя
+          const user: User = {
+            id: currentUser.uid,
+            name: userName,
+            themePreference: 'dark',
+            isOnline: true,
+            isDM: false,
+            character
+          };
+          
+          // Присоединяемся к сессии
+          const joined = await sessionService.joinSession(session.id, user);
+          if (!joined) {
+            throw new Error("Не удалось присоединиться к сессии");
+          }
+          
+          // Получаем обновленную сессию
+          const updatedSession = await sessionService.getSessionById(session.id);
+          
+          // Обновляем состояние
+          set({
+            currentSession: updatedSession,
+            currentUser: user,
+            loading: false
           });
           
-          return {
-            sessions: updatedSessions,
-            currentSession: {
-              ...session,
-              users: [...(session.users || []), newUser],
-              lastActivity: new Date().toISOString(),
-            },
-            currentUser: newUser,
-          };
-        });
-        
-        return true;
+          toast.success("Успешно присоединились к сессии");
+          return true;
+        } catch (error: any) {
+          set({ loading: false, error: error.message });
+          toast.error(error.message);
+          return false;
+        }
       },
       
       leaveSession: () => {
@@ -124,37 +159,35 @@ export const useSessionStore = create<SessionStore>()(
         
         if (!currentUser || !currentSession) return;
         
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === currentSession.id) {
-              return {
-                ...s,
-                users: (s.users || []).map((u) => {
-                  if (u.id === currentUser.id) {
-                    return { ...u, isOnline: false };
-                  }
-                  return u;
-                }),
-                lastActivity: new Date().toISOString(),
-              };
-            }
-            return s;
-          });
-          
-          return {
-            sessions: updatedSessions,
-            currentSession: null,
-            currentUser: null,
-          };
+        set({
+          currentSession: null,
+          currentUser: null
         });
+        
+        toast.info("Вы покинули сессию");
       },
       
-      endSession: (sessionId: string) => {
-        set((state) => ({
-          sessions: state.sessions.filter((s) => s.id !== sessionId),
-          currentSession: state.currentSession?.id === sessionId ? null : state.currentSession,
-          currentUser: state.currentSession?.id === sessionId ? null : state.currentUser,
-        }));
+      endSession: async (sessionId: string) => {
+        set({ loading: true, error: null });
+        
+        try {
+          const deleted = await sessionService.deleteSession(sessionId);
+          if (!deleted) {
+            throw new Error("Не удалось удалить сессию");
+          }
+          
+          set(state => ({
+            sessions: state.sessions.filter(s => s.id !== sessionId),
+            currentSession: state.currentSession?.id === sessionId ? null : state.currentSession,
+            loading: false
+          }));
+          
+          return true;
+        } catch (error: any) {
+          set({ loading: false, error: error.message });
+          toast.error(error.message);
+          return false;
+        }
       },
       
       // Методы для управления пользователями
@@ -167,42 +200,27 @@ export const useSessionStore = create<SessionStore>()(
         
         if (!currentSession) return;
         
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === currentSession.id) {
-              return {
-                ...s,
-                users: (s.users || []).map((u) => {
-                  if (u.id === userId) {
-                    return { ...u, ...updates };
-                  }
-                  return u;
-                }),
-              };
-            }
-            return s;
-          });
-          
-          const updatedCurrentSession = {
-            ...currentSession,
-            users: (currentSession.users || []).map((u) => {
-              if (u.id === userId) {
-                return { ...u, ...updates };
-              }
-              return u;
-            }),
-          };
-          
-          const updatedCurrentUser = userId === state.currentUser?.id
-            ? { ...state.currentUser, ...updates }
-            : state.currentUser;
-          
-          return {
-            sessions: updatedSessions,
-            currentSession: updatedCurrentSession,
-            currentUser: updatedCurrentUser,
-          };
+        // Обновление пользователей в текущей сессии
+        const updatedUsers = currentSession.users?.map(u => {
+          if (u.id === userId) {
+            return { ...u, ...updates };
+          }
+          return u;
         });
+        
+        // Обновление текущего пользователя
+        const updatedCurrentUser = get().currentUser?.id === userId
+          ? { ...get().currentUser!, ...updates }
+          : get().currentUser;
+        
+        // Обновление сессий
+        set(state => ({
+          currentSession: currentSession ? {
+            ...currentSession,
+            users: updatedUsers
+          } : null,
+          currentUser: updatedCurrentUser
+        }));
       },
       
       updateUserTheme: (userId: string, theme: string) => {
@@ -215,93 +233,79 @@ export const useSessionStore = create<SessionStore>()(
         
         if (!currentSession) return;
         
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === currentSession.id) {
-              return { ...s, ...updates };
-            }
-            return s;
-          });
-          
-          return {
-            sessions: updatedSessions,
-            currentSession: { ...currentSession, ...updates },
-          };
+        set({
+          currentSession: { ...currentSession, ...updates }
         });
       },
       
-      addUserToSession: (sessionId: string, user: User) => {
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === sessionId) {
-              if ((s.users || []).some((u) => u.id === user.id)) {
-                return {
-                  ...s,
-                  users: (s.users || []).map((u) => (u.id === user.id ? { ...user, isOnline: true } : u)),
-                };
-              }
-              return {
-                ...s,
-                users: [...(s.users || []), user],
-              };
+      addUserToSession: async (sessionId: string, user: User) => {
+        try {
+          const joined = await sessionService.joinSession(sessionId, user);
+          
+          if (joined) {
+            // Получаем обновленную сессию
+            const updatedSession = await sessionService.getSessionById(sessionId);
+            
+            // Обновляем состояние, если это текущая сессия
+            if (get().currentSession?.id === sessionId) {
+              set({ currentSession: updatedSession });
             }
-            return s;
-          });
+          }
           
-          const currentSessionUpdate =
-            state.currentSession?.id === sessionId
-              ? {
-                  currentSession: {
-                    ...state.currentSession,
-                    users: state.currentSession.users && state.currentSession.users.some((u) => u.id === user.id)
-                      ? state.currentSession.users.map((u) =>
-                          u.id === user.id ? { ...user, isOnline: true } : u
-                        )
-                      : [...(state.currentSession.users || []), user],
-                  },
-                }
-              : {};
-          
-          return {
-            sessions: updatedSessions,
-            ...currentSessionUpdate,
-          };
-        });
+          return joined;
+        } catch (error) {
+          console.error("Ошибка при добавлении пользователя:", error);
+          return false;
+        }
       },
       
       removeUserFromSession: (sessionId: string, userId: string) => {
-        set((state) => {
-          const updatedSessions = state.sessions.map((s) => {
-            if (s.id === sessionId) {
-              return {
-                ...s,
-                users: (s.users || []).filter((u) => u.id !== userId),
-              };
-            }
-            return s;
-          });
-          
-          const currentSessionUpdate =
-            state.currentSession?.id === sessionId
-              ? {
-                  currentSession: {
-                    ...state.currentSession,
-                    users: (state.currentSession.users || []).filter((u) => u.id !== userId),
-                  },
-                }
-              : {};
-          
-          return {
-            sessions: updatedSessions,
-            ...currentSessionUpdate,
-          };
-        });
+        // Этот метод требует доработки для работы с Firebase
+        console.log("Метод removeUserFromSession не реализован для Firebase");
       },
+      
+      // Методы для работы с персонажами
+      fetchCharacters: () => {
+        const characters = characterService.getCharacters();
+        set({ characters });
+      },
+      
+      deleteCharacter: (characterId: string) => {
+        const deleted = characterService.deleteCharacter(characterId);
+        
+        if (deleted) {
+          // Обновляем список персонажей
+          set(state => ({
+            characters: state.characters.filter(c => c.id !== characterId)
+          }));
+          
+          toast.success("Персонаж успешно удален");
+        } else {
+          toast.error("Не удалось удалить персонажа");
+        }
+        
+        return deleted;
+      },
+      
+      clearAllCharacters: () => {
+        const cleared = characterService.clearAllCharacters();
+        
+        if (cleared) {
+          set({ characters: [] });
+          toast.success("Все персонажи удалены");
+        } else {
+          toast.error("Не удалось удалить персонажей");
+        }
+        
+        return cleared;
+      }
     }),
     {
-      name: 'session-storage', // имя для локального хранилища
+      name: 'session-storage',
       partialize: (state) => ({
-        sessions: state.sessions,
+        // Сохраняем только текущего пользователя и сессию
+        currentUser: state.currentUser,
+        currentSession: state.currentSession
       }),
     }
   )

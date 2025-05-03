@@ -4,7 +4,7 @@ export interface Session {
   campaignId?: string;
   title: string;
   description: string;
-  dmId: string;
+  dmId: string; // ID мастера, создавшего сессию
   players: string[];
   startTime: string;
   endTime?: string;
@@ -19,15 +19,30 @@ export interface Session {
   lastActivity?: string;
   createdAt: string;
   code?: string;
-  name?: string; // Добавляем поле name
-  users?: User[]; // Добавляем поле users
+  name?: string; 
+  users?: User[];
 }
 
-// Добавляем интерфейс User
 export interface User {
   id: string;
   name: string;
   themePreference: string;
   isOnline: boolean;
   isDM: boolean;
+  character?: Character; // Добавляем персонажа к пользователю
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  race: string;
+  class: string;
+  level: number;
+  avatarUrl?: string;
+}
+
+// Добавляем типы для хранения персонажей
+export interface CharacterStorage {
+  characters: Character[];
+  lastUsed?: string; // ID последнего использованного персонажа
 }
