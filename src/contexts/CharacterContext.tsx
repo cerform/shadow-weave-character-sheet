@@ -46,6 +46,7 @@ export interface Character {
   userId?: string; 
   name: string;
   race: string;
+  class?: string;  // Опциональное поле для совместимости с session.ts
   subrace?: string; 
   className: string;
   level: number;
@@ -81,7 +82,7 @@ export interface CharacterContextType {
   setCharacter: (char: Character) => void;
   clearCharacter: () => void;
   updateCharacter: (updates: Partial<Character>) => void;
-  saveCharacter: (char: Partial<Character>) => Promise<Character>;
+  saveCharacter: (char: Character) => Promise<Character>;
   deleteCharacter: (id: string) => Promise<void>;
   getUserCharacters: () => Character[];
 }
@@ -118,8 +119,8 @@ export function CharacterProvider({ children }: Props) {
     const loadCharacters = async () => {
       try {
         const loadedCharacters = await characterService.getCharacters();
-        if (loadedCharacters.length > 0) {
-          setCharacters(loadedCharacters);
+        if (loadedCharacters && loadedCharacters.length > 0) {
+          setCharacters(loadedCharacters as Character[]);
           
           // Если есть сохраненный активный персонаж, пытаемся его найти среди загруженных
           const savedActiveCharacterId = localStorage.getItem(ACTIVE_CHARACTER_KEY);
@@ -128,7 +129,7 @@ export function CharacterProvider({ children }: Props) {
               const activeChar = JSON.parse(savedActiveCharacterId);
               const foundCharacter = loadedCharacters.find(c => c.id === activeChar.id);
               if (foundCharacter) {
-                setCharacterState(foundCharacter);
+                setCharacterState(foundCharacter as Character);
               }
             } catch (e) {
               console.error("Ошибка при чтении активного персонажа из localStorage:", e);
@@ -199,7 +200,7 @@ export function CharacterProvider({ children }: Props) {
     console.log("Установка персонажа:", char.name);
     
     // Если персонаж - чародей, добавляем очки чародея
-    if (char.className?.includes('Чародей') && !char.sorceryPoints) {
+    if ((char.className?.includes('Чародей') || char.class?.includes('Чародей')) && !char.sorceryPoints) {
       char.sorceryPoints = {
         current: char.level,
         max: char.level
@@ -218,7 +219,8 @@ export function CharacterProvider({ children }: Props) {
       const updatedChar = { ...prev, ...updates, updatedAt: new Date().toISOString() };
       
       // Добавляем очки чародея, если персонаж стал чародеем
-      if (updates.className?.includes('Чародей') && !prev.className?.includes('Чародей')) {
+      if ((updates.className?.includes('Чародей') || updates.class?.includes('Чародей')) && 
+          !prev.className?.includes('Чародей') && !prev.class?.includes('Чародей')) {
         updatedChar.sorceryPoints = {
           current: updatedChar.level,
           max: updatedChar.level
@@ -242,10 +244,15 @@ export function CharacterProvider({ children }: Props) {
   }, []);
   
   // Метод для сохранения персонажа - теперь используем Firebase Storage
-  const saveCharacter = useCallback(async (charData: Partial<Character>): Promise<Character> => {
+  const saveCharacter = useCallback(async (charData: Character): Promise<Character> => {
     const now = new Date().toISOString();
     
     try {
+      // Добавляем userId из текущего пользователя Firebase
+      if (auth.currentUser) {
+        charData.userId = auth.currentUser.uid;
+      }
+      
       // Проверяем, новый это персонаж или обновление существующего
       if (charData.id) {
         // Обновление существующего персонажа
@@ -271,12 +278,12 @@ export function CharacterProvider({ children }: Props) {
       } else {
         // Создание нового персонажа
         const newChar: Character = {
-          ...charData as Omit<Character, 'id' | 'createdAt' | 'updatedAt'>,
+          ...charData,
           id: uuidv4(),
           userId: auth.currentUser?.uid, // Привязываем к текущему пользователю
           createdAt: now,
           updatedAt: now
-        } as Character;
+        };
         
         // Сохраняем в Firebase Storage
         const saved = await characterService.saveCharacter(newChar);

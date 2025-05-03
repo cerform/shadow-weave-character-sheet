@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
-import { Character } from "@/contexts/CharacterContext"; // Импортируем тип Character
+import { convertToCharacter } from "@/utils/characterConverter";
+import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -46,76 +47,6 @@ export const useCharacterCreation = () => {
     backstory: ""
   });
 
-  // Обновляем функцию для конвертации CharacterSheet в Character (для контекста персонажа)
-  const convertToCharacter = (sheet: CharacterSheet): Character => {
-    // Расчет максимального HP на основе класса и уровня
-    const calculateMaxHp = (): number => {
-      // Базовое значение в зависимости от класса
-      const baseHpByClass: {[key: string]: number} = {
-        "Варвар": 12,
-        "Воин": 10,
-        "Паладин": 10,
-        "Следопыт": 10,
-        "Монах": 8,
-        "Плут": 8,
-        "Бард": 8,
-        "Жрец": 8,
-        "Друид": 8,
-        "Волшебник": 6,
-        "Чародей": 6,
-        "Колдун": 8
-      };
-      
-      const baseHp = baseHpByClass[sheet.class] || 8; // По умолчанию 8, если класс не найден
-      const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
-      
-      // HP первого уровня = максимум хитов кости + модификатор телосложения
-      let maxHp = baseHp + constitutionMod;
-      
-      // Для каждого уровня выше первого добавляем среднее значение кости хитов + модификатор телосложения
-      if (sheet.level > 1) {
-        maxHp += ((baseHp / 2 + 1) + constitutionMod) * (sheet.level - 1);
-      }
-      
-      return Math.round(maxHp);
-    };
-    
-    // Вычисляем максимальные хиты
-    const maxHp = sheet.maxHp || calculateMaxHp();
-    
-    console.log("Конвертирование CharacterSheet в Character:", sheet.name);
-    
-    return {
-      id: sheet.id || "",
-      userId: sheet.userId,
-      name: sheet.name || "Безымянный",
-      race: sheet.race || "",
-      subrace: sheet.subrace || "",
-      className: sheet.class || "",
-      level: sheet.level || 1,
-      abilities: {
-        STR: sheet.abilities.strength || 10,
-        DEX: sheet.abilities.dexterity || 10,
-        CON: sheet.abilities.constitution || 10,
-        INT: sheet.abilities.intelligence || 10,
-        WIS: sheet.abilities.wisdom || 10,
-        CHA: sheet.abilities.charisma || 10
-      },
-      spells: sheet.spells || [],
-      spellSlots: {}, // Заполнять при необходимости
-      gender: sheet.gender || "",
-      alignment: sheet.alignment || "",
-      background: sheet.background || "",
-      equipment: sheet.equipment || [],
-      languages: sheet.languages || [],
-      proficiencies: sheet.proficiencies || [],
-      maxHp: maxHp,
-      currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    } as Character;
-  };
-
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
     if (updates.abilities) {
@@ -132,34 +63,8 @@ export const useCharacterCreation = () => {
 
   // Проверяем, является ли класс магическим
   const isMagicClass = () => {
-    const magicClasses = [
-      "Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун", "Чернокнижник",
-      "Паладин", "Следопыт"
-    ];
-    
-    const magicSubclasses = [
-      "Мистический рыцарь", // для Воина
-      "Мистический ловкач", // для Плута
-      "Путь Тотемного Воина", // для Варвара
-      "Путь Четырех Стихий" // для Монаха
-    ];
-
-    // Проверяем основно�� класс
-    if (magicClasses.includes(character.class)) {
-      return true;
-    }
-    
-    // Проверяем основной подкласс
-    if (magicSubclasses.includes(character.subclass || '')) {
-      return true;
-    }
-    
-    // Проверяем дополнительные классы
-    if (character.additionalClasses?.some(cls => magicClasses.includes(cls.class))) {
-      return true;
-    }
-    
-    return false;
+    if (!character.class) return false;
+    return checkIsMagicClass(character.class);
   };
 
   // Получаем общий уровень персонажа (основной + мультикласс)
@@ -187,8 +92,7 @@ export const useCharacterCreation = () => {
 
   // Вычисляем модификатор характеристики
   const getModifier = (score: number): string => {
-    const mod = Math.floor((score - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
+    return getModifierFromAbilityScore(score);
   };
   
   // Получаем особенности подкласса, доступные для текущего уровня
@@ -243,7 +147,7 @@ export const useCharacterCreation = () => {
       updateCharacter({ level });
       
       // Опционально: здесь можно добавить логику изменения доступных
-      // заклинаний, особ��нностей класса и подкласса в зависимости от уровня
+      // заклинаний, особенностей класса и подкласса в зависимости от уровня
       
       console.log(`Уровень персонажа изменен на ${level}`);
     } else {
@@ -265,7 +169,7 @@ export const useCharacterCreation = () => {
       });
     }
     
-    return allClasses;
+    return allClasses.filter(Boolean) as string[];
   };
 
   return { 
@@ -280,6 +184,6 @@ export const useCharacterCreation = () => {
     handleLevelChange,
     getTotalLevel,
     getAllClasses,
-    convertToCharacter // Экспортируем обновленный метод
+    convertToCharacter // Используем импортированную функцию
   };
 };
