@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -18,6 +19,7 @@ import JoinGamePage from "@/pages/JoinGamePage";
 import PlayerSessionPage from "@/pages/PlayerSessionPage";
 import HandbookPage from "@/pages/HandbookPage";
 import AuthPage from "@/pages/AuthPage";
+import ProfilePage from "@/pages/ProfilePage";
 
 import { CharacterProvider } from "@/contexts/CharacterContext";
 import { SocketProvider } from "@/contexts/SocketContext";
@@ -30,6 +32,17 @@ const ProtectedDMRoute = ({ children }) => {
   
   if (!currentUser?.isDM) {
     return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
+// Компонент-обертка для защищенных пользовательских маршрутов
+const ProtectedUserRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/auth?redirect=profile" replace />;
   }
   
   return children;
@@ -53,6 +66,9 @@ function App() {
                   <Route path="/player-session" element={<PlayerSessionPage />} />
                   <Route path="/handbook" element={<HandbookPage />} />
                   <Route path="/auth" element={<AuthPage />} />
+                  
+                  {/* Защищенный маршрут для профиля пользователя */}
+                  <Route path="/profile" element={<ProtectedUserRoute><ProfilePage /></ProtectedUserRoute>} />
                   
                   {/* Защищенные маршруты только для DM */}
                   <Route path="/battle" element={<ProtectedDMRoute><PlayBattlePage /></ProtectedDMRoute>} />

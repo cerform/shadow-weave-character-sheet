@@ -81,7 +81,7 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
               >
                 {isSpecialStep && characterClass
                   ? `Выбор ${characterClass}`
-                  : step.title}
+                  : step.name}
               </div>
             </div>
           );

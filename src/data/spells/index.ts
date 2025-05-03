@@ -1,106 +1,104 @@
 
-import { CharacterSpell } from '@/types/character';
-import { cantrips } from './cantrips';
-// Correcting the imports for level files
-import { level1 } from './level1';
-import { level2 } from './level2';
-import { level3 } from './level3';
-import { level4 } from './level4';
-import { level4Part2 } from './level4_part2';
-import { level4Part3 } from './level4_part3';
-import { level5 } from './level5';
-import { level6 } from './level6';
-import { level7 } from './level7';
-import { level8 } from './level8';
-import { level9 } from './level9';
+import { cantrips } from "./cantrips";
+import { level1Spells } from "./level1";
+import { level2Spells } from "./level2";
+import { level3Spells } from "./level3";
+import { level3CombatSpells } from "./level3_combat";
+import { level3DivinationSpells } from "./level3_divination";
+import { level3EnchantSpells } from "./level3_enchant";
+import { level3IllusionSpells } from "./level3_illusion";
+import { level3MoreSpells } from "./level3_more";
+import { level3UtilitySpells } from "./level3_utility";
+import { level4Spells } from "./level4";
+import { level4Part2Spells } from "./level4_part2";
+import { level4Part3Spells } from "./level4_part3";
+import { level5Spells } from "./level5";
+import { level6Spells } from "./level6";
+import { level7Spells } from "./level7";
+import { level8Spells } from "./level8";
+import { level9Spells } from "./level9";
+import { CharacterSpell } from "@/types/character";
 
-// Import level0 correctly
-import { level0 } from './level0';
-
-// Объединяем все заклинания
+// Combine all spells into one array
 export const spells: CharacterSpell[] = [
   ...cantrips,
-  ...level0,
-  ...level1,
-  ...level2,
-  ...level3,
-  ...level4,
-  ...level4Part2,
-  ...level4Part3,
-  ...level5,
-  ...level6,
-  ...level7,
-  ...level8,
-  ...level9
+  ...level1Spells,
+  ...level2Spells,
+  ...level3Spells,
+  ...level3CombatSpells,
+  ...level3DivinationSpells,
+  ...level3EnchantSpells,
+  ...level3IllusionSpells,
+  ...level3MoreSpells,
+  ...level3UtilitySpells,
+  ...level4Spells,
+  ...level4Part2Spells,
+  ...level4Part3Spells,
+  ...level5Spells,
+  ...level6Spells,
+  ...level7Spells,
+  ...level8Spells,
+  ...level9Spells,
 ];
 
-/**
- * Получает заклинания по уровню
- */
+// Define spell levels
+export const spellLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+// Get spells by level
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  return spells.filter(spell => spell.level === level);
+  return spells.filter((spell) => spell.level === level);
 };
 
-/**
- * Получает заклинание по имени
- */
-export const getSpellByName = (name: string): CharacterSpell | undefined => {
-  return spells.find(spell => spell.name === name);
-};
-
-/**
- * Получает заклинания по классу
- */
-export const getSpellsByClass = (className: string, characterLevel?: number): CharacterSpell[] => {
-  if (!className || typeof className !== 'string') {
-    return [];
-  }
-  
-  const classNameLower = className.toLowerCase();
-  
-  return spells.filter(spell => {
-    // Проверяем, что classes существует
-    if (!spell.classes) {
-      return false;
-    }
-    
-    // Если classes это строка
-    if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase().includes(classNameLower);
-    }
-    
-    // Если classes это массив
+// Get spells by class
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  return spells.filter((spell) => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => {
-        // Проверяем, что элемент массива это строка
-        if (typeof cls === 'string') {
-          return cls.toLowerCase().includes(classNameLower);
-        }
-        return false;
-      });
+      return spell.classes.some(
+        (c) => typeof c === 'string' && c.toLowerCase() === className.toLowerCase()
+      );
+    } else if (typeof spell.classes === 'string') {
+      return spell.classes.toLowerCase() === className.toLowerCase();
     }
-    
     return false;
   });
 };
 
-/**
- * Получает заклинания по школе
- */
+// Get spell details by name
+export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
+  return spells.find(
+    (spell) => spell.name.toLowerCase() === spellName.toLowerCase()
+  );
+};
+
+// Get spells by school
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
-  return spells.filter(spell => spell.school === school);
+  return spells.filter(
+    (spell) => spell.school.toLowerCase() === school.toLowerCase()
+  );
 };
 
-/**
- * Получает все имена заклинаний
- */
-export const getAllSpellNames = (): string[] => {
-  return spells.map(spell => spell.name);
+// Get all spell schools
+export const getAllSpellSchools = (): string[] => {
+  const schools = new Set<string>();
+  spells.forEach((spell) => {
+    schools.add(spell.school);
+  });
+  return Array.from(schools).sort();
 };
 
-/**
- * Возвращает все заклинания
- */
-export const getAllSpells = (): CharacterSpell[] => {
-  return [...spells];
+// Get all classes that can cast spells
+export const getAllSpellcastingClasses = (): string[] => {
+  const classes = new Set<string>();
+  spells.forEach((spell) => {
+    if (Array.isArray(spell.classes)) {
+      spell.classes.forEach((c) => {
+        if (typeof c === 'string') {
+          classes.add(c);
+        }
+      });
+    } else if (typeof spell.classes === 'string') {
+      classes.add(spell.classes);
+    }
+  });
+  return Array.from(classes).sort();
 };
