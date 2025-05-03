@@ -7,7 +7,6 @@ import React, {
   useContext,
 } from "react";
 import { v4 as uuidv4 } from 'uuid';
-import { useAuth } from './AuthContext';
 import { toast } from "sonner";
 import { auth } from "@/services/firebase"; 
 import { characterService } from "@/services/sessionService";
@@ -109,26 +108,29 @@ interface Props {
 const STORAGE_KEY = "dnd-characters"; // Единый ключ для всего приложения
 const ACTIVE_CHARACTER_KEY = "dnd-active-character"; // Обновленный ключ для активного персонажа
 
+// Создаем безопасную версию хука useAuth, которая не выбросит исключение
+const useSafeAuth = () => {
+  try {
+    // Динамический импорт AuthContext для избежания циклических зависимостей
+    const AuthContext = require('./AuthContext');
+    return AuthContext.useAuth();
+  } catch (error) {
+    // Возвращаем заглушки при отсутствии контекста
+    console.warn("AuthContext не доступен, используется автономный режим");
+    return {
+      currentUser: null,
+      addCharacterToUser: async (_characterId: string) => {},
+      removeCharacterFromUser: async (_characterId: string) => {}
+    };
+  }
+};
+
 export function CharacterProvider({ children }: Props) {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [character, setCharacterState] = useState<Character | null>(null);
   
-  // Проверяем, находимся ли мы в контексте AuthProvider
-  let currentUser = null;
-  // Fix for type errors: Update function signatures to match expected types
-  let addCharacterToUser = async (_characterId: string) => {};
-  let removeCharacterFromUser = async (_characterId: string) => {};
-  
-  try {
-    // Пытаемся использовать AuthContext, если он доступен
-    const authContext = useAuth();
-    currentUser = authContext.currentUser;
-    addCharacterToUser = authContext.addCharacterToUser;
-    removeCharacterFromUser = authContext.removeCharacterFromUser;
-  } catch (error) {
-    console.error("AuthContext не доступен, используем заглушки для функций");
-    // Если контекст не доступен, используем заглушки
-  }
+  // Используем безопасную версию useAuth
+  const { currentUser, addCharacterToUser, removeCharacterFromUser } = useSafeAuth();
 
   // При старте читаем из localStorage и Firebase Storage
   useEffect(() => {

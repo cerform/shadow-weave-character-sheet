@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Конфигурация Firebase
 const firebaseConfig = {
@@ -27,7 +27,24 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize Analytics only if supported (prevents errors in environments like SSR)
+const initializeAnalytics = async () => {
+  try {
+    if (await isSupported()) {
+      return getAnalytics(app);
+    }
+    return null;
+  } catch (error) {
+    console.warn("Analytics not initialized:", error);
+    return null;
+  }
+};
+
+// Initialize asynchronously but don't wait
+const analyticsPromise = initializeAnalytics();
+
+// Initialize other Firebase services immediately
 const firebaseAuth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -65,6 +82,9 @@ const auth = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
       const result = await signInWithPopup(firebaseAuth, googleProvider);
       return result.user;
     } catch (error: any) {
@@ -89,4 +109,4 @@ const auth = {
   }
 };
 
-export { app, db, storage, auth, firebaseAuth };
+export { app, db, storage, auth, firebaseAuth, analyticsPromise };
