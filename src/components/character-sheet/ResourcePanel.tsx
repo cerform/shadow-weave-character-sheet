@@ -1,12 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Shield } from 'lucide-react';
+import { Heart, Shield, Dices } from 'lucide-react';
 import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
+import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResourcePanelProps {
   currentHp: number;
@@ -16,6 +21,12 @@ interface ResourcePanelProps {
 
 export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelProps) => {
   const { character } = useContext(CharacterContext);
+  const { theme } = useTheme();
+  const { toast } = useToast();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  
+  const [showHitDiceRoller, setShowHitDiceRoller] = useState(false);
+  const [showHealingRoller, setShowHealingRoller] = useState(false);
   
   const handleHpAdjust = (amount: number) => {
     const newHp = Math.max(0, Math.min(currentHp + amount, maxHp));
@@ -61,6 +72,29 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     return ac;
   };
   
+  // Обработчик результата броска кубика для лечения
+  const handleHealingRollComplete = (result: number) => {
+    handleHpAdjust(result);
+    setShowHealingRoller(false);
+    toast({
+      title: "Лечение!",
+      description: `Вы восстановили ${result} очков здоровья.`,
+    });
+  };
+  
+  // Обработчик результата броска Hit Die
+  const handleHitDiceRollComplete = (result: number) => {
+    const conMod = character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0;
+    const healingAmount = result + conMod;
+    
+    handleHpAdjust(healingAmount);
+    setShowHitDiceRoller(false);
+    toast({
+      title: "Использован Hit Die!",
+      description: `Восстановлено HP: ${healingAmount} (${result} + ${conMod} Телосложение)`,
+    });
+  };
+  
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <h3 className="text-lg font-semibold mb-4 text-primary">Ресурсы</h3>
@@ -80,6 +114,32 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
           <div className="flex justify-between gap-2 mt-2">
             <Button size="sm" variant="outline" onClick={() => handleHpAdjust(-1)}>-1</Button>
             <Button size="sm" variant="outline" onClick={() => handleHpAdjust(-5)}>-5</Button>
+            
+            <Sheet open={showHealingRoller} onOpenChange={setShowHealingRoller}>
+              <SheetTrigger asChild>
+                <Button size="sm" variant="outline" className="flex items-center gap-1">
+                  <Dices className="h-3 w-3" /> +d8
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
+                <SheetHeader className="p-4">
+                  <SheetTitle>Бросок для лечения</SheetTitle>
+                  <SheetDescription>
+                    Бросьте кубик d8 для восстановления здоровья
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="h-[80vh]">
+                  <DiceRoller3DFixed
+                    initialDice="d8"
+                    hideControls={false}
+                    modifier={0}
+                    onRollComplete={handleHealingRollComplete}
+                    themeColor={currentTheme.accent}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+            
             <Button size="sm" variant="outline" onClick={() => handleHpAdjust(1)}>+1</Button>
             <Button size="sm" variant="outline" onClick={() => handleHpAdjust(5)}>+5</Button>
           </div>
@@ -129,7 +189,30 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               {character?.level || 1}d{getHitDieByClass(character?.className || '')}
             </span>
             <div>
-              <Button size="sm" variant="outline">Использовать</Button>
+              <Sheet open={showHitDiceRoller} onOpenChange={setShowHitDiceRoller}>
+                <SheetTrigger asChild>
+                  <Button size="sm" variant="outline" className="flex items-center gap-1">
+                    <Dices className="h-3 w-3" /> Использовать
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
+                  <SheetHeader className="p-4">
+                    <SheetTitle>Hit Dice</SheetTitle>
+                    <SheetDescription>
+                      Используйте Hit Die для восстановления здоровья во время короткого отдыха
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="h-[80vh]">
+                    <DiceRoller3DFixed
+                      initialDice={getHitDieByClass(character?.className || '') as any}
+                      hideControls={false}
+                      modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
+                      onRollComplete={handleHitDiceRollComplete}
+                      themeColor={currentTheme.accent}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
@@ -139,22 +222,22 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
 };
 
 // Получаем Hit Die для класса
-const getHitDieByClass = (characterClass: string): number => {
-  const hitDice: Record<string, number> = {
-    "Варвар": 12,
-    "Воин": 10,
-    "Паладин": 10,
-    "Следопыт": 10,
-    "Жрец": 8,
-    "Друид": 8,
-    "Монах": 8,
-    "Плут": 8,
-    "Бард": 8,
-    "Колдун": 8,
-    "Чернокнижник": 8,
-    "Волшебник": 6,
-    "Чародей": 6
+const getHitDieByClass = (characterClass: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' => {
+  const hitDice: Record<string, 'd4' | 'd6' | 'd8' | 'd10' | 'd12'> = {
+    "Варвар": "d12",
+    "Воин": "d10",
+    "Паладин": "d10",
+    "Следопыт": "d10",
+    "Жрец": "d8",
+    "Друид": "d8",
+    "Монах": "d8",
+    "Плут": "d8",
+    "Бард": "d8",
+    "Колдун": "d8",
+    "Чернокнижник": "d8",
+    "Волшебник": "d6",
+    "Чародей": "d6"
   };
   
-  return hitDice[characterClass] || 8; // По умолчанию d8
+  return hitDice[characterClass] || "d8"; // По умолчанию d8
 };

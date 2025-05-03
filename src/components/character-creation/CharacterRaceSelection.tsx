@@ -78,6 +78,9 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                         label={subrace}
                         selected={selectedSubrace === subrace}
                         onClick={() => handleSubraceSelect(subrace)}
+                        className={`transition-all duration-300 ${selectedSubrace === subrace ? 
+                          'border-primary border-2 bg-primary/20 text-primary-foreground' : 
+                          'border border-border hover:border-primary/60'}`}
                       />
                     ))}
                   </SelectionSubOptionsContainer>

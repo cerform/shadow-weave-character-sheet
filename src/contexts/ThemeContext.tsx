@@ -51,7 +51,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
       document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
       document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
-      // Removed contrastColor as it doesn't exist in Theme type
       document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
       document.documentElement.style.setProperty('--stat-box-background', selectedTheme.statBoxBackground);
       document.documentElement.style.setProperty('--ability-score-color', selectedTheme.abilityScoreColor);
@@ -61,9 +60,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Фон для всех страниц, учитывая тему
       document.documentElement.style.setProperty('--background-color', themeName === 'default' ? '#1A1105' : '#0A0A0A');
       
-      // Переменные tailwind для конкретной темы
+      // Переменные tailwind для конкретной темы - обеспечить контрастность для лучшей читаемости
       document.documentElement.style.setProperty('--primary', selectedTheme.accent.replace('#', ''));
       document.documentElement.style.setProperty('--background', themeName === 'default' ? '26 10% 5%' : '0 0% 5%');
+      
+      // Улучшаем контрастность для текста
+      const textColor = getContrastColor(selectedTheme.accent);
+      document.documentElement.style.setProperty('--primary-foreground', textColor);
+      document.documentElement.style.setProperty('--foreground', '#FFFFFF');
+      
+      // Обеспечиваем контраст для всех текстовых элементов
+      document.documentElement.style.setProperty('--text-contrast', '#FFFFFF');
       
       // Позаботимся о переменных для компонентов shadcn
       const hue = parseInt(selectedTheme.accent.replace('#', ''), 16);
@@ -74,6 +81,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.style.setProperty('--primary', `${h} ${s} ${l}`);
       document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
     }
+  };
+  
+  // Вспомогательная функция для определения контрастного цвета текста
+  const getContrastColor = (hexColor: string) => {
+    // Преобразуем hex в RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Вычисляем яркость по формуле
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    // Возвращаем белый или черный в зависимости от яркости
+    return brightness > 125 ? '0 0% 0%' : '0 0% 100%';
   };
 
   return (
