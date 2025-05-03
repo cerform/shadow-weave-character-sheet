@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut } from "lucide-react";
@@ -66,6 +65,7 @@ const Index = () => {
     { title: "Главная", path: "/home", icon: Home },
     { title: "Создание персонажа", path: "/character-creation", icon: UserPlus },
     { title: "Лист персонажа", path: "/character-sheet", icon: FileText },
+    { title: "Руководство игрока", path: "/handbook", icon: BookOpen },
     { title: "Книга заклинаний", path: "/spellbook", icon: BookOpen },
     { title: "Боевая карта", path: "/battle", icon: Swords },
     { title: "Панель мастера", path: "/dm", icon: Crown },
