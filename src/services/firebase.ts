@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 // Firebase конфигурация
 const firebaseConfig = {
-  apiKey: "AIzaSyDbUVuFyp_OPRuuRoEbFQT_PCqTYbqT7Hc",
+  apiKey: "AIzaSyCBygAL1xaZNnZgnZLZODuCBfjgmpFEVNA",
   authDomain: "dnd-character-creator-lovable.firebaseapp.com",
   projectId: "dnd-character-creator-lovable",
   storageBucket: "dnd-character-creator-lovable.appspot.com",
@@ -65,6 +65,7 @@ export const firebaseAuthService = {
       toast.success("Вход через Google выполнен успешно!");
       return result.user;
     } catch (error: any) {
+      console.error("Ошибка при входе через Google:", error);
       toast.error("Ошибка при входе через Google");
       throw error;
     }
