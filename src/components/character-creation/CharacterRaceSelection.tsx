@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { races } from "@/data/races";
 import { CharacterSheet } from "@/types/character.d";
 import NavigationButtons from "./NavigationButtons";
@@ -36,6 +36,27 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Функция для определения, нужна ли подраса для выбранной расы
+  const hasSubraces = (raceName: string) => {
+    if (!raceName) return false;
+    const race = races.find(r => r.name === raceName);
+    return race && race.subRaces && race.subRaces.length > 0;
+  };
+
+  // Эффект для сброса подрасы при изменении расы
+  useEffect(() => {
+    if (selectedRace !== character.race) {
+      setSelectedSubrace("");
+    }
+  }, [selectedRace, character.race]);
+
+  // Получаем доступные подрасы для выбранной расы
+  const getAvailableSubraces = (raceName: string) => {
+    if (!raceName) return [];
+    const race = races.find(r => r.name === raceName);
+    return race?.subRaces || [];
+  };
+
   const handleRaceSelect = (race: string) => {
     setSelectedRace(race);
     setSelectedSubrace("");
@@ -47,8 +68,18 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     updateCharacter({ subrace });
   };
 
+  // Проверяем, доступен ли переход на следующий шаг
+  const canProceed = () => {
+    // Если у расы есть подрасы, требуется выбрать подрасу
+    if (hasSubraces(selectedRace)) {
+      return !!selectedSubrace;
+    }
+    // Иначе достаточно только выбрать расу
+    return !!selectedRace;
+  };
+
   const handleNext = () => {
-    if (selectedRace) {
+    if (canProceed()) {
       nextStep();
     }
   };
@@ -63,8 +94,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
       <SelectionCardGrid>
         {races.map((race) => {
           const isSelected = selectedRace === race.name;
-          const hasSubraces = (race.subRaces && race.subRaces.length > 0) || 
-                             (race.subRaceDetails && Object.keys(race.subRaceDetails).length > 0);
+          const raceHasSubraces = race.subRaces && race.subRaces.length > 0;
           
           return (
             <SelectionCard
@@ -76,17 +106,16 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               badges={race.abilityBonuses ? (
                 <SelectionCardBadge>{race.abilityBonuses}</SelectionCardBadge>
               ) : undefined}
-              subOptions={hasSubraces && isSelected ? (
-                <div>
+              subOptions={raceHasSubraces && isSelected ? (
+                <div className="space-y-3">
                   <p className="text-sm font-medium mb-2 text-white">Доступные подрасы:</p>
                   <div className="bg-black/60 p-3 rounded-lg border border-primary/30">
                     <SelectionSubOptionsContainer>
                       {race.subRaces?.map((subrace) => {
                         const isSubraceSelected = selectedSubrace === subrace;
                         return (
-                          <div className="relative">
+                          <div key={subrace} className="relative">
                             <SelectionSubOption
-                              key={subrace}
                               label={subrace}
                               selected={isSubraceSelected}
                               onClick={() => handleSubraceSelect(subrace)}
@@ -123,7 +152,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
       </SelectionCardGrid>
       
       <NavigationButtons
-        allowNext={!!selectedRace}
+        allowNext={canProceed()}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={true}
