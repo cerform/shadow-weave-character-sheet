@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Text, PerspectiveCamera } from '@react-three/drei';
@@ -7,6 +8,7 @@ import { themes } from '@/lib/themes';
 import { Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SelectionSubOption } from '@/components/ui/selection-card';
+import SimpleDiceRenderer from './SimpleDiceRenderer';
 
 // Типы кубиков D&D
 const DICE_TYPES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const;
@@ -22,82 +24,8 @@ interface DiceRendererProps {
   height?: string | number;
   width?: string | number;
   className?: string;
-  themeColor?: string; // Added themeColor prop
+  themeColor?: string; // Добавлен themeColor prop
 }
-
-const DiceModel = ({
-  diceType,
-  position = [0, 0, 0],
-  rolling = false,
-  onStopRolling,
-  themeColor = '#ffffff',
-  result
-}: {
-  diceType: DiceType;
-  position?: [number, number, number];
-  rolling?: boolean;
-  onStopRolling?: (result: number) => void;
-  themeColor?: string;
-  result?: number;
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotationSpeed] = useState(() => ({
-    x: Math.random() * 0.3 + 0.1,
-    y: Math.random() * 0.3 + 0.1,
-    z: Math.random() * 0.3 + 0.1
-  }));
-  
-  // Материал кубика, зависящий от темы
-  const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(themeColor),
-    metalness: 0.7,
-    roughness: 0.3,
-    emissive: new THREE.Color(themeColor).multiplyScalar(0.2)
-  });
-  
-  // Анимация броска кубика
-  useFrame((_, delta) => {
-    if (!meshRef.current || !rolling) return;
-    
-    meshRef.current.rotation.x += rotationSpeed.x * delta * 5;
-    meshRef.current.rotation.y += rotationSpeed.y * delta * 5;
-    meshRef.current.rotation.z += rotationSpeed.z * delta * 5;
-  });
-  
-  // Отображение результата броска
-  useEffect(() => {
-    if (!rolling && onStopRolling && result) {
-      onStopRolling(result);
-    }
-  }, [rolling, onStopRolling, result]);
-  
-  // Используем заглушки для моделей, когда нет GLTF моделей
-  const renderDicePlaceholder = () => {
-    switch(diceType) {
-      case 'd4':
-        return <tetrahedronGeometry args={[1, 0]} />;
-      case 'd6':
-        return <boxGeometry args={[1, 1, 1]} />;
-      case 'd8':
-        return <octahedronGeometry args={[1, 0]} />;
-      case 'd10':
-        return <coneGeometry args={[0.8, 2, 10]} />;
-      case 'd12':
-        return <dodecahedronGeometry args={[1, 0]} />;
-      case 'd20':
-        return <icosahedronGeometry args={[1, 0]} />;
-      default:
-        return <boxGeometry args={[1, 1, 1]} />;
-    }
-  };
-  
-  return (
-    <mesh ref={meshRef} position={new THREE.Vector3(...position)}>
-      {renderDicePlaceholder()}
-      <primitive object={material} attach="material" />
-    </mesh>
-  );
-};
 
 const DiceScene = ({
   diceType,
@@ -213,6 +141,81 @@ const DiceScene = ({
   );
 };
 
+// Использующий SimpleDiceRenderer для отрисовки модели кубика
+const DiceModel = ({
+  diceType,
+  position = [0, 0, 0],
+  rolling = false,
+  onStopRolling,
+  themeColor = '#ffffff',
+  result
+}: {
+  diceType: DiceType;
+  position?: [number, number, number];
+  rolling?: boolean;
+  onStopRolling?: (result: number) => void;
+  themeColor?: string;
+  result?: number;
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [rotationSpeed] = useState(() => ({
+    x: Math.random() * 0.3 + 0.1,
+    y: Math.random() * 0.3 + 0.1,
+    z: Math.random() * 0.3 + 0.1
+  }));
+  
+  // Материал кубика, зависящий от темы
+  const material = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(themeColor),
+    metalness: 0.7,
+    roughness: 0.3,
+    emissive: new THREE.Color(themeColor).multiplyScalar(0.2)
+  });
+  
+  // Анимация броска кубика
+  useFrame((_, delta) => {
+    if (!meshRef.current || !rolling) return;
+    
+    meshRef.current.rotation.x += rotationSpeed.x * delta * 5;
+    meshRef.current.rotation.y += rotationSpeed.y * delta * 5;
+    meshRef.current.rotation.z += rotationSpeed.z * delta * 5;
+  });
+  
+  // Отображение результата броска
+  useEffect(() => {
+    if (!rolling && onStopRolling && result) {
+      onStopRolling(result);
+    }
+  }, [rolling, onStopRolling, result]);
+  
+  // Используем заглушки для моделей, когда нет GLTF моделей
+  const renderDicePlaceholder = () => {
+    switch(diceType) {
+      case 'd4':
+        return <tetrahedronGeometry args={[1, 0]} />;
+      case 'd6':
+        return <boxGeometry args={[1, 1, 1]} />;
+      case 'd8':
+        return <octahedronGeometry args={[1, 0]} />;
+      case 'd10':
+        return <coneGeometry args={[0.8, 2, 10]} />;
+      case 'd12':
+        return <dodecahedronGeometry args={[1, 0]} />;
+      case 'd20':
+        return <icosahedronGeometry args={[1, 0]} />;
+      default:
+        return <boxGeometry args={[1, 1, 1]} />;
+    }
+  };
+  
+  return (
+    <mesh ref={meshRef} position={new THREE.Vector3(...position)}>
+      {renderDicePlaceholder()}
+      <primitive object={material} attach="material" />
+    </mesh>
+  );
+};
+
 export const DiceRenderer: React.FC<DiceRendererProps> = ({
   onRollComplete,
   compact = false,
@@ -223,7 +226,7 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
   height = '300px',
   width = '100%',
   className = '',
-  themeColor // Use the added themeColor prop
+  themeColor // Используем переданный themeColor
 }) => {
   const [diceType, setDiceType] = useState<DiceType>(defaultDiceType);
   const [diceCount, setDiceCount] = useState(defaultDiceCount);
@@ -232,7 +235,7 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
   
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  // Use the provided themeColor or fallback to the current theme
+  // Используем переданный themeColor или берем из текущей темы
   const actualThemeColor = themeColor || currentTheme?.accent || '#ffffff';
   
   const handleRollDice = () => {
@@ -250,6 +253,9 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
     if (onRollComplete) onRollComplete(total, diceType);
   };
   
+  // Используем SimpleDiceRenderer для отображения кубика, если не нужен полный 3D рендер
+  const showSimpleDice = compact && !rolling;
+  
   return (
     <div 
       className={`dice-renderer relative ${className}`} 
@@ -260,15 +266,30 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
         overflow: 'hidden',
       }}
     >
-      <Canvas shadows style={{ background: 'transparent' }}>
-        <DiceScene 
-          diceType={diceType}
-          diceCount={diceCount}
-          rolling={rolling}
-          onRollComplete={handleRollComplete}
-          themeColor={actualThemeColor}
-        />
-      </Canvas>
+      {showSimpleDice ? (
+        <div className="flex flex-col items-center justify-center h-full">
+          <SimpleDiceRenderer 
+            type={diceType}
+            themeColor={actualThemeColor}
+            size={100}
+          />
+          {result !== null && (
+            <div className="mt-2 text-center font-bold text-lg" style={{ color: actualThemeColor }}>
+              {result}
+            </div>
+          )}
+        </div>
+      ) : (
+        <Canvas shadows style={{ background: 'transparent' }}>
+          <DiceScene 
+            diceType={diceType}
+            diceCount={diceCount}
+            rolling={rolling}
+            onRollComplete={handleRollComplete}
+            themeColor={actualThemeColor}
+          />
+        </Canvas>
+      )}
       
       {showControls && (
         <div className="absolute left-0 bottom-0 w-full p-2 bg-black/30 backdrop-blur-sm">
@@ -280,7 +301,7 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
                 selected={diceType === type}
                 onClick={() => setDiceType(type)}
                 style={{
-                  backgroundColor: diceType === type ? themeColor : 'rgba(255,255,255,0.1)',
+                  backgroundColor: diceType === type ? actualThemeColor : 'rgba(255,255,255,0.1)',
                   color: diceType === type ? '#000' : '#fff',
                   fontSize: '0.75rem',
                   padding: '0.25rem 0.5rem'
@@ -319,14 +340,14 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
             variant="default"
             onClick={handleRollDice}
             disabled={rolling}
-            style={{ backgroundColor: themeColor, color: '#000' }}
+            style={{ backgroundColor: actualThemeColor, color: '#000' }}
           >
             <Dices className="mr-1" size={16} />
             {rolling ? 'Бросаем...' : `Бросить ${diceCount}${diceType}`}
           </Button>
           
           {result !== null && !rolling && !compact && (
-            <div className="mt-2 text-center font-bold text-lg" style={{ color: themeColor }}>
+            <div className="mt-2 text-center font-bold text-lg" style={{ color: actualThemeColor }}>
               Результат: {result}
             </div>
           )}

@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Dices } from 'lucide-react';
+import SimpleDiceRenderer from '@/components/dice/SimpleDiceRenderer';
 
 interface LeftPanelDiceRollerProps {
   playerName?: string;
@@ -18,10 +19,17 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
   const [modifier, setModifier] = useState<number>(0);
   const [diceCount, setDiceCount] = useState<number>(1);
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
+  const [previewDice, setPreviewDice] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
   const { theme } = useTheme();
   // Добавляем защиту от undefined
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
+  // Обновляем превью кубика при изменении типа
+  const handleDiceTypeChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20') => {
+    setDiceType(type);
+    setPreviewDice(type);
+  };
   
   return (
     <Card className="w-full h-full bg-background/90 backdrop-blur-sm">
@@ -38,7 +46,11 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
                   size="sm"
                   variant={diceType === dice ? "default" : "outline"}
                   className="h-8 text-xs"
-                  onClick={() => setDiceType(dice as any)}
+                  onClick={() => handleDiceTypeChange(dice as any)}
+                  style={{
+                    backgroundColor: diceType === dice ? currentTheme.accent : undefined,
+                    color: diceType === dice ? '#000' : undefined,
+                  }}
                 >
                   {dice}
                 </Button>
@@ -96,13 +108,12 @@ const LeftPanelDiceRoller: React.FC<LeftPanelDiceRollerProps> = ({ playerName })
             </div>
           </div>
           
-          <div className="h-[200px] w-full">
-            <DiceRoller3DFixed 
-              initialDice={diceType}
-              modifier={modifier} 
+          {/* Заменяем DiceRoller3DFixed на SimpleDiceRenderer для предпросмотра */}
+          <div className="h-[200px] w-full flex justify-center items-center">
+            <SimpleDiceRenderer
+              type={previewDice}
+              size={120}
               themeColor={currentTheme.accent}
-              playerName={playerName}
-              diceCount={diceCount}
             />
           </div>
           

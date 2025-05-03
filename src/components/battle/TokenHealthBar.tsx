@@ -23,7 +23,15 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
     return 'rgb(239, 68, 68)'; // красный
   };
   
+  // Определяем градиент для полоски здоровья
+  const getHealthGradient = (percent: number) => {
+    if (percent > 60) return 'linear-gradient(90deg, rgba(52, 211, 153, 0.7) 0%, rgba(52, 211, 153, 1) 100%)';
+    if (percent > 30) return 'linear-gradient(90deg, rgba(251, 191, 36, 0.7) 0%, rgba(251, 191, 36, 1) 100%)';
+    return 'linear-gradient(90deg, rgba(239, 68, 68, 0.7) 0%, rgba(239, 68, 68, 1) 100%)';
+  };
+  
   const barColor = getHealthColor(healthPercentage);
+  const barGradient = getHealthGradient(healthPercentage);
   
   return (
     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20">
@@ -35,7 +43,7 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
           className="h-full transition-all duration-300 rounded-full"
           style={{ 
             width: `${healthPercentage}%`, 
-            backgroundColor: barColor,
+            background: barGradient,
             boxShadow: `0 0 5px ${barColor}`
           }}
         />
