@@ -21,8 +21,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-amber-900 to-stone-900",
     secondaryGradient: "from-amber-800/20 to-stone-900/20",
     cardBackground: "rgba(20, 15, 30, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(139, 90, 43, 0.7)",
     buttonText: "#FFFFFF",
@@ -35,8 +35,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-purple-900 to-indigo-900",
     secondaryGradient: "from-purple-800/20 to-indigo-900/20",
     cardBackground: "rgba(15, 10, 25, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(144, 97, 249, 0.7)",
     buttonText: "#FFFFFF",
@@ -49,8 +49,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-blue-900 to-indigo-900",
     secondaryGradient: "from-blue-800/20 to-indigo-900/20",
     cardBackground: "rgba(10, 15, 30, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(59, 130, 246, 0.7)",
     buttonText: "#FFFFFF",
@@ -63,8 +63,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-green-900 to-emerald-700",
     secondaryGradient: "from-green-800/20 to-emerald-700/20",
     cardBackground: "rgba(10, 30, 15, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(16, 185, 129, 0.7)",
     buttonText: "#FFFFFF",
@@ -77,8 +77,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-red-900 to-rose-700",
     secondaryGradient: "from-red-800/20 to-rose-700/20",
     cardBackground: "rgba(30, 15, 10, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(244, 63, 94, 0.7)",
     buttonText: "#FFFFFF",
@@ -91,8 +91,8 @@ export const themes: { [key: string]: Theme } = {
     primaryGradient: "from-amber-700 to-yellow-600",
     secondaryGradient: "from-amber-600/20 to-yellow-500/20",
     cardBackground: "rgba(30, 25, 10, 0.85)",
-    textColor: "#FFFFFF",
-    mutedTextColor: "#DDDDDD",
+    textColor: "#FFFFFF", // Обновлено до светлого цвета
+    mutedTextColor: "#DDDDDD", // Обновлено до светлого цвета
     statBoxBackground: "rgba(0, 0, 0, 0.75)",
     buttonBackground: "rgba(245, 158, 11, 0.7)",
     buttonText: "#FFFFFF",

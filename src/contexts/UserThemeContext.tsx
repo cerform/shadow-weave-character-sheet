@@ -49,6 +49,10 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Применяем новую тему
     document.body.classList.add(`theme-${theme}`);
     document.documentElement.setAttribute('data-theme', theme);
+    
+    // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
+    document.documentElement.style.setProperty('--text-color', '#FFFFFF');
+    document.documentElement.style.setProperty('--muted-text-color', '#DDDDDD');
   };
   
   // Функция для изменения темы пользователя

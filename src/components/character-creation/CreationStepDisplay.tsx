@@ -66,8 +66,8 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
                         : isCompleted
                         ? `${currentTheme.accent}30`
                         : undefined,
-                      color: "#FFFFFF", // Обеспечиваем белый текст для всех кнопок
-                      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для улучшения читаемости
+                      color: "#FFFFFF", // Всегда белый текст для контраста
+                      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Тень для улучшения читаемости
                     }}
                     onClick={() => setCurrentStep(step.id)}
                   >
