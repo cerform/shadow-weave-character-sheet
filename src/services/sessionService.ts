@@ -1,4 +1,3 @@
-
 import { db, storage, auth as firebaseAuth } from './firebase';
 import { 
   collection, 
@@ -195,18 +194,24 @@ export const sessionService = {
       // Создаем объект сессии
       const session: Session = {
         id: sessionId,
-        name,
+        title: name,
         description: description || '',
         code,
         dmId: uid,
+        players: [],
         users: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        startTime: new Date().toISOString(),
+        isActive: true,
+        notes: []
       };
       
       // Сохраняем сессию в Firestore
       const sessionRef = doc(db, 'sessions', sessionId);
-      await setDoc(sessionRef, session);
+      await setDoc(sessionRef, {
+        ...session,
+        lastActivity: serverTimestamp()
+      });
       
       // Добавляем сессию в список у пользователя
       const userRef = doc(db, 'users', uid);
@@ -366,6 +371,88 @@ export const sessionService = {
       return true;
     } catch (error) {
       console.error("Ошибка при удалении сессии:", error);
+      return false;
+    }
+  },
+  
+  // Добавляем новые методы, которые используются в DMSessionPage
+  updateSessionCode: async (sessionId: string): Promise<string | null> => {
+    const uid = getCurrentUid();
+    if (!uid) return null;
+    
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
+      
+      if (!sessionSnap.exists()) {
+        return null;
+      }
+      
+      const sessionData = sessionSnap.data();
+      
+      // Проверяем, является ли текущий пользователь мастером
+      if (sessionData.dmId !== uid) {
+        console.error("Нет прав на обновление кода сессии");
+        return null;
+      }
+      
+      // Генерируем новый код
+      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      // Обновляем код в Firestore
+      await updateDoc(sessionRef, {
+        code: newCode,
+        lastActivity: serverTimestamp()
+      });
+      
+      return newCode;
+    } catch (error) {
+      console.error("Ошибка при обновлении кода сессии:", error);
+      return null;
+    }
+  },
+  
+  saveSessionNotes: async (sessionId: string, content: string): Promise<boolean> => {
+    const uid = getCurrentUid();
+    if (!uid) return false;
+    
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
+      
+      if (!sessionSnap.exists()) {
+        return false;
+      }
+      
+      const sessionData = sessionSnap.data() as Session;
+      
+      // Проверяем, является ли текущий пользователь мастером
+      if (sessionData.dmId !== uid) {
+        console.error("Нет прав на сохранение заметок сессии");
+        return false;
+      }
+      
+      // Создаем новую заметку
+      const newNote = {
+        id: uuidv4(),
+        content,
+        timestamp: new Date().toISOString(),
+        authorId: uid
+      };
+      
+      // Добавляем заметку к существующим или создаем новый массив
+      const notes = sessionData.notes || [];
+      notes.push(newNote);
+      
+      // Обновляем заметки в Firestore
+      await updateDoc(sessionRef, {
+        notes,
+        lastActivity: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Ошибка при сохранении заметок:", error);
       return false;
     }
   }

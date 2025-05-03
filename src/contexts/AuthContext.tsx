@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { firebaseAuth, auth } from '@/services/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { syncUserWithFirestore, getCurrentUserWithData } from '@/utils/authHelpers';
+import { FirestoreUserData } from '@/utils/firestoreHelpers';
 
 // Типы для пользователя и контекста
 export interface User {
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       if (firebaseUser) {
         try {
           // Получаем данные пользователя из Firestore
-          const userData = await getCurrentUserWithData();
+          const userData = await getCurrentUserWithData() as FirestoreUserData | null;
           
           if (userData) {
             // Если пользователь есть в Firestore, используем эти данные
@@ -72,7 +73,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
               username: userData.displayName || firebaseUser.displayName || '',
               isDM: userData.isDM || false,
               characters: userData.characters || [],
-              createdAt: userData.createdAt || new Date().toISOString(),
+              createdAt: typeof userData.createdAt === 'string' ? userData.createdAt : new Date().toISOString(),
               firebaseUid: firebaseUser.uid
             };
             
@@ -114,7 +115,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       
       if (firebaseUser) {
         // Получаем данные пользователя из Firestore
-        const userData = await getCurrentUserWithData();
+        const userData = await getCurrentUserWithData() as FirestoreUserData | null;
         
         if (userData) {
           // Если пользователь есть в Firestore, используем эти данные
@@ -124,7 +125,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
             username: userData.displayName || firebaseUser.displayName || '',
             isDM: userData.isDM || false,
             characters: userData.characters || [],
-            createdAt: userData.createdAt || new Date().toISOString(),
+            createdAt: typeof userData.createdAt === 'string' ? userData.createdAt : new Date().toISOString(),
             firebaseUid: firebaseUser.uid
           };
           
@@ -184,7 +185,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       
       if (firebaseUser) {
         // Получаем данные пользователя из Firestore
-        const userData = await getCurrentUserWithData();
+        const userData = await getCurrentUserWithData() as FirestoreUserData | null;
         
         if (userData) {
           // Если пользователь есть в Firestore, используем эти данные
@@ -194,7 +195,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
             username: userData.displayName || firebaseUser.displayName || '',
             isDM: userData.isDM || isDM, // Используем значение из Firestore или параметр
             characters: userData.characters || [],
-            createdAt: userData.createdAt || new Date().toISOString(),
+            createdAt: typeof userData.createdAt === 'string' ? userData.createdAt : new Date().toISOString(),
             firebaseUid: firebaseUser.uid
           };
           

@@ -31,16 +31,21 @@ export const requireAuth = async <T>(callback: () => Promise<T>): Promise<T> => 
   return await callback();
 };
 
+interface UserDataForSync {
+  username?: string;
+  email?: string;
+  isDM?: boolean;
+  displayName?: string;
+  characters?: string[];
+  campaigns?: string[];
+}
+
 /**
  * Синхронизация данных пользователя с Firestore
  * @param userData Данные пользователя для синхронизации
  * @returns true если данные успешно синхронизированы, иначе false
  */
-export const syncUserWithFirestore = async (userData: {
-  username?: string;
-  email?: string;
-  isDM?: boolean;
-}) => {
+export const syncUserWithFirestore = async (userData: UserDataForSync) => {
   const uid = getCurrentUid();
   if (!uid) return false;
   
@@ -55,11 +60,11 @@ export const syncUserWithFirestore = async (userData: {
     
     // Если данных нет, создаем новый документ с начальными значениями
     if (!currentData) {
-      updateData.displayName = userData.username || auth.currentUser?.displayName || 'User';
+      updateData.displayName = userData.displayName || userData.username || auth.currentUser?.displayName || 'User';
       updateData.email = userData.email || auth.currentUser?.email || '';
       updateData.isDM = userData.isDM || false;
-      updateData.characters = [];
-      updateData.campaigns = [];
+      updateData.characters = userData.characters || [];
+      updateData.campaigns = userData.campaigns || [];
     }
     
     // Обновляем данные в Firestore

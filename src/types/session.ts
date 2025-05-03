@@ -23,6 +23,7 @@ export interface Session {
   code?: string;
   name?: string; 
   users?: User[];
+  updatedAt?: string;
 }
 
 export interface User {

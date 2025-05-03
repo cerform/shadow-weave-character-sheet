@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useTheme } from '@/hooks/use-theme';
 import { useSessionStore } from '@/stores/sessionStore';
 import { ArrowLeft, Shield } from 'lucide-react';
-import { auth } from '@/services/firebase';
+import { firebaseAuth } from '@/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const JoinSessionPage = () => {
@@ -25,7 +25,7 @@ const JoinSessionPage = () => {
   
   useEffect(() => {
     // Проверяем авторизацию
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       if (user) {
         // Пользователь авторизован
         setPlayerName(user.displayName || '');

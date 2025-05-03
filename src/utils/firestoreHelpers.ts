@@ -17,18 +17,31 @@ import { getCurrentUid } from "./authHelpers";
 import { CharacterSheet } from "@/types/character";
 import { Character } from "@/contexts/CharacterContext";
 
+// Определение типа данных пользователя из Firestore
+export interface FirestoreUserData {
+  id: string;
+  displayName?: string;
+  email?: string;
+  isDM?: boolean;
+  characters?: string[];
+  campaigns?: string[];
+  createdAt?: string | Timestamp;
+  lastLogin?: string | Timestamp;
+  [key: string]: any; // Для других возможных полей
+}
+
 /**
  * Получение документа пользователя по UID
  * @param uid ID пользователя
  * @returns Данные пользователя или null
  */
-export const getUserData = async (uid: string) => {
+export const getUserData = async (uid: string): Promise<FirestoreUserData | null> => {
   try {
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
-      return { id: userSnap.id, ...userSnap.data() };
+      return { id: userSnap.id, ...userSnap.data() } as FirestoreUserData;
     }
     return null;
   } catch (error) {
@@ -61,8 +74,8 @@ export const updateUserData = async (uid: string, userData: any) => {
         ...userData,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
-        characters: [],
-        campaigns: []
+        characters: userData.characters || [],
+        campaigns: userData.campaigns || []
       });
     }
     

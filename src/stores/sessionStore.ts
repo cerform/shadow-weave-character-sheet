@@ -2,10 +2,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Session, User, Character } from '../types/session';
+import { Session, User, Character as SessionCharacter } from '../types/session';
 import { sessionService, characterService } from '../services/sessionService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
+import { Character } from '@/contexts/CharacterContext';
 
 interface SessionStore {
   // Состояние
@@ -18,7 +19,7 @@ interface SessionStore {
   
   // Методы для управления сессиями
   createSession: (name: string, description?: string) => Promise<Session | null>;
-  joinSession: (code: string, userName: string, character?: Character) => Promise<boolean>;
+  joinSession: (code: string, userName: string, character?: SessionCharacter) => Promise<boolean>;
   leaveSession: () => void;
   endSession: (sessionId: string) => Promise<boolean>;
   fetchSessions: () => Promise<void>;
