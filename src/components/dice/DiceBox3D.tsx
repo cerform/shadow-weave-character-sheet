@@ -33,48 +33,69 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const actualThemeColor = themeColor || currentTheme.accent;
   
-  // Инициализация DiceBox
+  // Условная инициализация DiceBox только для видимых компонентов
   useEffect(() => {
+    // Проверяем, что канвас существует и видим
     if (!canvasRef.current) return;
     
-    // Присваиваем ID к элементу canvas
-    const canvasId = canvasIdRef.current;
-    canvasRef.current.id = canvasId;
+    // Проверяем видимость элемента
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          initDiceBox();
+        }
+      },
+      { threshold: 0.1 }
+    );
     
-    // Создаем экземпляр DiceBox используя селектор ID
-    const diceBox = new DiceBox(`#${canvasId}`, {
-      assetPath: "/assets/dice-models/", // Путь к ассетам
-      scale: 6,                         // Масштаб кубиков
-      theme: "default",                 // Тема по умолчанию
-      themeColor: actualThemeColor,     // Цвет темы
-      gravity: { x: 0, y: 0, z: -9.8 }, // Гравитация
-      mass: 1,                          // Масса кубиков
-      friction: 0.8,                    // Трение
-      shadows: true,                    // Тени
-      origin: { x: 0, y: 10, z: 0 },    // Начальная позиция
-      lightIntensity: 1.0,              // Интенсивность света
-      delay: 10                         // Задержка между бросками
-    });
+    // Начинаем наблюдение за канвасом
+    observer.observe(canvasRef.current);
     
-    // Инициализация
-    const initDiceBox = async () => {
+    // Функция для инициализации DiceBox
+    const initDiceBox = () => {
+      if (diceBoxRef.current) return; // Уже инициализирован
+      
       try {
-        await diceBox.initialize();
-        diceBoxRef.current = diceBox;
-        console.log("DiceBox инициализирован успешно");
+        // Присваиваем ID к элементу canvas
+        const canvasId = canvasIdRef.current;
+        if (canvasRef.current) {
+          canvasRef.current.id = canvasId;
+        }
+        
+        // Создаем экземпляр DiceBox используя селектор ID
+        const diceBox = new DiceBox(`#${canvasId}`, {
+          assetPath: "/assets/dice-models/", // Путь к ассетам
+          scale: 6,                         // Масштаб кубиков
+          theme: "default",                 // Тема по умолчанию
+          themeColor: actualThemeColor,     // Цвет темы
+          gravity: { x: 0, y: 0, z: -9.8 }, // Гравитация
+          mass: 1,                          // Масса кубиков
+          friction: 0.8,                    // Трение
+          shadows: true,                    // Тени
+          origin: { x: 0, y: 10, z: 0 },    // Начальная позиция
+          lightIntensity: 1.0,              // Интенсивность света
+          delay: 10                         // Задержка между бросками
+        });
+        
+        // Инициализация
+        diceBox.initialize().then(() => {
+          diceBoxRef.current = diceBox;
+          console.log("DiceBox инициализирован успешно");
+        }).catch((error: any) => {
+          console.error("Ошибка при инициализации DiceBox:", error);
+        });
       } catch (error) {
-        console.error("Ошибка при инициализации DiceBox:", error);
-        // Если не удалось инициализировать, можно создать фолбэк здесь
+        console.error("Ошибка при создании DiceBox:", error);
       }
     };
     
-    initDiceBox();
-    
     // Очистка при размонтировании
     return () => {
+      observer.disconnect();
       if (diceBoxRef.current) {
         try {
           diceBoxRef.current.clear();
+          diceBoxRef.current = null;
         } catch (e) {
           console.error("Ошибка при очистке DiceBox:", e);
         }
