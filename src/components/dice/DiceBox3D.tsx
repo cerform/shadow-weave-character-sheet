@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import DiceBox from "@3d-dice/dice-box"; // Импорт по умолчанию
+import DiceBox from "@3d-dice/dice-box";
 import { Button } from '@/components/ui/button';
 import { Dices } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
@@ -85,12 +85,13 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   
   // Условная инициализация DiceBox только для видимых компонентов
   useEffect(() => {
-    // Проверяем, что канвас существует и видим
+    // Проверяем, что канвас существует
     if (!canvasRef.current) return;
     
     // Проверяем видимость элемента
     const observer = new IntersectionObserver(
       ([entry]) => {
+        // Инициализируем DiceBox только если компонент видим
         if (entry.isIntersecting) {
           initDiceBox();
         }
@@ -106,8 +107,8 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
       if (diceBoxRef.current) return; // Уже инициализирован
       
       try {
-        // Присваиваем ID к элементу canvas
         const canvasId = canvasIdRef.current;
+        // Присваиваем ID к элементу canvas для корректной работы DiceBox
         if (canvasRef.current) {
           canvasRef.current.id = canvasId;
         }
@@ -134,7 +135,7 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
           shadows: true,                    // Тени
           origin: { x: 0, y: 10, z: 0 },    // Начальная позиция
           lightIntensity: 1.5,              // Увеличенная интенсивность света для лучшего эффекта
-          delay: 10,                         // Задержка между бросками
+          delay: 10,                        // Задержка между бросками
           // Добавляем настройки освещения для реализма
           lights: [
             { type: "ambient", intensity: 0.5 },
