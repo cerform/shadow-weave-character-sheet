@@ -106,47 +106,40 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               badges={race.abilityBonuses ? (
                 <SelectionCardBadge>{race.abilityBonuses}</SelectionCardBadge>
               ) : undefined}
-              subOptions={raceHasSubraces && isSelected ? (
-                <div className="space-y-3">
-                  <p className="text-sm font-medium mb-2 text-white">Доступные подрасы:</p>
-                  <div className="bg-black/60 p-3 rounded-lg border border-primary/30">
-                    <SelectionSubOptionsContainer>
-                      {race.subRaces?.map((subrace) => {
-                        const isSubraceSelected = selectedSubrace === subrace;
-                        return (
-                          <div key={subrace} className="relative">
-                            <SelectionSubOption
-                              label={subrace}
-                              selected={isSubraceSelected}
-                              onClick={() => handleSubraceSelect(subrace)}
-                              style={{
-                                backgroundColor: isSubraceSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
-                                color: isSubraceSelected ? '#FFFFFF' : '#FFFFFF',
-                                border: `1px solid ${isSubraceSelected ? '#FFFFFF' : currentTheme.accent}`,
-                                boxShadow: isSubraceSelected ? `0 0 12px ${currentTheme.accent}` : 'none',
-                                transform: isSubraceSelected ? 'scale(1.05)' : 'scale(1)',
-                                position: 'relative',
-                                paddingRight: isSubraceSelected ? '35px' : '12px'
-                              }}
-                              className={`
-                                transition-all duration-200 font-medium
-                                ${isSubraceSelected ? 'shadow-glow' : 'hover:bg-white/20'}
-                              `}
-                            />
-                            {isSubraceSelected && (
-                              <Check 
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white" 
-                                size={20} 
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </SelectionSubOptionsContainer>
+            >
+              {raceHasSubraces && isSelected && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium">Доступные подрасы:</p>
+                  <div className="bg-black/40 p-3 rounded-lg border border-primary/30">
+                    <div className="flex flex-wrap gap-2">
+                      {race.subRaces?.map((subrace) => (
+                        <button
+                          key={subrace}
+                          onClick={() => handleSubraceSelect(subrace)}
+                          className={`
+                            px-3 py-1.5 rounded text-sm font-medium transition-all duration-200
+                            ${selectedSubrace === subrace
+                              ? 'bg-primary text-white shadow-md scale-105'
+                              : 'bg-black/60 text-white hover:bg-white/20'
+                            }
+                            ${selectedSubrace === subrace ? 'border border-white' : 'border border-primary/30'}
+                          `}
+                          style={{
+                            backgroundColor: selectedSubrace === subrace ? currentTheme.accent : undefined,
+                            boxShadow: selectedSubrace === subrace ? `0 0 8px ${currentTheme.accent}` : undefined
+                          }}
+                        >
+                          <span className="flex items-center">
+                            {subrace}
+                            {selectedSubrace === subrace && <Check className="ml-1.5 h-3 w-3" />}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              ) : undefined}
-            />
+              )}
+            </SelectionCard>
           );
         })}
       </SelectionCardGrid>

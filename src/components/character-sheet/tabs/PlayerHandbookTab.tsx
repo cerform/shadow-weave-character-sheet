@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Book, BookOpen, ExternalLink, User, Sword, Wand, Mountain } from 'lucide-react';
+import { Book, BookOpen, ExternalLink, Mountain, Sword } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
 import { useDeviceType } from '@/hooks/use-mobile';

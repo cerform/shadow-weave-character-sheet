@@ -5,20 +5,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Book, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 export const HandbookTab = () => {
   const [activeSection, setActiveSection] = useState("equipment");
-
+  const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold flex items-center">
           <Book className="mr-2 h-5 w-5" />
-          Справочник
+          Руководство игрока
         </h2>
-        <Button variant="outline" onClick={() => window.open('/handbook', '_blank')}>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/handbook')}
+          style={{
+            borderColor: currentTheme.accent
+          }}
+        >
           <BookOpen className="mr-2 h-4 w-4" />
-          Открыть полный справочник
+          Открыть полную версию
         </Button>
       </div>
 
