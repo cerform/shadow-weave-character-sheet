@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -72,6 +71,14 @@ export interface CharacterSheet {
   maxHp?: number;  // Добавляем максимальные хиты
   currentHp?: number;  // Добавляем текущие хиты
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
+  abilityBonuses?: { // Добавляем бонусы к характеристикам
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
 }
 
 // Интерфейс для подклассов персонажей

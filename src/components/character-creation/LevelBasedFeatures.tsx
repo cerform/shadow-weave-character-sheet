@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLevelFeatures, LevelFeature } from '@/hooks/useLevelFeatures';
 import { CharacterSheet } from '@/types/character';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Info } from 'lucide-react';
 
 interface LevelBasedFeaturesProps {
   character: CharacterSheet;
@@ -20,73 +22,92 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
 }) => {
   const { availableFeatures, selectedFeatures, selectFeature, getHitDiceInfo } = useLevelFeatures(character);
   const [expandedFeature, setExpandedFeature] = useState<string | null>(null);
+  
+  // Состояние для модальных окон
+  const [showSubclassModal, setShowSubclassModal] = useState(false);
+  const [showAbilityIncreaseModal, setShowAbilityIncreaseModal] = useState(false);
+  const [selectedAbilityIncreaseType, setSelectedAbilityIncreaseType] = useState<string>('');
+  
+  // Состояние для выбора характеристик при увеличении
+  const [abilityIncreases, setAbilityIncreases] = useState<{
+    first: { ability: string, value: number },
+    second: { ability: string, value: number }
+  }>({
+    first: { ability: '', value: 0 },
+    second: { ability: '', value: 0 }
+  });
 
-  // Функция для отображения деталей особенности
-  const toggleFeatureDetails = (featureType: string) => {
-    if (expandedFeature === featureType) {
-      setExpandedFeature(null);
-    } else {
-      setExpandedFeature(featureType);
-    }
+  // Открытие диалога выбора архетипа
+  const openSubclassDialog = () => {
+    setShowSubclassModal(true);
+    setExpandedFeature('subclass');
   };
 
-  // Отображение выбора архетипа (подкласса)
-  const renderSubclassSelection = (feature: LevelFeature) => {
-    const subclasses = getAvailableSubclasses(character.class);
+  // Открытие диалога увеличения характеристик
+  const openAbilityIncreaseDialog = () => {
+    setShowAbilityIncreaseModal(true);
+    setExpandedFeature('ability_increase');
+  };
+
+  // Обработка выбора архетипа
+  const handleSubclassSelect = (value: string) => {
+    updateCharacter({ subclass: value });
+    selectFeature('subclass', value);
+    setShowSubclassModal(false);
+  };
+
+  // Обработка выбора типа увеличения характеристик
+  const handleAbilityIncreaseTypeSelect = (type: string) => {
+    setSelectedAbilityIncreaseType(type);
+    selectFeature('ability_increase', type);
     
-    return (
-      <div className="mt-4">
-        <Label htmlFor="subclass-select">Выберите архетип:</Label>
-        <Select 
-          onValueChange={(value) => {
-            selectFeature('subclass', value);
-            updateCharacter({ subclass: value });
-          }}
-          value={character.subclass || ''}
-        >
-          <SelectTrigger className="w-full mt-1">
-            <SelectValue placeholder="Выберите архетип" />
-          </SelectTrigger>
-          <SelectContent>
-            {subclasses.map((subclass) => (
-              <SelectItem key={subclass} value={subclass}>
-                {subclass}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
+    // Сбросить выбранные характеристики при смене типа
+    setAbilityIncreases({
+      first: { ability: '', value: 0 },
+      second: { ability: '', value: 0 }
+    });
   };
 
-  // Отображение увеличения характеристик
-  const renderAbilityScoreImprovement = (feature: LevelFeature) => {
-    // В будущем можно добавить возможность выбора, какие характеристики улучшать
-    return (
-      <div className="mt-4">
-        <p className="text-sm">
-          На {feature.level} уровне вы получаете возможность увеличить характеристики:
-        </p>
-        <RadioGroup 
-          className="mt-2"
-          onValueChange={(value) => selectFeature('ability_increase', value)}
-          value={selectedFeatures['ability_increase'] || ''}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="single_2" id="single_2" />
-            <Label htmlFor="single_2">Увеличить одну характеристику на 2</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="dual_1" id="dual_1" />
-            <Label htmlFor="dual_1">Увеличить две характеристики на 1</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="feat" id="feat" />
-            <Label htmlFor="feat">Взять черту (подвиг)</Label>
-          </div>
-        </RadioGroup>
-      </div>
-    );
+  // Обработка выбора характеристики для увеличения
+  const handleAbilitySelect = (ability: string, position: 'first' | 'second') => {
+    setAbilityIncreases(prev => ({
+      ...prev,
+      [position]: { 
+        ability, 
+        value: selectedAbilityIncreaseType === 'single_2' ? 2 : 1 
+      }
+    }));
+  };
+
+  // Применение увеличения характеристик
+  const applyAbilityIncrease = () => {
+    if (selectedAbilityIncreaseType === 'single_2' && abilityIncreases.first.ability) {
+      // Увеличиваем одну характеристику на 2
+      const updatedAbilities = { ...character.abilities };
+      const abilityKey = abilityIncreases.first.ability.toLowerCase() as keyof typeof updatedAbilities;
+      updatedAbilities[abilityKey] += 2;
+      updateCharacter({ abilities: updatedAbilities });
+      
+    } else if (selectedAbilityIncreaseType === 'dual_1' && 
+               abilityIncreases.first.ability && 
+               abilityIncreases.second.ability) {
+      // Увеличиваем две характеристики на 1
+      const updatedAbilities = { ...character.abilities };
+      const firstKey = abilityIncreases.first.ability.toLowerCase() as keyof typeof updatedAbilities;
+      const secondKey = abilityIncreases.second.ability.toLowerCase() as keyof typeof updatedAbilities;
+      updatedAbilities[firstKey] += 1;
+      updatedAbilities[secondKey] += 1;
+      updateCharacter({ abilities: updatedAbilities });
+    }
+    
+    // Добавляем особенность в список особенностей персонажа
+    const features = character.features || [];
+    features.push(`Увеличение характеристик (${selectedAbilityIncreaseType === 'single_2' ? 
+      abilityIncreases.first.ability + ' +2' : 
+      abilityIncreases.first.ability + ' +1, ' + abilityIncreases.second.ability + ' +1'})`);
+    
+    updateCharacter({ features });
+    setShowAbilityIncreaseModal(false);
   };
 
   // Получаем доступные подклассы для класса
@@ -115,10 +136,22 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
       case "Паладин":
         return ["Клятва Преданности", "Клятва Древних", "Клятва Мести"];
       case "Бард":
-        return ["Коллегия Знаний", "Коллегия Доблести"];
+        return ["Коллегия Знания", "Коллегия Доблести"];
       default:
         return [];
     }
+  };
+
+  // Получить список способностей для выбора
+  const getAbilityOptions = () => {
+    return [
+      { value: "strength", label: "Сила" },
+      { value: "dexterity", label: "Ловкость" },
+      { value: "constitution", label: "Телосложение" },
+      { value: "intelligence", label: "Интеллект" },
+      { value: "wisdom", label: "Мудрость" },
+      { value: "charisma", label: "Харизма" }
+    ];
   };
 
   // Группировка особенностей по уровням
@@ -156,29 +189,36 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
             {features.map((feature) => (
               <div key={feature.name} className="py-3 first:pt-0 last:pb-0">
                 <div 
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleFeatureDetails(feature.type)}
+                  className="flex justify-between items-center"
                 >
                   <div>
                     <h4 className="font-medium">{feature.name}</h4>
                     <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    {feature.type === 'subclass' && character.subclass && (
+                      <Badge variant="secondary" className="mt-2">
+                        Выбрано: {character.subclass}
+                      </Badge>
+                    )}
                   </div>
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFeatureDetails(feature.type);
+                    onClick={() => {
+                      if (feature.type === 'subclass') {
+                        openSubclassDialog();
+                      } else if (feature.type === 'ability_increase') {
+                        openAbilityIncreaseDialog();
+                      } else {
+                        setExpandedFeature(expandedFeature === feature.type ? null : feature.type);
+                      }
                     }}
                   >
-                    {expandedFeature === feature.type ? 'Скрыть' : 'Детали'}
+                    Детали
                   </Button>
                 </div>
                 
-                {expandedFeature === feature.type && (
+                {expandedFeature === feature.type && feature.type !== 'subclass' && feature.type !== 'ability_increase' && (
                   <div className="mt-3 pt-3 border-t border-border">
-                    {feature.type === 'subclass' && renderSubclassSelection(feature)}
-                    {feature.type === 'ability_increase' && renderAbilityScoreImprovement(feature)}
                     {feature.type === 'extra_attack' && (
                       <p className="text-sm">
                         На 5 уровне вы получаете способность совершать дополнительную атаку в свой ход.
@@ -196,6 +236,153 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
           </CardContent>
         </Card>
       ))}
+
+      {/* Модальное окно для выбора архетипа */}
+      <Dialog open={showSubclassModal} onOpenChange={setShowSubclassModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Выберите архетип для {character.class}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Select 
+              onValueChange={handleSubclassSelect}
+              value={character.subclass || ''}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Выберите архетип" />
+              </SelectTrigger>
+              <SelectContent>
+                {getAvailableSubclasses(character.class).map((subclass) => (
+                  <SelectItem key={subclass} value={subclass}>
+                    {subclass}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Модальное окно для увеличения характеристик */}
+      <Dialog open={showAbilityIncreaseModal} onOpenChange={setShowAbilityIncreaseModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Увеличение характеристик</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-3">
+              <Label>Выберите способ распределения:</Label>
+              <RadioGroup 
+                className="space-y-2"
+                value={selectedAbilityIncreaseType}
+                onValueChange={handleAbilityIncreaseTypeSelect}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="single_2" id="single_2" />
+                  <Label htmlFor="single_2">Увеличить одну характеристику на 2</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="dual_1" id="dual_1" />
+                  <Label htmlFor="dual_1">Увеличить две характеристики на 1</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="feat" id="feat" />
+                  <Label htmlFor="feat">Взять черту (подвиг)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {selectedAbilityIncreaseType === 'single_2' && (
+              <div className="space-y-3">
+                <Label>Выберите характеристику для увеличения на +2:</Label>
+                <Select 
+                  onValueChange={(value) => handleAbilitySelect(value, 'first')}
+                  value={abilityIncreases.first.ability}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Выберите характеристику" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAbilityOptions().map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedAbilityIncreaseType === 'dual_1' && (
+              <div className="space-y-3">
+                <Label>Выберите две разные характеристики для увеличения на +1:</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Select 
+                    onValueChange={(value) => handleAbilitySelect(value, 'first')}
+                    value={abilityIncreases.first.ability}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Первая" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAbilityOptions()
+                        .filter(opt => opt.value !== abilityIncreases.second.ability)
+                        .map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select 
+                    onValueChange={(value) => handleAbilitySelect(value, 'second')}
+                    value={abilityIncreases.second.ability}
+                    disabled={!abilityIncreases.first.ability}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Вторая" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAbilityOptions()
+                        .filter(opt => opt.value !== abilityIncreases.first.ability)
+                        .map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {selectedAbilityIncreaseType === 'feat' && (
+              <div className="space-y-3">
+                <div className="bg-primary/5 p-3 rounded-md flex items-start">
+                  <Info className="h-5 w-5 text-primary mr-2 mt-0.5" />
+                  <p className="text-sm">Выбор подвига будет доступен в следующем обновлении. Пожалуйста, выберите другой способ распределения очков.</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              onClick={applyAbilityIncrease}
+              disabled={
+                selectedAbilityIncreaseType === 'single_2' && !abilityIncreases.first.ability ||
+                selectedAbilityIncreaseType === 'dual_1' && (!abilityIncreases.first.ability || !abilityIncreases.second.ability) ||
+                selectedAbilityIncreaseType === 'feat'
+              }
+            >
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

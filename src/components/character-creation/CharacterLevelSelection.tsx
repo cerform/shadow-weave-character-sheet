@@ -10,6 +10,7 @@ import HitPointsRoller from './HitPointsRoller';
 import LevelBasedFeatures from './LevelBasedFeatures';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import SectionHeader from "@/components/ui/section-header";
+import { useLevelFeatures } from '@/hooks/useLevelFeatures';
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
@@ -28,6 +29,11 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
 }) => {
   const [level, setLevel] = useState(character.level || 1);
   const [statCapAlert, setStatCapAlert] = useState<string | null>(null);
+  const { availableFeatures } = useLevelFeatures(character);
+
+  // Проверка, выбран ли подкласс (если требуется)
+  const needsSubclass = availableFeatures.some(f => f.type === 'subclass');
+  const subclassSelected = character.subclass !== undefined && character.subclass !== '';
 
   // Рассчитываем модификатор Телосложения
   const getConModifier = (): number => {
@@ -73,6 +79,9 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   const handleHitPointsRolled = (hp: number) => {
     updateCharacter({ maxHp: hp, currentHp: hp });
   };
+
+  // Проверка всех обязательных выборов
+  const requiredSelectionsMade = !needsSubclass || subclassSelected;
 
   return (
     <div className="space-y-6">
@@ -176,10 +185,20 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
         </div>
       )}
       
+      {/* Предупреждение если не выбраны обязательные опции */}
+      {needsSubclass && !subclassSelected && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>Не выбран архетип</AlertTitle>
+          <AlertDescription>
+            Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <NavigationButtons
         nextStep={nextStep}
         prevStep={prevStep}
-        allowNext={true} // Всегда можно продолжить, так как по умолчанию уровень = 1
+        allowNext={requiredSelectionsMade} // Переход дальше только если выбраны все обязательные опции
       />
     </div>
   );
