@@ -6,7 +6,7 @@ import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
 import CharacterClassSelection from './CharacterClassSelection';
 import CharacterAbilityScores from './CharacterAbilityScores';
-import CharacterSubclassSelection from './CharacterSubclassSelection';
+import CharacterMulticlassing from './CharacterMulticlassing';
 import CharacterBackground from './CharacterBackground';
 import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
@@ -99,13 +99,14 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             rollsHistory={rollsHistory}
           />
         );
-      case 4: // Выбор подкласса
+      case 4: // Мультиклассирование (раньше был выбор подкласса)
         return (
-          <CharacterSubclassSelection 
+          <CharacterMulticlassing 
             character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
+            getModifier={getModifier}
           />
         );
       case 5: // Выбор заклинаний

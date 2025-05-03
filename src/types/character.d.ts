@@ -18,6 +18,13 @@ export interface CharacterSpell {
   material?: boolean;
 }
 
+// Обновляем интерфейс для поддержки мультиклассирования
+export interface ClassLevel {
+  class: string;
+  level: number;
+  subclass?: string;
+}
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string; 
@@ -26,8 +33,9 @@ export interface CharacterSheet {
   gender: string; 
   race: string;
   subrace?: string; 
-  class: string;
-  subclass?: string;
+  class: string; // Основной класс
+  subclass?: string; // Основной подкласс
+  additionalClasses?: ClassLevel[]; // Дополнительные классы для мультиклассирования
   level: number;
   background: string;
   alignment: string;
@@ -121,4 +129,11 @@ export interface CharacterRace {
     };
     traits: RaceTraits[];
   }[];
+}
+
+// Минимальные требования для мультиклассирования
+export interface MulticlassRequirements {
+  [className: string]: {
+    [ability: string]: number;  // Например, { "strength": 13, "charisma": 13 }
+  };
 }

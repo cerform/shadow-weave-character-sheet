@@ -16,16 +16,15 @@ export const useCreationStep = ({ isMagicClass, characterClass, character }: Use
   useEffect(() => {
     const newCompletedSteps = { ...completedSteps };
     
-    // Проверяем базовую информацию (имя, раса, класс)
-    if (character.name && character.race && character.class) {
+    // Проверяем расу
+    if (character.race) {
       newCompletedSteps[0] = true;
     } else {
       newCompletedSteps[0] = false;
     }
     
-    // Проверяем характеристики
-    if (character.abilities && 
-        Object.values(character.abilities).every(score => score >= 3 && score <= 30)) {
+    // Проверяем класс
+    if (character.class) {
       newCompletedSteps[1] = true;
     } else {
       newCompletedSteps[1] = false;
@@ -38,19 +37,16 @@ export const useCreationStep = ({ isMagicClass, characterClass, character }: Use
       newCompletedSteps[2] = false;
     }
     
-    // Проверка навыков
-    if (character.skills && character.skills.length > 0) {
+    // Проверяем характеристики
+    if (character.abilities && 
+        Object.values(character.abilities).every(score => score >= 3 && score <= 30)) {
       newCompletedSteps[3] = true;
     } else {
       newCompletedSteps[3] = false;
     }
     
-    // Проверка специализации
-    if (character.subclass) {
-      newCompletedSteps[4] = true;
-    } else {
-      newCompletedSteps[4] = false;
-    }
+    // Шаг мультиклассирования всегда считается завершенным (необязательный шаг)
+    newCompletedSteps[4] = true;
     
     // Проверка заклинаний (только для магических классов)
     if (!isMagicClass || (character.spells && character.spells.length > 0)) {
@@ -66,22 +62,38 @@ export const useCreationStep = ({ isMagicClass, characterClass, character }: Use
       newCompletedSteps[6] = false;
     }
     
-    // Характеристики персонажа (личность, внешность и т.д.)
-    if (character.personalityTraits || character.ideals || 
-        character.bonds || character.flaws) {
+    // Проверка языков
+    if (character.languages && character.languages.length > 0) {
       newCompletedSteps[7] = true;
     } else {
       newCompletedSteps[7] = false;
     }
     
+    // Проверка имени и внешности
+    if (character.name) {
+      newCompletedSteps[8] = true;
+    } else {
+      newCompletedSteps[8] = false;
+    }
+    
+    // Проверка предыстории
+    if (character.background) {
+      newCompletedSteps[9] = true;
+    } else {
+      newCompletedSteps[9] = false;
+    }
+    
+    // Шаг обзора всегда завершен
+    newCompletedSteps[10] = true;
+    
     setCompletedSteps(newCompletedSteps);
   }, [character, isMagicClass]);
 
   const nextStep = () => {
-    // Шаг 4 - выбор специализации
+    // Шаг 4 - Мультиклассирование (необязательный)
     // Шаг 5 - выбор заклинаний (только для магических классов)
     
-    // Если мы на шаге 4 (специализация) и класс не магический, то пропускаем шаг 5
+    // Если мы на шаге 4 (мультиклассирование) и класс не магический, то пропускаем шаг 5
     if (currentStep === 4 && !isMagicClass) {
       setCurrentStep(6); // Переходим к снаряжению
     } 
@@ -94,7 +106,7 @@ export const useCreationStep = ({ isMagicClass, characterClass, character }: Use
   const prevStep = () => {
     // Если мы на шаге 6 (снаряжение) и класс не магический, то возвращаемся к шагу 4
     if (currentStep === 6 && !isMagicClass) {
-      setCurrentStep(4); // Возвращаемся к специализации
+      setCurrentStep(4); // Возвращаемся к мультиклассированию
     }
     // В остальных случаях просто возвращаемся на предыдущий шаг
     else if (currentStep > 0) {

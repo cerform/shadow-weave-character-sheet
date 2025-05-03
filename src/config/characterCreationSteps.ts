@@ -26,9 +26,9 @@ export const steps = [
   },
   {
     id: 4,
-    name: "Специализация",
-    description: "Выберите специализацию класса",
-    isOptional: false
+    name: "Мультиклассирование",
+    description: "Выберите дополнительные классы",
+    isOptional: true
   },
   {
     id: 5,
