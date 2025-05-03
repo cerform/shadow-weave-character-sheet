@@ -52,7 +52,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     }
   };
   
-  // Стили для подрасы
+  // Обновленные стили для подрасы
   const subraceButtonStyle = {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     color: '#FFFFFF',
@@ -102,13 +102,19 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                           label={subrace}
                           selected={isSubraceSelected}
                           onClick={() => handleSubraceSelect(subrace)}
-                          style={isSubraceSelected ? selectedSubraceButtonStyle : subraceButtonStyle}
                           className={`
                             transition-all duration-200
                             ${isSubraceSelected 
-                              ? 'font-semibold shadow-lg ring-2 ring-white' 
+                              ? 'font-semibold scale-105 shadow-glow' 
                               : 'hover:bg-white/20'}
                           `}
+                          style={{
+                            ...(isSubraceSelected ? selectedSubraceButtonStyle : subraceButtonStyle),
+                            backgroundColor: isSubraceSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                            color: isSubraceSelected ? '#000000' : '#FFFFFF',
+                            boxShadow: isSubraceSelected ? `0 0 12px ${currentTheme.accent}` : 'none',
+                            transform: isSubraceSelected ? 'scale(1.05)' : 'scale(1)',
+                          }}
                         />
                       );
                     })}
