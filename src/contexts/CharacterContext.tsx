@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -116,8 +115,9 @@ export function CharacterProvider({ children }: Props) {
   
   // Проверяем, находимся ли мы в контексте AuthProvider
   let currentUser = null;
-  let addCharacterToUser = async () => {};
-  let removeCharacterFromUser = async () => {};
+  // Fix for type errors: Update function signatures to match expected types
+  let addCharacterToUser = async (_characterId: string) => {};
+  let removeCharacterFromUser = async (_characterId: string) => {};
   
   try {
     // Пытаемся использовать AuthContext, если он доступен
@@ -168,7 +168,7 @@ export function CharacterProvider({ children }: Props) {
                 // Сохраняем локальных персонажей в Firebase, если пользователь авторизован
                 const uid = getCurrentUid();
                 if (uid) {
-                  console.log("Синхронизируем локальных персонажей с Firebase...");
+                  console.log("Синхронизируем локальные персонажи с Firebase...");
                   for (const char of parsedChars) {
                     await characterService.saveCharacter({ ...char, userId: uid });
                   }
