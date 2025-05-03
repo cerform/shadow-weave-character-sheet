@@ -1,63 +1,40 @@
 
-import { CharacterSpell } from '@/types/character';
-
 /**
- * Maps component codes to their full component names
- * K - Verbal (Компонент вербальный)
- * В/V - Somatic (Компонент жестов)
- * С/S - Material (Материальный компонент)
- * Р/R - Ritual (Ритуальное заклинание)
+ * Parse spell components from the code string
+ * Component codes:
+ * В - Verbal
+ * С - Somatic
+ * М - Material
+ * Р - Ritual
+ * К - Concentration
  */
 export const parseComponents = (componentCode: string): {
   verbal: boolean;
   somatic: boolean;
   material: boolean;
   ritual: boolean;
+  concentration: boolean;
 } => {
   return {
-    verbal: componentCode.includes('К') || componentCode.includes('K'),
-    somatic: componentCode.includes('В') || componentCode.includes('V'),
-    material: componentCode.includes('С') || componentCode.includes('S') || componentCode.includes('М') || componentCode.includes('M'),
+    verbal: componentCode.includes('В') || componentCode.includes('V'),
+    somatic: componentCode.includes('С') || componentCode.includes('S'),
+    material: componentCode.includes('М') || componentCode.includes('M'),
     ritual: componentCode.includes('Р') || componentCode.includes('R'),
+    concentration: componentCode.includes('К') || componentCode.includes('K')
   };
 };
 
 /**
- * Converts the component properties to a formatted string representation
+ * Build component string from boolean flags
  */
-export const formatComponents = (spell: CharacterSpell): string => {
-  const components: string[] = [];
-  
-  if (spell.verbal) components.push('В');
-  if (spell.somatic) components.push('С');
-  if (spell.material) components.push('М');
-  
-  let result = components.join(', ');
-  if (spell.ritual) {
-    result = 'Р, ' + result;
-  }
-  
-  return result;
-};
-
-/**
- * Updates spell components based on the provided component string
- */
-export const updateSpellComponents = (spell: CharacterSpell, componentString: string): CharacterSpell => {
-  const components = parseComponents(componentString);
-  
-  return {
-    ...spell,
-    verbal: components.verbal,
-    somatic: components.somatic,
-    material: components.material,
-    ritual: components.ritual
-  };
-};
-
-/**
- * Helper to check if a spell exists in the array
- */
-export const findSpellByName = (spells: CharacterSpell[], name: string): CharacterSpell | undefined => {
-  return spells.find(spell => spell.name === name);
+export const buildComponentString = (components: {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+}): string => {
+  let result = '';
+  if (components.verbal) result += 'В';
+  if (components.somatic) result += 'С';
+  if (components.material) result += 'М';
+  return result || '';
 };
