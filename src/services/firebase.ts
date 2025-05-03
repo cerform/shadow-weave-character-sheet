@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
   authDomain: "shadow-char.firebaseapp.com",
   projectId: "shadow-char",
-  storageBucket: "shadow-char.firebasestorage.app",
+  storageBucket: "shadow-char.appspot.com",
   messagingSenderId: "815261687102",
   appId: "1:815261687102:web:5497647ed6ff449a57e06f",
   measurementId: "G-KQ3M1GQJX2"
@@ -19,6 +19,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+
+// Добавляем дополнительные параметры для Google Auth
+googleProvider.setCustomParameters({ 
+  prompt: 'select_account' 
+});
 
 // Инициализация Firebase Analytics
 const analytics = getAnalytics(app);
@@ -66,12 +71,20 @@ export const firebaseAuthService = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
+      console.log("Начинаем вход через Google...");
       const result = await signInWithPopup(auth, googleProvider);
+      console.log("Успешный вход через Google:", result);
       toast.success("Вход через Google выполнен успешно!");
       return result.user;
     } catch (error: any) {
-      console.error("Ошибка при входе через Google:", error);
-      toast.error("Ошибка при входе через Google");
+      console.error("Детальная информация об ошибке:", error);
+      let message = "Ошибка при входе через Google";
+      if (error.code === 'auth/configuration-not-found') {
+        message = "Ошибка конфигурации Firebase. Пожалуйста, попробуйте позже или используйте другой метод входа";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        message = "Окно авторизации было закрыто. Попробуйте еще раз.";
+      }
+      toast.error(message);
       throw error;
     }
   },
