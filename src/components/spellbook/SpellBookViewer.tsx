@@ -56,13 +56,43 @@ const SpellBookViewer: React.FC = () => {
       <Button variant="ghost" size="icon" onClick={() => navigate('/handbook')}>
         <BookOpen className="h-5 w-5" />
       </Button>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Filter className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <Button variant="ghost" size="icon">
-        <Search className="h-5 w-5" onClick={() => setIsFilterOpen(true)} />
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Filter className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[85%] sm:w-[385px] pt-10">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Фильтры заклинаний</h2>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon">
+                <X className="h-5 w-5" />
+              </Button>
+            </SheetClose>
+          </div>
+          <div className="h-[calc(100vh-100px)] overflow-auto pb-16">
+            <SpellFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              activeLevel={activeLevel}
+              toggleLevel={toggleLevel}
+              activeSchool={activeSchool}
+              toggleSchool={toggleSchool}
+              activeClass={activeClass}
+              toggleClass={toggleClass}
+              clearFilters={clearFilters}
+              allLevels={allLevels}
+              allSchools={allSchools}
+              allClasses={allClasses}
+              getBadgeColor={getBadgeColor}
+              getSchoolBadgeColor={getSchoolBadgeColor}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(true)}>
+        <Search className="h-5 w-5" />
       </Button>
     </div>
   );
