@@ -67,10 +67,13 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
     
     // Если classes это массив
     if (Array.isArray(spell.classes)) {
-      // Используем guard clause для проверки типа перед каждой операцией
-      return spell.classes.some(cls => 
-        typeof cls === 'string' && cls.toLowerCase().includes(classNameLower)
-      );
+      // Проверяем каждый элемент массива перед вызовом toLowerCase()
+      return spell.classes.some((cls: unknown) => {
+        if (typeof cls === 'string') {
+          return cls.toLowerCase().includes(classNameLower);
+        }
+        return false;
+      });
     }
     
     // Если не строка и не массив, возвращаем false
