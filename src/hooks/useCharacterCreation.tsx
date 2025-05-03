@@ -7,9 +7,10 @@ export const useCharacterCreation = () => {
   const { toast } = useToast();
   const [character, setCharacter] = useState<CharacterSheet>({
     name: "",
+    gender: "", // Добавляем пол с пустой строкой по умолчанию
     race: "",
     class: "",
-    subclass: "", // Добавляем поле для подкласса
+    subclass: "",
     level: 1,
     background: "",
     alignment: "",
@@ -139,6 +140,6 @@ export const useCharacterCreation = () => {
     getAvailableSubclassFeatures,
     getClassFeatures,
     getRequiredXP,
-    handleLevelChange // Добавляем новый метод
+    handleLevelChange
   };
 };

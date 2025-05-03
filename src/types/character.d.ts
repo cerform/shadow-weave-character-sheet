@@ -23,6 +23,7 @@ export interface CharacterSheet {
   userId?: string; // Добавляем поле для идентификатора пользователя
   id?: string; // Добавляем поле для идентификатора персонажа
   name: string;
+  gender?: string; // Добавляем поле для пола персонажа
   race: string;
   subrace?: string; 
   class: string;
@@ -113,4 +114,3 @@ export interface CharacterRace {
     traits: RaceTraits[];
   }[];
 }
-

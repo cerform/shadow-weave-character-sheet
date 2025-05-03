@@ -1,9 +1,11 @@
+
 import React, { useState } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
+import { CharacterSheet } from "@/types/character";
 
 interface CharacterBasicInfoProps {
-  character: any;
-  updateCharacter: (updates: any) => void;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
   nextStep: () => void;
   prevStep: () => void;
 }

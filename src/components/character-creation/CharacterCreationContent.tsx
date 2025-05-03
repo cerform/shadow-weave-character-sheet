@@ -133,7 +133,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 7: // Выбор языков
         return (
           <CharacterLanguagesSelection 
-            character={character as CharacterSheet}
+            character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}

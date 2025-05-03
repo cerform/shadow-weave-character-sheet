@@ -1,3 +1,4 @@
+
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
@@ -109,7 +110,7 @@ export const getAllSpellcastingClasses = (): string[] => {
 };
 
 // Исправляем ошибку toLowerCase is not a function
-const spellFilter = (query: string, spell: any) => {
+const spellFilter = (query: string, spell: CharacterSpell): boolean => {
   if (!query || query.trim() === '') return true;
   
   const searchTerm = query.toLowerCase();
