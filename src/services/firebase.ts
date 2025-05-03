@@ -1,22 +1,27 @@
 
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, User as FirebaseUser } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 import { toast } from "sonner";
 
 // Firebase конфигурация
 const firebaseConfig = {
-  apiKey: "AIzaSyCBygAL1xaZNnZgnZLZODuCBfjgmpFEVNA",
-  authDomain: "dnd-character-creator-lovable.firebaseapp.com",
-  projectId: "dnd-character-creator-lovable",
-  storageBucket: "dnd-character-creator-lovable.appspot.com",
-  messagingSenderId: "697774652457",
-  appId: "1:697774652457:web:5e9b3f3a31d58b7c5cb131"
+  apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
+  authDomain: "shadow-char.firebaseapp.com",
+  projectId: "shadow-char",
+  storageBucket: "shadow-char.firebasestorage.app",
+  messagingSenderId: "815261687102",
+  appId: "1:815261687102:web:5497647ed6ff449a57e06f",
+  measurementId: "G-KQ3M1GQJX2"
 };
 
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+
+// Инициализация Firebase Analytics
+const analytics = getAnalytics(app);
 
 // Сервис для работы с аутентификацией
 export const firebaseAuthService = {
@@ -93,4 +98,4 @@ export const firebaseAuthService = {
   }
 };
 
-export { auth };
+export { auth, analytics };
