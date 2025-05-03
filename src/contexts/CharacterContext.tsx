@@ -46,9 +46,11 @@ export interface Character {
   userId?: string; 
   name?: string;
   className?: string;
+  class?: string;  // Добавляем class как дополнительное поле для совместимости
   subclass?: string;
   background?: string;
   race?: string;
+  subrace?: string;  // Добавляем subrace как поле для совместимости
   alignment?: string;
   level?: number;
   experience?: number;
@@ -61,7 +63,7 @@ export interface Character {
   };
   currentHp?: number;
   maxHp?: number;
-  temporaryHp?: number; // Добавляем поле для временного HP
+  temporaryHp?: number; // Поле для временного HP
   spellSlots?: SpellSlots;
   spells?: string[];
   features?: any[];
@@ -277,8 +279,8 @@ export function CharacterProvider({ children }: Props) {
       if ((updates.className?.includes('Чародей') || updates.class?.includes('Чародей')) && 
           !prev.className?.includes('Чародей') && !prev.class?.includes('Чародей')) {
         updatedChar.sorceryPoints = {
-          current: updatedChar.level,
-          max: updatedChar.level
+          current: updatedChar.level || 1,
+          max: updatedChar.level || 1
         };
       }
       
@@ -303,7 +305,7 @@ export function CharacterProvider({ children }: Props) {
     setCharacterState(null);
   }, []);
   
-  // Метод для сохранения персонажа - теперь используем Firebase Storage
+  // Метод для сохранения персонажа - тепер�� используем Firebase Storage
   const saveCharacter = useCallback(async (charData: Character): Promise<Character> => {
     const now = new Date().toISOString();
     
@@ -402,7 +404,7 @@ export function CharacterProvider({ children }: Props) {
         console.log("Создан новый персонаж:", newChar.name);
         return newChar;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ошибка при сохранении персонажа:", error);
       toast.error("Не удалось сохранить персонажа");
       throw error;

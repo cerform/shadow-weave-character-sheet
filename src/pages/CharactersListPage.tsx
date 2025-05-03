@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -156,7 +155,7 @@ const CharactersListPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Класс:</span>
-                      <span>{character.class}</span>
+                      <span>{character.class || character.className}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Уровень:</span>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,8 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { firebaseAuth } from '@/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { Character as SessionCharacter } from '@/types/session';
+import { Character } from '@/contexts/CharacterContext';
 
 const JoinSessionPage = () => {
   const navigate = useNavigate();
@@ -64,8 +65,18 @@ const JoinSessionPage = () => {
     
     try {
       setIsJoining(true);
+      // Преобразуем Character в SessionCharacter
+      const sessionCharacter: SessionCharacter | undefined = character ? {
+        id: character.id || '',
+        name: character.name || 'Персонаж',
+        race: character.race || '',
+        class: character.class || character.className || '',
+        level: character.level || 1,
+        avatarUrl: character.image
+      } : undefined;
+      
       // Пытаемся присоединиться к сессии
-      const joined = await joinSession(sessionCode, playerName, character);
+      const joined = await joinSession(sessionCode, playerName, sessionCharacter);
       
       if (joined) {
         navigate('/play');
@@ -135,8 +146,8 @@ const JoinSessionPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {characters.map((character) => (
-                      <SelectItem key={character.id} value={character.id}>
-                        {character.name} ({character.race}, {character.class})
+                      <SelectItem key={character.id} value={character.id || ''}>
+                        {character.name} ({character.race}, {character.class || character.className})
                       </SelectItem>
                     ))}
                   </SelectContent>

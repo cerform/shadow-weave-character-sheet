@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +18,7 @@ interface SessionStore {
   
   // Методы для управления сессиями
   createSession: (name: string, description?: string) => Promise<Session | null>;
-  joinSession: (code: string, userName: string, character?: SessionCharacter) => Promise<boolean>;
+  joinSession: (code: string, userName: string, character?: SessionCharacter | Partial<SessionCharacter>) => Promise<boolean>;
   leaveSession: () => void;
   endSession: (sessionId: string) => Promise<boolean>;
   fetchSessions: () => Promise<void>;
@@ -102,7 +101,7 @@ export const useSessionStore = create<SessionStore>()(
         }
       },
       
-      joinSession: async (code: string, userName: string, character?: Character) => {
+      joinSession: async (code: string, userName: string, character?: SessionCharacter | Partial<SessionCharacter>) => {
         set({ loading: true, error: null });
         
         try {
@@ -122,13 +121,27 @@ export const useSessionStore = create<SessionStore>()(
           }
           
           // Создаем пользователя
+          // Преобразуем character к типу SessionCharacter, если нужно
+          let sessionCharacter: SessionCharacter | undefined;
+          
+          if (character) {
+            sessionCharacter = {
+              id: character.id || '',
+              name: character.name || 'Персонаж',
+              race: character.race || '',
+              class: (character as Character).class || (character as Character).className || '',
+              level: character.level || 1,
+              avatarUrl: (character as Character).image
+            };
+          }
+          
           const user: User = {
             id: currentUser.uid,
             name: userName,
             themePreference: 'dark',
             isOnline: true,
             isDM: false,
-            character
+            character: sessionCharacter
           };
           
           // Присоединяемся к сессии

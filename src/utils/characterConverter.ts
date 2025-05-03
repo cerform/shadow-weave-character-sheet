@@ -83,7 +83,8 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     userId: sheet.userId,
     name: sheet.name || "Безымянный",
     race: sheet.race || "",
-    subrace: sheet.subrace || "",
+    // Используем свойство subrace как отдельное поле только если оно есть в Character
+    ...(sheet.subrace && { subrace: sheet.subrace }),
     className: sheet.class || "",
     class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: sheet.level || 1,
