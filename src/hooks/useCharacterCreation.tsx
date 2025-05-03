@@ -7,7 +7,7 @@ export const useCharacterCreation = () => {
   const { toast } = useToast();
   const [character, setCharacter] = useState<CharacterSheet>({
     name: "",
-    gender: "", // Добавляем пол с пустой строкой по умолчанию
+    gender: "", // Поле для пола персонажа
     race: "",
     class: "",
     subclass: "",
@@ -15,6 +15,14 @@ export const useCharacterCreation = () => {
     background: "",
     alignment: "",
     abilities: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    stats: {  // Добавляем поле stats для совместимости
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -37,6 +45,15 @@ export const useCharacterCreation = () => {
   });
 
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
+    // Если обновляются abilities, также обновляем и stats для совместимости
+    if (updates.abilities) {
+      updates.stats = updates.abilities;
+    }
+    // Если обновляются stats, также обновляем и abilities для совместимости
+    else if (updates.stats) {
+      updates.abilities = updates.stats;
+    }
+    
     setCharacter(prev => ({ ...prev, ...updates }));
     console.log("Персонаж обновлен:", { ...character, ...updates });
   };

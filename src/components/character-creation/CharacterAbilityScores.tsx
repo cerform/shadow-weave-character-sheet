@@ -6,20 +6,21 @@ import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
+import { CharacterSheet } from "@/types/character";
 
 interface CharacterAbilityScoresProps {
-  character: any;
-  updateCharacter: (updates: any) => void;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
   nextStep: () => void;
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
   setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[][]; // Меняем тип с number[] на number[][]
-  getModifier: (score: number) => string; // Меняем тип возвращаемого значения на string
+  diceResults: number[][];
+  getModifier: (score: number) => string;
   rollAllAbilities: () => void;
   rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
   abilityScorePoints?: number;
-  rollsHistory?: { ability: string, rolls: number[], total: number }[]; // Меняем тип на массив объектов
+  rollsHistory?: { ability: string, rolls: number[], total: number }[];
 }
 
 const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
@@ -36,14 +37,14 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   abilityScorePoints = 27,
   rollsHistory = []
 }) => {
-  // Инициализируем stats с безопасной проверкой на существование character.stats
+  // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
   const [stats, setStats] = useState({
-    strength: character?.stats?.strength || 10,
-    dexterity: character?.stats?.dexterity || 10,
-    constitution: character?.stats?.constitution || 10,
-    intelligence: character?.stats?.intelligence || 10,
-    wisdom: character?.stats?.wisdom || 10,
-    charisma: character?.stats?.charisma || 10,
+    strength: character?.abilities?.strength || character?.stats?.strength || 10,
+    dexterity: character?.abilities?.dexterity || character?.stats?.dexterity || 10,
+    constitution: character?.abilities?.constitution || character?.stats?.constitution || 10,
+    intelligence: character?.abilities?.intelligence || character?.stats?.intelligence || 10,
+    wisdom: character?.abilities?.wisdom || character?.stats?.wisdom || 10,
+    charisma: character?.abilities?.charisma || character?.stats?.charisma || 10,
   });
 
   const [pointsLeft, setPointsLeft] = useState(abilityScorePoints);
@@ -150,7 +151,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   };
 
   const handleNext = () => {
-    updateCharacter({ stats });
+    // Сохраняем в оба поля abilities и stats для совместимости
+    updateCharacter({ 
+      abilities: stats,
+      stats: stats 
+    });
     nextStep();
   };
 

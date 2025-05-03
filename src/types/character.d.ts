@@ -39,6 +39,14 @@ export interface CharacterSheet {
     wisdom: number;
     charisma: number;
   };
+  stats?: {  // Добавляем опциональное поле stats для совместимости
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
   skills: string[];
   languages: string[];
   equipment: string[];
