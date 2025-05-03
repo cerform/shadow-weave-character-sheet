@@ -20,3 +20,34 @@
 .text-shadow-accent {
   text-shadow: 0 1px 3px rgba(var(--accent-rgb), 0.7);
 }
+
+/* Кнопки и элементы управления */
+.btn-glow {
+  box-shadow: 0 0 8px 2px rgba(var(--primary-rgb), 0.5);
+}
+
+/* Улучшенные текстовые эффекты */
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 
+               0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.7), 
+               0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.text-glow-green {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.7), 
+               0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.7), 
+               0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.text-glow-purple {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.7), 
+               0 0 20px rgba(139, 92, 246, 0.5);
+}

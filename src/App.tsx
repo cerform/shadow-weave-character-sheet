@@ -1,6 +1,5 @@
 
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
 
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -11,6 +10,7 @@ import { SocketProvider } from './contexts/SocketContext'
 import { SessionProvider } from './contexts/SessionContext'
 import { Toaster } from './components/ui/toaster'
 
+import Index from './pages/Index'
 import Home from './pages/Home'
 import DMDashboardPage from './pages/DMDashboardPage'
 import CharacterCreationPage from './pages/CharacterCreationPage'
@@ -38,16 +38,20 @@ function App() {
               <SocketProvider>
                 <Router>
                   <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-                    <Route path="/create-character" element={<CharacterCreationPage />} />
-                    <Route path="/character-creation" element={<CharacterCreationPage />} /> {/* Добавляем дополнительный маршрут */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/dm" element={<DMDashboardPage />} />
+                    <Route path="/dm-dashboard" element={<Navigate to="/dm" replace />} />
+                    <Route path="/create-character" element={<Navigate to="/character-creation" replace />} />
+                    <Route path="/character-creation" element={<CharacterCreationPage />} />
                     <Route path="/character-sheet" element={<CharacterSheetPage />} />
+                    <Route path="/sheet" element={<CharacterSheetPage />} />
                     <Route path="/handbook" element={<PlayerHandbookPage />} />
                     <Route path="/spellbook" element={<SpellbookPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/battle" element={<BattleScenePage />} />
                     <Route path="/play-battle" element={<PlayBattlePage />} />
+                    <Route path="/join" element={<JoinSessionPage />} />
                     <Route path="/session/dm" element={<DMSessionPage />} />
                     <Route path="/session/join" element={<JoinSessionPage />} />
                     <Route path="/session/create" element={<CreateSessionPage />} />
