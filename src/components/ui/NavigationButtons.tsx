@@ -6,6 +6,7 @@ import { Home, BookOpen, Scroll, Map, Users, Book } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { useDeviceType } from '@/hooks/use-mobile';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -18,6 +19,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
   
   // Стили для кнопок на основе текущей темы
   const buttonStyle = {
@@ -31,30 +34,33 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         variant="outline" 
         onClick={() => navigate('/')}
         className="flex items-center gap-2 font-semibold"
+        size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Home className="size-4" />
-        На главную
+        <Home className={isMobile ? "size-3" : "size-4"} />
+        {isMobile ? "" : "На главную"}
       </Button>
       
       <Button 
         variant="outline" 
         onClick={() => navigate('/handbook')}
         className="flex items-center gap-2 font-semibold"
+        size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <BookOpen className="size-4" />
-        Руководство игрока
+        <BookOpen className={isMobile ? "size-3" : "size-4"} />
+        {isMobile ? "Рук-во" : "Руководство игрока"}
       </Button>
       
       <Button 
         variant="outline" 
         onClick={() => navigate('/spellbook')}
         className="flex items-center gap-2 font-semibold"
+        size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Scroll className="size-4" />
-        Книга заклинаний
+        <Scroll className={isMobile ? "size-3" : "size-4"} />
+        {isMobile ? "Заклинания" : "Книга заклинаний"}
       </Button>
       
       {/* Показывать кнопку боевой карты только Мастерам */}
@@ -63,10 +69,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           variant="outline" 
           onClick={() => navigate('/dm/battle')}
           className="flex items-center gap-2 font-semibold"
+          size={isMobile ? "sm" : "default"}
           style={buttonStyle}
         >
-          <Map className="size-4" />
-          Боевая карта
+          <Map className={isMobile ? "size-3" : "size-4"} />
+          {isMobile ? "Карта" : "Боевая карта"}
         </Button>
       )}
       
@@ -74,10 +81,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         variant="outline" 
         onClick={() => navigate('/character-creation')}
         className="flex items-center gap-2 font-semibold"
+        size={isMobile ? "sm" : "default"}
         style={buttonStyle}
       >
-        <Users className="size-4" />
-        Создание персонажа
+        <Users className={isMobile ? "size-3" : "size-4"} />
+        {isMobile ? "Персонаж" : "Создание персонажа"}
       </Button>
     </div>
   );
