@@ -4,6 +4,7 @@ import { spells as allSpells } from '@/data/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { CharacterSpell } from '@/types/character';
+import { parseComponents } from '@/utils/spellProcessors';
 
 export interface SpellData {
   id?: string | number;
@@ -151,16 +152,24 @@ export const useSpellbook = () => {
         if (typeof spell.classes === 'string') {
           // Check if the classes string contains any of the selected classes
           const spellClassesStr = spell.classes;
-          return activeClass.some(cls => 
-            spellClassesStr.toLowerCase().includes(cls.toLowerCase())
-          );
+          return activeClass.some(cls => {
+            // Add type check before calling toLowerCase
+            if (typeof spellClassesStr === 'string') {
+              return spellClassesStr.toLowerCase().includes(cls.toLowerCase());
+            }
+            return false;
+          });
         } else if (Array.isArray(spell.classes)) {
           // Check if the classes array contains any of the selected classes
           return (spell.classes as string[]).some(spellClass => {
             if (typeof spellClass !== 'string') return false;
-            return activeClass.some(cls => 
-              spellClass.toLowerCase().includes(cls.toLowerCase())
-            );
+            return activeClass.some(cls => {
+              // Add type check before calling toLowerCase
+              if (typeof spellClass === 'string' && typeof cls === 'string') {
+                return spellClass.toLowerCase().includes(cls.toLowerCase());
+              }
+              return false;
+            });
           });
         }
         return false;
