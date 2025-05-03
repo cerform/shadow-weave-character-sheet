@@ -40,6 +40,7 @@ export interface PlayerInfo {
 
 export interface CampaignInfo {
   id: string;
+  dmId?: string; // Добавляем ID ведущего
   name: string;
   description?: string;
   createdAt: string;

@@ -1,119 +1,109 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from 'react';
 
-// Определяем типы для разных методов распределения характеристик
-export type AbilityRollMethod = "pointbuy" | "standard" | "roll" | "manual";
+export type AbilityMethod = 'pointbuy' | 'standard' | 'roll' | 'manual';
 
-export const useAbilitiesRoller = (
-  abilitiesMethod: AbilityRollMethod = "standard", 
-  characterLevel: number = 1
-) => {
-  // Массив результатов бросков кубиков
-  const [diceResults, setDiceResults] = useState<number[][]>([]);
+// Хук для генерации и управления значениями характеристик
+export const useAbilitiesRoller = (method: AbilityMethod, level: number = 1) => {
+  // Массив результатов бросков для каждой характеристики (с доп. элементами для метода roll)
+  const [diceResults, setDiceResults] = useState<number[][]>(Array(6).fill([]).map(() => [0, 0, 0, 0]));
   
-  // Очки для метода "Point Buy"
+  // Доступные очки для метода pointbuy
   const [abilityScorePoints, setAbilityScorePoints] = useState<number>(27);
   
-  // История бросков для отслеживания
-  const [rollsHistory, setRollsHistory] = useState<{ ability: string, rolls: number[], total: number }[]>([]);
+  // История бросков
+  const [rollsHistory, setRollsHistory] = useState<{ ability: string; rolls: number[]; total: number }[]>([]);
 
-  // Инициализация результатов бросков при изменении метода на "roll"
-  useEffect(() => {
-    if (abilitiesMethod === "roll" && diceResults.length === 0) {
-      rollAllAbilities();
-    }
-  }, [abilitiesMethod]);
-
-  // Расчет количества очков для Point Buy на основе уровня персонажа
-  useEffect(() => {
-    if (abilitiesMethod === "pointbuy") {
-      // Базовое количество очков - 27 для 1 уровня
-      let points = 27;
-      
-      // Добавляем дополнительные очки для более высоких уровней
-      // Согласно правилам D&D 5e, при повышении уровня игрок может увеличивать характеристики
-      if (characterLevel >= 4) points += 2;  // На 4 уровне
-      if (characterLevel >= 8) points += 2;  // На 8 уровне
-      if (characterLevel >= 12) points += 2; // На 12 уровне
-      if (characterLevel >= 16) points += 2; // На 16 уровне
-      if (characterLevel >= 19) points += 2; // На 19 уровне
-      
-      setAbilityScorePoints(points);
-    }
-  }, [abilitiesMethod, characterLevel]);
-
-  // Генерация бросков для всех 6 характеристик
-  const rollAllAbilities = useCallback(() => {
-    // Очищаем историю бросков
-    setRollsHistory([]);
+  // Функция для броска 4d6, отбрасывая наименьшее значение
+  const roll4d6DropLowest = useCallback((): { rolls: number[]; total: number } => {
+    // Бросаем 4d6
+    const rolls = Array(4).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
     
-    // Генерируем 6 наборов бросков (4d6 для каждой характеристики)
-    const rolls = [];
-    const abilities = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+    // Сортируем результаты от большего к меньшему
+    const sortedRolls = [...rolls].sort((a, b) => b - a);
     
-    for (let i = 0; i < 6; i++) {
-      // Бросаем 4d6
-      const diceRolls = [];
-      for (let j = 0; j < 4; j++) {
-        diceRolls.push(Math.floor(Math.random() * 6) + 1);
-      }
-      
-      // Сортируем броски по убыванию
-      const sortedRolls = [...diceRolls].sort((a, b) => b - a);
-      // Берем три наибольших значения (отбрасываем наименьшее)
-      const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
-      
-      // Сохраняем результаты броска
-      rolls.push(diceRolls);
-      
-      // Добавляем результат в историю
-      setRollsHistory(prev => [
-        ...prev, 
-        { ability: abilities[i], rolls: diceRolls, total }
-      ]);
-    }
+    // Суммируем три наибольших результата
+    const total = sortedRolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
     
-    setDiceResults(rolls);
+    return { rolls, total };
   }, []);
 
-  // Бросок кубиков для одной характеристики
-  const rollSingleAbility = useCallback((abilityIndex: number) => {
-    // Броски 4d6
-    const diceRolls = [];
-    for (let i = 0; i < 4; i++) {
-      diceRolls.push(Math.floor(Math.random() * 6) + 1);
+  // Функция для броска всех 6 характеристик
+  const rollAllAbilities = useCallback(() => {
+    const newResults: number[][] = [];
+    const newHistory: { ability: string; rolls: number[]; total: number }[] = [];
+    
+    // Названия характеристик для истории
+    const abilityNames = ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
+    
+    // Бросаем кости для каждой характеристики
+    for (let i = 0; i < 6; i++) {
+      const { rolls, total } = roll4d6DropLowest();
+      newResults.push(rolls);
+      
+      // Добавляем результат в историю
+      newHistory.push({
+        ability: abilityNames[i],
+        rolls,
+        total
+      });
     }
     
-    // Сортируем и суммируем три наибольших значения
-    const sortedRolls = [...diceRolls].sort((a, b) => b - a);
-    const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
+    setDiceResults(newResults);
+    setRollsHistory(prev => [...prev, ...newHistory]);
     
-    // Обновляем результаты бросков для конкретной характеристики
-    const newDiceResults = [...diceResults];
-    newDiceResults[abilityIndex] = diceRolls;
-    setDiceResults(newDiceResults);
+    return newResults;
+  }, [roll4d6DropLowest]);
+
+  // Функция для броска конкретной характеристики
+  const rollSingleAbility = useCallback((abilityIndex: number): { rolls: number[]; total: number } => {
+    // Названия характеристик для истории
+    const abilityNames = ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
     
-    // Обновляем историю бросков
-    const abilities = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+    // Бросаем кости для выбранной характеристики
+    const { rolls, total } = roll4d6DropLowest();
+    
+    // Обновляем результаты
+    setDiceResults(prev => {
+      const newResults = [...prev];
+      newResults[abilityIndex] = rolls;
+      return newResults;
+    });
+    
+    // Добавляем результат в историю
     setRollsHistory(prev => [
-      // Удаляем предыдущий бросок для этой характеристики
-      ...prev.filter(roll => roll.ability !== abilities[abilityIndex]),
-      // Добавляем новый бросок
-      { ability: abilities[abilityIndex], rolls: diceRolls, total }
+      ...prev,
+      {
+        ability: abilityNames[abilityIndex],
+        rolls,
+        total
+      }
     ]);
     
-    return {
-      rolls: diceRolls,
-      total: total
-    };
-  }, [diceResults]);
+    return { rolls, total };
+  }, [roll4d6DropLowest]);
 
-  // Возвращаем объект с состоянием и функциями
+  // Сброс доступных очков для метода pointbuy
+  const resetPoints = useCallback(() => {
+    setAbilityScorePoints(27);
+  }, []);
+
+  // Обновляем очки при изменении метода
+  const updateAbilityPoints = useCallback(() => {
+    if (method === 'pointbuy') {
+      resetPoints();
+    }
+  }, [method, resetPoints]);
+
   return {
     diceResults,
+    abilityScorePoints,
+    rollsHistory,
     rollAllAbilities,
     rollSingleAbility,
-    abilityScorePoints,
-    rollsHistory
+    resetPoints,
+    updateAbilityPoints
   };
 };
+
+export default useAbilitiesRoller;

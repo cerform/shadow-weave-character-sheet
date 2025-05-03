@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 
 interface NavigationButtonsProps {
-  allowNext: boolean;
+  allowNext?: boolean; // Сделаем опциональным
+  disableNext?: boolean; // Добавляем новое свойство
   nextStep: () => void;
   prevStep: () => void;
   isFirstStep?: boolean;
@@ -24,7 +25,8 @@ interface NavigationButtonsProps {
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  allowNext,
+  allowNext = true, // По умолчанию true
+  disableNext = false, // По умолчанию false
   nextStep,
   prevStep,
   isFirstStep = false,
@@ -103,7 +105,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {/* Кнопка далее */}
       <Button
         onClick={nextStep}
-        disabled={!allowNext}
+        disabled={disableNext || !allowNext}
         className="flex items-center gap-2"
       >
         <ArrowRight className="size-4" />

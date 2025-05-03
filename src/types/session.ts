@@ -1,31 +1,22 @@
 
-// Удаляем неправильный импорт Character
-export interface User {
-  id: string;
-  name: string;
-  themePreference: string;
-  isOnline: boolean;
-  isDM: boolean;
-  characterIds?: string[];
-  currentCharacterId?: string;
-}
-
 export interface Session {
   id: string;
-  name: string;
-  code: string;
-  description?: string;
+  campaignId?: string; // Добавляем ID кампании
+  title: string;
+  description: string;
   dmId: string;
-  users: User[];
-  createdAt: string;
-  lastActive: string;
+  players: string[];
+  startTime: string;
+  endTime?: string;
   isActive: boolean;
-}
-
-export interface SessionState {
-  sessions: Session[];
-  currentSession: Session | null;
-  currentUser: User | null;
-  loading: boolean;
-  error: string | null;
+  notes: {
+    id: string;
+    content: string;
+    timestamp: string;
+    authorId: string;
+  }[];
+  mapId?: string;
+  lastActivity?: string;
+  createdAt: string;
+  code?: string;
 }

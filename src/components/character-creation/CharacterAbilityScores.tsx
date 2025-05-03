@@ -14,12 +14,12 @@ interface CharacterAbilityScoresProps {
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
   setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[][];
-  getModifier: (score: number) => string;
+  diceResults: number[][]; // Меняем тип с number[] на number[][]
+  getModifier: (score: number) => string; // Меняем тип возвращаемого значения на string
   rollAllAbilities: () => void;
   rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
   abilityScorePoints?: number;
-  rollsHistory?: { ability: string, rolls: number[], total: number }[];
+  rollsHistory?: { ability: string, rolls: number[], total: number }[]; // Меняем тип на массив объектов
 }
 
 const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({

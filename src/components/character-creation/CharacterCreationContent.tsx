@@ -25,13 +25,13 @@ interface CharacterCreationContentProps {
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
   setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[];
-  getModifier: (abilityScore: number) => number;
+  diceResults: number[][];
+  getModifier: (abilityScore: number) => string;
   rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => void;
+  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
   abilityScorePoints: number;
   isMagicClass: boolean;
-  rollsHistory: Record<string, number[]>;
+  rollsHistory: { ability: string; rolls: number[]; total: number }[];
   onLevelChange: (level: number) => void;
 }
 

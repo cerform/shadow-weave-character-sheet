@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -19,9 +20,11 @@ export interface CharacterSpell {
 
 // Adding the CharacterSheet interface for use in useCharacterCreation and the PDF generator
 export interface CharacterSheet {
+  userId?: string; // Добавляем поле для идентификатора пользователя
+  id?: string; // Добавляем поле для идентификатора персонажа
   name: string;
   race: string;
-  subrace?: string; // Добавляем опциональное поле subrace
+  subrace?: string; 
   class: string;
   subclass?: string;
   level: number;
@@ -47,8 +50,8 @@ export interface CharacterSheet {
   flaws: string;
   appearance: string;
   backstory: string;
-  xp?: number; // Добавляем поле для опыта
-  inspiration?: boolean; // Добавляем поле для вдохновения
+  xp?: number;
+  inspiration?: boolean;
 }
 
 // Интерфейс для подклассов персонажей
@@ -110,3 +113,4 @@ export interface CharacterRace {
     traits: RaceTraits[];
   }[];
 }
+

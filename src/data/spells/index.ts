@@ -68,7 +68,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
 // Get spell details by name
 export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
   return spells.find(
-    (spell) => spell && spell.name && spell.name.toLowerCase() === spellName.toLowerCase()
+    (spell) => spell && spell.name && spell.name.toLowerCase() === (spellName?.toLowerCase() || '')
   );
 };
 

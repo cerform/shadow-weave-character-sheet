@@ -24,7 +24,7 @@ const CharacterCreationPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
-  const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll">("standard");
+  const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
   
   // Custom hooks
   const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange } = useCharacterCreation();
@@ -59,6 +59,28 @@ const CharacterCreationPage = () => {
   // Переход к последнему шагу (обзор персонажа)
   const goToFinalReview = () => {
     setCurrentStep(10);
+  };
+
+  // Обертка для setAbilitiesMethod для соответствия типам
+  const handleSetAbilitiesMethod = (method: "pointbuy" | "standard" | "roll" | "manual") => {
+    setAbilitiesMethod(method as any); // Используем any для совместимости
+  };
+
+  // Функция-обертка для обеспечения правильной сигнатуры в rollSingleAbility
+  const handleRollSingleAbility = (index: number): { rolls: number[], total: number } => {
+    // Вызываем оригинальную функцию и преобразуем результат
+    rollSingleAbility(index);
+    // Возвращаем обязательный формат данных
+    return { 
+      rolls: diceResults[index] || [0, 0, 0, 0], 
+      total: diceResults[index]?.reduce((a, b) => a + b, 0) || 0 
+    };
+  };
+
+  // Обертка для getModifier для возвращения string
+  const getModifierString = (score: number): string => {
+    const mod = getModifier(score);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
   return (
@@ -142,11 +164,11 @@ const CharacterCreationPage = () => {
           nextStep={nextStep}
           prevStep={prevStep}
           abilitiesMethod={abilitiesMethod}
-          setAbilitiesMethod={setAbilitiesMethod}
+          setAbilitiesMethod={handleSetAbilitiesMethod}
           diceResults={diceResults}
-          getModifier={getModifier}
+          getModifier={getModifierString}
           rollAllAbilities={rollAllAbilities}
-          rollSingleAbility={rollSingleAbility}
+          rollSingleAbility={handleRollSingleAbility}
           abilityScorePoints={abilityScorePoints}
           isMagicClass={isMagicClass()}
           rollsHistory={rollsHistory}

@@ -87,6 +87,7 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   };
 
   const spellLevels = getAvailableSpellLevels();
+  const shouldDisableNext = character.class && getMaxSpellsCount() > 0 && selectedSpells.length === 0;
 
   return (
     <div className="space-y-6">
@@ -143,7 +144,8 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         prevStep={prevStep}
         nextStep={handleSaveSpells}
         nextLabel="Далее: Снаряжение"
-        disableNext={character.class && getMaxSpellsCount() > 0 && selectedSpells.length === 0}
+        disableNext={shouldDisableNext}
+        allowNext={true}
       />
     </div>
   );
