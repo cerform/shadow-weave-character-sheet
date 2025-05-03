@@ -39,7 +39,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         style={buttonStyle}
       >
         <Home className={isMobile ? "size-4" : "size-4"} />
-        {isMobile ? "" : "На главную"}
+        {!isMobile ? "На главную" : ""}
       </Button>
       
       <Button 
@@ -50,7 +50,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         style={buttonStyle}
       >
         <BookOpen className={isMobile ? "size-4" : "size-4"} />
-        {isMobile ? "" : "Руководство игрока"}
+        {!isMobile ? "Руководство игрока" : ""}
       </Button>
       
       <Button 
@@ -61,7 +61,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         style={buttonStyle}
       >
         <Scroll className={isMobile ? "size-4" : "size-4"} />
-        {isMobile ? "" : "Книга заклинаний"}
+        {!isMobile ? "Книга заклинаний" : ""}
       </Button>
       
       {/* Показывать кнопку боевой карты только Мастерам */}
@@ -74,7 +74,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           style={buttonStyle}
         >
           <Map className={isMobile ? "size-4" : "size-4"} />
-          {isMobile ? "" : "Боевая карта"}
+          {!isMobile ? "Боевая карта" : ""}
         </Button>
       )}
       
@@ -86,7 +86,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         style={buttonStyle}
       >
         <Users className={isMobile ? "size-4" : "size-4"} />
-        {isMobile ? "" : "Создание персонажа"}
+        {!isMobile ? "Создание персонажа" : ""}
       </Button>
     </div>
   );
