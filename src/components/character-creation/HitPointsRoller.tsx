@@ -131,9 +131,10 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
             <div className="dice-container relative mx-auto" style={{height: "150px", perspective: "400px"}}>
               {rollState !== 'waiting' && (
                 <SimpleDiceRenderer 
-                  diceType={hitDie} 
-                  value={diceValue || 1}
-                  isRolling={rollState === 'rolling'} 
+                  type={`d${hitDie}`}
+                  result={diceValue || 1}
+                  size={150}
+                  themeColor={currentTheme.accent}
                 />
               )}
             </div>
