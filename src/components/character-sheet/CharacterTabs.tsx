@@ -28,12 +28,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   const isMobile = deviceType === 'mobile';
   const { character } = useCharacter();
   
-  // Расчет модификатора из значения характеристики
-  const getModifier = (score: number) => {
-    const mod = Math.floor((score - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
-  };
-
   // Словарь русских названий характеристик
   const abilityNames = {
     STR: "Сила",
@@ -53,7 +47,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
         borderColor: `${currentTheme.accent}30`
       }}
     >
-      {/* Добавим блок с характеристиками сверху */}
+      {/* Блок с характеристиками вверху */}
       <div className="mb-6 pb-4 border-b" style={{ borderColor: `${currentTheme.accent}30` }}>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
           {Object.entries(character?.abilities || {}).map(([key, value]) => {
@@ -223,4 +217,10 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
       </Tabs>
     </Card>
   );
+};
+
+// Расчет модификатора из значения характеристики
+const getModifier = (score: number) => {
+  const mod = Math.floor((score - 10) / 2);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
 };

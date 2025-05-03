@@ -4,6 +4,7 @@ import { useCharacter } from '@/contexts/CharacterContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Badge } from "@/components/ui/badge";
 
 export const AbilitiesTab = () => {
   const { character } = useCharacter();
@@ -46,9 +47,60 @@ export const AbilitiesTab = () => {
     CHA: "Харизма"
   };
 
+  // Словарь спас бросков на русском
+  const savingThrowNames = {
+    STR: "Сила",
+    DEX: "Ловкость", 
+    CON: "Телосложение",
+    INT: "Интеллект",
+    WIS: "Мудрость", 
+    CHA: "Харизма"
+  };
+
+  // Бонус мастерства и описание его расчета
+  const renderProficiencyBonusCard = () => (
+    <Card 
+      className="border border-primary/30 mb-6" 
+      style={{
+        backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
+        boxShadow: `0 0 10px ${currentTheme.accent}40`
+      }}
+    >
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h4 
+              className="text-xl font-semibold"
+              style={{ 
+                color: currentTheme.textColor || '#FFFFFF',
+                textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 3px ${currentTheme.accent}70`
+              }}
+            >
+              Бонус мастерства
+            </h4>
+            <p className="text-sm opacity-80 mt-1" style={{ color: currentTheme.textColor }}>
+              1 + (уровень / 4) = +{proficiencyBonus}
+            </p>
+          </div>
+          <div 
+            className="text-4xl font-bold py-4 px-6 rounded-full"
+            style={{ 
+              backgroundColor: `${currentTheme.accent}20`,
+              color: currentTheme.textColor,
+              textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}80`,
+              boxShadow: `inset 0 0 15px ${currentTheme.accent}40`
+            }}
+          >
+            +{proficiencyBonus}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="space-y-8 pb-6">
-      {/* Удален блок "Характеристики персонажа" по просьбе пользователя */}
+    <div className="space-y-6 pb-6">
+      {renderProficiencyBonusCard()}
       
       <Card 
         className="border border-primary/30" 
@@ -59,7 +111,7 @@ export const AbilitiesTab = () => {
       >
         <CardContent className="p-6">
           <h4 
-            className="text-xl font-semibold mb-6"
+            className="text-xl font-semibold mb-4"
             style={{ 
               color: currentTheme.textColor || '#FFFFFF',
               textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 3px ${currentTheme.accent}70`
@@ -81,20 +133,25 @@ export const AbilitiesTab = () => {
                   style={{ borderColor: `${currentTheme.accent}30` }}
                 >
                   <span 
-                    className={`font-medium ${isProficient ? 'font-bold' : ''}`}
+                    className={`font-medium flex items-center ${isProficient ? 'font-bold' : ''}`}
                     style={{ 
                       color: currentTheme.textColor,
                       textShadow: `0 0 2px rgba(0,0,0,0.8)${isProficient ? `, 0 0 5px ${currentTheme.accent}80` : ''}`
                     }}
                   >
-                    {abilityNames[abilityKey]}
-                    {isProficient && 
-                      <span className="ml-2 px-1 py-0.5 text-xs rounded-full" 
-                        style={{ backgroundColor: `${currentTheme.accent}40` }}
+                    {savingThrowNames[abilityKey]}
+                    {isProficient && (
+                      <Badge 
+                        variant="outline" 
+                        className="ml-2 px-1 py-0 text-xs" 
+                        style={{ 
+                          borderColor: `${currentTheme.accent}60`,
+                          backgroundColor: `${currentTheme.accent}20`
+                        }}
                       >
-                        +{proficiencyBonus}
-                      </span>
-                    }
+                        владение
+                      </Badge>
+                    )}
                   </span>
                   <span 
                     className="text-lg font-bold"
@@ -108,40 +165,6 @@ export const AbilitiesTab = () => {
                 </div>
               );
             })}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Добавим здесь дополнительную информацию, чтобы заполнить пространство */}
-      <Card 
-        className="border border-primary/30" 
-        style={{
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
-          boxShadow: `0 0 10px ${currentTheme.accent}40`
-        }}
-      >
-        <CardContent className="p-6">
-          <h4 
-            className="text-xl font-semibold mb-6"
-            style={{ 
-              color: currentTheme.textColor || '#FFFFFF',
-              textShadow: `0 0 2px rgba(0,0,0,0.8), 0 0 3px ${currentTheme.accent}70`
-            }}
-          >
-            Бонус мастерства
-          </h4>
-          <div className="flex justify-center items-center">
-            <div 
-              className="text-4xl font-bold py-4 px-8 rounded-full"
-              style={{ 
-                backgroundColor: `${currentTheme.accent}20`,
-                color: currentTheme.textColor,
-                textShadow: `0 0 3px rgba(0,0,0,0.8), 0 0 5px ${currentTheme.accent}80`,
-                boxShadow: `inset 0 0 15px ${currentTheme.accent}40`
-              }}
-            >
-              +{proficiencyBonus}
-            </div>
           </div>
         </CardContent>
       </Card>
