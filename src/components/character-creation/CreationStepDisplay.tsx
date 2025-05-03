@@ -1,13 +1,15 @@
 
-import React from 'react';
-import { Check, CircleSlash } from 'lucide-react';
+import React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface Step {
   id: number;
   name: string;
   description: string;
-  isOptional?: boolean;
-  isMagicOnly?: boolean;
+  onlyFor?: string;
 }
 
 interface CreationStepDisplayProps {
@@ -17,68 +19,50 @@ interface CreationStepDisplayProps {
   isMagicClass?: boolean;
 }
 
-const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({ 
-  steps, 
-  currentStep, 
+const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
+  steps,
+  currentStep,
   setCurrentStep,
-  isMagicClass = false
+  isMagicClass = false,
 }) => {
-  const handleStepClick = (stepId: number) => {
-    // Не позволяем переходить к шагу для магических классов, если выбран немагический класс
-    if (steps[stepId]?.isMagicOnly && !isMagicClass) {
-      return;
-    }
-    
-    setCurrentStep(stepId);
-  };
-  
-  // Фильтруем шаги, чтобы не показывать шаг для магических классов, если выбран немагический класс
-  const filteredSteps = steps.filter(step => 
-    !step.isMagicOnly || isMagicClass
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+
+  // Фильтруем шаги для отображения
+  const visibleSteps = steps.filter(
+    (step) => step.onlyFor !== "magic" || isMagicClass
   );
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-medium">Прогресс создания</h2>
-        <span className="text-sm text-muted-foreground">
-          Шаг {currentStep + 1} из {filteredSteps.length}
-        </span>
-      </div>
-      
-      {/* Прогресс-бар */}
-      <div className="w-full bg-secondary h-2 rounded-full mb-4 overflow-hidden">
-        <div 
-          className="bg-primary h-full rounded-full transition-all duration-300"
-          style={{ width: `${((currentStep + 1) / filteredSteps.length) * 100}%` }}
-        ></div>
-      </div>
-      
-      {/* Шаги с возможностью перехода */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
-        {filteredSteps.map((step, index) => {
-          const isPast = index < currentStep;
-          const isCurrent = index === currentStep;
-          const isFuture = index > currentStep;
-          
+    <div className="flex overflow-x-auto pb-4 hide-scrollbar">
+      <div className="flex space-x-2 min-w-full">
+        {visibleSteps.map((step) => {
+          // Вычисляем, является ли шаг активным или завершенным
+          const isActive = step.id === currentStep;
+          const isCompleted = step.id < currentStep;
+
           return (
-            <button
+            <Button
               key={step.id}
-              className={`p-2 rounded-md text-center text-xs sm:text-sm transition-all cursor-pointer
-                ${isCurrent ? 'bg-primary text-primary-foreground font-medium' : ''}
-                ${isPast ? 'bg-primary/20 text-primary' : ''}
-                ${isFuture ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80' : ''}
-                ${step.isOptional ? 'opacity-70' : ''}
-              `}
-              onClick={() => handleStepClick(step.id)}
-              title={step.description}
+              className={cn(
+                "min-w-[130px] flex-shrink-0 transition-all",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                  : isCompleted
+                  ? "bg-primary/20 text-foreground hover:bg-primary/30"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+              style={{
+                backgroundColor: isActive
+                  ? currentTheme.accent
+                  : isCompleted
+                  ? `${currentTheme.accent}30`
+                  : undefined,
+              }}
+              onClick={() => setCurrentStep(step.id)}
             >
-              <div className="flex items-center justify-center gap-1">
-                {isPast && <Check className="w-3 h-3" />}
-                {step.isOptional && <CircleSlash className="w-3 h-3" />}
-                <span>{step.name}</span>
-              </div>
-            </button>
+              {step.name}
+            </Button>
           );
         })}
       </div>

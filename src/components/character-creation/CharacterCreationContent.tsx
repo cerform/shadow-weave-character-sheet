@@ -13,6 +13,7 @@ import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
 import CharacterLanguagesSelection from './CharacterLanguagesSelection';
+import CharacterSubclassSelection from './CharacterSubclassSelection';
 import { CharacterSheet } from '@/types/character.d';
 import { steps } from '@/config/characterCreationSteps';
 
@@ -74,7 +75,16 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 2: // Выбор уровня
+      case 2: // Выбор архетипа (подкласса)
+        return (
+          <CharacterSubclassSelection
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 3: // Выбор уровня
         return (
           <CharacterLevelSelection
             character={character}
@@ -84,7 +94,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             onLevelChange={onLevelChange}
           />
         );
-      case 3: // Характеристики
+      case 4: // Характеристики
         return (
           <CharacterAbilityScores 
             character={character} 
@@ -102,7 +112,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 4: // Мультиклассирование (раньше был выбор подкласса)
+      case 5: // Мультиклассирование
         return (
           <CharacterMulticlassing 
             character={character} 
@@ -112,7 +122,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             getModifier={getModifier}
           />
         );
-      case 5: // Выбор заклинаний
+      case 6: // Выбор заклинаний
         if (!isMagicClass) {
           nextStep(); // Пропускаем этот шаг для немагических классов
           return null;
@@ -125,7 +135,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 6: // Выбор снаряжения
+      case 7: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -134,7 +144,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Выбор языков
+      case 8: // Выбор языков
         return (
           <CharacterLanguagesSelection 
             character={character}
@@ -143,7 +153,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Выбор личностных черт
+      case 9: // Выбор личностных черт
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -152,7 +162,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 9: // Предыстория
+      case 10: // Предыстория
         return (
           <CharacterBackground 
             character={character} 
@@ -161,7 +171,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 10: // Просмотр и завершение
+      case 11: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}
@@ -171,26 +181,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       default:
         return (
           <div className="p-6 text-center">
-            <h3 className="text-xl font-bold mb-4">Шаг не найден</h3>
-            <p>Выбранный шаг создания персонажа недоступен. Пожалуйста, вернитесь к началу создания.</p>
-            <button 
-              onClick={() => prevStep()}
-              className="mt-4 px-4 py-2 bg-primary text-white rounded"
-            >
-              Вернуться
-            </button>
+            <p>Неизвестный шаг создания персонажа.</p>
           </div>
         );
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div>
-        {renderCreationStep()}
-      </div>
-    </div>
-  );
+  return renderCreationStep();
 };
 
 export default CharacterCreationContent;

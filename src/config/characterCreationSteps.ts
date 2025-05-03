@@ -3,67 +3,62 @@ export const steps = [
   {
     id: 0,
     name: "Раса",
-    description: "Выберите расу персонажа",
-    isOptional: false
+    description: "Выбор расы персонажа"
   },
   {
     id: 1,
     name: "Класс",
-    description: "Выберите класс персонажа",
-    isOptional: false
+    description: "Выбор основного класса персонажа"
   },
   {
     id: 2,
-    name: "Уровень",
-    description: "Выберите уровень персонажа",
-    isOptional: false
+    name: "Архетип",
+    description: "Выбор специализации класса"
   },
   {
     id: 3,
-    name: "Характеристики",
-    description: "Распределите характеристики",
-    isOptional: false
+    name: "Уровень",
+    description: "Уровень персонажа и особенности"
   },
   {
     id: 4,
-    name: "Мультиклассирование",
-    description: "Выберите дополнительные классы",
-    isOptional: true
+    name: "Характеристики",
+    description: "Распределение очков характеристик"
   },
   {
     id: 5,
-    name: "Заклинания",
-    description: "Выберите заклинания",
-    isMagicOnly: true
+    name: "Мультиклассирование",
+    description: "Дополнительные классы (опционально)"
   },
   {
     id: 6,
-    name: "Снаряжение",
-    description: "Выберите снаряжение",
-    isOptional: false
+    name: "Заклинания",
+    description: "Выбор заклинаний для заклинателей",
+    onlyFor: "magic"
   },
   {
     id: 7,
-    name: "Языки",
-    description: "Выберите языки",
-    isOptional: false
+    name: "Снаряжение",
+    description: "Выбор оружия и экипировки"
   },
   {
     id: 8,
-    name: "Личность",
-    description: "Укажите имя и внешность",
-    isOptional: false
+    name: "Языки",
+    description: "Выбор языков персонажа"
   },
   {
     id: 9,
-    name: "Предыстория",
-    description: "Выберите предысторию",
-    isOptional: false
+    name: "Черты",
+    description: "Определение черт личности"
   },
   {
     id: 10,
-    name: "Обзор",
-    description: "Просмотр и сохранение",
-    isOptional: false
+    name: "Предыстория",
+    description: "История персонажа и связи"
+  },
+  {
+    id: 11,
+    name: "Завершение",
+    description: "Обзор и финальные штрихи"
   }
 ];

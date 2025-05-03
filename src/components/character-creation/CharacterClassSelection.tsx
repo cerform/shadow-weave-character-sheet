@@ -9,6 +9,9 @@ import {
   SelectionCardGrid 
 } from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface CharacterClassSelectionProps {
   character: any;
@@ -25,11 +28,25 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
 }) => {
   const [selectedClass, setSelectedClass] = useState<string>(character.class || "");
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const { toast } = useToast();
 
   const handleNext = () => {
     if (selectedClass) {
       updateCharacter({ class: selectedClass });
+      
+      // Показываем подсказку о необходимости выбрать архетип
+      toast({
+        title: "Выбор класса завершен",
+        description: "На следующем шаге вам нужно будет выбрать архетип для вашего класса.",
+      });
+      
       nextStep();
+    } else {
+      toast({
+        title: "Выберите класс",
+        description: "Пожалуйста, выберите класс персонажа перед продолжением.",
+        variant: "destructive",
+      });
     }
   };
 

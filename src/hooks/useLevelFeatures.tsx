@@ -11,6 +11,7 @@ export interface LevelFeature {
   type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
   options?: string[];
   className?: string; // Для каких классов доступна эта особенность
+  required?: boolean;  // Является ли выбор обязательным
 }
 
 export const useLevelFeatures = (character: CharacterSheet) => {
@@ -26,13 +27,14 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     const level = character.level || 1;
 
     // Получаем доступные подклассы (архетипы) для класса
-    if (level >= getSubclassLevel(character.class)) {
+    if (level >= getSubclassLevel(character.class) && !character.subclass) {
       features.push({
         level: getSubclassLevel(character.class),
         name: 'Архетип',
         description: `Выберите архетип для ${character.class}`,
         type: 'subclass',
-        className: character.class
+        className: character.class,
+        required: true
       });
     }
 
@@ -74,11 +76,21 @@ export const useLevelFeatures = (character: CharacterSheet) => {
       }
     }
 
+    // Проверяем наличие обязательных архетипов и выдаем предупреждение
+    const requiredSubclass = features.find(f => f.type === 'subclass' && f.required);
+    if (requiredSubclass && !character.subclass) {
+      toast({
+        title: "Не выбран архетип",
+        description: `Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.`,
+        variant: "destructive"
+      });
+    }
+
     // Сортируем особенности по уровням
     features.sort((a, b) => a.level - b.level);
     
     setAvailableFeatures(features);
-  }, [character.class, character.level]);
+  }, [character.class, character.level, character.subclass, toast]);
 
   // Функция для выбора особенности
   const selectFeature = (featureType: string, value: string) => {
@@ -108,6 +120,9 @@ export const useLevelFeatures = (character: CharacterSheet) => {
       case "Монах": return 3;
       case "Паладин": return 3;
       case "Бард": return 3;
+      case "Изобретатель": return 3;
+      case "Кровавый охотник": return 3;
+      case "Мистик": return 2;
       default: return 3;
     }
   };
@@ -165,6 +180,7 @@ export const useLevelFeatures = (character: CharacterSheet) => {
       case "Воин":
       case "Паладин":
       case "Следопыт":
+      case "Кровавый охотник":
         return { dice: "d10", average: 6 };
       case "Бард":
       case "Жрец":
@@ -172,6 +188,8 @@ export const useLevelFeatures = (character: CharacterSheet) => {
       case "Монах":
       case "Плут":
       case "Колдун":
+      case "Изобретатель":
+      case "Мистик":
         return { dice: "d8", average: 5 };
       case "Волшебник":
       case "Чародей":
