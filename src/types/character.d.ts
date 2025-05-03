@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -34,6 +35,7 @@ export interface CharacterSheet {
   subrace?: string; 
   class: string; // Основной класс
   subclass?: string; // Основной подкласс
+  className?: string; // Для обратной совместимости
   additionalClasses?: ClassLevel[]; // Дополнительные классы для мультиклассирования
   level: number;
   background: string;
@@ -59,7 +61,7 @@ export interface CharacterSheet {
   equipment: string[];
   spells: string[];
   proficiencies: string[];
-  features: string[];
+  features: string[];  // Добавляем features для совместимости с FeaturesTab
   personalityTraits: string;
   ideals: string;
   bonds: string;
@@ -155,3 +157,6 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,  // Для персонажей 16+ уровня
   MYTHIC_CAP: 30      // Абсолютный максимум (для особых случаев)
 };
+
+// Добавляем компонент Badge для более удобного использования в CharacterLevelSelection
+import { Badge } from "@/components/ui/badge";

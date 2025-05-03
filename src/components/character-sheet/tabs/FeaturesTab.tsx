@@ -1,32 +1,43 @@
 
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 export const FeaturesTab = () => {
   const { character } = useCharacter();
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  // Используем proficiencies вместо features и проверяем наличие свойства
-  const classFeatures = character?.proficiencies?.filter(f => 
+  // Проверяем какое поле доступно - features или proficiencies
+  const featuresList = character?.features || character?.proficiencies || [];
+  
+  // Используем доступные особенности и распределяем по категориям
+  const classFeatures = featuresList.filter(f => 
     f.includes('Дополнительная атака') || 
     f.includes('класс') || 
     f.includes('Архетип:')
   ) || [];
   
-  const raceFeatures = character?.proficiencies?.filter(f => 
+  const raceFeatures = featuresList.filter(f => 
     f.includes('раса') || 
     f.includes('Темное зрение') || 
     f.includes('Эльфийская проницательность')
   ) || [];
   
-  const otherFeatures = character?.proficiencies?.filter(f => 
+  const otherFeatures = featuresList.filter(f => 
     !classFeatures.includes(f) && !raceFeatures.includes(f)
   ) || [];
 
   // Получаем подкласс из className, если есть формат "Класс: Подкласс"
   const getSubclass = (): string | undefined => {
-    if (!character?.className) return undefined;
+    if (character?.subclass) return character.subclass;
     
-    const parts = character.className.split(':');
+    if (!character?.className && !character?.class) return undefined;
+    
+    const className = character.className || character.class;
+    const parts = className.split(':');
     if (parts.length > 1) {
       return parts[1].trim();
     }
@@ -35,76 +46,152 @@ export const FeaturesTab = () => {
 
   const subclass = getSubclass();
 
+  // Функция для определения иконки особенности
+  const getFeatureIcon = (feature: string) => {
+    if (feature.includes('атака') || feature.includes('Атака'))
+      return "⚔️";
+    if (feature.includes('заклинание') || feature.includes('Заклинание'))
+      return "✨";
+    if (feature.includes('зрение') || feature.includes('Зрение'))
+      return "👁️";
+    if (feature.includes('сопротивление') || feature.includes('Сопротивление'))
+      return "🛡️";
+    if (feature.includes('чувств') || feature.includes('Чувств'))
+      return "🔮";
+    return "🔹";
+  };
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Особенности и умения</h3>
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold border-b border-primary/20 pb-2 mb-4">Особенности и умения</h3>
       
-      <div className="space-y-4">
-        <div className="p-4 bg-primary/5 rounded-lg">
-          <h4 className="font-semibold mb-2">Классовые особенности</h4>
-          <div className="space-y-3">
+      <div className="space-y-6">
+        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+          <h4 className="font-semibold mb-3 flex items-center">
+            <span 
+              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
+              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
+            >
+              C
+            </span>
+            Классовые особенности
+          </h4>
+          <div className="space-y-3 pl-8">
             {classFeatures.length > 0 ? (
               classFeatures.map((feature, index) => (
-                <div key={index}>
-                  <h5 className="font-medium">{feature}</h5>
+                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
+                    {feature}
+                  </h5>
                 </div>
               ))
             ) : (
-              <div>
-                <h5 className="font-medium">Скрытая атака</h5>
-                <p className="text-sm">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
+              <div className="border-b border-primary/10 pb-2">
+                <h5 className="font-medium flex items-center">
+                  <span className="mr-2">⚔️</span> 
+                  Скрытая атака
+                </h5>
+                <p className="text-sm opacity-80 ml-6">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
               </div>
             )}
           </div>
         </div>
         
-        <div className="p-4 bg-primary/5 rounded-lg">
-          <h4 className="font-semibold mb-2">Расовые особенности</h4>
-          <div className="space-y-3">
+        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+          <h4 className="font-semibold mb-3 flex items-center">
+            <span 
+              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
+              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
+            >
+              Р
+            </span>
+            Расовые особенности
+          </h4>
+          <div className="space-y-3 pl-8">
             {raceFeatures.length > 0 ? (
               raceFeatures.map((feature, index) => (
-                <div key={index}>
-                  <h5 className="font-medium">{feature}</h5>
+                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
+                    {feature}
+                  </h5>
                 </div>
               ))
             ) : (
               <>
-                <div>
-                  <h5 className="font-medium">Темное зрение</h5>
-                  <p className="text-sm">Вы можете видеть в темноте на расстоянии 60 футов.</p>
+                <div className="border-b border-primary/10 pb-2">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">👁️</span> 
+                    Темное зрение
+                  </h5>
+                  <p className="text-sm opacity-80 ml-6">Вы можете видеть в темноте на расстоянии 60 футов.</p>
                 </div>
-                <div>
-                  <h5 className="font-medium">Эльфийская проницательность</h5>
-                  <p className="text-sm">Вы владеете навыком Восприятие.</p>
+                <div className="border-b border-primary/10 pb-2">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">🔮</span> 
+                    Эльфийская проницательность
+                  </h5>
+                  <p className="text-sm opacity-80 ml-6">Вы владеете навыком Восприятие.</p>
                 </div>
               </>
             )}
           </div>
         </div>
         
-        {(otherFeatures.length > 0 || subclass) && (
-          <div className="p-4 bg-primary/5 rounded-lg">
-            <h4 className="font-semibold mb-2">Черты и другие особенности</h4>
-            <div className="space-y-3">
-              {subclass && (
-                <div>
-                  <h5 className="font-medium">Архетип: {subclass}</h5>
+        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 shadow-sm">
+          <h4 className="font-semibold mb-3 flex items-center">
+            <span 
+              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
+              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
+            >
+              Д
+            </span>
+            Черты и другие особенности
+          </h4>
+          <div className="space-y-3 pl-8">
+            {subclass && (
+              <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">⭐</span>
+                    Архетип
+                  </h5>
+                  <Badge 
+                    className="font-semibold"
+                    style={{
+                      backgroundColor: currentTheme.accent,
+                      color: currentTheme.accent === '#8B5A2B' || currentTheme.accent === '#F59E0B' ? '#000' : '#fff'
+                    }}
+                  >
+                    {subclass}
+                  </Badge>
                 </div>
-              )}
-              {otherFeatures.map((feature, index) => (
-                <div key={index}>
-                  <h5 className="font-medium">{feature}</h5>
+              </div>
+            )}
+            
+            {otherFeatures.length > 0 ? (
+              otherFeatures.map((feature, index) => (
+                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
+                    {feature}
+                  </h5>
                 </div>
-              ))}
-              {otherFeatures.length === 0 && !subclass && (
-                <div>
-                  <h5 className="font-medium">Мастер легкого оружия</h5>
-                  <p className="text-sm">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
+              ))
+            ) : (
+              !subclass && (
+                <div className="border-b border-primary/10 pb-2">
+                  <h5 className="font-medium flex items-center">
+                    <span className="mr-2">⚔️</span> 
+                    Мастер легкого оружия
+                  </h5>
+                  <p className="text-sm opacity-80 ml-6">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
                 </div>
-              )}
-            </div>
+              )
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

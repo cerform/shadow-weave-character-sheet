@@ -5,12 +5,15 @@ import NavigationButtons from './NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import HitPointsRoller from './HitPointsRoller';
 import LevelBasedFeatures from './LevelBasedFeatures';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import SectionHeader from "@/components/ui/section-header";
 import { useLevelFeatures } from '@/hooks/useLevelFeatures';
+import { Shield, TrendingUp, Skull } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
@@ -30,6 +33,8 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   const [level, setLevel] = useState(character.level || 1);
   const [statCapAlert, setStatCapAlert] = useState<string | null>(null);
   const { availableFeatures } = useLevelFeatures(character);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // Проверка, выбран ли подкласс (если требуется)
   const needsSubclass = availableFeatures.some(f => f.type === 'subclass');
@@ -90,7 +95,13 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
         description="Уровень определяет силу и способности вашего персонажа. Начинающие игроки обычно начинают с 1 уровня."
       />
       
-      <Card className="border border-primary/20">
+      <Card className="border border-primary/20 shadow-lg">
+        <CardHeader className="bg-primary/5 border-b border-primary/10">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" /> 
+            Уровень персонажа
+          </CardTitle>
+        </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-center gap-4">
@@ -112,6 +123,12 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   onValueChange={handleLevelChange}
                   className="my-4"
                 />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Новичок</span>
+                  <span>Опытный</span>
+                  <span>Герой</span>
+                  <span>Легенда</span>
+                </div>
               </div>
               
               <Button
@@ -135,13 +152,22 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
               </div>
             </div>
             
-            <div className="text-center">
-              <span className="font-bold text-3xl">{level}</span>
-              <span className="text-xl"> уровень</span>
+            <div className="flex items-center justify-center py-4 border-y border-primary/10 my-4">
+              <div className="text-center px-8 py-4 bg-primary/5 rounded-lg" style={{ boxShadow: `0 0 20px ${currentTheme.accent}30` }}>
+                <span className="text-sm text-muted-foreground">Текущий уровень</span>
+                <div className="font-bold text-5xl" style={{ color: currentTheme.accent }}>
+                  {level}
+                </div>
+                {level <= 5 && <span className="text-xs">Начальный уровень</span>}
+                {level > 5 && level <= 10 && <span className="text-xs">Опытный искатель приключений</span>}
+                {level > 10 && level <= 15 && <span className="text-xs">Герой государства</span>}
+                {level > 15 && <span className="text-xs">Герой континента</span>}
+              </div>
             </div>
             
             {statCapAlert && (
-              <Alert>
+              <Alert variant="default" className="bg-primary/5 border border-primary/20">
+                <Shield className="h-4 w-4" />
                 <AlertTitle>Влияние на характеристики</AlertTitle>
                 <AlertDescription>{statCapAlert}</AlertDescription>
               </Alert>
@@ -149,12 +175,27 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
             
             {level >= 5 && (
               <Alert variant="default" className="bg-primary/10 border-primary/30">
+                <TrendingUp className="h-4 w-4" />
                 <AlertTitle>Дополнительные очки характеристик</AlertTitle>
                 <AlertDescription>
-                  При использовании метода Point Buy вам доступны дополнительные очки:
-                  {level >= 15 && ' +15 очков (5 уровень: +3, 10 уровень: +5, 15 уровень: +7)'}
-                  {level >= 10 && level < 15 && ' +8 очков (5 уровень: +3, 10 уровень: +5)'}
-                  {level >= 5 && level < 10 && ' +3 очка (5 уровень)'}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span>5 уровень:</span> 
+                      <Badge className="bg-primary/20" variant="outline">+3 очка</Badge>
+                    </div>
+                    {level >= 10 && (
+                      <div className="flex justify-between items-center">
+                        <span>10 уровень:</span> 
+                        <Badge className="bg-primary/20" variant="outline">+5 очков</Badge>
+                      </div>
+                    )}
+                    {level >= 15 && (
+                      <div className="flex justify-between items-center">
+                        <span>15 уровень:</span> 
+                        <Badge className="bg-primary/20" variant="outline">+7 очков</Badge>
+                      </div>
+                    )}
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
@@ -188,6 +229,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
       {/* Предупреждение если не выбраны обязательные опции */}
       {needsSubclass && !subclassSelected && (
         <Alert variant="destructive" className="mt-4">
+          <Skull className="h-4 w-4" />
           <AlertTitle>Не выбран архетип</AlertTitle>
           <AlertDescription>
             Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.
