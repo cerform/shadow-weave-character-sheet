@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   FileUp, Plus, Users, Book, BookOpen, User, Swords, 
   Home as HomeIcon, UserPlus, LogIn, LogOut, Search, Filter, 
-  Edit, Download, Upload, Dices
+  Edit, Download, Upload, Dices, Info, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -39,14 +40,22 @@ const Home = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const { characters, getUserCharacters, setCharacter } = useCharacter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
   
-  const isDM = currentUser?.isDM;
+  // Проверка прав пользователя
+  const isDM = currentUser?.isDM || false;
   
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("player");
+  
+  // Определяем, какая вкладка должна быть активна по умолчанию
+  // Если пользователь не авторизован, показываем только вкладку "Справочник"
+  const getDefaultTab = () => {
+    if (!isAuthenticated) return "handbook";
+    return "player"; // Авторизованным пользователям показываем вкладку "Игрок"
+  };
+  
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragTarget, setDragTarget] = useState<string | null>(null);
   
@@ -69,10 +78,18 @@ const Home = () => {
       const chars = getUserCharacters();
       setUserCharacters(chars);
     } else {
-      // Если пользователь не аутентифицирован, просто берем все персонажи из localStorage
-      setUserCharacters(characters);
+      // Если пользователь не аутентифицирован, показываем пустой список
+      setUserCharacters([]);
     }
   }, [isAuthenticated, getUserCharacters, characters]);
+  
+  // При изменении статуса авторизации проверяем, нужно ли сменить активную вкладку
+  useEffect(() => {
+    // Если пользователь не авторизован и активна защищённая вкладка
+    if (!isAuthenticated && (activeTab === "player" || activeTab === "dm")) {
+      setActiveTab("handbook");
+    }
+  }, [isAuthenticated, activeTab]);
   
   // Загружаем список заклинаний
   useEffect(() => {
@@ -150,6 +167,12 @@ const Home = () => {
     setIsDragging(false);
     setDragTarget(null);
     
+    // Проверяем авторизацию перед обработкой файлов
+    if (!isAuthenticated) {
+      setAuthDialogOpen(true);
+      return;
+    }
+    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       
@@ -189,6 +212,12 @@ const Home = () => {
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Проверка авторизации перед загрузкой файла
+    if (!isAuthenticated) {
+      setAuthDialogOpen(true);
+      return;
+    }
+    
     const file = event.target.files?.[0];
     if (file) {
       handleJsonFileImport(file);
@@ -219,6 +248,17 @@ const Home = () => {
     } else {
       // Если пользователь авторизован, сразу переходим к созданию
       navigate("/character-creation");
+    }
+  };
+  
+  // Обработчик присоединения к сессии с проверкой авторизации
+  const handleJoinSession = () => {
+    // Если пользователь не авторизован, показываем диалог авторизации
+    if (!isAuthenticated) {
+      setAuthDialogOpen(true);
+    } else {
+      // Если пользователь авторизован, сразу переходим к соединению
+      navigate("/join");
     }
   };
   
@@ -365,9 +405,24 @@ const Home = () => {
         {/* Вкладки для разделов Игрок/Мастер/Справочник */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
           <TabsList className="grid grid-cols-3 mb-8 relative overflow-hidden">
-            <TabsTrigger value="player" className="text-base py-3 relative">
-              <User className="mr-2 h-4 w-4" />
-              Игрок
+            {/* Вкладка Игрок - доступна только авторизованным пользователям */}
+            <TabsTrigger 
+              value="player" 
+              className={`text-base py-3 relative ${!isAuthenticated ? "opacity-60 cursor-not-allowed" : ""}`}
+              disabled={!isAuthenticated}
+              onClick={(e) => {
+                if (!isAuthenticated) {
+                  e.preventDefault();
+                  setAuthDialogOpen(true);
+                }
+              }}
+            >
+              <div className="flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                Игрок
+                {!isAuthenticated && <Lock className="ml-2 h-3 w-3 opacity-70" />}
+              </div>
+              
               {activeTab === 'player' && (
                 <span 
                   className="absolute bottom-0 left-0 right-0 h-1 rounded-full animate-fade-in" 
@@ -375,10 +430,25 @@ const Home = () => {
                 ></span>
               )}
             </TabsTrigger>
-            {/* Показывать вкладку Мастера только если пользователь имеет права мастера */}
-            <TabsTrigger value="dm" className="text-base py-3 relative" disabled={!isDM}>
-              <Users className="mr-2 h-4 w-4" />
-              Мастер
+            
+            {/* Вкладка Мастер - доступна только авторизованным пользователям с правами мастера */}
+            <TabsTrigger 
+              value="dm" 
+              className={`text-base py-3 relative ${!(isAuthenticated && isDM) ? "opacity-60 cursor-not-allowed" : ""}`}
+              disabled={!(isAuthenticated && isDM)}
+              onClick={(e) => {
+                if (!isAuthenticated) {
+                  e.preventDefault();
+                  setAuthDialogOpen(true);
+                }
+              }}
+            >
+              <div className="flex items-center">
+                <Users className="mr-2 h-4 w-4" />
+                Мастер
+                {(!isAuthenticated || !isDM) && <Lock className="ml-2 h-3 w-3 opacity-70" />}
+              </div>
+              
               {activeTab === 'dm' && (
                 <span 
                   className="absolute bottom-0 left-0 right-0 h-1 rounded-full animate-fade-in" 
@@ -386,9 +456,14 @@ const Home = () => {
                 ></span>
               )}
             </TabsTrigger>
+            
+            {/* Вкладка Справочник - доступна всем пользователям */}
             <TabsTrigger value="handbook" className="text-base py-3 relative">
-              <BookOpen className="mr-2 h-4 w-4" />
-              Справочник
+              <div className="flex items-center">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Справочник
+              </div>
+              
               {activeTab === 'handbook' && (
                 <span 
                   className="absolute bottom-0 left-0 right-0 h-1 rounded-full animate-fade-in" 
@@ -398,205 +473,202 @@ const Home = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="player" className="space-y-8 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card 
-                className={`bg-card/20 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-102 overflow-hidden`}
-                style={{
-                  borderColor: `${currentTheme.accent}40`,
-                  boxShadow: `0 0 15px ${currentTheme.accent}20`,
-                }}
-              >
-                <CardHeader className="bg-gradient-to-r from-transparent to-background/20">
-                  <CardTitle className="flex items-center gap-2">
-                    <div 
-                      className="p-2 rounded-full" 
-                      style={{ backgroundColor: `${currentTheme.accent}30` }}
-                    >
-                      <User className="size-5" style={{ color: currentTheme.accent }} />
-                    </div>
-                    <span>Персонаж</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Создайте или управляйте персонажами
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button 
-                    onClick={handleCreateCharacter} 
-                    className="w-full gap-2 hover:scale-102 transition-transform"
-                    style={{backgroundColor: currentTheme.accent}}
-                  >
-                    <Plus className="size-4" />
-                    Создать персонажа
-                  </Button>
-                  
-                  {/* JSON импорт с поддержкой drag-n-drop */}
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all ${
-                      dragTarget === 'json' ? 'bg-primary/10 border-primary' : 'border-muted hover:border-muted-foreground/50'
-                    }`}
-                    onDragOver={(e) => handleDragOver(e, 'json')}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleFileDrop(e, 'json')}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Download className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium">Перетащите JSON файл персонажа сюда</p>
-                    <p className="text-xs text-muted-foreground">или нажмите, чтобы выбрать файл</p>
-                    <input
-                      type="file"
-                      id="character-file"
-                      accept=".json"
-                      className="hidden"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                    />
-                  </div>
-                  
-                  {/* PDF импорт с поддержкой drag-n-drop */}
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all ${
-                      dragTarget === 'pdf' ? 'bg-primary/10 border-primary' : 'border-muted hover:border-muted-foreground/50'
-                    }`}
-                    onDragOver={(e) => handleDragOver(e, 'pdf')}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleFileDrop(e, 'pdf')}
-                    onClick={() => setPdfImportDialogOpen(true)}
-                  >
-                    <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium">Перетащите PDF-лист персонажа сюда</p>
-                    <p className="text-xs text-muted-foreground">или нажмите, чтобы импортировать PDF</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card 
-                className={`bg-card/20 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-102 overflow-hidden`}
-                style={{
-                  borderColor: `${currentTheme.accent}40`,
-                  boxShadow: `0 0 15px ${currentTheme.accent}20`,
-                }}
-              >
-                <CardHeader className="bg-gradient-to-r from-transparent to-background/20">
-                  <CardTitle className="flex items-center gap-2">
-                    <div 
-                      className="p-2 rounded-full" 
-                      style={{ backgroundColor: `${currentTheme.accent}30` }}
-                    >
-                      <Swords className="size-5" style={{ color: currentTheme.accent }} />
-                    </div>
-                    <span>Играть</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Присоединяйтесь к игровым сессиям
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button 
-                    onClick={() => navigate("/join")} 
-                    className="w-full hover:scale-102 transition-transform"
-                    style={{backgroundColor: currentTheme.accent}}
-                  >
-                    <Dices className="mr-2 h-4 w-4" />
-                    Присоединиться к сессии
-                  </Button>
-                  
-                  <div className="p-4 rounded-lg bg-background/40">
-                    <h4 className="font-medium mb-2">Как присоединиться к игре?</h4>
-                    <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
-                      <li>Создайте персонажа</li>
-                      <li>Получите код сессии у Мастера</li>
-                      <li>Введите код и присоединитесь</li>
-                    </ol>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Раздел "Недавние персонажи" с улучшенным дизайном */}
-            <div className="animate-fade-in">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <span className="mr-2">{isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}</span>
-                <Badge variant="outline" className="font-normal">
-                  {userCharacters?.length || 0}
-                </Badge>
-              </h3>
-              
-              {userCharacters && userCharacters.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userCharacters.map((char) => (
-                    <Card 
-                      key={char.id} 
-                      className="bg-card/20 backdrop-blur-sm hover:bg-card/40 hover:scale-102 transition-all cursor-pointer rounded-xl border"
-                      style={{
-                        borderColor: `${currentTheme.accent}30`,
-                      }}
-                      onClick={() => loadCharacter(char)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-14 w-14 border-2" style={{borderColor: currentTheme.accent}}>
-                            <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name}`} />
-                            <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <h4 className="font-medium">{char.name}</h4>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {char.race}
-                              </Badge>
-                              <Badge 
-                                variant="outline" 
-                                className="text-xs"
-                                style={{
-                                  borderColor: currentTheme.accent,
-                                  backgroundColor: `${currentTheme.accent}20`
-                                }}
-                              >
-                                {char.className} {char.level}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div 
-                  className="bg-card/20 backdrop-blur-sm rounded-2xl p-8 text-center border"
+          {/* Контент вкладки Игрок - отображается только авторизованным пользователям */}
+          {isAuthenticated && (
+            <TabsContent value="player" className="space-y-8 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card 
+                  className={`bg-card/20 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-102 overflow-hidden`}
                   style={{
-                    borderColor: `${currentTheme.accent}30`,
+                    borderColor: `${currentTheme.accent}40`,
+                    boxShadow: `0 0 15px ${currentTheme.accent}20`,
                   }}
                 >
-                  <div className="mb-4">
-                    <Dices className="mx-auto h-12 w-12 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">{isAuthenticated ? 
-                    "У вас пока нет сохраненных персонажей" : 
-                    "Начните свое приключение"
-                  }</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {isAuthenticated ? 
-                      "Создайте своего первого героя и отправляйтесь в путешествие!" : 
-                      "Создайте персонажа или войдите в аккаунт, чтобы увидеть своих персонажей"
-                    }
-                  </p>
-                  <Button 
-                    onClick={handleCreateCharacter}
-                    style={{backgroundColor: currentTheme.accent}}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Создать нового героя
-                  </Button>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+                  <CardHeader className="bg-gradient-to-r from-transparent to-background/20">
+                    <CardTitle className="flex items-center gap-2">
+                      <div 
+                        className="p-2 rounded-full" 
+                        style={{ backgroundColor: `${currentTheme.accent}30` }}
+                      >
+                        <User className="size-5" style={{ color: currentTheme.accent }} />
+                      </div>
+                      <span>Персонаж</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Создайте или управляйте персонажами
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      onClick={handleCreateCharacter} 
+                      className="w-full gap-2 hover:scale-102 transition-transform"
+                      style={{backgroundColor: currentTheme.accent}}
+                    >
+                      <Plus className="size-4" />
+                      Создать персонажа
+                    </Button>
+                    
+                    {/* JSON импорт с поддержкой drag-n-drop */}
+                    <div
+                      className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all ${
+                        dragTarget === 'json' ? 'bg-primary/10 border-primary' : 'border-muted hover:border-muted-foreground/50'
+                      }`}
+                      onDragOver={(e) => handleDragOver(e, 'json')}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleFileDrop(e, 'json')}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Download className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium">Перетащите JSON файл персонажа сюда</p>
+                      <p className="text-xs text-muted-foreground">или нажмите, чтобы выбрать файл</p>
+                      <input
+                        type="file"
+                        id="character-file"
+                        accept=".json"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                    
+                    {/* PDF импорт с поддержкой drag-n-drop */}
+                    <div
+                      className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all ${
+                        dragTarget === 'pdf' ? 'bg-primary/10 border-primary' : 'border-muted hover:border-muted-foreground/50'
+                      }`}
+                      onDragOver={(e) => handleDragOver(e, 'pdf')}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleFileDrop(e, 'pdf')}
+                      onClick={() => setPdfImportDialogOpen(true)}
+                    >
+                      <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium">Перетащите PDF-лист персонажа сюда</p>
+                      <p className="text-xs text-muted-foreground">или нажмите, чтобы импортировать PDF</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card 
+                  className={`bg-card/20 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-102 overflow-hidden`}
+                  style={{
+                    borderColor: `${currentTheme.accent}40`,
+                    boxShadow: `0 0 15px ${currentTheme.accent}20`,
+                  }}
+                >
+                  <CardHeader className="bg-gradient-to-r from-transparent to-background/20">
+                    <CardTitle className="flex items-center gap-2">
+                      <div 
+                        className="p-2 rounded-full" 
+                        style={{ backgroundColor: `${currentTheme.accent}30` }}
+                      >
+                        <Swords className="size-5" style={{ color: currentTheme.accent }} />
+                      </div>
+                      <span>Играть</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Присоединяйтесь к игровым сессиям
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      onClick={handleJoinSession}
+                      className="w-full hover:scale-102 transition-transform"
+                      style={{backgroundColor: currentTheme.accent}}
+                    >
+                      <Dices className="mr-2 h-4 w-4" />
+                      Присоединиться к сессии
+                    </Button>
+                    
+                    <div className="p-4 rounded-lg bg-background/40">
+                      <h4 className="font-medium mb-2">Как присоединиться к игре?</h4>
+                      <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
+                        <li>Создайте персонажа</li>
+                        <li>Получите код сессии у Мастера</li>
+                        <li>Введите код и присоединитесь</li>
+                      </ol>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Показывать вкладку мастера только если пользователь имеет права мастера */}
-          {isDM && (
+              {/* Раздел "Недавние персонажи" с улучшенным дизайном */}
+              <div className="animate-fade-in">
+                <h3 className="text-xl font-semibold mb-4 flex items-center">
+                  <span className="mr-2">{isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}</span>
+                  <Badge variant="outline" className="font-normal">
+                    {userCharacters?.length || 0}
+                  </Badge>
+                </h3>
+                
+                {userCharacters && userCharacters.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {userCharacters.map((char) => (
+                      <Card 
+                        key={char.id} 
+                        className="bg-card/20 backdrop-blur-sm hover:bg-card/40 hover:scale-102 transition-all cursor-pointer rounded-xl border"
+                        style={{
+                          borderColor: `${currentTheme.accent}30`,
+                        }}
+                        onClick={() => loadCharacter(char)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-14 w-14 border-2" style={{borderColor: currentTheme.accent}}>
+                              <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name}`} />
+                              <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <h4 className="font-medium">{char.name}</h4>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {char.race}
+                                </Badge>
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs"
+                                  style={{
+                                    borderColor: currentTheme.accent,
+                                    backgroundColor: `${currentTheme.accent}20`
+                                  }}
+                                >
+                                  {char.className} {char.level}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div 
+                    className="bg-card/20 backdrop-blur-sm rounded-2xl p-8 text-center border"
+                    style={{
+                      borderColor: `${currentTheme.accent}30`,
+                    }}
+                  >
+                    <div className="mb-4">
+                      <Dices className="mx-auto h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">У вас пока нет сохраненных персонажей</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Создайте своего первого героя и отправляйтесь в путешествие!
+                    </p>
+                    <Button 
+                      onClick={handleCreateCharacter}
+                      style={{backgroundColor: currentTheme.accent}}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Создать нового героя
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
+          {/* Контент вкладки Мастер - отображается только авторизованным пользователям с правами мастера */}
+          {isAuthenticated && isDM && (
             <TabsContent value="dm" className="space-y-8 animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Card 
@@ -673,7 +745,34 @@ const Home = () => {
             </TabsContent>
           )}
 
+          {/* Вкладка справочника - доступна всем пользователям */}
           <TabsContent value="handbook" className="space-y-8 animate-fade-in">
+            {/* Информация для неавторизованных пользователей */}
+            {!isAuthenticated && (
+              <div className="bg-card/20 backdrop-blur-sm border rounded-2xl mb-8 transition-all duration-300 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div 
+                    className="p-2 rounded-full" 
+                    style={{ backgroundColor: `${currentTheme.accent}30` }}
+                  >
+                    <Info className="size-5" style={{ color: currentTheme.accent }} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Добро пожаловать в D&D 5e</h3>
+                    <p className="text-sm text-muted-foreground">Чтобы получить полный доступ к приложению, войдите в аккаунт</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate("/auth")} 
+                  variant="outline"
+                  className="text-sm"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Войти или создать аккаунт
+                </Button>
+              </div>
+            )}
+            
             {/* База заклинаний */}
             <Card 
               className="bg-card/20 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:shadow-lg overflow-hidden"
@@ -855,20 +954,19 @@ const Home = () => {
             <DialogTitle>Авторизация</DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center">
-            <p className="mb-4">Для создания персонажа рекомендуется войти в аккаунт или зарегистрироваться.</p>
+            <p className="mb-4">Для доступа к этому разделу необходимо войти в аккаунт или зарегистрироваться.</p>
             <div className="flex justify-center gap-4">
               <Button onClick={() => {
                 setAuthDialogOpen(false);
-                navigate("/auth?action=login&redirect=character-creation");
+                navigate("/auth?action=login");
               }}>
                 <LogIn className="mr-2 h-4 w-4" />
                 Войти
               </Button>
               <Button variant="outline" onClick={() => {
                 setAuthDialogOpen(false);
-                navigate("/character-creation");
               }}>
-                Продолжить без входа
+                Отмена
               </Button>
             </div>
           </div>
@@ -879,3 +977,4 @@ const Home = () => {
 };
 
 export default Home;
+
