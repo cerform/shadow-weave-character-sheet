@@ -500,4 +500,4 @@ export const level2: CharacterSpell[] = [
     somatic: true,
     ritual: true,
     concentration: true,
-    duration: "Концентрация, вплоть до 10 минут
+    duration: "Концентрация, вплоть до 10 минут",
