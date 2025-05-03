@@ -156,6 +156,9 @@ export const useSpellbook = () => {
             if (typeof spellClassesStr !== 'string') {
               return false;
             }
+            if (typeof cls !== 'string') {
+              return false;
+            }
             return spellClassesStr.toLowerCase().includes(cls.toLowerCase());
           });
         } else if (Array.isArray(spell.classes)) {
@@ -267,4 +270,3 @@ export const useSpellbook = () => {
     formatClasses,
   };
 };
-
