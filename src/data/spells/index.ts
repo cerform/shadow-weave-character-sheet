@@ -48,6 +48,12 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
  * Получает заклинания по классу
  */
 export const getSpellsByClass = (className: string, characterLevel?: number): CharacterSpell[] => {
+  if (!className || typeof className !== 'string') {
+    return [];
+  }
+  
+  const classNameLower = className.toLowerCase();
+  
   return spells.filter(spell => {
     // Проверяем, что classes существует
     if (!spell.classes) {
@@ -56,7 +62,7 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
     
     // Если classes это строка
     if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase().includes(className.toLowerCase());
+      return spell.classes.toLowerCase().includes(classNameLower);
     }
     
     // Если classes это массив
@@ -64,7 +70,7 @@ export const getSpellsByClass = (className: string, characterLevel?: number): Ch
       return spell.classes.some(cls => {
         // Убедимся, что элемент массива это строка, прежде чем вызывать toLowerCase()
         if (typeof cls === 'string') {
-          return cls.toLowerCase().includes(className.toLowerCase());
+          return cls.toLowerCase().includes(classNameLower);
         }
         return false;
       });
