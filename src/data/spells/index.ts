@@ -1,44 +1,44 @@
 
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
-import { level2Spells } from "./level2";
-import { level3Spells } from "./level3";
-import { level3CombatSpells } from "./level3_combat";
-import { level3DivinationSpells } from "./level3_divination";
-import { level3EnchantSpells } from "./level3_enchant";
-import { level3IllusionSpells } from "./level3_illusion";
-import { level3MoreSpells } from "./level3_more";
-import { level3UtilitySpells } from "./level3_utility";
-import { level4Spells } from "./level4";
-import { level4Part2Spells } from "./level4_part2";
-import { level4Part3Spells } from "./level4_part3";
-import { level5Spells } from "./level5";
-import { level6Spells } from "./level6";
-import { level7Spells } from "./level7";
-import { level8Spells } from "./level8";
-import { level9Spells } from "./level9";
+import { level2 } from "./level2";
+import { level3 } from "./level3";
+import { level3_combat } from "./level3_combat";
+import { level3_divination } from "./level3_divination";
+import { level3_enchant } from "./level3_enchant";
+import { level3_illusion } from "./level3_illusion";
+import { level3_more } from "./level3_more";
+import { level3_utility } from "./level3_utility";
+import { level4 } from "./level4";
+import { level4_part2 } from "./level4_part2";
+import { level4_part3 } from "./level4_part3";
+import { level5 } from "./level5";
+import { level6 } from "./level6";
+import { level7 } from "./level7";
+import { level8 } from "./level8";
+import { level9 } from "./level9";
 import { CharacterSpell } from "@/types/character";
 
 // Combine all spells into one array
 export const spells: CharacterSpell[] = [
   ...cantrips,
   ...level1,
-  ...(level2Spells || []),
-  ...(level3Spells || []),
-  ...(level3CombatSpells || []),
-  ...(level3DivinationSpells || []),
-  ...(level3EnchantSpells || []),
-  ...(level3IllusionSpells || []),
-  ...(level3MoreSpells || []),
-  ...(level3UtilitySpells || []),
-  ...(level4Spells || []),
-  ...(level4Part2Spells || []),
-  ...(level4Part3Spells || []),
-  ...(level5Spells || []),
-  ...(level6Spells || []),
-  ...(level7Spells || []),
-  ...(level8Spells || []),
-  ...(level9Spells || []),
+  ...(level2 || []),
+  ...(level3 || []),
+  ...(level3_combat || []),
+  ...(level3_divination || []),
+  ...(level3_enchant || []),
+  ...(level3_illusion || []),
+  ...(level3_more || []),
+  ...(level3_utility || []),
+  ...(level4 || []),
+  ...(level4_part2 || []),
+  ...(level4_part3 || []),
+  ...(level5 || []),
+  ...(level6 || []),
+  ...(level7 || []),
+  ...(level8 || []),
+  ...(level9 || []),
 ];
 
 // Define spell levels
@@ -81,7 +81,9 @@ export const getSpellsBySchool = (school: string): CharacterSpell[] => {
 export const getAllSpellSchools = (): string[] => {
   const schools = new Set<string>();
   spells.forEach((spell) => {
-    schools.add(spell.school);
+    if (spell && spell.school) {
+      schools.add(spell.school);
+    }
   });
   return Array.from(schools).sort();
 };
