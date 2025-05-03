@@ -10,8 +10,9 @@ import { level3_illusion } from "./level3_illusion";
 import { level3_more } from "./level3_more";
 import { level3_utility } from "./level3_utility";
 import { level4 } from "./level4";
-import { level4_part2 } from "./level4_part2";
-import { level4_part3 } from "./level4_part3";
+// Fix the import names to match the actual exports
+import { level4Part2 } from "./level4_part2";
+import { level4Part3 } from "./level4_part3";
 import { level5 } from "./level5";
 import { level6 } from "./level6";
 import { level7 } from "./level7";
@@ -32,8 +33,9 @@ export const spells: CharacterSpell[] = [
   ...level3_more,
   ...level3_utility,
   ...level4,
-  ...level4_part2,
-  ...level4_part3,
+  // Fixed variable names to match imports
+  ...level4Part2,
+  ...level4Part3,
   ...level5,
   ...level6,
   ...level7,

@@ -11,6 +11,7 @@ interface NavigationButtonsProps {
   nextLabel?: string;
   prevLabel?: string;
   disableNext?: boolean;
+  hideNextButton?: boolean;  // Added this property
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -20,7 +21,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isFirstStep = false,
   nextLabel = "Далее",
   prevLabel = "Назад",
-  disableNext = false
+  disableNext = false,
+  hideNextButton = false  // Added default value
 }) => {
   return (
     <div className="flex justify-between mt-6">
@@ -34,15 +36,17 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         </Button>
       )}
       
-      <div className={`${isFirstStep ? 'ml-auto' : ''}`}>
-        <Button 
-          onClick={nextStep}
-          disabled={!allowNext || disableNext}
-          className="gap-2"
-        >
-          {nextLabel} <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+      {!hideNextButton && (
+        <div className={`${isFirstStep ? 'ml-auto' : ''}`}>
+          <Button 
+            onClick={nextStep}
+            disabled={!allowNext || disableNext}
+            className="gap-2"
+          >
+            {nextLabel} <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
