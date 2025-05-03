@@ -56,9 +56,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Добавляем стили для улучшения контрастности в зависимости от темы
     const style = {
       ...props.style,
-      color: variant === 'default' ? currentTheme.buttonText || '#FFFFFF' : props.style?.color || currentTheme.buttonText,
-      borderColor: variant === 'outline' ? props.style?.borderColor || currentTheme.accent : props.style?.borderColor,
-      backgroundColor: variant === 'default' && !props.style?.backgroundColor ? currentTheme.accent : props.style?.backgroundColor,
+      color: variant === 'ghost' && props.className?.includes('Details') 
+        ? '#FFFFFF' 
+        : variant === 'default' 
+          ? currentTheme.buttonText || '#FFFFFF' 
+          : props.style?.color || currentTheme.buttonText,
+      borderColor: variant === 'outline' 
+        ? props.style?.borderColor || currentTheme.accent 
+        : props.style?.borderColor,
+      backgroundColor: variant === 'default' && !props.style?.backgroundColor 
+        ? currentTheme.accent 
+        : props.style?.backgroundColor,
+      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
     };
     
     return (

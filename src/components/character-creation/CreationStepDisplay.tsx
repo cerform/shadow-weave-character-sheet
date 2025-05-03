@@ -4,6 +4,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface Step {
   id: number;
@@ -42,27 +48,37 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
           const isCompleted = step.id < currentStep;
 
           return (
-            <Button
-              key={step.id}
-              className={cn(
-                "min-w-[130px] flex-shrink-0 transition-all",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                  : isCompleted
-                  ? "bg-primary/20 text-foreground hover:bg-primary/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              )}
-              style={{
-                backgroundColor: isActive
-                  ? currentTheme.accent
-                  : isCompleted
-                  ? `${currentTheme.accent}30`
-                  : undefined,
-              }}
-              onClick={() => setCurrentStep(step.id)}
-            >
-              {step.name}
-            </Button>
+            <TooltipProvider key={step.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className={cn(
+                      "min-w-[130px] flex-shrink-0 transition-all",
+                      isActive
+                        ? "bg-primary text-white shadow-lg scale-105 font-medium"
+                        : isCompleted
+                        ? "bg-primary/20 text-white hover:bg-primary/30"
+                        : "bg-muted text-white hover:bg-muted/80"
+                    )}
+                    style={{
+                      backgroundColor: isActive
+                        ? currentTheme.accent
+                        : isCompleted
+                        ? `${currentTheme.accent}30`
+                        : undefined,
+                      color: "#FFFFFF", // Обеспечиваем белый текст для всех кнопок
+                      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для улучшения читаемости
+                    }}
+                    onClick={() => setCurrentStep(step.id)}
+                  >
+                    {step.name}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{step.description}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           );
         })}
       </div>

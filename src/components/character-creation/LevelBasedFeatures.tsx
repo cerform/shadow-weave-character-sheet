@@ -10,6 +10,7 @@ import { useLevelFeatures, LevelFeature } from '@/hooks/useLevelFeatures';
 import { CharacterSheet } from '@/types/character';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LevelBasedFeaturesProps {
   character: CharacterSheet;
@@ -200,21 +201,31 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
                       </Badge>
                     )}
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      if (feature.type === 'subclass') {
-                        openSubclassDialog();
-                      } else if (feature.type === 'ability_increase') {
-                        openAbilityIncreaseDialog();
-                      } else {
-                        setExpandedFeature(expandedFeature === feature.type ? null : feature.type);
-                      }
-                    }}
-                  >
-                    Детали
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            if (feature.type === 'subclass') {
+                              openSubclassDialog();
+                            } else if (feature.type === 'ability_increase') {
+                              openAbilityIncreaseDialog();
+                            } else {
+                              setExpandedFeature(expandedFeature === feature.type ? null : feature.type);
+                            }
+                          }}
+                          className="bg-black/40 hover:bg-black/60 border-white/20"
+                        >
+                          <span className="text-white font-medium">Детали</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Просмотреть дополнительную информацию</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 
                 {expandedFeature === feature.type && feature.type !== 'subclass' && feature.type !== 'ability_increase' && (
