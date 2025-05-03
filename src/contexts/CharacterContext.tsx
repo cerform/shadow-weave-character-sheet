@@ -236,9 +236,14 @@ export function CharacterProvider({ children }: Props) {
       console.log("Обновление персонажа:", updatedChar.name, updates);
       
       // Обновляем также в общем списке персонажей
-      setCharacters(prevChars => 
-        prevChars.map(c => c.id === prev.id ? updatedChar : c)
-      );
+      setCharacters(prevChars => {
+        // Проверяем, что prevChars - это массив
+        if (!Array.isArray(prevChars)) {
+          console.error("prevChars не является массивом:", prevChars);
+          return prevChars || [];
+        }
+        return prevChars.map(c => c.id === prev.id ? updatedChar : c);
+      });
       
       return updatedChar;
     });
@@ -287,9 +292,14 @@ export function CharacterProvider({ children }: Props) {
         }
         
         // Обновляем локальный список
-        setCharacters(prevChars => 
-          prevChars.map(c => c.id === charData.id ? updatedChar : c)
-        );
+        setCharacters(prevChars => {
+          // Проверяем, что prevChars - это массив
+          if (!Array.isArray(prevChars)) {
+            console.error("prevChars не является массивом:", prevChars);
+            return [updatedChar];
+          }
+          return prevChars.map(c => c.id === charData.id ? updatedChar : c);
+        });
         
         console.log("Обновлен персонаж:", updatedChar.name);
         return updatedChar;
@@ -326,7 +336,14 @@ export function CharacterProvider({ children }: Props) {
         }
         
         // Обновляем локальный список
-        setCharacters(prevChars => [...prevChars, newChar]);
+        setCharacters(prevChars => {
+          // Проверяем, что prevChars - это массив
+          if (!Array.isArray(prevChars)) {
+            console.error("prevChars не является массивом:", prevChars);
+            return [newChar];
+          }
+          return [...prevChars, newChar];
+        });
         
         console.log("Создан новый персонаж:", newChar.name);
         return newChar;
@@ -350,7 +367,14 @@ export function CharacterProvider({ children }: Props) {
       await characterService.deleteCharacter(id);
       
       // Удаляем из локального списка персонажей
-      setCharacters(prevChars => prevChars.filter(c => c.id !== id));
+      setCharacters(prevChars => {
+        // Проверяем, что prevChars - это массив
+        if (!Array.isArray(prevChars)) {
+          console.error("prevChars не является массивом:", prevChars);
+          return [];
+        }
+        return prevChars.filter(c => c.id !== id);
+      });
       
       // Если есть авторизованный пользователь, удаляем персонажа у него
       if (currentUser) {
