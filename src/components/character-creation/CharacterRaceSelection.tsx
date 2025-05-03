@@ -43,12 +43,11 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     return race && race.subRaces && race.subRaces.length > 0;
   };
 
-  // Эффект для сброса подрасы при изменении расы
+  // Эффект для синхронизации локальных состояний с данными персонажа при монтировании
   useEffect(() => {
-    if (selectedRace !== character.race) {
-      setSelectedSubrace("");
-    }
-  }, [selectedRace, character.race]);
+    setSelectedRace(character.race || "");
+    setSelectedSubrace(character.subrace || "");
+  }, [character.race, character.subrace]);
 
   // Получаем доступные подрасы для выбранной расы
   const getAvailableSubraces = (raceName: string) => {
@@ -59,8 +58,14 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
 
   const handleRaceSelect = (race: string) => {
     setSelectedRace(race);
-    setSelectedSubrace("");
-    updateCharacter({ race, subrace: "" });
+    
+    // Сбрасываем подрасу только если новая раса отличается от предыдущей
+    if (race !== character.race) {
+      setSelectedSubrace("");
+      updateCharacter({ race, subrace: "" });
+    } else {
+      updateCharacter({ race });
+    }
   };
 
   const handleSubraceSelect = (subrace: string) => {
@@ -108,33 +113,40 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               ) : undefined}
             >
               {raceHasSubraces && isSelected && (
-                <div className="mt-4 space-y-3">
-                  <p className="text-sm font-medium">Доступные подрасы:</p>
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium">Доступные подрасы:</h4>
                   <div className="bg-black/40 p-3 rounded-lg border border-primary/30">
                     <div className="flex flex-wrap gap-2">
-                      {race.subRaces?.map((subrace) => (
-                        <button
-                          key={subrace}
-                          onClick={() => handleSubraceSelect(subrace)}
-                          className={`
-                            px-3 py-1.5 rounded text-sm font-medium transition-all duration-200
-                            ${selectedSubrace === subrace
-                              ? 'bg-primary text-white shadow-md scale-105'
-                              : 'bg-black/60 text-white hover:bg-white/20'
-                            }
-                            ${selectedSubrace === subrace ? 'border border-white' : 'border border-primary/30'}
-                          `}
-                          style={{
-                            backgroundColor: selectedSubrace === subrace ? currentTheme.accent : undefined,
-                            boxShadow: selectedSubrace === subrace ? `0 0 8px ${currentTheme.accent}` : undefined
-                          }}
-                        >
-                          <span className="flex items-center">
-                            {subrace}
-                            {selectedSubrace === subrace && <Check className="ml-1.5 h-3 w-3" />}
-                          </span>
-                        </button>
-                      ))}
+                      {race.subRaces?.map((subrace) => {
+                        const isSubraceSelected = selectedSubrace === subrace;
+                        
+                        return (
+                          <button
+                            key={subrace}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Предотвращаем всплытие события
+                              handleSubraceSelect(subrace);
+                            }}
+                            className={`
+                              px-3 py-1.5 rounded text-sm font-medium transition-all duration-200
+                              ${isSubraceSelected
+                                ? 'bg-primary text-white shadow-md scale-105'
+                                : 'bg-black/60 text-white hover:bg-white/20'
+                              }
+                              ${isSubraceSelected ? 'border border-white' : 'border border-primary/30'}
+                            `}
+                            style={{
+                              backgroundColor: isSubraceSelected ? currentTheme.accent : undefined,
+                              boxShadow: isSubraceSelected ? `0 0 8px ${currentTheme.accent}` : undefined
+                            }}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              {subrace}
+                              {isSubraceSelected && <Check className="h-3 w-3" />}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
