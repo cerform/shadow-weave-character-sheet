@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -100,8 +101,9 @@ interface Props {
   children: ReactNode;
 }
 
-const STORAGE_KEY = "dnd5e_characters";
-const ACTIVE_CHARACTER_KEY = "dnd5e_active_character";
+// Унифицируем ключи локального хранилища
+const STORAGE_KEY = "dnd-characters"; // Единый ключ для всего приложения
+const ACTIVE_CHARACTER_KEY = "dnd-active-character"; // Обновленный ключ для активного персонажа
 
 export function CharacterProvider({ children }: Props) {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -262,7 +264,7 @@ export function CharacterProvider({ children }: Props) {
   
   // Получение персонажей текущего пользователя
   const getUserCharacters = useCallback(() => {
-    if (!currentUser) return [];
+    if (!currentUser) return characters; // Возвращаем все персонажи, если пользователь не аутентифицирован
     
     // Если пользователь - DM, возвращаем все персонажи
     if (currentUser.isDM) {
@@ -281,7 +283,7 @@ export function CharacterProvider({ children }: Props) {
       value={{ 
         characters, 
         character, 
-        setCharacter,  // This line was missing! Adding it back
+        setCharacter,
         clearCharacter, 
         updateCharacter,
         saveCharacter,

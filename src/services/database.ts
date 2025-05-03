@@ -7,7 +7,7 @@ import { Session } from "@/types/session";
 const LOCAL_STORAGE_KEYS = {
   USERS: 'dnd_app_users',
   DM_MASTERS: 'dnd_app_dm_masters',
-  CHARACTERS: 'dnd_app_characters',
+  CHARACTERS: 'dnd-characters', // Обновляем ключ для соответствия с CharacterContext
   CAMPAIGNS: 'dnd_app_campaigns',
   SESSIONS: 'dnd_app_sessions',
   CURRENT_USER: 'dnd_app_current_user'

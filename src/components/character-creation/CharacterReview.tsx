@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CharacterSheet } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
@@ -10,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -26,6 +26,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { saveCharacter } = useCharacter(); // Используем контекст персонажа
   
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
@@ -34,31 +35,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     try {
       setIsSaving(true);
       
-      // Добавим ID, если его еще нет
-      if (!character.id) {
-        character.id = `char_${Date.now()}`;
-      }
-      
-      // Получим существующих персонажей из хранилища
-      const existingCharactersJson = localStorage.getItem('dnd-characters');
-      let existingCharacters = existingCharactersJson ? JSON.parse(existingCharactersJson) : [];
-      
-      // Проверим, существует ли уже этот персонаж
-      const existingIndex = existingCharacters.findIndex((c: CharacterSheet) => c.id === character.id);
-      
-      if (existingIndex >= 0) {
-        // Обновим существующего персонажа
-        existingCharacters[existingIndex] = character;
-      } else {
-        // Добавим нового персонажа
-        existingCharacters.push(character);
-      }
-      
-      // Сохраним обновленный список
-      localStorage.setItem('dnd-characters', JSON.stringify(existingCharacters));
-      
-      // Сохраним ID последнего выбранного персонажа
-      localStorage.setItem('last-selected-character', character.id);
+      // Используем функцию сохранения из контекста персонажа
+      const savedCharacter = await saveCharacter(character);
       
       // Установим флаг успешного сохранения
       setSaveSuccess(true);
@@ -66,7 +44,6 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
       toast({
         title: "Персонаж сохранен",
         description: `${character.name} успешно сохранен`,
-        // Изменяем variant с "success" на "default"
         variant: "default",
       });
       

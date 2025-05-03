@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut } from "lucide-react";
@@ -30,9 +31,11 @@ const Index = () => {
       console.log("Index: Персонажи пользователя", chars);
       setUserCharacters(chars);
     } else {
-      // Если пользователь не аутентифицирован, просто берем все персонажи из localStorage
-      console.log("Index: Персонажи из localStorage", characters);
-      setUserCharacters(characters);
+      // Если пользователь не аутентифицирован, используем функцию getUserCharacters
+      // которая вернет все персонажи из localStorage
+      const chars = getUserCharacters();
+      console.log("Index: Персонажи из localStorage", chars);
+      setUserCharacters(chars);
     }
   }, [isAuthenticated, getUserCharacters, characters]);
 

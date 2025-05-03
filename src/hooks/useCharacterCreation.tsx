@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
+import { Character } from "@/contexts/CharacterContext"; // Импортируем тип Character
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -44,6 +44,39 @@ export const useCharacterCreation = () => {
     appearance: "",
     backstory: ""
   });
+
+  // Добавляем функцию для конвертации CharacterSheet в Character (для контекста персонажа)
+  const convertToCharacter = (sheet: CharacterSheet): Character => {
+    return {
+      id: sheet.id || "",
+      userId: sheet.userId,
+      name: sheet.name,
+      race: sheet.race,
+      subrace: sheet.subrace,
+      className: sheet.class,
+      level: sheet.level,
+      abilities: {
+        STR: sheet.abilities.strength,
+        DEX: sheet.abilities.dexterity,
+        CON: sheet.abilities.constitution,
+        INT: sheet.abilities.intelligence,
+        WIS: sheet.abilities.wisdom,
+        CHA: sheet.abilities.charisma
+      },
+      spells: sheet.spells,
+      spellSlots: {}, // Заполнять при необходимости
+      gender: sheet.gender,
+      alignment: sheet.alignment,
+      background: sheet.background,
+      equipment: sheet.equipment,
+      languages: sheet.languages,
+      proficiencies: sheet.proficiencies,
+      maxHp: sheet.maxHp,
+      currentHp: sheet.currentHp,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as Character;
+  };
 
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
@@ -208,6 +241,7 @@ export const useCharacterCreation = () => {
     getRequiredXP,
     handleLevelChange,
     getTotalLevel,
-    getAllClasses
+    getAllClasses,
+    convertToCharacter // Экспортируем новый метод
   };
 };
