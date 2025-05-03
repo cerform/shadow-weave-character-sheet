@@ -1,10 +1,11 @@
 
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 
-const NotFound = () => {
+const NotFound: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -20,6 +21,9 @@ const NotFound = () => {
       <div className="text-center p-6 max-w-md">
         <h1 className="text-6xl font-bold mb-4">404</h1>
         <p className="text-xl mb-8">Страница не найдена</p>
+        <p className="text-muted-foreground mb-4">
+          К сожалению, запрошенная страница ({location.pathname}) не существует.
+        </p>
         <Button 
           onClick={() => navigate("/")} 
           className="flex items-center gap-2"

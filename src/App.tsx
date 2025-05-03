@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
@@ -40,7 +40,7 @@ const App = () => {
                     <Route path="/sheet" element={<CharacterSheetPage />} />
                     <Route path="/character-creation" element={<CharacterCreationPage />} />
                     <Route path="/join" element={<JoinSessionPage />} />
-                    <Route path="/dm" element={<DMDashboardPage />} />
+                    <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
                     <Route path="/dm-dashboard" element={<DMDashboardPage />} />
                     <Route path="/dm-session/:id" element={<DMSessionPage />} />
                     <Route path="/play" element={<PlayerSessionPage />} />
