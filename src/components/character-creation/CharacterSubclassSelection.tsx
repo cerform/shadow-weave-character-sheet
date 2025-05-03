@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -53,6 +53,17 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   };
   
   const availableSubclasses = getAvailableSubclasses();
+
+  // При монтировании компонента и при изменении класса проверяем наличие подклассов
+  useEffect(() => {
+    if (availableSubclasses.length === 0) {
+      // Добавляем небольшую задержку, чтобы UI успел обновиться
+      const timer = setTimeout(() => {
+        nextStep();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [character.class, availableSubclasses.length, nextStep]);
   
   const handleNext = () => {
     if (selectedSubclass || availableSubclasses.length === 0) {
@@ -79,11 +90,7 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   
   // Если для класса нет доступных подклассов, сразу переходим к следующему шагу
   if (availableSubclasses.length === 0) {
-    // Добавляем setTimeout, чтобы не блокировать рендеринг
-    setTimeout(() => {
-      nextStep();
-    }, 0);
-    return null;
+    return null; // Возвращаем null, чтобы компонент не рендерился, так как мы сразу переходим к следующему шагу
   }
 
   return (

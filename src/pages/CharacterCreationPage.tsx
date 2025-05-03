@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,9 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { steps } from "@/config/characterCreationSteps";
 import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 
+// Импортируем данные о подклассах
+import { subclassData } from "@/data/subclasses";
+
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -31,11 +33,19 @@ const CharacterCreationPage = () => {
   const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange } = useCharacterCreation();
   const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
   
+  // Проверяем, есть ли подклассы для выбранного класса
+  const hasSubclasses = () => {
+    if (!character.class) return false;
+    const classSubclasses = subclassData[character.class];
+    return classSubclasses && Object.keys(classSubclasses).length > 0;
+  };
+
   // Fix: Update the hook call to match the expected parameters
   const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep({
     isMagicClass: isMagicClass(),
     characterClass: character.class,
-    character: character
+    character: character,
+    hasSubclasses: hasSubclasses()
   });
 
   // Определяем максимальное значение для характеристик на основе уровня

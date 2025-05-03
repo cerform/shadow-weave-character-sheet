@@ -12,6 +12,7 @@ import SectionHeader from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { subclassData } from "@/data/subclasses";
 
 interface CharacterClassSelectionProps {
   character: any;
@@ -30,15 +31,31 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
   const [activeTab, setActiveTab] = useState<string>("overview");
   const { toast } = useToast();
 
+  // Проверяем, есть ли подклассы для выбранного класса
+  const hasSubclasses = (className: string) => {
+    if (!className) return false;
+    const classSubclasses = subclassData[className];
+    return classSubclasses && Object.keys(classSubclasses).length > 0;
+  };
+
   const handleNext = () => {
     if (selectedClass) {
-      updateCharacter({ class: selectedClass });
+      // Сохраняем текущий класс и сбрасываем подкласс (если был)
+      const updates: any = { class: selectedClass, subclass: undefined };
+      updateCharacter(updates);
       
-      // Показываем подсказку о необходимости выбрать архетип
-      toast({
-        title: "Выбор класса завершен",
-        description: "На следующем шаге вам нужно будет выбрать архетип для вашего класса.",
-      });
+      // Показываем подходящую подсказку в зависимости от наличия подклассов
+      if (hasSubclasses(selectedClass)) {
+        toast({
+          title: "Выбор класса завершен",
+          description: "На следующем шаге вам нужно будет выбрать архетип для вашего класса.",
+        });
+      } else {
+        toast({
+          title: "Выбор класса завершен",
+          description: "Для этого класса нет доступных архетипов. Переходим к выбору уровня.",
+        });
+      }
       
       nextStep();
     } else {

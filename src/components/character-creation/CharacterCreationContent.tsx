@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import { useCreationStep } from '@/hooks/useCreationStep';
@@ -63,6 +62,17 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     const classSubclasses = subclassData[character.class];
     return classSubclasses && Object.keys(classSubclasses).length > 0;
   };
+  
+  // Функция для корректной навигации назад
+  const handlePrevStep = () => {
+    // Если находимся на шаге 3 (уровень) и у класса нет подклассов, перейти на шаг 1 (выбор класса)
+    if (currentStep === 3 && !hasSubclasses()) {
+      updateCharacter({ subclass: undefined }); // Сбрасываем подкласс, если он был
+      prevStep(); // Вызываем prevStep из useCreationStep, который должен правильно обрабатывать логику
+    } else {
+      prevStep(); // Обычный переход назад
+    }
+  };
 
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
@@ -96,7 +106,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
-            prevStep={prevStep}
+            prevStep={handlePrevStep}
           />
         );
       case 3: // Выбор уровня
@@ -105,8 +115,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
-            prevStep={prevStep}
-            onLevelChange={onLevelChange}
+            prevStep={handlePrevStep}
           />
         );
       case 4: // Характеристики
