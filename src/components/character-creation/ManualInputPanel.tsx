@@ -46,7 +46,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                   <Input
                     type="number"
                     id={`${key}-input`}
-                    value={String(value)} // Ensure value is always passed as a string
+                    value={String(value)}
                     onChange={(e) => {
                       const newValue = parseInt(e.target.value, 10);
                       if (!isNaN(newValue) && newValue >= 1 && newValue <= maxAbilityScore) {
@@ -73,7 +73,7 @@ function getStatName(stat: string): string {
     'constitution': 'Телосложение',
     'intelligence': 'Интеллект',
     'wisdom': 'Мудрость',
-    'charisma': 'Харизма'
+    'charisма': 'Харизма'
   };
   return names[stat] || stat;
 }
