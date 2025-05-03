@@ -23,8 +23,10 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   hideControls = false,
   themeColor,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const diceBoxRef = useRef<any>(null);
+  const canvasIdRef = useRef<string>(`dice-canvas-${Math.random().toString(36).substring(2, 9)}`);
   const [isRolling, setIsRolling] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const { theme } = useTheme();
@@ -35,8 +37,12 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    // Создаем экземпляр DiceBox
-    const diceBox = new DiceBox(canvasRef.current, {
+    // Присваиваем ID к элементу canvas
+    const canvasId = canvasIdRef.current;
+    canvasRef.current.id = canvasId;
+    
+    // Создаем экземпляр DiceBox используя селектор ID
+    const diceBox = new DiceBox(`#${canvasId}`, {
       assetPath: "/assets/dice-models/", // Путь к ассетам
       scale: 6,                         // Масштаб кубиков
       theme: "default",                 // Тема по умолчанию
@@ -67,7 +73,11 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
     // Очистка при размонтировании
     return () => {
       if (diceBoxRef.current) {
-        diceBoxRef.current.clear();
+        try {
+          diceBoxRef.current.clear();
+        } catch (e) {
+          console.error("Ошибка при очистке DiceBox:", e);
+        }
       }
     };
   }, [actualThemeColor]);
@@ -102,7 +112,7 @@ const DiceBox3D: React.FC<DiceBox3DProps> = ({
   };
   
   return (
-    <div className="dice-box-container w-full h-full flex flex-col relative">
+    <div className="dice-box-container w-full h-full flex flex-col relative" ref={containerRef}>
       <div className="dice-canvas-container flex-grow relative overflow-hidden rounded-lg bg-black/20">
         <canvas ref={canvasRef} className="w-full h-full" />
         
