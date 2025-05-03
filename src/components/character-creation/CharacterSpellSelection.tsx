@@ -1,13 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
+import { Check, X, Trash2 } from 'lucide-react';
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   character: any;
@@ -20,6 +24,10 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(character.spells || []);
   const [availableSpells, setAvailableSpells] = useState<CharacterSpell[]>([]);
   const [activeTab, setActiveTab] = useState<string>("0");
+  
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   // Определяем максимальное количество заклинаний, которые может выбрать персонаж
   const getMaxSpellsCount = () => {
@@ -86,6 +94,10 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
     nextStep();
   };
 
+  const removeSpell = (spellName: string) => {
+    setSelectedSpells(selectedSpells.filter(s => s.name !== spellName));
+  };
+
   const spellLevels = getAvailableSpellLevels();
   const shouldDisableNext = character.class && getMaxSpellsCount() > 0 && selectedSpells.length === 0;
 
@@ -93,19 +105,64 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Выбор заклинаний</h2>
       
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center bg-black/60 p-3 rounded-lg border border-primary/30 mb-4">
         <div>
-          <Label>Класс: {character.class}</Label>
+          <Label className="text-white">Класс: {character.class}</Label>
         </div>
         <div>
-          <Label>Выбрано заклинаний: {selectedSpells.length} / {getMaxSpellsCount()}</Label>
+          <Badge 
+            style={{backgroundColor: currentTheme.accent}}
+            className="text-white font-medium"
+          >
+            Выбрано заклинаний: {selectedSpells.length} / {getMaxSpellsCount()}
+          </Badge>
         </div>
       </div>
       
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 w-full">
+      {/* Блок выбранных заклинаний */}
+      {selectedSpells.length > 0 && (
+        <Card className="border border-primary/30 bg-black/60 mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Check size={16} className="text-green-400" />
+              Выбранные заклинания
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {selectedSpells.map((spell, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between bg-primary/10 p-2 rounded-md border border-primary/30"
+                  style={{ boxShadow: `0 0 5px ${currentTheme.accent}40` }}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-white">{spell.name}</span>
+                    <span className="text-xs opacity-70">{spell.school || ''} • {spell.level ? `Уровень ${spell.level}` : 'Заговор'}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeSpell(spell.name)}
+                    className="hover:bg-red-500/20 hover:text-red-400 p-1 h-auto"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-5 w-full bg-black/40">
           {spellLevels.map(level => (
-            <TabsTrigger key={level} value={level.toString()}>
+            <TabsTrigger 
+              key={level} 
+              value={level.toString()}
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+            >
               {level === 0 ? "Заговоры" : `Уровень ${level}`}
             </TabsTrigger>
           ))}
@@ -113,25 +170,37 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         
         {spellLevels.map(level => (
           <TabsContent key={level} value={level.toString()}>
-            <Card>
+            <Card className="border-primary/20 bg-black/60">
               <CardContent className="pt-4">
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="grid grid-cols-1 gap-2">
                     {availableSpells
                       .filter(spell => spell && spell.level === level)
-                      .map((spell, index) => (
-                        <Button 
-                          key={index}
-                          variant={selectedSpells.some(s => s.name === spell.name) ? "default" : "outline"}
-                          className="justify-start text-left h-auto py-2"
-                          onClick={() => handleSelectSpell(spell)}
-                        >
-                          <div>
-                            <div className="font-bold">{spell.name}</div>
-                            <div className="text-sm opacity-70">{spell.school} • {spell.castingTime}</div>
-                          </div>
-                        </Button>
-                      ))}
+                      .map((spell, index) => {
+                        const isSelected = selectedSpells.some(s => s.name === spell.name);
+                        return (
+                          <Button 
+                            key={index}
+                            variant={isSelected ? "default" : "outline"}
+                            className={`justify-start text-left h-auto py-3 relative ${isSelected ? 'border-white' : 'border-primary/30'}`}
+                            onClick={() => handleSelectSpell(spell)}
+                            style={{
+                              backgroundColor: isSelected ? `${currentTheme.accent}80` : 'rgba(0, 0, 0, 0.6)',
+                              boxShadow: isSelected ? `0 0 10px ${currentTheme.accent}80` : 'none'
+                            }}
+                          >
+                            <div className="flex-1">
+                              <div className="font-bold text-white">{spell.name}</div>
+                              <div className="text-sm opacity-80 text-white">{spell.school} • {spell.castingTime}</div>
+                            </div>
+                            {isSelected && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <Check size={20} className="text-white" />
+                              </div>
+                            )}
+                          </Button>
+                        );
+                      })}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -145,7 +214,7 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         nextStep={handleSaveSpells}
         nextLabel="Далее: Снаряжение"
         disableNext={shouldDisableNext}
-        allowNext={true}
+        allowNext={!shouldDisableNext}
       />
     </div>
   );

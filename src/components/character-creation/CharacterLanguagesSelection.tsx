@@ -9,6 +9,8 @@ import SectionHeader from "@/components/ui/section-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import { Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface CharacterLanguagesSelectionProps {
   character: any;
@@ -93,17 +95,6 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
     nextStep();
   };
 
-  // Стили для кнопок
-  const getButtonClass = (isSelected: boolean) => {
-    return `
-      transition-all duration-200
-      ${isSelected 
-        ? 'text-black font-bold bg-accent-color'
-        : 'text-white hover:bg-white/20'
-      }
-    `;
-  };
-
   return (
     <div>
       <SectionHeader
@@ -113,32 +104,52 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
       
       <Card className="mb-8" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderColor: currentTheme.accent }}>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold mb-2 text-white">Языки (максимум 3)</h3>
-          <p className="mb-4 text-white">
-            Выберите языки, которыми владеет ваш персонаж.
-          </p>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-white">Языки</h3>
+            <Badge 
+              style={{backgroundColor: currentTheme.accent}}
+              className="text-white font-medium"
+            >
+              {selectedLanguages.length}/3
+            </Badge>
+          </div>
           
-          <SelectionSubOptionsContainer className="mb-4">
-            {languages.map((lang) => (
-              <SelectionSubOption
-                key={lang}
-                label={lang}
-                selected={selectedLanguages.includes(lang)}
-                onClick={() => toggleLanguage(lang)}
-                className={getButtonClass(selectedLanguages.includes(lang))}
-                style={{
-                  backgroundColor: selectedLanguages.includes(lang) ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
-                  color: selectedLanguages.includes(lang) ? '#000000' : '#FFFFFF',
-                  border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-                  boxShadow: selectedLanguages.includes(lang) ? `0 0 8px rgba(255, 255, 255, 0.5)` : 'none'
-                }}
-              />
-            ))}
-          </SelectionSubOptionsContainer>
+          <div className="bg-black/50 p-4 rounded-lg border border-primary/30 mb-4">
+            <SelectionSubOptionsContainer className="gap-3 flex-wrap">
+              {languages.map((lang) => {
+                const isSelected = selectedLanguages.includes(lang);
+                return (
+                  <div key={lang} className="relative">
+                    <SelectionSubOption
+                      label={lang}
+                      selected={isSelected}
+                      onClick={() => toggleLanguage(lang)}
+                      style={{
+                        backgroundColor: isSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                        color: '#FFFFFF',
+                        borderColor: isSelected ? '#FFFFFF' : currentTheme.accent,
+                        boxShadow: isSelected ? `0 0 10px ${currentTheme.accent}80` : 'none',
+                        paddingRight: isSelected ? '30px' : '12px'
+                      }}
+                      className={`
+                        transition-all duration-200 font-medium
+                        ${isSelected ? 'scale-105' : 'hover:bg-white/20'}
+                      `}
+                    />
+                    {isSelected && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <Check size={16} className="text-white" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </SelectionSubOptionsContainer>
+          </div>
           
-          <div className="mb-6">
-            <h4 className="font-medium mb-1 text-white">Выбранные языки:</h4>
-            <ul className="list-disc pl-5">
+          <div className="mt-6">
+            <h4 className="font-medium mb-2 text-white">Выбранные языки:</h4>
+            <ul className="list-disc pl-5 space-y-1">
               {selectedLanguages.map((lang, idx) => (
                 <li key={idx} className="text-white">{lang}</li>
               ))}
@@ -149,32 +160,52 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
       
       <Card className="mb-8" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderColor: currentTheme.accent }}>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold mb-2 text-white">Навыки (максимум 4)</h3>
-          <p className="mb-4 text-white">
-            Выберите навыки, которыми владеет ваш персонаж.
-          </p>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-white">Навыки</h3>
+            <Badge 
+              style={{backgroundColor: currentTheme.accent}}
+              className="text-white font-medium"
+            >
+              {selectedProficiencies.length}/4
+            </Badge>
+          </div>
           
-          <SelectionSubOptionsContainer className="mb-4">
-            {availableProficiencies.map((prof) => (
-              <SelectionSubOption
-                key={prof}
-                label={prof}
-                selected={selectedProficiencies.includes(prof)}
-                onClick={() => toggleProficiency(prof)}
-                className={getButtonClass(selectedProficiencies.includes(prof))}
-                style={{
-                  backgroundColor: selectedProficiencies.includes(prof) ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
-                  color: selectedProficiencies.includes(prof) ? '#000000' : '#FFFFFF',
-                  border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-                  boxShadow: selectedProficiencies.includes(prof) ? `0 0 8px rgba(255, 255, 255, 0.5)` : 'none'
-                }}
-              />
-            ))}
-          </SelectionSubOptionsContainer>
+          <div className="bg-black/50 p-4 rounded-lg border border-primary/30 mb-4">
+            <SelectionSubOptionsContainer className="gap-3 flex-wrap">
+              {availableProficiencies.map((prof) => {
+                const isSelected = selectedProficiencies.includes(prof);
+                return (
+                  <div key={prof} className="relative">
+                    <SelectionSubOption
+                      label={prof}
+                      selected={isSelected}
+                      onClick={() => toggleProficiency(prof)}
+                      style={{
+                        backgroundColor: isSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                        color: '#FFFFFF',
+                        borderColor: isSelected ? '#FFFFFF' : currentTheme.accent,
+                        boxShadow: isSelected ? `0 0 10px ${currentTheme.accent}80` : 'none',
+                        paddingRight: isSelected ? '30px' : '12px'
+                      }}
+                      className={`
+                        transition-all duration-200 font-medium
+                        ${isSelected ? 'scale-105' : 'hover:bg-white/20'}
+                      `}
+                    />
+                    {isSelected && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <Check size={16} className="text-white" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </SelectionSubOptionsContainer>
+          </div>
           
           <div>
-            <h4 className="font-medium mb-1 text-white">Выбранные навыки:</h4>
-            <ul className="list-disc pl-5">
+            <h4 className="font-medium mb-2 text-white">Выбранные навыки:</h4>
+            <ul className="list-disc pl-5 space-y-1">
               {selectedProficiencies.length > 0 ? (
                 selectedProficiencies.map((prof, idx) => (
                   <li key={idx} className="text-white">{prof}</li>

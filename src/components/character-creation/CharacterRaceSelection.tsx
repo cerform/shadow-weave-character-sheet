@@ -13,6 +13,7 @@ import {
 import SectionHeader from "@/components/ui/section-header";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
+import { Check } from "lucide-react";
 
 interface CharacterRaceSelectionProps {
   character: CharacterSheet;
@@ -78,33 +79,42 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
               subOptions={hasSubraces && isSelected ? (
                 <div>
                   <p className="text-sm font-medium mb-2 text-white">Доступные подрасы:</p>
-                  <SelectionSubOptionsContainer>
-                    {race.subRaces?.map((subrace) => {
-                      const isSubraceSelected = selectedSubrace === subrace;
-                      return (
-                        <SelectionSubOption
-                          key={subrace}
-                          label={subrace}
-                          selected={isSubraceSelected}
-                          onClick={() => handleSubraceSelect(subrace)}
-                          style={{
-                            backgroundColor: isSubraceSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
-                            color: isSubraceSelected ? '#000000' : '#FFFFFF',
-                            boxShadow: isSubraceSelected ? `0 0 12px ${currentTheme.accent}` : 'none',
-                            transform: isSubraceSelected ? 'scale(1.05)' : 'scale(1)',
-                            border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-                            textShadow: isSubraceSelected ? 'none' : '0px 1px 2px rgba(0, 0, 0, 0.8)'
-                          }}
-                          className={`
-                            transition-all duration-200
-                            ${isSubraceSelected 
-                              ? 'font-semibold scale-105 shadow-glow' 
-                              : 'hover:bg-white/20'}
-                          `}
-                        />
-                      );
-                    })}
-                  </SelectionSubOptionsContainer>
+                  <div className="bg-black/60 p-3 rounded-lg border border-primary/30">
+                    <SelectionSubOptionsContainer>
+                      {race.subRaces?.map((subrace) => {
+                        const isSubraceSelected = selectedSubrace === subrace;
+                        return (
+                          <div className="relative">
+                            <SelectionSubOption
+                              key={subrace}
+                              label={subrace}
+                              selected={isSubraceSelected}
+                              onClick={() => handleSubraceSelect(subrace)}
+                              style={{
+                                backgroundColor: isSubraceSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                                color: isSubraceSelected ? '#FFFFFF' : '#FFFFFF',
+                                border: `1px solid ${isSubraceSelected ? '#FFFFFF' : currentTheme.accent}`,
+                                boxShadow: isSubraceSelected ? `0 0 12px ${currentTheme.accent}` : 'none',
+                                transform: isSubraceSelected ? 'scale(1.05)' : 'scale(1)',
+                                position: 'relative',
+                                paddingRight: isSubraceSelected ? '35px' : '12px'
+                              }}
+                              className={`
+                                transition-all duration-200 font-medium
+                                ${isSubraceSelected ? 'shadow-glow' : 'hover:bg-white/20'}
+                              `}
+                            />
+                            {isSubraceSelected && (
+                              <Check 
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white" 
+                                size={20} 
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </SelectionSubOptionsContainer>
+                  </div>
                 </div>
               ) : undefined}
             />

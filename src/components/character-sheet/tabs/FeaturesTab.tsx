@@ -65,7 +65,7 @@ export const FeaturesTab = () => {
       
       <div className="space-y-6">
         <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center">
+          <h4 className="font-semibold mb-3 flex items-center text-white">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
               style={{ backgroundColor: currentTheme.accent, color: '#000' }}
@@ -78,7 +78,7 @@ export const FeaturesTab = () => {
             {classFeatures.length > 0 ? (
               classFeatures.map((feature, index) => (
                 <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">{getFeatureIcon(feature)}</span> 
                     {feature}
                   </h5>
@@ -86,18 +86,18 @@ export const FeaturesTab = () => {
               ))
             ) : (
               <div className="border-b border-primary/10 pb-2">
-                <h5 className="font-medium flex items-center">
+                <h5 className="font-medium flex items-center text-white">
                   <span className="mr-2">⚔️</span> 
                   Скрытая атака
                 </h5>
-                <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
+                <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
               </div>
             )}
           </div>
         </div>
         
         <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center">
+          <h4 className="font-semibold mb-3 flex items-center text-white">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
               style={{ backgroundColor: currentTheme.accent, color: '#000' }}
@@ -110,7 +110,7 @@ export const FeaturesTab = () => {
             {raceFeatures.length > 0 ? (
               raceFeatures.map((feature, index) => (
                 <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">{getFeatureIcon(feature)}</span> 
                     {feature}
                   </h5>
@@ -119,18 +119,18 @@ export const FeaturesTab = () => {
             ) : (
               <>
                 <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">👁️</span> 
                     Темное зрение
                   </h5>
-                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы можете видеть в темноте на расстоянии 60 футов.</p>
+                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы можете видеть в темноте на расстоянии 60 футов.</p>
                 </div>
                 <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">🔮</span> 
                     Эльфийская проницательность
                   </h5>
-                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы владеете навыком Восприятие.</p>
+                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы владеете навыком Восприятие.</p>
                 </div>
               </>
             )}
@@ -138,7 +138,7 @@ export const FeaturesTab = () => {
         </div>
         
         <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center">
+          <h4 className="font-semibold mb-3 flex items-center text-white">
             <span 
               className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
               style={{ backgroundColor: currentTheme.accent, color: '#000' }}
@@ -151,7 +151,7 @@ export const FeaturesTab = () => {
             {subclass && (
               <div className="mb-4 p-3 bg-black/60 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">⭐</span>
                     Архетип
                   </h5>
@@ -159,7 +159,7 @@ export const FeaturesTab = () => {
                     className="font-semibold"
                     style={{
                       backgroundColor: currentTheme.accent,
-                      color: currentTheme.accent === '#8B5A2B' || currentTheme.accent === '#F59E0B' ? '#000' : '#fff'
+                      color: '#FFFFFF'
                     }}
                   >
                     {subclass}
@@ -171,7 +171,7 @@ export const FeaturesTab = () => {
             {otherFeatures.length > 0 ? (
               otherFeatures.map((feature, index) => (
                 <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">{getFeatureIcon(feature)}</span> 
                     {feature}
                   </h5>
@@ -180,11 +180,11 @@ export const FeaturesTab = () => {
             ) : (
               !subclass && (
                 <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center">
+                  <h5 className="font-medium flex items-center text-white">
                     <span className="mr-2">⚔️</span> 
                     Мастер легкого оружия
                   </h5>
-                  <p className="text-sm opacity-80 ml-6 bg-black/40 p-2 rounded">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
+                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
                 </div>
               )
             )}
