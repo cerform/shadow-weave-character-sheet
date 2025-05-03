@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { FileText } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
@@ -234,20 +234,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           </CardContent>
         </Card>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <div className="md:col-span-2">
-            <CharacterTabs 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-            />
-          </div>
-          
-          <div className="md:col-span-1 space-y-4 mt-4">
-            <SkillsPanel character={character} />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        {/* Основная сетка с левой панелью и основным контентом */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          {/* Левая панель */}
           <div className="md:col-span-1 space-y-4">
             <StatsPanel character={character} />
             
@@ -341,19 +330,55 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             )}
           </div>
           
-          <div className="md:col-span-2">
-            {/* Пустая область для контента вкладок, отображение происходит внутри CharacterTabs */}
+          {/* Основной контент с вкладками и навыками */}
+          <div className="md:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-3">
+                <CharacterTabs 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                />
+              </div>
+              <div className="md:col-span-1">
+                <SkillsPanel character={character} />
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="flex justify-end mt-4">
-          <Button onClick={handleCharacterSave} className="mr-2">Сохранить</Button>
-          <Button variant="outline" onClick={handleExportToPdf}>
+        <div className="flex justify-end mt-8">
+          <Button 
+            onClick={handleCharacterSave} 
+            className="mr-2"
+            style={{
+              backgroundColor: currentTheme.accent,
+              color: currentTheme.buttonText
+            }}
+          >
+            Сохранить
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleExportToPdf}
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor
+            }}
+          >
             <FileText className="mr-2 h-4 w-4" />
             Экспорт в PDF
           </Button>
           {isDM && (
-            <Button onClick={() => setShowCombatDialog(true)} className="ml-2">В бой!</Button>
+            <Button 
+              onClick={() => setShowCombatDialog(true)} 
+              className="ml-2"
+              style={{
+                backgroundColor: currentTheme.accent,
+                color: currentTheme.buttonText
+              }}
+            >
+              В бой!
+            </Button>
           )}
         </div>
         

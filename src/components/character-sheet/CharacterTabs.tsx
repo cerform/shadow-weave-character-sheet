@@ -28,7 +28,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   
   return (
     <Card 
-      className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1 mt-4"
+      className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1 mt-2"
       style={{ 
         backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
         boxShadow: `0 0 10px ${currentTheme.accent}40`,
@@ -111,7 +111,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="playerhandbook" 
-            className="text-xs py-2 flex items-center justify-center gap-1 col-span-full"
+            className="text-xs py-2 flex items-center justify-center gap-1 col-span-full mt-1"
             style={{
               backgroundColor: activeTab === 'playerhandbook' ? `${currentTheme.accent}30` : 'transparent',
               boxShadow: activeTab === 'playerhandbook' ? `inset 0 0 5px ${currentTheme.accent}60` : 'none'
@@ -122,7 +122,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           </TabsTrigger>
         </TabsList>
         
-        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-300px)]' : 'h-[calc(100vh-280px)]'}`}>
+        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-340px)]' : 'h-[calc(100vh-320px)]'}`}>
           <TabsContent value="abilities" className="mt-0">
             <AbilitiesTab />
           </TabsContent>

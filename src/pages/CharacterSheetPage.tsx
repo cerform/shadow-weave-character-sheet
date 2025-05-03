@@ -5,7 +5,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext"; 
+import { useAuth } from "@/contexts/AuthContext";
+import OBSLayout from "@/components/OBSLayout"; 
 
 const CharacterSheetPage = () => {
   const [character, setCharacter] = useState<any>(null);
@@ -81,7 +82,12 @@ const CharacterSheetPage = () => {
   }, [isConnected, connect, toast]);
   
   return (
-    <div className="relative">
+    <div 
+      className="min-h-screen w-full"
+      style={{ 
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`
+      }}
+    >
       <CharacterSheet 
         character={character} 
         isDM={currentUser?.isDM === true}
