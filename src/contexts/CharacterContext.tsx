@@ -9,6 +9,8 @@ import React, {
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
 import { toast } from "sonner";
+import { auth } from "@/services/firebase"; 
+import { characterService } from "@/services/sessionService";
 
 // Типы для заклинания и персонажа
 export interface Spell {
@@ -110,25 +112,65 @@ export function CharacterProvider({ children }: Props) {
   const [character, setCharacterState] = useState<Character | null>(null);
   const { currentUser, addCharacterToUser, removeCharacterFromUser } = useAuth();
 
-  // При старте читаем из localStorage
+  // При старте читаем из localStorage и Firebase Storage
   useEffect(() => {
-    const savedCharacters = localStorage.getItem(STORAGE_KEY);
-    if (savedCharacters) {
+    // Загружаем персонажей из Storage при первой загрузке
+    const loadCharacters = async () => {
       try {
-        setCharacters(JSON.parse(savedCharacters));
-      } catch (e) {
-        console.error("Ошибка при чтении персонажей из localStorage:", e);
+        const loadedCharacters = await characterService.getCharacters();
+        if (loadedCharacters.length > 0) {
+          setCharacters(loadedCharacters);
+          
+          // Если есть сохраненный активный персонаж, пытаемся его найти среди загруженных
+          const savedActiveCharacterId = localStorage.getItem(ACTIVE_CHARACTER_KEY);
+          if (savedActiveCharacterId) {
+            try {
+              const activeChar = JSON.parse(savedActiveCharacterId);
+              const foundCharacter = loadedCharacters.find(c => c.id === activeChar.id);
+              if (foundCharacter) {
+                setCharacterState(foundCharacter);
+              }
+            } catch (e) {
+              console.error("Ошибка при чтении активного персонажа из localStorage:", e);
+            }
+          }
+        } else {
+          // Если из Storage ничего не загрузилось, пробуем из localStorage
+          const savedCharacters = localStorage.getItem(STORAGE_KEY);
+          if (savedCharacters) {
+            try {
+              const parsedChars = JSON.parse(savedCharacters);
+              setCharacters(parsedChars);
+            } catch (e) {
+              console.error("Ошибка при чтении персонажей из localStorage:", e);
+            }
+          }
+          
+          const savedActiveCharacter = localStorage.getItem(ACTIVE_CHARACTER_KEY);
+          if (savedActiveCharacter) {
+            try {
+              setCharacterState(JSON.parse(savedActiveCharacter));
+            } catch (e) {
+              console.error("Ошибка при чтении активного персонажа из localStorage:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке персонажей:", error);
+        
+        // При ошибке загрузки из Storage - используем localStorage
+        const savedCharacters = localStorage.getItem(STORAGE_KEY);
+        if (savedCharacters) {
+          try {
+            setCharacters(JSON.parse(savedCharacters));
+          } catch (e) {
+            console.error("Ошибка при чтении персонажей из localStorage:", e);
+          }
+        }
       }
-    }
+    };
     
-    const savedActiveCharacter = localStorage.getItem(ACTIVE_CHARACTER_KEY);
-    if (savedActiveCharacter) {
-      try {
-        setCharacterState(JSON.parse(savedActiveCharacter));
-      } catch (e) {
-        console.error("Ошибка при чтении активного персонажа из localStorage:", e);
-      }
-    }
+    loadCharacters();
   }, []);
 
   // Сохраняем список персонажей в localStorage при изменении
@@ -199,67 +241,98 @@ export function CharacterProvider({ children }: Props) {
     setCharacterState(null);
   }, []);
   
-  // Метод для сохранения персонажа
+  // Метод для сохранения персонажа - теперь используем Firebase Storage
   const saveCharacter = useCallback(async (charData: Partial<Character>): Promise<Character> => {
     const now = new Date().toISOString();
     
-    // Проверяем, новый это персонаж или обновление существующего
-    if (charData.id) {
-      // Обновление существующего персонажа
-      const updatedChar = {
-        ...charData,
-        updatedAt: now
-      } as Character;
-      
-      setCharacters(prevChars => 
-        prevChars.map(c => c.id === charData.id ? updatedChar : c)
-      );
-      
-      console.log("Обновлен персонаж:", updatedChar.name);
-      return updatedChar;
-    } else {
-      // Создание нового персонажа
-      const newChar: Character = {
-        ...charData as Omit<Character, 'id' | 'createdAt' | 'updatedAt'>,
-        id: uuidv4(),
-        userId: currentUser?.id, // Привязываем к текущему пользователю
-        createdAt: now,
-        updatedAt: now
-      } as Character;
-      
-      setCharacters(prevChars => [...prevChars, newChar]);
-      
-      // Если есть авторизованный пользователь, добавляем персонажа к нему
-      if (currentUser) {
-        try {
-          await addCharacterToUser(newChar.id);
-          toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
-        } catch (err) {
-          console.error("Ошибка при привязке персонажа к пользователю:", err);
+    try {
+      // Проверяем, новый это персонаж или обновление существующего
+      if (charData.id) {
+        // Обновление существующего персонажа
+        const updatedChar = {
+          ...charData,
+          updatedAt: now
+        } as Character;
+        
+        // Сохраняем в Firebase Storage
+        const saved = await characterService.saveCharacter(updatedChar);
+        if (!saved) {
+          throw new Error("Не удалось сохранить персонажа в Firebase Storage");
         }
+        
+        // Обновляем локальный список
+        setCharacters(prevChars => 
+          prevChars.map(c => c.id === charData.id ? updatedChar : c)
+        );
+        
+        console.log("Обновлен персонаж:", updatedChar.name);
+        return updatedChar;
+        
+      } else {
+        // Создание нового персонажа
+        const newChar: Character = {
+          ...charData as Omit<Character, 'id' | 'createdAt' | 'updatedAt'>,
+          id: uuidv4(),
+          userId: auth.currentUser?.uid, // Привязываем к текущему пользователю
+          createdAt: now,
+          updatedAt: now
+        } as Character;
+        
+        // Сохраняем в Firebase Storage
+        const saved = await characterService.saveCharacter(newChar);
+        if (!saved) {
+          throw new Error("Не удалось сохранить персонажа в Firebase Storage");
+        }
+        
+        // Обновляем локальный список
+        setCharacters(prevChars => [...prevChars, newChar]);
+        
+        // Если есть авторизованный пользователь, добавляем персонажа к нему
+        if (currentUser) {
+          try {
+            await addCharacterToUser(newChar.id);
+            toast.success(`Персонаж ${newChar.name} создан и привязан к аккаунту`);
+          } catch (err) {
+            console.error("Ошибка при привязке персонажа к пользователю:", err);
+          }
+        }
+        
+        console.log("Создан новый персонаж:", newChar.name);
+        return newChar;
       }
-      
-      console.log("Создан новый персонаж:", newChar.name);
-      return newChar;
+    } catch (error) {
+      console.error("Ошибка при сохранении персонажа:", error);
+      toast.error("Не удалось сохранить персонажа");
+      throw error;
     }
   }, [currentUser, addCharacterToUser]);
   
   // Метод для удаления персонажа
   const deleteCharacter = useCallback(async (id: string): Promise<void> => {
-    // Если текущий активный персонаж - удаляемый, очищаем его
-    if (character?.id === id) {
-      clearCharacter();
+    try {
+      // Если текущий активный персонаж - удаляемый, очищаем его
+      if (character?.id === id) {
+        clearCharacter();
+      }
+      
+      // Удаляем из Firebase Storage
+      await characterService.deleteCharacter(id);
+      
+      // Удаляем из локального списка персонажей
+      setCharacters(prevChars => prevChars.filter(c => c.id !== id));
+      
+      // Если есть авторизованный пользователь, удаляем персонажа у него
+      if (currentUser) {
+        await removeCharacterFromUser(id);
+      }
+      
+      toast.success("Персонаж успешно удалён");
+      console.log("Удален персонаж с ID:", id);
+    } catch (error) {
+      console.error("Ошибка при удалении персонажа:", error);
+      toast.error("Не удалось удалить персонажа");
+      throw error;
     }
-    
-    // Удаляем из списка персонажей
-    setCharacters(prevChars => prevChars.filter(c => c.id !== id));
-    
-    // Если есть авторизованный пользователь, удаляем персонажа у него
-    if (currentUser) {
-      await removeCharacterFromUser(id);
-    }
-    
-    console.log("Удален персонаж с ID:", id);
   }, [character, clearCharacter, currentUser, removeCharacterFromUser]);
   
   // Получение персонажей текущего пользователя

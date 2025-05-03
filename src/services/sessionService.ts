@@ -16,6 +16,7 @@ import {
 import { 
   ref as storageRef, 
   uploadString, 
+  uploadBytes,
   getDownloadURL, 
   deleteObject, 
   listAll
@@ -84,6 +85,15 @@ export const sessionService = {
       };
       
       const docRef = await addDoc(collection(db, "sessions"), sessionData);
+      
+      // Сохраняем сессию также в Storage
+      const sessionJson = JSON.stringify({
+        ...sessionData,
+        id: docRef.id
+      });
+      
+      const sessionRef = storageRef(storage, `sessions/${currentUser.uid}/${docRef.id}.json`);
+      await uploadString(sessionRef, sessionJson, 'raw');
       
       return {
         ...sessionData,
@@ -287,7 +297,17 @@ export const sessionService = {
         return false;
       }
       
+      // Удаляем из Firestore и Storage
       await deleteDoc(sessionRef);
+      
+      try {
+        const storageSessionRef = storageRef(storage, `sessions/${currentUser.uid}/${sessionId}.json`);
+        await deleteObject(storageSessionRef);
+      } catch (storageError) {
+        console.warn("Не удалось удалить сессию из Storage:", storageError);
+        // Продолжаем выполнение, так как основные данные уже удалены из Firestore
+      }
+      
       toast.success("Сессия успешно удалена");
       return true;
     } catch (error) {
@@ -323,13 +343,19 @@ export const characterService = {
         
         // Асинхронно загружаем данные каждого персонажа
         const charactersPromises = listResult.items.map(async (item) => {
-          const url = await getDownloadURL(item);
-          const response = await fetch(url);
-          const text = await response.text();
-          return JSON.parse(text) as Character;
+          try {
+            const url = await getDownloadURL(item);
+            const response = await fetch(url);
+            const text = await response.text();
+            return JSON.parse(text) as Character;
+          } catch (error) {
+            console.error(`Ошибка при загрузке персонажа ${item.name}:`, error);
+            return null; // Пропускаем этот файл при ошибке
+          }
         });
         
-        const characters = await Promise.all(charactersPromises);
+        // Фильтруем null значения (файлы с ошибками)
+        const characters = (await Promise.all(charactersPromises)).filter(char => char !== null) as Character[];
         
         // Также сохраняем в localStorage для оффлайн-доступа
         localStorage.setItem('dnd-characters', JSON.stringify({ 
@@ -385,8 +411,11 @@ export const characterService = {
       // Сериализуем объект персонажа в строку JSON
       const characterJson = JSON.stringify(character);
       
+      // Создаем Blob из JSON данных
+      const blob = new Blob([characterJson], { type: 'application/json' });
+      
       // Загружаем в Firebase Storage
-      await uploadString(characterRef, characterJson);
+      await uploadBytes(characterRef, blob);
       
       // Также сохраняем в localStorage для быстрого доступа
       const storedData = localStorage.getItem('dnd-characters');
@@ -403,6 +432,7 @@ export const characterService = {
       data.lastUsed = character.id;
       localStorage.setItem('dnd-characters', JSON.stringify(data));
       
+      toast.success(`Персонаж ${character.name} успешно сохранен`);
       return true;
     } catch (error) {
       console.error("Ошибка при сохранении персонажа:", error);

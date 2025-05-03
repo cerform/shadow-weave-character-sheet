@@ -119,7 +119,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={handlePrevStep} // Используем обработчик для корректной навигации
-            onLevelChange={onLevelChange} // Добавляем пропс onLevelChange
+            onLevelChange={onLevelChange} // Передаем функцию onLevelChange
           />
         );
       case 4: // Характеристики
@@ -204,6 +204,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           <CharacterReview 
             character={character}
             prevStep={prevStep}
+            updateCharacter={updateCharacter} // Передаем функцию для обновления персонажа
           />
         );
       default:
