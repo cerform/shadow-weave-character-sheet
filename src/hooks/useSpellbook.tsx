@@ -153,7 +153,7 @@ export const useSpellbook = () => {
           // Check if the classes string contains any of the selected classes
           const spellClassesStr = spell.classes;
           return activeClass.some(cls => {
-            if (typeof spellClassesStr !== 'string' || typeof cls !== 'string') {
+            if (typeof spellClassesStr !== 'string') {
               return false;
             }
             return spellClassesStr.toLowerCase().includes(cls.toLowerCase());
@@ -163,7 +163,7 @@ export const useSpellbook = () => {
           return (spell.classes as string[]).some(spellClass => {
             if (typeof spellClass !== 'string') return false;
             return activeClass.some(cls => {
-              if (typeof spellClass !== 'string' || typeof cls !== 'string') {
+              if (typeof cls !== 'string') {
                 return false;
               }
               return spellClass.toLowerCase().includes(cls.toLowerCase());
@@ -267,3 +267,4 @@ export const useSpellbook = () => {
     formatClasses,
   };
 };
+

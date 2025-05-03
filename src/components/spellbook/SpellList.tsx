@@ -59,7 +59,7 @@ const SpellList: React.FC<SpellListProps> = ({
             >
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-bold" style={{color: currentTheme.textColor}}>{spell.name}</h4>
+                  <h4 className="text-lg font-bold" style={{color: currentTheme.textColor || 'white'}}>{spell.name}</h4>
                   <Badge
                     variant="outline"
                     style={{
@@ -71,7 +71,7 @@ const SpellList: React.FC<SpellListProps> = ({
                     {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
                   </Badge>
                 </div>
-                <div className="flex items-center text-sm mb-2">
+                <div className="flex items-center text-sm mb-2 flex-wrap gap-2">
                   <Badge
                     variant="outline"
                     style={{
@@ -83,7 +83,7 @@ const SpellList: React.FC<SpellListProps> = ({
                     {spell.school}
                   </Badge>
                   {(spell.isRitual || spell.ritual) && (
-                    <Badge variant="outline" className="ml-2" style={{
+                    <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',
                       borderColor: currentTheme.accent
@@ -92,7 +92,7 @@ const SpellList: React.FC<SpellListProps> = ({
                     </Badge>
                   )}
                   {(spell.isConcentration || spell.concentration) && (
-                    <Badge variant="outline" className="ml-2" style={{
+                    <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',
                       borderColor: currentTheme.accent
