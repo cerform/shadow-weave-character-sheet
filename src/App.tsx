@@ -24,6 +24,7 @@ import DMSessionPage from './pages/DMSessionPage'
 import JoinSessionPage from './pages/JoinSessionPage'
 import CreateSessionPage from './pages/CreateSessionPage'
 import PlayerSessionPage from './pages/PlayerSessionPage'
+import NotFound from './pages/NotFound'
 
 // Добавляем компонент с плавающей кнопкой кубиков
 import AppDiceButton from './AppDiceButton'
@@ -56,6 +57,7 @@ function App() {
                     <Route path="/session/join" element={<JoinSessionPage />} />
                     <Route path="/session/create" element={<CreateSessionPage />} />
                     <Route path="/session/player" element={<PlayerSessionPage />} />
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                   
                   {/* Плавающая кнопка кубиков */}
