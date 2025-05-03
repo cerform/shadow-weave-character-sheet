@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -43,38 +42,50 @@ export interface SorceryPoints {
 }
 
 export interface Character {
-  id: string;
+  id?: string;
   userId?: string; 
-  name: string;
-  race: string;
-  class: string;  // Изменено с необязательного (?) на обязательное
-  subrace?: string; 
-  className: string;
-  level: number;
-  abilities: AbilityScores;
-  spellsKnown?: Spell[];
-  spells?: string[];
-  spellSlots: SpellSlots;
-  gender?: string;
-  alignment?: string;
+  name?: string;
+  className?: string;
+  subclass?: string;
   background?: string;
-  equipment?: string[];
-  languages?: string[];
-  proficiencies?: string[];
-  // Добавляем владение навыками
-  skillProficiencies?: {
-    [skillName: string]: boolean;
+  race?: string;
+  alignment?: string;
+  level?: number;
+  experience?: number;
+  abilities?: AbilityScores;
+  savingThrowProficiencies?: {
+    [key: string]: boolean;
   };
-  maxHp?: number;
+  skillProficiencies?: {
+    [key: string]: boolean;
+  };
   currentHp?: number;
+  maxHp?: number;
   temporaryHp?: number; // Добавляем поле для временного HP
+  spellSlots?: SpellSlots;
+  spells?: string[];
+  features?: any[];
+  equipment?: any[];
+  proficiencies?: any[];
+  languages?: string[];
+  age?: number;
+  height?: string;
+  weight?: string;
+  eyes?: string;
+  hair?: string;
+  skin?: string;
+  backstory?: string;
+  allies?: string;
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  image?: string;
+  notes?: string;
   sorceryPoints?: SorceryPoints;
   theme?: string;
   createdAt: string;
   updatedAt: string;
-  savingThrowProficiencies?: {
-    [ability: string]: boolean;
-  };
 }
 
 // Контекст и его тип

@@ -192,7 +192,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           </TabsTrigger>
         </TabsList>
         
-        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-460px)]' : 'h-[calc(100vh-440px)]'} overflow-y-auto`}>
+        <ScrollArea className={`${isMobile ? 'h-[calc(100vh-460px)]' : 'h-[calc(100vh-440px)]'} overflow-y-auto pr-2`}>
           <TabsContent value="abilities" className="mt-0">
             <AbilitiesTab />
           </TabsContent>
