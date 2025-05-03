@@ -15,13 +15,12 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from "firebase/analytics";
 
 // Конфигурация Firebase
-// Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
   authDomain: "shadow-char.firebaseapp.com",
   projectId: "shadow-char",
-  storageBucket: "shadow-char.appspot.com", // Исправлен URL хранилища
+  storageBucket: "shadow-char.appspot.com", // Правильный URL хранилища
   messagingSenderId: "815261687102",
   appId: "1:815261687102:web:5497647ed6ff449a57e06f",
   measurementId: "G-KQ3M1GQJX2"
