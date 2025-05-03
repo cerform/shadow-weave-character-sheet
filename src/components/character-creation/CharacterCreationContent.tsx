@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import { useCreationStep } from '@/hooks/useCreationStep';
@@ -116,6 +117,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={handlePrevStep}
+            onLevelChange={onLevelChange}
           />
         );
       case 4: // Характеристики
