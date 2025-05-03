@@ -1,17 +1,16 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import React, { useState } from "react";
 import { races } from "@/data/races";
-import { CharacterSheet } from "@/types/character";
-import { 
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider
-} from "@/components/ui/tooltip";
+import { CharacterSheet } from "@/types/character.d";
 import NavigationButtons from "./NavigationButtons";
+import { 
+  SelectionCard,
+  SelectionCardBadge, 
+  SelectionCardGrid,
+  SelectionSubOptionsContainer,
+  SelectionSubOption
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterRaceSelectionProps {
   character: CharacterSheet;
@@ -28,7 +27,6 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
 }) => {
   const [selectedRace, setSelectedRace] = useState(character.race || "");
   const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || "");
-  const [expandedRace, setExpandedRace] = useState<string | null>(null);
 
   const handleRaceSelect = (race: string) => {
     setSelectedRace(race);
@@ -41,14 +39,6 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     updateCharacter({ subrace });
   };
 
-  const toggleExpandRace = (race: string) => {
-    if (expandedRace === race) {
-      setExpandedRace(null);
-    } else {
-      setExpandedRace(race);
-    }
-  };
-
   const handleNext = () => {
     if (selectedRace) {
       nextStep();
@@ -57,89 +47,52 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Выберите расу</h2>
-        <p className="text-muted-foreground">Раса определяет внешний вид персонажа и дает врожденные способности.</p>
-      </div>
+      <SectionHeader
+        title="Выберите расу"
+        description="Раса определяет внешний вид персонажа и дает врожденные способности."
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <SelectionCardGrid>
         {races.map((race) => {
           const isSelected = selectedRace === race.name;
-          // Проверяем, существуют ли подрасы, используя subRaces или subraces
-          const hasSubraces = (race.subRaces && race.subRaces.length > 0) || (race.subRaceDetails && Object.keys(race.subRaceDetails).length > 0);
+          const hasSubraces = (race.subRaces && race.subRaces.length > 0) || 
+                             (race.subRaceDetails && Object.keys(race.subRaceDetails).length > 0);
           
           return (
-            <Card 
+            <SelectionCard
               key={race.name}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
-                isSelected ? 'border-primary ring-1 ring-primary' : 'border-border'
-              }`}
-              onClick={() => {
-                handleRaceSelect(race.name);
-                if (hasSubraces) {
-                  toggleExpandRace(race.name);
-                }
-              }}
-            >
-              <CardContent className="p-4 flex items-start gap-4">
-                <div className="flex-grow">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg mb-1">{race.name}</h3>
-                    {isSelected && <Check className="text-primary h-5 w-5" />}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {race.abilityBonuses && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="cursor-help">
-                              {race.abilityBonuses}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Бонусы к характеристикам: {race.abilityBonuses}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground">{race.description}</p>
-                  
-                  {hasSubraces && (
-                    <div className="mt-3">
-                      <p className="text-sm font-medium mb-2">Доступные подрасы:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {race.subRaces?.map((subrace) => (
-                          <Badge 
-                            key={subrace}
-                            variant={selectedSubrace === subrace ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSubraceSelect(subrace);
-                            }}
-                          >
-                            {subrace}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              title={race.name}
+              description={race.description}
+              selected={isSelected}
+              onClick={() => handleRaceSelect(race.name)}
+              badges={race.abilityBonuses ? (
+                <SelectionCardBadge>{race.abilityBonuses}</SelectionCardBadge>
+              ) : undefined}
+              subOptions={hasSubraces && isSelected ? (
+                <div>
+                  <p className="text-sm font-medium mb-2">Доступные подрасы:</p>
+                  <SelectionSubOptionsContainer>
+                    {race.subRaces?.map((subrace) => (
+                      <SelectionSubOption
+                        key={subrace}
+                        label={subrace}
+                        selected={selectedSubrace === subrace}
+                        onClick={() => handleSubraceSelect(subrace)}
+                      />
+                    ))}
+                  </SelectionSubOptionsContainer>
                 </div>
-              </CardContent>
-            </Card>
+              ) : undefined}
+            />
           );
         })}
-      </div>
+      </SelectionCardGrid>
       
       <NavigationButtons
         allowNext={!!selectedRace}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={true}
-        disableNext={!selectedRace}
       />
     </div>
   );

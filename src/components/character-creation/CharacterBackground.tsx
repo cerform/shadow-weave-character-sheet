@@ -1,6 +1,13 @@
 
 import React, { useState } from "react";
 import NavigationButtons from "./NavigationButtons";
+import { 
+  SelectionCard, 
+  SelectionCardGrid 
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
   character: {
@@ -63,38 +70,37 @@ export default function CharacterBackground({ character, updateCharacter, nextSt
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">Предыстория персонажа</h1>
+    <div>
+      <SectionHeader
+        title="Предыстория персонажа"
+        description="Выберите готовую предысторию или создайте свою собственную."
+      />
 
-      <div className="mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {backgroundOptions.map((bg) => (
-            <button
-              key={bg.id}
-              className={`p-4 rounded-lg transition-all ${
-                selectedBackgroundId === bg.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-primary/10 text-foreground hover:bg-primary/20"
-              }`}
-              onClick={() => handleBackgroundSelect(bg.id)}
-            >
-              {bg.name}
-            </button>
-          ))}
-        </div>
-      </div>
+      <SelectionCardGrid className="mb-6">
+        {backgroundOptions.map((bg) => (
+          <SelectionCard
+            key={bg.id}
+            title={bg.name}
+            description={bg.description}
+            selected={selectedBackgroundId === bg.id}
+            onClick={() => handleBackgroundSelect(bg.id)}
+          />
+        ))}
+      </SelectionCardGrid>
 
-      <div className="mb-6">
-        <label className="block text-lg font-medium mb-2">
-          Опишите предысторию вашего персонажа
-        </label>
-        <textarea
-          value={customBackground}
-          onChange={handleCustomBackgroundChange}
-          className="w-full h-40 bg-background/70 border border-primary/30 rounded-md p-3 text-foreground"
-          placeholder="Расскажите историю вашего персонажа, его происхождение, мотивы и цели..."
-        ></textarea>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <label className="block text-lg font-medium mb-2">
+            Опишите предысторию вашего персонажа
+          </label>
+          <Textarea
+            value={customBackground}
+            onChange={handleCustomBackgroundChange}
+            className="w-full h-40 bg-background/70 border border-primary/30 rounded-md p-3 text-foreground"
+            placeholder="Расскажите историю вашего персонажа, его происхождение, мотивы и цели..."
+          />
+        </CardContent>
+      </Card>
 
       <NavigationButtons 
         allowNext={true} 

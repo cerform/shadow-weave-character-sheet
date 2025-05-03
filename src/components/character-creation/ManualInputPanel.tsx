@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ABILITY_SCORE_CAPS } from '@/types/character.d';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ManualInputPanelProps {
   stats: {[key: string]: number};
@@ -32,29 +33,31 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
           const modifier = getModifier(value);
           
           return (
-            <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
-              <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
-              <div className="text-xl mb-3 text-accent">{modifier}</div>
-              
-              <div>
-                <Label htmlFor={`${key}-input`} className="text-sm text-muted-foreground">
-                  Значение (1-{maxAbilityScore})
-                </Label>
-                <Input
-                  type="number"
-                  id={`${key}-input`}
-                  value={value.toString()} // Convert number to string to fix the type error
-                  onChange={(e) => {
-                    const newValue = parseInt(e.target.value, 10);
-                    if (!isNaN(newValue) && newValue >= 1 && newValue <= maxAbilityScore) {
-                      updateStat(stat, newValue);
-                    }
-                  }}
-                  className="text-center"
-                />
-              </div>
-            </div>
+            <Card key={key} className="border rounded">
+              <CardContent className="p-4 text-center">
+                <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
+                <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
+                <div className="text-xl mb-3 text-accent">{modifier}</div>
+                
+                <div>
+                  <Label htmlFor={`${key}-input`} className="text-sm text-muted-foreground">
+                    Значение (1-{maxAbilityScore})
+                  </Label>
+                  <Input
+                    type="number"
+                    id={`${key}-input`}
+                    value={value.toString()} // Convert number to string to fix the type error
+                    onChange={(e) => {
+                      const newValue = parseInt(e.target.value, 10);
+                      if (!isNaN(newValue) && newValue >= 1 && newValue <= maxAbilityScore) {
+                        updateStat(stat, newValue);
+                      }
+                    }}
+                    className="text-center"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>

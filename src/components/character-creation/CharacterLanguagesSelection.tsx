@@ -1,6 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
+import { 
+  SelectionSubOption, 
+  SelectionSubOptionsContainer 
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CharacterLanguagesSelectionProps {
   character: any;
@@ -84,76 +90,72 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Выберите языки и навыки</h2>
+      <SectionHeader
+        title="Выберите языки и навыки"
+        description="Определите, какими языками и навыками владеет ваш персонаж."
+      />
       
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-2">Языки (максимум 3)</h3>
-        <p className="mb-4 text-muted-foreground">
-          Выберите языки, которыми владеет ваш персонаж.
-        </p>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
-          {languages.map((lang) => (
-            <button
-              key={lang}
-              onClick={() => toggleLanguage(lang)}
-              disabled={lang === "Общий"}
-              className={`p-2 text-sm border rounded ${
-                selectedLanguages.includes(lang) 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-card"
-              } ${lang === "Общий" ? "opacity-70" : ""}`}
-            >
-              {lang}
-            </button>
-          ))}
-        </div>
-        
-        <div className="mb-6">
-          <h4 className="font-medium mb-1">Выбранные языки:</h4>
-          <ul className="list-disc pl-5">
-            {selectedLanguages.map((lang, idx) => (
-              <li key={idx}>{lang}</li>
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <h3 className="text-xl font-semibold mb-2">Языки (максимум 3)</h3>
+          <p className="mb-4 text-muted-foreground">
+            Выберите языки, которыми владеет ваш персонаж.
+          </p>
+          
+          <SelectionSubOptionsContainer className="mb-4">
+            {languages.map((lang) => (
+              <SelectionSubOption
+                key={lang}
+                label={lang}
+                selected={selectedLanguages.includes(lang)}
+                onClick={() => toggleLanguage(lang)}
+              />
             ))}
-          </ul>
-        </div>
-      </div>
+          </SelectionSubOptionsContainer>
+          
+          <div className="mb-6">
+            <h4 className="font-medium mb-1">Выбранные языки:</h4>
+            <ul className="list-disc pl-5">
+              {selectedLanguages.map((lang, idx) => (
+                <li key={idx}>{lang}</li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
       
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-2">Навыки (максимум 4)</h3>
-        <p className="mb-4 text-muted-foreground">
-          Выберите навыки, которыми владеет ваш персонаж.
-        </p>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-          {availableProficiencies.map((prof) => (
-            <button
-              key={prof}
-              onClick={() => toggleProficiency(prof)}
-              className={`p-2 border rounded ${
-                selectedProficiencies.includes(prof) 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-card"
-              }`}
-            >
-              {prof}
-            </button>
-          ))}
-        </div>
-        
-        <div>
-          <h4 className="font-medium mb-1">Выбранные навыки:</h4>
-          <ul className="list-disc pl-5">
-            {selectedProficiencies.length > 0 ? (
-              selectedProficiencies.map((prof, idx) => (
-                <li key={idx}>{prof}</li>
-              ))
-            ) : (
-              <li className="text-muted-foreground italic">Не выбрано навыков</li>
-            )}
-          </ul>
-        </div>
-      </div>
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <h3 className="text-xl font-semibold mb-2">Навыки (максимум 4)</h3>
+          <p className="mb-4 text-muted-foreground">
+            Выберите навыки, которыми владеет ваш персонаж.
+          </p>
+          
+          <SelectionSubOptionsContainer className="mb-4">
+            {availableProficiencies.map((prof) => (
+              <SelectionSubOption
+                key={prof}
+                label={prof}
+                selected={selectedProficiencies.includes(prof)}
+                onClick={() => toggleProficiency(prof)}
+              />
+            ))}
+          </SelectionSubOptionsContainer>
+          
+          <div>
+            <h4 className="font-medium mb-1">Выбранные навыки:</h4>
+            <ul className="list-disc pl-5">
+              {selectedProficiencies.length > 0 ? (
+                selectedProficiencies.map((prof, idx) => (
+                  <li key={idx}>{prof}</li>
+                ))
+              ) : (
+                <li className="text-muted-foreground italic">Не выбрано навыков</li>
+              )}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
 
       <NavigationButtons
         allowNext={selectedLanguages.length > 0 && selectedProficiencies.length > 0}

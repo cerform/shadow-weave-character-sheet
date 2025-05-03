@@ -4,6 +4,11 @@ import NavigationButtons from "@/components/character-creation/NavigationButtons
 import { classes } from "@/data/classes";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  SelectionCard,
+  SelectionCardGrid 
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterClassSelectionProps {
   character: any;
@@ -33,27 +38,25 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Выберите класс</h2>
+      <SectionHeader
+        title="Выберите класс"
+        description="Класс определяет основные способности вашего персонажа и стиль игры."
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <SelectionCardGrid>
         {classes.map((cls) => (
-          <button
+          <SelectionCard
             key={cls.name}
+            title={cls.name}
+            description={cls.description}
+            selected={selectedClass === cls.name} 
             onClick={() => setSelectedClass(cls.name)}
-            className={`p-4 border rounded transition-all ${
-              selectedClass === cls.name 
-                ? "bg-primary text-primary-foreground shadow-lg" 
-                : "bg-background hover:bg-muted/20"
-            }`}
-          >
-            <div className="font-semibold">{cls.name}</div>
-            <div className="text-sm text-muted-foreground">{cls.description}</div>
-          </button>
+          />
         ))}
-      </div>
+      </SelectionCardGrid>
 
       {selectedClassDetails && (
-        <div className="mb-8 bg-card/20 p-4 rounded-lg border">
+        <div className="mt-8 bg-card/20 p-5 rounded-lg border">
           <h3 className="text-xl font-medium mb-3">{selectedClassDetails.name}</h3>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
@@ -8,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import HitPointsRoller from './HitPointsRoller';
 import LevelBasedFeatures from './LevelBasedFeatures';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
@@ -74,12 +76,10 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Выберите уровень персонажа</h2>
-        <p className="text-muted-foreground">
-          Уровень определяет силу и способности вашего персонажа. Начинающие игроки обычно начинают с 1 уровня.
-        </p>
-      </div>
+      <SectionHeader
+        title="Выберите уровень персонажа"
+        description="Уровень определяет силу и способности вашего персонажа. Начинающие игроки обычно начинают с 1 уровня."
+      />
       
       <Card className="border border-primary/20">
         <CardContent className="p-6">
@@ -119,7 +119,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   type="number"
                   min={1}
                   max={20}
-                  value={level}
+                  value={level.toString()}
                   onChange={handleInputChange}
                   className="text-center font-bold text-lg"
                 />

@@ -1,105 +1,104 @@
 
-export const themes = {
+interface Theme {
+  name: string;
+  accent: string;
+  primaryGradient: string;
+  secondaryGradient: string;
+  cardBackground: string;
+  textColor: string;
+  mutedTextColor: string;
+  statBoxBackground: string;
+  buttonBackground: string;
+  buttonText: string;
+  abilityScoreColor: string;
+  glow: string;
+}
+
+export const themes: { [key: string]: Theme } = {
   default: {
-    primary: 'from-amber-900 to-stone-900',
-    secondary: 'from-amber-800/20 to-stone-900/20',
-    accent: '#8B5A2B',
-    glow: '0 0 15px #4B3621',
-    name: 'Стандартная', // Brown/black/white tavern theme
-    textColor: '#FFFFFF', // Усиливаем яркость для лучшей видимости
-    contrastColor: '#000000',
-    mutedTextColor: '#DDDDDD', // Усиливаем контраст для второстепенного текста
-    tabInactiveText: '#EEEEEE', // Улучшенный контраст для неактивных вкладок
-    cardBackground: 'rgba(0, 0, 0, 0.75)',  // Более темный фон для карточек
-    buttonText: '#FFFFFF',
-    buttonBackground: '#8B5A2B',
-    statBoxBackground: 'rgba(20, 12, 5, 0.85)',
-    abilityScoreColor: '#FFFFFF',
-    success: '#4caf50'  // Добавляем цвет успеха
+    name: "Таверна",
+    accent: "#8B5A2B",
+    primaryGradient: "from-amber-900 to-stone-900",
+    secondaryGradient: "from-amber-800/20 to-stone-900/20",
+    cardBackground: "rgba(20, 15, 30, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(139, 90, 43, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#FFFFFF",
+    glow: "0 0 15px rgba(139, 90, 43, 0.5)",
   },
   warlock: {
-    primary: 'from-purple-700 to-purple-900',
-    secondary: 'from-purple-600/20 to-purple-800/20',
-    accent: '#8B5CF6',
-    glow: '0 0 15px #8B5CF6',
-    name: 'Чернокнижник', // Purple theme
-    textColor: '#FFFFFF',
-    contrastColor: '#000000',
-    mutedTextColor: '#E4D3FF', // Светлее для лучшего контраста
-    tabInactiveText: '#E4D3FF', // Улучшенный контраст
-    cardBackground: 'rgba(20, 10, 30, 0.85)', // Темно-фиолетовый фон
-    buttonText: '#FFFFFF',
-    buttonBackground: '#8B5CF6',
-    statBoxBackground: 'rgba(30, 15, 45, 0.85)',
-    abilityScoreColor: '#E4D3FF',
-    success: '#4caf50'  // Добавляем цвет успеха
+    name: "Колдун",
+    accent: "#9061F9",
+    primaryGradient: "from-purple-900 to-indigo-900",
+    secondaryGradient: "from-purple-800/20 to-indigo-900/20",
+    cardBackground: "rgba(15, 10, 25, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(144, 97, 249, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#D8BFD8",
+    glow: "0 0 15px rgba(144, 97, 249, 0.5)",
   },
   wizard: {
-    primary: 'from-blue-500 to-blue-700',
-    secondary: 'from-blue-500/20 to-blue-700/20',
-    accent: '#33C3F0',
-    glow: '0 0 15px #33C3F0',
-    name: 'Волшебник', // Blue theme
-    textColor: '#FFFFFF',
-    contrastColor: '#000000',
-    mutedTextColor: '#D1E9FF', // Светлее для лучшего контраста 
-    tabInactiveText: '#D1E9FF', // Улучшенный контраст
-    cardBackground: 'rgba(10, 20, 45, 0.85)', // Темно-синий фон
-    buttonText: '#FFFFFF',
-    buttonBackground: '#33C3F0',
-    statBoxBackground: 'rgba(15, 30, 60, 0.85)',
-    abilityScoreColor: '#D1E9FF',
-    success: '#4caf50'  // Добавляем цвет успеха
+    name: "Волшебник",
+    accent: "#3B82F6",
+    primaryGradient: "from-blue-900 to-indigo-900",
+    secondaryGradient: "from-blue-800/20 to-indigo-900/20",
+    cardBackground: "rgba(10, 15, 30, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(59, 130, 246, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#ADD8E6",
+    glow: "0 0 15px rgba(59, 130, 246, 0.5)",
   },
   druid: {
-    primary: 'from-green-600 to-green-800',
-    secondary: 'from-green-600/20 to-green-800/20',
-    accent: '#10B981',
-    glow: '0 0 15px #10B981',
-    name: 'Друид', // Green theme
-    textColor: '#FFFFFF',
-    contrastColor: '#000000',
-    mutedTextColor: '#CEFBE3', // Светлее для лучшего контраста
-    tabInactiveText: '#CEFBE3', // Улучшенный контраст
-    cardBackground: 'rgba(10, 45, 25, 0.85)', // Темно-зеленый фон
-    buttonText: '#FFFFFF',
-    buttonBackground: '#10B981',
-    statBoxBackground: 'rgba(15, 50, 30, 0.85)',
-    abilityScoreColor: '#CEFBE3',
-    success: '#4caf50'  // Добавляем цвет успеха
+    name: "Друид",
+    accent: "#10B981",
+    primaryGradient: "from-green-900 to-emerald-700",
+    secondaryGradient: "from-green-800/20 to-emerald-700/20",
+    cardBackground: "rgba(10, 30, 15, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(16, 185, 129, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#90EE90",
+    glow: "0 0 15px rgba(16, 185, 129, 0.5)",
   },
   warrior: {
-    primary: 'from-red-600 to-red-800',
-    secondary: 'from-red-600/20 to-red-800/20',
-    accent: '#EA384D',
-    glow: '0 0 15px #EA384D',
-    name: 'Воин', // Red theme
-    textColor: '#FFFFFF',
-    contrastColor: '#000000',
-    mutedTextColor: '#FFD0D0', // Светлее для лучшего контраста
-    tabInactiveText: '#FFD0D0', // Улучшенный контраст
-    cardBackground: 'rgba(45, 10, 15, 0.85)', // Темно-красный фон
-    buttonText: '#FFFFFF',
-    buttonBackground: '#EA384D',
-    statBoxBackground: 'rgba(60, 15, 20, 0.85)',
-    abilityScoreColor: '#FFD0D0',
-    success: '#4caf50'  // Добавляем цвет успеха
+    name: "Воин",
+    accent: "#F43F5E",
+    primaryGradient: "from-red-900 to-rose-700",
+    secondaryGradient: "from-red-800/20 to-rose-700/20",
+    cardBackground: "rgba(30, 15, 10, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(244, 63, 94, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#FFA07A",
+    glow: "0 0 15px rgba(244, 63, 94, 0.5)",
   },
   bard: {
-    primary: 'from-amber-500 to-amber-700',
-    secondary: 'from-amber-500/20 to-amber-700/20',
-    accent: '#FCD34D',
-    glow: '0 0 15px #FCD34D',
-    name: 'Бард', // Yellow theme
-    textColor: '#FFFFFF',
-    contrastColor: '#000000',
-    mutedTextColor: '#FFF0C0', // Светлее для лучшего контраста
-    tabInactiveText: '#FFF0C0', // Улучшенный контраст
-    cardBackground: 'rgba(45, 35, 5, 0.85)', // Темно-желтый фон
-    buttonText: '#000000', // Черный текст для контраста с желтым
-    buttonBackground: '#FCD34D',
-    statBoxBackground: 'rgba(60, 45, 10, 0.85)',
-    abilityScoreColor: '#FFF0C0',
-    success: '#4caf50'  // Добавляем цвет успеха
-  }
+    name: "Бард",
+    accent: "#F59E0B",
+    primaryGradient: "from-amber-700 to-yellow-600",
+    secondaryGradient: "from-amber-600/20 to-yellow-500/20",
+    cardBackground: "rgba(30, 25, 10, 0.85)",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#DDDDDD",
+    statBoxBackground: "rgba(0, 0, 0, 0.75)",
+    buttonBackground: "rgba(245, 158, 11, 0.7)",
+    buttonText: "#FFFFFF",
+    abilityScoreColor: "#FFD700",
+    glow: "0 0 15px rgba(245, 158, 11, 0.5)",
+  },
 };
+
+export default themes;

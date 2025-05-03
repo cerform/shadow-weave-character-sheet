@@ -1,11 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character'; 
+import { CharacterSheet } from '@/types/character.d'; 
 import NavigationButtons from './NavigationButtons';
 import { Check, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  SelectionCard,
+  SelectionCardGrid 
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterEquipmentSelectionProps {
   character: CharacterSheet;
@@ -93,36 +98,26 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
     return (
       <div className="mb-6">
         <h3 className="font-medium text-lg mb-3">{title}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <SelectionCardGrid cols={3}>
           {items.map(item => (
-            <Card 
+            <SelectionCard
               key={item.name}
-              className={`cursor-pointer transition-all ${
-                selectedEquipment.includes(item.name) 
-                  ? 'border-primary bg-primary/10 ring-1 ring-primary' 
-                  : 'border-border hover:border-primary/50'
-              }`}
+              title={item.name}
+              selected={selectedEquipment.includes(item.name)}
               onClick={() => toggleEquipment(item.name)}
-            >
-              <CardContent className="p-3 flex justify-between items-center">
-                <span>{item.name}</span>
-                {selectedEquipment.includes(item.name) && (
-                  <Check className="h-5 w-5 text-primary" />
-                )}
-              </CardContent>
-            </Card>
+            />
           ))}
-        </div>
+        </SelectionCardGrid>
       </div>
     );
   };
   
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Снаряжение</h2>
-        <p className="text-muted-foreground">Выберите снаряжение для вашего персонажа.</p>
-      </div>
+      <SectionHeader
+        title="Снаряжение"
+        description="Выберите снаряжение для вашего персонажа."
+      />
       
       {/* Снаряжение по категориям */}
       {renderEquipmentCategory('weapon', 'Оружие')}
@@ -132,34 +127,38 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
       {renderEquipmentCategory('tool', 'Инструменты')}
       
       {/* Добавление собственного снаряжения */}
-      <div className="mt-8 mb-6">
-        <h3 className="font-medium text-lg mb-3">Добавить своё снаряжение</h3>
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Введите название предмета..."
-            value={customItem}
-            onChange={(e) => setCustomItem(e.target.value)}
-            className="flex-1"
-          />
-          <Button onClick={addCustomItem} className="shrink-0">
-            <Plus className="h-4 w-4 mr-1" /> Добавить
-          </Button>
-        </div>
-      </div>
+      <Card className="mt-8 mb-6">
+        <CardContent className="p-6">
+          <h3 className="font-medium text-lg mb-3">Добавить своё снаряжение</h3>
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Введите название предмета..."
+              value={customItem}
+              onChange={(e) => setCustomItem(e.target.value)}
+              className="flex-1"
+            />
+            <Button onClick={addCustomItem} className="shrink-0">
+              <Plus className="h-4 w-4 mr-1" /> Добавить
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Выбранное снаряжение */}
       {selectedEquipment.length > 0 && (
-        <div className="mt-6 mb-8">
-          <h3 className="font-medium text-lg mb-3">Выбранное снаряжение:</h3>
-          <ul className="list-disc pl-5 space-y-1">
-            {selectedEquipment.map((item, index) => (
-              <li key={index} className="text-primary">
-                <span className="text-foreground">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Card className="mt-6 mb-8">
+          <CardContent className="p-6">
+            <h3 className="font-medium text-lg mb-3">Выбранное снаряжение:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {selectedEquipment.map((item, index) => (
+                <li key={index} className="text-primary">
+                  <span className="text-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
       
       <NavigationButtons
