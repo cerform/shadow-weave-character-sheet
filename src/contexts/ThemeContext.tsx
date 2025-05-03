@@ -46,12 +46,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const selectedTheme = themes[themeName];
     if (selectedTheme) {
       // Основные цвета темы
-      document.documentElement.style.setProperty('--primary-gradient', selectedTheme.primary);
-      document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondary);
+      document.documentElement.style.setProperty('--primary-gradient', selectedTheme.primaryGradient);
+      document.documentElement.style.setProperty('--secondary-gradient', selectedTheme.secondaryGradient);
       document.documentElement.style.setProperty('--accent-color', selectedTheme.accent);
       document.documentElement.style.setProperty('--glow-effect', selectedTheme.glow);
       document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
-      document.documentElement.style.setProperty('--contrast-color', selectedTheme.contrastColor);
+      // Removed contrastColor as it doesn't exist in Theme type
       document.documentElement.style.setProperty('--muted-text-color', selectedTheme.mutedTextColor);
       document.documentElement.style.setProperty('--stat-box-background', selectedTheme.statBoxBackground);
       document.documentElement.style.setProperty('--ability-score-color', selectedTheme.abilityScoreColor);

@@ -46,7 +46,7 @@ export const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
                   <Input
                     type="number"
                     id={`${key}-input`}
-                    value={value.toString()} // Convert number to string to fix the type error
+                    value={value.toString()} // Convert number to string to fix type error
                     onChange={(e) => {
                       const newValue = parseInt(e.target.value, 10);
                       if (!isNaN(newValue) && newValue >= 1 && newValue <= maxAbilityScore) {
