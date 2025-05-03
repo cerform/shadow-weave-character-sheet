@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +10,7 @@ export const FeaturesTab = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   // Проверяем какое поле доступно - features или proficiencies
-  const featuresList = character?.features || character?.proficiencies || [];
+  const featuresList = character?.proficiencies || [];
   
   // Используем доступные особенности и распределяем по категориям
   const classFeatures = featuresList.filter(f => 
@@ -30,14 +29,12 @@ export const FeaturesTab = () => {
     !classFeatures.includes(f) && !raceFeatures.includes(f)
   ) || [];
 
-  // Получаем подкласс из className, если есть формат "Класс: Подкласс"
+  // Получаем подкласс из className или class, если есть формат "Класс: Подкласс"
   const getSubclass = (): string | undefined => {
-    if (character?.subclass) return character.subclass;
+    // Проверяем наличие строк с соответствующими полями
+    const characterClassName = character?.className || character?.class || '';
     
-    if (!character?.className && !character?.class) return undefined;
-    
-    const className = character.className || character.class;
-    const parts = className.split(':');
+    const parts = characterClassName.split(':');
     if (parts.length > 1) {
       return parts[1].trim();
     }

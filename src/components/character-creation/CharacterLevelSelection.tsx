@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
@@ -14,6 +13,7 @@ import { useLevelFeatures } from '@/hooks/useLevelFeatures';
 import { Shield, TrendingUp, Skull } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Badge } from '@/components/ui/badge';
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
