@@ -17,7 +17,7 @@ interface SessionStore {
   characters: Character[];
   
   // Методы для управления сессиями
-  createSession: (name: string, description?: string) => Promise<Session>;
+  createSession: (name: string, description?: string) => Promise<Session | null>;
   joinSession: (code: string, userName: string, character?: Character) => Promise<boolean>;
   leaveSession: () => void;
   endSession: (sessionId: string) => Promise<boolean>;
@@ -34,9 +34,10 @@ interface SessionStore {
   removeUserFromSession: (sessionId: string, userId: string) => void;
   
   // Методы для работы с персонажами
-  fetchCharacters: () => void;
-  deleteCharacter: (characterId: string) => boolean;
-  clearAllCharacters: () => boolean;
+  fetchCharacters: () => Promise<void>;
+  saveCharacter: (character: Character) => Promise<boolean>;
+  deleteCharacter: (characterId: string) => Promise<boolean>;
+  clearAllCharacters: () => Promise<boolean>;
 }
 
 export const useSessionStore = create<SessionStore>()(
@@ -84,7 +85,7 @@ export const useSessionStore = create<SessionStore>()(
         } catch (error: any) {
           set({ loading: false, error: error.message });
           toast.error(error.message);
-          throw error;
+          return null;
         }
       },
       
@@ -265,39 +266,70 @@ export const useSessionStore = create<SessionStore>()(
       },
       
       // Методы для работы с персонажами
-      fetchCharacters: () => {
-        const characters = characterService.getCharacters();
-        set({ characters });
+      fetchCharacters: async () => {
+        try {
+          set({ loading: true });
+          const characters = await characterService.getCharacters();
+          set({ characters, loading: false });
+        } catch (error) {
+          console.error("Ошибка при загрузке персонажей:", error);
+          set({ loading: false });
+        }
       },
       
-      deleteCharacter: (characterId: string) => {
-        const deleted = characterService.deleteCharacter(characterId);
-        
-        if (deleted) {
-          // Обновляем список персонажей
-          set(state => ({
-            characters: state.characters.filter(c => c.id !== characterId)
-          }));
+      saveCharacter: async (character: Character) => {
+        try {
+          const success = await characterService.saveCharacter(character);
           
-          toast.success("Персонаж успешно удален");
-        } else {
-          toast.error("Не удалось удалить персонажа");
+          if (success) {
+            // Обновляем список персонажей
+            get().fetchCharacters();
+          }
+          
+          return success;
+        } catch (error) {
+          console.error("Ошибка при сохранении персонажа:", error);
+          return false;
         }
-        
-        return deleted;
       },
       
-      clearAllCharacters: () => {
-        const cleared = characterService.clearAllCharacters();
-        
-        if (cleared) {
-          set({ characters: [] });
-          toast.success("Все персонажи удалены");
-        } else {
-          toast.error("Не удалось удалить персонажей");
+      deleteCharacter: async (characterId: string) => {
+        try {
+          const deleted = await characterService.deleteCharacter(characterId);
+          
+          if (deleted) {
+            // Обновляем список персонажей
+            await get().fetchCharacters();
+            toast.success("Персонаж успешно удален");
+          } else {
+            toast.error("Не удалось удалить персонажа");
+          }
+          
+          return deleted;
+        } catch (error) {
+          console.error("Ошибка при удалении персонажа:", error);
+          toast.error("Не удалось удалить персонажа");
+          return false;
         }
-        
-        return cleared;
+      },
+      
+      clearAllCharacters: async () => {
+        try {
+          const cleared = await characterService.clearAllCharacters();
+          
+          if (cleared) {
+            set({ characters: [] });
+            toast.success("Все персонажи удалены");
+          } else {
+            toast.error("Не удалось удалить персонажей");
+          }
+          
+          return cleared;
+        } catch (error) {
+          console.error("Ошибка при удалении всех персонажей:", error);
+          toast.error("Не удалось удалить персонажей");
+          return false;
+        }
       }
     }),
     {

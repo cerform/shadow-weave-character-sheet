@@ -10,7 +10,7 @@ import JoinSessionPage from "@/pages/JoinSessionPage";
 import NotFound from "@/pages/NotFound";
 import HandbookPage from "@/pages/HandbookPage";
 import BattleScenePage from "@/pages/BattleScenePage"; 
-import { SpellbookPage } from "@/pages/SpellbookPage";
+import SpellbookPage from "@/pages/SpellbookPage";
 import AuthPage from "@/pages/AuthPage";
 import DMDashboardPage from "@/pages/DMDashboardPage";
 import DMSessionPage from "@/pages/DMSessionPage";

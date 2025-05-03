@@ -15,11 +15,12 @@ interface CreateSessionProps {
 const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
   const [nickname, setNickname] = useState("");
   const [sessionName, setSessionName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const { theme } = useTheme();
   const { createSession } = useSessionStore();
   const { toast } = useToast();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!nickname.trim()) {
       toast({
         title: "Ошибка",
@@ -39,25 +40,30 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
     }
     
     try {
-      // Создаем сессию через SessionStore
-      const newSession = createSession(sessionName);
+      setIsCreating(true);
+      // Создаем сессию через SessionStore (асинхронно)
+      const newSession = await createSession(sessionName);
       
-      // Подключаемся к сокетам, если используются
-      socketService.connect(newSession.code, nickname);
-      
-      // Вызываем колбэк с кодом комнаты
-      onRoomCreated(newSession.code);
-      
-      toast({
-        title: "Сессия создана",
-        description: `Код комнаты: ${newSession.code}`,
-      });
+      if (newSession && newSession.code) {
+        // Подключаемся к сокетам, если используются
+        socketService.connect(newSession.code, nickname);
+        
+        // Вызываем колбэк с кодом комнаты
+        onRoomCreated(newSession.code);
+        
+        toast({
+          title: "Сессия создана",
+          description: `Код комнаты: ${newSession.code}`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Ошибка при создании сессии",
         description: error instanceof Error ? error.message : "Неизвестная ошибка",
         variant: "destructive"
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -87,9 +93,10 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
         </div>
         <Button
           onClick={handleCreate}
+          disabled={isCreating}
           className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
         >
-          Создать
+          {isCreating ? "Создание..." : "Создать"}
         </Button>
       </CardContent>
     </Card>

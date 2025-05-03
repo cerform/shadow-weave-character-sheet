@@ -1,4 +1,6 @@
 
+import { Timestamp } from "firebase/firestore";
+
 export interface Session {
   id: string;
   campaignId?: string;
@@ -16,7 +18,7 @@ export interface Session {
     authorId: string;
   }[];
   mapId?: string;
-  lastActivity?: string;
+  lastActivity?: string | Timestamp;
   createdAt: string;
   code?: string;
   name?: string; 

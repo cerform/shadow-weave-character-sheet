@@ -13,8 +13,15 @@ import {
   Timestamp, 
   addDoc
 } from "firebase/firestore";
-import { auth, db } from "./firebase";
-import { Session, User, Character } from "@/types/session";
+import { 
+  ref as storageRef, 
+  uploadString, 
+  getDownloadURL, 
+  deleteObject, 
+  listAll
+} from "firebase/storage";
+import { auth, db, storage } from "./firebase";
+import { Session, User, Character, CharacterStorage } from "@/types/session";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 
@@ -82,6 +89,7 @@ export const sessionService = {
         ...sessionData,
         id: docRef.id,
         createdAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString() // Конвертируем Timestamp в строку
       };
     } catch (error) {
       console.error("Ошибка при создании сессии:", error);
@@ -98,10 +106,13 @@ export const sessionService = {
       
       if (!docSnap.exists()) return null;
       
+      const data = docSnap.data();
+      
       return {
-        ...docSnap.data(),
+        ...data,
         id: docSnap.id,
-        createdAt: docSnap.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        lastActivity: data.lastActivity?.toDate?.()?.toISOString() || new Date().toISOString()
       } as Session;
     } catch (error) {
       console.error("Ошибка при получении сессии:", error);
@@ -119,10 +130,13 @@ export const sessionService = {
       if (querySnapshot.empty) return null;
       
       const doc = querySnapshot.docs[0];
+      const data = doc.data();
+      
       return {
-        ...doc.data(),
+        ...data,
         id: doc.id,
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        lastActivity: data.lastActivity?.toDate?.()?.toISOString() || new Date().toISOString()
       } as Session;
     } catch (error) {
       console.error("Ошибка при получении сессии по коду:", error);
@@ -284,53 +298,211 @@ export const sessionService = {
   }
 };
 
-// Сервис для работы с персонажами
+// Сервис для работы с персонажами в Firebase Storage
 export const characterService = {
-  // Получить всех персонажей пользователя из локального хранилища
-  getCharacters: (): Character[] => {
+  // Получить всех персонажей пользователя из Firebase Storage
+  getCharacters: async (): Promise<Character[]> => {
     try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn("Пользователь не авторизован, возвращаем локальные данные");
+        // Временно используем локальное хранилище, если пользователь не авторизован
+        const storedData = localStorage.getItem('dnd-characters');
+        if (!storedData) return [];
+        
+        const data = JSON.parse(storedData) as CharacterStorage;
+        return data.characters || [];
+      }
+      
+      // Путь для хранения персонажей в Storage
+      const charactersRef = storageRef(storage, `characters/${currentUser.uid}`);
+      
+      try {
+        // Получаем список всех файлов в директории
+        const listResult = await listAll(charactersRef);
+        
+        // Асинхронно загружаем данные каждого персонажа
+        const charactersPromises = listResult.items.map(async (item) => {
+          const url = await getDownloadURL(item);
+          const response = await fetch(url);
+          const text = await response.text();
+          return JSON.parse(text) as Character;
+        });
+        
+        const characters = await Promise.all(charactersPromises);
+        
+        // Также сохраняем в localStorage для оффлайн-доступа
+        localStorage.setItem('dnd-characters', JSON.stringify({ 
+          characters,
+          lastUsed: characters.length > 0 ? characters[0].id : undefined
+        }));
+        
+        return characters;
+      } catch (error) {
+        if ((error as any)?.code === 'storage/object-not-found') {
+          // Директория не существует, это нормально для новых пользователей
+          return [];
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error("Ошибка при получении персонажей:", error);
+      // Пробуем использовать локальное хранилище при ошибке
       const storedData = localStorage.getItem('dnd-characters');
       if (!storedData) return [];
       
       const data = JSON.parse(storedData) as CharacterStorage;
       return data.characters || [];
+    }
+  },
+  
+  // Сохранить персонажа в Firebase Storage
+  saveCharacter: async (character: Character): Promise<boolean> => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn("Пользователь не авторизован, сохраняем локально");
+        // Временно сохраняем в локальное хранилище
+        const storedData = localStorage.getItem('dnd-characters');
+        const data: CharacterStorage = storedData ? JSON.parse(storedData) : { characters: [] };
+        
+        const existingCharIndex = data.characters.findIndex(c => c.id === character.id);
+        
+        if (existingCharIndex >= 0) {
+          data.characters[existingCharIndex] = character;
+        } else {
+          data.characters.push(character);
+        }
+        
+        data.lastUsed = character.id;
+        localStorage.setItem('dnd-characters', JSON.stringify(data));
+        return true;
+      }
+      
+      // Путь для сохранения персонажа в Storage
+      const characterRef = storageRef(storage, `characters/${currentUser.uid}/${character.id}.json`);
+      
+      // Сериализуем объект персонажа в строку JSON
+      const characterJson = JSON.stringify(character);
+      
+      // Загружаем в Firebase Storage
+      await uploadString(characterRef, characterJson);
+      
+      // Также сохраняем в localStorage для быстрого доступа
+      const storedData = localStorage.getItem('dnd-characters');
+      const data: CharacterStorage = storedData ? JSON.parse(storedData) : { characters: [] };
+      
+      const existingCharIndex = data.characters.findIndex(c => c.id === character.id);
+      
+      if (existingCharIndex >= 0) {
+        data.characters[existingCharIndex] = character;
+      } else {
+        data.characters.push(character);
+      }
+      
+      data.lastUsed = character.id;
+      localStorage.setItem('dnd-characters', JSON.stringify(data));
+      
+      return true;
     } catch (error) {
-      console.error("Ошибка при получении персонажей:", error);
-      return [];
+      console.error("Ошибка при сохранении персонажа:", error);
+      toast.error("Не удалось сохранить персонажа");
+      return false;
     }
   },
   
   // Удалить персонажа
-  deleteCharacter: (characterId: string): boolean => {
+  deleteCharacter: async (characterId: string): Promise<boolean> => {
     try {
-      const storedData = localStorage.getItem('dnd-characters');
-      if (!storedData) return false;
-      
-      const data = JSON.parse(storedData) as CharacterStorage;
-      
-      const updatedCharacters = data.characters.filter(c => c.id !== characterId);
-      
-      // Если удаляем последнего использованного персонажа, сбрасываем lastUsed
-      let lastUsed = data.lastUsed;
-      if (lastUsed === characterId) {
-        lastUsed = updatedCharacters.length > 0 ? updatedCharacters[0].id : undefined;
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn("Пользователь не авторизован, удаляем из локального хранилища");
+        // Удаляем из локального хранилища
+        const storedData = localStorage.getItem('dnd-characters');
+        if (!storedData) return false;
+        
+        const data = JSON.parse(storedData) as CharacterStorage;
+        
+        const updatedCharacters = data.characters.filter(c => c.id !== characterId);
+        
+        // Если удаляем последнего использованного персонажа, сбрасываем lastUsed
+        let lastUsed = data.lastUsed;
+        if (lastUsed === characterId) {
+          lastUsed = updatedCharacters.length > 0 ? updatedCharacters[0].id : undefined;
+        }
+        
+        localStorage.setItem('dnd-characters', JSON.stringify({
+          characters: updatedCharacters,
+          lastUsed
+        }));
+        
+        return true;
       }
       
-      localStorage.setItem('dnd-characters', JSON.stringify({
-        characters: updatedCharacters,
-        lastUsed
-      }));
+      // Путь к персонажу в Storage
+      const characterRef = storageRef(storage, `characters/${currentUser.uid}/${characterId}.json`);
+      
+      // Удаляем персонажа из Firebase Storage
+      await deleteObject(characterRef);
+      
+      // Также обновляем локальное хранилище
+      const storedData = localStorage.getItem('dnd-characters');
+      if (storedData) {
+        const data = JSON.parse(storedData) as CharacterStorage;
+        
+        const updatedCharacters = data.characters.filter(c => c.id !== characterId);
+        
+        // Если удаляем последнего использованного персонажа, сбрасываем lastUsed
+        let lastUsed = data.lastUsed;
+        if (lastUsed === characterId) {
+          lastUsed = updatedCharacters.length > 0 ? updatedCharacters[0].id : undefined;
+        }
+        
+        localStorage.setItem('dnd-characters', JSON.stringify({
+          characters: updatedCharacters,
+          lastUsed
+        }));
+      }
       
       return true;
     } catch (error) {
       console.error("Ошибка при удалении персонажа:", error);
+      // Если ошибка "объект не найден", считаем что персонаж успешно удален
+      if ((error as any)?.code === 'storage/object-not-found') {
+        return true;
+      }
+      
+      toast.error("Не удалось удалить персонажа");
       return false;
     }
   },
   
   // Очистить всех персонажей
-  clearAllCharacters: (): boolean => {
+  clearAllCharacters: async (): Promise<boolean> => {
     try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn("Пользователь не авторизован, очищаем локальное хранилище");
+        // Очищаем локальное хранилище
+        localStorage.setItem('dnd-characters', JSON.stringify({
+          characters: [],
+          lastUsed: undefined
+        }));
+        
+        return true;
+      }
+      
+      // Путь для хранения персонажей в Storage
+      const charactersRef = storageRef(storage, `characters/${currentUser.uid}`);
+      
+      // Получаем список всех файлов в директории
+      const listResult = await listAll(charactersRef);
+      
+      // Удаляем каждый файл по очереди
+      const deletePromises = listResult.items.map(item => deleteObject(item));
+      await Promise.all(deletePromises);
+      
+      // Также очищаем локальное хранилище
       localStorage.setItem('dnd-characters', JSON.stringify({
         characters: [],
         lastUsed: undefined
@@ -339,6 +511,12 @@ export const characterService = {
       return true;
     } catch (error) {
       console.error("Ошибка при удалении всех персонажей:", error);
+      // Если ошибка "объект не найден", считаем что персонажи успешно удалены
+      if ((error as any)?.code === 'storage/object-not-found') {
+        return true;
+      }
+      
+      toast.error("Не удалось удалить персонажей");
       return false;
     }
   }

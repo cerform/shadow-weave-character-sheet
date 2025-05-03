@@ -8,36 +8,80 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useSessionStore } from '@/stores/sessionStore';
 import { Character } from '@/types/session';
 import { useTheme } from '@/hooks/use-theme';
-import { ArrowLeft, Plus, Trash, Users, FileX } from 'lucide-react';
+import { ArrowLeft, Plus, Trash, Users, FileX, Loader2 } from 'lucide-react';
 import NavigationButtons from '@/components/ui/NavigationButtons';
+import { auth } from '@/services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { toast } from 'sonner';
 
 const CharactersListPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { characters, fetchCharacters, deleteCharacter, clearAllCharacters } = useSessionStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null);
+  const [clearInProgress, setClearInProgress] = useState(false);
 
   useEffect(() => {
-    // Загружаем персонажей при монтировании компонента
-    fetchCharacters();
-    setIsLoading(false);
-  }, [fetchCharacters]);
+    // Проверяем авторизацию
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        toast.warning("Для доступа к персонажам необходимо войти в аккаунт");
+        navigate('/auth', { state: { returnPath: '/characters' } });
+      }
+      setIsAuthChecking(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    // Загружаем персонажей после проверки авторизации
+    if (!isAuthChecking) {
+      const loadCharacters = async () => {
+        await fetchCharacters();
+        setIsLoading(false);
+      };
+      
+      loadCharacters();
+    }
+  }, [fetchCharacters, isAuthChecking]);
 
   const handleCreateCharacter = () => {
     navigate('/create-character');
   };
 
-  const handleDeleteCharacter = (characterId: string) => {
-    deleteCharacter(characterId);
+  const handleDeleteCharacter = async (characterId: string) => {
+    setDeleteInProgress(characterId);
+    try {
+      await deleteCharacter(characterId);
+    } finally {
+      setDeleteInProgress(null);
+    }
   };
 
-  const handleDeleteAllCharacters = () => {
-    clearAllCharacters();
+  const handleDeleteAllCharacters = async () => {
+    setClearInProgress(true);
+    try {
+      await clearAllCharacters();
+    } finally {
+      setClearInProgress(false);
+    }
   };
 
   const handleViewCharacter = (characterId: string) => {
     navigate(`/character/${characterId}`);
   };
+
+  if (isAuthChecking) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Проверка авторизации...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-4 theme-${theme} bg-gradient-to-br from-background to-background/80`}>
@@ -60,9 +104,12 @@ const CharactersListPage = () => {
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={characters.length === 0}>
-                  <Trash className="mr-2 h-4 w-4" />
-                  Удалить всех
+                <Button 
+                  variant="destructive" 
+                  disabled={characters.length === 0 || clearInProgress}
+                >
+                  {clearInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash className="mr-2 h-4 w-4" />}
+                  {clearInProgress ? "Удаление..." : "Удалить всех"}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -74,8 +121,12 @@ const CharactersListPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Отмена</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteAllCharacters} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Удалить всех
+                  <AlertDialogAction 
+                    onClick={handleDeleteAllCharacters} 
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={clearInProgress}
+                  >
+                    {clearInProgress ? "Удаление..." : "Удалить всех"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -86,7 +137,8 @@ const CharactersListPage = () => {
         <Separator className="my-6" />
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
             <p>Загрузка персонажей...</p>
           </div>
         ) : characters.length > 0 ? (
@@ -118,8 +170,11 @@ const CharactersListPage = () => {
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
-                        <Trash className="h-4 w-4" />
+                      <Button variant="destructive" size="icon" disabled={deleteInProgress === character.id}>
+                        {deleteInProgress === character.id ? 
+                          <Loader2 className="h-4 w-4 animate-spin" /> : 
+                          <Trash className="h-4 w-4" />
+                        }
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -131,8 +186,12 @@ const CharactersListPage = () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Отмена</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteCharacter(character.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Удалить
+                        <AlertDialogAction 
+                          onClick={() => handleDeleteCharacter(character.id)} 
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          disabled={deleteInProgress === character.id}
+                        >
+                          {deleteInProgress === character.id ? "Удаление..." : "Удалить"}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
