@@ -54,7 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
     // Проверяем наличие className в props и определяем, имеет ли он класс Details
-    const hasDetailsClass = className?.includes('Details');
+    const hasDetailsClass = props.className ? props.className.includes('Details') : false;
     
     // Добавляем стили для улучшения контрастности в зависимости от темы
     const style = {
@@ -63,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? '#FFFFFF' 
         : variant === 'default' 
           ? currentTheme.buttonText || '#FFFFFF' 
-          : props.style?.color || currentTheme.buttonText,
+          : props.style?.color || currentTheme.buttonText || '#FFFFFF',
       borderColor: variant === 'outline' 
         ? props.style?.borderColor || currentTheme.accent 
         : props.style?.borderColor,

@@ -489,7 +489,7 @@ input::placeholder {
   background-color: rgba(var(--primary), 0.05);
 }
 
-/* Стили для тумана войны */
+/* Стили для тумана в��йны */
 .fog-of-war-toggle .light {
   color: var(--text-color, #FFFFFF);
   opacity: 0.7;
@@ -751,4 +751,59 @@ input, select {
   color: var(--text-color, #FFFFFF) !important;
   background-color: rgba(0, 0, 0, 0.7) !important;
   border: 1px solid var(--accent-color, #8B5A2B) !important;
+}
+
+/* Принудительно задаем цвет для всех текстовых элементов, особенно для заголовков и элементов на темном фоне */
+.bg-card, .bg-background, .dark, [data-theme], .card, .tabs-content, .tab-content {
+  color: var(--text-color, #FFFFFF) !important;
+}
+
+/* Все заголовки тоже получают явный светлый цвет для лучшей видимости */
+h1, h2, h3, h4, h5, h6, .heading, .title, .card-title, .text-heading {
+  color: var(--text-color, #FFFFFF) !important;
+}
+
+/* Усиливаем контрастность для текста внутри карточек */
+.card p, .card span, .card div, .card li {
+  color: var(--text-color, #FFFFFF) !important;
+}
+
+/* Специально усиливаем видимость для красных текстов (предупреждения, заголовки особенностей) */
+.text-red-500, .text-red-600, .text-red-700, 
+.text-destructive, .text-error, .text-danger,
+[style*="color: red"], [class*="text-red"] {
+  color: #FF8080 !important; /* Более светлый и яркий красный */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+/* Улучшаем видимость для особенностей классов */
+.features-list h4, .features-title, .feature-name {
+  color: #FFD700 !important; /* Золотой для заголовков особенностей */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.feature-description, .feature-text {
+  color: #FFFFFF !important;
+  opacity: 0.9;
+}
+
+/* Контрастные стили для вкладок и кнопок в архетипах и классах */
+.tabs-list [data-state="active"] {
+  background-color: var(--accent-color, #8B5A2B) !important;
+  color: #FFFFFF !important;
+  font-weight: bold;
+}
+
+.subclass-card, .class-card, .archetype-card {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  border: 1px solid var(--accent-color, #8B5A2B) !important;
+}
+
+.subclass-name, .class-name, .archetype-name {
+  color: #FFD700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.subclass-description, .class-description, .archetype-description {
+  color: #FFFFFF !important;
 }
