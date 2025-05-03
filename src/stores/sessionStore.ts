@@ -52,14 +52,18 @@ export const useSessionStore = create<SessionStore>()(
         const sessionCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         const newSession: Session = {
           id: uuidv4(),
-          name,
-          description,
+          title: name,
+          name: name,
+          description: description || "",
           code: sessionCode,
           dmId: newUser.id,
           users: [newUser],
-          createdAt: new Date().toISOString(),
-          lastActive: new Date().toISOString(),
+          players: [],
+          startTime: new Date().toISOString(),
           isActive: true,
+          notes: [],
+          createdAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString(),
         };
         
         set((state) => ({
@@ -94,8 +98,8 @@ export const useSessionStore = create<SessionStore>()(
             if (s.id === session.id) {
               return {
                 ...s,
-                users: [...s.users, newUser],
-                lastActive: new Date().toISOString(),
+                users: [...(s.users || []), newUser],
+                lastActivity: new Date().toISOString(),
               };
             }
             return s;
@@ -105,8 +109,8 @@ export const useSessionStore = create<SessionStore>()(
             sessions: updatedSessions,
             currentSession: {
               ...session,
-              users: [...session.users, newUser],
-              lastActive: new Date().toISOString(),
+              users: [...(session.users || []), newUser],
+              lastActivity: new Date().toISOString(),
             },
             currentUser: newUser,
           };
@@ -125,13 +129,13 @@ export const useSessionStore = create<SessionStore>()(
             if (s.id === currentSession.id) {
               return {
                 ...s,
-                users: s.users.map((u) => {
+                users: (s.users || []).map((u) => {
                   if (u.id === currentUser.id) {
                     return { ...u, isOnline: false };
                   }
                   return u;
                 }),
-                lastActive: new Date().toISOString(),
+                lastActivity: new Date().toISOString(),
               };
             }
             return s;
@@ -168,7 +172,7 @@ export const useSessionStore = create<SessionStore>()(
             if (s.id === currentSession.id) {
               return {
                 ...s,
-                users: s.users.map((u) => {
+                users: (s.users || []).map((u) => {
                   if (u.id === userId) {
                     return { ...u, ...updates };
                   }
@@ -181,7 +185,7 @@ export const useSessionStore = create<SessionStore>()(
           
           const updatedCurrentSession = {
             ...currentSession,
-            users: currentSession.users.map((u) => {
+            users: (currentSession.users || []).map((u) => {
               if (u.id === userId) {
                 return { ...u, ...updates };
               }
@@ -230,15 +234,15 @@ export const useSessionStore = create<SessionStore>()(
         set((state) => {
           const updatedSessions = state.sessions.map((s) => {
             if (s.id === sessionId) {
-              if (s.users.some((u) => u.id === user.id)) {
+              if ((s.users || []).some((u) => u.id === user.id)) {
                 return {
                   ...s,
-                  users: s.users.map((u) => (u.id === user.id ? { ...user, isOnline: true } : u)),
+                  users: (s.users || []).map((u) => (u.id === user.id ? { ...user, isOnline: true } : u)),
                 };
               }
               return {
                 ...s,
-                users: [...s.users, user],
+                users: [...(s.users || []), user],
               };
             }
             return s;
@@ -249,11 +253,11 @@ export const useSessionStore = create<SessionStore>()(
               ? {
                   currentSession: {
                     ...state.currentSession,
-                    users: state.currentSession.users.some((u) => u.id === user.id)
+                    users: state.currentSession.users && state.currentSession.users.some((u) => u.id === user.id)
                       ? state.currentSession.users.map((u) =>
                           u.id === user.id ? { ...user, isOnline: true } : u
                         )
-                      : [...state.currentSession.users, user],
+                      : [...(state.currentSession.users || []), user],
                   },
                 }
               : {};
@@ -271,7 +275,7 @@ export const useSessionStore = create<SessionStore>()(
             if (s.id === sessionId) {
               return {
                 ...s,
-                users: s.users.filter((u) => u.id !== userId),
+                users: (s.users || []).filter((u) => u.id !== userId),
               };
             }
             return s;
@@ -282,7 +286,7 @@ export const useSessionStore = create<SessionStore>()(
               ? {
                   currentSession: {
                     ...state.currentSession,
-                    users: state.currentSession.users.filter((u) => u.id !== userId),
+                    users: (state.currentSession.users || []).filter((u) => u.id !== userId),
                   },
                 }
               : {};
