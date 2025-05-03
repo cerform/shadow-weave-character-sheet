@@ -9,23 +9,39 @@ interface ManualInputPanelProps {
   abilityScores: CharacterSheet['abilities'];
   setAbilityScores: (scores: CharacterSheet['abilities']) => void;
   maxAbilityScore: number;
+  level?: number; // Add level prop (optional)
+  stats?: CharacterSheet['abilities']; // Add stats prop (optional)
+  updateStat?: (stat: keyof CharacterSheet['abilities'], value: number) => void; // Add updateStat prop (optional)
+  getModifier?: (score: number) => string; // Add getModifier prop (optional)
 }
 
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   abilityScores,
   setAbilityScores,
-  maxAbilityScore
+  maxAbilityScore,
+  stats, 
+  updateStat,
+  getModifier,
+  level
 }) => {
+  // Use either the passed stats or the abilityScores
+  const scores = stats || abilityScores;
+  
   const handleAbilityChange = (ability: keyof CharacterSheet['abilities'], value: string) => {
     const numValue = parseInt(value) || 0;
     if (numValue > maxAbilityScore) {
       return;
     }
     
-    setAbilityScores({
-      ...abilityScores,
-      [ability]: numValue
-    });
+    // Use updateStat if provided, otherwise use setAbilityScores
+    if (updateStat) {
+      updateStat(ability, numValue);
+    } else {
+      setAbilityScores({
+        ...scores,
+        [ability]: numValue
+      });
+    }
   };
 
   const resetScores = () => {
@@ -42,7 +58,7 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {Object.entries(abilityScores).map(([ability, value]) => (
+        {Object.entries(scores).map(([ability, value]) => (
           <div key={ability} className="space-y-1">
             <Label htmlFor={ability} className="capitalize text-white">
               {ability}

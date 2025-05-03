@@ -93,25 +93,15 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
     nextStep();
   };
 
-  // Стили для лучшей контрастности
-  const buttonStyle = {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    color: '#FFFFFF',
-    border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
-  };
-
-  const selectedButtonStyle = {
-    backgroundColor: currentTheme.accent || '#50FF50',
-    color: '#000000',
-    fontWeight: 'bold',
-    boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
-  };
-
-  const listItemStyle = {
-    color: '#FFFFFF',
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 1)',
-    fontWeight: 'normal'
+  // Стили для кнопок
+  const getButtonClass = (isSelected: boolean) => {
+    return `
+      transition-all duration-200
+      ${isSelected 
+        ? 'text-black font-bold bg-accent-color'
+        : 'text-white hover:bg-white/20'
+      }
+    `;
   };
 
   return (
@@ -135,12 +125,13 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={lang}
                 selected={selectedLanguages.includes(lang)}
                 onClick={() => toggleLanguage(lang)}
-                style={selectedLanguages.includes(lang) ? selectedButtonStyle : buttonStyle}
-                className={`
-                  transition-all duration-200
-                  hover:bg-white/20
-                  ${selectedLanguages.includes(lang) ? 'text-black font-bold' : 'text-white'}
-                `}
+                className={getButtonClass(selectedLanguages.includes(lang))}
+                style={{
+                  backgroundColor: selectedLanguages.includes(lang) ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                  color: selectedLanguages.includes(lang) ? '#000000' : '#FFFFFF',
+                  border: `1px solid ${currentTheme.accent || '#50FF50'}`,
+                  boxShadow: selectedLanguages.includes(lang) ? `0 0 8px rgba(255, 255, 255, 0.5)` : 'none'
+                }}
               />
             ))}
           </SelectionSubOptionsContainer>
@@ -149,7 +140,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
             <h4 className="font-medium mb-1 text-white">Выбранные языки:</h4>
             <ul className="list-disc pl-5">
               {selectedLanguages.map((lang, idx) => (
-                <li key={idx} className="text-white" style={listItemStyle}>{lang}</li>
+                <li key={idx} className="text-white">{lang}</li>
               ))}
             </ul>
           </div>
@@ -170,12 +161,13 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
                 label={prof}
                 selected={selectedProficiencies.includes(prof)}
                 onClick={() => toggleProficiency(prof)}
-                style={selectedProficiencies.includes(prof) ? selectedButtonStyle : buttonStyle}
-                className={`
-                  transition-all duration-200
-                  hover:bg-white/20
-                  ${selectedProficiencies.includes(prof) ? 'text-black font-bold' : 'text-white'}
-                `}
+                className={getButtonClass(selectedProficiencies.includes(prof))}
+                style={{
+                  backgroundColor: selectedProficiencies.includes(prof) ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
+                  color: selectedProficiencies.includes(prof) ? '#000000' : '#FFFFFF',
+                  border: `1px solid ${currentTheme.accent || '#50FF50'}`,
+                  boxShadow: selectedProficiencies.includes(prof) ? `0 0 8px rgba(255, 255, 255, 0.5)` : 'none'
+                }}
               />
             ))}
           </SelectionSubOptionsContainer>
@@ -185,7 +177,7 @@ const CharacterLanguagesSelection: React.FC<CharacterLanguagesSelectionProps> = 
             <ul className="list-disc pl-5">
               {selectedProficiencies.length > 0 ? (
                 selectedProficiencies.map((prof, idx) => (
-                  <li key={idx} className="text-white" style={listItemStyle}>{prof}</li>
+                  <li key={idx} className="text-white">{prof}</li>
                 ))
               ) : (
                 <li className="text-gray-400 italic">Не выбрано навыков</li>

@@ -52,21 +52,6 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     }
   };
   
-  // Обновленные стили для подрасы
-  const subraceButtonStyle = {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    color: '#FFFFFF',
-    border: `1px solid ${currentTheme.accent || '#50FF50'}`,
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)'
-  };
-
-  const selectedSubraceButtonStyle = {
-    backgroundColor: currentTheme.accent || '#50FF50',
-    color: '#000000',
-    fontWeight: 'bold',
-    boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
-  };
-  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -109,11 +94,12 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
                               : 'hover:bg-white/20'}
                           `}
                           style={{
-                            ...(isSubraceSelected ? selectedSubraceButtonStyle : subraceButtonStyle),
                             backgroundColor: isSubraceSelected ? currentTheme.accent : 'rgba(0, 0, 0, 0.6)',
                             color: isSubraceSelected ? '#000000' : '#FFFFFF',
                             boxShadow: isSubraceSelected ? `0 0 12px ${currentTheme.accent}` : 'none',
                             transform: isSubraceSelected ? 'scale(1.05)' : 'scale(1)',
+                            border: `1px solid ${currentTheme.accent || '#50FF50'}`,
+                            textShadow: isSubraceSelected ? 'none' : '0px 1px 2px rgba(0, 0, 0, 0.8)'
                           }}
                         />
                       );
