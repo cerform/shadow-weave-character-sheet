@@ -26,16 +26,20 @@ const Index = () => {
   useEffect(() => {
     console.log("Index: Обновляем список персонажей");
     
-    if (isAuthenticated) {
+    try {
       const chars = getUserCharacters();
-      console.log("Index: Персонажи пользователя", chars);
-      setUserCharacters(chars);
-    } else {
-      // Если пользователь не аутентифицирован, используем функцию getUserCharacters
-      // которая вернет все персонажи из localStorage
-      const chars = getUserCharacters();
-      console.log("Index: Персонажи из localStorage", chars);
-      setUserCharacters(chars);
+      
+      // Проверяем, что полученные данные являются массивом
+      if (Array.isArray(chars)) {
+        console.log("Index: Персонажи пользователя", chars);
+        setUserCharacters(chars);
+      } else {
+        console.error("Index: getUserCharacters вернул не массив:", chars);
+        setUserCharacters([]);
+      }
+    } catch (error) {
+      console.error("Index: Ошибка при получении персонажей:", error);
+      setUserCharacters([]);
     }
   }, [isAuthenticated, getUserCharacters, characters]);
 

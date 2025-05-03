@@ -368,6 +368,12 @@ export function CharacterProvider({ children }: Props) {
   
   // Получение персонажей текущего пользователя
   const getUserCharacters = useCallback(() => {
+    // Проверяем, что characters - это массив
+    if (!Array.isArray(characters)) {
+      console.error("characters is not an array:", characters);
+      return [];
+    }
+
     if (!currentUser) return characters; // Возвращаем все персонажи, если пользователь не аутентифицирован
     
     // Если пользователь - DM, возвращаем все персонажи
