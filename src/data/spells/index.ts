@@ -2,7 +2,6 @@
 import { CharacterSpell } from '@/types/character';
 import { cantrips } from './cantrips';
 // Correcting the imports for level files
-// Using default imports if the files export default, or importing the named exports
 import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
@@ -13,11 +12,8 @@ import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 
-// For level0, assuming it exports a default (we'll handle both cases)
-// If level0 is exported as default:
+// Import level0 correctly - using default import
 import level0 from './level0';
-// Alternatively, if it's a named export:
-// import { level0 } from './level0';
 
 // Объединяем все заклинания
 export const spells: CharacterSpell[] = [
@@ -53,14 +49,18 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
  */
 export const getSpellsByClass = (className: string, characterLevel?: number): CharacterSpell[] => {
   return spells.filter(spell => {
-    // Fix for the toLowerCase error on 'never' type
+    // Improved type checking to avoid toLowerCase on 'never' type
     if (typeof spell.classes === 'string') {
       return spell.classes.toLowerCase().includes(className.toLowerCase());
     }
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => 
-        typeof cls === 'string' && cls.toLowerCase().includes(className.toLowerCase())
-      );
+      return spell.classes.some(cls => {
+        // Extra safety check before using toLowerCase
+        if (typeof cls === 'string') {
+          return cls.toLowerCase().includes(className.toLowerCase());
+        }
+        return false;
+      });
     }
     return false;
   });
