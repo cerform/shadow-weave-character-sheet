@@ -10,12 +10,14 @@ import {
   TooltipProvider, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
+import { getCharacterSteps } from "@/config/characterCreationSteps";
 
 interface Step {
   id: number;
   name: string;
   description: string;
   onlyFor?: string;
+  optional?: boolean;
 }
 
 interface CreationStepDisplayProps {
@@ -23,6 +25,7 @@ interface CreationStepDisplayProps {
   currentStep: number;
   setCurrentStep: (step: number) => void;
   isMagicClass?: boolean;
+  hasSubclasses?: boolean;
 }
 
 const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
@@ -30,14 +33,16 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   currentStep,
   setCurrentStep,
   isMagicClass = false,
+  hasSubclasses = true,
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Фильтруем шаги для отображения
-  const visibleSteps = steps.filter(
-    (step) => step.onlyFor !== "magic" || isMagicClass
-  );
+  // Получаем видимые шаги с учетом фильтрации
+  const visibleSteps = getCharacterSteps({
+    isMagicClass,
+    hasSubclasses
+  });
 
   return (
     <div className="flex overflow-x-auto pb-4 hide-scrollbar">

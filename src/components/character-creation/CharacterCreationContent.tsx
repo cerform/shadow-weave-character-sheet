@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { useCreationStep } from '@/hooks/useCreationStep';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
 import CharacterClassSelection from './CharacterClassSelection';
@@ -63,19 +62,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     const classSubclasses = subclassData[character.class];
     return classSubclasses && Object.keys(classSubclasses).length > 0;
   };
-  
-  // Функция для корректной навигации назад
-  const handlePrevStep = () => {
-    // Если мы на шаге выбора уровня (3) и у класса нет подклассов,
-    // надо вернуться на шаг выбора класса (1), а не на шаг подкласса (2)
-    if (currentStep === 3 && !hasSubclasses()) {
-      // Переходим на шаг выбора класса (1) напрямую
-      updateCharacter({ subclass: undefined }); // Сбрасываем подкласс, если был
-      prevStep(); // Используем стандартный prevStep из useCreationStep
-    } else {
-      prevStep(); // Обычный переход назад
-    }
-  };
 
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
@@ -99,17 +85,19 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         );
       case 2: // Выбор архетипа (подкласса)
-        // Если нет подклассов для выбранного класса, автоматически переходим к следующему шагу
+        // Проверяем, есть ли подклассы для выбранного класса
         if (!hasSubclasses()) {
+          // Автоматически переходим к следующему шагу с задержкой
           setTimeout(() => nextStep(), 0);
-          return null;
+          // Возвращаем пустой фрагмент во время перехода
+          return <></>;
         }
         return (
           <CharacterSubclassSelection
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
-            prevStep={handlePrevStep} // Используем обработчик для корректной навигации
+            prevStep={prevStep}
           />
         );
       case 3: // Выбор уровня
@@ -118,8 +106,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
-            prevStep={handlePrevStep} // Используем обработчик для корректной навигации
-            onLevelChange={onLevelChange} // Передаем функцию onLevelChange
+            prevStep={prevStep}
+            onLevelChange={onLevelChange}
           />
         );
       case 4: // Характеристики
@@ -151,9 +139,12 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         );
       case 6: // Выбор заклинаний
+        // Проверяем, является ли класс магическим
         if (!isMagicClass) {
-          setTimeout(() => nextStep(), 0); // Пропускаем этот шаг для немагических классов
-          return null;
+          // Автоматически переходим к следующему шагу с задержкой
+          setTimeout(() => nextStep(), 0);
+          // Возвращаем пустой фрагмент во время перехода
+          return <></>;
         }
         return (
           <CharacterSpellSelection
@@ -204,7 +195,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           <CharacterReview 
             character={character}
             prevStep={prevStep}
-            updateCharacter={updateCharacter} // Передаем функцию для обновления персонажа
+            updateCharacter={updateCharacter}
           />
         );
       default:

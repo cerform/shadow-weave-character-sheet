@@ -42,16 +42,14 @@ const CharacterCreationPage = () => {
   };
 
   // Обновляем конфигурацию хука useCreationStep с актуальной информацией
-  const { currentStep, nextStep, prevStep, setCurrentStep } = useCreationStep({
+  const { currentStep, nextStep, prevStep, setCurrentStep, visibleSteps } = useCreationStep({
     isMagicClass: isMagicClass(),
-    characterClass: character.class,
-    character: character,
     hasSubclasses: hasSubclassesForClass()
   });
 
   // Обновляем hasSubclasses при изменении класса персонажа
   useEffect(() => {
-    // При любом изменении класса обновляем состояние
+    // При изменении класса конфигурация обновится автоматически через хук
   }, [character.class]);
 
   // Определяем максимальное значение для характеристик на основе уровня
@@ -177,6 +175,7 @@ const CharacterCreationPage = () => {
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
           isMagicClass={isMagicClass()}
+          hasSubclasses={hasSubclassesForClass()}
         />
       </div>
 

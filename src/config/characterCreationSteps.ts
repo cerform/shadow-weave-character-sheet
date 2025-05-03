@@ -13,7 +13,8 @@ export const steps = [
   {
     id: 2,
     name: "Архетип",
-    description: "Выбор специализации класса"
+    description: "Выбор специализации класса",
+    optional: true // Помечаем шаг как опциональный
   },
   {
     id: 3,
@@ -34,6 +35,7 @@ export const steps = [
     id: 6,
     name: "Заклинания",
     description: "Выбор заклинаний для заклинателей",
+    optional: true,
     onlyFor: "magic"
   },
   {
@@ -62,3 +64,37 @@ export const steps = [
     description: "Обзор и финальные штрихи"
   }
 ];
+
+// Новая функция для получения всех шагов, поддерживающая фильтрацию
+export const getCharacterSteps = (config?: { isMagicClass?: boolean; hasSubclasses?: boolean }) => {
+  return steps.filter(step => {
+    // Фильтруем шаги заклинаний для немагических классов
+    if (step.id === 6 && step.onlyFor === "magic" && config?.isMagicClass === false) {
+      return false;
+    }
+    // Фильтруем шаг архетипа для классов без подклассов
+    if (step.id === 2 && step.optional && config?.hasSubclasses === false) {
+      return false;
+    }
+    return true;
+  });
+};
+
+// Получаем индекс шага в отфильтрованном массиве по ID из полного массива
+export const getStepIndexByID = (stepId: number, filteredSteps: typeof steps) => {
+  return filteredSteps.findIndex(step => step.id === stepId);
+};
+
+// Находим следующий доступный шаг после указанного ID
+export const getNextStepID = (currentStepId: number, filteredSteps: typeof steps) => {
+  const currentIndex = filteredSteps.findIndex(step => step.id === currentStepId);
+  if (currentIndex === -1 || currentIndex >= filteredSteps.length - 1) return currentStepId;
+  return filteredSteps[currentIndex + 1].id;
+};
+
+// Находим предыдущий доступный шаг перед указанным ID
+export const getPrevStepID = (currentStepId: number, filteredSteps: typeof steps) => {
+  const currentIndex = filteredSteps.findIndex(step => step.id === currentStepId);
+  if (currentIndex <= 0) return 0;
+  return filteredSteps[currentIndex - 1].id;
+};
