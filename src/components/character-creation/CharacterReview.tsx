@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSheet } from '@/types/character.d';
@@ -53,7 +52,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
     }
   };
 
-  // Функция для просмотра персонажа (временное решение)
+  // Функция для просмотра персонажа (исправлена, без preventDefault)
   const viewCharacter = () => {
     // Если у персонажа есть ID, переходим к его просмотру
     if (character.id) {
@@ -62,7 +61,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       toast({
         title: "Персонаж не сохранен",
         description: "Сначала сохраните персонажа, чтобы просмотреть его лист.",
-        variant: "destructive"  // Changed from "warning" to "destructive"
+        variant: "destructive"
       });
     }
   };

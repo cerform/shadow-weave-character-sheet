@@ -29,14 +29,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
-  // Используем обработчик событий с preventDefault для кнопок
-  const handlePrev = (e: React.MouseEvent) => {
-    e.preventDefault();
+  // Упрощаем обработчики, удаляем preventDefault, который может вызывать проблемы
+  const handlePrev = () => {
     prevStep();
   };
   
-  const handleNext = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleNext = () => {
     nextStep();
   };
   

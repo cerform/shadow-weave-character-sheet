@@ -64,18 +64,20 @@ const CharacterCreationPage = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Навигация на главную
+  // Навигация на главную - исправлено
   const goToHomePage = () => {
     // Показываем предупреждение, если процесс создания не завершен
     if (currentStep < steps.length - 1) {
       const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
       if (!confirmed) return;
     }
+    // Прямая навигация без preventDefault
     navigate('/');
   };
 
   // Навигация в руководство игрока
   const goToHandbook = () => {
+    // Прямая навигация без preventDefault
     navigate('/handbook');
   };
   
