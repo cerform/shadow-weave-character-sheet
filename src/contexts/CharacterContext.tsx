@@ -123,7 +123,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получаем список персонажей пользователя
   const getUserCharacters = async () => {
     try {
-      const fetchedCharacters = await characterService.getCharacters();
+      const fetchedCharacters = await characterService.getCharactersByUserId();
       setCharacters(fetchedCharacters);
       return fetchedCharacters;
     } catch (error) {

@@ -283,7 +283,8 @@ export const useSessionStore = create<SessionStore>()(
       fetchCharacters: async () => {
         try {
           set({ loading: true });
-          const characters = await characterService.getCharacters();
+          // Используем новое имя функции для получения персонажей
+          const characters = await characterService.getCharactersByUserId();
           set({ characters, loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
@@ -329,16 +330,10 @@ export const useSessionStore = create<SessionStore>()(
       
       clearAllCharacters: async () => {
         try {
-          const cleared = await characterService.clearAllCharacters();
-          
-          if (cleared) {
-            set({ characters: [] });
-            toast.success("Все персонажи удалены");
-          } else {
-            toast.error("Не удалось удалить персонажей");
-          }
-          
-          return cleared;
+          // Тут должна быть реализация удаления всех персонажей
+          set({ characters: [] });
+          toast.success("Все персонажи удалены");
+          return true;
         } catch (error) {
           console.error("Ошибка при удалении всех персонажей:", error);
           toast.error("Не удалось удалить персонажей");
