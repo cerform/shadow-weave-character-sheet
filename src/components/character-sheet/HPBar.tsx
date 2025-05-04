@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
@@ -26,6 +26,7 @@ export const HPBar: React.FC<HPBarProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const initializedRef = useRef(false);
   
   // Безопасные значения для расчетов
   const safeCurrentHp = isNaN(currentHp) ? 0 : Math.max(0, currentHp);
@@ -34,6 +35,14 @@ export const HPBar: React.FC<HPBarProps> = ({
   
   // Обработка изменения HP для анимации
   useEffect(() => {
+    // Пропускаем анимацию при первой инициализации
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      setPrevCurrentHp(safeCurrentHp);
+      return;
+    }
+    
+    // Анимируем только при реальных изменениях
     if (safeCurrentHp !== prevCurrentHp) {
       setIsAnimating(true);
       const timer = setTimeout(() => {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +34,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   const [showHitDiceRoller, setShowHitDiceRoller] = useState(false);
   const [showHealingRoller, setShowHealingRoller] = useState(false);
   const [hpAdjustValue, setHpAdjustValue] = useState(1);
+  const initializedRef = useRef(false);
   
   // Используем хук для управления уроном и здоровьем
   const { 
@@ -47,6 +48,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     setHp,
     setTempHp
   } = useDamageLog(currentHp, maxHp, (hp, tempHp) => {
+    // Избегаем повторных обновлений при инициализации
+    if (!initializedRef.current) return;
+    
     onHpChange(hp);
     updateCharacter({ 
       currentHp: hp,
@@ -56,9 +60,17 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   
   // Синхронизируем текущее HP и временные HP с данными персонажа
   useEffect(() => {
-    setHp(currentHp);
+    // Используем тихий режим при первоначальной загрузке
+    const silent = !initializedRef.current;
+    
+    setHp(currentHp, silent);
     if (character?.temporaryHp !== undefined) {
-      setTempHp(character.temporaryHp);
+      setTempHp(character.temporaryHp, silent);
+    }
+    
+    // После первой синхронизации отмечаем компонент как инициализированный
+    if (!initializedRef.current) {
+      initializedRef.current = true;
     }
   }, [currentHp, character?.temporaryHp, setHp, setTempHp]);
   

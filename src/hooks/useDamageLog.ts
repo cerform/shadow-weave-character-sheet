@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export interface DamageEvent {
@@ -19,11 +19,43 @@ export const useDamageLog = (
   const [tempHp, setTempHp] = useState(0);
   const [events, setEvents] = useState<DamageEvent[]>([]);
   const { toast } = useToast();
+  
+  // Реф для отслеживания инициализации хука
+  const isInitialized = useRef(false);
+  // Реф для предотвращения дублирования уведомлений
+  const notificationCooldown = useRef(false);
 
   // Обновляем значения HP и сообщаем наверх через колбэк
   useEffect(() => {
+    // Предотвращаем повторные уведомления при первичной инициализации
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      return;
+    }
+    
+    // Вызываем колбэк без отображения уведомлений при начальной загрузке
     onHpChange(currentHp, tempHp);
   }, [currentHp, tempHp, onHpChange]);
+
+  // Функция для показа уведомлений с предотвращением спама
+  const showNotification = useCallback((title: string, description: string, variant?: "default" | "destructive") => {
+    // Проверяем, не в режиме кулдауна ли уведомления
+    if (notificationCooldown.current) return;
+    
+    // Устанавливаем кулдаун на 500мс, чтобы предотвратить спам
+    notificationCooldown.current = true;
+    
+    toast({
+      title,
+      description,
+      variant
+    });
+    
+    // Снимаем кулдаун через 500мс
+    setTimeout(() => {
+      notificationCooldown.current = false;
+    }, 500);
+  }, [toast]);
 
   // Применяем событие получения урона
   const applyDamage = useCallback((amount: number, source?: string) => {
@@ -33,7 +65,7 @@ export const useDamageLog = (
     }
 
     const eventId = crypto.randomUUID();
-    const damageAmount = amount; // Уже положительное число
+    const damageAmount = amount;
     let remainingDamage = damageAmount;
     
     // Если есть временные HP, сначала снимаем их
@@ -76,20 +108,20 @@ export const useDamageLog = (
       // Проверяем на статус "в сознании/без сознания"
       const newHp = Math.max(0, currentHp - remainingDamage);
       if (newHp === 0) {
-        toast({
-          title: "Персонаж без сознания!",
-          description: `HP снижено до 0${source ? ` от ${source}` : ''}`,
-          variant: "destructive"
-        });
+        showNotification(
+          "Персонаж без сознания!", 
+          `HP снижено до 0${source ? ` от ${source}` : ''}`,
+          "destructive"
+        );
       } else {
-        toast({
-          title: "Урон получен",
-          description: `${damageAmount} урона${source ? ` от ${source}` : ''}`,
-          variant: "destructive" 
-        });
+        showNotification(
+          "Урон получен", 
+          `${damageAmount} урона${source ? ` от ${source}` : ''}`,
+          "destructive"
+        );
       }
     }
-  }, [currentHp, tempHp, toast]);
+  }, [currentHp, tempHp, showNotification]);
 
   // Применяем событие получения лечения
   const applyHealing = useCallback((amount: number, source?: string) => {
@@ -115,18 +147,19 @@ export const useDamageLog = (
     ]);
     
     if (wasUnconscious && newHp > 0) {
-      toast({
-        title: "Персонаж пришел в сознание!",
-        description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-        variant: "default"
-      });
+      showNotification(
+        "Персонаж пришел в сознание!",
+        `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+        "default"
+      );
     } else {
-      toast({
-        title: "Лечение получено",
-        description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-      });
+      showNotification(
+        "Лечение получено",
+        `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+        "default"
+      );
     }
-  }, [currentHp, maxHp, toast]);
+  }, [currentHp, maxHp, showNotification]);
 
   // Добавляем временные хиты
   const addTempHp = useCallback((amount: number, source?: string) => {
@@ -144,22 +177,25 @@ export const useDamageLog = (
         ...prev
       ]);
       
-      toast({
-        title: "Временные HP получены",
-        description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
-      });
+      showNotification(
+        "Временные HP получены",
+        `${amount} временных HP${source ? ` от ${source}` : ''}`,
+        "default"
+      );
     } else if (amount === tempHp) {
-      toast({
-        title: "Временные HP обновлены",
-        description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
-      });
-    } else {
-      toast({
-        title: "Временные HP не изменились",
-        description: `У вас уже ${tempHp} временных HP (больше чем ${amount})`,
-      });
+      showNotification(
+        "Временные HP обновлены",
+        `${amount} временных HP${source ? ` от ${source}` : ''}`,
+        "default"
+      );
+    } else if (amount > 0) {
+      showNotification(
+        "Временные HP не изменились",
+        `У вас уже ${tempHp} временных HP (больше чем ${amount})`,
+        "default"
+      );
     }
-  }, [tempHp, toast]);
+  }, [tempHp, showNotification]);
 
   // Отменяем последнее изменение HP
   const undoLastEvent = useCallback(() => {
@@ -183,21 +219,22 @@ export const useDamageLog = (
         break;
     }
     
-    toast({
-      title: "Отменено последнее событие",
-      description: `${lastEvent.type === 'damage' ? 'Урон' : lastEvent.type === 'heal' ? 'Лечение' : 'Временные HP'} ${lastEvent.amount}`,
-    });
-  }, [events, maxHp, toast]);
+    showNotification(
+      "Отменено последнее событие",
+      `${lastEvent.type === 'damage' ? 'Урон' : lastEvent.type === 'heal' ? 'Лечение' : 'Временные HP'} ${lastEvent.amount}`,
+      "default"
+    );
+  }, [events, maxHp, showNotification]);
 
-  // Прямое обновление HP (например, при загрузке персонажа или отдыхе)
-  const setHp = useCallback((hp: number) => {
+  // Прямое обновление HP с отключением уведомлений
+  const setHp = useCallback((hp: number, silent: boolean = false) => {
     const oldHp = currentHp;
     const newHp = Math.max(0, Math.min(maxHp, hp));
     
     setCurrentHp(newHp);
     
-    // Если значение изменилось, добавляем событие в журнал
-    if (newHp !== oldHp) {
+    // Если значение изменилось и не в тихом режиме, добавляем событие в журнал
+    if (newHp !== oldHp && !silent) {
       const difference = newHp - oldHp;
       
       setEvents((prev) => [
@@ -210,18 +247,32 @@ export const useDamageLog = (
         },
         ...prev
       ]);
+      
+      if (difference > 0) {
+        showNotification(
+          "Здоровье изменено",
+          `+${difference} HP (ручное изменение)`,
+          "default"
+        );
+      } else if (difference < 0) {
+        showNotification(
+          "Здоровье изменено",
+          `-${Math.abs(difference)} HP (ручное изменение)`,
+          "destructive"
+        );
+      }
     }
-  }, [currentHp, maxHp]);
+  }, [currentHp, maxHp, showNotification]);
   
   // Прямое обновление временного HP
-  const setTempHpValue = useCallback((hp: number) => {
+  const setTempHpValue = useCallback((hp: number, silent: boolean = false) => {
     const oldTempHp = tempHp;
     const newTempHp = Math.max(0, hp);
     
     setTempHp(newTempHp);
     
-    // Если значение изменилось, добавляем событие в журнал
-    if (newTempHp !== oldTempHp) {
+    // Если значение изменилось и не в тихом режиме, добавляем событие в журнал
+    if (newTempHp !== oldTempHp && !silent) {
       setEvents((prev) => [
         {
           id: crypto.randomUUID(),
@@ -232,8 +283,22 @@ export const useDamageLog = (
         },
         ...prev
       ]);
+      
+      if (newTempHp > oldTempHp) {
+        showNotification(
+          "Временные HP изменены",
+          `Установлено ${newTempHp} временных HP`,
+          "default"
+        );
+      } else {
+        showNotification(
+          "Временные HP изменены",
+          `Установлено ${newTempHp} временных HP`,
+          "default"
+        );
+      }
     }
-  }, [tempHp]);
+  }, [tempHp, showNotification]);
 
   return {
     currentHp,

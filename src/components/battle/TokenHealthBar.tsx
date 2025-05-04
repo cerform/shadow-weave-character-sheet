@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TokenHealthBarProps {
@@ -25,6 +25,7 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   // Для анимированного обновления используем локальное состояние с useEffect
   const [prevHP, setPrevHP] = useState(safeCurrentHP);
   const [isAnimating, setIsAnimating] = useState(false);
+  const initializedRef = useRef(false);
   
   // Расчет процентов для HP баров
   const healthPercentage = safeMaxHP > 0 
@@ -37,6 +38,13 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   
   // Обновляем локальное состояние при изменении props
   useEffect(() => {
+    // Пропускаем анимацию при первой инициализации
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      setPrevHP(safeCurrentHP);
+      return;
+    }
+    
     if (safeCurrentHP !== prevHP) {
       setIsAnimating(true);
       

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import NavigationButtons from "./NavigationButtons";
 import { CharacterSheet } from '@/types/character.d';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { getNumericModifier } from '@/utils/characterUtils';
+import { calculateMaxHitPoints } from '@/utils/characterUtils'; 
 import HitPointsRoller from './HitPointsRoller';
 
 interface CharacterHitPointsCalculatorProps {
@@ -32,46 +32,22 @@ const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> 
     ? getNumericModifier(character.abilities.constitution)
     : 0;
   
-  // Определяем максимальные хиты на основе класса и модификатора телосложения
-  const getMaxHpForClass = () => {
-    const classHitDice: Record<string, number> = {
-      'Варвар': 12,
-      'Воин': 10,
-      'Паладин': 10,
-      'Следопыт': 10,
-      'Монах': 8,
-      'Плут': 8,
-      'Друид': 8,
-      'Бард': 8,
-      'Жрец': 8,
-      'Колдун': 8,
-      'Волшебник': 6,
-      'Чародей': 6
-    };
-    
-    return classHitDice[character.class] || 8;
-  };
-  
   // Сохраняем очки здоровья в состоянии
   const [hitPoints, setHitPoints] = useState<number | null>(character.maxHp || null);
   
   // При монтировании компонента предварительно рассчитываем HP, если его еще нет
   useEffect(() => {
     if (!hitPoints && character.class && character.level) {
-      const baseHitDie = getMaxHpForClass();
+      // Используем утилиту расчета HP
+      const calculatedHp = calculateMaxHitPoints(
+        character.class, 
+        character.level, 
+        character.abilities?.constitution || 10
+      );
       
-      // На 1-м уровне HP = максимальное значение кубика + модификатор телосложения
-      let calculatedHp = baseHitDie + constitutionModifier;
-      
-      // Для уровней выше 1, добавляем среднее значение кубика хитов + модификатор телосложения
-      if (character.level > 1) {
-        const averageHitDie = Math.ceil((baseHitDie / 2) + 0.5);
-        calculatedHp += (averageHitDie + constitutionModifier) * (character.level - 1);
-      }
-      
-      setHitPoints(Math.max(1, calculatedHp)); // Минимум 1 хит
+      setHitPoints(calculatedHp);
     }
-  }, [character.class, character.level, constitutionModifier]);
+  }, [character.class, character.level, character.abilities?.constitution, hitPoints]);
   
   // Обработчик для сохранения HP после броска или ручного ввода
   const handleSaveHitPoints = (hp: number) => {
@@ -159,7 +135,7 @@ const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> 
         nextStep={handleNextStep}
         prevStep={prevStep}
         isFirstStep={false}
-        nextLabel="Сохранить и продолжить"
+        nextLabel="Сохранить и ��родолжить"
       />
     </div>
   );
