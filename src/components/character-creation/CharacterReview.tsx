@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Save, Eye } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { auth } from '@/services/firebase';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -35,6 +36,18 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
         updateCharacter({ id: characterId });
       }
       
+      // Проверяем авторизацию
+      const currentUser = auth.currentUser;
+      console.log("Текущий пользователь:", currentUser ? currentUser.email : "Не авторизован");
+      
+      // Добавляем userId к персонажу, если пользователь авторизован
+      if (currentUser) {
+        console.log("Сохраняем персонажа для пользователя:", currentUser.uid);
+        updateCharacter({ userId: currentUser.uid });
+      } else {
+        console.log("Пользователь не авторизован, сохраняем локально");
+      }
+      
       // Сохраняем в локальное хранилище
       const savedCharacters = localStorage.getItem('dnd-characters');
       let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
@@ -42,21 +55,30 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       // Если персонаж с таким ID уже существует, заменяем его
       const existingIndex = characters.findIndex((c: any) => c.id === characterId);
       
+      const characterWithTimestamp = {
+        ...character, 
+        id: characterId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
       if (existingIndex >= 0) {
-        characters[existingIndex] = { ...character, id: characterId };
+        characters[existingIndex] = characterWithTimestamp;
       } else {
-        characters.push({ ...character, id: characterId });
+        characters.push(characterWithTimestamp);
       }
       
       localStorage.setItem('dnd-characters', JSON.stringify(characters));
       localStorage.setItem('last-selected-character', characterId);
+      
+      console.log("Персонаж сохранен локально:", characterId);
       
       toast({
         title: "Персонаж создан",
         description: `${character.name} теперь готов к приключениям!`,
       });
       
-      // Переходим к списку персонажей с небольшой задержкой
+      // Переходим к просмотру персонажа с небольшой задержкой
       setTimeout(() => {
         navigate('/character/' + characterId);
       }, 500);
