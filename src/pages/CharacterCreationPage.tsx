@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { themes } from "@/lib/themes";
@@ -16,6 +16,7 @@ import { useCreationStep } from "@/hooks/useCreationStep";
 import CreationStepDisplay from "@/components/character-creation/CreationStepDisplay";
 import CharacterCreationContent from "@/components/character-creation/CharacterCreationContent";
 import ThemeSelector from "@/components/ThemeSelector";
+import HomeButton from "@/components/navigation/HomeButton";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
@@ -64,19 +65,26 @@ const CharacterCreationPage = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Навигация на главную 
-  const goToHomePage = () => {
+  // Навигация на главную - используем новую систему предотвращения багов
+  const goToHomePage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Показываем предупреждение, если процесс создания не завершен
     if (currentStep < steps.length - 1) {
       const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
       if (!confirmed) return;
     }
-    navigate('/');
+    
+    // Используем replace вместо push для оптимизации истории браузера
+    navigate('/', { replace: true });
   };
 
-  // Навигация в руководство игрока
-  const goToHandbook = () => {
-    navigate('/handbook');
+  // Навигация в руководство игрока с оптимизацией
+  const goToHandbook = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate('/handbook', { replace: true });
   };
   
   // Переход к последнему шагу (обзор персонажа)
@@ -108,14 +116,7 @@ const CharacterCreationPage = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="min-h-screen w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <Button 
-            onClick={goToHomePage} 
-            variant="outline" 
-            className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            На главную
-          </Button>
+          <HomeButton />
 
           <div className="flex items-center gap-2">
             <Button 

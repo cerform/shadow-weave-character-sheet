@@ -6,11 +6,16 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { PlayerDicePanel } from '@/components/character-sheet/PlayerDicePanel';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 export const FloatingDiceButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const { activeTheme } = useUserTheme();
+  
+  // Используем активную тему с запасным вариантом
+  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   const handleButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();

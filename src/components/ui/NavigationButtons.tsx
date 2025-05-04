@@ -2,12 +2,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Scroll, Map, Users, Book } from "lucide-react";
+import { BookOpen, Scroll, Map, Users, Book } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useDeviceType } from '@/hooks/use-mobile';
 import { useUserTheme } from '@/hooks/use-user-theme';
+import HomeButton from '@/components/navigation/HomeButton';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -36,10 +37,13 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
 
-  // Улучшенная функция для навигации с проверкой текущего маршрута
-  const goTo = (path: string) => {
+  // Оптимизированная функция для навигации
+  const handleNavigation = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Если мы уже на этой странице, ничего не делаем
     if (location.pathname === path) {
-      // Если мы уже на этой странице, ничего не делаем
       return;
     }
     
@@ -49,26 +53,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      <Button 
-        variant="outline" 
-        onClick={(e) => {
-          e.preventDefault(); // Предотвращаем стандартное поведение
-          goTo('/');
-        }}
-        className="flex items-center gap-2 font-semibold"
-        size={isMobile ? "sm" : "default"}
-        style={buttonStyle}
-      >
-        <Home className={isMobile ? "size-4" : "size-4"} />
-        {!isMobile ? "На главную" : ""}
-      </Button>
+      <HomeButton />
       
       <Button 
         variant="outline" 
-        onClick={(e) => {
-          e.preventDefault();
-          goTo('/handbook');
-        }}
+        onClick={(e) => handleNavigation(e, '/handbook')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -79,10 +68,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={(e) => {
-          e.preventDefault();
-          goTo('/spellbook');
-        }}
+        onClick={(e) => handleNavigation(e, '/spellbook')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -95,10 +81,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={(e) => {
-            e.preventDefault();
-            goTo('/dm/battle');
-          }}
+          onClick={(e) => handleNavigation(e, '/dm/battle')}
           className="flex items-center gap-2 font-semibold"
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}
@@ -110,10 +93,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={(e) => {
-          e.preventDefault();
-          goTo('/character-creation');
-        }}
+        onClick={(e) => handleNavigation(e, '/character-creation')}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -125,10 +105,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={(e) => {
-            e.preventDefault();
-            goTo('/dm-dashboard');
-          }}
+          onClick={(e) => handleNavigation(e, '/dm-dashboard')}
           className="flex items-center gap-2 font-semibold"
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}

@@ -29,16 +29,20 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
-  // Оптимизированные обработчики для навигации
-  const handlePrevStep = (e: React.MouseEvent) => {
+  // Оптимизированные обработчики для навигации с явным предотвращением событий
+  const handlePrevStep = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!isFirstStep) {
       prevStep();
     }
   };
   
-  const handleNextStep = (e: React.MouseEvent) => {
+  const handleNextStep = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!isNextDisabled) {
       nextStep();
     }
