@@ -4,9 +4,9 @@ import cantrips from './cantrips';
 import level0 from './level0';
 import level1 from './level1';
 import level2 from './level2';
-import level3 from './level3';
-import level4 from './level4';
-import level4Part2 from './level4_part2';
+import { level3Spells as level3 } from './level3'; // Предположим, что экспорт именован
+import { level4Spells as level4 } from './level4';
+import { level4Part2 } from './level4_part2';
 import level4Part3 from './level4_part3';
 import level5 from './level5';
 import level6 from './level6';
@@ -22,9 +22,9 @@ export const spells: CharacterSpell[] = [
   ...level0,
   ...level1,
   ...(level2 || []),
-  ...(level3?.level3Spells || []),
-  ...(level4?.level4Spells || []),
-  ...(level4Part2?.level4Part2 || []),
+  ...(level3 || []),
+  ...(level4 || []),
+  ...(level4Part2 || []),
   ...(level4Part3 || []),
   ...(level5 || []),
   ...(level6 || []),

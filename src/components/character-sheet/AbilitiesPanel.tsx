@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/contexts/CharacterContext';
+import { useTheme } from '@/hooks/use-theme';
+import { Character } from '@/types/character';
 
 interface AbilitiesPanelProps {
   character: Character | null;

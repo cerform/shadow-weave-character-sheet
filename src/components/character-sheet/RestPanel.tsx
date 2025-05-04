@@ -1,8 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Character } from '@/types/character';
 import { Button } from "@/components/ui/button";
-import { Character } from '@/contexts/CharacterContext';
 
 export interface RestPanelProps {
   character: Character;

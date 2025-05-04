@@ -13,7 +13,7 @@ import HitPointsPanel from './HitPointsPanel';
 import FeaturesPanel from './FeaturesPanel';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 import EditCharacterButton from './EditCharacterButton';
 import RestPanel from "./RestPanel";
 import { SpellsTab } from './tabs/SpellsTab';

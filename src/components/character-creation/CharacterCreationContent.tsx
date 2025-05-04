@@ -1,4 +1,3 @@
-
 import React from 'react';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
@@ -58,8 +57,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 0: // Выбор расы
         return (
           <CharacterRaceSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
+            character={character as any} 
+            updateCharacter={updateCharacter as any}
             nextStep={nextStep}
             prevStep={prevStep}
           />

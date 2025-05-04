@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import SectionHeader from "@/components/ui/section-header";
 import { useTheme } from '@/hooks/use-theme';

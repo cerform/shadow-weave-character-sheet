@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/types/character';
+import { Character, CharacterSheet, CharacterSpell } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CharacterSpell } from '@/types/character';
 import { spells as allSpells } from '@/data/spells';
 
 interface SpellPanelProps {

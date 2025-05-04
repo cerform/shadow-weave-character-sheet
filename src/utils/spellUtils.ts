@@ -9,7 +9,7 @@ import { CharacterSpell, SpellData } from '@/types/character';
  */
 export const normalizeSpells = (
   spells: (string | CharacterSpell)[],
-  allSpells: CharacterSpell[]
+  allSpells: CharacterSpell[] = []
 ): SpellData[] => {
   if (!spells || !spells.length) return [];
 

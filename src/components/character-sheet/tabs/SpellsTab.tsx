@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
 import { safeJoin, normalizeSpells } from '@/utils/spellUtils';
 import SpellDescription from '../SpellDescription';
+import { spells as allSpells } from '@/data/spells';
 
 interface SpellsTabProps {
   character: any;
@@ -21,7 +22,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const [expandedSpells, setExpandedSpells] = useState<string[]>([]);
 
   // Ensure spells are in the correct format
-  const normalizedSpells = normalizeSpells(character?.spells || []);
+  const normalizedSpells = normalizeSpells(character?.spells || [], allSpells);
   
   // Group spells by level
   const spellsByLevel = React.useMemo(() => {

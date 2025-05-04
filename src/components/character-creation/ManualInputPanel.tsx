@@ -1,6 +1,7 @@
-
 import React from 'react';
 import { ABILITY_SCORE_CAPS } from '@/types/character';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 // Update the getMaxAbilityScore function:
 export const getMaxAbilityScore = (level?: number, maxAbilityScoreOverride?: number): number => {

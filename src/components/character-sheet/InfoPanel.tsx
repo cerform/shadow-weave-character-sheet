@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 
 interface InfoPanelProps {
   character: Character | null;

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLevelFeatures, LevelFeature } from '@/hooks/useLevelFeatures';
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet, Proficiencies } from '@/types/character';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -14,6 +14,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface LevelBasedFeaturesProps {
   character: CharacterSheet;
   updateCharacter: (updates: Partial<CharacterSheet>) => void;
+}
+
+// Добавим тип определения для функции updateFeatures:
+interface UpdateFeaturesFunction {
+  (character: CharacterSheet, features: string[]): void;
 }
 
 const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({

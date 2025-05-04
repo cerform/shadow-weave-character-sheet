@@ -16,7 +16,7 @@ export interface CharacterSheet {
   subclass?: string;
   level: number;
   abilities: AbilityScores;
-  proficiencies: string[]; // Строго string[]
+  proficiencies: string[];
   equipment: string[];
   spells: string[];
   features?: string[];
@@ -64,7 +64,7 @@ export interface AbilityScores {
   INT: number;
   WIS: number;
   CHA: number;
-  [key: string]: number; // Индексная сигнатура для доступа к свойствам по имени
+  [key: string]: number; // Добавляем индексную сигнатуру для доступа по строковому ключу
 }
 
 export interface CharacterSpell {
@@ -83,7 +83,7 @@ export interface CharacterSpell {
   higherLevels?: string;
   higherLevel?: string;
   classes?: string[] | string;
-  prepared?: boolean;
+  prepared: boolean; // Это свойство должно быть обязательным
   concentration?: boolean;
   ritual?: boolean;
   duration?: string;
@@ -125,7 +125,16 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24
 };
 
-// Тип Character для контекста
+// Добавляем тип Character, который расширяет CharacterSheet
 export interface Character extends CharacterSheet {
   features: string[];
+}
+
+// Добавляем интерфейс Proficiencies для совместимости
+export interface Proficiencies {
+  armor?: string[];
+  weapons?: string[];
+  tools?: string[];
+  languages?: string[];
+  [key: string]: string[] | undefined;
 }
