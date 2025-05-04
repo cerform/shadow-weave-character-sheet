@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getNumericModifier } from '@/utils/characterUtils';
@@ -110,7 +111,7 @@ export function useHitPoints({
           variant: "destructive"
         });
       }
-      // Проверка мгновенной см��рти
+      // Проверка мгновенной смерти
       else if (wasUnconscious && remainingDamage >= maxHp) {
         setDeathSaves({ successes: 0, failures: 3 }); // Мгновенная смерть
         
@@ -208,7 +209,7 @@ export function useHitPoints({
         timestamp: new Date()
       }, ...prev]);
     } else {
-      // Если персонаж уже на максиму����е здоровья
+      // Если персонаж уже на максимуме здоровья
       toast({
         title: "Лечение невозможно",
         description: "Персонаж уже имеет максимальное количество HP",
@@ -428,7 +429,7 @@ export function useHitPoints({
   const longRest = () => {
     const wasUnconscious = currentHp <= 0;
     setCurrentHp(maxHp);
-    setTempHp(0); // Временные хиты сбрасываются ��осле отдыха
+    setTempHp(0); // Временные хиты сбрасываются после отдыха
     
     if (wasUnconscious) {
       setIsUnconscious(false);
