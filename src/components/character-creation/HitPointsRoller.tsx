@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,16 +70,20 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     return hitDie + constitutionModifier;
   };
 
-  // Для каждого уровня после первого: кубик + модификатор Телосложения
+  // Рассчитываем общее количество HP на основе уровня и класса
   const calculateTotalHp = (diceRoll: number): number => {
-    const firstLevelHp = getFirstLevelHp();
+    // HP первого уровня всегда максимальное значение кубика + модификатор Телосложения
+    const firstLevelHp = hitDie + constitutionModifier;
     
     if (level === 1) {
       return firstLevelHp;
-    } else {
-      // Для уровней выше 1-го используем бросок кубика + модификатор Телосложения
-      return firstLevelHp + diceRoll + constitutionModifier;
-    }
+    } 
+    
+    // Для уровней 2+, добавляем результат броска + конституция для каждого уровня
+    // Бросаем количество кубиков равное (уровень - 1)
+    const additionalHp = diceRoll + (constitutionModifier * (level - 1));
+    
+    return firstLevelHp + additionalHp;
   };
 
   // Обработчик завершения броска кубика
@@ -97,9 +102,12 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     // Обработка результата броска выполнится в handleDiceRollComplete
   };
 
-  // Для текстового представления типа кубика
+  // Для текстового представления типа кубика и количества
   const getDiceText = (dieType: number): string => {
-    return `d${dieType}`;
+    if (level === 1) {
+      return `d${dieType} (максимум)`;
+    }
+    return `${level-1}d${dieType}`;
   };
 
   return (
@@ -147,6 +155,7 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
                   onRollComplete={handleDiceRollComplete}
                   hideControls={true}
                   themeColor={currentTheme.accent}
+                  diceCount={level > 1 ? level - 1 : 1}
                 />
               )}
               {rollState === 'waiting' && (
@@ -174,7 +183,7 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">
                   {level === 1 
                     ? `${hitDie} (максимум) + ${constitutionModifier} (модификатор Телосложения)`
-                    : `${getFirstLevelHp()} (1-й уровень) + ${diceValue} (бросок) + ${constitutionModifier} (модификатор)`
+                    : `${hitDie} (1-й уровень) + ${diceValue} (${level-1}d${hitDie}) + ${constitutionModifier * level} (${constitutionModifier} × ${level} уровней)`
                   }
                 </p>
               </div>
