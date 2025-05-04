@@ -1,9 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TokenHealthBarProps {
   currentHP: number;
   maxHP: number;
+  temporaryHP?: number;
   width?: number;
   showValue?: boolean;
 }
@@ -11,30 +13,49 @@ interface TokenHealthBarProps {
 const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   currentHP,
   maxHP,
+  temporaryHP = 0,
   width = 30,
   showValue = false
 }) => {
   // Защита от некорректных значений
   const safeCurrentHP = isNaN(currentHP) ? 0 : Math.max(0, currentHP);
   const safeMaxHP = isNaN(maxHP) || maxHP <= 0 ? 1 : maxHP;
+  const safeTempHP = isNaN(temporaryHP) ? 0 : Math.max(0, temporaryHP);
   
   // Для анимированного обновления используем локальное состояние с useEffect
   const [healthPercentage, setHealthPercentage] = useState(0);
-  const [displayedCurrentHP, setDisplayedCurrentHP] = useState(safeCurrentHP);
-  const [displayedMaxHP, setDisplayedMaxHP] = useState(safeMaxHP);
+  const [tempHealthPercentage, setTempHealthPercentage] = useState(0);
+  const [prevHealthPercentage, setPrevHealthPercentage] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // Обновляем локальное состояние при изменении props
   useEffect(() => {
-    setDisplayedCurrentHP(safeCurrentHP);
-    setDisplayedMaxHP(safeMaxHP);
-    
     // Расчет процента здоровья
-    const calculatedPercentage = safeMaxHP > 0 
+    const calculatedHealthPercentage = safeMaxHP > 0 
       ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) 
       : 0;
     
-    setHealthPercentage(calculatedPercentage);
-  }, [safeCurrentHP, safeMaxHP]);
+    // Расчет процента временного здоровья
+    const calculatedTempPercentage = safeMaxHP > 0 
+      ? Math.max(0, Math.min(100, (safeTempHP / safeMaxHP) * 100)) 
+      : 0;
+    
+    // Если значение здоровья изменилось, запускаем анимацию
+    if (healthPercentage !== calculatedHealthPercentage) {
+      setPrevHealthPercentage(healthPercentage);
+      setIsAnimating(true);
+      
+      // Останавливаем анимацию через короткий промежуток времени
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    setHealthPercentage(calculatedHealthPercentage);
+    setTempHealthPercentage(calculatedTempPercentage);
+  }, [safeCurrentHP, safeMaxHP, safeTempHP, healthPercentage]);
   
   // Определяем цвет полоски здоровья в зависимости от процента
   const getHealthColor = (percent: number) => {
@@ -51,19 +72,52 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
         className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden shadow-sm border border-black/30"
         style={{ width: `${width}px` }}
       >
-        <div 
+        {/* Основная полоса здоровья */}
+        <motion.div 
           className="h-full transition-all duration-300 rounded-full"
           style={{ 
             width: `${healthPercentage}%`, 
             backgroundColor: barColor,
             boxShadow: `0 0 5px ${barColor}`
           }}
+          initial={{ width: `${prevHealthPercentage}%` }}
+          animate={{ width: `${healthPercentage}%` }}
         />
+        
+        {/* Индикатор изменения здоровья */}
+        <AnimatePresence>
+          {isAnimating && (
+            <motion.div 
+              className={`absolute top-0 left-0 h-full ${currentHP < prevHealthPercentage ? 'bg-red-500/30' : 'bg-green-500/30'}`}
+              style={{ width: `${Math.max(healthPercentage, prevHealthPercentage)}%` }}
+              initial={{ opacity: 0.7 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+            />
+          )}
+        </AnimatePresence>
+        
+        {/* Полоса временного здоровья */}
+        {safeTempHP > 0 && (
+          <motion.div
+            className="absolute top-0 h-full bg-emerald-400/70"
+            style={{ 
+              left: `${healthPercentage}%`,
+              width: `${tempHealthPercentage}%`,
+              boxShadow: `0 0 5px rgba(52, 211, 153, 0.7)`
+            }}
+            initial={{ width: 0, opacity: 0.5 }}
+            animate={{ width: `${tempHealthPercentage}%`, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
       </div>
       
       {showValue && (
-        <div className="absolute -bottom-4 text-xs font-bold text-white text-shadow">
-          {displayedCurrentHP}/{displayedMaxHP}
+        <div className="absolute -bottom-4 text-xs font-bold text-white drop-shadow-md">
+          {safeCurrentHP}/{safeMaxHP}
+          {safeTempHP > 0 && <span className="text-emerald-400">(+{safeTempHP})</span>}
         </div>
       )}
     </div>
