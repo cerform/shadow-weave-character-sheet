@@ -1,10 +1,71 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet, Character as CharacterType } from '@/types/character';
+import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
 
 // Экспортируем тип Character для использования в других компонентах
-export type Character = CharacterType;
+export interface Character {
+  id?: string;
+  userId?: string;
+  name: string;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string;
+  subclass?: string;
+  level: number;
+  abilities: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  proficiencies: string[];
+  equipment: string[];
+  spells: CharacterSpell[] | string[];
+  languages: string[];
+  gender: string;
+  alignment: string;
+  background: string;
+  backstory: string;
+  appearance?: string;
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    value: string;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
+}
 
 // Интерфейс для контекста персонажей
 export interface CharacterContextType {
@@ -27,6 +88,16 @@ export const CharacterContext = createContext<CharacterContextType>({
   getUserCharacters: async () => [],
   deleteCharacter: async () => {},
 });
+
+// Функция для проверки, является ли объект CharacterSpell
+const isCharacterSpell = (obj: any): obj is CharacterSpell => {
+  return obj && typeof obj === 'object' && 'name' in obj && 'level' in obj;
+};
+
+// Функция для преобразования смешанного массива в массив строк
+const convertSpellsToStrings = (spells: (CharacterSpell | string)[]): string[] => {
+  return spells.map(spell => typeof spell === 'string' ? spell : spell.name);
+};
 
 // Провайдер контекста
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
@@ -58,16 +129,21 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       }
       
       // Преобразуем Character в CharacterSheet для сохранения
-      // Обновляем преобразование, чтобы type-check проходил успешно
       const charToSave: CharacterSheet = {
         ...updatedCharacter,
         backstory: updatedCharacter.backstory || "", 
         background: updatedCharacter.background || "",
+        // Конвертируем spells в массив CharacterSpell
+        spells: Array.isArray(updatedCharacter.spells) 
+          ? updatedCharacter.spells.map(spell => 
+              typeof spell === 'string' ? { name: spell, level: 0, description: '', school: '' } : spell
+            ) 
+          : [],
         // Преобразуем proficiencies в ожидаемый формат
         proficiencies: {
-          armor: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
-          weapons: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
-          tools: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
+          armor: [],
+          weapons: [],
+          tools: [],
           languages: updatedCharacter.languages || []
         }
       };
@@ -92,16 +168,6 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       
       // Преобразуем к типу Character
       const convertedCharacters = fetchedCharacters.map(c => {
-        // Преобразуем proficiencies в формат, ожидаемый типом Character
-        let proficienciesArray: string[] = [];
-        
-        if (c.proficiencies) {
-          const prof = c.proficiencies;
-          if (prof.armor) proficienciesArray = [...proficienciesArray, ...prof.armor];
-          if (prof.weapons) proficienciesArray = [...proficienciesArray, ...prof.weapons];
-          if (prof.tools) proficienciesArray = [...proficienciesArray, ...prof.tools];
-        }
-        
         return {
           ...c,
           backstory: c.backstory || "", // Убедимся, что backstory всегда есть
@@ -113,8 +179,9 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
             STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
             strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
           },
-          proficiencies: proficienciesArray,
+          proficiencies: [], // Исправлено
           equipment: c.equipment || [],
+          // Обрабатываем заклинания правильно
           spells: c.spells || [],
           languages: c.languages || []
         } as Character;

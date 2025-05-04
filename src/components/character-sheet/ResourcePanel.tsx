@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,35 +19,51 @@ import {
 } from "@/components/ui/dialog";
 
 interface ResourcePanelProps {
-  character: Character;
-  updateCharacter: (updates: Partial<Character>) => void;
+  character?: Character;
+  updateCharacter?: (updates: Partial<Character>) => void;
+  currentHp?: number;
+  maxHp?: number;
+  onHpChange?: (newHp: number) => void;
 }
 
-const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacter }) => {
+const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
+  character, 
+  updateCharacter,
+  currentHp: propCurrentHp,
+  maxHp: propMaxHp,
+  onHpChange
+}) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   // Состояние для текущих хитов
-  const [currentHp, setCurrentHp] = useState(character.currentHp || character.maxHp || 0);
+  const [currentHp, setCurrentHp] = useState(propCurrentHp || character?.currentHp || character?.maxHp || 0);
   // Состояние для временных хитов
-  const [temporaryHp, setTemporaryHp] = useState(character.temporaryHp || 0);
+  const [temporaryHp, setTemporaryHp] = useState(character?.temporaryHp || 0);
   // Состояние для кубиков хитов
-  const [hitDiceUsed, setHitDiceUsed] = useState(character.hitDice?.used || 0);
+  const [hitDiceUsed, setHitDiceUsed] = useState(character?.hitDice?.used || 0);
   
   // Состояние для диалога смерти
   const [deathSaveDialogOpen, setDeathSaveDialogOpen] = useState(false);
   // Состояние для успешных спасбросков от смерти
-  const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(character.deathSaves?.successes || 0);
+  const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(character?.deathSaves?.successes || 0);
   // Состояние для проваленных спасбросков от смерти
-  const [deathSaveFailures, setDeathSaveFailures] = useState(character.deathSaves?.failures || 0);
+  const [deathSaveFailures, setDeathSaveFailures] = useState(character?.deathSaves?.failures || 0);
   // Состояние для диалога броска кубика хитов
   const [hitDiceDialogOpen, setHitDiceDialogOpen] = useState(false);
   // Результат броска кубика хитов
   const [hitDiceRollResult, setHitDiceRollResult] = useState<number | null>(null);
+  // Состояние для отображения результата броска кубика
+  const [showDiceResult, setShowDiceResult] = useState(false);
+  // Состояние для результата броска кубика
+  const [diceResult, setDiceResult] = useState<any>(null);
+  
   // Максимальное значение хитов
-  const maxHp = character.maxHp || 10;
+  const maxHp = propMaxHp || character?.maxHp || 10;
   // Кубик хитов (зависит от класса)
   const hitDiceType = useMemo(() => {
+    if (!character) return "d8";
+    
     switch(character.class) {
       case "Варвар": return "d12";
       case "Воин":
@@ -63,22 +80,30 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
       case "Чародей": return "d6";
       default: return "d8";
     }
-  }, [character.class]);
+  }, [character?.class]);
   
   // Модификатор телосложения для восстановления хитов
   const conModifier = useMemo(() => {
+    if (!character?.abilities) return 0;
     const con = character.abilities?.CON || character.abilities?.constitution || 10;
     return Math.floor((con - 10) / 2);
-  }, [character.abilities]);
+  }, [character?.abilities]);
   
   // Обновление состояния при изменении персонажа
   useEffect(() => {
-    setCurrentHp(character.currentHp !== undefined ? character.currentHp : character.maxHp || 0);
-    setTemporaryHp(character.temporaryHp || 0);
-    setHitDiceUsed(character.hitDice?.used || 0);
-    setDeathSaveSuccesses(character.deathSaves?.successes || 0);
-    setDeathSaveFailures(character.deathSaves?.failures || 0);
-  }, [character]);
+    if (propCurrentHp !== undefined) {
+      setCurrentHp(propCurrentHp);
+    } else if (character?.currentHp !== undefined) {
+      setCurrentHp(character.currentHp);
+    } else if (character?.maxHp !== undefined) {
+      setCurrentHp(character.maxHp);
+    }
+    
+    setTemporaryHp(character?.temporaryHp || 0);
+    setHitDiceUsed(character?.hitDice?.used || 0);
+    setDeathSaveSuccesses(character?.deathSaves?.successes || 0);
+    setDeathSaveFailures(character?.deathSaves?.failures || 0);
+  }, [character, propCurrentHp]);
   
   // Расчет процента оставшихся хитов
   const healthPercentage = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
@@ -137,15 +162,24 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
     setCurrentHp(newCurrentHp);
     setTemporaryHp(newTemporaryHp);
     
-    // Обновляем персонажа в контексте
-    updateCharacter({
-      currentHp: newCurrentHp,
-      temporaryHp: newTemporaryHp
-    });
+    // Вызываем пропс onHpChange если он передан
+    if (onHpChange) {
+      onHpChange(newCurrentHp);
+    }
+    
+    // Обновляем персонажа в контексте, если есть функция updateCharacter
+    if (updateCharacter && character) {
+      updateCharacter({
+        currentHp: newCurrentHp,
+        temporaryHp: newTemporaryHp
+      });
+    }
   };
   
   // Обработчик броска кубика хитов
   const handleHitDiceRoll = () => {
+    if (!character) return;
+    
     // Проверяем, остались ли неиспользованные кубики хитов
     if (hitDiceUsed >= (character.hitDice?.total || character.level || 1)) {
       toast({
@@ -164,6 +198,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
   
   // Обработчик завершения броска кубика хитов
   const onHitDiceRollComplete = (result: number) => {
+    if (!character || !updateCharacter) return;
+    
     // Рассчитываем восстановление хитов: результат броска + модификатор телосложения
     const healAmount = Math.max(1, result + conModifier); // Минимум 1 хит
     setHitDiceRollResult(healAmount);
@@ -193,6 +229,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
   
   // Обработчик добавления временных хитов
   const addTemporaryHp = (amount: number) => {
+    if (!updateCharacter || !character) return;
+    
     const newTemporaryHp = temporaryHp + amount;
     setTemporaryHp(newTemporaryHp);
     
@@ -203,6 +241,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
   
   // Обработчик сброса временных хитов
   const resetTemporaryHp = () => {
+    if (!updateCharacter || !character) return;
+    
     setTemporaryHp(0);
     
     updateCharacter({
@@ -212,6 +252,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
   
   // Обработчик спасброска от смерти
   const handleDeathSave = (result: number) => {
+    if (!updateCharacter || !character) return;
+    
     let newSuccesses = deathSaveSuccesses;
     let newFailures = deathSaveFailures;
     
@@ -276,6 +318,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
   
   // Обработчик воскрешения персонажа
   const reviveCharacter = (hp: number = 1) => {
+    if (!updateCharacter || !character) return;
+    
     setCurrentHp(hp);
     setDeathSaveSuccesses(0);
     setDeathSaveFailures(0);
@@ -295,9 +339,14 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
     });
   };
   
+  // Функция броска кубика
+  const rollDie = (sides: number): number => {
+    return Math.floor(Math.random() * sides) + 1;
+  };
+  
   // Обработчик использования зелья лечения
   const handleHealingPotion = () => {
-    if (!character) return;
+    if (!character || !updateCharacter) return;
     
     const diceValue = "d4" as const; // Изменяем тип на допустимый
     const rolls = [];
@@ -420,32 +469,34 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
       </Card>
       
       {/* Кубики хитов */}
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-bold flex items-center">
-            <Dices className="w-5 h-5 mr-2 text-amber-500" />
-            Кубики хитов
-          </h3>
-          <div className="text-sm">
-            {(character.hitDice?.total || character.level || 1) - hitDiceUsed} / {character.hitDice?.total || character.level || 1}
+      {character && (
+        <Card className="p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-bold flex items-center">
+              <Dices className="w-5 h-5 mr-2 text-amber-500" />
+              Кубики хитов
+            </h3>
+            <div className="text-sm">
+              {(character.hitDice?.total || character.level || 1) - hitDiceUsed} / {character.hitDice?.total || character.level || 1}
+            </div>
           </div>
-        </div>
-        
-        <Progress 
-          value={((character.hitDice?.total || character.level || 1) - hitDiceUsed) / (character.hitDice?.total || character.level || 1) * 100} 
-          className="h-2 mb-3" 
-        />
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleHitDiceRoll}
-          disabled={hitDiceUsed >= (character.hitDice?.total || character.level || 1)}
-          className="w-full bg-amber-500/10 hover:bg-amber-500/20"
-        >
-          Использовать кубик хитов ({hitDiceType})
-        </Button>
-      </Card>
+          
+          <Progress 
+            value={((character.hitDice?.total || character.level || 1) - hitDiceUsed) / (character.hitDice?.total || character.level || 1) * 100} 
+            className="h-2 mb-3" 
+          />
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleHitDiceRoll}
+            disabled={hitDiceUsed >= (character.hitDice?.total || character.level || 1)}
+            className="w-full bg-amber-500/10 hover:bg-amber-500/20"
+          >
+            Использовать кубик хитов ({hitDiceType})
+          </Button>
+        </Card>
+      )}
       
       {/* Диалог спасбросков от смерти */}
       <Dialog open={deathSaveDialogOpen} onOpenChange={setDeathSaveDialogOpen}>
@@ -540,7 +591,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
               <div className="text-center mt-2">
                 <p className="text-lg font-bold">Восстановлено: {hitDiceRollResult} HP</p>
                 <p className="text-sm text-muted-foreground">
-                  Осталось кубиков хитов: {(character.hitDice?.total || character.level || 1) - (hitDiceUsed + 1)} / {character.hitDice?.total || character.level || 1}
+                  Осталось кубиков хитов: {(character?.hitDice?.total || character?.level || 1) - (hitDiceUsed + 1)} / {character?.hitDice?.total || character?.level || 1}
                 </p>
               </div>
             )}

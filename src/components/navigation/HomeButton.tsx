@@ -19,7 +19,7 @@ const HomeButton: React.FC<HomeButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { activeTheme, currentThemeStyles } = useUserTheme();
+  const { activeTheme } = useUserTheme();
   
   const handleNavigateHome = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,7 +41,6 @@ const HomeButton: React.FC<HomeButtonProps> = ({
       variant={variant}
       className={`flex items-center gap-2 ${className}`}
       onClick={handleNavigateHome}
-      style={{ borderColor: currentThemeStyles?.accent }}
     >
       <Home className="size-4" />
       {showText && "На главную"}

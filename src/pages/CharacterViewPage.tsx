@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import NotFound from './NotFound';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { useCharacter } from '@/contexts/CharacterContext';
+import HomeButton from '@/components/navigation/HomeButton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const CharacterViewPage: React.FC = () => {
   const { character, characters } = useCharacter();
@@ -17,11 +19,21 @@ const CharacterViewPage: React.FC = () => {
   }
 
   return (
-    <div>
-      {selectedCharacter ? (
-        <CharacterSheet character={selectedCharacter} />
+    <div className="container mx-auto px-4 py-8">
+      {!selectedCharacter ? (
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Персонаж не выбран</span>
+              <HomeButton />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Выберите персонажа или создайте нового.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <p>Выберите персонажа или создайте нового.</p>
+        <CharacterSheet character={selectedCharacter} />
       )}
     </div>
   );

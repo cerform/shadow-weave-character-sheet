@@ -1,81 +1,113 @@
 
 import { CharacterSpell } from '@/types/character';
-import { cantrips } from './cantrips';
-import { level1 } from './level1';
-import { level2 } from './level2';
-import { level3 } from './level3';
-import { level4 } from './level4';
-import { level5 } from './level5';
-import { level6 } from './level6';
-import { level7 } from './level7';
-import { level8 } from './level8';
-import { level9 } from './level9';
 
-// Объединяем все заклинания в один массив
-export const spells: CharacterSpell[] = [
-  ...cantrips,
-  ...level1,
-  ...level2,
-  ...level3,
-  ...level4,
-  ...level5,
-  ...level6,
-  ...level7,
-  ...level8,
-  ...level9
-];
+// Функция проверки, является ли значение строкой
+const isString = (value: unknown): value is string => typeof value === 'string';
 
-// Функция для проверки, существует ли указанное заклинание
-export const spellExists = (name: string): boolean => {
-  return spells.some(spell => spell.name.toLowerCase() === name.toLowerCase());
-};
-
-// Функция для получения всех заклинаний
-export const getAllSpells = (): CharacterSpell[] => {
-  return spells;
-};
-
-// Функция для получения деталей заклинания по имени
-export const getSpellDetails = (name: string): CharacterSpell | undefined => {
-  // Проверяем, является ли name строкой
-  if (typeof name !== 'string') {
-    // Если name - объект типа CharacterSpell, возвращаем его
-    if (name && typeof name === 'object' && 'name' in name && 'level' in name) {
-      return name as CharacterSpell;
-    }
-    return undefined;
-  }
-  
-  // Ищем заклинание по имени
-  return spells.find(spell => spell.name.toLowerCase() === name.toLowerCase());
-};
-
-// Функция для безопасного доступа к свойству classes с проверкой типа
-export const getSpellClasses = (spell: CharacterSpell): string[] => {
-  if (!spell.classes) {
-    return [];
-  }
-  
-  if (Array.isArray(spell.classes)) {
-    return spell.classes;
-  }
-  
-  if (typeof spell.classes === 'string') {
-    return spell.classes.split(', ').map(c => c.trim());
-  }
-  
-  return [];
+// Функция проверки, является ли значение массивом строк
+const isStringArray = (value: unknown): value is string[] => {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
 };
 
 // Функция для фильтрации заклинаний по классу
-export const getSpellsByClass = (className: string): CharacterSpell[] => {
+export const filterSpellsByClass = (
+  spells: CharacterSpell[], 
+  characterClass: string[]
+): CharacterSpell[] => {
+  if (!characterClass.length) return spells;
+  
   return spells.filter(spell => {
-    const classes = getSpellClasses(spell);
-    return classes.some(c => c.toLowerCase().includes(className.toLowerCase()));
+    if (!spell.classes) return false;
+    
+    if (isString(spell.classes)) {
+      return characterClass.includes(spell.classes);
+    }
+    
+    if (isStringArray(spell.classes)) {
+      return spell.classes.some(cls => characterClass.includes(cls));
+    }
+    
+    return false;
   });
 };
 
 // Функция для фильтрации заклинаний по уровню
-export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  return spells.filter(spell => spell.level === level);
+export const filterSpellsByLevel = (
+  spells: CharacterSpell[], 
+  maxLevel: number
+): CharacterSpell[] => {
+  return spells.filter(spell => spell.level <= maxLevel);
+};
+
+// Пример тестовых заклинаний
+export const sampleSpells: CharacterSpell[] = [
+  {
+    id: 1,
+    name: "Волшебная рука",
+    level: 0,
+    school: "Преобразование",
+    description: "Появляется призрачная парящая рука, которую вы можете контролировать. Она может манипулировать объектами, открывать незапертые двери и т.д.",
+    castingTime: "1 действие",
+    range: "30 футов",
+    components: "В, С",
+    duration: "1 минута",
+    classes: ["Бард", "Волшебник", "Колдун", "Чародей"]
+  },
+  {
+    id: 2,
+    name: "Огненный снаряд",
+    level: 1,
+    school: "Воплощение",
+    description: "Вы бросаете сгусток огня. Совершите дальнобойную атаку заклинанием. При попадании цель получает урон огнём 1d10.",
+    castingTime: "1 действие",
+    range: "120 футов",
+    components: "В, С",
+    duration: "Мгновенная",
+    classes: ["Волшебник", "Чародей"]
+  },
+  {
+    id: 3,
+    name: "Лечащее слово",
+    level: 1,
+    school: "Исцеление",
+    description: "Существо, которое вы можете видеть, восстанавливает количество хитов, равное 1d4 + ваш модификатор базовой характеристики.",
+    castingTime: "1 бонусное действие",
+    range: "60 футов",
+    components: "В",
+    duration: "Мгновенная",
+    classes: ["Бард", "Друид", "Жрец"]
+  }
+];
+
+// Получение всех доступных заклинаний
+export const getAllSpells = (): CharacterSpell[] => {
+  // В реальности здесь был бы импорт из базы данных или API
+  return [...sampleSpells];
+};
+
+// Поиск заклинания по имени
+export const getSpellByName = (name: string): CharacterSpell | undefined => {
+  return getAllSpells().find(spell => 
+    spell.name.toLowerCase() === name.toLowerCase()
+  );
+};
+
+// Функция для получения детальной информации о заклинании
+export const getSpellDetails = (spellNameOrObj: string | CharacterSpell): CharacterSpell | undefined => {
+  if (typeof spellNameOrObj === 'object') {
+    return spellNameOrObj;
+  }
+  
+  return getSpellByName(spellNameOrObj);
+};
+
+// Экспорт заклинаний и функций
+export const spells = getAllSpells();
+export default {
+  getAllSpells,
+  getSpellByName,
+  getSpellDetails,
+  filterSpellsByClass,
+  filterSpellsByLevel,
+  spells
 };

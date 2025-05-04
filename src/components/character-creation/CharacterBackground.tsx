@@ -1,175 +1,274 @@
 
-import React, { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from "@/components/ui/select";
-import NavigationButtons from './NavigationButtons';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { backgrounds } from '@/data/backgrounds';
+import { alignments } from '@/data/alignments';
+import NavigationButtons from '@/components/ui/NavigationButtons';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useToast } from '@/hooks/use-toast';
 
-interface BackgroundOption {
-  value: string;
-  label: string;
+interface BackgroundInfo {
+  name: string;
   description: string;
+  featureTitle: string;
+  featureDescription: string;
+  proficiencies: string[];
+  characteristicsDescription: string;
 }
 
-interface CharacterBackgroundProps {
-  character: {
-    background: string;
-    backstory: string;
-    personalityTraits?: string;
-    ideals?: string;
-    bonds?: string;
-    flaws?: string;
+const CharacterBackground = ({ prevStep, nextStep }: { prevStep: () => void, nextStep: () => void }) => {
+  const { character, updateCharacter } = useCharacterCreation();
+  const { toast } = useToast();
+  const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || '');
+  const [ideals, setIdeals] = useState(character.ideals || '');
+  const [bonds, setBonds] = useState(character.bonds || '');
+  const [flaws, setFlaws] = useState(character.flaws || '');
+  const [backstory, setBackstory] = useState(character.backstory || '');
+  const [alignment, setAlignment] = useState(character.alignment || '');
+  const [background, setBackground] = useState(character.background || '');
+  const [appearance, setAppearance] = useState(character.appearance || '');
+  
+  const selectedBackground: BackgroundInfo | undefined = backgrounds.find((bg) => bg.name === background);
+  
+  const handleBackgroundChange = (value: string) => {
+    setBackground(value);
+    
+    // Если выбран новый бэкграунд, устанавливаем его профессии
+    const bgInfo = backgrounds.find((bg) => bg.name === value);
+    if (bgInfo) {
+      // Добавляем профессии бэкграунда к существующим
+      const existingProficiencies = character.proficiencies || [];
+      
+      // Фильтруем только уникальные профессии
+      const uniqueProficiencies = [
+        ...existingProficiencies,
+        ...bgInfo.proficiencies
+      ].filter((value, index, self) => self.indexOf(value) === index);
+      
+      updateCharacter({
+        proficiencies: uniqueProficiencies
+      });
+      
+      // Показываем уведомление о добавленных профессиях
+      toast({
+        title: "Профессии обновлены",
+        description: `Добавлены профессии: ${bgInfo.proficiencies.join(", ")}`
+      });
+    }
   };
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-}
-
-const backgroundOptions: BackgroundOption[] = [
-  { value: "Артист", label: "Артист", description: "Вы выросли во всеобщем внимании. Вы знаете, как развлечь публику и доставить ей удовольствие." },
-  { value: "Беспризорник", label: "Беспризорник", description: "Вы выросли на улицах, умея выживать благодаря хитрости, смелости и удаче." },
-  { value: "Благородный", label: "Благородный", description: "Вы знаете, что такое богатство, власть и привилегии." },
-  { value: "Гильдейский ремесленник", label: "Гильдейский ремесленник", description: "Вы — член гильдии ремесленников, опытный в определённом поле, тесно связанный с другими ремесленниками." },
-  { value: "Мудрец", label: "Мудрец", description: "Вы провели годы за изучением мультивселенной." },
-  { value: "Народный герой", label: "Народный герой", description: "Вы были простолюдином, пока что-то не произошло, отметив вас для великих свершений." },
-  { value: "Отшельник", label: "Отшельник", description: "Вы жили в уединении — либо в закрытой общине, либо совершенно одни." },
-  { value: "Преступник", label: "Преступник", description: "Вы опытный преступник, имеющий историю нарушения законов." },
-  { value: "Прислужник", label: "Прислужник", description: "Вы провели свою молодость под властью могущественного хозяина, которому служили с преданностью." },
-  { value: "Солдат", label: "Солдат", description: "Войны были частью вашей жизни с самой юности." },
-  { value: "Чужеземец", label: "Чужеземец", description: "Вы чужие в этих краях. Вы путешествуете издалека, и поэтому особенные." },
-  { value: "Шарлатан", label: "Шарлатан", description: "Вы знаете, как говорить с людьми и манипулировать ими, чтобы они поступали так, как вы хотите." },
-];
-
-const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
-  character,
-  updateCharacter,
-  nextStep,
-  prevStep
-}) => {
-  const [selectedBackground, setSelectedBackground] = useState(character.background || "");
-  const [backstory, setBackstory] = useState(character.backstory || "");
-  const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || "");
-  const [ideals, setIdeals] = useState(character.ideals || "");
-  const [bonds, setBonds] = useState(character.bonds || "");
-  const [flaws, setFlaws] = useState(character.flaws || "");
-
-  // Обновляем локальное состояние при изменении пропсов
-  useEffect(() => {
-    setSelectedBackground(character.background || "");
-    setBackstory(character.backstory || "");
-    setPersonalityTraits(character.personalityTraits || "");
-    setIdeals(character.ideals || "");
-    setBonds(character.bonds || "");
-    setFlaws(character.flaws || "");
-  }, [character]);
-
-  // Обработчик для сохранения и перехода к следующему шагу
-  const handleSaveAndContinue = () => {
+  
+  const handleSave = () => {
+    if (!background) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, выберите предысторию персонажа",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!alignment) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, выберите мировоззрение персонажа",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!backstory || backstory.length < 10) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, добавьте историю персонажа (минимум 10 символов)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     updateCharacter({
-      background: selectedBackground,
-      backstory, // Теперь обязательное поле, уже не опциональное
+      background,
+      alignment,
       personalityTraits,
       ideals,
       bonds,
-      flaws
+      flaws,
+      backstory,
+      appearance
     });
+    
+    toast({
+      title: "Предыстория сохранена",
+      description: "Информация о предыстории персонажа обновлена"
+    });
+    
     nextStep();
   };
-
+  
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-6">Предыстория персонажа</h2>
+    <div className="container mx-auto py-8 px-4">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>История персонажа</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Колонка для основных выборов */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="background">Предыстория</Label>
+                <Select
+                  value={background}
+                  onValueChange={handleBackgroundChange}
+                >
+                  <SelectTrigger id="background">
+                    <SelectValue placeholder="Выберите предысторию" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {backgrounds.map((bg) => (
+                      <SelectItem key={bg.name} value={bg.name}>
+                        {bg.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="alignment">Мировоззрение</Label>
+                <Select
+                  value={alignment}
+                  onValueChange={setAlignment}
+                >
+                  <SelectTrigger id="alignment">
+                    <SelectValue placeholder="Выберите мировоззрение" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alignments.map((align) => (
+                      <SelectItem key={align.value} value={align.value}>
+                        {align.label} - {align.value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="appearance">Внешний вид</Label>
+                <Textarea
+                  id="appearance"
+                  placeholder="Опишите внешность персонажа"
+                  value={appearance}
+                  onChange={(e) => setAppearance(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </div>
+            
+            {/* Колонка для детальной информации о предыстории */}
+            <div>
+              {selectedBackground ? (
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="description">
+                    <AccordionTrigger>Описание предыстории</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm">{selectedBackground.description}</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="feature">
+                    <AccordionTrigger>Умение: {selectedBackground.featureTitle}</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm">{selectedBackground.featureDescription}</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="proficiencies">
+                    <AccordionTrigger>Владения</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="text-sm list-disc pl-5">
+                        {selectedBackground.proficiencies.map((prof, idx) => (
+                          <li key={idx}>{prof}</li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              ) : (
+                <div className="text-center p-4">
+                  <p className="text-muted-foreground">Выберите предысторию для просмотра деталей</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Характеристики персонажа */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="personalityTraits">Черты характера</Label>
+              <Textarea
+                id="personalityTraits"
+                placeholder="Опишите черты характера вашего персонажа"
+                value={personalityTraits}
+                onChange={(e) => setPersonalityTraits(e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="ideals">Идеалы</Label>
+              <Textarea
+                id="ideals"
+                placeholder="Опишите идеалы и ценности вашего персонажа"
+                value={ideals}
+                onChange={(e) => setIdeals(e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bonds">Привязанности</Label>
+              <Textarea
+                id="bonds"
+                placeholder="Опишите привязанности вашего персонажа"
+                value={bonds}
+                onChange={(e) => setBonds(e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="flaws">Слабости</Label>
+              <Textarea
+                id="flaws"
+                placeholder="Опишите недостатки и слабости вашего персонажа"
+                value={flaws}
+                onChange={(e) => setFlaws(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          {/* История персонажа */}
+          <div className="mt-6 space-y-2">
+            <Label htmlFor="backstory">История персонажа</Label>
+            <Textarea
+              id="backstory"
+              placeholder="Опишите историю жизни вашего персонажа"
+              value={backstory}
+              onChange={(e) => setBackstory(e.target.value)}
+              rows={6}
+            />
+          </div>
+        </CardContent>
+      </Card>
       
-      <div>
-        <Label htmlFor="background">Выберите предысторию</Label>
-        <Select
-          value={selectedBackground}
-          onValueChange={(value) => setSelectedBackground(value)}
-        >
-          <SelectTrigger className="w-full mb-2">
-            <SelectValue placeholder="Выберите предысторию" />
-          </SelectTrigger>
-          <SelectContent>
-            {backgroundOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {selectedBackground && (
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
-            {backgroundOptions.find(bg => bg.value === selectedBackground)?.description || ""}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="personalityTraits">Черты характера</Label>
-        <Textarea
-          id="personalityTraits"
-          className="h-24"
-          placeholder="Опишите черты характера вашего персонажа"
-          value={personalityTraits}
-          onChange={(e) => setPersonalityTraits(e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="ideals">Идеалы</Label>
-        <Textarea
-          id="ideals"
-          placeholder="Что движет вашим персонажем? Какие принципы он отстаивает?"
-          value={ideals}
-          onChange={(e) => setIdeals(e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="bonds">Привязанности</Label>
-        <Textarea
-          id="bonds"
-          placeholder="Что связывает вашего персонажа с людьми, местами или идеями?"
-          value={bonds}
-          onChange={(e) => setBonds(e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="flaws">Слабости</Label>
-        <Textarea
-          id="flaws"
-          placeholder="Какие недостатки или страхи есть у вашего персонажа?"
-          value={flaws}
-          onChange={(e) => setFlaws(e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="backstory">История персонажа</Label>
-        <Textarea
-          id="backstory"
-          className="h-36"
-          placeholder="Опишите прошлое вашего персонажа"
-          value={backstory}
-          onChange={(e) => setBackstory(e.target.value)}
-        />
-      </div>
-      
-      <NavigationButtons 
-        prevStep={prevStep} 
-        nextStep={handleSaveAndContinue}
-        nextDisabled={!selectedBackground || !backstory}
-      />
+      <NavigationButtons prevStep={prevStep} nextStep={handleSave} nextDisabled={!background || !alignment || !backstory} />
     </div>
   );
 };

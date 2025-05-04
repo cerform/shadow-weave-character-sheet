@@ -1,37 +1,21 @@
 
 import { CharacterSpell } from '@/types/character';
+import { Dispatch, SetStateAction } from 'react';
 
-// Интерфейс для данных о заклинании
-export interface SpellData {
-  id?: string | number;
-  name: string;
-  name_en?: string;
-  level: number;
-  school: string;
+// Типы для работы с заклинаниями
+export interface SpellData extends CharacterSpell {
+  id: number;
+  isRitual: boolean;
+  isConcentration: boolean;
   castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string | string[];
-  classes?: string[] | string;
-  source?: string;
-  isRitual?: boolean;
-  isConcentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
-  toString?: () => string; // Добавляем toString как опциональный метод
+  toString: () => string;
 }
 
-// Интерфейс для возвращаемого значения хука useSpellbook
+// Тип для возвращаемого значения хука useSpellbook
 export interface UseSpellbookReturn {
   filteredSpells: SpellData[];
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: Dispatch<SetStateAction<string>>;
   activeLevel: number[];
   selectedSpell: SpellData | null;
   isModalOpen: boolean;
@@ -49,6 +33,25 @@ export interface UseSpellbookReturn {
   clearFilters: () => void;
   getBadgeColor: (level: number) => string;
   getSchoolBadgeColor: (school: string) => string;
-  formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  formatClasses: (classes: string[] | string) => string;
+  importSpellsFromText: (text: string) => CharacterSpell[];
+}
+
+// Тип для краткой информации о заклинании
+export interface SpellSummary {
+  id: number;
+  name: string;
+  level: number;
+  school: string;
+  isRitual: boolean;
+  isConcentration: boolean;
+  castingTime: string;
+}
+
+// Тип для фильтров заклинаний
+export interface SpellFilters {
+  searchTerm: string;
+  level: number[];
+  school: string[];
+  class: string[];
 }

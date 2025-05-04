@@ -21,6 +21,14 @@ export interface CharacterSpell {
   toString?: () => string;
 }
 
+// Добавляем метод toString для преобразования CharacterSpell в строку
+CharacterSpell.prototype = {
+  ...CharacterSpell.prototype,
+  toString: function() {
+    return this.name;
+  }
+};
+
 export interface ClassFeature {
   name: string;
   description: string;
@@ -152,25 +160,6 @@ export interface CharacterSheet {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
-}
-
-// Требования для мультиклассирования
-export interface MulticlassRequirements {
-  [className: string]: { 
-    [ability: string]: number 
-  };
-}
-
-// Интерфейс для подклассов персонажей
-export interface CharacterSubclass {
-  name: string;
-  className: string;
-  description: string;
-  features: {
-    level: number;
-    name: string;
-    description: string;
-  }[];
 }
 
 // Расширяем интерфейс для Character в контексте персонажей

@@ -1,4 +1,5 @@
 
+// Импортируем все необходимые компоненты и хуки
 import React, { useState, useContext } from 'react';
 import { CharacterContext, Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { RestPanel } from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
 import LevelUpPanel from './LevelUpPanel';
 import { SkillsPanel } from './SkillsPanel';
+import HomeButton from '@/components/navigation/HomeButton';
 
 interface CharacterSheetProps {
   character: Character | null;
@@ -178,7 +180,14 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
     >
       <div className="container mx-auto py-4 px-2">
     
-        <NavigationButtons className="mb-4" />
+        <div className="flex justify-between items-center mb-4">
+          <HomeButton />
+          <NavigationButtons 
+            prevStep={() => navigate(-1)}
+            nextStep={() => {}} 
+            nextDisabled={true}
+          />
+        </div>
         
         <div className="flex justify-end mb-4">
           <ThemeSelector />
@@ -238,11 +247,15 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-6">
           {/* Левая панель с ресурсами вверху */}
           <div className="md:col-span-3 space-y-4">
-            <ResourcePanel 
-              currentHp={character?.currentHp || 0}
-              maxHp={character?.maxHp || 0}
-              onHpChange={handleHpChange}
-            />
+            {character && (
+              <ResourcePanel 
+                character={character} 
+                updateCharacter={updateCharacter}
+                currentHp={character?.currentHp} 
+                maxHp={character?.maxHp}
+                onHpChange={handleHpChange}
+              />
+            )}
             
             <StatsPanel character={character} />
             
