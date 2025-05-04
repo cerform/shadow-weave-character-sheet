@@ -45,42 +45,52 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   });
 
   return (
-    <div className="flex overflow-x-auto pb-4 hide-scrollbar">
-      <div className="flex space-x-2 min-w-full">
-        {visibleSteps.map((step) => {
+    <div className="relative w-full mb-8">
+      {/* Прогресс-бар */}
+      <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-700 -translate-y-1/2 rounded-full z-0"></div>
+      
+      {/* Шаги */}
+      <div className="flex justify-between relative z-10">
+        {visibleSteps.map((step, index) => {
           // Вычисляем, является ли шаг активным или завершенным
           const isActive = step.id === currentStep;
           const isCompleted = step.id < currentStep;
-
+          const isLast = index === visibleSteps.length - 1;
+          
           return (
             <TooltipProvider key={step.id}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    className={cn(
-                      "min-w-[130px] flex-shrink-0 transition-all",
-                      isActive
-                        ? "bg-primary text-white shadow-lg scale-105 font-medium"
-                        : isCompleted
-                        ? "bg-primary/20 text-white hover:bg-primary/30"
-                        : "bg-muted text-white hover:bg-muted/80"
-                    )}
-                    style={{
-                      backgroundColor: isActive
-                        ? currentTheme.accent
-                        : isCompleted
-                        ? `${currentTheme.accent}30`
-                        : undefined,
-                      color: "#FFFFFF", // Всегда белый текст для контраста
-                      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Тень для улучшения читаемости
-                    }}
-                    onClick={() => setCurrentStep(step.id)}
-                  >
-                    {step.name}
-                  </Button>
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => setCurrentStep(step.id)}
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center relative z-10 transition-all",
+                        isActive
+                          ? "bg-yellow-500 text-black shadow-lg scale-125 font-bold shadow-yellow-500/30"
+                          : isCompleted
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      )}
+                      aria-label={step.name}
+                    >
+                      {isCompleted ? "✓" : index + 1}
+                    </button>
+                    <span 
+                      className={cn(
+                        "mt-2 text-xs text-center font-medium hidden md:block",
+                        isActive ? "text-yellow-300" : isCompleted ? "text-green-400" : "text-gray-400"
+                      )}
+                    >
+                      {step.name}
+                    </span>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{step.description}</p>
+                  <div className="text-center">
+                    <p className="font-bold">{step.name}</p>
+                    <p className="text-xs">{step.description}</p>
+                  </div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

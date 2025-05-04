@@ -67,12 +67,21 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
     }
   }, [config?.isMagicClass, config?.hasSubclasses]);
 
+  // Вычисляем процент завершения создания персонажа
+  const calculateProgress = (): number => {
+    if (visibleSteps.length === 0) return 0;
+    const currentIndex = visibleSteps.findIndex(step => step.id === currentStepId);
+    if (currentIndex === -1) return 0;
+    return Math.round(((currentIndex + 1) / visibleSteps.length) * 100);
+  };
+
   return {
     currentStep: currentStepId,
     nextStep,
     prevStep,
     setCurrentStep,
-    totalSteps: steps.length,
-    visibleSteps
+    totalSteps: visibleSteps.length,
+    visibleSteps,
+    progress: calculateProgress()
   };
 };

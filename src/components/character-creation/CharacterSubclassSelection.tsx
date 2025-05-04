@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { subclassData } from "@/data/subclasses";
+import { Book, ShieldCheck, Swords, Award } from "lucide-react";
 
 // Компонент для улучшенного отображения особенностей подклассов
 const FeatureItem = ({ title, level, description }: { title: string; level: number; description: string }) => (
@@ -53,14 +54,17 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   };
   
   const availableSubclasses = getAvailableSubclasses();
-
-  // Удаляем автоматический переход к следующему шагу, если нет подклассов
-  // Вместо этого будем обрабатывать это в CharacterClassSelection
   
   const handleNext = () => {
     if (selectedSubclass || availableSubclasses.length === 0) {
       if (selectedSubclass) {
         updateCharacter({ subclass: selectedSubclass });
+        
+        // Показываем уведомление о выборе архетипа
+        toast({
+          title: "Архетип выбран",
+          description: `Вы выбрали: ${selectedSubclass}`,
+        });
       }
       nextStep();
     } else {
@@ -98,6 +102,21 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
     );
   }
 
+  // Получаем иконку для архетипа в зависимости от класса
+  const getIconForSubclass = (subclass: string) => {
+    const baseClass = character.class.toLowerCase();
+    
+    if (baseClass.includes('паладин') || baseClass.includes('жрец')) {
+      return <ShieldCheck className="h-6 w-6 text-yellow-400" />;
+    } else if (baseClass.includes('воин') || baseClass.includes('варвар')) {
+      return <Swords className="h-6 w-6 text-red-400" />;
+    } else if (baseClass.includes('волшебник') || baseClass.includes('чародей') || baseClass.includes('колдун')) {
+      return <Book className="h-6 w-6 text-blue-400" />;
+    }
+    
+    return <Award className="h-6 w-6 text-purple-400" />;
+  };
+  
   return (
     <div className="space-y-8">
       <SectionHeader
@@ -105,47 +124,75 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
         description="Специализация определяет уникальные способности и развитие вашего персонажа."
       />
       
-      <SelectionCardGrid>
-        {availableSubclasses.map((subclass) => (
-          <SelectionCard
-            key={subclass}
-            title={subclass}
-            description={subclassData[character.class]?.[subclass]?.description || ""}
-            selected={selectedSubclass === subclass}
-            onClick={() => setSelectedSubclass(subclass)}
-            // Принудительно задаем светлый текст
-            titleClassName="text-yellow-300 text-xl" 
-            descriptionClassName="text-white/90"
-            className={`${selectedSubclass === subclass ? 'border-yellow-500' : 'border-primary/30'} bg-black/70`}
-          />
-        ))}
-      </SelectionCardGrid>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {availableSubclasses.map((subclass) => {
+          const isSelected = selectedSubclass === subclass;
+          const iconElement = getIconForSubclass(subclass);
+          
+          return (
+            <div 
+              key={subclass}
+              className={`
+                p-6 rounded-lg shadow-lg cursor-pointer transform transition-all duration-300
+                ${isSelected ? 'scale-105 border-2 border-yellow-500 bg-gradient-to-b from-gray-900/90 to-black/90' : 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800'}
+              `}
+              onClick={() => setSelectedSubclass(subclass)}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className={`
+                    rounded-full p-2 flex-shrink-0
+                    ${isSelected ? 'bg-yellow-500/20' : 'bg-gray-700/50'}
+                  `}
+                >
+                  {iconElement}
+                </div>
+                <h3 className={`font-bold text-xl ${isSelected ? 'text-yellow-300' : 'text-white'}`}>
+                  {subclass}
+                </h3>
+              </div>
+              <p className="text-gray-300 text-sm mb-4">
+                {subclassData[character.class]?.[subclass]?.description?.substring(0, 100)}...
+              </p>
+              <div className={`
+                text-xs px-2 py-1 rounded-full inline-block
+                ${isSelected ? 'bg-yellow-600/30 text-yellow-300 border border-yellow-600/50' : 'bg-gray-700 text-gray-300'} 
+              `}>
+                {isSelected ? 'Выбрано' : 'Нажмите для выбора'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
       
       {selectedSubclass && subclassInfo && (
-        <Card className="mt-8 border-primary/30 bg-black/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl text-white">{selectedSubclass}</CardTitle>
+        <Card className="mt-8 border-primary/30 bg-gradient-to-b from-gray-900/90 to-black/95 shadow-lg">
+          <CardHeader className="border-b border-gray-700 pb-4">
+            <div className="flex items-center gap-3">
+              {getIconForSubclass(selectedSubclass)}
+              <CardTitle className="text-2xl text-yellow-300">{selectedSubclass}</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-2 mb-4 bg-black/50">
+          <CardContent className="pt-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-2 mb-4 bg-black/50 border border-gray-700">
                 <TabsTrigger 
                   value="description" 
-                  className="data-[state=active]:text-white data-[state=active]:bg-primary data-[state=inactive]:text-white/80"
+                  className="data-[state=active]:bg-blue-900/60 data-[state=active]:text-white data-[state=inactive]:text-gray-400"
                 >
                   Описание
                 </TabsTrigger>
                 <TabsTrigger 
                   value="features" 
-                  className="data-[state=active]:text-white data-[state=active]:bg-primary data-[state=inactive]:text-white/80"
+                  className="data-[state=active]:bg-purple-900/60 data-[state=active]:text-white data-[state=inactive]:text-gray-400"
                 >
                   Особенности
                 </TabsTrigger>
               </TabsList>
               
-              <ScrollArea className="h-64 rounded-md border p-4 bg-black/40">
+              <ScrollArea className="h-64 rounded-md border border-gray-700 p-4 bg-black/40">
                 <TabsContent value="description" className="mt-0">
-                  <p className="text-white">{subclassInfo.description}</p>
+                  <p className="text-white leading-relaxed">{subclassInfo.description}</p>
                 </TabsContent>
                 
                 <TabsContent value="features" className="mt-0 space-y-4">

@@ -127,97 +127,91 @@ const CharacterCreationPage = () => {
 
   return (
     <div 
-      className="p-6 min-h-screen"
+      className="min-h-screen w-full bg-cover bg-center bg-fixed"
       style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
-        color: currentTheme.textColor
+        backgroundImage: 'url("/lovable-uploads/43dc3cd0-ed20-4d92-8064-6ce14d96c90b.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          onClick={goToHomePage} 
-          variant="outline" 
-          className="flex items-center gap-2"
-          style={{
-            borderColor: currentTheme.accent,
-            color: currentTheme.textColor
-          }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          На главную
-        </Button>
-
-        <div className="flex items-center gap-2">
+      <div className="min-h-screen w-full backdrop-blur-sm backdrop-brightness-50 p-6">
+        <div className="flex justify-between items-center mb-4">
           <Button 
-            onClick={goToHandbook} 
+            onClick={goToHomePage} 
             variant="outline" 
-            className="flex items-center gap-2"
-            style={{
-              borderColor: currentTheme.accent,
-              color: currentTheme.textColor
-            }}
+            className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
           >
-            <BookOpen className="h-4 w-4" />
-            Руководство игрока
+            <ArrowLeft className="h-4 w-4" />
+            На главную
           </Button>
+
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={goToHandbook} 
+              variant="outline" 
+              className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
+            >
+              <BookOpen className="h-4 w-4" />
+              Руководство игрока
+            </Button>
+            
+            {/* Only show theme selector in small screens here */}
+            <div className="block sm:hidden">
+              <ThemeSelector />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <h1 
+            className="text-3xl font-bold mb-8 text-center text-white"
+          >
+            Создание персонажа
+          </h1>
           
-          {/* Only show theme selector in small screens here */}
-          <div className="block sm:hidden">
+          {/* Show theme selector on larger screens in a more prominent position */}
+          <div className="hidden sm:block mb-8">
             <ThemeSelector />
           </div>
         </div>
-      </div>
 
-      <div className="flex justify-between items-center">
-        <h1 
-          className="text-3xl font-bold mb-8 text-center"
-          style={{ color: currentTheme.textColor }}
-        >
-          Создание персонажа
-        </h1>
-        
-        {/* Show theme selector on larger screens in a more prominent position */}
-        <div className="hidden sm:block mb-8">
-          <ThemeSelector />
+        <div className="mb-8">
+          <CreationStepDisplay 
+            steps={steps} 
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            isMagicClass={isMagicClass()}
+            hasSubclasses={hasSubclassesForClass()}
+          />
         </div>
-      </div>
 
-      <div className="mb-8">
-        <CreationStepDisplay 
-          steps={steps} 
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-          isMagicClass={isMagicClass()}
-          hasSubclasses={hasSubclassesForClass()}
-        />
-      </div>
-
-      <div 
-        className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"
-        style={{ 
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
-          borderColor: currentTheme.accent,
-          boxShadow: `0 0 10px ${currentTheme.accent}30`
-        }}
-      >
-        <CharacterCreationContent 
-          currentStep={currentStep}
-          character={character}
-          updateCharacter={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          abilitiesMethod={abilitiesMethod}
-          setAbilitiesMethod={handleSetAbilitiesMethod}
-          diceResults={diceResults}
-          getModifier={getModifierString}
-          rollAllAbilities={rollAllAbilities}
-          rollSingleAbility={handleRollSingleAbility}
-          abilityScorePoints={adjustedAbilityScorePoints}
-          isMagicClass={isMagicClass()}
-          rollsHistory={rollsHistory}
-          onLevelChange={handleLevelChange}
-          maxAbilityScore={maxAbilityScore}
-        />
+        <div 
+          className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5)'
+          }}
+        >
+          <CharacterCreationContent 
+            currentStep={currentStep}
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+            abilitiesMethod={abilitiesMethod}
+            setAbilitiesMethod={handleSetAbilitiesMethod}
+            diceResults={diceResults}
+            getModifier={getModifierString}
+            rollAllAbilities={rollAllAbilities}
+            rollSingleAbility={handleRollSingleAbility}
+            abilityScorePoints={adjustedAbilityScorePoints}
+            isMagicClass={isMagicClass()}
+            rollsHistory={rollsHistory}
+            onLevelChange={handleLevelChange}
+            maxAbilityScore={maxAbilityScore}
+          />
+        </div>
       </div>
     </div>
   );

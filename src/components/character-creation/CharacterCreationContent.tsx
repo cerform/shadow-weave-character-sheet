@@ -4,15 +4,11 @@ import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
 import CharacterClassSelection from './CharacterClassSelection';
 import CharacterAbilityScores from './CharacterAbilityScores';
-import CharacterMulticlassing from './CharacterMulticlassing';
 import CharacterBackground from './CharacterBackground';
 import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
-import CharacterLevelSelection from './CharacterLevelSelection';
-import CharacterLanguagesSelection from './CharacterLanguagesSelection';
 import CharacterSubclassSelection from './CharacterSubclassSelection';
-import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { CharacterSheet } from '@/types/character.d';
 
 // Импорт даннных о подклассах для проверки их наличия
@@ -92,17 +88,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 3: // Выбор уровня
-        return (
-          <CharacterLevelSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            onLevelChange={onLevelChange}
-          />
-        );
-      case 4: // Характеристики
+      case 3: // Характеристики
         return (
           <CharacterAbilityScores 
             character={character} 
@@ -120,23 +106,31 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 5: // Здоровье (HP)
+      case 4: // Предыстория
         return (
-          <CharacterHitPointsCalculator
-            character={character}
+          <CharacterBackground 
+            character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
         );
-      case 6: // Мультиклассирование
+      case 5: // Выбор снаряжения
         return (
-          <CharacterMulticlassing 
+          <CharacterEquipmentSelection 
             character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
-            getModifier={getModifier}
+          />
+        );
+      case 6: // Детали персонажа
+        return (
+          <CharacterBasicInfo 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
           />
         );
       case 7: // Выбор заклинаний
@@ -155,43 +149,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Выбор снаряжения
-        return (
-          <CharacterEquipmentSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 9: // Выбор языков
-        return (
-          <CharacterLanguagesSelection 
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 10: // Выбор личностных черт
-        return (
-          <CharacterBasicInfo 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 11: // Предыстория
-        return (
-          <CharacterBackground 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 12: // Просмотр и завершение
+      case 8: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}
