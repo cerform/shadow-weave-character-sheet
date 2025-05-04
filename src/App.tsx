@@ -22,6 +22,7 @@ import HandbookPage from './pages/HandbookPage';
 import CharactersListPage from './pages/CharactersListPage';
 import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
+import CharacterViewPage from './pages/CharacterViewPage';
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
@@ -57,6 +58,7 @@ const App = () => {
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/sheet" element={<CharacterSheetPage />} />
                       <Route path="/character-creation" element={<CharacterCreationPage />} />
+                      <Route path="/character/:id" element={<CharacterViewPage />} />
                       <Route path="/join" element={<JoinSessionPage />} />
                       <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
                       <Route path="/dm-dashboard" element={<DMDashboardPage />} />

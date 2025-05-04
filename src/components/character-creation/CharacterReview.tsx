@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Save, Eye } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -26,9 +27,29 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   const saveCharacter = async () => {
     setIsSaving(true);
     try {
-      // Здесь должна быть логика сохранения персонажа в базу данных
-      // Для демонстрации будем считать, что персонаж сохраняется с id
-      const savedCharacterId = character.id || 'new-character-id';
+      // Присваиваем ID персонажу, если его нет
+      const characterId = character.id || uuidv4();
+      
+      // Обновляем персонажа с ID
+      if (!character.id) {
+        updateCharacter({ id: characterId });
+      }
+      
+      // Сохраняем в локальное хранилище
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
+      
+      // Если персонаж с таким ID уже существует, заменяем его
+      const existingIndex = characters.findIndex((c: any) => c.id === characterId);
+      
+      if (existingIndex >= 0) {
+        characters[existingIndex] = { ...character, id: characterId };
+      } else {
+        characters.push({ ...character, id: characterId });
+      }
+      
+      localStorage.setItem('dnd-characters', JSON.stringify(characters));
+      localStorage.setItem('last-selected-character', characterId);
       
       toast({
         title: "Персонаж создан",
@@ -37,7 +58,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       
       // Переходим к списку персонажей с небольшой задержкой
       setTimeout(() => {
-        navigate('/characters');
+        navigate('/character/' + characterId);
       }, 500);
       
     } catch (error) {
@@ -54,15 +75,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
 
   // Функция для просмотра персонажа
   const viewCharacter = () => {
-    // Если у персонажа есть ID, переходим к его просмотру
-    if (character.id) {
-      navigate(`/character/${character.id}`);
+    // Пробуем сначала сохранить персонажа, если у него нет ID
+    if (!character.id) {
+      saveCharacter();
     } else {
-      toast({
-        title: "Персонаж не сохранен",
-        description: "Сначала сохраните персонажа, чтобы просмотреть его лист.",
-        variant: "destructive"
-      });
+      // Если у персонажа есть ID, переходим к его просмотру
+      navigate(`/character/${character.id}`);
     }
   };
 
@@ -140,17 +158,15 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
           disableNext={isSaving}
         />
         
-        {character.id && (
-          <Button 
-            onClick={viewCharacter}
-            variant="outline"
-            className="ml-4 bg-primary/10 border-primary/20 hover:bg-primary/20"
-            style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
-          >
-            <Eye className="mr-2 size-4" />
-            Просмотр листа персонажа
-          </Button>
-        )}
+        <Button 
+          onClick={viewCharacter}
+          variant="outline"
+          className="ml-4 bg-primary/10 border-primary/20 hover:bg-primary/20"
+          style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+        >
+          <Eye className="mr-2 size-4" />
+          Просмотр листа персонажа
+        </Button>
       </div>
     </div>
   );
