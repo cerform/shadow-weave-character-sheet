@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ResourcePanel } from './ResourcePanel';
 import { useCharacter } from '@/contexts/CharacterContext';
@@ -9,7 +10,7 @@ import { CharacterSheet } from '@/types/character';
  * Enhanced Resource Panel that manages health state internally
  * with context awareness for character data
  */
-export const EnhancedResourcePanel = () => {
+export const EnhancedResourcePanel: React.FC = () => {
   const { character, updateCharacter } = useCharacter();
   
   // Состояния для хранения HP
@@ -22,9 +23,9 @@ export const EnhancedResourcePanel = () => {
   useEffect(() => {
     if (character) {
       // Базовая формула для расчета Max HP
-      const conMod = character.abilities?.constitution 
-        ? getNumericModifier(character.abilities.constitution)
-        : (character.abilities?.CON ? getNumericModifier(character.abilities.CON) : 0);
+      const conMod = character.abilities?.CON 
+        ? getNumericModifier(character.abilities.CON)
+        : (character.abilities?.constitution ? getNumericModifier(character.abilities.constitution) : 0);
       
       const level = character.level || 1;
       const calculatedMaxHP = Math.max(1, 10 + (level - 1) * 6 + level * conMod);
@@ -36,7 +37,7 @@ export const EnhancedResourcePanel = () => {
         // Обновляем персонажа
         updateCharacter({
           maxHp: calculatedMaxHP
-        } as Partial<CharacterSheet>);
+        } as any);
       } else {
         setMaxHitPoints(character.maxHp);
       }
@@ -60,9 +61,9 @@ export const EnhancedResourcePanel = () => {
     initialCurrentHp: currentHitPoints,
     initialMaxHp: maxHitPoints,
     initialTempHp: character?.temporaryHp || 0,
-    constitutionModifier: character?.abilities?.constitution 
-      ? getNumericModifier(character.abilities.constitution)
-      : (character?.abilities?.CON ? getNumericModifier(character.abilities.CON) : 0),
+    constitutionModifier: character?.abilities?.CON 
+      ? getNumericModifier(character.abilities.CON)
+      : (character?.abilities?.constitution ? getNumericModifier(character.abilities.constitution) : 0),
     onHealthChange: (hp, maxHp, tempHp) => {
       // Обновляем локальное состояние
       setCurrentHitPoints(hp);
@@ -72,7 +73,7 @@ export const EnhancedResourcePanel = () => {
         currentHp: hp,
         maxHp: maxHp,
         temporaryHp: tempHp
-      } as Partial<CharacterSheet>);
+      } as any);
     }
   });
   

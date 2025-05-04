@@ -45,7 +45,8 @@ export const useCharacterCreation = () => {
     bonds: "",
     flaws: "",
     appearance: "",
-    backstory: ""
+    backstory: "",
+    xp: 0  // Add xp field with default value
   });
 
   const updateCharacter = (updates: Partial<CharacterSheet>) => {

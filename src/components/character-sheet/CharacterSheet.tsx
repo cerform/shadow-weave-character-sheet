@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, UserPlus, Save, Download, Trash2, BookOpen } from 'lucide-react';
 import CharacterEditModal from './CharacterEditModal';
 import PDFGenerator from './PDFGenerator';
-import EnhancedResourcePanel from './EnhancedResourcePanel';
+import { EnhancedResourcePanel } from './EnhancedResourcePanel';
 import EnhancedLevelUpPanel from './EnhancedLevelUpPanel';
 import FeaturesTab from './FeaturesTab';
 import EquipmentPanel from './EquipmentPanel';

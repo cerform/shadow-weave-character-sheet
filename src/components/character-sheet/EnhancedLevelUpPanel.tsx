@@ -9,7 +9,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useContext } from 'react';
-import { CharacterSheet } from '@/types/character';
 
 export function EnhancedLevelUpPanel() {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -74,11 +73,9 @@ export function EnhancedLevelUpPanel() {
     // Имитация обработки повышения уровня
     setTimeout(() => {
       // Обновляем уровень персонажа
-      const updatedCharacter: Partial<CharacterSheet> = {
+      updateCharacter({
         level: nextLevel
-      };
-      
-      updateCharacter(updatedCharacter);
+      });
       
       // Отображаем уведомление о повышении уровня
       toast({
@@ -95,7 +92,7 @@ export function EnhancedLevelUpPanel() {
     if (!character) return;
     
     const newXP = (character.xp || 0) + amount;
-    updateCharacter({ xp: newXP });
+    updateCharacter({ xp: newXP } as any);
     
     toast({
       title: "Опыт получен",
