@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import HomeButton from '@/components/navigation/HomeButton';
 
 interface NavigationButtonsProps {
@@ -30,7 +30,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
-  const navigate = useNavigate();
   
   const handlePrevStep = () => {
     if (!isFirstStep) {

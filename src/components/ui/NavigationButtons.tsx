@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { BookOpen, Scroll, Map, Users, Book } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeviceType } from '@/hooks/use-mobile';
 import HomeButton from '@/components/navigation/HomeButton';
+import { Link } from 'react-router-dom';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -14,16 +14,9 @@ interface NavigationButtonsProps {
 export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
   const { currentUser } = useAuth();
   const isDM = currentUser?.isDM;
-  const navigate = useNavigate();
   
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
-  
-  // Обработчики навигации
-  const handleNavigate = (path: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate(path);
-  };
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
@@ -31,55 +24,65 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={handleNavigate('/handbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
+        asChild
       >
-        <BookOpen className={isMobile ? "size-4" : "size-4"} />
-        {!isMobile ? "Руководство игрока" : ""}
+        <Link to="/handbook">
+          <BookOpen className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile ? "Руководство игрока" : ""}
+        </Link>
       </Button>
       
       <Button 
         variant="outline" 
-        onClick={handleNavigate('/spellbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
+        asChild
       >
-        <Scroll className={isMobile ? "size-4" : "size-4"} />
-        {!isMobile ? "Книга заклинаний" : ""}
+        <Link to="/spellbook">
+          <Scroll className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile ? "Книга заклинаний" : ""}
+        </Link>
       </Button>
       
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={handleNavigate('/dm/battle')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
+          asChild
         >
-          <Map className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Боевая карта" : ""}
+          <Link to="/dm/battle">
+            <Map className={isMobile ? "size-4" : "size-4"} />
+            {!isMobile ? "Боевая карта" : ""}
+          </Link>
         </Button>
       )}
       
       <Button 
         variant="outline" 
-        onClick={handleNavigate('/character-creation')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
+        asChild
       >
-        <Users className={isMobile ? "size-4" : "size-4"} />
-        {!isMobile ? "Создание персонажа" : ""}
+        <Link to="/character-creation">
+          <Users className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile ? "Создание персонажа" : ""}
+        </Link>
       </Button>
       
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={handleNavigate('/dm-dashboard')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
+          asChild
         >
-          <Book className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Панель Мастера" : ""}
+          <Link to="/dm-dashboard">
+            <Book className={isMobile ? "size-4" : "size-4"} />
+            {!isMobile ? "Панель Мастера" : ""}
+          </Link>
         </Button>
       )}
     </div>
