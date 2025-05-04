@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CharacterSheet, AbilityScores, SpellSlots, SorceryPoints } from '@/types/character';
+import { CharacterSheet, SpellSlots, SorceryPoints } from '@/types/character';
 
 // Define the Character type that aligns with CharacterSheet
 export type Character = CharacterSheet;
@@ -23,8 +23,11 @@ export interface AbilityScores {
 
 interface CharacterContextType {
   character: Character | null;
+  characters?: Character[];
   updateCharacter: (updates: Partial<Character>) => void;
   setCharacter: (character: Character) => void;
+  getUserCharacters?: () => Character[];
+  deleteCharacter?: (id: string) => Promise<boolean>;
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
@@ -35,6 +38,7 @@ export const CharacterContext = createContext<CharacterContextType>({
 
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [character, setCharacterState] = useState<Character | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
 
   // Load character from localStorage on initial render
   useEffect(() => {
@@ -70,8 +74,36 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCharacterState(newCharacter);
   };
 
+  // Add function to get user characters from localStorage
+  const getUserCharacters = (): Character[] => {
+    try {
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      if (savedCharacters) {
+        return JSON.parse(savedCharacters);
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to load characters:', error);
+      return [];
+    }
+  };
+
+  // Add function to delete character
+  const deleteCharacter = async (id: string): Promise<boolean> => {
+    try {
+      const currentChars = getUserCharacters();
+      const updatedChars = currentChars.filter(char => char.id !== id);
+      localStorage.setItem('dnd-characters', JSON.stringify(updatedChars));
+      setCharacters(updatedChars);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete character:', error);
+      return false;
+    }
+  };
+
   return (
-    <CharacterContext.Provider value={{ character, updateCharacter, setCharacter }}>
+    <CharacterContext.Provider value={{ character, characters, updateCharacter, setCharacter, getUserCharacters, deleteCharacter }}>
       {children}
     </CharacterContext.Provider>
   );

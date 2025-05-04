@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -56,6 +57,11 @@ export interface SorceryPoints {
   max: number;
 }
 
+// Интерфейс для сохранения владений спасбросками
+export interface SavingThrowProficiencies {
+  [key: string]: boolean;
+}
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string; 
@@ -97,6 +103,11 @@ export interface CharacterSheet {
   // Добавляем новые свойства для заклинаний и ресурсов
   spellSlots?: SpellSlots;
   sorceryPoints?: SorceryPoints;
+  // Добавляем владения спасбросками
+  savingThrowProficiencies?: SavingThrowProficiencies;
+  // Добавляем дату создания
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Для совместимости с существующим кодом

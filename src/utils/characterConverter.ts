@@ -78,6 +78,10 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
   }
   
+  // Создаем timestamp для createdAt и updatedAt, если они не указаны
+  const createdAt = sheet.createdAt || new Date().toISOString();
+  const updatedAt = sheet.updatedAt || new Date().toISOString();
+  
   return {
     id: sheet.id || "",
     userId: sheet.userId,
@@ -89,12 +93,18 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: sheet.level || 1,
     abilities: {
-      STR: sheet.abilities.strength || 10,
-      DEX: sheet.abilities.dexterity || 10,
-      CON: sheet.abilities.constitution || 10,
-      INT: sheet.abilities.intelligence || 10,
-      WIS: sheet.abilities.wisdom || 10,
-      CHA: sheet.abilities.charisma || 10
+      strength: sheet.abilities.STR || sheet.abilities.strength || 10,
+      dexterity: sheet.abilities.DEX || sheet.abilities.dexterity || 10,
+      constitution: sheet.abilities.CON || sheet.abilities.constitution || 10,
+      intelligence: sheet.abilities.INT || sheet.abilities.intelligence || 10,
+      wisdom: sheet.abilities.WIS || sheet.abilities.wisdom || 10,
+      charisma: sheet.abilities.CHA || sheet.abilities.charisma || 10,
+      STR: sheet.abilities.STR || sheet.abilities.strength || 10,
+      DEX: sheet.abilities.DEX || sheet.abilities.dexterity || 10,
+      CON: sheet.abilities.CON || sheet.abilities.constitution || 10,
+      INT: sheet.abilities.INT || sheet.abilities.intelligence || 10,
+      WIS: sheet.abilities.WIS || sheet.abilities.wisdom || 10,
+      CHA: sheet.abilities.CHA || sheet.abilities.charisma || 10
     },
     spells: spellsArray,
     spellSlots: spellSlots,
@@ -106,8 +116,9 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     proficiencies: sheet.proficiencies || [],
     maxHp: maxHp,
     currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    xp: sheet.xp || 0 // Добавляем xp
   };
 };
 
