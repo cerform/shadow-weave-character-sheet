@@ -63,7 +63,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
-  }, [config?.isMagicClass]);
+  }, [config?.isMagicClass, visibleSteps]);
 
   // Вычисляем процент завершения создания персонажа
   const calculateProgress = (): number => {

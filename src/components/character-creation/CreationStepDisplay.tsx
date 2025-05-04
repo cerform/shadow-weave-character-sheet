@@ -52,7 +52,6 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
           // Вычисляем, является ли шаг активным или завершенным
           const isActive = step.id === currentStep;
           const isCompleted = step.id < currentStep;
-          const isLast = index === visibleSteps.length - 1;
           
           return (
             <TooltipProvider key={step.id}>

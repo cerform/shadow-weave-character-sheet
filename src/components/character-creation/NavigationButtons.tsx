@@ -29,20 +29,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
-  // Упрощаем обработчики, удаляем preventDefault, который может вызывать проблемы
-  const handlePrev = () => {
-    prevStep();
-  };
-  
-  const handleNext = () => {
-    nextStep();
-  };
-  
   return (
     <div className="flex justify-between pt-8 mt-2">
       <Button 
         variant="outline" 
-        onClick={handlePrev}
+        onClick={prevStep}
         disabled={isFirstStep}
         className={`
           flex items-center gap-2 px-4 py-2 
@@ -58,7 +49,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {!hideNextButton && (
         <Button 
           variant="default" 
-          onClick={handleNext}
+          onClick={nextStep}
           disabled={isNextDisabled}
           className={`
             flex items-center gap-2 px-4 py-2

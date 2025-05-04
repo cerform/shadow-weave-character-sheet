@@ -41,7 +41,7 @@ const CharacterCreationPage = () => {
     console.log(`Уровень: ${character.level}, доступные очки: ${calculatedPoints}`);
   }, [character.level, baseAbilityScorePoints, getAbilityScorePointsByLevel]);
   
-  // Обновляем конфигурацию хука useCreationStep с актуальной информацией
+  // Обновляем конфигурацию хука useCreationStep с актуальной информацией о классе
   const { currentStep, nextStep, prevStep, setCurrentStep, visibleSteps } = useCreationStep({
     isMagicClass: isMagicClass()
   });
@@ -64,20 +64,18 @@ const CharacterCreationPage = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Навигация на главную - исправлено
+  // Навигация на главную 
   const goToHomePage = () => {
     // Показываем предупреждение, если процесс создания не завершен
     if (currentStep < steps.length - 1) {
       const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
       if (!confirmed) return;
     }
-    // Прямая навигация без preventDefault
     navigate('/');
   };
 
   // Навигация в руководство игрока
   const goToHandbook = () => {
-    // Прямая навигация без preventDefault
     navigate('/handbook');
   };
   
@@ -93,9 +91,7 @@ const CharacterCreationPage = () => {
 
   // Функция-обертка для обеспечения правильной сигнатуры в rollSingleAbility
   const handleRollSingleAbility = (index: number): { rolls: number[], total: number } => {
-    // Вызываем оригинальную функцию и преобразуем результат
     rollSingleAbility(index);
-    // Возвращаем обязательный формат данных
     return { 
       rolls: diceResults[index] || [0, 0, 0, 0], 
       total: diceResults[index]?.reduce((a, b) => a + b, 0) || 0 
@@ -183,7 +179,6 @@ const CharacterCreationPage = () => {
             abilityScorePoints={adjustedAbilityScorePoints}
             isMagicClass={isMagicClass()}
             rollsHistory={rollsHistory}
-            onLevelChange={handleLevelChange}
             maxAbilityScore={maxAbilityScore}
           />
         </div>

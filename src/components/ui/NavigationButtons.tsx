@@ -35,7 +35,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
 
-  // Простая функция навигации без preventDefault, так как это может вызывать проблемы
+  // Функции для навигации
   const goTo = (path: string) => {
     navigate(path);
   };

@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSheet } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/use-theme';
@@ -52,7 +52,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
     }
   };
 
-  // Функция для просмотра персонажа (исправлена, без preventDefault)
+  // Функция для просмотра персонажа
   const viewCharacter = () => {
     // Если у персонажа есть ID, переходим к его просмотру
     if (character.id) {
