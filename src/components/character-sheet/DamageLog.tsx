@@ -6,10 +6,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { DamageEvent } from '@/hooks/useDamageLog';
+import { HealthEvent } from '@/hooks/useHealthSystem';
+
+// Define the DamageEvent type for compatibility
+export interface DamageEvent {
+  id: string;
+  type: 'damage' | 'heal' | 'temp' | 'rest-short' | 'rest-long' | 'level-up' | 'level-down';
+  amount: number;
+  source?: string;
+  timestamp: Date;
+}
 
 interface DamageLogProps {
-  events: DamageEvent[];
+  events: HealthEvent[] | DamageEvent[];
   undoLastEvent: () => void;
   maxEvents?: number;
   className?: string;
@@ -50,7 +59,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
   };
   
   // Функция для получения иконки события
-  const getEventIcon = (type: 'damage' | 'heal' | 'temp') => {
+  const getEventIcon = (type: string) => {
     switch (type) {
       case 'damage':
         return <Minus className="h-4 w-4 mr-2 text-red-500" />;
@@ -58,11 +67,19 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return <Plus className="h-4 w-4 mr-2 text-green-500" />;
       case 'temp':
         return <Shield className="h-4 w-4 mr-2 text-emerald-400" />;
+      case 'rest-short':
+      case 'rest-long':
+        return <Shield className="h-4 w-4 mr-2 text-blue-500" />;
+      case 'level-up':
+      case 'level-down':
+        return <Plus className="h-4 w-4 mr-2 text-purple-500" />;
+      default:
+        return <Minus className="h-4 w-4 mr-2 text-gray-500" />;
     }
   };
   
   // Функция для получения описания события
-  const getEventDescription = (event: DamageEvent): string => {
+  const getEventDescription = (event: DamageEvent | HealthEvent): string => {
     switch (event.type) {
       case 'damage':
         return `Урон ${event.amount}`;
@@ -70,6 +87,16 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return `Лечение ${event.amount}`;
       case 'temp':
         return `Временные HP ${event.amount}`;
+      case 'rest-short':
+        return `Короткий отдых (+${event.amount} HP)`;
+      case 'rest-long':
+        return `Длинный отдых (полное восстановление)`;
+      case 'level-up':
+        return `Повышение уровня (+${event.amount} макс. HP)`;
+      case 'level-down':
+        return `Понижение уровня (-${event.amount} макс. HP)`;
+      default:
+        return `Неизвестное событие`;
     }
   };
   
@@ -99,7 +126,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
       <div className={`bg-black/30 rounded-lg p-1 ${expanded ? 'max-h-64' : 'max-h-32'}`}>
         <ScrollArea className="h-full">
           <AnimatePresence initial={false}>
-            {displayEvents.map((event, index) => (
+            {displayEvents.map((event) => (
               <motion.div
                 key={event.id}
                 className="flex items-center py-1 px-2 rounded-md mb-1 bg-black/30"
@@ -145,3 +172,5 @@ export const DamageLog: React.FC<DamageLogProps> = ({
     </div>
   );
 };
+
+export default DamageLog;

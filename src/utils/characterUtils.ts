@@ -1,71 +1,53 @@
 
 /**
- * Получение модификатора из значения характеристики
- * @param score Значение характеристики (от 1 до 30)
- * @returns Строка модификатора с + или - (например, "+3" или "-1")
- */
-export const getModifierFromAbilityScore = (score: number): string => {
-  const mod = Math.floor((score - 10) / 2);
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-};
-
-/**
- * Получение числового значения модификатора из значения характеристики
- * @param score Значение характеристики (от 1 до 30)
- * @returns Числовое значение модификатора (например, 3 или -1)
+ * Converts an ability score to its modifier
  */
 export const getNumericModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
 
 /**
- * Расчет максимальных хитов персонажа на основе класса, уровня и телосложения
- * @param className Название класса
- * @param level Уровень персонажа
- * @param constitutionScore Значение характеристики Телосложение
- * @returns Количество максимальных хитов
+ * Formats a modifier as a string with a + sign for positive values
  */
-export const calculateMaxHitPoints = (className: string, level: number, constitutionScore: number): number => {
-  // Базовое значение в зависимости от класса
-  const baseHpByClass: {[key: string]: number} = {
-    "Варвар": 12,
-    "Воин": 10,
-    "Паладин": 10,
-    "Следопыт": 10,
-    "Монах": 8,
-    "Плут": 8,
-    "Бард": 8,
-    "Жрец": 8,
-    "Друид": 8,
-    "Волшебник": 6,
-    "Чародей": 6,
-    "Колдун": 8
-  };
-  
-  const baseHp = baseHpByClass[className] || 8; // По умолчанию 8, если класс не найден
-  const constitutionMod = getNumericModifier(constitutionScore);
-  
-  // HP первого уровня = максимум хитов кости + модификатор телосложения
-  let maxHp = baseHp + constitutionMod;
-  
-  // Для каждого уровня выше первого добавляем среднее значение кости хитов + модификатор телосложения
-  if (level > 1) {
-    maxHp += ((baseHp / 2 + 1) + constitutionMod) * (level - 1);
-  }
-  
-  return Math.max(1, Math.round(maxHp)); // Минимум 1 хит
+export const getModifierString = (modifier: number): string => {
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };
 
 /**
- * Определяет, является ли класс магическим
- * @param className Название класса
- * @returns true если класс является заклинателем
+ * Calculates the proficiency bonus based on character level
  */
-export const isMagicClass = (className: string): boolean => {
-  const magicClasses = [
-    "Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун", "Чернокнижник",
-    "Паладин", "Следопыт"
-  ];
+export const getProficiencyBonus = (level: number): number => {
+  return Math.ceil(1 + (level / 4));
+};
+
+/**
+ * Gets the hit die type based on character class
+ */
+export const getHitDieType = (characterClass: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
+  const hitDice: Record<string, "d4" | "d6" | "d8" | "d10" | "d12"> = {
+    "Варвар": "d12",
+    "Воин": "d10",
+    "Паладин": "d10",
+    "Следопыт": "d10",
+    "Монах": "d8",
+    "Плут": "d8",
+    "Бард": "d8",
+    "Жрец": "d8",
+    "Друид": "d8",
+    "Колдун": "d8",
+    "Чернокнижник": "d8",
+    "Волшебник": "d6",
+    "Чародей": "d6"
+  };
   
-  return magicClasses.includes(className);
+  return hitDice[characterClass] || "d8";
+};
+
+/**
+ * Gets the hit die value based on character class
+ */
+export const getHitDieValue = (characterClass: string): number => {
+  const hitDieType = getHitDieType(characterClass);
+  const dieValue = parseInt(hitDieType.substring(1), 10);
+  return dieValue;
 };

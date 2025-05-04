@@ -1,132 +1,83 @@
 
-import React, { useContext } from 'react';
-import { Card } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { CharacterContext } from '@/contexts/CharacterContext';
-import { Badge } from "@/components/ui/badge";
 
 interface SkillsPanelProps {
-  character?: any;
+  character: any;
 }
 
-export const SkillsPanel = ({ character }: SkillsPanelProps) => {
+export const SkillsPanel: React.FC<SkillsPanelProps> = ({ character }) => {
   const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  const { updateCharacter } = useContext(CharacterContext);
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  // Функция для вычисления модификатора характеристики
-  const getModifier = (score: number) => {
-    const mod = Math.floor((score - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
+  // Get character skills and proficiency bonus
+  const skills = character?.skills || [];
+  const proficiencyBonus = Math.ceil(1 + (character?.level || 1) / 4);
+  
+  // Map abilities to skills
+  const skillMap = {
+    acrobatics: { ability: 'dexterity', label: 'Акробатика' },
+    animalHandling: { ability: 'wisdom', label: 'Обращение с животными' },
+    arcana: { ability: 'intelligence', label: 'Магия' },
+    athletics: { ability: 'strength', label: 'Атлетика' },
+    deception: { ability: 'charisma', label: 'Обман' },
+    history: { ability: 'intelligence', label: 'История' },
+    insight: { ability: 'wisdom', label: 'Проницательность' },
+    intimidation: { ability: 'charisma', label: 'Запугивание' },
+    investigation: { ability: 'intelligence', label: 'Расследование' },
+    medicine: { ability: 'wisdom', label: 'Медицина' },
+    nature: { ability: 'intelligence', label: 'Природа' },
+    perception: { ability: 'wisdom', label: 'Восприятие' },
+    performance: { ability: 'charisma', label: 'Выступление' },
+    persuasion: { ability: 'charisma', label: 'Убеждение' },
+    religion: { ability: 'intelligence', label: 'Религия' },
+    sleightOfHand: { ability: 'dexterity', label: 'Ловкость рук' },
+    stealth: { ability: 'dexterity', label: 'Скрытность' },
+    survival: { ability: 'wisdom', label: 'Выживание' }
   };
-  
-  // Список всех навыков и связанных с ними характеристик
-  const skills = [
-    { name: 'Акробатика', ability: 'DEX', rus: 'Акробатика' },
-    { name: 'Анализ', ability: 'INT', rus: 'Анализ' },
-    { name: 'Атлетика', ability: 'STR', rus: 'Атлетика' },
-    { name: 'Восприятие', ability: 'WIS', rus: 'Восприятие' },
-    { name: 'Выживание', ability: 'WIS', rus: 'Выживание' },
-    { name: 'Выступление', ability: 'CHA', rus: 'Выступление' },
-    { name: 'Запугивание', ability: 'CHA', rus: 'Запугивание' },
-    { name: 'История', ability: 'INT', rus: 'История' },
-    { name: 'Ловкость рук', ability: 'DEX', rus: 'Ловкость рук' },
-    { name: 'Магия', ability: 'INT', rus: 'Магия' },
-    { name: 'Медицина', ability: 'WIS', rus: 'Медицина' },
-    { name: 'Обман', ability: 'CHA', rus: 'Обман' },
-    { name: 'Природа', ability: 'INT', rus: 'Природа' },
-    { name: 'Проницательность', ability: 'WIS', rus: 'Проницательность' },
-    { name: 'Религия', ability: 'INT', rus: 'Религия' },
-    { name: 'Скрытность', ability: 'DEX', rus: 'Скрытность' },
-    { name: 'Убеждение', ability: 'CHA', rus: 'Убеждение' },
-    { name: 'Уход за животными', ability: 'WIS', rus: 'Уход за животными' }
-  ];
 
-  // Получить модификатор навыка
-  const getSkillModifier = (skill: typeof skills[0]) => {
-    if (!character || !character.abilities) return '+0';
-    
-    const abilityScore = character.abilities[skill.ability] || 10;
-    const baseModifier = Math.floor((abilityScore - 10) / 2);
-    
-    // Проверяем, есть ли у персонажа владение этим навыком
-    const proficient = character.skillProficiencies && 
-                       character.skillProficiencies[skill.name];
-                       
-    // Бонус мастерства зависит от уровня
-    const profBonus = character.level ? Math.ceil(1 + (character.level / 4)) : 2;
-    
-    // Если есть владение, добавляем бонус мастерства
-    const modifier = proficient ? baseModifier + profBonus : baseModifier;
-    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-  };
-  
-  // Изменить владение навыком
-  const toggleProficiency = (skillName: string) => {
-    if (!character) return;
-    
-    const currentProficiencies = character.skillProficiencies || {};
-    const newProficiencies = { 
-      ...currentProficiencies,
-      [skillName]: !currentProficiencies[skillName]
-    };
-    
-    updateCharacter({ 
-      skillProficiencies: newProficiencies 
-    });
+  // Calculate ability modifier
+  const getModifier = (abilityName: string) => {
+    const abilityScore = character?.abilities?.[abilityName] || 10;
+    return Math.floor((abilityScore - 10) / 2);
   };
 
   return (
-    <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h3 className="text-lg font-semibold mb-4" style={{ color: currentTheme.textColor }}>
-        Навыки
-      </h3>
-      
-      <div className="space-y-2">
-        {skills.map((skill) => {
-          const modifier = getSkillModifier(skill);
-          const isProficient = character?.skillProficiencies?.[skill.name] || false;
-          const isPositiveModifier = !modifier.includes('-');
-          
-          return (
-            <div 
-              key={skill.name} 
-              className="flex justify-between items-center p-2 hover:bg-black/20 rounded cursor-pointer"
-              onClick={() => toggleProficiency(skill.name)}
-            >
-              <div className="flex items-center">
-                <span className="text-sm font-medium mr-2" style={{ color: currentTheme.textColor }}>
-                  {skill.rus} 
-                </span>
-                <span className="text-xs opacity-70" style={{ color: currentTheme.mutedTextColor }}>
-                  ({skill.ability})
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                {isProficient && (
-                  <Badge 
-                    variant="outline" 
-                    className="mr-2 bg-primary/20"
-                    style={{ color: currentTheme.accent }}
-                  >
-                    ✓
-                  </Badge>
-                )}
+    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+      <CardContent className="p-4">
+        <h3 className="text-lg font-semibold mb-3" style={{ color: currentTheme.textColor }}>
+          Навыки
+        </h3>
+        <div className="space-y-1">
+          {Object.entries(skillMap).map(([key, { ability, label }]) => {
+            const isProficient = skills.includes(key);
+            const abilityMod = getModifier(ability);
+            const bonus = isProficient ? abilityMod + proficiencyBonus : abilityMod;
+            
+            return (
+              <div key={key} className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div 
+                    className={`w-3 h-3 rounded-full mr-2 ${isProficient ? 'bg-primary' : 'border border-gray-400'}`}
+                  />
+                  <span className="text-sm">{label}</span>
+                  <span className="text-xs ml-1 text-muted-foreground">({ability.slice(0, 3).toUpperCase()})</span>
+                </div>
                 <span 
-                  className={`px-2 py-1 rounded text-sm ${
-                    isPositiveModifier ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"
-                  }`}
+                  className="text-sm font-medium" 
+                  style={{ color: currentTheme.accent }}
                 >
-                  {modifier}
+                  {bonus >= 0 ? `+${bonus}` : bonus}
                 </span>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </CardContent>
     </Card>
   );
 };
+
+export default SkillsPanel;
