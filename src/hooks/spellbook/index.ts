@@ -6,10 +6,10 @@ import { spells as allSpells } from '@/data/spells';
 import { importSpellsFromText } from './importUtils';
 import { getSchoolBadgeColor as getSchoolColor } from './themeUtils';
 import { 
-  filterByLevel, 
-  filterBySchool, 
-  filterByClass, 
-  filterBySearchTerm 
+  filterSpellsByLevel as filterByLevel, 
+  filterSpellsBySchool as filterBySchool, 
+  filterSpellsByClass as filterByClass, 
+  filterSpellsBySearchTerm as filterBySearchTerm 
 } from './filterUtils';
 import { CharacterSpell } from '@/types/character';
 

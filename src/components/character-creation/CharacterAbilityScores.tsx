@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
@@ -18,21 +17,23 @@ const CharacterAbilityScores: React.FC = () => {
   useEffect(() => {
     // Initialize abilities with default values if they are not already set
     if (!character || !character.abilities) {
+      const defaultAbilities = {
+        strength: ABILITY_SCORE_CAPS.DEFAULT,
+        dexterity: ABILITY_SCORE_CAPS.DEFAULT,
+        constitution: ABILITY_SCORE_CAPS.DEFAULT,
+        intelligence: ABILITY_SCORE_CAPS.DEFAULT,
+        wisdom: ABILITY_SCORE_CAPS.DEFAULT,
+        charisma: ABILITY_SCORE_CAPS.DEFAULT,
+        STR: ABILITY_SCORE_CAPS.DEFAULT,
+        DEX: ABILITY_SCORE_CAPS.DEFAULT,
+        CON: ABILITY_SCORE_CAPS.DEFAULT,
+        INT: ABILITY_SCORE_CAPS.DEFAULT,
+        WIS: ABILITY_SCORE_CAPS.DEFAULT,
+        CHA: ABILITY_SCORE_CAPS.DEFAULT,
+      };
+      
       updateCharacter({
-        abilities: {
-          strength: ABILITY_SCORE_CAPS.DEFAULT,
-          dexterity: ABILITY_SCORE_CAPS.DEFAULT,
-          constitution: ABILITY_SCORE_CAPS.DEFAULT,
-          intelligence: ABILITY_SCORE_CAPS.DEFAULT,
-          wisdom: ABILITY_SCORE_CAPS.DEFAULT,
-          charisma: ABILITY_SCORE_CAPS.DEFAULT,
-          STR: ABILITY_SCORE_CAPS.DEFAULT,
-          DEX: ABILITY_SCORE_CAPS.DEFAULT,
-          CON: ABILITY_SCORE_CAPS.DEFAULT,
-          INT: ABILITY_SCORE_CAPS.DEFAULT,
-          WIS: ABILITY_SCORE_CAPS.DEFAULT,
-          CHA: ABILITY_SCORE_CAPS.DEFAULT,
-        }
+        abilities: defaultAbilities
       });
     }
   }, [updateCharacter, character]);
@@ -40,12 +41,14 @@ const CharacterAbilityScores: React.FC = () => {
   const handleAbilityChange = (ability: string, value: number) => {
     if (!character?.abilities) return;
 
+    const updatedAbilities = {
+      ...character.abilities,
+      [ability]: value,
+      [ability.toLowerCase()]: value
+    };
+
     updateCharacter({
-      abilities: {
-        ...character.abilities,
-        [ability]: value,
-        [ability.toLowerCase()]: value
-      }
+      abilities: updatedAbilities
     });
   };
 

@@ -109,3 +109,9 @@ export const formatClasses = (classes: string[] | string | undefined): string =>
   
   return classes;
 };
+
+// Экспортируем функции с другими именами для обратной совместимости
+export const filterByLevel = filterSpellsByLevel;
+export const filterBySchool = filterSpellsBySchool;
+export const filterByClass = filterSpellsByClass;
+export const filterBySearchTerm = filterSpellsBySearchTerm;

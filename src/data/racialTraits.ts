@@ -3,9 +3,13 @@ import { RacialTraits } from "@/types/character";
 export const racialTraits: RacialTraits[] = [
   {
     race: "Дварф",
+    abilityScoreIncrease: "Телосложение +2",
     abilityBonuses: {
       CON: 2
     },
+    age: "Дварфы взрослеют с той же скоростью, что и люди, но считаются молодыми, пока им не исполнится 50 лет.",
+    alignment: "Большинство дварфов законопослушные, твёрдо верящие в преимущества хорошо организованного общества.",
+    size: "Средний",
     features: [
       {
         name: "Тёмное зрение",
@@ -25,9 +29,13 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Эльф",
+    abilityScoreIncrease: "Ловкость +2",
     abilityBonuses: {
       DEX: 2
     },
+    age: "Эльфы взрослеют с той же скоростью, что и люди, но считаются молодыми, пока им не исполнится 100 лет.",
+    alignment: "Эльфы любят свободу, разнообразие и самовыражение, поэтому они склоняются к более мягким аспектам хаоса.",
+    size: "Средний",
     features: [
       {
         name: "Тёмное зрение",

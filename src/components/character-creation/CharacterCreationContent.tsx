@@ -1,4 +1,3 @@
-
 import React from 'react';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
@@ -11,7 +10,7 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import { CharacterSheet } from '@/types/character.d';
+import { CharacterSheet } from '@/types/character';
 
 interface CharacterCreationContentProps {
   currentStep: number;
