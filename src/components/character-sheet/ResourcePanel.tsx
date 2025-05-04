@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -193,8 +192,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
             {/* Base HP bar */}
             <Progress 
               value={healthPercentage} 
-              className="h-3" 
-              indicatorClassName={`${healthPercentage > 60 ? 'bg-green-500' : healthPercentage > 30 ? 'bg-orange-500' : 'bg-red-500'}`}
+              className={`h-3 ${healthPercentage > 60 ? 'bg-green-500' : healthPercentage > 30 ? 'bg-orange-500' : 'bg-red-500'}`}
             />
             
             {/* Temporary HP overlay */}
