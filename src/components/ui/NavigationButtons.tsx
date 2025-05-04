@@ -30,7 +30,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       >
         <Link to="/handbook">
           <BookOpen className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Руководство игрока" : ""}
+          {!isMobile && "Руководство игрока"}
         </Link>
       </Button>
       
@@ -42,7 +42,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       >
         <Link to="/spellbook">
           <Scroll className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Книга заклинаний" : ""}
+          {!isMobile && "Книга заклинаний"}
         </Link>
       </Button>
       
@@ -55,7 +55,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         >
           <Link to="/dm/battle">
             <Map className={isMobile ? "size-4" : "size-4"} />
-            {!isMobile ? "Боевая карта" : ""}
+            {!isMobile && "Боевая карта"}
           </Link>
         </Button>
       )}
@@ -68,7 +68,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       >
         <Link to="/character-creation">
           <Users className={isMobile ? "size-4" : "size-4"} />
-          {!isMobile ? "Создание персонажа" : ""}
+          {!isMobile && "Создание персонажа"}
         </Link>
       </Button>
       
@@ -81,7 +81,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         >
           <Link to="/dm-dashboard">
             <Book className={isMobile ? "size-4" : "size-4"} />
-            {!isMobile ? "Панель Мастера" : ""}
+            {!isMobile && "Панель Мастера"}
           </Link>
         </Button>
       )}

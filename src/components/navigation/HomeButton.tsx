@@ -23,7 +23,7 @@ const HomeButton: React.FC<HomeButtonProps> = ({
     >
       <Link to="/">
         <Home className="size-4" />
-        {showText && "На главную"}
+        {showText && <span>На главную</span>}
       </Link>
     </Button>
   );

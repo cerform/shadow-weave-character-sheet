@@ -309,6 +309,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="age" className="text-gray-400">Возраст</Label>
               <Input
                 id="age"
+                name="age"
                 value={appearanceDetails.age}
                 onChange={(e) => handleAppearanceChange('age', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -320,6 +321,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="height" className="text-gray-400">Рост</Label>
               <Input
                 id="height"
+                name="height"
                 value={appearanceDetails.height}
                 onChange={(e) => handleAppearanceChange('height', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -331,6 +333,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="weight" className="text-gray-400">Вес</Label>
               <Input
                 id="weight"
+                name="weight"
                 value={appearanceDetails.weight}
                 onChange={(e) => handleAppearanceChange('weight', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -342,6 +345,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="eyes" className="text-gray-400">Глаза</Label>
               <Input
                 id="eyes"
+                name="eyes"
                 value={appearanceDetails.eyes}
                 onChange={(e) => handleAppearanceChange('eyes', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -353,6 +357,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="skin" className="text-gray-400">Кожа</Label>
               <Input
                 id="skin"
+                name="skin"
                 value={appearanceDetails.skin}
                 onChange={(e) => handleAppearanceChange('skin', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -364,6 +369,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="hair" className="text-gray-400">Волосы</Label>
               <Input
                 id="hair"
+                name="hair"
                 value={appearanceDetails.hair}
                 onChange={(e) => handleAppearanceChange('hair', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
@@ -561,6 +567,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <Label htmlFor="file-name" className="text-gray-300">Имя файла</Label>
               <Input
                 id="file-name"
+                name="file-name"
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"

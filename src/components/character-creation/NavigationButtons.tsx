@@ -40,20 +40,15 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   return (
     <div className="flex justify-between pt-8 mt-2">
       {isFirstStep ? (
-        <HomeButton variant="outline" className={`
-          bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
-        `} />
+        <HomeButton variant="outline" className="bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500" />
       ) : (
         <Button 
           variant="outline" 
           onClick={handlePrevStep}
-          className={`
-            flex items-center gap-2 px-4 py-2 
-            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
-          `}
+          className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
         >
           <ArrowLeft className="size-4" />
-          {!isMobile && "Назад"}
+          {!isMobile && <span>Назад</span>}
         </Button>
       )}
       
@@ -71,7 +66,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
                 : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
           `}
         >
-          {!isMobile && nextLabel}
+          {!isMobile && <span>{nextLabel}</span>}
           {isLastStep ? <CheckCircle className="size-4" /> : <ArrowRight className="size-4" />}
         </Button>
       )}
