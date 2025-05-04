@@ -18,18 +18,21 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => ({
   id: spell.id,
   name: spell.name,
   level: spell.level,
-  school: spell.school || 'Unknown', // Ensure school is never undefined
+  school: spell.school || 'Unknown', 
   castingTime: spell.castingTime || '',
   range: spell.range || '',
   components: spell.components || '',
   duration: spell.duration || '',
   description: spell.description || '',
-  classes: spell.classes,
+  classes: spell.classes || [],
   isRitual: spell.ritual || false,
   isConcentration: spell.concentration || false,
   verbal: spell.verbal || false,
   somatic: spell.somatic || false,
-  material: spell.material || false
+  material: spell.material || false,
+  higherLevel: spell.higherLevels || '',
+  ritual: spell.ritual || false,
+  concentration: spell.concentration || false
 });
 
 // Функция для фильтрации заклинаний по поисковому запросу

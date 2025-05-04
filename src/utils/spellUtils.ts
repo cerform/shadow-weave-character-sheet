@@ -98,3 +98,13 @@ export const safeSome = (
   if (Array.isArray(array)) return array.some(someFn);
   return someFn(array);
 };
+
+/**
+ * Extracts spell names from either CharacterSpell objects or strings
+ */
+export const extractSpellNames = (spells: (CharacterSpell | string)[]): string[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') return spell;
+    return spell.name;
+  });
+};

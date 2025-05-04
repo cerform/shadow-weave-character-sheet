@@ -1,6 +1,6 @@
-
 import { CharacterSheet } from '@/types/character';
 import { Character } from '@/contexts/CharacterContext';
+import { extractSpellNames } from './spellUtils';
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения
@@ -43,8 +43,10 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
   // Вычисляем максимальные хиты
   const maxHp = sheet.maxHp || calculateMaxHp();
   
-  // Преобразуем структуру заклинаний
-  const spellsArray = sheet.spells || [];
+  // Преобразуем структуру заклинаний - сохраняем только имена
+  const spellsArray = Array.isArray(sheet.spells) 
+    ? extractSpellNames(sheet.spells)
+    : [];
   
   // Определяем слоты заклинаний в зависимости от класса и уровня
   const spellSlots: Record<number, { max: number; used: number }> = {};
@@ -78,6 +80,9 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
   }
   
+  // Extract languages from proficiencies if available
+  const languages = sheet.proficiencies?.languages || sheet.languages || [];
+  
   return {
     id: sheet.id || "",
     userId: sheet.userId,
@@ -89,12 +94,18 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: sheet.level || 1,
     abilities: {
-      STR: sheet.abilities.strength || 10,
-      DEX: sheet.abilities.dexterity || 10,
-      CON: sheet.abilities.constitution || 10,
-      INT: sheet.abilities.intelligence || 10,
-      WIS: sheet.abilities.wisdom || 10,
-      CHA: sheet.abilities.charisma || 10
+      STR: sheet.abilities.STR || sheet.abilities.strength || 10,
+      DEX: sheet.abilities.DEX || sheet.abilities.dexterity || 10,
+      CON: sheet.abilities.CON || sheet.abilities.constitution || 10,
+      INT: sheet.abilities.INT || sheet.abilities.intelligence || 10,
+      WIS: sheet.abilities.WIS || sheet.abilities.wisdom || 10,
+      CHA: sheet.abilities.CHA || sheet.abilities.charisma || 10,
+      strength: sheet.abilities.strength || sheet.abilities.STR || 10,
+      dexterity: sheet.abilities.dexterity || sheet.abilities.DEX || 10,
+      constitution: sheet.abilities.constitution || sheet.abilities.CON || 10,
+      intelligence: sheet.abilities.intelligence || sheet.abilities.INT || 10,
+      wisdom: sheet.abilities.wisdom || sheet.abilities.WIS || 10,
+      charisma: sheet.abilities.charisma || sheet.abilities.CHA || 10
     },
     spells: spellsArray,
     spellSlots: spellSlots,
@@ -102,8 +113,8 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     alignment: sheet.alignment || "",
     background: sheet.background || "",
     equipment: sheet.equipment || [],
-    languages: sheet.languages || [],
-    proficiencies: sheet.proficiencies || [],
+    languages: languages,
+    proficiencies: sheet.proficiencies?.armor || [],
     maxHp: maxHp,
     currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
     createdAt: new Date().toISOString(),

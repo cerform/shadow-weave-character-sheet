@@ -1,158 +1,108 @@
-import { auth, db, storage } from './firebase';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/contexts/CharacterContext';
-import characterService from './characterService';
-
-// Экспортируем сервис персонажей
-export { characterService };
+import { db, auth } from './firebase';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  updateDoc, 
+  arrayUnion, 
+  arrayRemove, 
+  deleteDoc,
+  query,
+  where
+} from 'firebase/firestore';
+import { Session, User, Character as SessionCharacter } from '../types/session';
+import axios from 'axios';
 
 // Сервис для работы с сессиями
-export const sessionService = {
-  // Создание новой сессии
-  createSession: async (name: string, description?: string): Promise<Session | null> => {
-    const uid = getCurrentUid();
-    if (!uid) return null;
+const sessionService = {
+  // Создание сессии
+  createSession: async (name: string, description?: string): Promise<Session> => {
+    const sessionId = uuidv4();
+    const sessionCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const user = auth.currentUser;
     
-    try {
-      // Генерируем уникальный ID и код для сессии
-      const sessionId = uuidv4();
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      // Создаем объект сессии
-      const session: Session = {
-        id: sessionId,
-        title: name,
-        description: description || '',
-        code,
-        dmId: uid,
-        players: [],
-        users: [],
-        createdAt: new Date().toISOString(),
-        startTime: new Date().toISOString(),
-        isActive: true,
-        notes: []
-      };
-      
-      // Сохраняем сессию в Firestore
-      const sessionRef = doc(db, 'sessions', sessionId);
-      await setDoc(sessionRef, {
-        ...session,
-        lastActivity: serverTimestamp()
-      });
-      
-      // Добавляем сессию в список у пользователя
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const campaigns = userData.campaigns || [];
-        
-        await updateDoc(userRef, {
-          campaigns: [...campaigns, sessionId]
-        });
-      }
-      
-      return session;
-    } catch (error) {
-      console.error("Ошибка при создании сессии:", error);
-      return null;
+    if (!user) {
+      throw new Error("Пользователь не авторизован");
     }
-  },
-  
-  // Получение сессий пользователя
-  getUserSessions: async (): Promise<Session[]> => {
-    const uid = getCurrentUid();
-    if (!uid) return [];
     
-    try {
-      // Получаем сессии, где пользователь - мастер
-      const sessionsRef = collection(db, 'sessions');
-      const q = query(sessionsRef, where('dmId', '==', uid));
-      const querySnapshot = await getDocs(q);
-      
-      const sessions: Session[] = [];
-      querySnapshot.forEach((doc) => {
-        sessions.push({ id: doc.id, ...doc.data() } as Session);
-      });
-      
-      // TODO: получение сессий, где пользователь - игрок
-      
-      return sessions;
-    } catch (error) {
-      console.error("Ошибка при получении сессий:", error);
-      return [];
-    }
+    const session: Session = {
+      id: sessionId,
+      name: name,
+      code: sessionCode,
+      description: description || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: user.uid,
+      users: [],
+      isEnded: false
+    };
+    
+    // Добавление сессии в Firestore
+    await setDoc(doc(db, "sessions", sessionId), session);
+    
+    return session;
   },
   
   // Получение сессии по ID
   getSessionById: async (sessionId: string): Promise<Session | null> => {
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (sessionSnap.exists()) {
-        return { id: sessionSnap.id, ...sessionSnap.data() } as Session;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Ошибка при получении сессии:", error);
+    const docRef = doc(db, "sessions", sessionId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data() as Session;
+    } else {
       return null;
     }
   },
   
   // Получение сессии по коду
   getSessionByCode: async (code: string): Promise<Session | null> => {
-    try {
-      const sessionsRef = collection(db, 'sessions');
-      const q = query(sessionsRef, where('code', '==', code));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Session;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Ошибка при получении сессии по коду:", error);
+    const sessionsRef = collection(db, "sessions");
+    const q = query(sessionsRef, where("code", "==", code));
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      // Предполагаем, что код уникален, поэтому берем первый результат
+      const doc = querySnapshot.docs[0];
+      return doc.data() as Session;
+    } else {
       return null;
     }
   },
   
+  // Получение всех сессий пользователя
+  getUserSessions: async (): Promise<Session[]> => {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error("Пользователь не авторизован");
+    }
+    
+    const sessionsRef = collection(db, "sessions");
+    const q = query(sessionsRef, where("createdBy", "==", user.uid));
+    
+    const querySnapshot = await getDocs(q);
+    
+    const sessions: Session[] = [];
+    querySnapshot.forEach((doc) => {
+      sessions.push(doc.data() as Session);
+    });
+    
+    return sessions;
+  },
+  
   // Присоединение к сессии
-  joinSession: async (sessionId: string, user: SessionUser): Promise<boolean> => {
+  joinSession: async (sessionId: string, user: User): Promise<boolean> => {
+    const sessionRef = doc(db, "sessions", sessionId);
+    
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (!sessionSnap.exists()) {
-        return false;
-      }
-      
-      const sessionData = sessionSnap.data() as Session;
-      const users = sessionData.users || [];
-      
-      // Проверяем, не присоединился ли уже пользователь
-      const existingUserIndex = users.findIndex(u => u.id === user.id);
-      
-      if (existingUserIndex !== -1) {
-        // Обновляем данные пользователя
-        users[existingUserIndex] = { ...users[existingUserIndex], ...user };
-      } else {
-        // Добавляем нового пользователя
-        users.push(user);
-      }
-      
-      // Обновляем сессию
       await updateDoc(sessionRef, {
-        users,
-        updatedAt: new Date().toISOString()
+        users: arrayUnion(user)
       });
-      
       return true;
     } catch (error) {
       console.error("Ошибка при присоединении к сессии:", error);
@@ -160,168 +110,137 @@ export const sessionService = {
     }
   },
   
-  // Удаление сессии
+  // Выход из сессии
+  leaveSession: async (sessionId: string, userId: string): Promise<boolean> => {
+    const sessionRef = doc(db, "sessions", sessionId);
+    
+    try {
+      // Получаем текущую сессию
+      const sessionSnap = await getDoc(sessionRef);
+      if (!sessionSnap.exists()) {
+        throw new Error("Сессия не найдена");
+      }
+      
+      const session = sessionSnap.data() as Session;
+      
+      // Фильтруем пользователей, исключая покидающего
+      const updatedUsers = session.users?.filter(user => user.id !== userId) || [];
+      
+      // Обновляем сессию
+      await updateDoc(sessionRef, {
+        users: updatedUsers
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Ошибка при выходе из сессии:", error);
+      return false;
+    }
+  },
+  
+  // Завершение сессии
   deleteSession: async (sessionId: string): Promise<boolean> => {
-    const uid = getCurrentUid();
-    if (!uid) return false;
-    
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (!sessionSnap.exists()) {
-        return false;
-      }
-      
-      const sessionData = sessionSnap.data();
-      
-      // Проверяем, является ли текущий пользователь мастером
-      if (sessionData.dmId !== uid) {
-        console.error("Нет прав на удаление сессии");
-        return false;
-      }
-      
-      // Удаляем сессию
-      await deleteDoc(sessionRef);
-      
-      // Удаляем сессию из списка у пользователя
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const campaigns = userData.campaigns || [];
-        
-        await updateDoc(userRef, {
-          campaigns: campaigns.filter((id: string) => id !== sessionId)
-        });
-      }
-      
+      await deleteDoc(doc(db, "sessions", sessionId));
       return true;
     } catch (error) {
-      console.error("Ошибка при удалении сессии:", error);
-      return false;
-    }
-  },
-  
-  // Добавляем новые методы, которые используются в DMSessionPage
-  updateSessionCode: async (sessionId: string): Promise<string | null> => {
-    const uid = getCurrentUid();
-    if (!uid) return null;
-    
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (!sessionSnap.exists()) {
-        return null;
-      }
-      
-      const sessionData = sessionSnap.data();
-      
-      // Проверяем, является ли текущий пользователь мастером
-      if (sessionData.dmId !== uid) {
-        console.error("Нет прав на обновление кода сессии");
-        return null;
-      }
-      
-      // Генерируем новый код
-      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      // Обновляем код в Firestore
-      await updateDoc(sessionRef, {
-        code: newCode,
-        lastActivity: serverTimestamp()
-      });
-      
-      return newCode;
-    } catch (error) {
-      console.error("Ошибка при обновлении кода сессии:", error);
-      return null;
-    }
-  },
-  
-  saveSessionNotes: async (sessionId: string, content: string): Promise<boolean> => {
-    const uid = getCurrentUid();
-    if (!uid) return false;
-    
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (!sessionSnap.exists()) {
-        return false;
-      }
-      
-      const sessionData = sessionSnap.data() as Session;
-      
-      // Проверяем, является ли текущий пользователь мастером
-      if (sessionData.dmId !== uid) {
-        console.error("Нет прав на сохранение заметок сессии");
-        return false;
-      }
-      
-      // Создаем новую заметку
-      const newNote = {
-        id: uuidv4(),
-        content,
-        timestamp: new Date().toISOString(),
-        authorId: uid
-      };
-      
-      // Добавляем заметку к существующим или создаем новый массив
-      const notes = sessionData.notes || [];
-      notes.push(newNote);
-      
-      // Обновляем заметки в Firestore
-      await updateDoc(sessionRef, {
-        notes,
-        lastActivity: serverTimestamp()
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Ошибка при сохранении заметок:", error);
+      console.error("Ошибка при завершении сессии:", error);
       return false;
     }
   }
 };
 
-// Функции для работы с хранилищем Firebase
-export const storageService = {
-  // Загрузка изображения
-  uploadImage: async (file: File, path: string): Promise<string | null> => {
-    const uid = getCurrentUid();
-    if (!uid) return null;
-    
+// Сервис для работы с персонажами
+const characterService = {
+  // Сохранение персонажа
+  saveCharacter: async (character: any): Promise<{ id: string } | false> => {
     try {
-      const storageRef = ref(storage, `${path}/${uid}/${file.name}`);
-      await uploadBytes(storageRef, file);
+      const characterId = character.id || uuidv4();
       
-      const downloadUrl = await getDownloadURL(storageRef);
-      return downloadUrl;
+      // Добавление или обновление персонажа в Firestore
+      await setDoc(doc(db, "characters", characterId), character, { merge: true });
+      
+      return { id: characterId };
     } catch (error) {
-      console.error("Ошибка при загрузке изображения:", error);
+      console.error("Ошибка при сохранении персонажа:", error);
+      return false;
+    }
+  },
+  
+  // Получение персонажа по ID
+  getCharacterById: async (characterId: string): Promise<any | null> => {
+    const docRef = doc(db, "characters", characterId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    } else {
       return null;
     }
   },
   
-  // Удаление изображения
-  deleteImage: async (url: string): Promise<boolean> => {
+  // Получение всех персонажей пользователя
+  getCharactersByUserId: async (): Promise<any[]> => {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error("Пользователь не авторизован");
+    }
+    
+    const charactersRef = collection(db, "characters");
+    const q = query(charactersRef, where("userId", "==", user.uid));
+    
+    const querySnapshot = await getDocs(q);
+    
+    const characters: any[] = [];
+    querySnapshot.forEach((doc) => {
+      characters.push(doc.data());
+    });
+    
+    return characters;
+  },
+  
+  // Удаление персонажа
+  deleteCharacter: async (characterId: string): Promise<void | false> => {
     try {
-      const imageRef = ref(storage, url);
-      await deleteObject(imageRef);
-      return true;
+      await deleteDoc(doc(db, "characters", characterId));
+      return;
     } catch (error) {
-      console.error("Ошибка при удалении изображения:", error);
+      console.error("Ошибка при удалении персонажа:", error);
       return false;
     }
   }
 };
 
-export default { characterService, sessionService, storageService };
-
-// Helper function to get current user ID
-const getCurrentUid = () => {
-  return auth.currentUser?.uid;
+// Temporary mock for firebase functions that are causing issues
+const mockFirebaseUpload = async (file: File): Promise<string> => {
+  console.log('File upload functionality not implemented yet');
+  return URL.createObjectURL(file);
 };
+
+const mockFirebaseDelete = async (path: string): Promise<void> => {
+  console.log('File deletion functionality not implemented yet:', path);
+};
+
+export const uploadImage = async (file: File): Promise<string> => {
+  try {
+    // Mock implementation
+    const downloadUrl = await mockFirebaseUpload(file);
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+};
+
+export const deleteImage = async (imageUrl: string): Promise<void> => {
+  try {
+    // Mock implementation
+    await mockFirebaseDelete(imageUrl);
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error;
+  }
+};
+
+export { sessionService, characterService };

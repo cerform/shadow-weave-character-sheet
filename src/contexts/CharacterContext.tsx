@@ -1,7 +1,7 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
 import { SorceryPoints, CharacterSheet } from '@/types/character';
+import { normalizeSpells, extractSpellNames } from '@/utils/spellUtils';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -115,7 +115,31 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter as CharacterSheet);
+      // Convert character object to CharacterSheet type for saving
+      const characterSheet = {
+        ...updatedCharacter,
+        // Ensure spells are saved as an array of strings for compatibility
+        spells: Array.isArray(updatedCharacter.spells) 
+          ? extractSpellNames(updatedCharacter.spells)
+          : [],
+        // Ensure we have the correct abilities format
+        abilities: {
+          STR: updatedCharacter.abilities.STR,
+          DEX: updatedCharacter.abilities.DEX,
+          CON: updatedCharacter.abilities.CON,
+          INT: updatedCharacter.abilities.INT,
+          WIS: updatedCharacter.abilities.WIS,
+          CHA: updatedCharacter.abilities.CHA,
+          strength: updatedCharacter.abilities.strength || updatedCharacter.abilities.STR,
+          dexterity: updatedCharacter.abilities.dexterity || updatedCharacter.abilities.DEX,
+          constitution: updatedCharacter.abilities.constitution || updatedCharacter.abilities.CON,
+          intelligence: updatedCharacter.abilities.intelligence || updatedCharacter.abilities.INT,
+          wisdom: updatedCharacter.abilities.wisdom || updatedCharacter.abilities.WIS,
+          charisma: updatedCharacter.abilities.charisma || updatedCharacter.abilities.CHA
+        }
+      } as unknown as CharacterSheet;
+      
+      const savedChar = await characterService.saveCharacter(characterSheet);
       if (savedChar) {
         setCharacter({...updatedCharacter, id: savedChar.id});
       }

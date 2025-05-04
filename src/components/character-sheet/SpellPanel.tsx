@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { Book, Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCh
 import SpellDescription from './SpellDescription';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { normalizeSpells, safeJoin } from '@/utils/spellUtils';
 
 interface SpellPanelProps {
   character: Character | null;
@@ -26,22 +28,13 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Вспомогательная функция для безопасного преобразования строки или массива в строку
-  const safeJoin = (value: string | string[] | undefined, separator: string = ', '): string => {
-    if (!value) return '';
-    if (Array.isArray(value)) return value.join(separator);
-    return value.toString();
-  };
-
   // Группировка заклинаний по уровням
   const spellsByLevel = React.useMemo(() => {
-    if (!character?.spells || !Array.isArray(character.spells)) return {};
+    if (!character?.spells) return {};
 
-    const spells = character.spells.filter(spell => 
-      typeof spell === 'object' && spell !== null
-    ) as CharacterSpell[];
+    const normalizedSpells = normalizeSpells(character.spells);
 
-    return spells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
+    return normalizedSpells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
       const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
@@ -51,16 +44,14 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Фильтрация заклинаний по поиску и вкладке
   const filteredSpells = React.useMemo(() => {
-    if (!character?.spells || !Array.isArray(character.spells)) return [];
+    if (!character?.spells) return [];
 
-    const spells = character.spells.filter(spell => 
-      typeof spell === 'object' && spell !== null
-    ) as CharacterSpell[];
+    const normalizedSpells = normalizeSpells(character.spells);
 
-    return spells.filter(spell => {
+    return normalizedSpells.filter(spell => {
       const matchesSearch = searchTerm === '' || 
         spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        spell.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (spell.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
       const matchesTab = activeTab === 'all' || 
         (activeTab === 'prepared' && spell.prepared) ||
@@ -84,7 +75,8 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   const toggleSpellPrepared = (spellId: string | number | undefined) => {
     if (!character || !spellId) return;
     
-    const updatedSpells = (character.spells as CharacterSpell[]).map(spell => {
+    const normalizedSpells = normalizeSpells(character.spells);
+    const updatedSpells = normalizedSpells.map(spell => {
       if ((spell.id?.toString() || '') === spellId.toString()) {
         return { ...spell, prepared: !spell.prepared };
       }
@@ -104,15 +96,15 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Получение варианта для бейджа школы магии
   const getSchoolVariant = (school: string) => {
-    switch (school.toLowerCase()) {
+    switch (school?.toLowerCase()) {
       case 'воплощение': return 'destructive';
       case 'некромантия': return 'outline';
       case 'очарование': return 'secondary';
       case 'преобразование': return 'default';
-      case 'прорицание': return 'accent';
-      case 'вызов': return 'warning';
-      case 'ограждение': return 'info';
-      case 'иллюзия': return 'subtle';
+      case 'прорицание': return 'default'; // Changed from 'accent'
+      case 'вызов': return 'secondary'; // Changed from 'warning'
+      case 'ограждение': return 'default'; // Changed from 'info'
+      case 'иллюзия': return 'outline'; // Changed from 'subtle'
       default: return 'default';
     }
   };
@@ -178,14 +170,14 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-            <Badge variant={getSchoolVariant(spell.school)}>{spell.school}</Badge>
+            <Badge variant={getSchoolVariant(spell.school || '')}>{spell.school}</Badge>
             <span>{getSpellLevelText(spell.level)}</span>
           </div>
         </CardHeader>
         
         <CardContent className="p-3 pt-1">
           <SpellDescription
-            description={spell.description}
+            description={spell.description || ''}
             higherLevels={spell.higherLevels || ''}
             expanded={expandedSpells.includes(spell.id?.toString() || spell.name)}
           />
@@ -258,11 +250,10 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Получение количества подготовленных заклинаний
   const getPreparedSpellsCount = () => {
-    if (!character?.spells || !Array.isArray(character.spells)) return 0;
+    if (!character?.spells) return 0;
     
-    return (character.spells as CharacterSpell[])
-      .filter(spell => spell.prepared && spell.level > 0)
-      .length;
+    const normalizedSpells = normalizeSpells(character.spells);
+    return normalizedSpells.filter(spell => spell.prepared && spell.level > 0).length;
   };
 
   // Получение максимального количества подготовленных заклинаний

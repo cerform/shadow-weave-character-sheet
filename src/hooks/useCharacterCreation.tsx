@@ -66,11 +66,31 @@ export const useCharacterCreation = () => {
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
     if (updates.abilities) {
-      updates.stats = updates.abilities;
+      updates.stats = {
+        strength: updates.abilities.strength,
+        dexterity: updates.abilities.dexterity,
+        constitution: updates.abilities.constitution,
+        intelligence: updates.abilities.intelligence,
+        wisdom: updates.abilities.wisdom,
+        charisma: updates.abilities.charisma
+      };
     }
     // Если обновляются stats, также обновляем и abilities для совместимости
     else if (updates.stats) {
-      updates.abilities = updates.stats;
+      updates.abilities = {
+        STR: updates.stats.strength,
+        DEX: updates.stats.dexterity,
+        CON: updates.stats.constitution,
+        INT: updates.stats.intelligence,
+        WIS: updates.stats.wisdom,
+        CHA: updates.stats.charisma,
+        strength: updates.stats.strength,
+        dexterity: updates.stats.dexterity,
+        constitution: updates.stats.constitution,
+        intelligence: updates.stats.intelligence,
+        wisdom: updates.stats.wisdom,
+        charisma: updates.stats.charisma
+      };
     }
     
     // Добавляем userId из текущего авторизованного пользователя, если он доступен

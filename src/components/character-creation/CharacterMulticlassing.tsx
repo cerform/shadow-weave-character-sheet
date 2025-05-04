@@ -1,120 +1,96 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MulticlassRequirements, ClassRequirement } from '@/types/character';
 
-interface ClassRequirement {
-  abilities: Record<string, number>;
-  description: string;
-}
-
-interface MulticlassRequirements {
-  [className: string]: ClassRequirement;
-}
-
-// Правильно определяем требования к мультиклассированию согласно интерфейсу ClassRequirement
-const multiclassRequirements: MulticlassRequirements = {
+// Define correct multiclass requirements interface structure
+const MULTICLASS_REQUIREMENTS: MulticlassRequirements = {
   "Бард": {
     abilities: { charisma: 13 },
-    description: "Харизма 13 или выше"
+    description: "Харизма 13"
   },
   "Варвар": {
     abilities: { strength: 13 },
-    description: "Сила 13 или выше"
+    description: "Сила 13"
   },
   "Воин": {
     abilities: { strength: 13, dexterity: 13 },
-    description: "Сила 13 или Ловкость 13 или выше"
+    description: "Сила 13 или Ловкость 13"
   },
   "Волшебник": {
     abilities: { intelligence: 13 },
-    description: "Интеллект 13 или выше"
+    description: "Интеллект 13"
   },
   "Друид": {
     abilities: { wisdom: 13 },
-    description: "Мудрость 13 или выше"
+    description: "Мудрость 13"
   },
   "Жрец": {
     abilities: { wisdom: 13 },
-    description: "Мудрость 13 или выше"
+    description: "Мудрость 13"
   },
   "Колдун": {
     abilities: { charisma: 13 },
-    description: "Харизма 13 или выше"
+    description: "Харизма 13"
   },
   "Монах": {
     abilities: { dexterity: 13, wisdom: 13 },
-    description: "Ловкость 13 и Мудрость 13 или выше"
+    description: "Ловкость 13 и Мудрость 13"
   },
   "Паладин": {
     abilities: { strength: 13, charisma: 13 },
-    description: "Сила 13 и Харизма 13 или выше"
+    description: "Сила 13 и Харизма 13"
   },
   "Плут": {
     abilities: { dexterity: 13 },
-    description: "Ловкость 13 или выше"
+    description: "Ловкость 13"
   },
   "Следопыт": {
     abilities: { dexterity: 13, wisdom: 13 },
-    description: "Ловкость 13 и Мудрость 13 или выше"
+    description: "Ловкость 13 и Мудрость 13"
   },
   "Чародей": {
     abilities: { charisma: 13 },
-    description: "Харизма 13 или выше"
+    description: "Харизма 13"
   }
 };
 
-interface Props {
-  selectedClass: string;
-  abilities: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
+export default function CharacterMulticlassing() {
+  const [selectedClass, setSelectedClass] = useState<ClassRequirement | null>(null);
+  const classNames = Object.keys(MULTICLASS_REQUIREMENTS);
+
+  const handleSelectClass = (className: string) => {
+    setSelectedClass(MULTICLASS_REQUIREMENTS[className]);
   };
-}
-
-const CharacterMulticlassing = ({ selectedClass, abilities }: Props) => {
-  const [meetsRequirements, setMeetsRequirements] = useState(true);
-  const [requirements, setRequirements] = useState<ClassRequirement | null>(null);
-
-  useEffect(() => {
-    const classReqs = multiclassRequirements[selectedClass];
-    if (classReqs) {
-      setRequirements(classReqs);
-      
-      // Проверяем, что все необходимые характеристики соответствуют требованиям
-      const meetsCriteria = Object.entries(classReqs.abilities).every(
-        ([ability, minValue]) => {
-          const abilityValue = abilities[ability as keyof typeof abilities] || 0;
-          return abilityValue >= minValue;
-        }
-      );
-      
-      setMeetsRequirements(meetsCriteria);
-    }
-  }, [selectedClass, abilities]);
-
-  if (!requirements) return null;
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="space-y-2">
-          <Label className="font-bold">Требования для мультиклассирования:</Label>
-          <p className="text-sm">{requirements.description}</p>
-          <div className={`mt-2 font-medium ${meetsRequirements ? 'text-green-500' : 'text-red-500'}`}>
-            {meetsRequirements 
-              ? 'Ваши характеристики соответствуют требованиям для этого класса.' 
-              : 'Ваши характеристики не соответствуют требованиям для этого класса.'
-            }
-          </div>
+    <div>
+      <h2>Требования для мультиклассирования</h2>
+      <p>Для взятия уровня в новом классе необходимо соответствовать минимальным требованиям к характеристикам:</p>
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+        {classNames.map((className) => (
+          <Card 
+            key={className} 
+            className="cursor-pointer hover:border-primary transition-all"
+            onClick={() => handleSelectClass(className)}
+          >
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">{className}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 text-sm">
+              <p>{MULTICLASS_REQUIREMENTS[className].description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {selectedClass && (
+        <div className="mt-6">
+          <h3 className="text-xl font-bold">Детали требований</h3>
+          <p>{selectedClass.description}</p>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
-};
-
-export default CharacterMulticlassing;
+}
