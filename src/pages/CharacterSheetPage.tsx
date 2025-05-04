@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
@@ -14,51 +14,52 @@ const CharacterSheetPage = () => {
   const { isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
   const { currentUser, isOfflineMode } = useAuth();
+  
   // Флаг для отслеживания инициализации
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Оптимизированная загрузка персонажа из локального хранилища
+  const loadCharacter = useCallback(() => {
+    try {
+      const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
+      
+      if (lastSelectedCharacterId) {
+        const savedCharacters = localStorage.getItem('dnd-characters');
+        if (savedCharacters) {
+          const parsedCharacters = JSON.parse(savedCharacters);
+          const foundCharacter = parsedCharacters.find((c: any) => c.id === lastSelectedCharacterId);
+          
+          if (foundCharacter) {
+            setCharacter(foundCharacter);
+            return;
+          }
+        }
+      }
+      
+      // Если нет выбранного персонажа, берем первого из списка
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      if (savedCharacters) {
+        const parsedCharacters = JSON.parse(savedCharacters);
+        if (parsedCharacters.length > 0) {
+          setCharacter(parsedCharacters[0]);
+          localStorage.setItem('last-selected-character', parsedCharacters[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке персонажа:', error);
+    }
+  }, []);
   
   // Загрузка персонажа из локального хранилища
   useEffect(() => {
     // Проверяем, было ли уже загружено
     if (isInitialized) return;
-
-    // Проверяем в локальном хранилище последнего выбранного персонажа
-    const loadCharacter = () => {
-      try {
-        const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
-        
-        if (lastSelectedCharacterId) {
-          const savedCharacters = localStorage.getItem('dnd-characters');
-          if (savedCharacters) {
-            const parsedCharacters = JSON.parse(savedCharacters);
-            const foundCharacter = parsedCharacters.find((c: any) => c.id === lastSelectedCharacterId);
-            
-            if (foundCharacter) {
-              setCharacter(foundCharacter);
-              return;
-            }
-          }
-        }
-        
-        // Если нет выбранного персонажа, берем первого из списка
-        const savedCharacters = localStorage.getItem('dnd-characters');
-        if (savedCharacters) {
-          const parsedCharacters = JSON.parse(savedCharacters);
-          if (parsedCharacters.length > 0) {
-            setCharacter(parsedCharacters[0]);
-            localStorage.setItem('last-selected-character', parsedCharacters[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке персонажа:', error);
-      }
-    };
     
     loadCharacter();
     setIsInitialized(true);
-  }, [isInitialized]);
+  }, [isInitialized, loadCharacter]);
   
-  // Проверка наличия активной сессии и подключение к ней
+  // Проверка наличия активной сессии и подключение к ней (один раз)
   useEffect(() => {
     // Проверяем наличие активной сессии в sessionStore
     const checkActiveSession = () => {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -7,10 +6,10 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { syncUserWithFirestore, getCurrentUserWithData } from '@/utils/authHelpers';
 import { FirestoreUserData } from '@/utils/firestoreHelpers';
 
-// Флаг для отслеживания вывода предупреждений
+// Флаг для отслеживания вывода предупреждений контекста
 let authContextWarningShown = false;
 
-// Вывод предупреждения только один раз
+// Вывод предупреждения только один раз для контекста
 const showAuthContextWarningOnce = (message: string) => {
   if (!authContextWarningShown) {
     console.warn(message);

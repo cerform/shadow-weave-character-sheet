@@ -1,16 +1,25 @@
 
-import { auth } from "@/services/firebase";
-import { getUserData, updateUserData } from "./firestoreHelpers";
-
-// Флаг для отслеживания вывода предупреждений
+// Флаги для отслеживания вывода предупреждений
 let authWarningShown = false;
+let firestoreWarningShown = false;
+let networkWarningShown = false;
 
-// Вывод предупреждения только один раз
-const showAuthWarningOnce = (message: string) => {
-  if (!authWarningShown) {
+// Общая функция для вывода предупреждений только один раз с разными типами
+const showWarningOnce = (message: string, warningType: 'auth' | 'firestore' | 'network'): boolean => {
+  if (warningType === 'auth' && !authWarningShown) {
     console.warn(message);
     authWarningShown = true;
+    return true;
+  } else if (warningType === 'firestore' && !firestoreWarningShown) {
+    console.warn(message);
+    firestoreWarningShown = true;
+    return true;
+  } else if (warningType === 'network' && !networkWarningShown) {
+    console.warn(message);
+    networkWarningShown = true;
+    return true;
   }
+  return false;
 };
 
 /**
@@ -22,7 +31,7 @@ export const getCurrentUid = (): string | null => {
     const user = auth.currentUser;
     return user ? user.uid : null;
   } catch (error) {
-    showAuthWarningOnce("Ошибка при получении UID пользователя, используется автономный режим");
+    showWarningOnce("Ошибка при получении UID пользователя, используется автономный режим", 'auth');
     return null;
   }
 };
@@ -35,7 +44,7 @@ export const isUserAuthenticated = (): boolean => {
   try {
     return !!auth.currentUser;
   } catch (error) {
-    showAuthWarningOnce("Ошибка при проверке аутентификации, используется автономный режим");
+    showWarningOnce("Ошибка при проверке аутентификации, используется автономный режим", 'auth');
     return false;
   }
 };
@@ -52,7 +61,7 @@ export const requireAuth = async <T>(callback: () => Promise<T>): Promise<T> => 
     }
     return await callback();
   } catch (error) {
-    showAuthWarningOnce("Ошибка при проверке аутентификации, используется автономный режим");
+    showWarningOnce("Ошибка при проверке аутентификации, используется автономный режим", 'auth');
     throw new Error("Действие требует авторизации. Приложение работает в автономном режиме.");
   }
 };
@@ -109,7 +118,7 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
     const updated = await updateUserData(uid, updateData);
     return updated;
   } catch (error) {
-    showAuthWarningOnce("Ошибка при синхронизации пользователя с Firestore, используется автономный режим");
+    showWarningOnce("Ошибка при синхронизации пользователя с Firestore, используется автономный режим", 'firestore');
     return false;
   }
 };
@@ -125,7 +134,14 @@ export const getCurrentUserWithData = async () => {
     
     return await getUserData(uid);
   } catch (error) {
-    showAuthWarningOnce("Ошибка при получении данных пользователя, используется автономный режим");
+    showWarningOnce("Ошибка при получении данных пользователя, используется автономный режим", 'firestore');
     return null;
   }
+};
+
+// Экспортируем функцию сброса счётчиков предупреждений для тестирования
+export const resetWarningCounters = () => {
+  authWarningShown = false;
+  firestoreWarningShown = false;
+  networkWarningShown = false;
 };
