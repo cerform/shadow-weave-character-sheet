@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSheet } from '@/types/character.d';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Save, Eye, Edit, Info, Check, AlertTriangle, Bookmark, BookOpen, Shield, Swords } from 'lucide-react';
+import { Save, Eye, Edit, Info, Check, AlertTriangle, Bookmark, BookOpen, Shield, Swords, ArrowLeft } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import {
@@ -95,7 +94,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
         !character.abilities.wisdom || 
         !character.abilities.charisma) {
       toast({
-        title: "Не распределены характеристики",
+        title: "Не распредел��ны характеристики",
         description: "Пожалуйста, распределите значения характеристик",
         variant: "destructive"
       });
@@ -969,7 +968,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <>
                       <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
                       <p className="text-sm">
-                        Вы не выбрали заклинания. Рекомендуем вернуться к шагу выбора заклинаний.
+                        Вы не выбрали за��линания. Рекомендуем вернуться к шагу выбора заклинаний.
                       </p>
                       <Button 
                         variant="outline" 
@@ -1095,4 +1094,3 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
 };
 
 export default CharacterReview;
-
