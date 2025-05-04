@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -14,11 +13,11 @@ import {
   isStringArray
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
-import { importSpellsFromText } from './importUtils';
+import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
 import { CharacterSpell } from '@/types/character';
 
 export * from './types';
-export { importSpellsFromText };
+export { importSpellsFromTextUtil as importSpellsFromText };
 
 export const useSpellbook = (): UseSpellbookReturn => {
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
@@ -141,6 +140,6 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText
+    importSpellsFromText: importSpellsFromTextUtil
   };
 };

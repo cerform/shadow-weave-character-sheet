@@ -1,13 +1,12 @@
-
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
-import { useIsMobile } from './use-mobile.tsx';
 import { spells } from '@/data/spells';
+import { SpellData } from './spellbook/types';
 
-// Типы для определения структуры заклинаний
-interface Spell {
-  id: string;
+// Update the Spell interface to match SpellData for compatibility
+interface Spell extends SpellData {
+  id: string | number;
   name: string;
   level: number;
   school: string;
@@ -16,11 +15,7 @@ interface Spell {
   components: string;
   duration: string;
   classes: string[];
-  description: string[];
-  higherLevel?: string;
-  ritual?: boolean;
-  concentration?: boolean;
-  material?: string;
+  description: string[] | string;
 }
 
 export const useSpellbook = () => {
@@ -111,8 +106,8 @@ export const useSpellbook = () => {
   };
 
   // Обработчики для модального окна с деталями заклинания
-  const handleOpenSpell = (spell: Spell) => {
-    setSelectedSpell(spell);
+  const handleOpenSpell = (spell: SpellData) => {
+    setSelectedSpell(spell as unknown as Spell);
     setIsModalOpen(true);
   };
 

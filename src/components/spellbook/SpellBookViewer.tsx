@@ -7,7 +7,8 @@ import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import { ThemeSelector } from "@/components/character-sheet/ThemeSelector"; 
 import { useNavigate } from 'react-router-dom';
-import { useSpellbook, SpellData } from '@/hooks/spellbook';
+import { useSpellbook } from '@/hooks/spellbook';
+import { SpellData } from '@/hooks/spellbook/types';
 import SpellFilters from './SpellFilters';
 import SpellList from './SpellList';
 import { 
