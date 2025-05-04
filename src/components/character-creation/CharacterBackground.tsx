@@ -22,7 +22,12 @@ interface BackgroundInfo {
   characteristicsDescription: string;
 }
 
-const CharacterBackground = ({ prevStep, nextStep }: { prevStep: () => void, nextStep: () => void }) => {
+interface CharacterBackgroundProps {
+  prevStep: () => void;
+  nextStep: () => void;
+}
+
+const CharacterBackground = ({ prevStep, nextStep }: CharacterBackgroundProps) => {
   const { character, updateCharacter } = useCharacterCreation();
   const { toast } = useToast();
   const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || '');
@@ -45,14 +50,19 @@ const CharacterBackground = ({ prevStep, nextStep }: { prevStep: () => void, nex
       // Добавляем профессии бэкграунда к существующим
       const existingProficiencies = character.proficiencies || [];
       
-      // Фильтруем только уникальные профессии
-      const uniqueProficiencies = [
-        ...existingProficiencies,
-        ...bgInfo.proficiencies
-      ].filter((value, index, self) => self.indexOf(value) === index);
+      // Создаем структуру, соответствующую типу proficiencies в CharacterSheet
+      const proficienciesObject = {
+        armor: [] as string[],
+        weapons: [] as string[],
+        tools: [] as string[],
+        languages: character.languages || []
+      };
+
+      // Добавляем новые профессии как инструменты (это упрощение, в идеале нужна более детальная логика)
+      proficienciesObject.tools = [...(proficienciesObject.tools || []), ...bgInfo.proficiencies];
       
       updateCharacter({
-        proficiencies: uniqueProficiencies
+        proficiencies: proficienciesObject
       });
       
       // Показываем уведомление о добавленных профессиях
@@ -268,7 +278,11 @@ const CharacterBackground = ({ prevStep, nextStep }: { prevStep: () => void, nex
         </CardContent>
       </Card>
       
-      <NavigationButtons prevStep={prevStep} nextStep={handleSave} nextDisabled={!background || !alignment || !backstory} />
+      <NavigationButtons 
+        prevStep={prevStep} 
+        nextStep={handleSave} 
+        allowNext={!!background && !!alignment && !!backstory && backstory.length >= 10} 
+      />
     </div>
   );
 };

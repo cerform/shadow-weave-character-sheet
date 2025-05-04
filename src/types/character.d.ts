@@ -1,3 +1,4 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;

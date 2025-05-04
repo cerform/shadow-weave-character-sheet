@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { spells as allSpells } from '@/data/spells';
+import { spells as allSpells, getSpellsByClass } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
 import { 
   filterSpellsBySearchTerm, 
@@ -11,10 +11,12 @@ import {
   formatClasses,
   convertToSpellData,
   isString,
-  isStringArray
+  isStringArray,
+  safeJoin
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
 import { CharacterSpell } from '@/types/character';
+import { importSpellsFromText as importFromText } from './importUtils';
 
 export * from './types';
 // Экспортируем функцию importSpellsFromText

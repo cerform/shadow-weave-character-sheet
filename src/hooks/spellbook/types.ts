@@ -55,3 +55,11 @@ export interface SpellFilters {
   school: string[];
   class: string[];
 }
+
+// Тип для требования мультиклассирования
+export interface MulticlassRequirements {
+  [key: string]: {
+    abilities: { [key: string]: number };
+    description: string;
+  }
+}

@@ -31,7 +31,6 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     higherLevels: spell.higherLevels || '',
     prepared: spell.prepared || false,
     classes: spell.classes || [],
-    // Добавляем метод toString для преобразования в строку
     toString: function() {
       return this.name;
     }
@@ -110,4 +109,11 @@ export const formatClasses = (classes: string[] | string): string => {
   }
   
   return classes.join(', ');
+};
+
+// Helper to safely join strings or arrays or handle a single string
+export const safeJoin = (value: string | string[], separator: string = ', '): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) return value.join(separator);
+  return value;
 };

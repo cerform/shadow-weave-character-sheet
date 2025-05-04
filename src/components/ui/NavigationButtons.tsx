@@ -1,38 +1,37 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 export interface NavigationButtonsProps {
   prevStep: () => void;
   nextStep: () => void;
-  nextDisabled?: boolean;
-  className?: string;
+  prevLabel?: string;
+  nextLabel?: string;
+  disableNext?: boolean;
+  allowNext?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   prevStep,
   nextStep,
-  nextDisabled = false,
-  className = ''
+  prevLabel = "Назад",
+  nextLabel = "Далее",
+  disableNext = false,
+  allowNext = true
 }) => {
   return (
-    <div className={`flex justify-between ${className}`}>
+    <div className="flex justify-between mt-4">
       <Button 
-        onClick={prevStep} 
-        variant="outline"
-        className="flex items-center gap-1"
+        variant="outline" 
+        onClick={prevStep}
       >
-        <ArrowLeft size={16} />
-        Назад
+        {prevLabel}
       </Button>
       <Button 
         onClick={nextStep}
-        className="flex items-center gap-1"
-        disabled={nextDisabled}
+        disabled={disableNext || !allowNext}
       >
-        Далее
-        <ArrowRight size={16} />
+        {nextLabel}
       </Button>
     </div>
   );

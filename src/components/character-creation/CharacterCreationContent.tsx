@@ -1,184 +1,166 @@
 
 import React from 'react';
-import CharacterBasicInfo from './CharacterBasicInfo';
-import CharacterRaceSelection from './CharacterRaceSelection';
-import CharacterClassSelection from './CharacterClassSelection';
-import CharacterLevelSelection from './CharacterLevelSelection';
-import CharacterMulticlassing from './CharacterMulticlassing';
-import CharacterAbilityScores from './CharacterAbilityScores';
+import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CharacterBasics from './CharacterBasics';
+import CharacterAbilities from './CharacterAbilities';
+import CharacterClass from './CharacterClass';
 import CharacterBackground from './CharacterBackground';
-import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
+import CharacterEquipment from './CharacterEquipment';
 import CharacterReview from './CharacterReview';
-import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import { CharacterSheet } from '@/types/character.d';
+import { CharacterSheet } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
 
-interface CharacterCreationContentProps {
-  currentStep: number;
-  character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
-  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[][];
-  getModifier: (abilityScore: number) => string;
-  rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
-  abilityScorePoints: number;
-  isMagicClass: boolean;
-  rollsHistory: { ability: string; rolls: number[]; total: number }[];
-  onLevelChange: (level: number) => void;
-  maxAbilityScore?: number;
-  setCurrentStep: (step: number) => void;
-}
+const CharacterCreationContent: React.FC = () => {
+  const { character, activeStep, setActiveStep, updateCharacter, saveCharacter } = useCharacterCreation();
+  const { toast } = useToast();
 
-const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
-  currentStep,
-  character,
-  updateCharacter,
-  nextStep,
-  prevStep,
-  abilitiesMethod,
-  setAbilitiesMethod,
-  diceResults,
-  getModifier,
-  rollAllAbilities,
-  rollSingleAbility,
-  abilityScorePoints,
-  isMagicClass,
-  rollsHistory,
-  onLevelChange,
-  maxAbilityScore,
-  setCurrentStep
-}) => {
-  // Функция для рендеринга текущего шага создания персонажа
-  const renderCreationStep = () => {
-    switch (currentStep) {
-      case 0: // Выбор расы
-        return (
-          <CharacterRaceSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 1: // Выбор класса и подкласса
-        return (
-          <CharacterClassSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 2: // Выбор основного уровня персонажа
-        return (
-          <CharacterLevelSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            onLevelChange={onLevelChange}
-          />
-        );
-      case 3: // Характеристики
-        return (
-          <CharacterAbilityScores 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            abilitiesMethod={abilitiesMethod}
-            setAbilitiesMethod={setAbilitiesMethod}
-            diceResults={diceResults}
-            getModifier={getModifier}
-            rollAllAbilities={rollAllAbilities}
-            rollSingleAbility={rollSingleAbility}
-            abilityScorePoints={abilityScorePoints}
-            rollsHistory={rollsHistory}
-            maxAbilityScore={maxAbilityScore}
-          />
-        );
-      case 4: // Предыстория
-        return (
-          <CharacterBackground 
-            character={{ 
-              background: character.background || "", 
-              backstory: character.backstory || "",
-              personalityTraits: character.personalityTraits || "",
-              ideals: character.ideals || "",
-              bonds: character.bonds || "",
-              flaws: character.flaws || ""
-            }}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 5: // Здоровье
-        return (
-          <CharacterHitPointsCalculator
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 6: // Выбор снаряжения
-        return (
-          <CharacterEquipmentSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 7: // Детали персонажа
-        return (
-          <CharacterBasicInfo 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 8: // Выбор заклинаний
-        // Проверяем, является ли класс магическим
-        if (!isMagicClass) {
-          // Автоматически переходим к следующему шагу с задержкой
-          setTimeout(() => nextStep(), 0);
-          // Возвращаем пустой фрагмент во время перехода
-          return <></>;
-        }
-        return (
-          <CharacterSpellSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 9: // Просмотр и завершение
-        return (
-          <CharacterReview 
-            character={character}
-            prevStep={prevStep}
-            updateCharacter={updateCharacter}
-            setCurrentStep={setCurrentStep}
-          />
-        );
-      default:
-        return (
-          <div className="p-6 text-center">
-            <p>Неизвестный шаг создания персонажа.</p>
-          </div>
-        );
+  // Verify if we can navigate to a certain step
+  const canNavigate = (step: number) => {
+    if (step === 0) return true;
+    
+    if (step === 1) {
+      return !!character.name && !!character.race;
+    }
+    
+    if (step === 2) {
+      return !!character.name && !!character.race && 
+        !!character.abilities?.strength && !!character.abilities?.dexterity &&
+        !!character.abilities?.constitution && !!character.abilities?.intelligence &&
+        !!character.abilities?.wisdom && !!character.abilities?.charisma;
+    }
+    
+    if (step === 3) {
+      return !!character.name && !!character.race && !!character.class;
+    }
+    
+    return false;
+  };
+
+  const handleSave = async () => {
+    try {
+      await saveCharacter();
+      
+      toast({
+        title: "Персонаж сохранен",
+        description: `${character.name} был успешно сохранен.`,
+      });
+      
+      // Redirect to character list or character sheet
+    } catch (error) {
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить персонажа. Попробуйте еще раз.",
+        variant: "destructive",
+      });
     }
   };
 
-  return renderCreationStep();
+  const nextStep = () => {
+    if (activeStep < 6) {
+      setActiveStep(activeStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1);
+    }
+  };
+
+  // Создаем нужную часть CharacterSheet для CharacterBackground
+  const backgroundCharacterData = {
+    background: character.background || '',
+    backstory: character.backstory || '',
+    personalityTraits: character.personalityTraits || '',
+    ideals: character.ideals || '',
+    bonds: character.bonds || '',
+    flaws: character.flaws || ''
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex justify-between items-center">
+          <span>Создание персонажа</span>
+          <Button onClick={handleSave}>Сохранить</Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue={activeStep.toString()} onValueChange={(v) => setActiveStep(parseInt(v))}>
+          <TabsList className="grid grid-cols-7 mb-8">
+            <TabsTrigger value="0" disabled={!canNavigate(0)}>Основы</TabsTrigger>
+            <TabsTrigger value="1" disabled={!canNavigate(1)}>Характеристики</TabsTrigger>
+            <TabsTrigger value="2" disabled={!canNavigate(2)}>Класс</TabsTrigger>
+            <TabsTrigger value="3" disabled={!canNavigate(3)}>Предыстория</TabsTrigger>
+            <TabsTrigger value="4" disabled={!canNavigate(3)}>Заклинания</TabsTrigger>
+            <TabsTrigger value="5" disabled={!canNavigate(3)}>Снаряжение</TabsTrigger>
+            <TabsTrigger value="6" disabled={!canNavigate(3)}>Обзор</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="0">
+            <CharacterBasics 
+              nextStep={nextStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="1">
+            <CharacterAbilities 
+              prevStep={prevStep} 
+              nextStep={nextStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="2">
+            <CharacterClass 
+              prevStep={prevStep} 
+              nextStep={nextStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="3">
+            <CharacterBackground prevStep={prevStep} nextStep={nextStep} />
+          </TabsContent>
+          
+          <TabsContent value="4">
+            <CharacterSpellSelection 
+              prevStep={prevStep} 
+              nextStep={nextStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="5">
+            <CharacterEquipment 
+              prevStep={prevStep} 
+              nextStep={nextStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="6">
+            <CharacterReview 
+              prevStep={prevStep} 
+              character={character} 
+              updateCharacter={updateCharacter} 
+              onSave={handleSave}
+            />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default CharacterCreationContent;
