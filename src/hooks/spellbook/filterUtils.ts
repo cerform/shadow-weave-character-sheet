@@ -2,11 +2,16 @@
 import { safeSome, safeFilter } from '@/utils/spellUtils';
 import { CharacterSpell, SpellData } from '@/types/character';
 
+// Функция для поиска по имени заклинания
 export const filterSpellsByName = (spells: SpellData[], searchTerm: string): SpellData[] => {
   if (!searchTerm.trim()) return spells;
   return safeFilter(spells, (spell) => safeSome(spell.name, searchTerm));
 };
 
+// Переименуем функцию для обратной совместимости
+export const filterBySearchTerm = filterSpellsByName;
+
+// Функция для фильтрации по школе магии
 export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
   if (!schools.length) return spells;
   return safeFilter(spells, (spell) => {
@@ -15,11 +20,19 @@ export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): Sp
   });
 };
 
+// Переименуем функцию для обратной совместимости
+export const filterBySchool = filterSpellsBySchool;
+
+// Функция для фильтрации по уровню заклинания
 export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
   if (!levels.length) return spells;
   return safeFilter(spells, (spell) => levels.includes(spell.level));
 };
 
+// Переименуем функцию для обратной совместимости
+export const filterByLevel = filterSpellsByLevel;
+
+// Функция для фильтрации по компонентам заклинания
 export const filterSpellsByComponents = (
   spells: SpellData[], 
   components: { verbal?: boolean; somatic?: boolean; material?: boolean }
@@ -35,6 +48,7 @@ export const filterSpellsByComponents = (
   });
 };
 
+// Функция для фильтрации по классу персонажа
 export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
   if (!classes.length) return spells;
   
@@ -51,7 +65,32 @@ export const filterSpellsByClass = (spells: SpellData[], classes: string[]): Spe
   });
 };
 
+// Переименуем функцию для обратной совместимости
+export const filterByClass = filterSpellsByClass;
+
+// Функция для фильтрации по подготовленным заклинаниям
 export const filterSpellsByPrepared = (spells: CharacterSpell[], showPrepared: boolean): CharacterSpell[] => {
   if (!showPrepared) return spells;
   return safeFilter(spells, (spell) => spell.prepared);
+};
+
+// Функция для извлечения доступных классов из списка заклинаний
+export const extractClasses = (spells: SpellData[]): string[] => {
+  const classesSet = new Set<string>();
+  
+  spells.forEach(spell => {
+    if (!spell.classes) return;
+    
+    if (Array.isArray(spell.classes)) {
+      spell.classes.forEach(spellClass => {
+        if (typeof spellClass === 'string') {
+          classesSet.add(spellClass);
+        }
+      });
+    } else if (typeof spell.classes === 'string') {
+      classesSet.add(spell.classes);
+    }
+  });
+  
+  return Array.from(classesSet).sort();
 };

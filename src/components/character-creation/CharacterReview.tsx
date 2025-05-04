@@ -1,171 +1,204 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, Save } from 'lucide-react';
-import { CharacterSheet } from '@/types/character';
-import { useNavigate } from 'react-router-dom';
-import characterService from '@/services/characterService';
+import { CharacterSheet, Equipment } from '@/types/character';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Shield, Sword, Book, Heart } from 'lucide-react';
+import { calculateAbilityModifier } from '@/utils/characterUtils';
 
-interface Props {
+interface CharacterReviewProps {
   character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
-  prevStep: () => void;
-  setCurrentStep: (step: number) => void;
 }
 
-const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter, setCurrentStep }) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Конвертируем заклинания в строки для отображения
-  const formatSpells = (spells: CharacterSheet['spells'] | string[]): JSX.Element => {
-    if (!spells || spells.length === 0) return <span className="text-muted-foreground">Нет выбранных заклинаний</span>;
-    
-    return (
-      <div className="space-y-1">
-        {spells.map((spell, index) => {
-          // Проверяем тип spell и преобразуем в строку
-          const spellName = typeof spell === 'string' 
-            ? spell 
-            : spell.name;
-          
-          return (
-            <div key={index} className="text-sm">
-              {spellName}
-            </div>
-          );
-        })}
-      </div>
-    );
+export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) => {
+  const {
+    name,
+    race,
+    background,
+    characterClass,
+    subclass,
+    abilityScores,
+    alignment,
+    hitPoints,
+    proficiencies,
+    equipment,
+    languages,
+    features,
+    spellcasting,
+    spells
+  } = character;
+  
+  // Функция для форматирования названий
+  const formatName = (text: string = ''): string => {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   };
-
-  // Функция для сохранения персонажа
-  const handleSaveCharacter = async () => {
-    try {
-      // Убеждаемся, что все обязательные поля заполнены
-      if (!character.name) {
-        toast({
-          title: "Ошибка",
-          description: "Имя персонажа должно быть заполнено",
-          variant: "destructive"
-        });
-        setCurrentStep(7); // Переход к шагу деталей персонажа
-        return;
-      }
-
-      // Сохраняем персонажа
-      const result = await characterService.saveCharacter(character);
-      
-      toast({
-        title: "Успешно",
-        description: "Персонаж успешно сохранен",
-        variant: "default"
-      });
-
-      // Перенаправляем на страницу просмотра персонажа
-      navigate(`/character-sheet/${result.id}`);
-    } catch (error) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить персонажа",
-        variant: "destructive"
-      });
-    }
+  
+  // Функция для получения строкового представления способностей и модификаторов
+  const getAbilityDisplay = (abilityName: string): string => {
+    const score = abilityScores[abilityName.toLowerCase() as keyof typeof abilityScores] || 10;
+    const modifier = calculateAbilityModifier(score);
+    const sign = modifier >= 0 ? '+' : '';
+    return `${score} (${sign}${modifier})`;
   };
-
+  
   return (
-    <div className="container max-w-4xl mx-auto">
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Основные характеристики</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-sm">Имя: {character.name}</div>
-              <div className="text-sm">Класс: {character.class || character.className}</div>
-              <div className="text-sm">Раса: {character.race}</div>
-              <div className="text-sm">Уровень: {character.level}</div>
-              <div className="text-sm">Мировоззрение: {character.alignment}</div>
-              <div className="text-sm">Предыстория: {character.background}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Характеристики</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-sm">Сила: {character.abilities?.strength || character.abilities?.STR}</div>
-              <div className="text-sm">Ловкость: {character.abilities?.dexterity || character.abilities?.DEX}</div>
-              <div className="text-sm">Телосложение: {character.abilities?.constitution || character.abilities?.CON}</div>
-              <div className="text-sm">Интеллект: {character.abilities?.intelligence || character.abilities?.INT}</div>
-              <div className="text-sm">Мудрость: {character.abilities?.wisdom || character.abilities?.WIS}</div>
-              <div className="text-sm">Харизма: {character.abilities?.charisma || character.abilities?.CHA}</div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="space-y-6">
+      <Card className="shadow-md">
+        <CardHeader className="bg-secondary/10">
+          <CardTitle className="text-center">Обзор персонажа</CardTitle>
+        </CardHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Заклинания</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {formatSpells(character.spells || [])}
-            </CardContent>
-          </Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-bold text-lg mb-2">{name || "Безымянный герой"}</h3>
+              
+              <div className="space-y-2">
+                <p>
+                  <span className="font-semibold">Раса:</span> {formatName(race)}
+                </p>
+                <p>
+                  <span className="font-semibold">Класс:</span> {formatName(characterClass)}
+                  {subclass && ` (${formatName(subclass)})`}
+                </p>
+                <p>
+                  <span className="font-semibold">Предыстория:</span> {formatName(background)}
+                </p>
+                <p>
+                  <span className="font-semibold">Мировоззрение:</span> {formatName(alignment)}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center">
+              <div className="text-center">
+                <div className="flex justify-center mb-2">
+                  <Heart size={24} className="text-red-500" />
+                </div>
+                <h3 className="font-bold text-xl">
+                  {hitPoints?.current || 0} / {hitPoints?.maximum || hitPoints?.current || 0}
+                </h3>
+                <p className="text-sm text-muted-foreground">Хиты</p>
+              </div>
+            </div>
+          </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Снаряжение</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {character.equipment && character.equipment.length > 0 ? (
-                character.equipment.map((item, index) => (
-                  <div key={index} className="text-sm">{item}</div>
-                ))
-              ) : (
-                <span className="text-muted-foreground">Нет выбранного снаряжения</span>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        
-        {character.backstory && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Предыстория персонажа</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap text-sm">{character.backstory}</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        <div className="flex justify-between pt-8">
-          <Button 
-            variant="outline" 
-            onClick={prevStep}
-            className="bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
-          >
-            Назад
-          </Button>
+          <Separator className="my-4" />
           
-          <Button 
-            variant="default" 
-            onClick={handleSaveCharacter}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Сохранить персонажа
-          </Button>
-        </div>
-      </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <StatBlock name="СИЛ" value={getAbilityDisplay('strength')} />
+            <StatBlock name="ЛОВ" value={getAbilityDisplay('dexterity')} />
+            <StatBlock name="ТЕЛ" value={getAbilityDisplay('constitution')} />
+            <StatBlock name="ИНТ" value={getAbilityDisplay('intelligence')} />
+            <StatBlock name="МДР" value={getAbilityDisplay('wisdom')} />
+            <StatBlock name="ХАР" value={getAbilityDisplay('charisma')} />
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <Shield size={20} />
+                <h3 className="font-semibold">Владения</h3>
+              </div>
+              
+              <div className="space-y-2">
+                {Array.isArray(proficiencies) ? (
+                  <div className="flex flex-wrap gap-1">
+                    {proficiencies.map((prof, i) => (
+                      <Badge key={i} variant="outline">{prof}</Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    {Object.entries(proficiencies || {}).map(([category, profs]) => (
+                      <div key={category} className="mb-2">
+                        <p className="text-sm font-medium mb-1">{formatName(category)}:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {Array.isArray(profs) && profs.map((prof, i) => (
+                            <Badge key={i} variant="outline">{prof}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+            
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <Sword size={20} />
+                <h3 className="font-semibold">Снаряжение</h3>
+              </div>
+              
+              <div className="space-y-1">
+                {equipment && Array.isArray(equipment) && equipment.map((item, i) => (
+                  <div key={i} className="text-sm py-1 border-b border-gray-200 dark:border-gray-800">
+                    {typeof item === 'string' ? item : (item?.name || String(item))}
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Book size={20} />
+              <h3 className="font-semibold">Умения и особенности</h3>
+            </div>
+            
+            <div className="space-y-2">
+              {features && Array.isArray(features) && features.map((feature, i) => {
+                const featureName = typeof feature === 'string' ? feature : feature.name;
+                const featureDescription = typeof feature !== 'string' ? feature.description : '';
+                
+                return (
+                  <div key={i} className="mb-2">
+                    <p className="font-medium">{featureName}</p>
+                    {featureDescription && (
+                      <p className="text-sm text-muted-foreground">{featureDescription}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+          
+          {spells && spells.length > 0 && (
+            <>
+              <Separator className="my-4" />
+              
+              <section>
+                <h3 className="font-semibold mb-3">Заклинания</h3>
+                <div className="flex flex-wrap gap-1">
+                  {spells.map((spell, i) => (
+                    <Badge key={i}>{spell.name}</Badge>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+interface StatBlockProps {
+  name: string;
+  value: string;
+}
+
+const StatBlock: React.FC<StatBlockProps> = ({ name, value }) => (
+  <div className="flex flex-col items-center justify-center p-2 bg-primary/5 rounded-md">
+    <span className="text-xs font-semibold">{name}</span>
+    <span className="text-lg font-bold">{value}</span>
+  </div>
+);
 
 export default CharacterReview;
