@@ -134,11 +134,13 @@ export const deleteCharacter = async (id: string): Promise<void> => {
   }
 };
 
-// Для совместимости с предыдущим API
-export default {
+// Экспорт по умолчанию для совместимости с предыдущим API
+const characterService = {
   saveCharacter,
   getCharacterById,
   getCharactersByUserId,
   getCharacters,
   deleteCharacter
 };
+
+export default characterService;

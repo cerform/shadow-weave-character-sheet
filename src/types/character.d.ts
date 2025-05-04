@@ -47,13 +47,16 @@ export interface CharacterSpell {
   concentration?: boolean;
   classes?: string | string[]; // Added to match usage in components
   higherLevels?: string; // Added to match usage in components
+  higherLevel?: string; // Alternative field name used in some places
 }
 
 export interface HitPointEvent {
-  type: 'damage' | 'heal' | 'temp';
+  type: 'damage' | 'heal' | 'temp' | 'healing' | 'tempHP' | 'death-save';
   value: number;
   timestamp: number;
   source?: string;
+  id?: string;
+  amount?: number; // Alias for value used in some components
 }
 
 export interface CharacterSheet {
@@ -67,6 +70,14 @@ export interface CharacterSheet {
   subclass?: string;
   level: number;
   abilities: AbilityScores;
+  stats?: {  // Added to match usage in components
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
   skills?: { [key: string]: { proficient: boolean; expertise: boolean; bonus?: number } };
   savingThrows?: { [key: string]: boolean };
   proficiencies: string[] | Proficiencies;  // Allow both formats for backward compatibility
@@ -102,19 +113,12 @@ export interface CharacterSheet {
   image?: string;
   skillProficiencies?: { [skillName: string]: boolean };
   savingThrowProficiencies?: { [ability: string]: boolean };
-  stats?: {  // Added to match usage in components
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
   features?: string[]; // Added to match usage in LevelBasedFeatures.tsx
   personalityTraits?: string; // Added for background info
   ideals?: string; // Added for background info
   bonds?: string; // Added for background info
   flaws?: string; // Added for background info
+  abilityPointsUsed?: number; // Added for character creation
 }
 
 export interface ClassRequirement {
@@ -133,6 +137,7 @@ export interface ClassRequirement {
 export interface RacialTraits {
   race: string;
   abilityScoreIncrease: string | number; // Updated to accept both string and number
+  abilityBonuses?: any; // Added to support usage in racial traits data
   age: string;
   alignment: string;
   size: string;

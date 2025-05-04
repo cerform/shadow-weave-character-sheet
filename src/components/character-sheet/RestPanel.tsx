@@ -12,9 +12,13 @@ import { themes } from '@/lib/themes';
 
 interface RestPanelProps {
   character: Character | null;
+  onHitPointsChange: (newHp: number) => void;
+  onHitDiceChange: (newHitDice: any) => void;
+  onSpellSlotsChange: (newSpellSlots: any) => void;
+  onSorceryPointsChange: (newSorceryPoints: any) => void;
 }
 
-const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
+const RestPanel: React.FC<RestPanelProps> = ({ character, onHitPointsChange, onHitDiceChange, onSpellSlotsChange, onSorceryPointsChange }) => {
   const { updateCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
   const [tempHp, setTempHp] = useState('');
@@ -32,6 +36,8 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       title: "Здоровье восстановлено",
       description: `Восстановлено ${amount} HP. Текущее здоровье: ${newHp}`,
     });
+
+    onHitPointsChange(newHp);
   };
 
   const handleDamage = (amount: number) => {
@@ -44,6 +50,8 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       title: "Получен урон",
       description: `Получено ${amount} урона. Текущее здоровье: ${newHp}`,
     });
+
+    onHitPointsChange(newHp);
   };
 
   const handleSetTempHp = () => {
@@ -64,6 +72,8 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       title: "Временные HP установлены",
       description: `Установлено ${amount} временных HP.`,
     });
+
+    onHitPointsChange(character.currentHp);
   };
 
   const handleLongRest = () => {
@@ -114,6 +124,11 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       title: "Длительный отдых завершен",
       description: "Здоровье, хиты кости и ячейки заклинаний восстановлены.",
     });
+
+    onHitPointsChange(character.maxHp);
+    onHitDiceChange({ used: 0 });
+    onSpellSlotsChange({});
+    onSorceryPointsChange({ current: character.sorceryPoints.max });
   };
 
   const handleShortRest = () => {

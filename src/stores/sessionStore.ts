@@ -1,8 +1,10 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Session, User, Character as SessionCharacter } from '../types/session';
-import { sessionService, characterService } from '../services/sessionService';
+import sessionService from '../services/sessionService';
+import characterService from '../services/characterService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
 import { Character } from '@/contexts/CharacterContext';
