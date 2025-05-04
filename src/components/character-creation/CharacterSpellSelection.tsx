@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet, CharacterSpell } from '@/types/character';
 import { getSpellsByClass } from '@/data/spells';
 
 interface CharacterSpellSelectionProps {
@@ -21,16 +22,19 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   prevStep
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpells, setSelectedSpells] = useState<string[]>(character.spells as string[] || []);
-  const [availableSpells, setAvailableSpells] = useState<any[]>([]);
-  const [spellDetails, setSpellDetails] = useState<any>(null);
+  const [selectedSpells, setSelectedSpells] = useState<string[]>(Array.isArray(character.spells) ? 
+    character.spells.map(spell => typeof spell === 'string' ? spell : spell.name) : []);
+  
+  const [availableSpells, setAvailableSpells] = useState<CharacterSpell[]>([]);
+  const [spellDetails, setSpellDetails] = useState<CharacterSpell | null>(null);
 
   useEffect(() => {
-    if (character.class) {
-      const spells = getSpellsByClass(character.class);
+    if (character.class || character.className) {
+      const className = character.className || character.class;
+      const spells = getSpellsByClass(className);
       setAvailableSpells(spells);
     }
-  }, [character.class]);
+  }, [character.class, character.className]);
 
   const handleSpellSelect = (spellName: string) => {
     if (selectedSpells.includes(spellName)) {
@@ -59,7 +63,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   const getSpellDetails = (spellName: string) => {
     const spell = availableSpells.find(spell => spell.name === spellName);
-    setSpellDetails(spell);
+    if (spell) {
+      setSpellDetails(spell);
+    } else {
+      setSpellDetails(null);
+    }
   };
 
   return (
@@ -107,12 +115,21 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </div>
         </Tabs>
         {spellDetails && (
-          <div className="mt-4">
-            <h3>{spellDetails.name}</h3>
-            <p>Уровень: {spellDetails.level}</p>
-            <p>Школа: {spellDetails.school}</p>
-            <p>Описание: {spellDetails.description}</p>
-            {/* Добавьте другие детали заклинания, если необходимо */}
+          <div className="mt-4 p-4 border rounded">
+            <h3 className="text-lg font-bold">{spellDetails.name}</h3>
+            <p><strong>Уровень:</strong> {spellDetails.level}</p>
+            <p><strong>Школа:</strong> {spellDetails.school}</p>
+            <p><strong>Время накладывания:</strong> {spellDetails.castingTime}</p>
+            <p><strong>Дальность:</strong> {spellDetails.range}</p>
+            <p><strong>Компоненты:</strong> {spellDetails.components}</p>
+            <p><strong>Длительность:</strong> {spellDetails.duration}</p>
+            <p className="mt-2"><strong>Описание:</strong> {spellDetails.description}</p>
+            {spellDetails.higherLevels && (
+              <p className="mt-2"><strong>На больших уровнях:</strong> {spellDetails.higherLevels}</p>
+            )}
+            {spellDetails.higherLevel && !spellDetails.higherLevels && (
+              <p className="mt-2"><strong>На больших уровнях:</strong> {spellDetails.higherLevel}</p>
+            )}
           </div>
         )}
         <div className="flex justify-between mt-6">

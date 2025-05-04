@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,15 @@ interface CharacterLevelSelectionProps {
   updateCharacter: (updates: Partial<CharacterSheet>) => void;
   nextStep: () => void;
   prevStep: () => void;
+  onLevelChange?: (level: number) => void; // Добавляем опциональный параметр
 }
 
 const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   character,
   updateCharacter,
   nextStep,
-  prevStep
+  prevStep,
+  onLevelChange
 }) => {
   const [level, setLevel] = useState(character.level || 1);
 
@@ -24,6 +27,10 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
 
   const handleLevelChange = (newLevel: number) => {
     setLevel(newLevel);
+    // Если предоставлен callback onLevelChange, вызываем его
+    if (onLevelChange) {
+      onLevelChange(newLevel);
+    }
   };
 
   const handleSaveLevel = () => {

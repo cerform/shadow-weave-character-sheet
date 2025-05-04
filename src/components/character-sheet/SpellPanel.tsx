@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character, CharacterSheet, CharacterSpell } from '@/types/character';
+import { Character, CharacterSheet, CharacterSpell, SpellData } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,8 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character }) => {
           name: spell,
           level: 0,
           school: "Unknown",
-          description: "No description available"
+          description: "No description available",
+          prepared: false // Добавляем обязательное свойство
         };
       }
       
