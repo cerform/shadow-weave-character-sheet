@@ -6,11 +6,11 @@ export const useTheme = () => {
   const context = useContext(ThemeContext);
   
   if (!context) {
-    console.warn('useTheme must be used within a ThemeProvider');
+    console.error('useTheme must be used within a ThemeProvider');
     return { 
       theme: 'default' as Theme, 
       setTheme: (theme: Theme) => {
-        console.warn(`Unable to set theme to ${theme}: ThemeProvider not found`);
+        console.error(`Unable to set theme to ${theme}: ThemeProvider not found`);
       }
     };
   }

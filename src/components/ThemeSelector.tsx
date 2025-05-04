@@ -3,7 +3,7 @@ import React from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeviceType } from "@/hooks/use-mobile";
 import { Check, PaintBucket, Palette, Sparkles, Wand, Leaf, Sword, Music } from "lucide-react";
 import {
   DropdownMenu,
@@ -16,7 +16,8 @@ import {
 
 const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
-  const isMobile = useIsMobile();
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
   
   // Добавляем защиту от undefined
   const themeKey = (theme || 'default') as keyof typeof themes;

@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature';
+export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
 
 interface ThemeContextType {
   theme: Theme;
@@ -28,7 +28,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature'].includes(savedTheme)) {
+      if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature', 'warlock', 'wizard', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
         setTheme(savedTheme as Theme);
       }
     } catch (error) {
@@ -41,6 +41,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     try {
       setTheme(newTheme);
       localStorage.setItem('theme', newTheme);
+      console.log('Тема изменена на:', newTheme);
+      
+      // Применяем класс темы к корневому элементу
+      document.documentElement.setAttribute('data-theme', newTheme);
+      document.body.className = '';
+      document.body.classList.add(`theme-${newTheme}`);
     } catch (error) {
       console.error('Ошибка при сохранении темы в localStorage:', error);
     }
