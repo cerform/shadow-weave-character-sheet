@@ -2,6 +2,17 @@
 import { auth } from "@/services/firebase";
 import { getUserData, updateUserData } from "./firestoreHelpers";
 
+// Флаг для отслеживания вывода предупреждений
+let authWarningShown = false;
+
+// Вывод предупреждения только один раз
+const showAuthWarningOnce = (message: string) => {
+  if (!authWarningShown) {
+    console.warn(message);
+    authWarningShown = true;
+  }
+};
+
 /**
  * Получить текущий UID пользователя
  * @returns UID пользователя или null, если пользователь не авторизован
@@ -11,7 +22,7 @@ export const getCurrentUid = (): string | null => {
     const user = auth.currentUser;
     return user ? user.uid : null;
   } catch (error) {
-    console.warn("Ошибка при получении UID пользователя:", error);
+    showAuthWarningOnce("Ошибка при получении UID пользователя, используется автономный режим");
     return null;
   }
 };
@@ -24,7 +35,7 @@ export const isUserAuthenticated = (): boolean => {
   try {
     return !!auth.currentUser;
   } catch (error) {
-    console.warn("Ошибка при проверке аутентификации:", error);
+    showAuthWarningOnce("Ошибка при проверке аутентификации, используется автономный режим");
     return false;
   }
 };
@@ -41,7 +52,7 @@ export const requireAuth = async <T>(callback: () => Promise<T>): Promise<T> => 
     }
     return await callback();
   } catch (error) {
-    console.warn("Ошибка при проверке аутентификации:", error);
+    showAuthWarningOnce("Ошибка при проверке аутентификации, используется автономный режим");
     throw new Error("Действие требует авторизации. Приложение работает в автономном режиме.");
   }
 };
@@ -98,7 +109,7 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
     const updated = await updateUserData(uid, updateData);
     return updated;
   } catch (error) {
-    console.error("Ошибка при синхронизации пользователя с Firestore:", error);
+    showAuthWarningOnce("Ошибка при синхронизации пользователя с Firestore, используется автономный режим");
     return false;
   }
 };
@@ -114,7 +125,7 @@ export const getCurrentUserWithData = async () => {
     
     return await getUserData(uid);
   } catch (error) {
-    console.error("Ошибка при получении данных пользователя:", error);
+    showAuthWarningOnce("Ошибка при получении данных пользователя, используется автономный режим");
     return null;
   }
 };

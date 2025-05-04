@@ -7,6 +7,17 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { syncUserWithFirestore, getCurrentUserWithData } from '@/utils/authHelpers';
 import { FirestoreUserData } from '@/utils/firestoreHelpers';
 
+// Флаг для отслеживания вывода предупреждений
+let authContextWarningShown = false;
+
+// Вывод предупреждения только один раз
+const showAuthContextWarningOnce = (message: string) => {
+  if (!authContextWarningShown) {
+    console.warn(message);
+    authContextWarningShown = true;
+  }
+};
+
 // Типы для пользователя и контекста
 export interface User {
   id: string;
@@ -121,13 +132,13 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
           });
         } else {
           // Если Firebase не доступен, включаем автономный режим
-          console.warn("AuthContext не доступен, используется автономный режим");
+          showAuthContextWarningOnce("Firebase не доступен, используется автономный режим");
           setIsOfflineMode(true);
           setIsInitializing(false);
         }
       } catch (error) {
         console.error("Ошибка инициализации AuthContext:", error);
-        console.warn("AuthContext не доступен, используется автономный режим");
+        showAuthContextWarningOnce("AuthContext не инициализирован, используется автономный режим");
         setIsOfflineMode(true);
         setIsInitializing(false);
       }
@@ -396,7 +407,7 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    console.warn("AuthContext не доступен, используется автономный режим");
+    showAuthContextWarningOnce("AuthContext не доступен, используется автономный режим");
     // Возвращаем заглушку для работы в автономном режиме
     return {
       currentUser: null,

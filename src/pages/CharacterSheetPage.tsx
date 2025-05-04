@@ -13,10 +13,15 @@ const CharacterSheetPage = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
-  const { currentUser, isOfflineMode } = useAuth(); 
+  const { currentUser, isOfflineMode } = useAuth();
+  // Флаг для отслеживания инициализации
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Загрузка персонажа из локального хранилища
   useEffect(() => {
+    // Проверяем, было ли уже загружено
+    if (isInitialized) return;
+
     // Проверяем в локальном хранилище последнего выбранного персонажа
     const loadCharacter = () => {
       try {
@@ -50,7 +55,8 @@ const CharacterSheetPage = () => {
     };
     
     loadCharacter();
-  }, []);
+    setIsInitialized(true);
+  }, [isInitialized]);
   
   // Проверка наличия активной сессии и подключение к ней
   useEffect(() => {
