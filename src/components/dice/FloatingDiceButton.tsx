@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dices } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { DicePanel } from '@/components/character-sheet/DicePanel';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { PlayerDicePanel } from '@/components/character-sheet/PlayerDicePanel';
@@ -13,23 +12,28 @@ export const FloatingDiceButton = () => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(true);
+  };
+  
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button 
-            size="lg" 
-            className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 
-            style={{ 
-              backgroundColor: `${currentTheme.accent}`,
-              color: '#FFFFFF',
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
-            }}
-          >
-            <Dices className="h-8 w-8" />
-          </Button>
-        </SheetTrigger>
+        <Button 
+          size="lg" 
+          className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 
+          style={{ 
+            backgroundColor: `${currentTheme.accent}`,
+            color: '#FFFFFF',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
+          }}
+          onClick={handleButtonClick}
+        >
+          <Dices className="h-8 w-8" />
+        </Button>
         <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/95 border-white/30 p-0 pt-4">
           <SheetHeader className="px-6">
             <SheetTitle className="text-white text-2xl">Кубики</SheetTitle>

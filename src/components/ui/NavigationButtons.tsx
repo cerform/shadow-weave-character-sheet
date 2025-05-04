@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Scroll, Map, Users, Book } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,7 @@ interface NavigationButtonsProps {
 
 export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
   const isDM = currentUser?.isDM;
   const { theme } = useTheme();
@@ -35,9 +36,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
 
-  // Функции для навигации
+  // Функция для навигации с предотвращением повторной навигации на ту же страницу
   const goTo = (path: string) => {
-    navigate(path);
+    if (location.pathname !== path) {
+      navigate(path);
+    }
   };
   
   return (

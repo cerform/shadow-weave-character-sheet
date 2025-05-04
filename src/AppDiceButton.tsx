@@ -22,18 +22,18 @@ export const AppDiceButton: React.FC = () => {
   
   // Инициализация позиции кнопки при первой загрузке
   useEffect(() => {
-    // Восстановление сохраненной позиции из localStorage
-    const savedPosition = localStorage.getItem('diceButtonPosition');
-    
-    if (savedPosition) {
-      try {
+    try {
+      // Восстановление сохраненной позиции из localStorage
+      const savedPosition = localStorage.getItem('diceButtonPosition');
+      
+      if (savedPosition) {
         const pos = JSON.parse(savedPosition);
         setPosition(pos);
-      } catch (e) {
-        // При ошибке разбора JSON используем значения по умолчанию
+      } else {
         resetPosition();
       }
-    } else {
+    } catch (e) {
+      // При ошибке разбора JSON используем значения по умолчанию
       resetPosition();
     }
   }, []);
@@ -46,79 +46,83 @@ export const AppDiceButton: React.FC = () => {
   // При изменении позиции сохраняем её в localStorage
   useEffect(() => {
     if (position.x !== -1 && position.y !== -1) {
-      localStorage.setItem('diceButtonPosition', JSON.stringify(position));
+      try {
+        localStorage.setItem('diceButtonPosition', JSON.stringify(position));
+      } catch (e) {
+        console.error("Ошибка при сохранении позиции кнопки:", e);
+      }
     }
   }, [position]);
   
   // Начало перетаскивания
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (buttonRef.current) {
-      setIsDragging(true);
+    if (!buttonRef.current) return;
+    
+    setIsDragging(true);
+    
+    // Для событий мыши
+    if ('clientX' in e) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
       
-      // Для событий мыши
-      if ('clientX' in e) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
-        
-        const handleMouseMove = (moveEvent: MouseEvent) => {
-          const x = moveEvent.clientX - offsetX;
-          const y = moveEvent.clientY - offsetY;
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const x = moveEvent.clientX - offsetX;
+        const y = moveEvent.clientY - offsetY;
+        updatePosition(x, y);
+      };
+      
+      const handleMouseUp = () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        setIsDragging(false);
+      };
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    // Для сенсорных событий
+    else if ('touches' in e && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const rect = buttonRef.current.getBoundingClientRect();
+      const offsetX = touch.clientX - rect.left;
+      const offsetY = touch.clientY - rect.top;
+      
+      const handleTouchMove = (moveEvent: TouchEvent) => {
+        if (moveEvent.touches.length > 0) {
+          const touchMove = moveEvent.touches[0];
+          const x = touchMove.clientX - offsetX;
+          const y = touchMove.clientY - offsetY;
           updatePosition(x, y);
-        };
-        
-        const handleMouseUp = () => {
-          document.removeEventListener('mousemove', handleMouseMove);
-          document.removeEventListener('mouseup', handleMouseUp);
-          setIsDragging(false);
-        };
-        
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-      }
-      // Для сенсорных событий
-      else if ('touches' in e && e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = buttonRef.current.getBoundingClientRect();
-        const offsetX = touch.clientX - rect.left;
-        const offsetY = touch.clientY - rect.top;
-        
-        const handleTouchMove = (moveEvent: TouchEvent) => {
-          if (moveEvent.touches.length > 0) {
-            const touchMove = moveEvent.touches[0];
-            const x = touchMove.clientX - offsetX;
-            const y = touchMove.clientY - offsetY;
-            updatePosition(x, y);
-            moveEvent.preventDefault(); // Предотвращаем скролл во время перетаскивания
-          }
-        };
-        
-        const handleTouchEnd = () => {
-          document.removeEventListener('touchmove', handleTouchMove);
-          document.removeEventListener('touchend', handleTouchEnd);
-          setIsDragging(false);
-        };
-        
-        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        document.addEventListener('touchend', handleTouchEnd);
-      }
+          moveEvent.preventDefault(); // Предотвращаем скролл во время перетаскивания
+        }
+      };
+      
+      const handleTouchEnd = () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+        setIsDragging(false);
+      };
+      
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
     }
   };
   
   // Обновление позиции с проверкой границ экрана
   const updatePosition = (x: number, y: number) => {
-    if (buttonRef.current) {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const buttonWidth = buttonRef.current.offsetWidth;
-      const buttonHeight = buttonRef.current.offsetHeight;
-      
-      // Ограничиваем позицию в пределах окна браузера
-      const boundedX = Math.max(0, Math.min(windowWidth - buttonWidth, x));
-      const boundedY = Math.max(0, Math.min(windowHeight - buttonHeight, y));
-      
-      setPosition({ x: boundedX, y: boundedY });
-    }
+    if (!buttonRef.current) return;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const buttonWidth = buttonRef.current.offsetWidth;
+    const buttonHeight = buttonRef.current.offsetHeight;
+    
+    // Ограничиваем позицию в пределах окна браузера
+    const boundedX = Math.max(0, Math.min(windowWidth - buttonWidth, x));
+    const boundedY = Math.max(0, Math.min(windowHeight - buttonHeight, y));
+    
+    setPosition({ x: boundedX, y: boundedY });
   };
   
   // Исключаем страницы, на которых не нужно показывать плавающую кнопку кубиков
