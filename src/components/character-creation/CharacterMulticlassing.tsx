@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -112,9 +111,11 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
         continue;
       }
       
-      // Для обычных требований
-      if (character.abilities[ability] < value) {
-        return false;
+      // Для обычных требований, проверяем что это числовое свойство
+      if (typeof value === 'number' && typeof character.abilities[ability] === 'number') {
+        if (character.abilities[ability] < value) {
+          return false;
+        }
       }
     }
     
@@ -144,9 +145,10 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     
     // Проверяем требования для мультикласса
     if (!canMulticlass(selectedClass)) {
+      const className = classes.find(c => c.id === selectedClass)?.name || selectedClass;
       toast({
         title: "Не соответствует требованиям",
-        description: `Ваш персонаж не соответствует требованиям для класса ${classes.find(c => c.id === selectedClass)?.name}`,
+        description: `Ваш персонаж не соответствует требованиям для класса ${className}`,
         variant: "destructive"
       });
       return;
@@ -164,7 +166,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     
     toast({
       title: "Класс добавлен",
-      description: `${classes.find(c => c.id === selectedClass)?.name} (Уровень ${selectedLevel}) добавлен`
+      description: `${classes.find(c => c.id === selectedClass)?.name || selectedClass} (Уровень ${selectedLevel}) добавлен`
     });
   };
   

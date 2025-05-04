@@ -56,11 +56,11 @@ export interface SorceryPoints {
   max: number;
 }
 
-// Добавляем MulticlassRequirements, которое используется в CharacterMulticlassing
+// Обновляем интерфейс MulticlassRequirements, чтобы исправить ошибку типов
 export interface MulticlassRequirements {
   [key: string]: {
     [key: string]: number;
-    description?: string;
+    description: string;
   }
 }
 

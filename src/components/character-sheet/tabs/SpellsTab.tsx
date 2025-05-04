@@ -1,22 +1,23 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails } from "@/data/spells"; // Removing getSpellsByLevels since it doesn't exist
+import { getSpellDetails } from "@/data/spells"; 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Book, Plus, Search, Filter, XCircle } from "lucide-react"; 
+import { Book } from "lucide-react"; 
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CharacterSpell } from '@/types/character';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { Wand, Search, Plus, Info, Trash2 } from 'lucide-react';
-import { isString, isStringArray, safeJoin } from '@/hooks/spellbook/filterUtils';
+import { Wand, Info, Trash2, Plus, Search, Filter, XCircle } from 'lucide-react';
+import { isString, safeJoin, isCharacterSpell, stringToSpell } from '@/hooks/spellbook/filterUtils';
+import { getSpellsByLevel } from '@/data/spells';
 
 export const SpellsTab = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -28,6 +29,19 @@ export const SpellsTab = () => {
   const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
   const deviceType = useDeviceType();
   const { toast } = useToast();
+  
+  // Функция для получения заклинаний как строк
+  const getCharacterSpellNames = (): string[] => {
+    if (!character?.spells) return [];
+
+    // Если заклинания хранятся как объекты CharacterSpell
+    if (Array.isArray(character.spells) && character.spells.length > 0 && typeof character.spells[0] !== 'string') {
+      return (character.spells as CharacterSpell[]).map(spell => spell.name);
+    }
+    
+    // Если заклинания хранятся как строки
+    return character.spells as string[];
+  };
   
   // Функция для переключения выбора уровней заклинаний
   const toggleLevelFilter = (level: number) => {
@@ -46,16 +60,19 @@ export const SpellsTab = () => {
   };
   
   // Group spells by level
-  const spellsByLevel = character?.spells?.reduce((acc: {[key: string]: string[]}, spell: string) => {
-    const spellDetails = getSpellDetails(spell);
-    const level = spellDetails?.level ?? 0;
-    
-    if (!acc[level]) {
-      acc[level] = [];
-    }
-    acc[level].push(spell);
-    return acc;
-  }, {}) || {};
+  const spellsByLevel = useMemo(() => {
+    const spellNames = getCharacterSpellNames();
+    return spellNames?.reduce((acc: {[key: string]: string[]}, spellName: string) => {
+      const spellDetails = getSpellDetails(spellName);
+      const level = spellDetails?.level ?? 0;
+      
+      if (!acc[level]) {
+        acc[level] = [];
+      }
+      acc[level].push(spellName);
+      return acc;
+    }, {}) || {};
+  }, [character?.spells]);
 
   const getLevelName = (level: number): string => {
     return level === 0 ? "Заговоры" : `${level} круг`;
@@ -76,7 +93,7 @@ export const SpellsTab = () => {
     
     return schoolColors[school] || "bg-primary/20";
   };
-
+  
   // Улучшенный рендеринг компонентов для описания заклинаний
   const renderComponents = (components?: string) => {
     if (!components) return null;
@@ -205,11 +222,12 @@ export const SpellsTab = () => {
 
   // Фильтрация заклинаний для текущего отображения в зависимости от выбранных фильтров
   const filteredSpells = useMemo(() => {
-    if (!character?.spells) return [];
+    const spellNames = getCharacterSpellNames();
+    if (!spellNames || spellNames.length === 0) return [];
     
     // Если есть выбранные уровни для фильтрации
     if (selectedLevels.length > 0) {
-      return character.spells.filter(spellName => {
+      return spellNames.filter(spellName => {
         const spellDetails = getSpellDetails(spellName);
         
         // Проверяем, соответствует ли уровень заклинания хотя бы одному из выбранных уровней
@@ -228,7 +246,7 @@ export const SpellsTab = () => {
     }
     
     // Если нет выбранных уровней, применяем только поиск и фильтр по школе
-    return character.spells.filter(spellName => {
+    return spellNames.filter(spellName => {
       const spellDetails = getSpellDetails(spellName);
       
       // Проверяем, соответствует ли заклинание поисковому запросу
@@ -278,7 +296,7 @@ export const SpellsTab = () => {
     };
   };
   
-  // Функция для получения уровня заклинания, обрабатывает строки и объекты
+  // Функция для получения у��овня заклинания, обрабатывает строки и объекты
   const getSpellLevel = (spell: string | CharacterSpell): number => {
     if (isCharacterSpell(spell)) {
       return spell.level;
