@@ -56,7 +56,7 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
         description: `${character.name} успешно сохранен`,
       });
       
-      // Перенаправляем на страницу с персонажами
+      // Перенаправляем на страницу списка персонажей вместо страницы конкретного персонажа
       navigate('/characters');
     } catch (error) {
       console.error("Ошибка при сохранении персонажа:", error);
@@ -94,6 +94,7 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
               <p><span className="font-medium text-gray-200">Класс:</span> <span className="text-white">{character.class || "Не указан"}</span></p>
               {character.subclass && <p><span className="font-medium text-gray-200">Подкласс:</span> <span className="text-white">{character.subclass}</span></p>}
               <p><span className="font-medium text-gray-200">Уровень:</span> <span className="text-white">{character.level || 1}</span></p>
+              <p><span className="font-medium text-gray-200">Здоровье (HP):</span> <span className="text-white">{character.maxHp || "Не указано"}</span></p>
               <p><span className="font-medium text-gray-200">Предыстория:</span> <span className="text-white">{character.background || "Не указана"}</span></p>
             </div>
           </div>

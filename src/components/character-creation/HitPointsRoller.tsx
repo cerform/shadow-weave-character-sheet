@@ -76,14 +76,14 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
     const firstLevelHp = hitDie + constitutionModifier;
     
     if (level === 1) {
-      return firstLevelHp;
+      return Math.max(1, firstLevelHp); // Минимум 1 HP
     } 
     
     // Для уровней 2+, добавляем результат броска + конституция для каждого уровня
     // Бросаем количество кубиков равное (уровень - 1)
     const additionalHp = diceRoll + (constitutionModifier * (level - 1));
     
-    return firstLevelHp + additionalHp;
+    return Math.max(level, firstLevelHp + additionalHp); // Минимум HP равен уровню персонажа
   };
 
   // Обработчик завершения броска кубика
@@ -201,7 +201,7 @@ const HitPointsRoller: React.FC<HitPointsRollerProps> = ({
               color: currentTheme.accent === '#8B5A2B' || currentTheme.accent === '#F59E0B' ? '#fff' : currentTheme.accent
             }}
           >
-            {rollState === 'rolling' ? 'Бросаем кубик...' : 'Бросить кубик хитов'}
+            {rollState === 'rolling' ? 'Бросаем кубик...' : 'БРОСИТЬ КУБИК ХИТОВ'}
           </Button>
         </div>
       </CardContent>

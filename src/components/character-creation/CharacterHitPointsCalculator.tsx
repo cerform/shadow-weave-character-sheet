@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import NavigationButtons from "./NavigationButtons";
 import { CharacterSheet } from '@/types/character.d';
@@ -70,7 +71,7 @@ const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> 
     } else {
       toast({
         title: "Не удалось сохранить HP",
-        description: "Пожалуйста, бросьте кубик хитов или введите значение вручную",
+        description: "Пожалуйста, бросьте кубик хитов или примите расчетное значение",
         variant: "destructive"
       });
     }
@@ -135,7 +136,7 @@ const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> 
         nextStep={handleNextStep}
         prevStep={prevStep}
         isFirstStep={false}
-        nextLabel="Сохранить и ��родолжить"
+        nextLabel="СОХРАНИТЬ И ПРОДОЛЖИТЬ"
       />
     </div>
   );

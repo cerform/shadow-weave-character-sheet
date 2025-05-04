@@ -1,6 +1,5 @@
 
-import React, { useEffect } from 'react';
-import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import React from 'react';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
 import CharacterClassSelection from './CharacterClassSelection';
@@ -15,7 +14,6 @@ import CharacterLanguagesSelection from './CharacterLanguagesSelection';
 import CharacterSubclassSelection from './CharacterSubclassSelection';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { CharacterSheet } from '@/types/character.d';
-import { steps } from '@/config/characterCreationSteps';
 
 // Импорт даннных о подклассах для проверки их наличия
 import { subclassData } from '@/data/subclasses';
@@ -122,7 +120,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 5: // Здоровье (HP) - новый шаг
+      case 5: // Здоровье (HP)
         return (
           <CharacterHitPointsCalculator
             character={character}
