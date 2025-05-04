@@ -70,15 +70,28 @@ export const useDamageLog = (
           ...prev
         ]);
         
-        toast({
-          title: "Урон получен",
-          description: `${damage} урона${source ? ` от ${source}` : ''}`,
-          variant: "destructive"
-        });
+        // Проверяем на статус "в сознании/без сознания"
+        const newHp = Math.max(0, currentHp - remainingDamage);
+        if (newHp === 0) {
+          toast({
+            title: "Персонаж без сознания!",
+            description: `HP снижено до 0${source ? ` от ${source}` : ''}`,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Урон получен",
+            description: `${damage} урона${source ? ` от ${source}` : ''}`,
+            variant: "destructive"
+          });
+        }
       }
     } else {
       // Это лечение
-      setCurrentHp((prev) => Math.min(maxHp, prev + amount));
+      const wasUnconscious = currentHp === 0;
+      const newHp = Math.min(maxHp, currentHp + amount);
+      setCurrentHp(newHp);
+      
       setEvents((prev) => [
         {
           id: eventId,
@@ -90,10 +103,18 @@ export const useDamageLog = (
         ...prev
       ]);
       
-      toast({
-        title: "Лечение получено",
-        description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-      });
+      if (wasUnconscious && newHp > 0) {
+        toast({
+          title: "Персонаж пришел в сознание!",
+          description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Лечение получено",
+          description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+        });
+      }
     }
   };
 
@@ -116,6 +137,16 @@ export const useDamageLog = (
       toast({
         title: "Временные HP получены",
         description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
+      });
+    } else if (amount === tempHp) {
+      toast({
+        title: "Временные HP обновлены",
+        description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
+      });
+    } else {
+      toast({
+        title: "Временные HP не изменились",
+        description: `У вас уже ${tempHp} временных HP (больше чем ${amount})`,
       });
     }
   };
@@ -148,6 +179,52 @@ export const useDamageLog = (
     });
   };
 
+  // Прямое обновление HP (например, при загрузке персонажа или отдыхе)
+  const setHp = (hp: number) => {
+    const oldHp = currentHp;
+    const newHp = Math.max(0, Math.min(maxHp, hp));
+    
+    setCurrentHp(newHp);
+    
+    // Если значение изменилось, добавляем событие в журнал
+    if (newHp !== oldHp) {
+      const difference = newHp - oldHp;
+      
+      setEvents((prev) => [
+        {
+          id: crypto.randomUUID(),
+          type: difference > 0 ? 'heal' : 'damage',
+          amount: Math.abs(difference),
+          source: 'Ручное изменение',
+          timestamp: new Date()
+        },
+        ...prev
+      ]);
+    }
+  };
+  
+  // Прямое обновление временного HP
+  const setTempHpValue = (hp: number) => {
+    const oldTempHp = tempHp;
+    const newTempHp = Math.max(0, hp);
+    
+    setTempHp(newTempHp);
+    
+    // Если значение изменилось, добавляем событие в журнал
+    if (newTempHp !== oldTempHp) {
+      setEvents((prev) => [
+        {
+          id: crypto.randomUUID(),
+          type: 'temp',
+          amount: newTempHp,
+          source: 'Ручное изменение',
+          timestamp: new Date()
+        },
+        ...prev
+      ]);
+    }
+  };
+
   return {
     currentHp,
     tempHp,
@@ -156,7 +233,7 @@ export const useDamageLog = (
     addTempHp,
     undoLastEvent,
     // Устанавливаем HP напрямую (для инициализации)
-    setHp: (hp: number) => setCurrentHp(hp),
-    setTempHp
+    setHp,
+    setTempHp: setTempHpValue
   };
 };

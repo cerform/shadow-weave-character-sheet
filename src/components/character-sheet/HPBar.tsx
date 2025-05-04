@@ -51,10 +51,6 @@ export const HPBar: React.FC<HPBarProps> = ({
     return 'bg-red-500';
   };
   
-  // Создаем сегментированную полосу здоровья
-  const segments = 20;
-  const segmentWidth = `${100 / segments}%`;
-  
   return (
     <div className={`w-full ${className}`}>
       {showValues && (
@@ -75,25 +71,11 @@ export const HPBar: React.FC<HPBarProps> = ({
       )}
       
       <div className={`relative w-full overflow-hidden rounded-full bg-gray-800/50`} style={{ height }}>
-        {/* Основной HP бар - сегментированный */}
-        <div className="flex h-full w-full">
-          {Array.from({ length: segments }).map((_, i) => {
-            const filled = (i + 1) / segments * 100 <= healthPercentage;
-            return (
-              <motion.div
-                key={i}
-                className={`h-full mx-[0.5px] first:ml-0 last:mr-0 ${filled ? getHealthColor() : 'bg-gray-700/20'}`}
-                style={{ width: segmentWidth }}
-                initial={{ scaleY: 0.5, opacity: 0.5 }}
-                animate={{ 
-                  scaleY: filled ? 1 : 0.5, 
-                  opacity: filled ? 1 : 0.2,
-                }}
-                transition={{ duration: 0.3, delay: filled ? i * 0.01 : 0 }}
-              />
-            );
-          })}
-        </div>
+        {/* Основная полоса здоровья */}
+        <div 
+          className={`absolute top-0 left-0 h-full transition-all duration-300 ${getHealthColor()}`} 
+          style={{ width: `${healthPercentage}%` }}
+        />
         
         {/* Индикатор изменения HP */}
         <AnimatePresence>
@@ -123,6 +105,16 @@ export const HPBar: React.FC<HPBarProps> = ({
             transition={{ duration: 0.3 }}
           />
         )}
+        
+        {/* Сегментированный оверлей для стильного эффекта */}
+        <div className="absolute top-0 left-0 right-0 bottom-0 flex pointer-events-none">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="flex-1 border-r border-black/20 last:border-0" 
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

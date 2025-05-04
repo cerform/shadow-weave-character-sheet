@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DamageEvent } from '@/hooks/useDamageLog';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Heart, Plus, Minus } from 'lucide-react';
+import { Shield, Heart, Plus, Minus, Undo } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DamageLogProps {
   events: DamageEvent[];
@@ -40,15 +41,25 @@ export const DamageLog: React.FC<DamageLogProps> = ({
           Журнал событий
         </h3>
         {undoLastEvent && events.length > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={undoLastEvent} 
-            className="h-7 px-2 text-xs"
-            style={{ color: currentTheme.accent }}
-          >
-            Отменить последнее
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={undoLastEvent} 
+                  className="h-7 px-2 text-xs flex items-center gap-1"
+                  style={{ color: currentTheme.accent }}
+                >
+                  <Undo className="h-3.5 w-3.5" />
+                  Отменить
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Отменить последнее изменение HP</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
       
@@ -64,13 +75,23 @@ export const DamageLog: React.FC<DamageLogProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {event.type === 'damage' ? (
-                  <Minus className="h-4 w-4 mr-2 text-red-500" />
-                ) : event.type === 'heal' ? (
-                  <Plus className="h-4 w-4 mr-2 text-green-500" />
-                ) : (
-                  <Shield className="h-4 w-4 mr-2 text-emerald-400" />
-                )}
+                <div 
+                  className={`flex items-center justify-center h-5 w-5 rounded-full mr-2 ${
+                    event.type === 'damage' 
+                      ? 'bg-red-500/20' 
+                      : event.type === 'heal'
+                        ? 'bg-green-500/20'
+                        : 'bg-emerald-400/20'
+                  }`}
+                >
+                  {event.type === 'damage' ? (
+                    <Minus className="h-3 w-3 text-red-500" />
+                  ) : event.type === 'heal' ? (
+                    <Plus className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Shield className="h-3 w-3 text-emerald-400" />
+                  )}
+                </div>
                 
                 <div className="flex-1 text-xs" style={{ color: currentTheme.textColor }}>
                   <span>

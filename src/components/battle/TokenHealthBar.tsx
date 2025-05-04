@@ -69,12 +69,12 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   return (
     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20">
       <div 
-        className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden shadow-sm border border-black/30"
+        className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden shadow-sm border border-black/30 relative"
         style={{ width: `${width}px` }}
       >
         {/* Основная полоса здоровья */}
         <motion.div 
-          className="h-full transition-all duration-300 rounded-full"
+          className="h-full transition-all duration-300 rounded-full absolute top-0 left-0"
           style={{ 
             width: `${healthPercentage}%`, 
             backgroundColor: barColor,
@@ -88,7 +88,7 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
         <AnimatePresence>
           {isAnimating && (
             <motion.div 
-              className={`absolute top-0 left-0 h-full ${currentHP < prevHealthPercentage ? 'bg-red-500/30' : 'bg-green-500/30'}`}
+              className={`absolute top-0 left-0 h-full ${safeCurrentHP < prevHealthPercentage ? 'bg-red-500/30' : 'bg-green-500/30'}`}
               style={{ width: `${Math.max(healthPercentage, prevHealthPercentage)}%` }}
               initial={{ opacity: 0.7 }}
               animate={{ opacity: 0 }}
