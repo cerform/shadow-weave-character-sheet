@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/types/character';
+import { Character, Feature } from '@/types/character';
 
 interface FeaturesPanelProps {
   character: Character | null;
@@ -17,7 +18,14 @@ export const FeaturesPanel: React.FC<FeaturesPanelProps> = ({ character }) => {
           <div className="space-y-4">
             {character.features.map((feature, index) => (
               <div key={index} className="border-b pb-2 last:border-b-0">
-                <h4 className="font-medium">{feature}</h4>
+                <h4 className="font-medium">
+                  {typeof feature === 'string' 
+                    ? feature 
+                    : feature.name}
+                </h4>
+                {typeof feature !== 'string' && feature.description && (
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                )}
               </div>
             ))}
           </div>

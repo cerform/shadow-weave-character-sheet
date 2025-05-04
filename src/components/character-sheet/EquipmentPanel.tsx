@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/types/character';
+import { Character, Equipment } from '@/types/character';
 
 interface EquipmentPanelProps {
   character: Character | null;
@@ -13,11 +14,15 @@ export const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ character }) => 
         <CardTitle>Снаряжение</CardTitle>
       </CardHeader>
       <CardContent>
-        {character && character.equipment ? (
+        {character && character.equipment && character.equipment.length > 0 ? (
           <div className="space-y-2">
             <ul className="list-disc pl-5">
               {character.equipment.map((item, index) => (
-                <li key={index}>{item}</li>
+                <li key={index}>
+                  {typeof item === 'string' 
+                    ? item 
+                    : `${item.name} (${item.quantity})`}
+                </li>
               ))}
             </ul>
           </div>

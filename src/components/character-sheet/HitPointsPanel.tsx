@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Character } from '@/types/character';
@@ -17,12 +18,17 @@ export const HitPointsPanel: React.FC<HitPointsPanelProps> = ({ character }) => 
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Текущее здоровье</p>
-              <p className="text-2xl font-bold">{character.currentHp || 0} / {character.maxHp || 0}</p>
+              <p className="text-2xl font-bold">
+                {character.currentHp !== undefined ? character.currentHp : (character.hitPoints?.current || 0)} / 
+                {character.maxHp !== undefined ? character.maxHp : (character.hitPoints?.maximum || 0)}
+              </p>
             </div>
-            {character.temporaryHp && character.temporaryHp > 0 && (
+            {(character.temporaryHp !== undefined ? character.temporaryHp > 0 : character.hitPoints?.temporary && character.hitPoints.temporary > 0) && (
               <div>
                 <p className="text-sm text-muted-foreground">Временное здоровье</p>
-                <p className="text-xl font-semibold text-blue-500">{character.temporaryHp}</p>
+                <p className="text-xl font-semibold text-blue-500">
+                  {character.temporaryHp !== undefined ? character.temporaryHp : character.hitPoints?.temporary}
+                </p>
               </div>
             )}
             {character.hitDice && (

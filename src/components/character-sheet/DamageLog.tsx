@@ -23,7 +23,7 @@ const DamageLog: React.FC<DamageLogProps> = ({ events }) => {
   }
 
   const getEventTypeClass = (event: HitPointEvent) => {
-    if (typeof event === 'object' && 'type' in event) {
+    if (typeof event === 'object') {
       if (event.type === 'damage') {
         return "text-red-500";
       } else if (event.type === 'heal' || event.type === 'healing') {

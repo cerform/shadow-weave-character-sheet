@@ -1,110 +1,31 @@
 
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { Character, CharacterSheet } from '@/types/character';
-import { extractSpellNames } from '@/utils/spellUtils';
+import React, { createContext, useState, ReactNode } from 'react';
+import { Character } from '@/types/character';
 
-interface CharacterContextProps {
+// Контекст для работы с персонажем
+interface CharacterContextType {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
-  saveCharacter: () => Promise<void>;
-  updateCharacter: (updates: Partial<Character>) => void;
-  isLoading: boolean;
 }
 
-// Добавляем именованный экспорт для CharacterContext
-export const CharacterContext = createContext<CharacterContextProps>({
+export const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
-  saveCharacter: async () => {},
-  updateCharacter: () => {},
-  isLoading: true
 });
 
+// Provider для контекста персонажа
 interface CharacterProviderProps {
   children: ReactNode;
-  initialCharacter?: Character | null;
 }
 
-export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children, initialCharacter = null }) => {
-  const [character, setCharacter] = useState<Character | null>(initialCharacter);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // При монтировании компонента загружаем персонажа из localStorage
-    const loadCharacter = () => {
-      try {
-        const savedCharacter = localStorage.getItem('character');
-        if (savedCharacter) {
-          const parsedCharacter = JSON.parse(savedCharacter) as CharacterSheet;
-          // Убедимся, что у нас есть все необходимые свойства для типа Character
-          setCharacter({
-            ...parsedCharacter,
-            features: parsedCharacter.features || []
-          } as Character);
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки персонажа из localStorage:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCharacter();
-  }, []);
-
-  const saveCharacter = async (): Promise<void> => {
-    try {
-      if (character) {
-        // Сохраняем персонажа в localStorage
-        localStorage.setItem('character', JSON.stringify(character));
-      }
-    } catch (error) {
-      console.error('Ошибка сохранения персонажа:', error);
-      throw new Error('Не удалось сохранить персонажа');
-    }
-  };
-
-  const updateCharacter = (updates: Partial<Character>) => {
-    setCharacter(prevCharacter => {
-      if (!prevCharacter) return null;
-      
-      // Обрабатываем специальный случай со списком заклинаний
-      if (updates.spells) {
-        // Если spells содержит объекты заклинаний, извлекаем только их имена
-        if (updates.spells.length > 0 && typeof updates.spells[0] !== 'string') {
-          updates = {
-            ...updates,
-            spells: extractSpellNames(updates.spells)
-          };
-        }
-      }
-      
-      const updated = {
-        ...prevCharacter,
-        ...updates
-      };
-      
-      // Автоматически сохраняем при обновлении
-      localStorage.setItem('character', JSON.stringify(updated));
-      
-      return updated;
-    });
-  };
+export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
+  const [character, setCharacter] = useState<Character | null>(null);
 
   return (
-    <CharacterContext.Provider value={{ 
-      character, 
-      setCharacter, 
-      saveCharacter, 
-      updateCharacter,
-      isLoading
-    }}>
+    <CharacterContext.Provider value={{ character, setCharacter }}>
       {children}
     </CharacterContext.Provider>
   );
 };
 
-export const useCharacter = () => useContext(CharacterContext);
-
-// Для обратной совместимости сохраняем default экспорт
 export default CharacterContext;

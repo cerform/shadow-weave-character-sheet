@@ -1,7 +1,7 @@
 
 declare module '@/types/character' {
   export interface CharacterSheet {
-    id: string;
+    id?: string;
     name: string;
     level: number;
     race?: string;
@@ -11,17 +11,17 @@ declare module '@/types/character' {
     subclass?: string;
     background?: string;
     alignment?: string;
-    abilities: AbilityScores;
-    hitPoints: HitPoints;
-    hitDice: {
+    abilities?: AbilityScores;
+    hitPoints?: HitPoints;
+    hitDice?: {
       total: number;
-      current: number;
+      current?: number;
       value?: string;
       used?: number;
     };
     proficiencies?: Proficiencies;
-    equipment?: Equipment[];
-    features?: Feature[];
+    equipment?: Equipment[] | string[];
+    features?: Feature[] | string[];
     spells?: (string | CharacterSpell)[];
     personalityTraits?: string[];
     ideals?: string[];
@@ -31,13 +31,16 @@ declare module '@/types/character' {
     userId?: string;
     // Дополнительные поля
     experience?: number;
+    experiencePoints?: number;
     proficiencyBonus?: number;
     inspiration?: boolean;
     armorClass?: number;
     initiative?: number;
     speed?: number;
-    maxHitPoints?: number;
-    temporaryHitPoints?: number;
+    maxHp?: number;
+    currentHp?: number;
+    temporaryHp?: number;
+    tempHp?: number;
     deathSaves?: {
       successes: number;
       failures: number;
@@ -58,8 +61,17 @@ declare module '@/types/character' {
     };
     // Дополнительные данные для рас
     size?: string;
-    speed?: number;
+    gender?: string;
     age?: number;
+    // Внешний вид
+    appearance?: {
+      age: number;
+      height: string;
+      weight: string;
+      eyes: string;
+      skin: string;
+      hair: string;
+    };
     // Характеристики для заклинателей
     spellcastingAbility?: 'intelligence' | 'wisdom' | 'charisma';
     spellSaveDC?: number;
@@ -68,6 +80,8 @@ declare module '@/types/character' {
     spellsKnown?: number; // для колдунов и чародеев
     // Для отслеживания мультиклассирования
     classes?: { class: string, level: number }[];
+    // Очки колдовства для чародеев
+    sorceryPoints?: SorceryPoints;
   }
 
   export type AbilityScores = {
@@ -83,12 +97,13 @@ declare module '@/types/character' {
     INT?: number;
     WIS?: number;
     CHA?: number;
+    [key: string]: number | undefined;
   };
 
   export interface HitPoints {
     current: number;
     max: number;
-    temporary: number;
+    temporary?: number;
   }
 
   export interface Proficiencies {
@@ -96,6 +111,9 @@ declare module '@/types/character' {
     armor?: string[];
     tools?: string[];
     languages?: string[];
+    savingThrows?: string[];
+    skills?: string[];
+    [key: string]: string[] | undefined;
   }
 
   export interface Equipment {
@@ -105,6 +123,7 @@ declare module '@/types/character' {
     value?: number;
     description?: string;
     equipped?: boolean;
+    toString?: () => string;
   }
 
   export interface Feature {
@@ -112,9 +131,11 @@ declare module '@/types/character' {
     source: string;
     description: string;
     level?: number;
+    toString?: () => string;
   }
 
   export interface CharacterSpell {
+    id?: string | number;
     name: string;
     level: number;
     school?: string;
@@ -133,6 +154,7 @@ declare module '@/types/character' {
     ritual?: boolean;
     higherLevels?: string;
     higherLevel?: string;
+    [key: string]: any;
   }
 
   export interface SpellData {
@@ -149,13 +171,13 @@ declare module '@/types/character' {
     materialComponents?: string;
     description?: string;
     higherLevels?: string;
-    higherLevel?: string; // Альтернативное имя в некоторых структурах данных
+    higherLevel?: string;
     classes?: string[] | string;
     prepared?: boolean;
     concentration?: boolean;
     ritual?: boolean;
     duration?: string;
-    [key: string]: any; // Индексная сигнатура для совместимости
+    [key: string]: any;
   }
 
   export interface SaveProficiencies {
@@ -206,14 +228,22 @@ declare module '@/types/character' {
     7: { max: number; current: number };
     8: { max: number; current: number };
     9: { max: number; current: number };
+    [key: string]: { max: number; current: number };
+  }
+
+  export interface SorceryPoints {
+    total: number;
+    used: number;
+    max?: number;
+    current?: number;
   }
 
   export interface Character extends CharacterSheet {
-    features: Feature[];
+    features: Feature[] | string[];
   }
 
   export interface ClassRequirement {
-    abilityRequirements: {
+    abilityRequirements?: {
       strength?: number;
       dexterity?: number;
       constitution?: number;
@@ -221,7 +251,9 @@ declare module '@/types/character' {
       wisdom?: number;
       charisma?: number;
     };
-    description: string;
+    abilityScore?: keyof AbilityScores;
+    minValue?: number;
+    description?: string;
   }
 
   export interface Background {
@@ -265,18 +297,24 @@ declare module '@/types/character' {
   }
 
   export interface HitPointEvent {
-    type: 'damage' | 'healing' | 'temp';
-    amount: number;
+    id?: string | number;
+    type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+    value: number;
+    amount?: number;
     source?: string;
     timestamp: number;
   }
 
-  export const ABILITY_SCORE_CAPS = {
-    DEFAULT: 10,
-    BASE_CAP: 15,
-    RACIAL_CAP: 17,
-    ASI_CAP: 20,
-    MAGIC_CAP: 30,
-    MIN: 1
+  export const ABILITY_SCORE_CAPS: {
+    DEFAULT: number;
+    BASE_CAP: number;
+    RACIAL_CAP: number;
+    ASI_CAP: number;
+    MAGIC_CAP: number;
+    MIN: number;
+    MAX: number;
+    ABSOLUTE_MAX: number;
+    EPIC_CAP: number;
+    LEGENDARY_CAP: number;
   };
 }
