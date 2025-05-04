@@ -1,10 +1,9 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
   level: number;
   description: string;
-  school?: string;
+  school: string;  // Теперь обязательное поле
   castingTime?: string;
   range?: string;
   components?: string;
@@ -16,6 +15,8 @@ export interface CharacterSpell {
   material?: boolean;
   higherLevels?: string;
   classes?: string[];
+  ritual?: boolean;  // Добавляем поле ritual
+  concentration?: boolean;  // Добавляем поле concentration
 }
 
 export interface ClassFeature {
@@ -58,12 +59,15 @@ export interface CharacterSheet {
   level: number;
   race?: string;
   subrace?: string;
-  background?: string;
+  background: string;  // Теперь обязательное поле
   alignment?: string;
   experience?: number;
   gender?: string; // Поле для гендера персонажа
   appearance?: string; // Описание внешности персонажа
   personalityTraits?: string; // Черты личности персонажа
+  ideals?: string; // Изменено с string[] на string
+  bonds?: string; // Изменено с string[] на string
+  flaws?: string; // Изменено с string[] на string
   abilities?: {
     STR: number;
     DEX: number;
@@ -113,10 +117,7 @@ export interface CharacterSheet {
   equipment?: string[];
   features?: string[];
   traits?: string[];
-  ideals?: string[];
-  bonds?: string[];
-  flaws?: string[];
-  backstory: string;
+  backstory: string;  // Теперь обязательное поле
   xp?: number;
   inspiration?: boolean;
   maxHp?: number;  // Максимальные хиты

@@ -19,6 +19,12 @@ export const useCharacterCreation = () => {
     background: "",
     alignment: "",
     abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -34,11 +40,16 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    skills: [],
+    skills: {},  // Пустой объект вместо пустого массива
     languages: [],
     equipment: [],
     spells: [],
-    proficiencies: [],
+    proficiencies: {  // Правильная инициализация
+      armor: [],
+      weapons: [],
+      tools: [],
+      languages: []
+    },
     features: [],
     personalityTraits: "",
     ideals: "",
@@ -82,6 +93,12 @@ export const useCharacterCreation = () => {
       background: "",
       alignment: "",
       abilities: {
+        STR: 10,
+        DEX: 10,
+        CON: 10,
+        INT: 10,
+        WIS: 10,
+        CHA: 10,
         strength: 10,
         dexterity: 10,
         constitution: 10,
@@ -97,11 +114,16 @@ export const useCharacterCreation = () => {
         wisdom: 10,
         charisma: 10
       },
-      skills: [],
+      skills: {},  // Пустой объект вместо пустого массива
       languages: [],
       equipment: [],
       spells: [],
-      proficiencies: [],
+      proficiencies: {  // Правильная инициализация
+        armor: [],
+        weapons: [],
+        tools: [],
+        languages: []
+      },
       features: [],
       personalityTraits: "",
       ideals: "",

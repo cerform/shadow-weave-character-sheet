@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -237,7 +236,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
             />
           </div>
           
-          {/* Интерактивные кнопки для изменения HP */}
+          {/* Интерактив��ые кнопки для изменения HP */}
           <div className="flex items-center justify-between gap-2">
             {/* Кнопка урона */}
             <Popover>
@@ -435,7 +434,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                 </SheetHeader>
                 <div className="h-[80vh]">
                   <DiceRoller3DFixed
-                    initialDice="2d4+2"
+                    initialDice="d8" // было "2d4+2"
                     hideControls={false}
                     modifier={0}
                     onRollComplete={handleHealingRollComplete}

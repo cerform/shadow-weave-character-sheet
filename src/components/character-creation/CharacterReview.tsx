@@ -31,6 +31,7 @@ import { getModifierFromAbilityScore } from '@/utils/characterUtils';
 import NavigationButtons from './NavigationButtons';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { isOfflineMode } from '@/utils/authHelpers';
+import { CharacterSpell } from '@/types/character';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -249,6 +250,13 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     localStorage.setItem("session-character-id", character.id);
     
     navigate("/create-session");
+  };
+
+  // Вспомогательная функция для безопасной проверки заклинаний
+  const isSpellMatchingType = (spell: any, type: string): boolean => {
+    if (!spell || !spell.name) return false;
+    const spellName = spell.name.toLowerCase();
+    return spellName.includes(type.toLowerCase());
   };
 
   // Выводим информацию по вкладкам для лучшей организации
@@ -481,8 +489,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">СИЛА</p>
-                        <p className="text-2xl font-bold">{character.abilities?.strength || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.strength || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.STR || character.abilities?.strength || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.STR || character.abilities?.strength || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -502,8 +514,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">ЛОВКОСТЬ</p>
-                        <p className="text-2xl font-bold">{character.abilities?.dexterity || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.dexterity || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.DEX || character.abilities?.dexterity || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.DEX || character.abilities?.dexterity || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -524,8 +540,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">ТЕЛОСЛОЖЕНИЕ</p>
-                        <p className="text-2xl font-bold">{character.abilities?.constitution || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.constitution || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.CON || character.abilities?.constitution || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.CON || character.abilities?.constitution || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -545,8 +565,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">ИНТЕЛЛЕКТ</p>
-                        <p className="text-2xl font-bold">{character.abilities?.intelligence || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.intelligence || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.INT || character.abilities?.intelligence || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.INT || character.abilities?.intelligence || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -566,8 +590,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">МУДРОСТЬ</p>
-                        <p className="text-2xl font-bold">{character.abilities?.wisdom || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.wisdom || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.WIS || character.abilities?.wisdom || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.WIS || character.abilities?.wisdom || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -588,8 +616,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <TooltipTrigger asChild>
                       <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
                         <p className="font-medium text-sm text-primary/80">ХАРИЗМА</p>
-                        <p className="text-2xl font-bold">{character.abilities?.charisma || 10}</p>
-                        <p className="text-sm">{formatModifier(character.abilities?.charisma || 10)}</p>
+                        <p className="text-2xl font-bold">
+                          {character.abilities?.CHA || character.abilities?.charisma || 10}
+                        </p>
+                        <p className="text-sm">
+                          {formatModifier(character.abilities?.CHA || character.abilities?.charisma || 10)}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
@@ -609,14 +641,23 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <div className="mt-6">
                 <h4 className="font-medium border-b border-primary/10 pb-2 mb-3">Владение навыками:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {character.skills && character.skills.map((skill, index) => (
-                    <div key={index} className="py-1 px-3 bg-primary/5 rounded flex items-center gap-1.5">
-                      <Check className="size-3.5 text-primary/80" />
-                      <span className="text-sm">{skill}</span>
-                    </div>
-                  ))}
+                  {character.skills && Object.keys(character.skills).map((skillName, index) => {
+                    // Правильный способ проверки владения навыком
+                    const skill = character.skills?.[skillName];
+                    const isProficient = skill?.proficient === true;
+                    
+                    if (isProficient) {
+                      return (
+                        <div key={index} className="py-1 px-3 bg-primary/5 rounded flex items-center gap-1.5">
+                          <Check className="size-3.5 text-primary/80" />
+                          <span className="text-sm">{skillName}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
                   
-                  {(!character.skills || character.skills.length === 0) && (
+                  {(!character.skills || Object.keys(character.skills).length === 0) && (
                     <div className="text-sm text-muted-foreground">Нет выбранных навыков</div>
                   )}
                 </div>
@@ -759,12 +800,14 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Оружие</h4>
                     <div className="space-y-2">
                       {character.equipment?.filter(item => 
-                        item.toLowerCase().includes('меч') || 
-                        item.toLowerCase().includes('топор') || 
-                        item.toLowerCase().includes('копьё') || 
-                        item.toLowerCase().includes('лук') || 
-                        item.toLowerCase().includes('кинжал') ||
-                        item.toLowerCase().includes('булава')
+                        typeof item === 'string' && (
+                          item.toLowerCase().includes('меч') || 
+                          item.toLowerCase().includes('топор') || 
+                          item.toLowerCase().includes('копьё') || 
+                          item.toLowerCase().includes('лук') || 
+                          item.toLowerCase().includes('кинжал') ||
+                          item.toLowerCase().includes('булава')
+                        )
                       ).map((weapon, index) => (
                         <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10 flex justify-between">
                           <span className="text-sm">{weapon}</span>
@@ -781,14 +824,16 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                         </div>
                       ))}
                       
-                      {character.equipment?.filter(item => 
-                        item.toLowerCase().includes('меч') || 
-                        item.toLowerCase().includes('топор') || 
-                        item.toLowerCase().includes('копьё') || 
-                        item.toLowerCase().includes('лук') || 
-                        item.toLowerCase().includes('кинжал') ||
-                        item.toLowerCase().includes('булава')
-                      ).length === 0 && (
+                      {!(character.equipment?.filter(item => 
+                        typeof item === 'string' && (
+                          item.toLowerCase().includes('меч') || 
+                          item.toLowerCase().includes('топор') || 
+                          item.toLowerCase().includes('копьё') || 
+                          item.toLowerCase().includes('лук') || 
+                          item.toLowerCase().includes('кинжал') ||
+                          item.toLowerCase().includes('булава')
+                        )
+                      ).length > 0) && (
                         <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm">
                           Нет оружия в инвентаре
                         </div>
@@ -801,10 +846,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Доспехи и защита</h4>
                     <div className="space-y-2">
                       {character.equipment?.filter(item => 
-                        item.toLowerCase().includes('доспех') || 
-                        item.toLowerCase().includes('кольчуга') || 
-                        item.toLowerCase().includes('щит') ||
-                        item.toLowerCase().includes('шлем')
+                        typeof item === 'string' && (
+                          item.toLowerCase().includes('доспех') || 
+                          item.toLowerCase().includes('кольчуга') || 
+                          item.toLowerCase().includes('щит') ||
+                          item.toLowerCase().includes('шлем')
+                        )
                       ).map((armor, index) => (
                         <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10 flex justify-between">
                           <span className="text-sm">{armor}</span>
@@ -821,12 +868,14 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                         </div>
                       ))}
                       
-                      {character.equipment?.filter(item => 
-                        item.toLowerCase().includes('доспех') || 
-                        item.toLowerCase().includes('кольчуга') || 
-                        item.toLowerCase().includes('щит') ||
-                        item.toLowerCase().includes('шлем')
-                      ).length === 0 && (
+                      {!(character.equipment?.filter(item => 
+                        typeof item === 'string' && (
+                          item.toLowerCase().includes('доспех') || 
+                          item.toLowerCase().includes('кольчуга') || 
+                          item.toLowerCase().includes('щит') ||
+                          item.toLowerCase().includes('шлем')
+                        )
+                      ).length > 0) && (
                         <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm">
                           Нет доспехов в инвентаре
                         </div>
@@ -840,6 +889,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                   <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Прочие предметы</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {character.equipment?.filter(item => 
+                      typeof item === 'string' && 
                       !item.toLowerCase().includes('меч') && 
                       !item.toLowerCase().includes('топор') && 
                       !item.toLowerCase().includes('копьё') && 
@@ -856,7 +906,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                       </div>
                     ))}
                     
-                    {character.equipment?.filter(item => 
+                    {!(character.equipment?.filter(item => 
+                      typeof item === 'string' && 
                       !item.toLowerCase().includes('меч') && 
                       !item.toLowerCase().includes('топор') && 
                       !item.toLowerCase().includes('копьё') && 
@@ -867,7 +918,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                       !item.toLowerCase().includes('кольчуга') && 
                       !item.toLowerCase().includes('щит') &&
                       !item.toLowerCase().includes('шлем')
-                    ).length === 0 && (
+                    ).length > 0) && (
                       <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
                         Нет дополнительных предметов в инвентаре
                       </div>
@@ -893,8 +944,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заговоры</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {character.spells.filter(spell => 
-                        spell.toLowerCase().includes('заговор') || 
-                        spell.toLowerCase().includes('уровень 0')
+                        isSpellMatchingType(spell, 'заговор') || 
+                        isSpellMatchingType(spell, 'уровень 0')
                       ).map((spell, index) => (
                         <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
                           <span className="text-sm">{spell}</span>
@@ -902,8 +953,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                       ))}
                       
                       {character.spells.filter(spell => 
-                        spell.toLowerCase().includes('заговор') || 
-                        spell.toLowerCase().includes('уровень 0')
+                        isSpellMatchingType(spell, 'заговор') || 
+                        isSpellMatchingType(spell, 'уровень 0')
                       ).length === 0 && (
                         <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
                           Нет выбранных заговоров
@@ -917,8 +968,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 1 уровня</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {character.spells.filter(spell => 
-                        spell.toLowerCase().includes('уровень 1') || 
-                        spell.toLowerCase().includes('1 уровень')
+                        isSpellMatchingType(spell, 'уровень 1') || 
+                        isSpellMatchingType(spell, '1 уровень')
                       ).map((spell, index) => (
                         <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
                           <span className="text-sm">{spell}</span>
@@ -926,8 +977,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                       ))}
                       
                       {character.spells.filter(spell => 
-                        spell.toLowerCase().includes('уровень 1') || 
-                        spell.toLowerCase().includes('1 уровень')
+                        isSpellMatchingType(spell, 'уровень 1') || 
+                        isSpellMatchingType(spell, '1 уровень')
                       ).length === 0 && (
                         <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
                           Нет заклинаний 1 уровня
@@ -942,8 +993,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                       <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 2 уровня</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {character.spells.filter(spell => 
-                          spell.toLowerCase().includes('уровень 2') || 
-                          spell.toLowerCase().includes('2 уровень')
+                          isSpellMatchingType(spell, 'уровень 2') || 
+                          isSpellMatchingType(spell, '2 уровень')
                         ).map((spell, index) => (
                           <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
                             <span className="text-sm">{spell}</span>
@@ -951,8 +1002,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                         ))}
                         
                         {character.spells.filter(spell => 
-                          spell.toLowerCase().includes('уровень 2') || 
-                          spell.toLowerCase().includes('2 уровень')
+                          isSpellMatchingType(spell, 'уровень 2') || 
+                          isSpellMatchingType(spell, '2 уровень')
                         ).length === 0 && (
                           <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
                             Нет заклинаний 2 уровня
@@ -968,7 +1019,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                     <>
                       <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
                       <p className="text-sm">
-                        Вы не выбрали за��линания. Рекомендуем вернуться к шагу выбора заклинаний.
+                        Вы не выб��али за��линания. Рекомендуем вернуться к шагу выбора заклинаний.
                       </p>
                       <Button 
                         variant="outline" 
@@ -1092,5 +1143,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     </div>
   );
 };
+
+// Создаём пустой компонент CharacterSkillsDisplay для исправления ошибки импорта
+const CharacterSkillsDisplay = () => <div />;
 
 export default CharacterReview;

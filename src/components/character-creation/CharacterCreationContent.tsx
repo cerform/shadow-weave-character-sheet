@@ -104,7 +104,11 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 4: // Предыстория
         return (
           <CharacterBackground 
-            character={character} 
+            character={{ 
+              ...character, 
+              background: character.background || "", 
+              backstory: character.backstory || "" 
+            }}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}

@@ -40,6 +40,12 @@ export interface Character {
   gender: string;
   alignment: string;
   background: string;
+  backstory: string;  // Добавлено обязательное поле
+  appearance?: string;  // Добавлено
+  personalityTraits?: string;  // Добавлено
+  ideals?: string;  // Добавлено
+  bonds?: string;  // Добавлено
+  flaws?: string;  // Добавлено
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
@@ -103,12 +109,21 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     if (!character) return;
     
     try {
-      const updatedCharacter = { ...character, updatedAt: new Date().toISOString() };
+      const updatedCharacter = { 
+        ...character, 
+        updatedAt: new Date().toISOString(),
+        backstory: character.backstory || "" // Убедимся, что backstory всегда есть
+      };
       if (!updatedCharacter.createdAt) {
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter);
+      // Преобразуем Character в CharacterSheet для сохранения
+      const charToSave: any = {
+        ...updatedCharacter
+      };
+      
+      const savedChar = await characterService.saveCharacter(charToSave);
       if (savedChar) {
         setCharacter(updatedCharacter);
       }
@@ -123,9 +138,15 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получаем список персонажей пользователя
   const getUserCharacters = async () => {
     try {
-      const fetchedCharacters = await characterService.getCharacters();
-      setCharacters(fetchedCharacters);
-      return fetchedCharacters;
+      const fetchedCharacters = await characterService.getCharactersByUserId();
+      const convertedCharacters = fetchedCharacters.map(c => ({
+        ...c,
+        backstory: c.backstory || "", // Убедимся, что backstory всегда есть
+        race: c.race || "",           // Убедимся, что race всегда есть
+        background: c.background || "" // Убедимся, что background всегда есть
+      })) as Character[];
+      setCharacters(convertedCharacters);
+      return convertedCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       return [];
