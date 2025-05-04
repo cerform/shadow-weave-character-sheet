@@ -7,6 +7,7 @@ export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export { Input } from "@/components/ui/input";
 export { Label } from "@/components/ui/label";
 export { Separator } from "@/components/ui/separator";
+export { Progress } from "@/components/ui/progress";
 
 // Navigation components
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +23,6 @@ export {
 // Data display components
 export { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export { Badge } from "@/components/ui/badge";
-export { Progress } from "@/components/ui/progress";
 
 // Feedback components
 export { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

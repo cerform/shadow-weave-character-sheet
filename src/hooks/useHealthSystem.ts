@@ -29,7 +29,7 @@ export const useHealthSystem = ({
   // Основные состояния здоровья
   const [currentHp, setCurrentHp] = useState<number>(initialCurrentHp);
   const [maxHp, setMaxHp] = useState<number>(initialMaxHp);
-  const [tempHp, setTempHpState] = useState<number>(initialTempHp);
+  const [tempHp, setTempHpState] = useState<number>(initialTempHp); // Переименовано во избежание конфликта
 
   // Журнал событий здоровья
   const [events, setEvents] = useState<HealthEvent[]>([]);
@@ -59,7 +59,7 @@ export const useHealthSystem = ({
 
   // Установка значений временного HP с возможностью "тихого" режима
   const setTempHp = useCallback((value: number, silent: boolean = false) => {
-    setTempHpState(Math.max(0, value));
+    setTempHpState(Math.max(0, value)); // Используем переименованный сеттер
     if (!silent && onHealthChange) {
       onHealthChange(currentHp, maxHp, value);
     }
@@ -114,7 +114,7 @@ export const useHealthSystem = ({
 
     // Лечение не может превышать максимальное здоровье
     setCurrentHp(Math.min(currentHp + amount, maxHp));
-  }, [currentHp, maxHp, setCurrentHp]);
+  }, [currentHp, maxHp]);
 
   // Добавление временных хитов
   const addTempHp = useCallback((amount: number, source?: string) => {
@@ -162,7 +162,7 @@ export const useHealthSystem = ({
         setTempHpState(Math.max(0, tempHp - lastEvent.amount));
         break;
     }
-  }, [events, currentHp, maxHp, tempHp, setCurrentHp]);
+  }, [events, currentHp, maxHp, tempHp]);
 
   return {
     currentHp,

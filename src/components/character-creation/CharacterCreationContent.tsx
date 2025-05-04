@@ -1,14 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CharacterBasicInfo } from './CharacterBasicInfo';
-import { CharacterAbilityScores } from './CharacterAbilityScores';
+import CharacterBasicInfo from './CharacterBasicInfo';
+import CharacterAbilityScores from './CharacterAbilityScores';
 import { CharacterClassSelector } from './CharacterClassSelector';
 import { CharacterBackgroundSelector } from './CharacterBackgroundSelector';
 import { CharacterSkillsSelector } from './CharacterSkillsSelector';
 import { CharacterEquipmentSelector } from './CharacterEquipmentSelector';
 import { CharacterPersonality } from './CharacterPersonality';
-import { CharacterReview } from './CharacterReview';
+import CharacterReview from './CharacterReview';
 import { CharacterAppearance } from './CharacterAppearance';
 import { CharacterSpellsSelector } from './CharacterSpellsSelector';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
@@ -17,46 +18,167 @@ import { CharacterHitPointsCalculator } from './CharacterHitPointsCalculator';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
-export const CharacterCreationContent: React.FC = () => {
+// Определим шаги создания персонажа для использования в компоненте
+const steps = [
+  { step: 1, label: "Основное" },
+  { step: 2, label: "Раса" },
+  { step: 3, label: "Класс" },
+  { step: 4, label: "Хит-поинты" },
+  { step: 5, label: "Характеристики" },
+  { step: 6, label: "Предыстория" },
+  { step: 7, label: "Навыки" },
+  { step: 8, label: "Снаряжение" },
+  { step: 9, label: "Заклинания" },
+  { step: 10, label: "Личность" },
+  { step: 11, label: "Внешность" },
+  { step: 12, label: "Обзор" }
+];
+
+interface CharacterCreationContentProps {
+  // Можно расширить эти пропсы, если потребуется
+}
+
+export const CharacterCreationContent: React.FC<CharacterCreationContentProps> = () => {
   const {
-    currentStep,
     character,
-    availablePoints,
-    abilityScoreMethod,
-    handleNextStep,
-    handlePrevStep,
-    handleAbilityScoreMethodChange,
-    handleAbilityScoreChange,
-    handleRaceChange,
-    handleClassChange,
-    handleBackgroundChange,
-    handleSkillChange,
-    handleEquipmentChange,
-    handlePersonalityChange,
-    handleAppearanceChange,
-    handleSpellChange,
-    handleSubmit,
-    steps,
-    isSubmitDisabled,
-    handleAlignmentChange,
-    handleNameChange,
-    handleGenderChange,
-    handleBackstoryChange,
-    handleIdealsChange,
-    handleBondsChange,
-    handleFlawsChange,
-    handleProficiencyChange,
+    updateCharacter,
     handleLevelChange,
-    handleAdditionalClassChange,
-    handleSubclassChange,
-    handleAbilityPointsUsedChange,
-    handleImageChange,
-    handleHitPointsCalculated
+    getModifier,
+    isMagicClass,
   } = useCharacterCreation();
   
+  // Добавляем локальное состояние для управления шагами и прочим
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availablePoints, setAvailablePoints] = useState<number>(27);
+  const [abilityScoreMethod, setAbilityScoreMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
+  
   const { toast } = useToast();
   
+  // Обработчики для управления шагами
+  const handleNextStep = () => {
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+  
+  // Вспомогательные обработчики, которые будут передаваться в дочерние компоненты
+  const handleAbilityScoreMethodChange = (method: "pointbuy" | "standard" | "roll" | "manual") => {
+    setAbilityScoreMethod(method);
+  };
+  
+  const handleAbilityScoreChange = (ability: string, value: number) => {
+    updateCharacter({
+      abilities: {
+        ...character.abilities,
+        [ability]: value
+      }
+    });
+  };
+  
+  const handleRaceChange = (race: string) => {
+    updateCharacter({ race });
+  };
+  
+  const handleClassChange = (className: string) => {
+    updateCharacter({ class: className });
+  };
+  
+  const handleBackgroundChange = (background: string) => {
+    updateCharacter({ background });
+  };
+  
+  const handleSkillChange = (skills: string[]) => {
+    updateCharacter({ skills });
+  };
+  
+  const handleEquipmentChange = (equipment: string[]) => {
+    updateCharacter({ equipment });
+  };
+  
+  const handlePersonalityChange = (values: any) => {
+    updateCharacter(values);
+  };
+  
+  const handleAppearanceChange = (appearance: string) => {
+    updateCharacter({ appearance });
+  };
+  
+  const handleSpellChange = (spells: string[]) => {
+    updateCharacter({ spells });
+  };
+  
+  const handleNameChange = (name: string) => {
+    updateCharacter({ name });
+  };
+  
+  const handleGenderChange = (gender: string) => {
+    updateCharacter({ gender });
+  };
+  
+  const handleAlignmentChange = (alignment: string) => {
+    updateCharacter({ alignment });
+  };
+  
+  const handleBackstoryChange = (backstory: string) => {
+    updateCharacter({ backstory });
+  };
+  
+  const handleIdealsChange = (ideals: string) => {
+    updateCharacter({ ideals });
+  };
+  
+  const handleBondsChange = (bonds: string) => {
+    updateCharacter({ bonds });
+  };
+  
+  const handleFlawsChange = (flaws: string) => {
+    updateCharacter({ flaws });
+  };
+  
+  const handleProficiencyChange = (proficiencies: string[]) => {
+    updateCharacter({ proficiencies });
+  };
+  
+  const handleAdditionalClassChange = (additionalClasses: any[]) => {
+    updateCharacter({ additionalClasses });
+  };
+  
+  const handleSubclassChange = (subclass: string) => {
+    updateCharacter({ subclass });
+  };
+  
+  const handleAbilityPointsUsedChange = (points: number) => {
+    updateCharacter({ abilityPointsUsed: points });
+  };
+  
+  const handleImageChange = (image: string) => {
+    updateCharacter({ image });
+  };
+  
+  const handleHitPointsCalculated = (hitPoints: number) => {
+    updateCharacter({ maxHp: hitPoints, currentHp: hitPoints });
+  };
+  
+  // Функция для создания персонажа
+  const handleSubmit = async () => {
+    // Здесь будет логика сохранения персонажа
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 1000);
+    });
+  };
+  
+  // Проверка, можно ли создать персонажа
+  const isSubmitDisabled = !character.name || !character.race || !character.class;
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -204,3 +326,5 @@ export const CharacterCreationContent: React.FC = () => {
     </div>
   );
 };
+
+export default CharacterCreationContent;
