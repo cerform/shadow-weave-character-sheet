@@ -1,3 +1,4 @@
+
 import { RacialTraits } from "@/types/character";
 
 export const racialTraits: RacialTraits[] = [
@@ -55,6 +56,7 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Человек",
+    abilityScoreIncrease: "Все +1",
     abilityBonuses: {
       STR: 1,
       DEX: 1,
@@ -63,6 +65,9 @@ export const racialTraits: RacialTraits[] = [
       WIS: 1,
       CHA: 1
     },
+    age: "Люди достигают зрелости к концу своего подросткового возраста и живут менее столетия.",
+    alignment: "Люди не имеют склонности к конкретному мировоззрению.",
+    size: "Средний",
     features: [
       {
         name: "Разносторонность",
@@ -74,9 +79,13 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Полурослик",
+    abilityScoreIncrease: "Ловкость +2",
     abilityBonuses: {
       DEX: 2
     },
+    age: "Полурослики достигают зрелости в 20 лет и обычно живут до 150 лет.",
+    alignment: "Большинство полуросликов законопослушные добрые. Они добросердечные и добрые.",
+    size: "Маленький",
     features: [
       {
         name: "Везучий",
@@ -96,10 +105,14 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Драконорождённый",
+    abilityScoreIncrease: "Сила +2, Харизма +1",
     abilityBonuses: {
       STR: 2,
       CHA: 1
     },
+    age: "Драконорождённые быстро взрослеют и достигают зрелости к 15 годам. Их продолжительность жизни сравнима с человеческой.",
+    alignment: "Драконорождённые, как и драконы, от которых они произошли, могут быть как добрыми, так и злыми.",
+    size: "Средний",
     features: [
       {
         name: "Наследие драконов",
@@ -115,9 +128,13 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Гном",
+    abilityScoreIncrease: "Интеллект +2",
     abilityBonuses: {
       INT: 2
     },
+    age: "Гномы взрослеют с той же скоростью, что и люди, и большинство готово покинуть дом к 40 годам. Они живут от 350 до 500 лет.",
+    alignment: "Гномы в основном добрые. Лесные гномы обычно нейтральные, а скальные гномы - законопослушные.",
+    size: "Маленький",
     features: [
       {
         name: "Тёмное зрение",
@@ -133,9 +150,13 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Полуэльф",
+    abilityScoreIncrease: "Харизма +2, два других на выбор +1",
     abilityBonuses: {
       CHA: 2
     },
+    age: "Полуэльфы взрослеют с той же скоростью, что и люди, достигая зрелости около 20 лет. Они живут намного дольше людей, часто превышая 180 лет.",
+    alignment: "Полуэльфы разделяют хаотичную природу своих эльфийских родителей.",
+    size: "Средний",
     features: [
       {
         name: "Наследие фей",
@@ -156,10 +177,14 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Полуорк",
+    abilityScoreIncrease: "Сила +2, Телосложение +1",
     abilityBonuses: {
       STR: 2,
       CON: 1
     },
+    age: "Полуорки взрослеют немного быстрее людей, достигая зрелости примерно к 14 годам. Они стареют заметно быстрее и редко живут дольше 75 лет.",
+    alignment: "Полуорки наследуют склонность к хаосу от своих орочьих родителей.",
+    size: "Средний",
     features: [
       {
         name: "Тёмное зрение",
@@ -179,10 +204,14 @@ export const racialTraits: RacialTraits[] = [
   },
   {
     race: "Тифлинг",
+    abilityScoreIncrease: "Интеллект +1, Харизма +2",
     abilityBonuses: {
       INT: 1,
       CHA: 2
     },
+    age: "Тифлинги взрослеют с той же скоростью, что и люди, но живут несколько дольше.",
+    alignment: "Тифлинги не имеют врожденной склонности к злу, но многие заканчивают там. Злые или нет, независимая природа склоняет многих тифлингов к хаотичному мировоззрению.",
+    size: "Средний",
     features: [
       {
         name: "Тёмное зрение",

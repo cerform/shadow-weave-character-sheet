@@ -1,4 +1,3 @@
-
 export interface AbilityScores {
   STR: number;
   DEX: number;
@@ -13,6 +12,8 @@ export interface AbilityScores {
   intelligence: number;
   wisdom: number;
   charisma: number;
+  // Добавляем индексную сигнатуру для обработки динамических ключей
+  [key: string]: number;
 }
 
 export interface Proficiencies {

@@ -1,4 +1,3 @@
-
 export interface AbilityScores {
   STR: number;
   DEX: number;
@@ -138,16 +137,16 @@ export interface ClassRequirement {
 // Типы для расовых особенностей и черт
 export interface RacialTraits {
   race: string;
-  abilityScoreIncrease?: string | number; // Обновлено для поддержки строк и чисел
-  abilityBonuses?: any; // Добавлено для поддержки данных в racial traits
+  abilityScoreIncrease?: string | number; 
+  abilityBonuses?: any; 
   age?: string;
   alignment?: string;
   size?: string;
-  speed: string | number; // Обновлено для поддержки строк и чисел
+  speed: string | number;
   languages: string[];
   features?: { name: string; description: string }[];
-  traits?: { name: string; description: string }[]; // Добавлено для совместимости с существующими данными
-  extraAbilityPoints?: number; // Добавлено для рас с дополнительными очками характеристик
+  traits?: { name: string; description: string }[];
+  extraAbilityPoints?: number;
 }
 
 // Типы для особенностей классов
