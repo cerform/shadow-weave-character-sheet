@@ -2,6 +2,13 @@
 // Вспомогательные функции для работы с заклинаниями
 import { CharacterSpell, SpellData } from '@/types/character';
 
+// Функция для извлечения имён заклинаний из массива
+export const extractSpellNames = (spells: (string | CharacterSpell)[]): string[] => {
+  return spells.map(spell => 
+    typeof spell === 'string' ? spell : spell.name
+  );
+};
+
 // Безопасное объединение массива в строку
 export const safeJoin = (value: any): string => {
   if (Array.isArray(value)) {
@@ -74,5 +81,6 @@ export default {
   normalizeSpells,
   safeSome,
   safeFilter,
-  safeGet
+  safeGet,
+  extractSpellNames
 };

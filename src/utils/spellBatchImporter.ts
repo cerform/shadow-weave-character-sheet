@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 
 // Функция для импорта заклинаний из текстового формата
@@ -105,6 +106,7 @@ export function importSpellsFromText(
         verbal,
         somatic,
         material,
+        prepared: false, // Обязательное поле для CharacterSpell
         // Предполагаем классы (для точности требуется дополнительный анализ)
         classes: []
       };

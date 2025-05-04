@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { spells as allSpells } from '@/data/spells';
+import { spells } from '@/data/spells';
 
 const SpellBookViewer = () => {
   const { 

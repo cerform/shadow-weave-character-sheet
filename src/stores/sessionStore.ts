@@ -306,7 +306,7 @@ export const useSessionStore = create<SessionStore>()(
           }
           return false;
         } catch (error) {
-          console.error("Ошибка при сохранени�� персонажа:", error);
+          console.error("Ошибка при сохранени персонажа:", error);
           return false;
         }
       },

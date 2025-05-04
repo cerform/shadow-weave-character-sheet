@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { importSpellsFromText } from '@/utils/spellBatchImporter';
-import { spells as allSpells } from '@/data/spells';
+import { spells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
 interface SpellImporterProps {
@@ -23,7 +22,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
     try {
       setIsProcessing(true);
       // Ensure all spells have the required prepared field
-      const spellsWithPreparedField = allSpells.map(spell => {
+      const spellsWithPreparedField = spells.map(spell => {
         if (spell.prepared === undefined) {
           return {...spell, prepared: false};
         }

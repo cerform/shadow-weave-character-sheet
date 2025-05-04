@@ -653,7 +653,7 @@ const Home = () => {
                     <div className="mb-4">
                       <Dices className="mx-auto h-12 w-12 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium mb-2">У вас пока нет сохраненных персонажей</h3>
+                    <h3 className="text-lg font-medium mb-2">У вас пока нет с��храненных персонажей</h3>
                     <p className="text-muted-foreground mb-4">
                       Создайте своего первого героя и отправляйтесь в путешествие!
                     </p>

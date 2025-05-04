@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Character, CharacterSheet, CharacterSpell, SpellData } from '@/types/character';
@@ -6,7 +5,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { spells as allSpells } from '@/data/spells';
+import { spells } from '@/data/spells';
 
 interface SpellPanelProps {
   character: Character | null;
@@ -45,7 +44,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character }) => {
         spellObject = spell;
       } else {
         // It's a string, find the full spell in the spells database
-        spellObject = allSpells.find(s => s.name === spell) || {
+        spellObject = spells.find(s => s.name === spell) || {
           name: spell,
           level: 0,
           school: "Unknown",

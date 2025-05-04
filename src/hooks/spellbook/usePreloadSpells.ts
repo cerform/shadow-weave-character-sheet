@@ -1,17 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { SpellData } from './types';
-import { spells as allSpells } from '@/data/spells';
+import { spells } from '@/data/spells'; // Теперь импортируем из правильного места
 
 /**
  * Хук для загрузки заклинаний из источника данных
  */
 const usePreloadSpells = (): SpellData[] => {
-  const [spells, setSpells] = useState<SpellData[]>([]);
+  const [loadedSpells, setLoadedSpells] = useState<SpellData[]>([]);
   
   useEffect(() => {
     // Загружаем заклинания из источника данных
-    setSpells(allSpells.map(spell => ({
+    setLoadedSpells(spells.map(spell => ({
       ...spell,
       // Устанавливаем значения по умолчанию для обязательных полей, если они отсутствуют
       prepared: spell.prepared ?? false,
@@ -21,7 +21,7 @@ const usePreloadSpells = (): SpellData[] => {
     })));
   }, []);
   
-  return spells;
+  return loadedSpells;
 };
 
 export default usePreloadSpells;

@@ -1,185 +1,110 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSessionStore } from '@/stores/sessionStore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { useTheme } from '@/hooks/use-theme';
-import { useSessionStore } from '@/stores/sessionStore';
-import { ArrowLeft, Shield } from 'lucide-react';
-import { firebaseAuth } from '@/services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { Character as SessionCharacter } from '@/types/session';
-import { Character } from '@/contexts/CharacterContext';
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Character } from '@/types/character';
+import { auth } from '@/services/firebase';
 
-const JoinSessionPage = () => {
+const JoinSessionPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { theme } = useTheme();
-  const { joinSession, fetchCharacters, characters } = useSessionStore();
-  
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+
   const [sessionCode, setSessionCode] = useState('');
-  const [selectedCharacter, setSelectedCharacter] = useState('');
-  const [playerName, setPlayerName] = useState('');
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isJoining, setIsJoining] = useState(false);
-  
+  const [userName, setUserName] = useState('');
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const { joinSession, fetchCharacters, characters, loading } = useSessionStore();
+
   useEffect(() => {
-    // Проверяем авторизацию
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-      if (user) {
-        // Пользователь авторизован
-        setPlayerName(user.displayName || '');
-      } else {
-        // Пользователь не авторизован
-        navigate('/auth');
-        toast.warning('Для присоединения к сессии необходимо войти в аккаунт');
-      }
-      setIsAuthLoading(false);
-    });
-    
-    // Загружаем персонажей
     fetchCharacters();
-    
-    return () => unsubscribe();
-  }, [navigate, fetchCharacters]);
-  
+  }, [fetchCharacters]);
+
   const handleJoinSession = async () => {
-    if (!sessionCode.trim()) {
-      toast.error('Введите код сессии');
+    if (!sessionCode || !userName) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, введите код сессии и имя пользователя.",
+        variant: "destructive"
+      });
       return;
     }
-    
-    if (!playerName.trim()) {
-      toast.error('Введите имя игрока');
-      return;
-    }
-    
-    if (!selectedCharacter && characters.length > 0) {
-      toast.error('Выберите персонажа');
-      return;
-    }
-    
-    // Найти выбранного персонажа
-    const character = characters.find(c => c.id === selectedCharacter);
-    
-    try {
-      setIsJoining(true);
-      // Преобразуем Character в SessionCharacter
-      const sessionCharacter: SessionCharacter | undefined = character ? {
-        id: character.id || '',
-        name: character.name || 'Персонаж',
-        race: character.race || '',
-        class: character.class || character.className || '',
-        level: character.level || 1,
-        avatarUrl: character.image
-      } : undefined;
-      
-      // Пытаемся присоединиться к сессии
-      const joined = await joinSession(sessionCode, playerName, sessionCharacter);
-      
-      if (joined) {
-        navigate('/play');
-      }
-    } catch (error) {
-      console.error("Ошибка при присоединении к сессии:", error);
-    } finally {
-      setIsJoining(false);
+
+    const success = await joinSession(sessionCode, userName, selectedCharacter);
+    if (success) {
+      navigate('/session');
     }
   };
 
-  if (isAuthLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Проверка авторизации...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className={`min-h-screen p-4 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
-      <div className="max-w-md mx-auto">
-        <header className="mb-6 flex items-center">
-          <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
-            <ArrowLeft className="size-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Присоединиться к сессии</h1>
-        </header>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-card/90 backdrop-blur-sm border-primary/30">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">Присоединиться к сессии</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sessionCode">Код сессии</Label>
+            <Input
+              id="sessionCode"
+              placeholder="Введите код сессии"
+              value={sessionCode}
+              onChange={(e) => setSessionCode(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="userName">Имя пользователя</Label>
+            <Input
+              id="userName"
+              placeholder="Введите ваше имя"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </div>
 
-        <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="size-5" />
-              Вход в игровую сессию
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div>
-              <label className="text-sm font-medium block mb-1">Код сессии</label>
-              <Input 
-                value={sessionCode} 
-                onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
-                placeholder="Например: AB12CD" 
-                className="uppercase"
-                maxLength={6}
-              />
+          <div>
+            <Label>Выберите персонажа (необязательно)</Label>
+            <div className="flex flex-col gap-2 mt-2">
+              {characters.map((character) => (
+                <label
+                  key={character.id}
+                  className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-secondary/50 ${selectedCharacter?.id === character.id ? 'bg-secondary' : ''}`}
+                  style={{ borderColor: currentTheme.secondary }}
+                >
+                  <input
+                    type="radio"
+                    name="character"
+                    value={character.id}
+                    className="mr-2"
+                    onChange={() => setSelectedCharacter(character)}
+                  />
+                  <Avatar className="mr-2">
+                    <AvatarImage src={character.image} alt={character.name} />
+                    <AvatarFallback>{character.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span>{character.name} - {character.class}</span>
+                  <p>{character.age ? `Возраст: ${character.age}` : ""}</p>
+                </label>
+              ))}
             </div>
-            
-            <div>
-              <label className="text-sm font-medium block mb-1">Ваше имя</label>
-              <Input 
-                value={playerName} 
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Имя игрока" 
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Это имя будет видно другим игрокам
-              </p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium block mb-1">Выберите персонажа</label>
-              {characters.length > 0 ? (
-                <Select value={selectedCharacter} onValueChange={setSelectedCharacter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите персонажа" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {characters.map((character) => (
-                      <SelectItem key={character.id} value={character.id || ''}>
-                        {character.name} ({character.race}, {character.class || character.className})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-center p-3 border rounded-md border-dashed text-sm text-muted-foreground">
-                  <p>У вас пока нет созданных персонажей</p>
-                  <Button 
-                    variant="link" 
-                    onClick={() => navigate('/create-character')}
-                    className="px-0 h-auto"
-                  >
-                    Создать персонажа
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            <Button 
-              onClick={handleJoinSession} 
-              disabled={!sessionCode.trim() || !playerName.trim() || (!selectedCharacter && characters.length > 0) || isJoining}
-              className="w-full"
-            >
-              {isJoining ? "Присоединение..." : "Присоединиться"}
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Код сессии предоставляет Мастер Подземелий</p>
-        </div>
-      </div>
+          </div>
+
+          <Button onClick={handleJoinSession} disabled={loading} className="w-full">
+            {loading ? "Присоединение..." : "Присоединиться"}
+          </Button>
+          <Button variant="link" onClick={() => navigate('/')}>
+            Назад на главную
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

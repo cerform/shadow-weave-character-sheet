@@ -8,7 +8,7 @@ import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, B
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
 import SpellDescription from '../SpellDescription';
-import { spells as allSpells } from '@/data/spells';
+import { spells } from '@/data/spells';
 
 // Добавляем утилиты для корректной обработки заклинаний
 const safeJoin = (value: any): string => {
@@ -69,7 +69,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const [expandedSpells, setExpandedSpells] = useState<string[]>([]);
 
   // Ensure spells are in the correct format
-  const normalizedSpells = normalizeSpells(character?.spells || [], allSpells);
+  const normalizedSpells = normalizeSpells(character?.spells || [], spells);
   
   // Group spells by level
   const spellsByLevel = React.useMemo(() => {
