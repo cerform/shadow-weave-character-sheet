@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";

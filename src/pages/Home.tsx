@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -74,13 +73,11 @@ const Home = () => {
   
   // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
   useEffect(() => {
-    if (isAuthenticated) {
-      const chars = getUserCharacters();
-      setUserCharacters(chars);
-    } else {
-      // Если пользователь не аутентифицирован, показываем пустой список
-      setUserCharacters([]);
-    }
+    const fetchAndSetCharacters = async () => {
+      const charactersData = await getUserCharacters();
+      setCharacters(charactersData);
+    };
+    fetchAndSetCharacters();
   }, [isAuthenticated, getUserCharacters, characters]);
   
   // При изменении статуса авторизации проверяем, нужно ли сменить активную вкладку
@@ -181,7 +178,7 @@ const Home = () => {
         if (file.type === 'application/json') {
           handleJsonFileImport(file);
         } else {
-          toast.error("Неверный формат файла. Пожалуйста, загрузите JSON файл.");
+          toast.error("Неве��ный формат файла. Пожалуйста, загрузите JSON файл.");
         }
       } else if (target === 'pdf') {
         // Обработка PDF файла
@@ -977,4 +974,3 @@ const Home = () => {
 };
 
 export default Home;
-
