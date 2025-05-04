@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { CharacterSheet, ClassLevel, MulticlassRequirements } from "@/types/character";
+import { CharacterSheet, ClassLevel, MulticlassRequirements } from "@/types/character.d";
 import { useToast } from "@/hooks/use-toast";
 import { classes } from "@/data/classes";
-import { Plus, X } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 
 // Минимальные требования характеристик для мультиклассирования согласно Книге Игрока
 const multiclassRequirements: MulticlassRequirements = {
@@ -68,11 +68,6 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     }
     
     return true;
-  };
-  
-  // Проверка основного класса на соответствие требованиям
-  const checkPrimaryClassRequirements = (): boolean => {
-    return checkRequirements(character.class);
   };
   
   useEffect(() => {
@@ -245,14 +240,6 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
         <p className="mt-1">
           <strong>Общий уровень:</strong> {totalLevel}/20
         </p>
-        
-        {!checkPrimaryClassRequirements() && (
-          <div className="mt-4 p-3 bg-red-500/20 rounded-md">
-            <p className="font-bold text-red-500">Внимание!</p>
-            <p className="text-sm">Характеристики вашего персонажа не соответствуют требованиям для основного класса. 
-            Это может вызвать проблемы при игре. Рекомендуется увеличить необходимые характеристики.</p>
-          </div>
-        )}
       </div>
       
       {/* Текущие дополнительные классы */}
@@ -272,7 +259,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
                       onClick={() => changeClassLevel(index, cls.level - 1)}
                       disabled={cls.level <= 1}
                     >
-                      -
+                      <Minus className="h-4 w-4" />
                     </Button>
                     <span className="w-8 text-center">
                       {cls.level}
@@ -283,7 +270,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
                       onClick={() => changeClassLevel(index, cls.level + 1)}
                       disabled={totalLevel >= 20}
                     >
-                      +
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   
@@ -292,7 +279,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
                     size="sm"
                     onClick={() => removeClass(index)}
                   >
-                    <X className="h-4 w-4" />
+                    X
                   </Button>
                 </div>
               </div>
@@ -336,7 +323,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
                 onClick={() => setSelectedLevel(prev => Math.max(1, prev - 1))}
                 disabled={selectedLevel <= 1}
               >
-                -
+                <Minus className="h-4 w-4" />
               </Button>
               <Input 
                 type="number" 
@@ -357,7 +344,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
                 onClick={() => setSelectedLevel(prev => Math.min(19, prev + 1))}
                 disabled={selectedLevel >= 19 || totalLevel + selectedLevel > 20}
               >
-                +
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -418,16 +405,6 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
               
               <TabsContent value="proficiencies" className="mt-0">
                 <p>{selectedClassDetails.proficiencies}</p>
-                
-                {/* Информация о владениях при мультиклассировании */}
-                <div className="mt-4 p-3 bg-muted rounded-md">
-                  <h4 className="font-medium">Владения при мультиклассировании</h4>
-                  <p className="text-sm mt-1">
-                    Когда вы получаете ваш первый уровень в классе, отличном от вашего исходного класса, 
-                    вы получаете только некоторые начальные владения нового класса, как показано в таблице 
-                    «Владения, полученные при мультиклассировании» в Книге игрока.
-                  </p>
-                </div>
               </TabsContent>
             </ScrollArea>
           </Tabs>
@@ -435,7 +412,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
       )}
 
       <NavigationButtons
-        allowNext={true} // Мультиклассирование необязательно
+        allowNext={true}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}

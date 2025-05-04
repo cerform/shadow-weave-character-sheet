@@ -2,89 +2,90 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { CharacterSheet } from '@/types/character.d';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 interface ManualInputPanelProps {
-  abilityScores: CharacterSheet['abilities'];
-  setAbilityScores: (scores: CharacterSheet['abilities']) => void;
-  maxAbilityScore: number;
+  abilityScores: { [key: string]: number };
+  setAbilityScores: (abilityScores: { [key: string]: number }) => void;
+  maxAbilityScore?: number;
   level?: number;
-  stats?: CharacterSheet['abilities']; // Добавляем опциональное свойство stats
-  updateStat?: (stat: keyof CharacterSheet['abilities'], value: number) => void;
-  getModifier?: (score: number) => string;
 }
+
+const abilityNames: { [key: string]: string } = {
+  strength: 'Сила',
+  dexterity: 'Ловкость',
+  constitution: 'Телосложение',
+  intelligence: 'Интеллект',
+  wisdom: 'Мудрость',
+  charisma: 'Харизма'
+};
 
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
   abilityScores,
   setAbilityScores,
   maxAbilityScore,
-  stats, 
-  updateStat,
-  getModifier,
-  level
+  level = 1
 }) => {
-  // Используем stats или abilityScores в зависимости от того, что передано
-  const scores = stats || abilityScores;
-  
-  const handleAbilityChange = (ability: keyof CharacterSheet['abilities'], value: string) => {
-    const numValue = parseInt(value) || 0;
-    if (numValue > maxAbilityScore) {
-      return;
-    }
+  // Определяем максимальное значение на основе уровня или переданного параметра
+  const getMaxAbilityScore = (): number => {
+    if (maxAbilityScore) return maxAbilityScore;
     
-    // Используем updateStat если он предоставлен, иначе используем setAbilityScores
-    if (updateStat) {
-      updateStat(ability, numValue);
-    } else {
-      setAbilityScores({
-        ...scores,
-        [ability]: numValue
-      });
+    if (level >= 16) return ABILITY_SCORE_CAPS.LEGENDARY_CAP;
+    if (level >= 10) return ABILITY_SCORE_CAPS.EPIC_CAP;
+    return ABILITY_SCORE_CAPS.BASE_CAP;
+  };
+  
+  const maxScore = getMaxAbilityScore();
+  
+  const handleInputChange = (ability: string, value: string) => {
+    const numValue = parseInt(value);
+    
+    if (!isNaN(numValue) && numValue >= 1 && numValue <= maxScore) {
+      setAbilityScores({ ...abilityScores, [ability]: numValue });
     }
   };
-
-  const resetScores = () => {
-    setAbilityScores({
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    });
+  
+  // Вычисление модификатора характеристики
+  const getModifier = (score: number): string => {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {Object.entries(scores).map(([ability, value]) => (
-          <div key={ability} className="space-y-1">
-            <Label htmlFor={ability} className="capitalize text-white">
-              {ability}
+    <div className="space-y-6">
+      <Alert className="bg-black/60 border-primary/20">
+        <AlertDescription>
+          Введите значения характеристик в диапазоне от 1 до {maxScore}.
+          {level >= 10 && ' На вашем уровне максимальное значение повышено.'}
+        </AlertDescription>
+      </Alert>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(abilityScores).map(([ability, score]) => (
+          <div key={ability} className="space-y-2">
+            <Label htmlFor={ability} className="flex justify-between">
+              <span>{abilityNames[ability] || ability}</span>
+              <span className="text-sm text-muted-foreground">
+                Модификатор: {getModifier(score)}
+              </span>
             </Label>
-            <Input
-              id={ability}
-              type="number"
-              value={value.toString()}
-              min="3"
-              max={maxAbilityScore}
-              onChange={(e) => handleAbilityChange(ability as keyof CharacterSheet['abilities'], e.target.value)}
-              className="text-white bg-black/50 border-white/30"
-            />
+            <div className="relative">
+              <Input
+                id={ability}
+                type="number"
+                min="1"
+                max={maxScore.toString()}
+                value={score}
+                onChange={(e) => handleInputChange(ability, e.target.value)}
+                className="bg-black/60 text-white text-center text-lg font-bold"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-sm text-gray-400">/ {maxScore}</span>
+              </div>
+            </div>
           </div>
         ))}
-      </div>
-      
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={resetScores}
-          className="text-white bg-black/50 hover:bg-white/20"
-        >
-          Сбросить
-        </Button>
       </div>
     </div>
   );

@@ -60,19 +60,10 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   const [totalPointsAvailable, setTotalPointsAvailable] = useState<number>(abilityScorePoints);
   
   useEffect(() => {
-    // Базовое количество очков
-    let basePoints = abilityScorePoints;
-    
-    // Добавляем дополнительные очки в зависимости от уровня
-    if (character.level >= 5) basePoints += 3;
-    if (character.level >= 10) basePoints += 2; // Всего +5 на 10 уровне
-    if (character.level >= 15) basePoints += 2; // Всего +7 на 15 уровне
-    
-    setTotalPointsAvailable(basePoints);
-    setAdjustedPointsLeft(basePoints);
-    
     // Устанавливаем максимальное значение в зависимости от уровня
-    if (character.level >= 16) {
+    if (maxAbilityScore) {
+      setMaxStatValue(maxAbilityScore);
+    } else if (character.level >= 16) {
       setMaxStatValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
     } else if (character.level >= 10) {
       setMaxStatValue(ABILITY_SCORE_CAPS.EPIC_CAP);
@@ -87,7 +78,10 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         description: `На уровне ${character.level} максимальное значение характеристики: ${character.level >= 16 ? 24 : 22}`,
       });
     }
-  }, [character.level, toast, abilityScorePoints]);
+    
+    setTotalPointsAvailable(abilityScorePoints);
+    setAdjustedPointsLeft(abilityScorePoints);
+  }, [character.level, toast, abilityScorePoints, maxAbilityScore]);
   
   // Для отслеживания использованных очков в point buy
   const [pointsLeft, setPointsLeft] = useState(totalPointsAvailable);
@@ -139,7 +133,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       // Уведомляем о доступных очках
       toast({
         title: "Доступные очки",
-        description: `У вас ${totalPointsAvailable} очков для распределения характеристик`
+        description: `У вас ${totalPointsAvailable} очков для распределения характеристик на ${character.level} уровне`
       });
     } else if (abilitiesMethod === "roll") {
       // При выборе метода бросков сбрасываем назначенные кости
@@ -152,7 +146,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: null,
       });
     }
-  }, [abilitiesMethod, totalPointsAvailable, toast]);
+  }, [abilitiesMethod, totalPointsAvailable, character.level, toast]);
 
   // Обработчики для Point Buy
   const incrementStat = (stat: keyof typeof stats) => {
@@ -177,7 +171,9 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
 
   // Обработчик для ручного ввода
   const updateStat = (stat: keyof typeof stats, value: number) => {
-    setStats({ ...stats, [stat]: value });
+    if (value >= 1 && value <= maxStatValue) {
+      setStats({ ...stats, [stat]: value });
+    }
   };
 
   // Обработчики для метода бросков
@@ -201,9 +197,14 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   // Функция для броска одиночной характеристики
   const handleRollAbility = (stat: keyof typeof stats) => {
     if (rollSingleAbility) {
-      const result = rollSingleAbility(0); // Используем индекс 0, т.к. бросаем одну характеристику
-      setStats({ ...stats, [stat]: result.total });
-      console.log(`Бросок для ${stat}: ${result.rolls.join(', ')} = ${result.total}`);
+      // Определяем индекс характеристики
+      const abilityKeys = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+      const index = abilityKeys.indexOf(stat);
+      
+      if (index !== -1) {
+        const result = rollSingleAbility(index);
+        setStats({ ...stats, [stat]: result.total });
+      }
     }
   };
 

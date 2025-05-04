@@ -1,21 +1,30 @@
 
-import React from 'react';
+import React, { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Dices } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AbilityRollingPanelProps {
   diceResults: number[][];
-  assignedDice: {[key: string]: number | null};
+  assignedDice: { [key: string]: number | null };
   onRollAllAbilities: () => void;
   onAssignDiceToStat: (stat: string, diceIndex: number) => void;
-  onRollSingleAbility?: (stat: string) => void;
-  stats: {[key: string]: number};
+  onRollSingleAbility?: (ability: string) => void;
+  stats: { [key: string]: number };
   getModifier: (score: number) => string;
 }
 
-export const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
+const abilityNames: { [key: string]: string } = {
+  strength: "Сила",
+  dexterity: "Ловкость",
+  constitution: "Телосложение",
+  intelligence: "Интеллект",
+  wisdom: "Мудрость",
+  charisma: "Харизма"
+};
+
+const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
   diceResults,
   assignedDice,
   onRollAllAbilities,
@@ -24,107 +33,132 @@ export const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
   stats,
   getModifier
 }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes];
+  const [isRollingInProgress, setIsRollingInProgress] = useState(false);
+  const [rollingAbility, setRollingAbility] = useState<string | null>(null);
   
+  // Обработчик броска для всех характеристик
+  const handleRollAll = () => {
+    setIsRollingInProgress(true);
+    onRollAllAbilities();
+    setTimeout(() => {
+      setIsRollingInProgress(false);
+    }, 1000);
+  };
+  
+  // Обработчик броска для одной характеристики
+  const handleSingleRoll = (ability: string) => {
+    if (!onRollSingleAbility) return;
+    
+    setRollingAbility(ability);
+    setIsRollingInProgress(true);
+    onRollSingleAbility(ability);
+    setTimeout(() => {
+      setRollingAbility(null);
+      setIsRollingInProgress(false);
+    }, 1000);
+  };
+  
+  // Получаем сумму броска (исключая наименьшее значение)
+  const getDiceTotal = (diceResults: number[]): number => {
+    if (!diceResults || diceResults.length === 0) return 0;
+    
+    // Сортируем кубики и берем 3 наибольших (отбрасываем наименьший)
+    const sorted = [...diceResults].sort((a, b) => b - a);
+    return sorted.slice(0, 3).reduce((sum, dice) => sum + dice, 0);
+  };
+
   return (
-    <div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-        {diceResults.map((roll, index) => {
-          const sortedRolls = [...roll].sort((a, b) => b - a);
-          const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
-          const isAssigned = Object.values(assignedDice).includes(index);
-          
-          return (
-            <div 
-              key={index}
-              className={`p-2 border rounded text-center ${isAssigned ? 'bg-gray-200 opacity-50' : 'bg-card'}`}
-            >
-              <div className="text-sm text-foreground">Бросок {index + 1}</div>
-              <div className="font-bold text-lg text-foreground">{total}</div>
-              <div className="text-xs" style={{ color: currentTheme.accent }}>
-                {sortedRolls.slice(0, 3).join(' + ')} {roll.length > 3 && <span className="line-through">+ {sortedRolls[3]}</span>}
-              </div>
-            </div>
-          );
-        })}
+    <div className="space-y-4">
+      <Alert className="bg-black/60 border-primary/20">
+        <AlertDescription>
+          Для генерации характеристик используется метод "4d6 drop lowest" - 
+          бросаются 4 кубика d6 и из результата исключается наименьшее значение.
+        </AlertDescription>
+      </Alert>
+      
+      <div className="flex justify-center mb-4">
+        <Button 
+          variant="outline" 
+          size="lg"
+          onClick={handleRollAll}
+          disabled={isRollingInProgress}
+          className="bg-primary/10 border-primary/30 hover:bg-primary/20"
+        >
+          <Dices className="mr-2 h-5 w-5" />
+          Бросить кубики для всех характеристик
+        </Button>
       </div>
       
-      <Button 
-        onClick={onRollAllAbilities}
-        className="w-full mb-4"
-        variant="outline"
-      >
-        <Dices className="mr-2 h-4 w-4" />
-        Перебросить все кубики
-      </Button>
-      
-      <p className="text-sm text-muted-foreground mb-4">
-        Выберите результат броска для каждой характеристики, кликнув по характеристике, а затем по значению броска.
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {Object.keys(stats).map((key) => {
-          const stat = key as keyof typeof stats;
-          const value = stats[stat];
-          const modifier = getModifier(value);
-          
-          return (
-            <div key={key} className="p-4 border rounded text-center">
-              <h3 className="font-bold text-lg mb-1 text-foreground">{getStatName(key)}</h3>
-              <div className="text-3xl font-bold mb-1 text-foreground">{value}</div>
-              <div className="text-xl mb-3" style={{ color: currentTheme.accent }}>{modifier}</div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {diceResults.map((roll, index) => {
-                  const sortedRolls = [...roll].sort((a, b) => b - a);
-                  const total = sortedRolls.slice(0, 3).reduce((a, b) => a + b, 0);
-                  const isAssigned = Object.values(assignedDice).includes(index);
-                  const isAssignedToThisStat = assignedDice[stat] === index;
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.entries(stats).map(([stat, value], statIndex) => (
+          <div key={stat} className="border rounded-md p-4 bg-black/50 border-primary/20">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-medium text-lg">{abilityNames[stat] || stat}</h3>
+              <div className="text-xl font-bold">{value} <span className="text-sm font-normal">({getModifier(value)})</span></div>
+            </div>
+            
+            {/* Кнопка для индивидуального броска */}
+            {onRollSingleAbility && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleSingleRoll(stat)}
+                disabled={isRollingInProgress}
+                className="w-full mb-2 bg-black/60 hover:bg-primary/20 border-primary/30"
+              >
+                <Dices className="mr-2 h-4 w-4" />
+                Бросить кубики для {abilityNames[stat]}
+              </Button>
+            )}
+            
+            {/* Отображение набора кубиков для выбора */}
+            <ScrollArea className="h-24 rounded-md border border-gray-700 bg-black/70 p-2">
+              <div className="space-y-2">
+                {diceResults.map((dice, diceIndex) => {
+                  const isAssigned = Object.values(assignedDice).includes(diceIndex);
+                  const isAssignedToThisStat = assignedDice[stat] === diceIndex;
                   
                   return (
-                    <Button
-                      key={index}
-                      size="sm"
-                      variant={isAssignedToThisStat ? "default" : "outline"}
-                      disabled={isAssigned && !isAssignedToThisStat}
-                      onClick={() => onAssignDiceToStat(key, index)}
+                    <div
+                      key={diceIndex}
+                      onClick={() => !isAssigned && onAssignDiceToStat(stat, diceIndex)}
+                      className={`
+                        flex justify-between items-center p-2 rounded cursor-pointer
+                        ${isAssignedToThisStat ? 'bg-primary/30 border border-primary' : isAssigned ? 'bg-gray-800/50 text-gray-500' : 'bg-gray-800 hover:bg-gray-700'}
+                      `}
                     >
-                      {total}
-                    </Button>
+                      <div className="flex gap-1">
+                        {dice.map((d, i) => (
+                          <span 
+                            key={i} 
+                            className={`
+                              inline-block w-6 h-6 text-center rounded border 
+                              ${i === dice.indexOf(Math.min(...dice)) ? 'line-through text-gray-500 border-gray-700' : 'border-primary/30'}
+                            `}
+                          >
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="font-bold">
+                        {getDiceTotal(dice)}
+                      </span>
+                    </div>
                   );
                 })}
+                
+                {diceResults.length === 0 && (
+                  <div className="text-center text-gray-500 py-2">
+                    Нажмите "Бросить кубики" для генерации значений
+                  </div>
+                )}
               </div>
-              
-              {onRollSingleAbility && (
-                <Button
-                  onClick={() => onRollSingleAbility(key)}
-                  size="sm"
-                  className="mt-2 w-full"
-                >
-                  <Dices className="mr-1 h-4 w-4" />
-                  Отдельный бросок
-                </Button>
-              )}
-            </div>
-          );
-        })}
+            </ScrollArea>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
-
-// Вспомогательные функции
-function getStatName(stat: string): string {
-  const names: {[key: string]: string} = {
-    'strength': 'Сила',
-    'dexterity': 'Ловкость',
-    'constitution': 'Телосложение',
-    'intelligence': 'Интеллект',
-    'wisdom': 'Мудрость',
-    'charisma': 'Харизма'
-  };
-  return names[stat] || stat;
-}
 
 export default AbilityRollingPanel;

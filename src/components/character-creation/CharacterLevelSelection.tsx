@@ -6,12 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import HitPointsRoller from './HitPointsRoller';
-import LevelBasedFeatures from './LevelBasedFeatures';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import SectionHeader from "@/components/ui/section-header";
-import { useLevelFeatures } from '@/hooks/useLevelFeatures';
-import { Shield, TrendingUp, Skull, Minus, Plus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
@@ -34,21 +30,10 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
 }) => {
   const [level, setLevel] = useState(character.level || 1);
   const [statCapAlert, setStatCapAlert] = useState<string | null>(null);
-  const { availableFeatures } = useLevelFeatures(character);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
-
-  // Проверка, выбран ли подкласс (если требуется)
-  const needsSubclass = availableFeatures.some(f => f.type === 'subclass');
-  const subclassSelected = character.subclass !== undefined && character.subclass !== '';
-
-  // Рассчитываем модификатор Телосложения
-  const getConModifier = (): number => {
-    if (!character.abilities) return 0;
-    return Math.floor((character.abilities.constitution - 10) / 2);
-  };
 
   // Обновляем уведомление о влиянии уровня на характеристики
   useEffect(() => {
@@ -84,13 +69,12 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
     }
   };
 
-  // Обработчик завершения броска HP
-  const handleHitPointsRolled = (hp: number) => {
-    updateCharacter({ maxHp: hp, currentHp: hp });
+  // Следующая вкладка - переход к мультиклассированию
+  const handleNext = () => {
+    // Сохраняем текущий уровень персонажа
+    updateCharacter({ level });
+    nextStep();
   };
-
-  // Проверка всех обязательных выборов
-  const requiredSelectionsMade = !needsSubclass || subclassSelected;
 
   return (
     <div className="space-y-6">
@@ -102,7 +86,6 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
       <Card className="border border-primary/20 shadow-lg bg-black/85">
         <CardHeader className="bg-primary/10 border-b border-primary/20">
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" /> 
             {!isMobile ? "Уровень персонажа" : "Уровень"}
           </CardTitle>
         </CardHeader>
@@ -119,7 +102,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   borderColor: currentTheme.accent 
                 }}
               >
-                <Minus className="size-5" />
+                -
               </Button>
               
               <div className="flex-grow">
@@ -149,7 +132,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
                   borderColor: currentTheme.accent 
                 }}
               >
-                <Plus className="size-5" />
+                +
               </Button>
               
               <div className="w-20">
@@ -179,7 +162,6 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
             
             {statCapAlert && (
               <Alert variant="default" className="bg-black/70 border border-primary/30">
-                <Shield className="h-4 w-4" />
                 <AlertTitle className="text-white">Влияние на характеристики</AlertTitle>
                 <AlertDescription className="text-white">{statCapAlert}</AlertDescription>
               </Alert>
@@ -187,7 +169,6 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
             
             {level >= 5 && (
               <Alert variant="default" className="bg-black/70 border-primary/30">
-                <TrendingUp className="h-4 w-4" />
                 <AlertTitle className="text-white">Дополнительные очки характеристик</AlertTitle>
                 <AlertDescription>
                   <div className="space-y-1">
@@ -214,45 +195,22 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
           </div>
         </CardContent>
       </Card>
-      
-      {/* Информация о том, что доступно на выбранном уровне */}
-      {character.class && (
-        <div className="mt-8">
-          <LevelBasedFeatures 
-            character={character} 
-            updateCharacter={updateCharacter} 
-          />
-        </div>
-      )}
-      
-      {/* Компонент для броска кубика HP */}
-      {character.class && (
-        <div className="mt-6">
-          <HitPointsRoller
-            characterClass={character.class}
-            level={level}
-            constitutionModifier={getConModifier()}
-            onHitPointsRolled={handleHitPointsRolled}
-            initialHp={character.maxHp}
-          />
-        </div>
-      )}
-      
-      {/* Предупреждение если не выбраны обязательные опции */}
-      {needsSubclass && !subclassSelected && (
-        <Alert variant="destructive" className="mt-4 bg-red-900/80 border-red-500">
-          <Skull className="h-4 w-4" />
-          <AlertTitle className="text-white">Не выбран архетип</AlertTitle>
+
+      {/* Кнопка перехода к мультиклассированию */}
+      <div className="mt-6">
+        <Alert variant="default" className="bg-black/70 border border-primary/30">
+          <AlertTitle className="text-white">Мультиклассирование</AlertTitle>
           <AlertDescription className="text-white">
-            Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.
+            Хотите добавить уровни в другие классы? Вы сможете сделать это на следующем шаге после выбора основного уровня.
           </AlertDescription>
         </Alert>
-      )}
+      </div>
       
       <NavigationButtons
-        nextStep={nextStep}
+        nextStep={handleNext}
         prevStep={prevStep}
-        allowNext={requiredSelectionsMade}
+        allowNext={true}
+        isFirstStep={false}
       />
     </div>
   );
