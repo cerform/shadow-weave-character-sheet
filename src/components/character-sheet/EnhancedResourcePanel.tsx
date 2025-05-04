@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { ResourcePanel } from './ResourcePanel';
-import { useCharacterContext } from '@/contexts/CharacterContext';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { getNumericModifier } from '@/utils/characterUtils';
 import { useHealthSystem } from '@/hooks/useHealthSystem'; 
 import { CharacterSheet } from '@/types/character';
@@ -11,7 +10,7 @@ import { CharacterSheet } from '@/types/character';
  * with context awareness for character data
  */
 export const EnhancedResourcePanel = () => {
-  const { character, updateCharacter } = useCharacterContext();
+  const { character, updateCharacter } = useCharacter();
   
   // Состояния для хранения HP
   const [maxHitPoints, setMaxHitPoints] = useState<number>(character?.maxHp || 10);
