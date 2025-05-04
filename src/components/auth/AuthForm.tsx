@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from 'sonner';
-import { Loader2, LogIn, Lock, Mail, User, AlertTriangle } from 'lucide-react';
+import { Loader2, LogIn, Lock, Mail, User, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -21,8 +21,14 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleAuthError, setGoogleAuthError] = useState(false);
+  const [currentDomain, setCurrentDomain] = useState('');
   const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Получаем текущий домен для отображения в сообщении об ошибке
+    setCurrentDomain(window.location.origin);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +105,15 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Домен не авторизован в Firebase. Используйте вход по email или откройте приложение на основном домене.
+              <p className="mb-2">Домен <strong>{currentDomain}</strong> не авторизован в Firebase.</p>
+              <p>Для использования входа через Google вам необходимо:</p>
+              <ol className="list-decimal pl-5 mt-2 space-y-1">
+                <li>Войти в <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center">консоль Firebase <ExternalLink className="h-3 w-3 ml-1" /></a></li>
+                <li>Открыть проект "shadow-char"</li>
+                <li>Перейти в Authentication &gt; Settings &gt; Authorized domains</li>
+                <li>Добавить домен: <strong>{currentDomain}</strong></li>
+              </ol>
+              <p className="mt-2">Пока используйте вход по email.</p>
             </AlertDescription>
           </Alert>
         )}

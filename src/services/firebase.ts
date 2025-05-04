@@ -55,6 +55,7 @@ const googleProvider = new GoogleAuthProvider();
 // Функция для форматирования сообщений ошибок Firebase
 const formatFirebaseError = (error: any): string => {
   const errorCode = error.code || '';
+  const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'текущий домен';
   
   // Карта пользовательских сообщений для известных ошибок
   const errorMessages: {[key: string]: string} = {
@@ -65,7 +66,7 @@ const formatFirebaseError = (error: any): string => {
     'auth/invalid-email': 'Введен некорректный email.',
     'auth/operation-not-allowed': 'Этот метод входа не включен. Пожалуйста, свяжитесь с администратором.',
     'auth/account-exists-with-different-credential': 'Этот email уже связан с другим методом входа.',
-    'auth/unauthorized-domain': 'Этот домен не авторизован для использования аутентификации Firebase.',
+    'auth/unauthorized-domain': `Домен "${currentDomain}" не авторизован для аутентификации Firebase. Добавьте этот домен в список разрешенных в консоли Firebase (Authentication > Settings > Authorized domains).`,
     'auth/popup-closed-by-user': 'Окно авторизации было закрыто до завершения процесса.',
     'auth/cancelled-popup-request': 'Операция отменена из-за нового запроса входа.',
     'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером.'
