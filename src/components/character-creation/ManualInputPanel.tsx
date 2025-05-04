@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ABILITY_SCORE_CAPS } from '@/types/character.d';
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 
 // Update the getMaxAbilityScore function:
 export const getMaxAbilityScore = (level?: number, maxAbilityScoreOverride?: number): number => {

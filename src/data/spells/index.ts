@@ -74,6 +74,14 @@ export const filterSpells = (
   });
 };
 
+// Функция для получения заклинаний по классу
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  return spells.filter(spell => {
+    const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+    return spellClasses.includes(className);
+  });
+};
+
 // Функции для получения заклинаний по уровню
 export const getCantrips = () => spells.filter(spell => spell.level === 0);
 export const getSpellsByLevel = (level: number) => spells.filter(spell => spell.level === level);

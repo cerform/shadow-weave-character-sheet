@@ -7,7 +7,7 @@ import StandardArrayPanel from './StandardArrayPanel';
 import PointBuyPanel from './PointBuyPanel';
 import ManualInputPanel, { getMaxAbilityScore } from './ManualInputPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ABILITY_SCORE_CAPS } from '@/constants/abilityScores';
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 import { AbilityScores } from '@/types/character';
 
 const CharacterAbilityScores: React.FC = () => {
@@ -75,7 +75,7 @@ const CharacterAbilityScores: React.FC = () => {
           <div className="mt-4">
             <TabsContent value="roll">
               <AbilityRollingPanel
-                stats={character?.abilities || {}}
+                stats={(character?.abilities || {}) as Record<string, number>}
                 onAssignDiceToStat={handleAbilityChange}
                 diceResults={[]}
                 assignedDice={{}}
@@ -85,13 +85,13 @@ const CharacterAbilityScores: React.FC = () => {
             </TabsContent>
             <TabsContent value="standard">
               <StandardArrayPanel
-                stats={character?.abilities || {}}
+                stats={(character?.abilities || {}) as Record<string, number>}
                 getModifier={getModifierString}
               />
             </TabsContent>
             <TabsContent value="point">
               <PointBuyPanel
-                stats={character?.abilities || {}}
+                stats={(character?.abilities || {}) as Record<string, number>}
                 pointsLeft={27}
                 incrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) + 1)}
                 decrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) - 1)}

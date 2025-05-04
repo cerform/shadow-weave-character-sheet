@@ -1,6 +1,8 @@
+
 export interface SorceryPoints {
   max: number;
   current: number;
+  used: number; // Added to ensure compatibility
 }
 
 export interface CharacterSheet {
@@ -14,7 +16,7 @@ export interface CharacterSheet {
   subclass?: string;
   level: number;
   abilities: AbilityScores;
-  proficiencies: string[];
+  proficiencies: string[]; // Changed to just string[] to fix type conflicts
   equipment: string[];
   spells: string[];
   features?: string[];
@@ -87,3 +89,38 @@ export interface CharacterSpell {
   duration?: string;
   [key: string]: any;
 }
+
+// Add SpellData type
+export interface SpellData {
+  id?: string | number;
+  name: string;
+  level: number;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materialComponents?: string;
+  description?: string;
+  higherLevels?: string;
+  higherLevel?: string;
+  classes?: string[] | string;
+  prepared?: boolean;
+  concentration?: boolean;
+  ritual?: boolean;
+  duration?: string;
+  [key: string]: any;
+}
+
+// Export ABILITY_SCORE_CAPS to make it consistent
+export const ABILITY_SCORE_CAPS = {
+  MIN: 1,
+  DEFAULT: 10, 
+  MAX: 20,
+  ABSOLUTE_MAX: 30,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};

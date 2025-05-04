@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import characterService from '@/services/characterService';
 import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
-import { extractSpellNames } from '@/utils/spellUtils';
+import { normalizeSpells } from '@/utils/spellUtils';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -20,6 +20,7 @@ export interface AbilityScores {
   intelligence: number;
   wisdom: number;
   charisma: number;
+  [key: string]: number; // Added index signature
 }
 
 // Интерфейс персонажа для хранения в CharacterContext
@@ -37,11 +38,12 @@ export interface Character {
   proficiencies: string[];
   equipment: string[];
   spells: CharacterSpell[];
+  features?: string[]; // Added features property
   languages: string[];
   gender: string;
   alignment: string;
   background: string;
-  backstory?: string; // Добавляем поле, которое требуется в CharacterSheet
+  backstory?: string;
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
