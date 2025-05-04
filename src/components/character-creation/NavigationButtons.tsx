@@ -3,7 +3,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
@@ -29,6 +31,9 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
+  const navigate = useNavigate();
+  const { resetCharacter } = useCharacterCreation();
+  const { toast } = useToast();
   
   const handlePrevStep = () => {
     if (!isFirstStep) {
@@ -36,21 +41,35 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     }
   };
   
+  const handleNavigateHome = () => {
+    // Показываем уведомление о переходе
+    toast({
+      title: "Переход на главную",
+      description: "Возвращаемся на главную страницу...",
+    });
+    
+    // Сбрасываем состояние персонажа перед навигацией
+    resetCharacter();
+    
+    // Используем setTimeout для обеспечения плавного перехода
+    setTimeout(() => {
+      navigate('/');
+    }, 300);
+  };
+  
   return (
     <div className="flex justify-between pt-8 mt-2">
       {isFirstStep ? (
         <Button 
           variant="outline" 
-          asChild
+          onClick={handleNavigateHome}
           className={`
             flex items-center gap-2 px-4 py-2 
             bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
           `}
         >
-          <Link to="/">
-            <ArrowLeft className="size-4" />
-            {!isMobile && "На главную"}
-          </Link>
+          <ArrowLeft className="size-4" />
+          {!isMobile && "На главную"}
         </Button>
       ) : (
         <Button 

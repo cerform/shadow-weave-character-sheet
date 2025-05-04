@@ -2,7 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import { useToast } from '@/hooks/use-toast';
 
 interface HomeButtonProps {
   className?: string;
@@ -15,16 +17,36 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   showText = true,
   variant = "outline"
 }) => {
+  const navigate = useNavigate();
+  const { resetCharacter } = useCharacterCreation();
+  const { toast } = useToast();
+  
+  const handleNavigateHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Показываем уведомление о переходе
+    toast({
+      title: "Переход на главную",
+      description: "Возвращаемся на главную страницу...",
+    });
+    
+    // Сбрасываем состояние персонажа перед навигацией
+    resetCharacter();
+    
+    // Используем setTimeout для обеспечения плавного перехода
+    setTimeout(() => {
+      navigate('/');
+    }, 300);
+  };
+  
   return (
     <Button 
       variant={variant}
-      asChild
       className={`flex items-center gap-2 ${className}`}
+      onClick={handleNavigateHome}
     >
-      <Link to="/">
-        <Home className="size-4" />
-        {showText && "На главную"}
-      </Link>
+      <Home className="size-4" />
+      {showText && "На главную"}
     </Button>
   );
 };
