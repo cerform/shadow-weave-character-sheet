@@ -11,7 +11,8 @@ interface CharacterContextProps {
   isLoading: boolean;
 }
 
-const CharacterContext = createContext<CharacterContextProps>({
+// Добавляем именованный экспорт для CharacterContext
+export const CharacterContext = createContext<CharacterContextProps>({
   character: null,
   setCharacter: () => {},
   saveCharacter: async () => {},
@@ -105,4 +106,5 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children, 
 
 export const useCharacter = () => useContext(CharacterContext);
 
+// Для обратной совместимости сохраняем default экспорт
 export default CharacterContext;

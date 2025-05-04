@@ -3,16 +3,16 @@
 import cantrips from './cantrips';
 import level0 from './level0';
 import level1 from './level1';
-import level2 from './level2';
-import { level3Spells as level3 } from './level3'; // Предположим, что экспорт именован
-import { level4Spells as level4 } from './level4';
+import { level2Spells } from './level2'; // Используем именованный импорт
+import { level3Spells } from './level3'; 
+import { level4Spells } from './level4';
 import { level4Part2 } from './level4_part2';
-import level4Part3 from './level4_part3';
-import level5 from './level5';
-import level6 from './level6';
-import level7 from './level7';
-import level8 from './level8';
-import level9 from './level9';
+import { level4Part3 } from './level4_part3'; // Используем именованный импорт
+import { level5Spells } from './level5'; // Используем именованный импорт
+import { level6Spells } from './level6'; // Используем именованный импорт
+import { level7Spells } from './level7'; // Используем именованный импорт
+import { level8Spells } from './level8'; // Используем именованный импорт
+import { level9Spells } from './level9'; // Используем именованный импорт
 
 import { CharacterSpell } from '@/types/character';
 
@@ -21,16 +21,16 @@ export const spells: CharacterSpell[] = [
   ...cantrips,
   ...level0,
   ...level1,
-  ...(level2 || []),
-  ...(level3 || []),
-  ...(level4 || []),
+  ...(level2Spells || []),
+  ...(level3Spells || []),
+  ...(level4Spells || []),
   ...(level4Part2 || []),
   ...(level4Part3 || []),
-  ...(level5 || []),
-  ...(level6 || []),
-  ...(level7 || []),
-  ...(level8 || []),
-  ...(level9 || [])
+  ...(level5Spells || []),
+  ...(level6Spells || []),
+  ...(level7Spells || []),
+  ...(level8Spells || []),
+  ...(level9Spells || [])
 ];
 
 // Функция для фильтрации заклинаний по различным критериям
