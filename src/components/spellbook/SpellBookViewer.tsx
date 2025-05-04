@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import {
   SheetTrigger, 
   SheetClose 
 } from "@/components/ui/sheet";
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile.tsx';
 
 const SpellBookViewer: React.FC = () => {
   const navigate = useNavigate();
@@ -97,7 +96,7 @@ const SpellBookViewer: React.FC = () => {
     </div>
   );
 
-  // Содержимое для мобильных фильтров
+  // Содержимое для мобильны�� фильтров
   const MobileFilters = () => (
     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
       <SheetContent side="right" className="w-[85%] sm:w-[385px] pt-10">

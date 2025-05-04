@@ -4,19 +4,23 @@ import * as React from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = React.useState<boolean>(false)
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
+    // Функция для определения мобильного устройства
+    const checkMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
+    
+    // Проверяем сразу при загрузке
+    checkMobile()
+    
+    // И добавляем слушатель события для изменения размера окна
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  return !!isMobile
+  return isMobile
 }
 
 // Расширенный хук для определения типа устройства (телефон, планшет, десктоп)
@@ -36,8 +40,14 @@ export function useDeviceType() {
     }
     
     checkDeviceType()
-    window.addEventListener("resize", checkDeviceType)
-    return () => window.removeEventListener("resize", checkDeviceType)
+    
+    // Добавляем слушатель события для изменения размера окна
+    const resizeHandler = () => {
+      checkDeviceType()
+    }
+    
+    window.addEventListener("resize", resizeHandler)
+    return () => window.removeEventListener("resize", resizeHandler)
   }, [])
 
   return deviceType
@@ -46,7 +56,9 @@ export function useDeviceType() {
 // Хук для проверки ориентации устройства
 export function useOrientation() {
   const [orientation, setOrientation] = React.useState<"portrait" | "landscape">(
-    window.innerHeight > window.innerWidth ? "portrait" : "landscape"
+    typeof window !== "undefined" 
+      ? window.innerHeight > window.innerWidth ? "portrait" : "landscape"
+      : "portrait"
   )
 
   React.useEffect(() => {
@@ -56,12 +68,21 @@ export function useOrientation() {
       )
     }
 
+    // Проверяем ориентацию при монтировании
+    handleOrientationChange()
+    
     window.addEventListener("resize", handleOrientationChange)
-    window.addEventListener("orientationchange", handleOrientationChange)
+    
+    // В современных браузерах событие orientationchange устарело
+    if (typeof window.orientation !== 'undefined') {
+      window.addEventListener("orientationchange", handleOrientationChange)
+    }
 
     return () => {
       window.removeEventListener("resize", handleOrientationChange)
-      window.removeEventListener("orientationchange", handleOrientationChange)
+      if (typeof window.orientation !== 'undefined') {
+        window.removeEventListener("orientationchange", handleOrientationChange)
+      }
     }
   }, [])
 
