@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -48,6 +47,27 @@ const SpellBookViewer: React.FC = () => {
     formatClasses,
   } = useSpellbook();
 
+  // Оборачиваем функции для сохранения состояния открытия sheet при выборе фильтров
+  const handleToggleLevel = (level: number) => {
+    toggleLevel(level);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleToggleSchool = (school: string) => {
+    toggleSchool(school);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleToggleClass = (className: string) => {
+    toggleClass(className);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleClearFilters = () => {
+    clearFilters();
+    // Удаляем автоматическое закрытие
+  };
+
   // Навигационные кнопки для мобильной версии
   const MobileNavigation = () => (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-accent z-30 flex justify-around p-2">
@@ -77,12 +97,12 @@ const SpellBookViewer: React.FC = () => {
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               activeLevel={activeLevel}
-              toggleLevel={toggleLevel}
+              toggleLevel={handleToggleLevel}
               activeSchool={activeSchool}
-              toggleSchool={toggleSchool}
+              toggleSchool={handleToggleSchool}
               activeClass={activeClass}
-              toggleClass={toggleClass}
-              clearFilters={clearFilters}
+              toggleClass={handleToggleClass}
+              clearFilters={handleClearFilters}
               allLevels={allLevels}
               allSchools={allSchools}
               allClasses={allClasses}
@@ -115,12 +135,12 @@ const SpellBookViewer: React.FC = () => {
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             activeLevel={activeLevel}
-            toggleLevel={toggleLevel}
+            toggleLevel={handleToggleLevel}
             activeSchool={activeSchool}
-            toggleSchool={toggleSchool}
+            toggleSchool={handleToggleSchool}
             activeClass={activeClass}
-            toggleClass={toggleClass}
-            clearFilters={clearFilters}
+            toggleClass={handleToggleClass}
+            clearFilters={handleClearFilters}
             allLevels={allLevels}
             allSchools={allSchools}
             allClasses={allClasses}

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -153,9 +152,11 @@ export const AppDiceButton: React.FC = () => {
       style={buttonStyle}
       onMouseEnter={() => setShowDragIcon(true)}
       onMouseLeave={() => setShowDragIcon(false)}
-      onTouchStart={() => setShowDragIcon(true)}
       onMouseDown={handleDragStart}
-      onTouchStart={handleDragStart}
+      onTouchStart={(e) => {
+        setShowDragIcon(true);
+        handleDragStart(e);
+      }}
     >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <Button 
