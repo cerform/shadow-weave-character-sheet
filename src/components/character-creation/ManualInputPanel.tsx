@@ -7,7 +7,7 @@ import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 interface ManualInputPanelProps {
   abilityScores: { [key: string]: number };
-  setAbilityScores: (abilityScores: { [key: string]: number }) => void;
+  setAbilityScores: (abilityScores: { [key: string]: number } | ((prev: { [key: string]: number }) => { [key: string]: number })) => void;
   maxAbilityScore?: number;
   level?: number;
 }
