@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useDeviceType } from '@/hooks/use-mobile.tsx';
+import { useDeviceType } from '@/hooks/use-mobile';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
