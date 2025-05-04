@@ -1,8 +1,9 @@
 
 import { CharacterSpell } from '@/types/character';
 
+// Интерфейс для данных о заклинании
 export interface SpellData {
-  id?: number;
+  id?: string | number;
   name: string;
   name_en?: string;
   level: number;
@@ -11,7 +12,7 @@ export interface SpellData {
   range: string;
   components: string;
   duration: string;
-  description: string;
+  description: string | string[];
   classes?: string[] | string;
   source?: string;
   isRitual?: boolean;
@@ -21,8 +22,11 @@ export interface SpellData {
   material?: boolean;
   ritual?: boolean;
   concentration?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
 }
 
+// Интерфейс для возвращаемого значения хука useSpellbook
 export interface UseSpellbookReturn {
   filteredSpells: SpellData[];
   searchTerm: string;
@@ -45,5 +49,5 @@ export interface UseSpellbookReturn {
   getBadgeColor: (level: number) => string;
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }

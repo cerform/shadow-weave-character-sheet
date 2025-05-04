@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import { ThemeSelector } from "@/components/character-sheet/ThemeSelector"; 
 import { useNavigate } from 'react-router-dom';
-import { useSpellbook } from '@/hooks/useSpellbook';
+import { useSpellbook, SpellData } from '@/hooks/spellbook';
 import SpellFilters from './SpellFilters';
 import SpellList from './SpellList';
 import { 
@@ -15,7 +16,7 @@ import {
   SheetTrigger, 
   SheetClose 
 } from "@/components/ui/sheet";
-import { useIsMobile } from '@/hooks/use-mobile.tsx';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const SpellBookViewer: React.FC = () => {
   const navigate = useNavigate();

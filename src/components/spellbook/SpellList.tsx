@@ -1,31 +1,9 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface SpellData {
-  id?: string | number;
-  name: string;
-  name_en?: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string;
-  classes?: string[] | string;
-  source?: string;
-  isRitual?: boolean;
-  isConcentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-}
+import { SpellData } from '@/hooks/spellbook/types';
 
 interface SpellListProps {
   spells: SpellData[];
@@ -50,7 +28,7 @@ const SpellList: React.FC<SpellListProps> = ({
         {spells.length > 0 ? (
           spells.map((spell, index) => (
             <Card 
-              key={spell.id || `spell-${index}`} 
+              key={spell.id !== undefined ? String(spell.id) : `spell-${index}`} 
               className="spell-card border border-accent hover:border-primary cursor-pointer transition-all"
               onClick={() => handleOpenSpell(spell)}
               style={{
