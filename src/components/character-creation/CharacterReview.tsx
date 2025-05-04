@@ -18,7 +18,7 @@ interface CharacterReviewProps {
 
 const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterReviewProps) => {
   const navigate = useNavigate();
-  const { saveCharacter } = useCharacter();
+  const { saveCurrentCharacter, setCharacter } = useCharacter();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -45,8 +45,11 @@ const CharacterReview = ({ character, prevStep, updateCharacter }: CharacterRevi
       // Преобразуем CharacterSheet в Character для сохранения
       const convertedCharacter = convertToCharacter(character);
       
+      // Устанавливаем персонажа в контекст
+      setCharacter(convertedCharacter);
+      
       // Сохраняем персонажа
-      const savedCharacter = await saveCharacter(convertedCharacter);
+      await saveCurrentCharacter();
       
       toast({
         title: "Персонаж сохранен",

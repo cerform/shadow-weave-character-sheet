@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FileUp, Loader2, AlertCircle, Info } from 'lucide-react';
 import { extractCharacterDataFromPdf, convertExtractedDataToCharacter } from '@/utils/pdfImporter';
 import { useToast } from '@/components/ui/use-toast';
-import { CharacterContext } from '@/contexts/CharacterContext';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -15,7 +15,7 @@ const PdfCharacterImport: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [importedData, setImportedData] = useState<any>(null);
-  const { setCharacter } = React.useContext(CharacterContext);
+  const { setCharacter } = useCharacter();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();

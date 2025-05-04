@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,6 +97,7 @@ export const AbilitiesTab = () => {
     </Card>
   );
 
+  // Внутри render компонента:
   return (
     <div className="space-y-6 pb-6">
       {renderProficiencyBonusCard()}

@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { saveCharacter, getUserCharacters, deleteCharacter as deleteCharacterService } from '@/services/characterService';
+import characterService from '@/services/characterService';
 import { SorceryPoints } from '@/types/character';
 
 // Интерфейс для характеристик
@@ -61,10 +61,14 @@ export interface Character {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
 }
 
 export interface CharacterContextType {
   character: Character | null;
+  setCharacter: (character: Character | null) => void;
   updateCharacter: (updates: Partial<Character>) => void;
   saveCurrentCharacter: () => Promise<void>;
   characters: Character[];
@@ -74,6 +78,7 @@ export interface CharacterContextType {
 
 export const CharacterContext = createContext<CharacterContextType>({
   character: null,
+  setCharacter: () => {},
   updateCharacter: () => {},
   saveCurrentCharacter: async () => {},
   characters: [],
@@ -103,8 +108,10 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await saveCharacter(updatedCharacter);
-      setCharacter(savedChar);
+      const savedChar = await characterService.saveCharacter(updatedCharacter);
+      if (savedChar) {
+        setCharacter(updatedCharacter);
+      }
       
       // Обновляем список персонажей, если сохранение прошло успешно
       await fetchUserCharacters();
@@ -116,7 +123,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получаем список персонажей пользователя
   const fetchUserCharacters = async () => {
     try {
-      const characters = await getUserCharacters();
+      const characters = await characterService.getCharacters();
       setCharacters(characters);
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
@@ -126,7 +133,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Удаление персонажа
   const handleDeleteCharacter = async (id: string) => {
     try {
-      await deleteCharacterService(id);
+      await characterService.deleteCharacter(id);
       setCharacters(prev => prev.filter(char => char.id !== id));
       
       // Если удаляем текущего персонажа, сбрасываем его
@@ -147,6 +154,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     <CharacterContext.Provider 
       value={{ 
         character, 
+        setCharacter,
         updateCharacter, 
         saveCurrentCharacter,
         characters,

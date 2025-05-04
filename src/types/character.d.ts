@@ -92,7 +92,8 @@ export interface CharacterSheet {
     wisdom: number;
     charisma: number;
   };
-  savingThrowProficiencies?: string[]; // Владения спасбросками
+  savingThrowProficiencies?: {[ability: string]: boolean}; // Владения спасбросками
+  skillProficiencies?: {[skillName: string]: boolean}; // Владения навыками
   deathSaves?: {
     successes: number;
     failures: number;
@@ -106,6 +107,7 @@ export interface CharacterSheet {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
+  image?: string; // URL изображения персонажа
 }
 
 // Определяем доступные классы и их подклассы
