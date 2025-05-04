@@ -57,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Исправляем проверку класса Details - без обращения к props.className
     const hasDetailsClass = className ? className.includes('Details') : false;
     
-    // Добавляем стили для улучшения контрастности в зависимости от темы
+    // Улучшаем подсветку для всех кнопок
     const style = {
       ...props.style,
       color: variant === 'ghost' && hasDetailsClass
@@ -72,11 +72,22 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? currentTheme.accent 
         : props.style?.backgroundColor,
       textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
+      // Добавим эффекты при наведении через CSS переменные
+      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
+      '--hover-border-color': currentTheme.accent,
+      '--hover-bg-color': `${currentTheme.accent}30`,
     };
+    
+    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
+    const enhancedClasses = cn(
+      baseClasses,
+      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
+    );
     
     return (
       <Comp
-        className={baseClasses}
+        className={enhancedClasses}
         ref={ref}
         style={style}
         {...props}
