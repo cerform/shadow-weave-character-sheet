@@ -1,3 +1,4 @@
+
 import { CharacterSheet, SpellSlots, Proficiencies, AbilityScores } from './character.types';
 
 export type { CharacterSheet, SpellSlots, Proficiencies, AbilityScores };
@@ -142,4 +143,31 @@ export interface HitPointEvent {
   amount?: number;
   source?: string;
   timestamp: number;
+}
+
+// Add ClassFeatures interface
+export interface ClassFeatures {
+  name: string;
+  hitDice: string;
+  primaryAbility: string[];
+  savingThrowProficiencies: string[];
+  armorProficiencies: string[];
+  weaponProficiencies: string[];
+  toolProficiencies: string[] | string;
+  skillChoices: string[];
+  numberOfSkillChoices: number;
+  features: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  spellcasting: {
+    ability: string;
+    cantripsKnown: number[];
+    spellsKnown: number[];
+    spellSlots: {
+      [key: string]: number[];
+    };
+  } | null;
+  [key: string]: any;
 }

@@ -101,7 +101,7 @@ export const useSessionStore = create<SessionStore>()(
               isDM: true
             },
             loading: false
-          } as Partial<SessionStore>)); // Cast to Partial<SessionStore>
+          }));
           
           toast.success("Сессия успешно создана");
           return newSession;
