@@ -71,13 +71,19 @@ const Home = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
+  // Получаем список персонажей пользователя
+  const fetchUserCharacters = async () => {
+    try {
+      const characters = await getUserCharacters();
+      setUserCharacters(characters);
+    } catch (error) {
+      console.error('Ошибка при получении персонажей:', error);
+    }
+  };
+
   // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
   useEffect(() => {
-    const fetchAndSetCharacters = async () => {
-      const charactersData = await getUserCharacters();
-      setCharacters(charactersData);
-    };
-    fetchAndSetCharacters();
+    fetchUserCharacters();
   }, [isAuthenticated, getUserCharacters, characters]);
   
   // При изменении статуса авторизации проверяем, нужно ли сменить активную вкладку

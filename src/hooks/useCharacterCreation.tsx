@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { convertToCharacter } from "@/utils/characterConverter";
-import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
+import { getModifierFromAbilityScore, isMagicClass } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
 
 export const useCharacterCreation = () => {
@@ -70,7 +70,7 @@ export const useCharacterCreation = () => {
   // Проверяем, является ли класс магическим
   const isMagicClass = () => {
     if (!character.class) return false;
-    return checkIsMagicClass(character.class);
+    return isMagicClass(character.class);
   };
 
   // Получаем общий уровень персонажа (основной + мультикласс)

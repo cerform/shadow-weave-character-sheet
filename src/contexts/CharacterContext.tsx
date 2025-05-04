@@ -72,7 +72,7 @@ export interface CharacterContextType {
   updateCharacter: (updates: Partial<Character>) => void;
   saveCurrentCharacter: () => Promise<void>;
   characters: Character[];
-  getUserCharacters: () => void;
+  getUserCharacters: () => Promise<Character[]>;
   deleteCharacter: (id: string) => Promise<void>;
 }
 
@@ -82,7 +82,7 @@ export const CharacterContext = createContext<CharacterContextType>({
   updateCharacter: () => {},
   saveCurrentCharacter: async () => {},
   characters: [],
-  getUserCharacters: () => {},
+  getUserCharacters: async () => [],
   deleteCharacter: async () => {},
 });
 
@@ -114,19 +114,21 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       }
       
       // Обновляем список персонажей, если сохранение прошло успешно
-      await fetchUserCharacters();
+      await getUserCharacters();
     } catch (error) {
       console.error('Ошибка при сохранении персонажа:', error);
     }
   };
   
   // Получаем список персонажей пользователя
-  const fetchUserCharacters = async () => {
+  const getUserCharacters = async () => {
     try {
-      const characters = await characterService.getCharacters();
-      setCharacters(characters);
+      const fetchedCharacters = await characterService.getCharacters();
+      setCharacters(fetchedCharacters);
+      return fetchedCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
+      return [];
     }
   };
   
@@ -147,7 +149,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   
   // При инициализации получаем список персонажей
   useEffect(() => {
-    fetchUserCharacters();
+    getUserCharacters();
   }, []);
   
   return (
@@ -158,7 +160,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updateCharacter, 
         saveCurrentCharacter,
         characters,
-        getUserCharacters: fetchUserCharacters,
+        getUserCharacters,
         deleteCharacter: handleDeleteCharacter
       }}
     >
