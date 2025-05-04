@@ -7,9 +7,56 @@ import { Input } from "@/components/ui/input";
 import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
-import { safeJoin, normalizeSpells } from '@/utils/spellUtils';
 import SpellDescription from '../SpellDescription';
 import { spells as allSpells } from '@/data/spells';
+
+// Добавляем утилиты для корректной обработки заклинаний
+const safeJoin = (value: any): string => {
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return String(value || "");
+};
+
+const normalizeSpells = (spells: any[], allSpellsData: any[]): CharacterSpell[] => {
+  if (!spells || !Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    // Если это уже объект CharacterSpell
+    if (typeof spell === 'object' && spell !== null) {
+      return {
+        ...spell,
+        prepared: spell.prepared === undefined ? false : spell.prepared
+      } as CharacterSpell;
+    }
+    
+    // Если это строка, найти заклинание в базе данных
+    if (typeof spell === 'string') {
+      const foundSpell = allSpellsData.find(s => s.name === spell);
+      if (foundSpell) {
+        return {
+          ...foundSpell,
+          prepared: false // По умолчанию не подготовлено
+        } as CharacterSpell;
+      }
+      // Если не найдено, создаем минимальный объект
+      return {
+        name: spell,
+        level: 0,
+        prepared: false
+      } as CharacterSpell;
+    }
+    
+    return {
+      name: "Неизвестное заклинание",
+      level: 0,
+      prepared: false
+    } as CharacterSpell;
+  });
+};
 
 interface SpellsTabProps {
   character: any;

@@ -1,6 +1,7 @@
 import { ClassFeatures } from '@/types/character';
 
-export const classFeatures: ClassFeatures[] = [
+// Исправляем структуру данных
+export const classFeatures = [
   {
     name: "Воин",
     hitDice: "1d10",
@@ -12,8 +13,8 @@ export const classFeatures: ClassFeatures[] = [
     skillChoices: ["Атлетика", "Акробатика", "История", "Наблюдательность", "Выживание", "Запугивание"],
     numberOfSkillChoices: 2,
     features: [
-      { level: 1, name: "Второе дыхание", description: "Вы можете действием восстановить хиты, равные 1d10 + уровень воина." },
-      { level: 1, name: "Мастерство доспехов", description: "Если вы носите доспех, вы получаете бонус +1 к КД." }
+      { name: "Второе дыхание", description: "Вы можете действием восстановить хиты, равные 1d10 + уровень воина." },
+      { name: "Мастерство доспехов", description: "Если вы носите доспех, вы получаете бонус +1 к КД." }
     ],
     spellcasting: null
   },
@@ -28,8 +29,8 @@ export const classFeatures: ClassFeatures[] = [
     skillChoices: ["Анимализм", "Атлетика", "Запугивание", "Природа", "Наблюдательность", "Выживание"],
     numberOfSkillChoices: 2,
     features: [
-      { level: 1, name: "Ярость", description: "В бою вы можете впадать в ярость, дающую временные хиты и бонус к урону." },
-      { level: 2, name: "Безрассудная атака", description: "Вы можете совершать атаки с преимуществом, но враги также получают преимущество против вас." }
+      { name: "Ярость", description: "В бою вы можете впадать в ярость, дающую временные хиты и бонус к урону." },
+      { name: "Безрассудная атака", description: "Вы можете совершать атаки с преимуществом, но враги также получают преимущество против вас." }
     ],
     spellcasting: null
   },
@@ -255,3 +256,5 @@ export const classFeatures: ClassFeatures[] = [
     }
   }
 ];
+
+export default classFeatures;

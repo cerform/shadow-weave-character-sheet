@@ -34,7 +34,7 @@ export const HitPointsPanel: React.FC<HitPointsPanelProps> = ({ character }) => 
             {character.hitDice && (
               <div>
                 <p className="text-sm text-muted-foreground">Кости хитов</p>
-                <p className="text-lg">{character.hitDice.total - (character.hitDice.used || 0)}/{character.hitDice.total} {character.hitDice.value}</p>
+                <p className="text-lg">{character.hitDice.current || character.hitDice.total - (character.hitDice.used || 0)}/{character.hitDice.total} {character.hitDice.value}</p>
               </div>
             )}
           </div>

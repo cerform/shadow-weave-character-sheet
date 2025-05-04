@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CharacterSheet } from '@/types/character';
-import { backgroundsData } from '@/data/backgrounds';
+import { backgrounds } from '@/data/backgrounds';
 
 interface CharacterBackgroundProps {
   character: CharacterSheet;
@@ -30,7 +29,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   // Обработчик выбора предыстории
   const handleBackgroundChange = (value: string) => {
     setBackground(value);
-    const selectedBackground = backgroundsData.find(bg => bg.name === value);
+    const selectedBackground = backgrounds.find(bg => bg.name === value);
     
     if (selectedBackground) {
       setPersonalityTraits(selectedBackground.personalityTraits.slice(0, 2));
@@ -67,7 +66,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
                 <SelectValue placeholder="Выберите предысторию" />
               </SelectTrigger>
               <SelectContent>
-                {backgroundsData.map((bg) => (
+                {backgrounds.map((bg) => (
                   <SelectItem key={bg.name} value={bg.name}>{bg.name}</SelectItem>
                 ))}
               </SelectContent>

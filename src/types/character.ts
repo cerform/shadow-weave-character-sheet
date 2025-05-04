@@ -16,6 +16,12 @@ export interface AbilityScores {
   [key: string]: number | undefined; // Добавляем индексную сигнатуру для совместимости
 }
 
+export interface HitPoints {
+  current: number;
+  maximum: number; // Исправляем на maximum вместо max для совместимости
+  temporary?: number;
+}
+
 export interface Proficiencies {
   weapons?: string[];
   armor?: string[];
@@ -110,17 +116,14 @@ export interface CharacterSheet {
   armorClass?: number;
   initiative?: number;
   speed?: number;
-  hitPoints?: {
-    current: number;
-    maximum: number;
-    temporary?: number;
-  };
+  hitPoints?: HitPoints;
   maxHp?: number; // Добавляем для совместимости
   currentHp?: number; // Добавляем для совместимости
   temporaryHp?: number; // Добавляем для совместимости
+  tempHp?: number; // Альтернативное название
   hitDice?: {
     total: number;
-    current: number;
+    current?: number;
     value?: string; // Добавляем для совместимости
     used?: number; // Добавляем для совместимости
   };
@@ -178,7 +181,7 @@ export interface CharacterSpell extends SpellData {
 
 // Определяем тип Character, расширяющий CharacterSheet
 export interface Character extends CharacterSheet {
-  features: string[] | Feature[];
+  features: (string | Feature)[]; // Обновляем для совместимости
 }
 
 export interface ClassRequirement {
@@ -198,8 +201,11 @@ export interface ClassRequirement {
 export interface HitPointEvent {
   id?: string | number;
   type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
-  value: number;
+  value?: number;
   amount?: number;
   source?: string;
   timestamp: number;
 }
+
+// Экспортируем всё из character.d.ts
+export * from '@/types/character.d';
