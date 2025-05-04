@@ -12,8 +12,6 @@ export const BackgroundTab = () => {
         <CardContent className="p-4">
           <h4 className="font-medium mb-1">Предыстория персонажа</h4>
           <Textarea 
-            id="character-backstory"
-            name="character-backstory"
             placeholder="Опишите историю вашего персонажа..."
             className="min-h-[100px]"
           />
@@ -24,8 +22,6 @@ export const BackgroundTab = () => {
         <CardContent className="p-4">
           <h4 className="font-medium mb-1">Внешность</h4>
           <Textarea 
-            id="character-appearance"
-            name="character-appearance"
             placeholder="Опишите внешность вашего персонажа..."
             className="min-h-[100px]"
           />
@@ -37,8 +33,6 @@ export const BackgroundTab = () => {
           <CardContent className="p-4">
             <h4 className="font-medium mb-1">Личностные черты</h4>
             <Textarea 
-              id="character-traits"
-              name="character-traits"
               placeholder="Какие качества отличают вашего персонажа?"
               className="min-h-[80px]"
             />
@@ -49,8 +43,6 @@ export const BackgroundTab = () => {
           <CardContent className="p-4">
             <h4 className="font-medium mb-1">Идеалы</h4>
             <Textarea 
-              id="character-ideals"
-              name="character-ideals"
               placeholder="Во что верит ваш персонаж?"
               className="min-h-[80px]"
             />
@@ -61,8 +53,6 @@ export const BackgroundTab = () => {
           <CardContent className="p-4">
             <h4 className="font-medium mb-1">Узы</h4>
             <Textarea 
-              id="character-bonds"
-              name="character-bonds"
               placeholder="С чем или кем связан ваш персонаж?"
               className="min-h-[80px]"
             />
@@ -73,8 +63,6 @@ export const BackgroundTab = () => {
           <CardContent className="p-4">
             <h4 className="font-medium mb-1">Слабости</h4>
             <Textarea 
-              id="character-flaws"
-              name="character-flaws"
               placeholder="Какие недостатки есть у вашего персонажа?"
               className="min-h-[80px]"
             />
@@ -84,5 +72,3 @@ export const BackgroundTab = () => {
     </div>
   );
 };
-
-export default BackgroundTab;

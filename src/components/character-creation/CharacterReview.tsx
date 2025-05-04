@@ -1,649 +1,1092 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CharacterSheet } from '@/types/character.d';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { Save, Eye, Edit, Info, Check, AlertTriangle, Bookmark, BookOpen, Shield, Swords, ArrowLeft } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { auth } from '@/services/firebase';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import NavigationButtons from "./NavigationButtons";
-import CharacterSkillsDisplay from "./CharacterSkillsDisplay";
-import { CharacterSheet } from "@/types/character";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-// Импортируем функции из соответствующих файлов
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  ExtendedTooltipContent
+} from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { saveCharacter } from "@/services/characterService";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { CharacterContext } from '@/contexts/CharacterContext';
+import { useContext } from 'react';
+import { getModifierFromAbilityScore } from '@/utils/characterUtils';
+import NavigationButtons from './NavigationButtons';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { isOfflineMode } from '@/utils/authHelpers';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
   prevStep: () => void;
-  setCurrentStep: (step: number) => void;
   updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  setCurrentStep: (step: number) => void;
 }
 
-const CharacterReview: React.FC<CharacterReviewProps> = ({
-  character,
-  prevStep,
-  setCurrentStep,
-  updateCharacter,
+const CharacterReview: React.FC<CharacterReviewProps> = ({ 
+  character, 
+  prevStep, 
+  updateCharacter, 
+  setCurrentStep 
 }) => {
-  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [isSaving, setIsSaving] = useState(false);
-  const [fileName, setFileName] = useState(`${character.name || "character"}.json`);
-  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [appearanceDetails, setAppearanceDetails] = useState({
-    age: character.age || "",
-    height: character.height || "",
-    weight: character.weight || "",
-    eyes: character.eyes || "",
-    skin: character.skin || "",
-    hair: character.hair || "",
-  });
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("basic");
+  const { saveCurrentCharacter } = useContext(CharacterContext);
 
-  // Функция для скачивания персонажа в формате JSON
-  const downloadCharacterAsJson = () => {
-    // Создаем полную копию объекта персонажа
-    const characterToDownload = {
-      ...character,
-      // Добавляем данные о внешности
-      age: appearanceDetails.age,
-      height: appearanceDetails.height,
-      weight: appearanceDetails.weight,
-      eyes: appearanceDetails.eyes,
-      skin: appearanceDetails.skin,
-      hair: appearanceDetails.hair,
-    };
-
-    // Создаем Blob с данными персонажа
-    const characterBlob = new Blob([JSON.stringify(characterToDownload, null, 2)], {
-      type: "application/json",
-    });
-    
-    // Создаем ссылку для скачивания файла
-    const url = URL.createObjectURL(characterBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    
-    // Симулируем клик по ссылке для скачивания файла
-    document.body.appendChild(link);
-    link.click();
-    
-    // Очищаем созданные объекты
-    URL.revokeObjectURL(url);
-    document.body.removeChild(link);
-    
-    // Закрываем диалог
-    setShowDownloadDialog(false);
-    
-    // Показываем уведомление об успешном скачивании
-    toast.success("Персонаж успешно скачан");
-  };
-
-  // Функция для генерации PDF-документа с персонажем
-  const generatePDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      // Здесь должен быть код для генерации PDF
-      // На данном этапе просто имитируем задержку
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("PDF-документ успешно создан");
-    } catch (error) {
-      console.error("Ошибка при генерации PDF:", error);
-      toast.error("Не удалось создать PDF-документ");
-    } finally {
-      setIsGeneratingPDF(false);
+  // Функция для валидации персонажа перед сохранением
+  const validateCharacter = () => {
+    if (!character.name || !character.name.trim()) {
+      toast({
+        title: "Отсутствует имя персонажа",
+        description: "Пожалуйста, укажите имя для вашего персонажа",
+        variant: "destructive"
+      });
+      setCurrentStep(7); // Переход к шагу с базовой информацией
+      return false;
     }
+    
+    if (!character.race) {
+      toast({
+        title: "Не выбрана раса",
+        description: "Пожалуйста, выберите расу для вашего персонажа",
+        variant: "destructive"
+      });
+      setCurrentStep(0); // Переход к шагу выбора расы
+      return false;
+    }
+    
+    if (!character.class) {
+      toast({
+        title: "Не выбран класс",
+        description: "Пожалуйста, выберите класс для вашего персонажа",
+        variant: "destructive"
+      });
+      setCurrentStep(1); // Переход к шагу выбора класса
+      return false;
+    }
+    
+    if (!character.abilities || 
+        !character.abilities.strength || 
+        !character.abilities.dexterity || 
+        !character.abilities.constitution || 
+        !character.abilities.intelligence || 
+        !character.abilities.wisdom || 
+        !character.abilities.charisma) {
+      toast({
+        title: "Не распредел��ны характеристики",
+        description: "Пожалуйста, распределите значения характеристик",
+        variant: "destructive"
+      });
+      setCurrentStep(3); // Переход к шагу распределения характеристик
+      return false;
+    }
+    
+    if (!character.maxHp || character.maxHp <= 0) {
+      toast({
+        title: "Не рассчитаны хиты",
+        description: "Пожалуйста, рассчитайте хиты вашего персонажа",
+        variant: "destructive"
+      });
+      setCurrentStep(5); // Переход к шагу расчёта хитов
+      return false;
+    }
+    
+    return true;
   };
 
-  // Функция для сохранения персонажа в базе данных
-  const saveCharacterToDatabase = async () => {
-    if (!currentUser) {
-      toast.error("Необходимо войти в аккаунт для сохранения персонажа");
+  // Функция для перехода к редактированию определенного шага
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+  };
+
+  // Функция для сохранения персонажа в базу данных
+  const saveCharacter = async () => {
+    // Проверка валидации
+    if (!validateCharacter()) {
       return;
     }
     
     setIsSaving(true);
-    
     try {
-      // Обновляем character с данными о внешности
-      const characterToSave = {
-        ...character,
-        userId: currentUser.uid,
-        age: appearanceDetails.age,
-        height: appearanceDetails.height,
-        weight: appearanceDetails.weight,
-        eyes: appearanceDetails.eyes,
-        skin: appearanceDetails.skin,
-        hair: appearanceDetails.hair,
+      // Присваиваем ID персонажу, если его нет
+      const characterId = character.id || uuidv4();
+      
+      // Обновляем персонажа с ID
+      if (!character.id) {
+        updateCharacter({ id: characterId });
+      }
+      
+      // Проверяем авторизацию
+      const currentUser = auth.currentUser;
+      console.log("Текущий пользователь:", currentUser ? currentUser.email : "Не авторизован");
+      
+      // Добавляем userId к персонажу, если пользователь авторизован
+      if (currentUser) {
+        console.log("Сохраняем персонажа для пользователя:", currentUser.uid);
+        updateCharacter({ userId: currentUser.uid });
+      } else {
+        console.log("Пользователь не авторизован, сохраняем локально");
+      }
+      
+      // Сохраняем в локальное хранилище
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
+      
+      // Если персонаж с таким ID уже существует, заменяем его
+      const existingIndex = characters.findIndex((c: any) => c.id === characterId);
+      
+      // Устанавливаем текущие HP равными максимальным при создании
+      if (!character.currentHp) {
+        character.currentHp = character.maxHp;
+      }
+      
+      const characterWithTimestamp = {
+        ...character, 
+        id: characterId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
-      // Сохраняем персонажа в базу данных
-      await saveCharacter(characterToSave);
+      if (existingIndex >= 0) {
+        characters[existingIndex] = characterWithTimestamp;
+      } else {
+        characters.push(characterWithTimestamp);
+      }
       
-      // Выводим сообщение об успешном сохранении
-      toast.success("Персонаж успешно сохранен");
+      localStorage.setItem('dnd-characters', JSON.stringify(characters));
+      localStorage.setItem('last-selected-character', characterId);
       
-      // Закрываем диалоговое окно
-      setShowSaveDialog(false);
+      console.log("Персонаж сохранен локально:", characterId);
+      
+      // Сохраняем через контекст для синхронизации с Firebase
+      if (saveCurrentCharacter) {
+        await saveCurrentCharacter();
+      }
+      
+      toast({
+        title: "Персонаж создан",
+        description: `${character.name} теперь готов к приключениям!`,
+      });
+      
+      // Переходим к просмотру персонажа с небольшой задержкой
+      setTimeout(() => {
+        navigate('/character/' + characterId);
+      }, 500);
+      
     } catch (error) {
-      console.error("Ошибка при сохранении персонажа:", error);
-      toast.error("Не удалось сохранить персонажа");
+      console.error("Ошибка сохранения персонажа:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось сохранить персонажа. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
     } finally {
       setIsSaving(false);
+      setSaveDialogOpen(false);
     }
   };
 
-  // Функция для перехода к определенному шагу создания персонажа
-  const goToStep = (stepId: number) => {
-    setCurrentStep(stepId);
-  };
-
-  // Проверяем, что все обязательные поля заполнены
-  const isCharacterComplete = !!character.name && !!character.race && !!character.class && !!character.level;
-
-  // Функция для отображения модификатора характеристики
-  const getAbilityModifier = (abilityScore: number) => {
-    const modifier = Math.floor((abilityScore - 10) / 2);
-    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-  };
-
-  // Хелпер для безопасного получения характеристики
-  const getAbilityValue = (shortName: string, fullName: string): number => {
-    if (abilities) {
-      // Пробуем сначала короткое имя
-      if (shortName in abilities) {
-        return (abilities as any)[shortName];
-      }
-      // Потом полное имя
-      if (fullName in abilities) {
-        return (abilities as any)[fullName];
-      }
+  // Функция для просмотра персонажа
+  const viewCharacter = () => {
+    // Валидация перед просмотром
+    if (!validateCharacter()) {
+      return;
     }
-    return 10; // Значение по умолчанию
-  };
-
-  // Обработчик изменения данных о внешности
-  const handleAppearanceChange = (key: string, value: string) => {
-    setAppearanceDetails(prev => ({
-      ...prev,
-      [key]: value
-    }));
     
-    // Также сразу обновляем основной объект персонажа
-    updateCharacter({ [key]: value } as any);
+    // Пробуем сначала сохранить персонажа, если у него нет ID
+    if (!character.id) {
+      saveCharacter();
+    } else {
+      // Если у персонажа есть ID, переходим к его просмотру
+      navigate(`/character/${character.id}`);
+    }
+  };
+  
+  // Функция для форматирования модификатора способности
+  const formatModifier = (score: number) => {
+    const mod = getModifierFromAbilityScore(score);
+    if (typeof mod === 'number') {
+      return mod >= 0 ? `+${mod}` : `${mod}`;
+    }
+    return mod;
+  };
+  
+  // Проверка, является ли пользователь мастером
+  const isDM = isOfflineMode() || (auth.currentUser && auth.currentUser.uid && auth.currentUser.uid !== '');
+  
+  const handleStartSession = () => {
+    if (!character.id) {
+      toast({
+        title: "Требуется сохранение",
+        description: "Пожалуйста, сначала сохраните персонажа",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Сохраняем ID в localStorage для использования в сессии
+    localStorage.setItem("session-character-id", character.id);
+    
+    navigate("/create-session");
   };
 
-  // Получаем доступные характеристики персонажа с безопасным доступом к ним
-  const abilities = character.stats || character.abilities || {
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
-  };
-
-  // Форматируем массивы элементов для отображения
-  const formatList = (items?: string[]) => {
-    if (!items || items.length === 0) return "Нет";
-    return items.join(", ");
-  };
-
+  // Выводим информацию по вкладкам для лучшей организации
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Обзор персонажа</h2>
-        <p className="text-gray-300">
-          Проверьте созданного персонажа и внесите финальные изменения.
-          <br />
-          После завершения вы сможете скачать лист персонажа или сохранить его в своем аккаунте.
+    <div className="space-y-6 min-h-[600px] relative pb-20">
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <Check className="size-5" />
+        Просмотр и завершение создания
+      </h2>
+      
+      <div className="p-4 bg-primary/10 rounded-lg mb-6 flex items-center gap-3">
+        <Info className="size-5 text-primary" />
+        <p className="text-sm">
+          Проверьте созданного персонажа перед сохранением. После сохранения вы сможете просмотреть и отредактировать 
+          его в разделе "Мои персонажи".
         </p>
       </div>
-
-      {/* Основная информация о персонаже */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Основные атрибуты */}
-        <Card className="bg-black/50 border border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-yellow-400">Основные данные</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Имя:</div>
-              <div className="col-span-2 font-medium text-white">{character.name || "—"}</div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Раса:</div>
-              <div className="col-span-2 font-medium text-white">
-                {character.race} {character.subrace ? `(${character.subrace})` : ""}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Класс:</div>
-              <div className="col-span-2 font-medium text-white">
-                {character.class} {character.subclass ? `(${character.subclass})` : ""}, {character.level} уровень
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Предыстория:</div>
-              <div className="col-span-2 font-medium text-white">{character.background || "—"}</div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Мировоззрение:</div>
-              <div className="col-span-2 font-medium text-white">{character.alignment || "—"}</div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1 text-gray-400">Здоровье:</div>
-              <div className="col-span-2 font-medium text-white">{character.maxHp || "—"} HP</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Характеристики - исправляем доступ к свойствам */}
-        <Card className="bg-black/50 border border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-yellow-400">Характеристики</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-3">
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">СИЛ</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('STR', 'strength')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('STR', 'strength'))}
-              </span>
-            </div>
-            
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">ЛОВ</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('DEX', 'dexterity')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('DEX', 'dexterity'))}
-              </span>
-            </div>
-            
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">ТЕЛ</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('CON', 'constitution')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('CON', 'constitution'))}
-              </span>
-            </div>
-            
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">ИНТ</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('INT', 'intelligence')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('INT', 'intelligence'))}
-              </span>
-            </div>
-            
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">МДР</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('WIS', 'wisdom')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('WIS', 'wisdom'))}
-              </span>
-            </div>
-            
-            <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
-              <span className="text-sm text-gray-400">ХАР</span>
-              <span className="text-xl font-bold text-white">{getAbilityValue('CHA', 'charisma')}</span>
-              <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(getAbilityValue('CHA', 'charisma'))}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Внешность и дополнительная информация */}
-        <Card className="bg-black/50 border border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-yellow-400">Внешность</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="age" className="text-gray-400">Возраст</Label>
-              <Input
-                id="age"
-                name="age"
-                value={appearanceDetails.age}
-                onChange={(e) => handleAppearanceChange('age', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder="Укажите возраст"
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="height" className="text-gray-400">Рост</Label>
-              <Input
-                id="height"
-                name="height"
-                value={appearanceDetails.height}
-                onChange={(e) => handleAppearanceChange('height', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder={"Например: 5'10\"/178 см"}
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="weight" className="text-gray-400">Вес</Label>
-              <Input
-                id="weight"
-                name="weight"
-                value={appearanceDetails.weight}
-                onChange={(e) => handleAppearanceChange('weight', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder="Например: 160 фунтов/73 кг"
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="eyes" className="text-gray-400">Глаза</Label>
-              <Input
-                id="eyes"
-                name="eyes"
-                value={appearanceDetails.eyes}
-                onChange={(e) => handleAppearanceChange('eyes', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder="Цвет глаз"
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="skin" className="text-gray-400">Кожа</Label>
-              <Input
-                id="skin"
-                name="skin"
-                value={appearanceDetails.skin}
-                onChange={(e) => handleAppearanceChange('skin', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder="Цвет кожи"
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1">
-              <Label htmlFor="hair" className="text-gray-400">Волосы</Label>
-              <Input
-                id="hair"
-                name="hair"
-                value={appearanceDetails.hair}
-                onChange={(e) => handleAppearanceChange('hair', e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                placeholder="Цвет и стиль волос"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Аккордеоны с дополнительной информацией */}
-      <div className="space-y-3">
-        <Accordion type="single" collapsible className="bg-black/30 rounded-lg border border-gray-700">
-          <AccordionItem value="backstory">
-            <AccordionTrigger className="px-4 text-yellow-400 hover:bg-black/20">Предыстория и личность</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 space-y-2 text-gray-300">
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Черты характера</h4>
-                <p>{character.personalityTraits || "Не указаны"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Идеалы</h4>
-                <p>{character.ideals ? formatList(character.ideals as string[]) : "Не указаны"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Привязанности</h4>
-                <p>{character.bonds ? formatList(character.bonds as string[]) : "Не указаны"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Слабости</h4>
-                <p>{character.flaws ? formatList(character.flaws as string[]) : "Не указаны"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">История персонажа</h4>
-                <p className="whitespace-pre-line">{character.backstory || "История персонажа не написана."}</p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      
+      <div className="relative">
+        <div className="absolute top-0 right-0 flex gap-2 z-10">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 h-auto"
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+                  onClick={() => goToStep(0)}
+                >
+                  <Edit className="size-3.5" />
+                  <span className="text-xs">Раса</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Редактировать расу персонажа</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
-          <AccordionItem value="proficiencies">
-            <AccordionTrigger className="px-4 text-yellow-400 hover:bg-black/20">Владения и языки</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 space-y-3 text-gray-300">
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Доспехи</h4>
-                <p>{character.proficiencies?.armor ? formatList(character.proficiencies.armor) : "Нет"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Оружие</h4>
-                <p>{character.proficiencies?.weapons ? formatList(character.proficiencies.weapons) : "Нет"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Инструменты</h4>
-                <p>{character.proficiencies?.tools ? formatList(character.proficiencies.tools) : "Нет"}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-yellow-200">Языки</h4>
-                <p>{character.proficiencies?.languages ? formatList(character.proficiencies.languages) : 
-                   character.languages ? formatList(character.languages) : "Нет"}</p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 h-auto"
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+                  onClick={() => goToStep(1)}
+                >
+                  <Edit className="size-3.5" />
+                  <span className="text-xs">Класс</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Редактировать класс персонажа</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
-          <AccordionItem value="features">
-            <AccordionTrigger className="px-4 text-yellow-400 hover:bg-black/20">Умения и особенности</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 text-gray-300">
-              <div className="space-y-3">
-                {character.features && character.features.length > 0 ? (
-                  character.features.map((feature, index) => (
-                    <div key={index} className="p-2 bg-black/20 rounded border border-gray-800">
-                      <p>{feature}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p>Умения и особенности не указаны</p>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="equipment">
-            <AccordionTrigger className="px-4 text-yellow-400 hover:bg-black/20">Снаряжение</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 text-gray-300">
-              <div className="space-y-2">
-                {character.equipment && character.equipment.length > 0 ? (
-                  <ul className="list-disc list-inside">
-                    {character.equipment.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Снаряжение не указано</p>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          {character.spells && character.spells.length > 0 && (
-            <AccordionItem value="spells">
-              <AccordionTrigger className="px-4 text-yellow-400 hover:bg-black/20">Заклинания</AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <ScrollArea className="h-[300px]">
-                  <div className="space-y-4">
-                    {/* Заклинания, сгруппированные по уровням */}
-                    {[...Array(10)].map((_, level) => {
-                      const spellsOfLevel = character.spells?.filter(spell => spell.level === level);
-                      
-                      if (!spellsOfLevel || spellsOfLevel.length === 0) {
-                        return null;
-                      }
-                      
-                      return (
-                        <div key={level} className="space-y-2">
-                          <h4 className="font-medium text-yellow-200">
-                            {level === 0 ? "Заговоры" : `Уровень ${level}`}
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {spellsOfLevel.map((spell, index) => (
-                              <div key={index} className="flex items-center space-x-2 p-2 bg-black/20 rounded border border-gray-800">
-                                <span className="text-gray-300">{spell.name}</span>
-                                {spell.ritual && (
-                                  <Badge variant="outline" className="ml-auto">Ритуал</Badge>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </AccordionContent>
-            </AccordionItem>
-          )}
-        </Accordion>
-      </div>
-  
-      {/* Навигационные кнопки и действия */}
-      <div className="flex flex-col space-y-4">
-        <NavigationButtons 
-          nextStep={() => {}} 
-          prevStep={prevStep} 
-          allowNext={true} 
-          hideNextButton={true}
-          isFirstStep={false}
-        />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 h-auto"
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+                  onClick={() => goToStep(3)}
+                >
+                  <Edit className="size-3.5" />
+                  <span className="text-xs">Характеристики</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Редактировать характеристики персонажа</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-          <Button 
-            onClick={() => setShowDownloadDialog(true)}
-            variant="outline"
-            className="w-full bg-gray-800/70 hover:bg-gray-700 text-white border-gray-600"
-          >
-            Скачать JSON
-          </Button>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+          <TabsList className="grid grid-cols-5 mb-6">
+            <TabsTrigger value="basic">Основное</TabsTrigger>
+            <TabsTrigger value="abilities">Характеристики</TabsTrigger>
+            <TabsTrigger value="features">Особенности</TabsTrigger>
+            <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
+            <TabsTrigger value="spells">Заклинания</TabsTrigger>
+          </TabsList>
           
-          <Button
-            onClick={generatePDF}
-            variant="outline"
-            className="w-full bg-gray-800/70 hover:bg-gray-700 text-white border-gray-600"
-            disabled={isGeneratingPDF}
-          >
-            {isGeneratingPDF ? "Создание PDF..." : "Скачать PDF"}
-          </Button>
+          {/* Вкладка с основной информацией */}
+          <TabsContent value="basic" className="space-y-6">
+            <Card className="p-6 bg-primary/5 border border-primary/20">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 flex items-center gap-2">
+                    <Bookmark className="size-4" />
+                    Базовая информация
+                  </h3>
+                  
+                  <div className="grid grid-cols-[120px_1fr] gap-y-2">
+                    <div className="font-medium">Имя:</div>
+                    <div>{character.name || <span className="text-red-400">Не указано</span>}</div>
+                    
+                    <div className="font-medium">Пол:</div>
+                    <div>{character.gender || "Не указан"}</div>
+                    
+                    <div className="font-medium">Раса:</div>
+                    <div className="flex items-center gap-2">
+                      {character.race}
+                      {character.subrace && <Badge variant="outline">{character.subrace}</Badge>}
+                    </div>
+                    
+                    <div className="font-medium">Класс:</div>
+                    <div className="flex items-center gap-2">
+                      {character.class}
+                      {character.subclass && <Badge variant="outline">{character.subclass}</Badge>}
+                    </div>
+                    
+                    <div className="font-medium">Уровень:</div>
+                    <div>{character.level || 1}</div>
+                    
+                    <div className="font-medium">Предыстория:</div>
+                    <div>{character.background || "Не указана"}</div>
+                    
+                    <div className="font-medium">Мировоззрение:</div>
+                    <div>{character.alignment || "Не указано"}</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 flex items-center gap-2">
+                    <Shield className="size-4" />
+                    Боевые параметры
+                  </h3>
+                  
+                  <div className="grid grid-cols-[140px_1fr] gap-y-2">
+                    <div className="font-medium">Класс доспеха:</div>
+                    <div>{10 + Math.floor((character.abilities?.dexterity || 10) - 10) / 2}</div>
+                    
+                    <div className="font-medium">Максимум хитов:</div>
+                    <div>
+                      {character.maxHp || 
+                      <span className="text-red-400">Не рассчитано</span>}
+                    </div>
+                    
+                    <div className="font-medium">Кубик хитов:</div>
+                    <div>
+                      {(() => {
+                        switch(character.class) {
+                          case "Варвар": return `d12`;
+                          case "Воин": case "Паладин": case "Следопыт": return `d10`;
+                          case "Жрец": case "Друид": case "Монах": case "Плут": case "Бард": case "Колдун": case "Чернокнижник": return `d8`;
+                          case "Волшебник": case "Чародей": return `d6`;
+                          default: return `d8`;
+                        }
+                      })()}
+                    </div>
+                    
+                    <div className="font-medium">Бонус мастерства:</div>
+                    <div>+{Math.ceil(2 + ((character.level || 1) - 1) / 4)}</div>
+                    
+                    <div className="font-medium">Инициатива:</div>
+                    <div>{formatModifier(character.abilities?.dexterity || 10)}</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+            
+            {/* Дополнительная информация о внешности и предыстории */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="appearance">
+                <AccordionTrigger className="text-base font-medium">
+                  Внешность и характер
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid gap-4 px-4 py-2">
+                    <div>
+                      <p className="font-medium mb-1">Внешность:</p>
+                      <p className="text-sm">{character.appearance || "Не указана"}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Черты характера:</p>
+                      <p className="text-sm">{character.personalityTraits || "Не указаны"}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Идеалы:</p>
+                      <p className="text-sm">{character.ideals || "Не указаны"}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Привязанности:</p>
+                      <p className="text-sm">{character.bonds || "Не указаны"}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Слабости:</p>
+                      <p className="text-sm">{character.flaws || "Не указаны"}</p>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="backstory">
+                <AccordionTrigger className="text-base font-medium">
+                  Предыстория
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="px-4 py-2">
+                    <p className="text-sm whitespace-pre-wrap">{character.backstory || "История персонажа не указана"}</p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </TabsContent>
           
-          <Button
-            onClick={() => setShowSaveDialog(true)}
-            variant="default"
-            className="w-full bg-yellow-600/90 hover:bg-yellow-700 text-white"
-            disabled={!currentUser}
-          >
-            {currentUser ? "Сохранить персонажа" : "Войдите для сохранения"}
-          </Button>
+          {/* Вкладка с характеристиками */}
+          <TabsContent value="abilities" className="space-y-6">
+            <Card className="p-6 bg-primary/5 border border-primary/20">
+              <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 mb-4 flex items-center gap-2">
+                <BookOpen className="size-4" />
+                Характеристики
+              </h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">СИЛА</p>
+                        <p className="text-2xl font-bold">{character.abilities?.strength || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.strength || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Сила</p>
+                      <p className="text-xs opacity-80 mb-2">Физическая мощь и атлетические способности</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Рукопашные атаки</li>
+                        <li>• Подъем, толкание и ломание</li>
+                        <li>• Атлетика</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">ЛОВКОСТЬ</p>
+                        <p className="text-2xl font-bold">{character.abilities?.dexterity || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.dexterity || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Ловкость</p>
+                      <p className="text-xs opacity-80 mb-2">Проворство, рефлексы и равновесие</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Дальнобойные атаки</li>
+                        <li>• Инициатива</li>
+                        <li>• Акробатика, ловкость рук</li>
+                        <li>• Скрытность</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">ТЕЛОСЛОЖЕНИЕ</p>
+                        <p className="text-2xl font-bold">{character.abilities?.constitution || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.constitution || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Телосложение</p>
+                      <p className="text-xs opacity-80 mb-2">Здоровье, выносливость и жизненные силы</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Хиты за уровень</li>
+                        <li>• Концентрация на заклинаниях</li>
+                        <li>• Сопротивление ядам</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">ИНТЕЛЛЕКТ</p>
+                        <p className="text-2xl font-bold">{character.abilities?.intelligence || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.intelligence || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Интеллект</p>
+                      <p className="text-xs opacity-80 mb-2">Рассуждение и память</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Заклинания волшебников</li>
+                        <li>• Расследование, история</li>
+                        <li>• Природа, религия, магия</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">МУДРОСТЬ</p>
+                        <p className="text-2xl font-bold">{character.abilities?.wisdom || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.wisdom || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Мудрость</p>
+                      <p className="text-xs opacity-80 mb-2">Внимательность и интуиция</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Заклинания жрецов, друидов</li>
+                        <li>• Внимательность, проницательность</li>
+                        <li>• Уход за животными, медицина</li>
+                        <li>• Выживание</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 text-center rounded-lg border border-primary/20 bg-card/10">
+                        <p className="font-medium text-sm text-primary/80">ХАРИЗМА</p>
+                        <p className="text-2xl font-bold">{character.abilities?.charisma || 10}</p>
+                        <p className="text-sm">{formatModifier(character.abilities?.charisma || 10)}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <ExtendedTooltipContent style={{ borderColor: currentTheme.accent }}>
+                      <p className="font-bold mb-1">Харизма</p>
+                      <p className="text-xs opacity-80 mb-2">Сила личности, обаяние и лидерство</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• Заклинания бардов, чародеев, паладинов</li>
+                        <li>• Обман, запугивание, убеждение</li>
+                        <li>• Выступление</li>
+                      </ul>
+                    </ExtendedTooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              
+              {/* Владение навыками */}
+              <div className="mt-6">
+                <h4 className="font-medium border-b border-primary/10 pb-2 mb-3">Владение навыками:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {character.skills && character.skills.map((skill, index) => (
+                    <div key={index} className="py-1 px-3 bg-primary/5 rounded flex items-center gap-1.5">
+                      <Check className="size-3.5 text-primary/80" />
+                      <span className="text-sm">{skill}</span>
+                    </div>
+                  ))}
+                  
+                  {(!character.skills || character.skills.length === 0) && (
+                    <div className="text-sm text-muted-foreground">Нет выбранных навыков</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Владение языками */}
+              <div className="mt-6">
+                <h4 className="font-medium border-b border-primary/10 pb-2 mb-3">Владение языками:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {character.languages && character.languages.map((language, index) => (
+                    <div key={index} className="py-1 px-3 bg-primary/5 rounded flex items-center gap-1.5">
+                      <span className="text-sm">{language}</span>
+                    </div>
+                  ))}
+                  
+                  {(!character.languages || character.languages.length === 0) && (
+                    <div className="text-sm text-muted-foreground">Нет известных языков</div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+          
+          {/* Вкладка с особенностями */}
+          <TabsContent value="features" className="space-y-6">
+            <Card className="p-6 bg-primary/5 border border-primary/20">
+              <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 mb-4 flex items-center gap-2">
+                <BookOpen className="size-4" />
+                Особенности и черты
+              </h3>
+              
+              <div className="space-y-5">
+                {/* Особенности расы */}
+                <div>
+                  <h4 className="font-medium text-primary/90 mb-2">
+                    Расовые особенности {character.subrace ? `(${character.subrace})` : ''}
+                  </h4>
+                  <div className="space-y-2">
+                    {/* Здесь отображаются расовые особенности */}
+                    <div className="py-2 px-3 bg-card/10 rounded-md border border-primary/20">
+                      <p className="text-sm font-medium mb-1">Черты расы {character.race}</p>
+                      <p className="text-xs opacity-80">
+                        {character.race === "Эльф" && "Тёмное зрение 60 футов, Наследие фей, Транс"}
+                        {character.race === "Дварф" && "Тёмное зрение 60 футов, Дварфская устойчивость, Дварфский боевой тренинг"}
+                        {character.race === "Человек" && "Универсальное увеличение характеристик, Дополнительный язык"}
+                        {character.race === "Полурослик" && "Удачливый, Храбрость, Ловкость полуросликов"}
+                        {character.race === "Драконорождённый" && "Наследие драконов, Сопротивление, Оружие дыхания"}
+                        {character.race === "Гном" && "Тёмное зрение 60 футов, Гномья хитрость, Природная иллюзия"}
+                        {character.race === "Полуэльф" && "Тёмное зрение 60 футов, Наследие фей, Универсальность"}
+                        {character.race === "Полуорк" && "Тёмное зрение 60 футов, Грозный, Неукротимость, Дикие атаки"}
+                        {character.race === "Тифлинг" && "Тёмное зрение 60 футов, Адское сопротивление, Дьявольское наследие"}
+                        {!["Эльф", "Дварф", "Человек", "Полурослик", "Драконорождённый", "Гном", "Полуэльф", "Полуорк", "Тифлинг"].includes(character.race || "") && 
+                          "Информация о расовых особенностях будет добавлена при сохранении персонажа"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Особенности класса */}
+                <div>
+                  <h4 className="font-medium text-primary/90 mb-2">
+                    Классовые особенности {character.subclass ? `(${character.subclass})` : ''}
+                  </h4>
+                  <div className="space-y-2">
+                    {/* Особенности в зависимости от уровня */}
+                    <div className="py-2 px-3 bg-card/10 rounded-md border border-primary/20">
+                      <p className="text-sm font-medium mb-1">Особенности {character.level} уровня</p>
+                      <p className="text-xs opacity-80">
+                        {character.class === "Воин" && character.level >= 1 && "Боевой стиль, Второе дыхание"}
+                        {character.class === "Воин" && character.level >= 2 && ", Всплеск действий"}
+                        {character.class === "Варвар" && character.level >= 1 && "Ярость, Защита без доспехов"}
+                        {character.class === "Варвар" && character.level >= 2 && ", Безрассудная атака"}
+                        {character.class === "Жрец" && character.level >= 1 && "Заклинания, Божественный домен"}
+                        {character.class === "Жрец" && character.level >= 2 && ", Божественный канал"}
+                        {character.class === "Бард" && character.level >= 1 && "Заклинания, Бардское вдохновение"}
+                        {character.class === "Бард" && character.level >= 2 && ", Мастер на все руки"}
+                        {character.class === "Волшебник" && character.level >= 1 && "Заклинания, Магическое восстановление"}
+                        {character.class === "Волшебник" && character.level >= 2 && ", Магическая традиция"}
+                        {character.class === "Паладин" && character.level >= 1 && "Божественное чувство, Исцеляющие руки"}
+                        {character.class === "Паладин" && character.level >= 2 && ", Божественный удар, Божественная защита"}
+                        {character.class === "Плут" && character.level >= 1 && "Компетентность, Скрытая атака, Воровской жаргон"}
+                        {character.class === "Плут" && character.level >= 2 && ", Хитрое действие"}
+                        {character.class === "Следопыт" && character.level >= 1 && "Избранный враг, Исследователь природы"}
+                        {character.class === "Следопыт" && character.level >= 2 && ", Боевой стиль"}
+                        {!["Воин", "Варвар", "Жрец", "Бард", "Волшебник", "Паладин", "Плут", "Следопыт"].includes(character.class || "") && 
+                          "Информация о классовых особенностях будет добавлена при сохранении персонажа"
+                        }
+                      </p>
+                    </div>
+                    
+                    {/* Особенности подкласса */}
+                    {character.subclass && (
+                      <div className="py-2 px-3 bg-card/10 rounded-md border border-primary/20">
+                        <p className="text-sm font-medium mb-1">Особенности {character.subclass}</p>
+                        <p className="text-xs opacity-80">
+                          Особенности подкласса будут доступны после сохранения персонажа
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Дополнительные черты */}
+                <div>
+                  <h4 className="font-medium text-primary/90 mb-2">
+                    Черты из предыстории
+                  </h4>
+                  <div className="py-2 px-3 bg-card/10 rounded-md border border-primary/20">
+                    <p className="text-sm font-medium mb-1">{character.background || "Предыстория"}</p>
+                    <p className="text-xs opacity-80">
+                      {character.background === "Благородный" && "Привилегия положения, Верный слуга"}
+                      {character.background === "Чужеземец" && "Странник, Знание племён"}
+                      {character.background === "Преступник" && "Криминальные связи, Воровской жаргон"}
+                      {character.background === "Народный герой" && "Деревенское гостеприимство"}
+                      {character.background === "Мудрец" && "Исследователь, Обширные знания"}
+                      {character.background === "Солдат" && "Военный чин, Ветеран"}
+                      {!["Благородный", "Чужеземец", "Преступник", "Народный герой", "Мудрец", "Солдат"].includes(character.background || "") && 
+                        "Информация о чертах предыстории будет добавлена при сохранении персонажа"
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+          
+          {/* Вкладка с снаряжением */}
+          <TabsContent value="equipment" className="space-y-6">
+            <Card className="p-6 bg-primary/5 border border-primary/20">
+              <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 mb-4 flex items-center gap-2">
+                <Swords className="size-4" />
+                Снаряжение
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Оружие */}
+                  <div>
+                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Оружие</h4>
+                    <div className="space-y-2">
+                      {character.equipment?.filter(item => 
+                        item.toLowerCase().includes('меч') || 
+                        item.toLowerCase().includes('топор') || 
+                        item.toLowerCase().includes('копьё') || 
+                        item.toLowerCase().includes('лук') || 
+                        item.toLowerCase().includes('кинжал') ||
+                        item.toLowerCase().includes('булава')
+                      ).map((weapon, index) => (
+                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10 flex justify-between">
+                          <span className="text-sm">{weapon}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="size-4 text-primary/60" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Подробности будут доступны в листе персонажа</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      ))}
+                      
+                      {character.equipment?.filter(item => 
+                        item.toLowerCase().includes('меч') || 
+                        item.toLowerCase().includes('топор') || 
+                        item.toLowerCase().includes('копьё') || 
+                        item.toLowerCase().includes('лук') || 
+                        item.toLowerCase().includes('кинжал') ||
+                        item.toLowerCase().includes('булава')
+                      ).length === 0 && (
+                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm">
+                          Нет оружия в инвентаре
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Доспехи */}
+                  <div>
+                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Доспехи и защита</h4>
+                    <div className="space-y-2">
+                      {character.equipment?.filter(item => 
+                        item.toLowerCase().includes('доспех') || 
+                        item.toLowerCase().includes('кольчуга') || 
+                        item.toLowerCase().includes('щит') ||
+                        item.toLowerCase().includes('шлем')
+                      ).map((armor, index) => (
+                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10 flex justify-between">
+                          <span className="text-sm">{armor}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="size-4 text-primary/60" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Подробности будут доступны в листе персонажа</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      ))}
+                      
+                      {character.equipment?.filter(item => 
+                        item.toLowerCase().includes('доспех') || 
+                        item.toLowerCase().includes('кольчуга') || 
+                        item.toLowerCase().includes('щит') ||
+                        item.toLowerCase().includes('шлем')
+                      ).length === 0 && (
+                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm">
+                          Нет доспехов в инвентаре
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Прочие предметы */}
+                <div>
+                  <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Прочие предметы</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {character.equipment?.filter(item => 
+                      !item.toLowerCase().includes('меч') && 
+                      !item.toLowerCase().includes('топор') && 
+                      !item.toLowerCase().includes('копьё') && 
+                      !item.toLowerCase().includes('лук') && 
+                      !item.toLowerCase().includes('кинжал') &&
+                      !item.toLowerCase().includes('булава') &&
+                      !item.toLowerCase().includes('доспех') && 
+                      !item.toLowerCase().includes('кольчуга') && 
+                      !item.toLowerCase().includes('щит') &&
+                      !item.toLowerCase().includes('шлем')
+                    ).map((item, index) => (
+                      <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md">
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                    
+                    {character.equipment?.filter(item => 
+                      !item.toLowerCase().includes('меч') && 
+                      !item.toLowerCase().includes('топор') && 
+                      !item.toLowerCase().includes('копьё') && 
+                      !item.toLowerCase().includes('лук') && 
+                      !item.toLowerCase().includes('кинжал') &&
+                      !item.toLowerCase().includes('булава') &&
+                      !item.toLowerCase().includes('доспех') && 
+                      !item.toLowerCase().includes('кольчуга') && 
+                      !item.toLowerCase().includes('щит') &&
+                      !item.toLowerCase().includes('шлем')
+                    ).length === 0 && (
+                      <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
+                        Нет дополнительных предметов в инвентаре
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+          
+          {/* Вкладка с заклинаниями */}
+          <TabsContent value="spells" className="space-y-6">
+            <Card className="p-6 bg-primary/5 border border-primary/20">
+              <h3 className="text-lg font-semibold border-b border-primary/10 pb-2 mb-4 flex items-center gap-2">
+                <BookOpen className="size-4" />
+                Заклинания
+              </h3>
+              
+              {character.spells && character.spells.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Заговоры */}
+                  <div>
+                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заговоры</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {character.spells.filter(spell => 
+                        spell.toLowerCase().includes('заговор') || 
+                        spell.toLowerCase().includes('уровень 0')
+                      ).map((spell, index) => (
+                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
+                          <span className="text-sm">{spell}</span>
+                        </div>
+                      ))}
+                      
+                      {character.spells.filter(spell => 
+                        spell.toLowerCase().includes('заговор') || 
+                        spell.toLowerCase().includes('уровень 0')
+                      ).length === 0 && (
+                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
+                          Нет выбранных заговоров
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Заклинания 1 уровня */}
+                  <div>
+                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 1 уровня</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {character.spells.filter(spell => 
+                        spell.toLowerCase().includes('уровень 1') || 
+                        spell.toLowerCase().includes('1 уровень')
+                      ).map((spell, index) => (
+                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
+                          <span className="text-sm">{spell}</span>
+                        </div>
+                      ))}
+                      
+                      {character.spells.filter(spell => 
+                        spell.toLowerCase().includes('уровень 1') || 
+                        spell.toLowerCase().includes('1 уровень')
+                      ).length === 0 && (
+                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
+                          Нет заклинаний 1 уровня
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Заклинания 2 уровня */}
+                  {character.level >= 3 && (
+                    <div>
+                      <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 2 уровня</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {character.spells.filter(spell => 
+                          spell.toLowerCase().includes('уровень 2') || 
+                          spell.toLowerCase().includes('2 уровень')
+                        ).map((spell, index) => (
+                          <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
+                            <span className="text-sm">{spell}</span>
+                          </div>
+                        ))}
+                        
+                        {character.spells.filter(spell => 
+                          spell.toLowerCase().includes('уровень 2') || 
+                          spell.toLowerCase().includes('2 уровень')
+                        ).length === 0 && (
+                          <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
+                            Нет заклинаний 2 уровня
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-4 text-center">
+                  {character.class && ["Волшебник", "Жрец", "Бард", "Чародей", "Колдун", "Паладин", "Следопыт", "Друид"].includes(character.class) ? (
+                    <>
+                      <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
+                      <p className="text-sm">
+                        Вы не выбрали за��линания. Рекомендуем вернуться к шагу выбора заклинаний.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mt-3"
+                        style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+                        onClick={() => goToStep(8)}
+                      >
+                        <Edit className="mr-1 size-3.5" />
+                        Выбрать заклинания
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Info className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Заклинания недоступны для вашего класса или не выбраны.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-card/70 backdrop-blur-md border-t border-primary/20">
+        <div className="flex flex-col md:flex-row gap-4 w-full max-w-4xl mx-auto">
+          <div className="flex justify-between md:justify-start items-center gap-4 flex-1">
+            <Button
+              onClick={prevStep}
+              variant="outline"
+              className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
+            >
+              {/* Back button */}
+              <ArrowLeft className="size-4" /> Назад
+            </Button>
+            
+            {/* Если пользователь Мастер, показываем кнопку создания сессии */}
+            {isDM && (
+              <Button
+                onClick={handleStartSession}
+                variant="outline"
+                style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+                className="flex items-center gap-2"
+              >
+                <BookOpen className="size-4" /> 
+                Создать сессию
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setSaveDialogOpen(true)}
+              disabled={isSaving}
+              className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-2"
+            >
+              <Save className="size-4" />
+              {isSaving ? "Сохранение..." : "Сохранить персонажа"}
+            </Button>
+            
+            <Button
+              onClick={viewCharacter}
+              variant="outline"
+              style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
+            >
+              <Eye className="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
       
-      {/* Диалоговое окно для скачивания JSON */}
-      <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
-        <DialogContent className="bg-gray-900 text-white border-gray-700">
+      {/* Диалог подтверждения сохранения */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Скачать персонажа</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Введите имя файла для скачивания персонажа в формате JSON.
+            <DialogTitle>Сохранение персонажа</DialogTitle>
+            <DialogDescription>
+              Проверьте данные персонажа перед сохранением.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-2">
-            <div className="flex flex-col space-y-2">
-              <Label htmlFor="file-name" className="text-gray-300">Имя файла</Label>
-              <Input
-                id="file-name"
-                name="file-name"
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white"
-              />
-            </div>
+          <div className="py-4">
+            <p className="mb-4">
+              Вы создали персонажа <strong>{character.name || "без имени"}</strong>:{' '}
+              {character.race} {character.class}, {character.level} уровень.
+            </p>
             
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDownloadDialog(false)}
-                className="bg-transparent border-gray-600 text-gray-300 hover:bg-gray-800"
-              >
-                Отмена
-              </Button>
-              <Button 
-                onClick={downloadCharacterAsJson}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                Скачать
-              </Button>
-            </div>
+            {(!character.name || !character.name.trim()) && (
+              <p className="text-red-500 mb-2 text-sm">
+                ⚠️ Персонаж не имеет имени. Рекомендуется указать имя.
+              </p>
+            )}
+            
+            {(!character.maxHp || character.maxHp <= 0) && (
+              <p className="text-red-500 mb-2 text-sm">
+                ⚠️ Не рассчитаны хиты персонажа.
+              </p>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Диалоговое окно для сохранения персонажа */}
-      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="bg-gray-900 text-white border-gray-700">
-          <DialogHeader>
-            <DialogTitle>Сохранить персонажа</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Персонаж будет сохранен в вашем аккаунте и доступен в разделе "Мои персонажи".
-            </DialogDescription>
-          </DialogHeader>
           
-          <div className="space-y-4 py-2">
-            <div className="p-3 bg-gray-800/50 rounded border border-gray-700">
-              <p className="text-sm text-gray-300">
-                Имя персонажа: <span className="font-medium text-white">{character.name}</span>
-              </p>
-              <p className="text-sm text-gray-300">
-                Раса/Класс: <span className="font-medium text-white">{character.race} / {character.class} ({character.level} уровень)</span>
-              </p>
-            </div>
-            
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowSaveDialog(false)}
-                className="bg-transparent border-gray-600 text-gray-300 hover:bg-gray-800"
-              >
-                Отмена
-              </Button>
-              <Button 
-                onClick={saveCharacterToDatabase}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
-                disabled={isSaving}
-              >
-                {isSaving ? "Сохранение..." : "Сохранить"}
-              </Button>
-            </div>
-          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSaveDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={saveCharacter}
+              disabled={isSaving}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white"
+            >
+              {isSaving ? "Сохранение..." : "Подтвердить сохранение"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

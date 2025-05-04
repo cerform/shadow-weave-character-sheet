@@ -18,12 +18,12 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   return (
     <Button 
       variant={variant}
-      className={`flex items-center gap-2 ${className}`}
       asChild
+      className={`flex items-center gap-2 ${className}`}
     >
       <Link to="/">
         <Home className="size-4" />
-        {showText && <span>На главную</span>}
+        {showText && "На главную"}
       </Link>
     </Button>
   );

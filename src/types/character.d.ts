@@ -10,12 +10,10 @@ export interface CharacterSpell {
   components?: string;
   duration?: string;
   prepared?: boolean;
-  ritual?: boolean;
   // Добавим недостающие поля для совместимости с существующим кодом
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  concentration?: boolean;
   higherLevels?: string;
   classes?: string[];
 }
@@ -66,9 +64,6 @@ export interface CharacterSheet {
   gender?: string; // Поле для гендера персонажа
   appearance?: string; // Описание внешности персонажа
   personalityTraits?: string; // Черты личности персонажа
-  ideals?: string[]; // Изменено с string | string[] на string[]
-  bonds?: string[]; // Изменено с string | string[] на string[]
-  flaws?: string[]; // Изменено с string | string[] на string[]
   abilities?: {
     STR: number;
     DEX: number;
@@ -118,6 +113,9 @@ export interface CharacterSheet {
   equipment?: string[];
   features?: string[];
   traits?: string[];
+  ideals?: string[];
+  bonds?: string[];
+  flaws?: string[];
   backstory: string;
   xp?: number;
   inspiration?: boolean;
@@ -151,13 +149,6 @@ export interface CharacterSheet {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
-  // Добавляем физические характеристики
-  age?: string;
-  height?: string;
-  weight?: string;
-  eyes?: string;
-  skin?: string;
-  hair?: string;
 }
 
 // Требования для мультиклассирования
@@ -177,13 +168,4 @@ export interface CharacterSubclass {
     name: string;
     description: string;
   }[];
-}
-
-// Интерфейс для событий изменения хит-поинтов
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'heal' | 'temp' | 'death-save';
-  amount: number;
-  source?: string;
-  timestamp: Date;
 }

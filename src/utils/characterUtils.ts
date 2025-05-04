@@ -1,76 +1,39 @@
 
-import { CharacterSheet } from '@/types/character.d';
-
 /**
- * Получение строкового представления модификатора характеристики
+ * Получает модификатор характеристики
  * @param abilityScore Значение характеристики
- * @returns Строка модификатора (например, "+3" или "-1")
+ * @returns Строка модификатора с + или -
  */
 export const getModifierFromAbilityScore = (abilityScore: number): string => {
   const modifier = Math.floor((abilityScore - 10) / 2);
-  return modifier >= 0 ? `+${modifier}` : modifier.toString();
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };
 
 /**
- * Получение числового значения модификатора характеристики
+ * Получает числовое значение модификатора характеристики
  * @param abilityScore Значение характеристики
- * @returns Числовое значение модификатора (например, 3 или -1)
+ * @returns Числовое значение модификатора
  */
 export const getNumericModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };
 
 /**
- * Проверка, является ли класс персонажа магическим
- * @param className Название класса персонажа
- * @returns true, если класс магический, false в противном случае
- */
-export const isMagicClass = (className: string): boolean => {
-  if (!className) return false;
-  
-  const magicClasses = [
-    'Бард',
-    'Волшебник',
-    'Друид',
-    'Жрец',
-    'Колдун',
-    'Паладин',
-    'Следопыт',
-    'Чародей',
-  ];
-  
-  return magicClasses.includes(className);
-};
-
-/**
- * Вычисление максимального количества хитов персонажа
- * @param className Название класса персонажа
+ * Вычисляет максимальное количество хитов для персонажа
+ * @param className Название класса
  * @param level Уровень персонажа
- * @param constitutionModifier Модификатор телосложения
+ * @param constitutionScore Значение характеристики Телосложение
  * @returns Максимальное количество хитов
  */
-export const calculateMaxHitPoints = (className: string, level: number, constitutionModifier: number): number => {
-  // Определяем кубик хитов класса
-  let hitDie = 8; // По умолчанию d8
-  
-  if (className === 'Варвар') {
-    hitDie = 12;
-  } else if (['Воин', 'Паладин', 'Следопыт'].includes(className)) {
-    hitDie = 10;
-  } else if (['Волшебник', 'Чародей'].includes(className)) {
-    hitDie = 6;
+export const calculateMaxHitPoints = (className: string, level: number, constitutionScore: number): number => {
+  const hitDieValue = getHitDieValue(getHitDieTypeByClass(className));
+  const constitutionModifier = getNumericModifier(constitutionScore);
+  let maxHp = hitDieValue + constitutionModifier; // Учитываем хит дайс и модификатор телосложения на первом уровне
+
+  for (let i = 2; i <= level; i++) {
+    maxHp += hitDieValue / 2 + 1 + constitutionModifier; // Учитываем среднее значение хит дайса и модификатор телосложения на последующих уровнях
   }
-  
-  // На первом уровне получаем максимум по кубику + модификатор телосложения
-  let maxHp = hitDie + constitutionModifier;
-  
-  // На каждом последующем уровне добавляем среднее значение кубика + модификатор телосложения
-  if (level > 1) {
-    // Среднее значение кубика = (1 + hitDie) / 2
-    const averageRoll = (1 + hitDie) / 2;
-    maxHp += (level - 1) * (averageRoll + constitutionModifier);
-  }
-  
+
   return Math.max(1, Math.round(maxHp)); // Минимум 1 хит
 };
 
@@ -111,9 +74,11 @@ export const getHitDieValue = (hitDieType: string): number => {
 /**
  * Определяет, является ли класс магическим
  * @param className Название класса
+ * @returns true, если класс является магическим, иначе false
  */
-export const hasSpellcasting = (className: string): boolean => {
-  return isMagicClass(className);
+export const isMagicClass = (className: string): boolean => {
+  const magicClasses = ["Волшебник", "Чародей", "Колдун", "Бард", "Жрец", "Друид", "Паладин", "Следопыт"];
+  return magicClasses.includes(className);
 };
 
 /**

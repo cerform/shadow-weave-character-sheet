@@ -1,164 +1,149 @@
 
 import React, { useState } from "react";
 import NavigationButtons from "./NavigationButtons";
-import { CharacterSheet } from '@/types/character';
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { 
+  SelectionCard, 
+  SelectionCardGrid 
+} from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { backgrounds } from "@/assets";
 
-interface CharacterBackgroundProps {
-  character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+type Props = {
+  character: {
+    background: string;
+  };
+  updateCharacter: (updates: any) => void;
   nextStep: () => void;
   prevStep: () => void;
-}
+};
 
 const backgroundOptions = [
-  "Артист", "Беспризорник", "Благородный", "Гильдейский ремесленник", "Моряк",
-  "Мудрец", "Отшельник", "Преступник", "Прислужник", "Солдат", "Чужеземец", "Шарлатан"
+  { 
+    id: "acolyte", 
+    name: "Служитель культа", 
+    description: "Вы провели свою жизнь, служа в храме, посвящённом тому или иному богу. Вы носили кадило на религиозных церемониях, и приносили жертвы, прося о благословении и чудесах." 
+  },
+  { 
+    id: "criminal", 
+    name: "Преступник", 
+    description: "Вы - опытный преступник, имеющий историю преступлений за своими плечами. Вы всегда были близки к насилию, и не понаслышке знаете, что значит убийство." 
+  },
+  { 
+    id: "folk_hero", 
+    name: "Народный герой", 
+    description: "Вы поднялись из народа благодаря какому-то происшествию. Народ верит в то, что у вас великое будущее." 
+  },
+  { 
+    id: "noble", 
+    name: "Благородный", 
+    description: "Вы знаете, что значит богатство, власть и привилегии. Вы имеете титул, земли, собираете налоги, и обладаете значительным политическим влиянием." 
+  },
+  { 
+    id: "sage", 
+    name: "Мудрец", 
+    description: "Вы провели годы, изучая мультивселенную. Вы выучили скрипты и языки, проводили дни в книжной пыли, и пропустили через свои руки сотни свитков." 
+  },
+  { 
+    id: "soldier", 
+    name: "Солдат", 
+    description: "Война была вашей жизнью с юности. Вы проходили тренировки, изучали оружие, и доспехи, узнавали техники выживания, включая то, как оставаться живым на поле боя." 
+  },
+  // Дополнительные предыстории из Книги Игрока
+  { 
+    id: "charlatan", 
+    name: "Шарлатан", 
+    description: "Вы всегда умели влиять на других людей своим остроумием, очарованием, или иногда хитростью. Вы знаете, как найти слабое место в характере человека и воспользоваться им." 
+  },
+  { 
+    id: "entertainer", 
+    name: "Артист", 
+    description: "Вы плясали для знати, пели народные песни в тавернах, или выступали в составе странствующего цирка. Ваше искусство вызывало улыбки и завоевывало сердца." 
+  },
+  { 
+    id: "guild_artisan", 
+    name: "Гильдейский ремесленник", 
+    description: "Вы являетесь членом гильдии ремесленников, опытны в конкретном ремесле и тесно связаны с другими ремесленниками. Вы зарабатываете на жизнь своим ремеслом и принадлежите к гильдии, которая защищает вас." 
+  },
+  { 
+    id: "hermit", 
+    name: "Отшельник", 
+    description: "Вы жили в уединении, добровольно или вынужденно, в течение периода вашей жизни. В течение этого времени, вы искали духовную истину, прятались от преследователей или просто избегали общества." 
+  },
+  { 
+    id: "outlander", 
+    name: "Чужеземец", 
+    description: "Вы выросли в глуши, вдали от цивилизации и её удобств. Вы пережили опасности кочевой жизни, жестокую погоду и атаки страшных зверей и монстров." 
+  },
+  { 
+    id: "sailor", 
+    name: "Моряк", 
+    description: "Вы провели годы в море. За это время вы столкнулись со штормами, глубинными монстрами и теми, кто хочет потопить ваш корабль. Ваш первый дом - корабль, и вы тоскуете по морю, когда находитесь вдали от него." 
+  },
+  { 
+    id: "urchin", 
+    name: "Беспризорник", 
+    description: "Вы выросли на улицах, предоставленные самим себе. Вы были бедны, возможно, сиротой, и общество отказалось от вас. У вас не было никого кроме себя, выживание потребовало работы, смелости и удачи."
+  }
 ];
 
-const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
-  character,
-  updateCharacter,
-  nextStep,
-  prevStep,
-}) => {
-  const { toast } = useToast();
-  
-  const [background, setBackground] = useState(character.background || "");
-  const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || "");
-  const [ideals, setIdeals] = useState<string>(character.ideals ? (Array.isArray(character.ideals) ? character.ideals.join(', ') : character.ideals) : "");
-  const [bonds, setBonds] = useState<string>(character.bonds ? (Array.isArray(character.bonds) ? character.bonds.join(', ') : character.bonds) : "");
-  const [flaws, setFlaws] = useState<string>(character.flaws ? (Array.isArray(character.flaws) ? character.flaws.join(', ') : character.flaws) : "");
-  const [backstory, setBackstory] = useState(character.backstory || "");
+export default function CharacterBackground({ character, updateCharacter, nextStep, prevStep }: Props) {
+  const [customBackground, setCustomBackground] = useState(character.background || "");
+  const [selectedBackgroundId, setSelectedBackgroundId] = useState("");
 
-  const handleNext = () => {
-    // Преобразуем строки в массивы
-    const idealsArray = ideals.split(',').map(item => item.trim()).filter(Boolean);
-    const bondsArray = bonds.split(',').map(item => item.trim()).filter(Boolean);
-    const flawsArray = flaws.split(',').map(item => item.trim()).filter(Boolean);
-    
-    const updates = {
-      background,
-      personalityTraits,
-      ideals: idealsArray,
-      bonds: bondsArray,
-      flaws: flawsArray,
-      backstory
-    };
-
-    updateCharacter(updates);
-    
-    toast({
-      title: "Предыстория сохранена",
-      description: "Детали предыстории персонажа сохранены"
-    });
-    
-    nextStep();
+  const handleBackgroundSelect = (id: string) => {
+    setSelectedBackgroundId(id);
+    const selectedBackground = backgroundOptions.find(b => b.id === id);
+    if (selectedBackground) {
+      setCustomBackground(selectedBackground.description);
+      updateCharacter({ background: selectedBackground.description });
+    }
   };
 
-  const canProceed = background !== "" && backstory !== "";
+  const handleCustomBackgroundChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCustomBackground(e.target.value);
+    updateCharacter({ background: e.target.value });
+  };
 
   return (
     <div>
       <SectionHeader
         title="Предыстория персонажа"
-        description="Выберите предысторию и заполните детали личности персонажа."
+        description="Выберите готовую предысторию или создайте свою собственную."
       />
+
+      <SelectionCardGrid className="mb-6" cols={3}>
+        {backgroundOptions.map((bg) => (
+          <SelectionCard
+            key={bg.id}
+            title={bg.name}
+            description={bg.description}
+            selected={selectedBackgroundId === bg.id}
+            onClick={() => handleBackgroundSelect(bg.id)}
+          />
+        ))}
+      </SelectionCardGrid>
 
       <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="background">Предыстория</Label>
-              <select
-                id="background"
-                value={background}
-                onChange={(e) => setBackground(e.target.value)}
-                className="w-full p-3 rounded-md bg-background border border-input"
-              >
-                <option value="">Выберите предысторию</option>
-                {backgroundOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="personalityTraits">Черты характера</Label>
-              <Textarea
-                id="personalityTraits"
-                value={personalityTraits}
-                onChange={(e) => setPersonalityTraits(e.target.value)}
-                className="min-h-[80px]"
-                placeholder="Опишите черты характера вашего персонажа"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ideals">Идеалы</Label>
-              <Textarea
-                id="ideals"
-                value={ideals}
-                onChange={(e) => setIdeals(e.target.value)}
-                className="min-h-[80px]"
-                placeholder="Опишите идеалы вашего персонажа"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bonds">Привязанности</Label>
-              <Textarea
-                id="bonds"
-                value={bonds}
-                onChange={(e) => setBonds(e.target.value)}
-                className="min-h-[80px]"
-                placeholder="Опишите привязанности вашего персонажа"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="flaws">Слабости</Label>
-              <Textarea
-                id="flaws"
-                value={flaws}
-                onChange={(e) => setFlaws(e.target.value)}
-                className="min-h-[80px]"
-                placeholder="Опишите слабости вашего персонажа"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="backstory" className="flex justify-between">
-                История персонажа <span className="text-muted-foreground text-sm">(Обязательно)</span>
-              </Label>
-              <Textarea
-                id="backstory"
-                value={backstory}
-                onChange={(e) => setBackstory(e.target.value)}
-                className="min-h-[150px]"
-                placeholder="Напишите подробную историю персонажа"
-              />
-            </div>
-          </div>
+          <label className="block text-lg font-medium mb-2">
+            Опишите предысторию вашего персонажа
+          </label>
+          <Textarea
+            value={customBackground}
+            onChange={handleCustomBackgroundChange}
+            className="w-full h-40 bg-background/70 border border-primary/30 rounded-md p-3 text-foreground"
+            placeholder="Расскажите историю вашего персонажа, его происхождение, мотивы и цели..."
+          />
         </CardContent>
       </Card>
 
-      <NavigationButtons
-        allowNext={canProceed}
-        nextStep={handleNext}
-        prevStep={prevStep}
-        isFirstStep={false}
+      <NavigationButtons 
+        allowNext={true} 
+        nextStep={nextStep} 
+        prevStep={prevStep} 
       />
     </div>
   );
-};
-
-export default CharacterBackground;
+}

@@ -73,7 +73,6 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
             <div className="relative">
               <Input
                 id={ability}
-                name={`ability-${ability}`}
                 type="number"
                 min="1"
                 max={maxScore.toString()}

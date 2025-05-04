@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
-import HomeButton from '@/components/navigation/HomeButton';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
@@ -40,15 +39,30 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   return (
     <div className="flex justify-between pt-8 mt-2">
       {isFirstStep ? (
-        <HomeButton variant="outline" className="bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500" />
+        <Button 
+          variant="outline" 
+          asChild
+          className={`
+            flex items-center gap-2 px-4 py-2 
+            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
+          `}
+        >
+          <Link to="/">
+            <ArrowLeft className="size-4" />
+            {!isMobile && "На главную"}
+          </Link>
+        </Button>
       ) : (
         <Button 
           variant="outline" 
           onClick={handlePrevStep}
-          className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
+          className={`
+            flex items-center gap-2 px-4 py-2 
+            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
+          `}
         >
           <ArrowLeft className="size-4" />
-          {!isMobile && <span>Назад</span>}
+          {!isMobile && "Назад"}
         </Button>
       )}
       
@@ -66,7 +80,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
                 : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
           `}
         >
-          {!isMobile && <span>{nextLabel}</span>}
+          {!isMobile && nextLabel}
           {isLastStep ? <CheckCircle className="size-4" /> : <ArrowRight className="size-4" />}
         </Button>
       )}
