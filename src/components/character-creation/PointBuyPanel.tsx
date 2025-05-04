@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
-interface PointBuyPanelProps {
+export interface PointBuyPanelProps {
   stats: {[key: string]: number};
   pointsLeft: number;
   incrementStat: (stat: string) => void;
@@ -15,7 +15,7 @@ interface PointBuyPanelProps {
   maxAbilityScore?: number;
 }
 
-export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
+const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
   stats,
   pointsLeft,
   incrementStat,
@@ -51,9 +51,10 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {Object.keys(stats).map((key) => {
-          const stat = key as keyof typeof stats;
-          const value = stats[stat];
+        {Object.entries(stats).filter(([key]) => 
+          key === 'strength' || key === 'dexterity' || key === 'constitution' ||
+          key === 'intelligence' || key === 'wisdom' || key === 'charisma'
+        ).map(([key, value]) => {
           const modifier = getModifier(value);
           
           return (

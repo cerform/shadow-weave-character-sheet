@@ -1,0 +1,10 @@
+
+export const ABILITY_SCORE_CAPS = {
+  MIN: 1,
+  DEFAULT: 10, 
+  MAX: 20,
+  ABSOLUTE_MAX: 30,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};

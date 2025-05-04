@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ABILITY_SCORE_CAPS } from '../../types/character';
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 // Update the getMaxAbilityScore function:
 export const getMaxAbilityScore = (level?: number, maxAbilityScoreOverride?: number): number => {
@@ -12,13 +12,13 @@ export const getMaxAbilityScore = (level?: number, maxAbilityScoreOverride?: num
 };
 
 interface ManualInputPanelProps {
-  abilities: any;
+  stats: { [key: string]: number };
   onAbilityChange: (ability: string, value: number) => void;
   maxAbilityScore?: number;
 }
 
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
-  abilities,
+  stats,
   onAbilityChange,
   maxAbilityScore = ABILITY_SCORE_CAPS.BASE_CAP
 }) => {
@@ -42,13 +42,10 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Object.entries(abilities || {}).map(([ability, value]) => {
-          // Пропускаем дубликаты характеристик (короткие и полные имена)
-          if (ability === 'STR' || ability === 'DEX' || ability === 'CON' || 
-              ability === 'INT' || ability === 'WIS' || ability === 'CHA') {
-            return null;
-          }
-          
+        {Object.entries(stats).filter(([key]) => 
+          key === 'strength' || key === 'dexterity' || key === 'constitution' ||
+          key === 'intelligence' || key === 'wisdom' || key === 'charisma'
+        ).map(([ability, value]) => {
           return (
             <div key={ability} className="space-y-2">
               <label htmlFor={ability} className="block font-medium text-sm">

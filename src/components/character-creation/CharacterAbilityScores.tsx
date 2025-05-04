@@ -5,46 +5,54 @@ import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import AbilityRollingPanel from './AbilityRollingPanel';
 import StandardArrayPanel from './StandardArrayPanel';
 import PointBuyPanel from './PointBuyPanel';
-import { getMaxAbilityScore } from './ManualInputPanel';
+import ManualInputPanel, { getMaxAbilityScore } from './ManualInputPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ABILITY_SCORE_CAPS } from '../../../types/character';
+import { ABILITY_SCORE_CAPS } from '@/constants/abilityScores';
 
 const CharacterAbilityScores: React.FC = () => {
-  const { abilities, setAbilities, level } = useCharacterCreation();
+  const { character, updateCharacter } = useCharacterCreation();
   const [selectedMethod, setSelectedMethod] = useState<'roll' | 'standard' | 'point'>('roll');
   const [maxAbilityScore, setMaxAbilityScore] = useState<number | undefined>(undefined);
+  const level = character?.level || 1;
 
   useEffect(() => {
     // Initialize abilities with default values if they are not already set
-    if (!abilities) {
-      setAbilities({
-        strength: ABILITY_SCORE_CAPS.DEFAULT,
-        dexterity: ABILITY_SCORE_CAPS.DEFAULT,
-        constitution: ABILITY_SCORE_CAPS.DEFAULT,
-        intelligence: ABILITY_SCORE_CAPS.DEFAULT,
-        wisdom: ABILITY_SCORE_CAPS.DEFAULT,
-        charisma: ABILITY_SCORE_CAPS.DEFAULT,
-        STR: ABILITY_SCORE_CAPS.DEFAULT,
-        DEX: ABILITY_SCORE_CAPS.DEFAULT,
-        CON: ABILITY_SCORE_CAPS.DEFAULT,
-        INT: ABILITY_SCORE_CAPS.DEFAULT,
-        WIS: ABILITY_SCORE_CAPS.DEFAULT,
-        CHA: ABILITY_SCORE_CAPS.DEFAULT,
+    if (!character || !character.abilities) {
+      updateCharacter({
+        abilities: {
+          strength: ABILITY_SCORE_CAPS.DEFAULT,
+          dexterity: ABILITY_SCORE_CAPS.DEFAULT,
+          constitution: ABILITY_SCORE_CAPS.DEFAULT,
+          intelligence: ABILITY_SCORE_CAPS.DEFAULT,
+          wisdom: ABILITY_SCORE_CAPS.DEFAULT,
+          charisma: ABILITY_SCORE_CAPS.DEFAULT,
+          STR: ABILITY_SCORE_CAPS.DEFAULT,
+          DEX: ABILITY_SCORE_CAPS.DEFAULT,
+          CON: ABILITY_SCORE_CAPS.DEFAULT,
+          INT: ABILITY_SCORE_CAPS.DEFAULT,
+          WIS: ABILITY_SCORE_CAPS.DEFAULT,
+          CHA: ABILITY_SCORE_CAPS.DEFAULT,
+        }
       });
     }
-  }, [setAbilities, abilities]);
+  }, [updateCharacter, character]);
 
   const handleAbilityChange = (ability: string, value: number) => {
-    setAbilities(prevAbilities => {
-      if (!prevAbilities) return prevAbilities;
+    if (!character?.abilities) return;
 
-      const updatedAbilities = {
-        ...prevAbilities,
+    updateCharacter({
+      abilities: {
+        ...character.abilities,
         [ability]: value,
-        [ability.toLowerCase()]: value,
-      };
-      return updatedAbilities;
+        [ability.toLowerCase()]: value
+      }
     });
+  };
+
+  // Helper function to convert modifier to string format
+  const getModifierString = (score: number) => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
   return (
@@ -62,32 +70,29 @@ const CharacterAbilityScores: React.FC = () => {
           <div className="mt-4">
             <TabsContent value="roll">
               <AbilityRollingPanel
-                abilities={abilities}
-                onAbilityChange={handleAbilityChange}
-                getMaxAbilityScore={getMaxAbilityScore}
-                level={level}
-                maxAbilityScoreOverride={maxAbilityScore}
-                setMaxAbilityScoreOverride={setMaxAbilityScore}
+                stats={character?.abilities || {}}
+                onAssignDiceToStat={handleAbilityChange}
+                diceResults={[]}
+                assignedDice={{}}
+                onRollAllAbilities={() => {}}
+                getModifier={getModifierString}
               />
             </TabsContent>
             <TabsContent value="standard">
               <StandardArrayPanel
-                abilities={abilities}
-                onAbilityChange={handleAbilityChange}
-                getMaxAbilityScore={getMaxAbilityScore}
-                level={level}
-                maxAbilityScoreOverride={maxAbilityScore}
-                setMaxAbilityScoreOverride={setMaxAbilityScore}
+                stats={character?.abilities || {}}
+                getModifier={getModifierString}
               />
             </TabsContent>
             <TabsContent value="point">
               <PointBuyPanel
-                abilities={abilities}
-                onAbilityChange={handleAbilityChange}
-                getMaxAbilityScore={getMaxAbilityScore}
-                level={level}
-                maxAbilityScoreOverride={maxAbilityScore}
-                setMaxAbilityScoreOverride={setMaxAbilityScore}
+                stats={character?.abilities || {}}
+                pointsLeft={27}
+                incrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) + 1)}
+                decrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) - 1)}
+                getModifier={getModifierString}
+                abilityScorePoints={27}
+                maxAbilityScore={maxAbilityScore || ABILITY_SCORE_CAPS.BASE_CAP}
               />
             </TabsContent>
           </div>

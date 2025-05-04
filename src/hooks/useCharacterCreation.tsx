@@ -1,7 +1,8 @@
 
 import { useState, useMemo } from 'react';
 import { Character } from '@/contexts/CharacterContext';
-import { RacialTraits, ClassFeatures, Background, ABILITY_SCORE_CAPS } from '@/types/character';
+import { RacialTraits, ClassFeatures, Background } from '@/types/character.d';
+import { ABILITY_SCORE_CAPS } from '@/constants/abilityScores';
 import { simpleArray } from '@/lib/simpleArray';
 import { useToast } from './use-toast';
 import { racialTraits } from '@/data/racialTraits';
@@ -143,6 +144,7 @@ export const useCharacterCreation = () => {
     getClassFeatures,
     getBackgroundDetails,
     isCharacterValid,
-    saveCharacter
+    saveCharacter,
+    level: character.level
   };
 };

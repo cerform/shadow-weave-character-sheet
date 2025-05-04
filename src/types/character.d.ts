@@ -195,7 +195,7 @@ export const ABILITY_SCORE_CAPS = {
   DEFAULT: 10, 
   MAX: 20,
   ABSOLUTE_MAX: 30,
-  BASE_CAP: 20,          // Добавлено для использования в компонентах
-  EPIC_CAP: 22,          // Добавлено для использования в компонентах
-  LEGENDARY_CAP: 24      // Добавлено для использования в компонентах
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
 };

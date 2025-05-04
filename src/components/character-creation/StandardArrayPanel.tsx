@@ -3,12 +3,12 @@ import React from 'react';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
-interface StandardArrayPanelProps {
+export interface StandardArrayPanelProps {
   stats: {[key: string]: number};
   getModifier: (score: number) => string;
 }
 
-export const StandardArrayPanel: React.FC<StandardArrayPanelProps> = ({
+const StandardArrayPanel: React.FC<StandardArrayPanelProps> = ({
   stats,
   getModifier
 }) => {
@@ -24,9 +24,10 @@ export const StandardArrayPanel: React.FC<StandardArrayPanelProps> = ({
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {Object.keys(stats).map((key) => {
-          const stat = key as keyof typeof stats;
-          const value = stats[stat];
+        {Object.entries(stats).filter(([key]) => 
+          key === 'strength' || key === 'dexterity' || key === 'constitution' ||
+          key === 'intelligence' || key === 'wisdom' || key === 'charisma'
+        ).map(([key, value]) => {
           const modifier = getModifier(value);
           
           return (
