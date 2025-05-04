@@ -66,3 +66,35 @@ export const safeJoin = (value: string | string[] | undefined, separator: string
 export const extractSpellNames = (spells: (SpellData | string)[]): string[] => {
   return spells.map(spell => typeof spell === 'string' ? spell : spell.name);
 };
+
+/**
+ * Безопасная проверка элемента в массиве (аналог Array.some)
+ * @param arr Массив или строка
+ * @param predicate Функция предикат для проверки
+ * @returns Результат проверки
+ */
+export const safeSome = <T>(arr: T[] | T | undefined, predicate: (item: T) => boolean): boolean => {
+  if (!arr) return false;
+  
+  if (Array.isArray(arr)) {
+    return arr.some(predicate);
+  }
+  
+  return predicate(arr);
+};
+
+/**
+ * Безопасная фильтрация массива
+ * @param arr Массив или строка
+ * @param predicate Функция предикат для фильтрации
+ * @returns Отфильтрованный массив
+ */
+export const safeFilter = <T>(arr: T[] | T | undefined, predicate: (item: T) => boolean): T[] => {
+  if (!arr) return [];
+  
+  if (Array.isArray(arr)) {
+    return arr.filter(predicate);
+  }
+  
+  return predicate(arr) ? [arr] : [];
+};

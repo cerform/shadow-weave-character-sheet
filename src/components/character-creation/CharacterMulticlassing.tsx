@@ -1,61 +1,71 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClassRequirement } from '@/types/character';
+
+// Определяем корректную структуру для требований по характеристикам
+interface AbilityRequirements {
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+}
 
 // Определяем корректную структуру для мультиклассирования
-interface MulticlassRequirements {
-  [className: string]: ClassRequirement;
+interface ClassRequirement {
+  abilityRequirements: AbilityRequirements;
+  description: string;
 }
 
 // Define correct multiclass requirements interface structure
-const MULTICLASS_REQUIREMENTS: MulticlassRequirements = {
+const MULTICLASS_REQUIREMENTS: Record<string, ClassRequirement> = {
   "Бард": {
-    abilities: { charisma: 13 },
+    abilityRequirements: { charisma: 13 },
     description: "Харизма 13"
   },
   "Варвар": {
-    abilities: { strength: 13 },
+    abilityRequirements: { strength: 13 },
     description: "Сила 13"
   },
   "Воин": {
-    abilities: { strength: 13, dexterity: 13 },
+    abilityRequirements: { strength: 13, dexterity: 13 },
     description: "Сила 13 или Ловкость 13"
   },
   "Волшебник": {
-    abilities: { intelligence: 13 },
+    abilityRequirements: { intelligence: 13 },
     description: "Интеллект 13"
   },
   "Друид": {
-    abilities: { wisdom: 13 },
+    abilityRequirements: { wisdom: 13 },
     description: "Мудрость 13"
   },
   "Жрец": {
-    abilities: { wisdom: 13 },
+    abilityRequirements: { wisdom: 13 },
     description: "Мудрость 13"
   },
   "Колдун": {
-    abilities: { charisma: 13 },
+    abilityRequirements: { charisma: 13 },
     description: "Харизма 13"
   },
   "Монах": {
-    abilities: { dexterity: 13, wisdom: 13 },
+    abilityRequirements: { dexterity: 13, wisdom: 13 },
     description: "Ловкость 13 и Мудрость 13"
   },
   "Паладин": {
-    abilities: { strength: 13, charisma: 13 },
+    abilityRequirements: { strength: 13, charisma: 13 },
     description: "Сила 13 и Харизма 13"
   },
   "Плут": {
-    abilities: { dexterity: 13 },
+    abilityRequirements: { dexterity: 13 },
     description: "Ловкость 13"
   },
   "Следопыт": {
-    abilities: { dexterity: 13, wisdom: 13 },
+    abilityRequirements: { dexterity: 13, wisdom: 13 },
     description: "Ловкость 13 и Мудрость 13"
   },
   "Чародей": {
-    abilities: { charisma: 13 },
+    abilityRequirements: { charisma: 13 },
     description: "Харизма 13"
   }
 };

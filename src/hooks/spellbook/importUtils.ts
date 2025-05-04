@@ -111,7 +111,8 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
         somatic: parsed.somatic,
         material: parsed.material,
         ritual: parsed.ritual,
-        concentration: parsed.concentration
+        concentration: parsed.concentration,
+        prepared: false // Добавляем обязательное поле prepared
       };
       
       updatedSpells.push(newSpell);
