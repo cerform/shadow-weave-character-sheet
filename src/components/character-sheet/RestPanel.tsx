@@ -32,7 +32,8 @@ export const RestPanel = () => {
     
     // При коротком отдыхе игрок может потратить Hit Dice для восстановления здоровья
     // Здесь мы даем фиксированное восстановление для простоты
-    const hpRecovery = Math.max(1, conModifier);
+    const hitDieValue = getHitDieValue(character.className || '');
+    const hpRecovery = Math.max(1, hitDieValue/2 + conModifier);
     
     // Проверяем, чтобы не превысить максимальное HP
     const newCurrentHp = Math.min(
@@ -83,8 +84,8 @@ export const RestPanel = () => {
     let sorceryPoints = character.sorceryPoints || { current: 0, max: 0 };
     if (character.className?.toLowerCase().includes('чародей')) {
       sorceryPoints = {
-        current: character.level,
-        max: character.level
+        current: character.level || 0,
+        max: character.level || 0
       };
     }
     
@@ -100,6 +101,27 @@ export const RestPanel = () => {
       title: "Длинный отдых",
       description: "Все здоровье и ячейки заклинаний восстановлены.",
     });
+  };
+
+  // Получаем числовое значение кубика хитов для класса
+  const getHitDieValue = (className: string): number => {
+    const hitDiceValues: Record<string, number> = {
+      "Варвар": 12,
+      "Воин": 10,
+      "Паладин": 10,
+      "Следопыт": 10,
+      "Монах": 8,
+      "Плут": 8,
+      "Бард": 8,
+      "Жрец": 8,
+      "Друид": 8,
+      "Волшебник": 6,
+      "Чародей": 6,
+      "Колдун": 8,
+      "Чернокнижник": 8
+    };
+    
+    return hitDiceValues[className] || 8;
   };
 
   return (

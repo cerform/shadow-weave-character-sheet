@@ -45,7 +45,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         
         // Если после вычета урона из temp HP остался еще урон, применяем к обычному HP
         if (remainingDamage < 0) {
-          const newHp = Math.max(0, Math.min(currentHp + remainingDamage, maxHp));
+          const newHp = Math.max(0, currentHp + remainingDamage);
           onHpChange(newHp);
         }
         
@@ -55,13 +55,23 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         });
       } else {
         // Если нет временных HP, просто уменьшаем обычные HP
-        const newHp = Math.max(0, Math.min(currentHp + amount, maxHp));
+        const newHp = Math.max(0, currentHp + amount);
         onHpChange(newHp);
+        
+        toast({
+          title: "Изменение HP",
+          description: `Здоровье: ${newHp} (${amount})`,
+        });
       }
     } else {
-      // Если лечение (положительное значение), восстанавливаем только обычные HP
-      const newHp = Math.max(0, Math.min(currentHp + amount, maxHp));
+      // Если лечение (положительное значение), восстанавливаем только обычные HP до максимума
+      const newHp = Math.min(maxHp, currentHp + amount);
       onHpChange(newHp);
+      
+      toast({
+        title: "Изменение HP",
+        description: `Здоровье: ${newHp} (+${amount})`,
+      });
     }
   };
   
@@ -116,6 +126,13 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     }
     
     return ac;
+  };
+  
+  // Вычисляем грузоподъемность
+  const getCarryingCapacity = () => {
+    if (!character?.abilities?.STR) return "0";
+    const capacity = character.abilities.STR * 15;
+    return `${capacity} фунтов`;
   };
   
   // Обработчик результата броска кубика для лечения
@@ -187,7 +204,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     id="adjust-hp"
                     type="number" 
                     value={hpAdjustValue}
-                    onChange={(e) => setHpAdjustValue(parseInt(e.target.value) || 1)}
+                    onChange={(e) => setHpAdjustValue(Math.max(1, parseInt(e.target.value) || 1))}
                     className="h-8 text-sm"
                     style={{
                       backgroundColor: `${currentTheme.cardBackground}80`,
@@ -225,7 +242,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     type="number" 
                     value={temporaryHp}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
+                      const value = Math.max(0, parseInt(e.target.value) || 0);
                       setTemporaryHp(value);
                       updateCharacter({ temporaryHp: value });
                     }}
@@ -332,7 +349,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                 </SheetHeader>
                 <div className="h-[80vh]">
                   <DiceRoller3DFixed
-                    initialDice={getHitDieByClass(character?.className || '') as any}
+                    initialDice={getHitDieByClass(character?.className || '')}
                     hideControls={false}
                     modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
                     onRollComplete={handleHitDiceRollComplete}
@@ -353,12 +370,12 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                 <Shield className="h-4 w-4 text-primary" />
               </div>
               <div className="text-sm text-muted-foreground">Класс Брони</div>
-              <div className="text-xl font-bold text-primary">{getArmorClass()}</div>
+              <div className="text-xl font-bold text-primary">{getArmorClass() || "10"}</div>
             </div>
             
             <div className="bg-primary/10 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground mb-1">Инициатива</div>
-              <div className="text-xl font-bold text-primary">{getInitiative()}</div>
+              <div className="text-xl font-bold text-primary">{getInitiative() || "+0"}</div>
             </div>
           </div>
         </div>
@@ -374,7 +391,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-primary">Грузоподъёмность</span>
             <span className="text-sm text-primary">
-              {character?.abilities ? character.abilities.STR * 15 : 150} фунтов
+              {getCarryingCapacity()}
             </span>
           </div>
         </div>
@@ -395,8 +412,8 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
 };
 
 // Получаем Hit Die для класса
-const getHitDieByClass = (characterClass: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' => {
-  const hitDice: Record<string, 'd4' | 'd6' | 'd8' | 'd10' | 'd12'> = {
+const getHitDieByClass = (characterClass: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
+  const hitDice: Record<string, "d4" | "d6" | "d8" | "d10" | "d12"> = {
     "Варвар": "d12",
     "Воин": "d10",
     "Паладин": "d10",

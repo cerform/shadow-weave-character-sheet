@@ -14,7 +14,11 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   width = 30,
   showValue = false
 }) => {
-  const healthPercentage = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
+  // Защита от некорректных значений
+  const safeCurrentHP = isNaN(currentHP) ? 0 : currentHP;
+  const safeMaxHP = isNaN(maxHP) || maxHP <= 0 ? 1 : maxHP;
+  
+  const healthPercentage = Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100));
   
   // Определяем цвет полоски здоровья в зависимости от процента
   const getHealthColor = (percent: number) => {
@@ -51,7 +55,7 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
       
       {showValue && (
         <div className="absolute -bottom-4 text-xs font-bold text-white text-shadow">
-          {currentHP}/{maxHP}
+          {safeCurrentHP}/{safeMaxHP}
         </div>
       )}
     </div>

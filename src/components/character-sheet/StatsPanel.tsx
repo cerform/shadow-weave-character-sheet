@@ -1,201 +1,111 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
+import { Character } from '@/contexts/CharacterContext';
+import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 interface StatsPanelProps {
-  character: any;
+  character: Character | null;
 }
 
-export const StatsPanel = ({ character }: StatsPanelProps) => {
+export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  
-  // Calculate modifier from ability score
-  const getModifier = (score: number) => {
+
+  // Рассчитываем бонус мастерства на основе уровня
+  const calculateProficiencyBonus = () => {
+    if (!character || !character.level) return 2;
+    
+    const level = character.level;
+    if (level < 5) return 2;
+    if (level < 9) return 3;
+    if (level < 13) return 4;
+    if (level < 17) return 5;
+    return 6; // Уровни 17-20
+  };
+
+  // Получаем модификатор для характеристики
+  const getModifier = (score: number | undefined) => {
+    if (score === undefined) return "+0";
     const mod = Math.floor((score - 10) / 2);
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
-  // Abilities order and translations
-  const abilities = [
-    { key: 'STR', name: 'Сила', rus: 'Сила' },
-    { key: 'DEX', name: 'Ловкость', rus: 'Ловкость' },
-    { key: 'CON', name: 'Телосложение', rus: 'Телосложение' },
-    { key: 'INT', name: 'Интеллект', rus: 'Интеллект' },
-    { key: 'WIS', name: 'Мудрость', rus: 'Мудрость' },
-    { key: 'CHA', name: 'Харизма', rus: 'Харизма' }
-  ] as const;
-
   return (
-    <Card 
-      className="p-4 bg-card/30 backdrop-blur-sm border-primary/20"
-      style={{ 
-        backgroundColor: `${currentTheme.cardBackground || 'rgba(20, 20, 30, 0.7)'}`,
-        boxShadow: `0 0 10px ${currentTheme.accent}40`,
-        borderColor: `${currentTheme.accent}30`
-      }}
-    >
-      <h3 
-        className="text-lg font-semibold mb-4" 
-        style={{ 
-          color: currentTheme.textColor,
-          textShadow: `0 0 5px ${currentTheme.accent}40`
-        }}
-      >
-        Характеристики
-      </h3>
-      
-      <div className="space-y-3">
-        {abilities.map(({ key, name, rus }) => {
-          const score = character?.abilities?.[key] || 10;
-          const modifier = getModifier(score);
-          const isPositiveModifier = !modifier.includes('-');
-          
-          return (
-            <div key={key} className="grid grid-cols-6 gap-2 items-center">
-              <div 
-                className="col-span-3 text-sm font-medium" 
-                style={{ 
-                  color: currentTheme.textColor,
-                  textShadow: `0 0 2px ${currentTheme.accent}40` 
-                }}
-              >
-                {rus}
-              </div>
-              <div 
-                className="col-span-1 text-center py-1 rounded font-semibold" 
-                style={{ 
-                  backgroundColor: `${currentTheme.accent}20`,
-                  color: currentTheme.textColor || 'white',
-                  boxShadow: `inset 0 0 5px ${currentTheme.accent}30`
-                }}
-              >
-                {score}
-              </div>
-              <div 
-                className={`col-span-2 text-center py-1 rounded font-bold`}
-                style={{ 
-                  backgroundColor: isPositiveModifier ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
-                  boxShadow: `inset 0 0 5px ${isPositiveModifier ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
-                }}
-              >
-                <span 
-                  style={{ 
-                    color: isPositiveModifier ? "#4ade80" : "#f87171",
-                    textShadow: `0 0 5px ${isPositiveModifier ? "rgba(74, 222, 128, 0.5)" : "rgba(248, 113, 113, 0.5)"}`
-                  }}
-                >
-                  {modifier}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {character && (
-        <div className="mt-8 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div 
-              className="p-3 rounded text-center"
-              style={{ 
-                backgroundColor: `${currentTheme.accent}15`,
-                boxShadow: `inset 0 0 8px ${currentTheme.accent}30` 
-              }}
-            >
-              <div 
-                className="text-xs mb-1" 
-                style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
-              >
-                Класс брони
-              </div>
-              <div 
-                className="text-xl font-bold" 
-                style={{ 
-                  color: currentTheme.textColor || 'white',
-                  textShadow: `0 0 5px ${currentTheme.accent}50`
-                }}
-              >
-                {character.armorClass || 10}
-              </div>
-            </div>
-            <div 
-              className="p-3 rounded text-center"
-              style={{ 
-                backgroundColor: `${currentTheme.accent}15`,
-                boxShadow: `inset 0 0 8px ${currentTheme.accent}30` 
-              }}
-            >
-              <div 
-                className="text-xs mb-1" 
-                style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
-              >
-                Инициатива
-              </div>
-              <div 
-                className="text-xl font-bold" 
-                style={{ 
-                  color: currentTheme.textColor || 'white',
-                  textShadow: `0 0 5px ${currentTheme.accent}50`
-                }}
-              >
-                {getModifier(character?.abilities?.DEX || 10)}
-              </div>
-            </div>
-          </div>
-          
-          <div 
-            className="mt-2 p-3 rounded"
-            style={{ 
-              backgroundColor: `${currentTheme.accent}10`,
-              boxShadow: `inset 0 0 5px ${currentTheme.accent}20` 
-            }}
-          >
-            <div 
-              className="text-xs mb-1" 
-              style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
-            >
-              Скорость
-            </div>
-            <div 
-              className="text-sm font-medium" 
-              style={{ 
-                color: currentTheme.textColor || 'white',
-                textShadow: `0 0 3px ${currentTheme.accent}40`
-              }}
-            >
-              {character.speed || 30} футов
-            </div>
-          </div>
-          
-          <div 
-            className="mt-2 p-3 rounded"
-            style={{ 
-              backgroundColor: `${currentTheme.accent}10`,
-              boxShadow: `inset 0 0 5px ${currentTheme.accent}20` 
-            }}
-          >
-            <div 
-              className="text-xs mb-1" 
-              style={{ color: currentTheme.textColor || 'rgba(255, 255, 255, 0.9)' }}
-            >
-              Грузоподъёмность
-            </div>
-            <div 
-              className="text-sm font-medium" 
-              style={{ 
-                color: currentTheme.textColor || 'white',
-                textShadow: `0 0 3px ${currentTheme.accent}40`
-              }}
-            >
-              {(character?.abilities?.STR || 10) * 15} фунтов
-            </div>
-          </div>
+    <Card className="bg-card/30 backdrop-blur-sm border-primary/20 p-4">
+      {/* Информация о бонусе мастерства - перенесена в компактный формат */}
+      <div className="mb-4 rounded-lg bg-primary/10 p-3 flex justify-between items-center">
+        <div>
+          <h3 className="text-sm font-medium text-primary mb-1">Бонус мастерства</h3>
+          <p className="text-xs text-muted-foreground">
+            1 + (уровень / 4) = {calculateProficiencyBonus()}
+          </p>
         </div>
-      )}
+        <div className="text-xl font-bold text-primary bg-primary/20 h-10 w-10 rounded-full flex items-center justify-center">
+          +{calculateProficiencyBonus()}
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.textColor }}>
+        Спасброски
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-primary">Сила</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.STR)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+          
+          <div className="flex justify-between items-center my-2">
+            <span className="text-sm font-medium text-primary">Телосложение</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.CON)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+          
+          <div className="flex justify-between items-center my-2">
+            <span className="text-sm font-medium text-primary">Мудрость</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.WIS)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+        </div>
+        
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-primary">Ловкость</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.DEX)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+          
+          <div className="flex justify-between items-center my-2">
+            <span className="text-sm font-medium text-primary">Интеллект</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.INT)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+          
+          <div className="flex justify-between items-center my-2">
+            <span className="text-sm font-medium text-primary">Харизма</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {getModifier(character?.abilities?.CHA)}
+            </span>
+          </div>
+          <Separator className="bg-primary/20" />
+        </div>
+      </div>
     </Card>
   );
 };
