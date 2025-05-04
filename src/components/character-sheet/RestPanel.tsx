@@ -16,7 +16,7 @@ interface RestPanelProps {
 }
 
 export const RestPanel = ({ compact = false }: RestPanelProps) => {
-  const { character, updateCharacter } = useContext(CharacterContext);
+  const { character, updateCharacter, saveCurrentCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -64,35 +64,66 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
     
     // Имитируем загрузку короткого отдыха
     setTimeout(() => {
-      // Определяем модификатор телосложения
-      const conModifier = character.abilities?.CON 
-        ? Math.floor((character.abilities.CON - 10) / 2) 
-        : 0;
-      
-      // При коротком отдыхе игрок может потратить Hit Die для восстановления здоровья
-      const hitDieValue = getHitDieValue(character.className || '');
-      
-      // Вычисляем восстановление HP (среднее значение кубика + модификатор телосложения)
-      const hpRecovery = Math.max(1, Math.floor(hitDieValue / 2) + conModifier);
-      
-      // Обновляем HP (не превышая максимум)
-      const newCurrentHp = Math.min(
-        character.maxHp || 0, 
-        (character.currentHp || 0) + hpRecovery
-      );
-      
-      // Обновляем персонажа
-      updateCharacter({
-        currentHp: newCurrentHp
-      });
+      try {
+        // Определяем модификатор телосложения
+        const conModifier = character.abilities?.CON 
+          ? Math.floor((character.abilities.CON - 10) / 2) 
+          : 0;
+        
+        // При коротком отдыхе игрок может потратить Hit Die для восстановления здоровья
+        const hitDieValue = getHitDieValue(character.class || character.className || '');
+        
+        // Вычисляем восстановление HP (среднее значение кубика + модификатор телосложения)
+        const hpRecovery = Math.max(1, Math.floor(hitDieValue / 2) + conModifier);
+        
+        // Обновляем HP (не превышая максимум)
+        const newCurrentHp = Math.min(
+          character.maxHp || 0, 
+          (character.currentHp || 0) + hpRecovery
+        );
+        
+        // Восстанавливаем Hit Dice (до половины от максимума)
+        let hitDiceToRestore = 0;
+        let updatedHitDice = { ...character.hitDice };
+        
+        if (character.hitDice) {
+          const maxRestore = Math.max(1, Math.floor(character.level / 2));
+          hitDiceToRestore = Math.min(
+            maxRestore,
+            character.hitDice.used || 0
+          );
+          
+          updatedHitDice = {
+            ...character.hitDice,
+            used: Math.max(0, (character.hitDice.used || 0) - hitDiceToRestore)
+          };
+        }
+        
+        // Обновляем персонажа
+        updateCharacter({
+          currentHp: newCurrentHp,
+          hitDice: updatedHitDice
+        });
+        
+        // Сохраняем изменения
+        saveCurrentCharacter();
 
-      // Уведомляем игрока
-      toast({
-        title: "Короткий отдых завершен",
-        description: `Восстановлено ${hpRecovery} HP`,
-      });
-      
-      setIsShortResting(false);
+        // Уведомляем игрока
+        toast({
+          title: "Короткий отдых завершен",
+          description: `Восстановлено ${hpRecovery} HP и ${hitDiceToRestore} Hit Dice`,
+        });
+        
+      } catch (error) {
+        console.error("Ошибка при обработке короткого отдыха:", error);
+        toast({
+          title: "Ошибка",
+          description: "Не удалось выполнить короткий отдых",
+          variant: "destructive"
+        });
+      } finally {
+        setIsShortResting(false);
+      }
     }, 1500);
   };
 
@@ -110,47 +141,79 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
     
     // Имитируем загрузку длинного отдыха
     setTimeout(() => {
-      // При длинном отдыхе восстанавливаем все здоровье
-      const fullHp = character.maxHp || 0;
-      
-      // Восстанавливаем все ячейки заклинаний, если они есть
-      let updatedSpellSlots = { ...character.spellSlots };
-      
-      if (updatedSpellSlots) {
-        for (const level in updatedSpellSlots) {
-          if (updatedSpellSlots.hasOwnProperty(level)) {
-            updatedSpellSlots[level] = {
-              ...updatedSpellSlots[level],
-              used: 0
-            };
+      try {
+        // При длинном отдыхе восстанавливаем все здоровье
+        const fullHp = character.maxHp || 0;
+        
+        // Восстанавливаем все ячейки заклинаний, если они есть
+        let updatedSpellSlots = { ...character.spellSlots };
+        
+        if (updatedSpellSlots) {
+          for (const level in updatedSpellSlots) {
+            if (updatedSpellSlots.hasOwnProperty(level)) {
+              updatedSpellSlots[level] = {
+                ...updatedSpellSlots[level],
+                used: 0
+              };
+            }
           }
         }
-      }
-      
-      // Восстанавливаем очки чародея, если персонаж - Чародей
-      let sorceryPoints = character.sorceryPoints || { current: 0, max: 0 };
-      if (character.className?.toLowerCase().includes('чародей')) {
-        sorceryPoints = {
-          current: character.level || 0,
-          max: character.level || 0
+        
+        // Восстанавливаем очки чародея, если персонаж - Чародей
+        let sorceryPoints = character.sorceryPoints || { current: 0, max: 0 };
+        if ((character.class?.toLowerCase() || character.className?.toLowerCase())?.includes('чародей')) {
+          sorceryPoints = {
+            current: character.level || 0,
+            max: character.level || 0
+          };
+        }
+        
+        // Восстанавливаем Hit Dice (до половины от максимума)
+        let updatedHitDice = { ...character.hitDice };
+        
+        if (character.hitDice) {
+          const maxRestore = Math.max(1, Math.floor(character.hitDice.total / 2));
+          updatedHitDice = {
+            ...character.hitDice,
+            used: Math.max(0, (character.hitDice.used || 0) - maxRestore)
+          };
+        }
+        
+        // Сбрасываем счетчики смерти
+        const updatedDeathSaves = {
+          successes: 0,
+          failures: 0
         };
+        
+        // Обновляем персонажа
+        updateCharacter({
+          currentHp: fullHp,
+          temporaryHp: 0, // Сбрасываем временное здоровье
+          spellSlots: updatedSpellSlots,
+          sorceryPoints: sorceryPoints,
+          hitDice: updatedHitDice,
+          deathSaves: updatedDeathSaves
+        });
+        
+        // Сохраняем изменения
+        saveCurrentCharacter();
+        
+        // Уведомляем игрока
+        toast({
+          title: "Длинный отдых завершен",
+          description: `Здоровье, ячейки заклинаний и Hit Dice восстановлены.`,
+        });
+      
+      } catch (error) {
+        console.error("Ошибка при обработке длинного отдыха:", error);
+        toast({
+          title: "Ошибка",
+          description: "Не удалось выполнить длинный отдых",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLongResting(false);
       }
-      
-      // Обновляем персонажа
-      updateCharacter({
-        currentHp: fullHp,
-        temporaryHp: 0, // Сбрасываем временное здоровье
-        spellSlots: updatedSpellSlots,
-        sorceryPoints: sorceryPoints
-      });
-      
-      // Уведомляем игрока
-      toast({
-        title: "Длинный отдых завершен",
-        description: `Здоровье и ячейки заклинаний восстановлены.`,
-      });
-      
-      setIsLongResting(false);
     }, 2000);
   };
 
@@ -158,30 +221,57 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
   const handleHitDieRollComplete = (result: number) => {
     if (!character) return;
     
-    const conModifier = character.abilities?.CON 
-      ? Math.floor((character.abilities.CON - 10) / 2) 
-      : 0;
-    
-    const healingAmount = result + conModifier;
-    
-    // Обновляем HP (не превышая максимум)
-    const newCurrentHp = Math.min(
-      character.maxHp || 0, 
-      (character.currentHp || 0) + healingAmount
-    );
-    
-    // Обновляем персонажа
-    updateCharacter({
-      currentHp: newCurrentHp
-    });
-    
-    toast({
-      title: "Hit Die использован",
-      description: `Восстановлено ${healingAmount} HP (${result} + ${conModifier} от CON)`,
-    });
+    try {
+      const conModifier = character.abilities?.CON 
+        ? Math.floor((character.abilities.CON - 10) / 2) 
+        : 0;
+      
+      const healingAmount = result + conModifier;
+      
+      // Обновляем HP (не превышая максимум)
+      const newCurrentHp = Math.min(
+        character.maxHp || 0, 
+        (character.currentHp || 0) + healingAmount
+      );
+      
+      // Уменьшаем доступные Hit Dice
+      let updatedHitDice = { ...character.hitDice };
+      if (character.hitDice) {
+        updatedHitDice = {
+          ...character.hitDice,
+          used: Math.min(character.hitDice.total || 0, (character.hitDice.used || 0) + 1)
+        };
+      }
+      
+      // Обновляем персонажа
+      updateCharacter({
+        currentHp: newCurrentHp,
+        hitDice: updatedHitDice
+      });
+      
+      // Сохраняем изменения
+      saveCurrentCharacter();
+      
+      toast({
+        title: "Hit Die использован",
+        description: `Восстановлено ${healingAmount} HP (${result} + ${conModifier} от CON)`,
+      });
+    } catch (error) {
+      console.error("Ошибка при использовании Hit Die:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось использовать Hit Die",
+        variant: "destructive"
+      });
+    }
     
     setShowDiceRoller(false);
   };
+  
+  // Проверяем наличие доступных Hit Dice
+  const hitDiceAvailable = character?.hitDice 
+    ? Math.max(0, character.hitDice.total - (character.hitDice.used || 0))
+    : 0;
 
   if (compact) {
     return (
@@ -230,8 +320,9 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
               size="sm"
               className="w-full flex items-center justify-center"
               style={{ color: currentTheme.accent }}
+              disabled={hitDiceAvailable <= 0}
             >
-              Использовать Hit Die
+              Использовать Hit Die ({hitDiceAvailable})
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
@@ -243,7 +334,7 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
             </SheetHeader>
             <div className="h-[80vh]">
               <DiceRoller3DFixed
-                initialDice={getHitDieByClass(character?.className || '')}
+                initialDice={getHitDieByClass(character?.class || character?.className || '')}
                 hideControls={false}
                 modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
                 onRollComplete={handleHitDieRollComplete}
@@ -337,8 +428,9 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
               variant="ghost" 
               className="w-full"
               style={{ color: currentTheme.accent }}
+              disabled={hitDiceAvailable <= 0}
             >
-              Использовать Hit Die
+              Использовать Hit Die ({hitDiceAvailable})
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
@@ -350,7 +442,7 @@ export const RestPanel = ({ compact = false }: RestPanelProps) => {
             </SheetHeader>
             <div className="h-[80vh]">
               <DiceRoller3DFixed
-                initialDice={getHitDieByClass(character?.className || '')}
+                initialDice={getHitDieByClass(character?.class || character?.className || '')}
                 hideControls={false}
                 modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
                 onRollComplete={handleHitDieRollComplete}

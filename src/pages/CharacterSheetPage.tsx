@@ -1,19 +1,21 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { CharacterContext } from "@/contexts/CharacterContext";
+import { isOfflineMode } from "@/utils/authHelpers";
 
 const CharacterSheetPage = () => {
-  const [character, setCharacter] = useState<any>(null);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
-  const { currentUser, isOfflineMode } = useAuth();
+  const { currentUser } = useAuth();
+  const { character, setCharacter } = useContext(CharacterContext);
   
   // Флаг для отслеживания инициализации
   const [isInitialized, setIsInitialized] = useState(false);
@@ -48,7 +50,7 @@ const CharacterSheetPage = () => {
     } catch (error) {
       console.error('Ошибка при загрузке персонажа:', error);
     }
-  }, []);
+  }, [setCharacter]);
   
   // Загрузка персонажа из локального хранилища
   useEffect(() => {
@@ -87,6 +89,9 @@ const CharacterSheetPage = () => {
     checkActiveSession();
   }, [isConnected, connect, toast]);
   
+  // Проверка оффлайн-режима для определения прав DM
+  const isDM = currentUser?.isDM === true || isOfflineMode();
+  
   return (
     <div 
       className="min-h-screen w-full"
@@ -96,7 +101,7 @@ const CharacterSheetPage = () => {
     >
       <CharacterSheet 
         character={character} 
-        isDM={currentUser?.isDM === true || isOfflineMode} // В автономном режиме разрешаем доступ как DM
+        isDM={isDM} // В автономном режиме разрешаем доступ как DM
       />
       
       {isConnected && sessionData && (

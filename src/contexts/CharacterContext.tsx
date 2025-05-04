@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
 import { SorceryPoints } from '@/types/character';

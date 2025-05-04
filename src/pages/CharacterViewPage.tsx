@@ -1,22 +1,23 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useToast } from "@/hooks/use-toast";
-import { Character } from "@/contexts/CharacterContext";
+import { Character, CharacterContext } from "@/contexts/CharacterContext";
 import { auth } from "@/services/firebase";
 import characterService from "@/services/characterService";
+import { isOfflineMode } from "@/utils/authHelpers";
 
 const CharacterViewPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { toast } = useToast();
+  const { setCharacter } = useContext(CharacterContext);
 
   // Загрузка персонажа по ID
   useEffect(() => {
@@ -56,20 +57,21 @@ const CharacterViewPage = () => {
           console.error("Ошибка при загрузке персонажа из Firestore:", error);
         }
         
-        // Если персонаж не найден через сервис, проверяем localStorage
-        if (!foundCharacter) {
+        // Если персонаж не найден через сервис или в оффлайн-режиме, проверяем localStorage
+        if (!foundCharacter || isOfflineMode()) {
           console.log("Пытаемся загрузить из localStorage...");
           const savedCharacters = localStorage.getItem("dnd-characters");
           
           if (savedCharacters) {
             const characters = JSON.parse(savedCharacters);
-            foundCharacter = characters.find((char: Character) => char.id === id);
+            const localCharacter = characters.find((char: Character) => char.id === id);
             
-            if (foundCharacter) {
-              console.log("Персонаж загружен из localStorage:", foundCharacter.name);
+            if (localCharacter) {
+              console.log(`Персонаж ${localCharacter.name} найден в localStorage ${isOfflineMode() ? "(при оффлайн-режиме)" : "(при ошибке Firestore)"}`);
+              foundCharacter = localCharacter;
               
-              // Если пользователь авторизован, сохраняем персонажа в Firestore
-              if (currentUser && foundCharacter) {
+              // Если пользователь авторизован и не в оффлайн-режиме, синхронизируем с Firestore
+              if (currentUser && !isOfflineMode()) {
                 console.log("Синхронизируем персонажа с Firestore...");
                 try {
                   foundCharacter.userId = currentUser.uid;
@@ -86,7 +88,7 @@ const CharacterViewPage = () => {
         }
         
         if (foundCharacter) {
-          setCharacter(foundCharacter);
+          setCharacter(foundCharacter); // Устанавливаем персонажа в контекст
           // Сохраняем ID последнего просмотренного персонажа
           localStorage.setItem("last-selected-character", id);
         } else {
@@ -115,7 +117,10 @@ const CharacterViewPage = () => {
     if (id) {
       loadCharacter();
     }
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, setCharacter]);
+
+  // Получаем персонажа из контекста
+  const { character } = useContext(CharacterContext);
 
   // Отображаем загрузку
   if (loading) {

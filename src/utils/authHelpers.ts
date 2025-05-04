@@ -24,3 +24,19 @@ export const getCurrentUser = () => {
 export const getCurrentUid = (): string | null => {
   return firebaseAuth.currentUser?.uid || null;
 };
+
+/**
+ * Проверяет, находится ли приложение в автономном режиме
+ * @returns true, если включен автономный режим
+ */
+export const isOfflineMode = (): boolean => {
+  return localStorage.getItem('offline-mode') === 'true';
+};
+
+/**
+ * Включает или отключает автономный режим
+ * @param value значение для установки
+ */
+export const setOfflineMode = (value: boolean): void => {
+  localStorage.setItem('offline-mode', value ? 'true' : 'false');
+};
