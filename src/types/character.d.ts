@@ -1,215 +1,73 @@
+
+export interface AbilityScores {
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
+  // Добавляем полные имена для совместимости
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+}
+
+export interface Proficiencies {
+  armor?: string[];
+  weapons?: string[];
+  tools?: string[];
+  languages?: string[];
+}
+
+export interface SorceryPoints {
+  max: number;
+  used: number;
+}
+
 export interface CharacterSpell {
   id?: string | number;
   name: string;
   level: number;
-  description?: string;
-  school?: string;
+  school: string;
+  description: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
-  prepared?: boolean;
-  // Добавим недостающие поля для совместимости с существующим кодом
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  higherLevels?: string;
-  classes?: string[] | string;
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  materialComponents?: string;
+  prepared: boolean;
   ritual?: boolean;
   concentration?: boolean;
-  // Вместо прототипа, добавляем функцию как опциональное свойство
-  toString?: () => string;
 }
 
-export interface ClassFeature {
-  name: string;
-  description: string;
-  level: number;
-}
-
-export interface ClassLevel {
-  class: string;
-  level: number;
-  features?: ClassFeature[];
-  subclass?: string;
-}
-
-// Константы для ограничений значений характеристик
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,      // Базовый максимум (уровни 1-9)
-  EPIC_CAP: 22,      // Эпический максимум (уровни 10-15)
-  LEGENDARY_CAP: 24  // Легендарный максимум (уровни 16+)
-} as const;
-
-// Интерфейс для очков чародея
-export interface SorceryPoints {
-  current: number;
-  max: number;
-}
-
-// Обновляем интерфейс MulticlassRequirements
-export interface MulticlassRequirements {
-  [key: string]: {
-    [key: string]: number;
-    description: string;
-  }
-}
-
-// Обновляем, чтобы требования к мультиклассам были более конкретными
-export interface ClassRequirement {
-  abilities: { [key: string]: number };
-  description: string;
-}
-
-export interface MulticlassRequirements {
-  [className: string]: ClassRequirement;
-}
-
-// Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
-  userId?: string;
-  id?: string;
-  img?: string;
-  name: string; // Обязательное поле
-  class?: string;
-  subclass?: string;
-  classes?: ClassLevel[];
-  additionalClasses?: ClassLevel[]; // Для мультиклассирования
-  className?: string; // Для обратной совместимости
-  level: number;
-  race?: string;
-  subrace?: string;
-  background: string;  // Теперь обязательное поле
-  alignment?: string;
-  experience?: number;
-  gender?: string; // Поле для гендера персонажа
-  appearance?: string; // Описание внешности персонажа
-  personalityTraits?: string; // Черты личности персонажа
-  ideals?: string; // Изменено с string[] на string
-  bonds?: string; // Изменено с string[] на string
-  flaws?: string; // Изменено с string[] на string
-  abilities?: {
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
-    // Для обратной совместимости добавляем новые имена
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  stats?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  skills?: {
-    [key: string]: {
-      proficient: boolean;
-      expertise: boolean;
-      bonus?: number;
-    }
-  };
-  savingThrows?: {
-    [key: string]: boolean;
-  };
-  proficiencies?: {
-    armor?: string[];
-    weapons?: string[];
-    tools?: string[];
-    languages?: string[];
-  };
-  languages?: string[]; // Для обратной совместимости
-  spells?: CharacterSpell[];
-  spellcasting?: {
-    ability?: string;
-    saveDC?: number;
-    attackBonus?: number;
-  };
-  equipment?: string[];
-  features?: string[];
-  traits?: string[];
-  backstory: string;  // Теперь обязательное поле
-  xp?: number;
-  inspiration?: boolean;
-  maxHp?: number;  // Максимальные хиты
-  currentHp?: number;  // Текущие хиты
-  temporaryHp?: number; // Временные хиты
-  hitDice?: {  // Кубики хитов
-    total: number;  // Всего кубиков
-    used: number;   // Использовано кубиков
-    value: string;  // Тип кубика (например, "d8")
-  };
-  abilityPointsUsed?: number; // Отслеживание использованных очков характеристик
-  abilityBonuses?: { // Бонусы к характеристикам
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
-  spellSlots?: {
-    [level: string]: {
-      max: number;
-      used: number;
-    };
-  };
-  sorceryPoints?: SorceryPoints;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Расширяем интерфейс для Character в контексте персонажей
-export interface Character {
   id?: string;
   userId?: string;
   name: string;
   race: string;
   subrace?: string;
   class: string;
-  className?: string;
+  className?: string; // для совместимости
   subclass?: string;
   level: number;
-  abilities: {
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  proficiencies: string[];
+  abilities: AbilityScores;
+  skills?: { [key: string]: { proficient: boolean; expertise: boolean; bonus?: number } };
+  savingThrows?: { [key: string]: boolean };
+  proficiencies: string[] | Proficiencies;  // Allow both formats for backward compatibility
+  proficiencyBonus?: number;
   equipment: string[];
-  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
+  spells: string[] | CharacterSpell[];  // Allow both formats for backward compatibility
   languages: string[];
   gender: string;
   alignment: string;
   background: string;
-  backstory: string;  // Добавляем обязательное поле
-  appearance?: string;  // Добавляем
-  personalityTraits?: string;  // Добавляем
-  ideals?: string;  // Добавляем
-  bonds?: string;  // Добавляем
-  flaws?: string;  // Добавляем
+  backstory: string;
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
@@ -221,7 +79,7 @@ export interface Character {
   deathSaves?: {
     successes: number;
     failures: number;
-    };
+  };
   spellSlots?: {
     [level: string]: {
       max: number;
@@ -231,87 +89,78 @@ export interface Character {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
-  skillProficiencies?: {[skillName: string]: boolean};
-  savingThrowProficiencies?: {[ability: string]: boolean};
   image?: string;
+  skillProficiencies?: { [skillName: string]: boolean };
+  savingThrowProficiencies?: { [ability: string]: boolean };
 }
 
-// Добавляем недостающие типы для useCharacterCreation
-export interface RacialTraitDetails {
-  name: string;
+export interface ClassRequirement {
+  abilities: { 
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+  };
   description: string;
 }
 
+// Types for racial traits and features
 export interface RacialTraits {
   race: string;
-  abilityBonuses: {
-    STR?: number;
-    DEX?: number;
-    CON?: number;
-    INT?: number;
-    WIS?: number;
-    CHA?: number;
-  };
-  traits: RacialTraitDetails[];
+  abilityScoreIncrease: string;
+  age: string;
+  alignment: string;
+  size: string;
+  speed: string;
   languages: string[];
-  speed: number;
-  extraAbilityPoints?: number;
+  features: { name: string; description: string }[];
 }
 
-export interface FeatureDetails {
-  name: string;
-  level: number;
-  description: string;
-}
-
+// Types for class features
 export interface ClassFeatures {
   name: string;
   hitDice: string;
-  primaryAbility: string;
-  savingThrows: string[];
+  primaryAbility: string[];
+  savingThrowProficiencies: string[];
   armorProficiencies: string[];
   weaponProficiencies: string[];
   toolProficiencies: string[];
-  features: FeatureDetails[];
+  skillChoices: string[];
+  numberOfSkillChoices: number;
+  features: { name: string; level: number; description: string }[];
+  spellcasting?: {
+    ability: string;
+    cantripsKnown?: number[];
+    spellsKnown?: number[];
+    spellSlots?: { [level: string]: number[] };
+  };
 }
 
-export interface BackgroundFeature {
-  name: string;
-  description: string;
-}
-
+// Types for backgrounds
 export interface Background {
   name: string;
   skillProficiencies: string[];
-  toolProficiencies: string[];
-  languages: string[];
+  toolProficiencies?: string[];
+  languages?: string[];
   equipment: string[];
-  personalityTraits: string[];
-  ideals: string[];
-  bonds: string[];
-  flaws: string[];
-  feature: BackgroundFeature;
+  feature: {
+    name: string;
+    description: string;
+  };
+  suggestedCharacteristics?: {
+    personalityTraits: string[];
+    ideals: string[];
+    bonds: string[];
+    flaws: string[];
+  };
 }
 
-// Обновляем интерфейс ClassRequirement
-export interface ClassRequirement {
-  abilities: { [key: string]: number };
-  description: string;
-}
-
-// Обновляем интерфейс HitPointEvent
-export interface HitPointEvent {
-  id: string;
-  // Обновляем типы для совместимости с компонентом DamageLog
-  type: 'damage' | 'healing' | 'tempHP' | 'heal' | 'temp' | 'death-save';
-  amount: number;
-  source: string;
-  timestamp: Date;
-}
-
-// Добавляем интерфейс ResourcePanelProps для улучшения типизации
-export interface ResourcePanelProps {
-  character: Character | null;
-  onUpdate: (character: Partial<Character>) => void;
-  isDM?: boolean;
-}
+// Ability score caps
+export const ABILITY_SCORE_CAPS = {
+  MIN: 1,
+  DEFAULT: 10, 
+  MAX: 20,
+  ABSOLUTE_MAX: 30
+};

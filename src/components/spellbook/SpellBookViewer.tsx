@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import useSpellbook from '@/hooks/spellbook';
+import { useSpellbook } from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,26 +16,7 @@ const SpellBookViewer = () => {
     formatClasses
   } = useSpellbook();
   
-  const [spellsData, setSpellsData] = useState<SpellData[]>(
-    allSpells.map(spell => ({
-      id: spell.id?.toString(),
-      name: spell.name,
-      level: spell.level,
-      school: spell.school || 'Unknown',
-      castingTime: spell.castingTime || '',
-      range: spell.range || '',
-      components: spell.components || '',
-      duration: spell.duration || '',
-      description: spell.description || '',
-      classes: spell.classes || [],
-      isRitual: spell.ritual || false,
-      isConcentration: spell.concentration || false,
-      verbal: spell.verbal || false,
-      somatic: spell.somatic || false,
-      material: spell.material || false,
-      higherLevel: spell.higherLevels || ''
-    }))
-  );
+  const [spellsData, setSpellsData] = useState<SpellData[]>(filteredSpells);
 
   return (
     <div className="container mx-auto py-8">

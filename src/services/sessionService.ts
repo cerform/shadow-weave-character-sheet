@@ -1,6 +1,7 @@
+
 import { db, storage } from './firebase';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref as storageRef, uploadBytes as storageUploadBytes, getDownloadURL as storageGetDownloadURL, deleteObject as storageDeleteObject } from "firebase/storage";
 import { Session } from '@/types/session';
 import axios from 'axios';
 
@@ -15,6 +16,7 @@ const createSession = async (session: Omit<Session, 'id' | 'createdAt' | 'lastAc
       players: [],
       createdAt: Timestamp.now(),
       lastActivity: Timestamp.now(),
+      isEnded: false // добавляем поле isEnded для совместимости
     };
     const docRef = await addDoc(sessionsCollection, newSession);
     return { id: docRef.id };
@@ -80,43 +82,190 @@ const deleteSession = async (id: string): Promise<void> => {
 };
 
 // Mock функции Firebase Storage для совместимости
-const ref = (storage: any, path: string) => {
-  return { fullPath: path };
+const mockFileRef = (storagePath: string) => {
+  return { fullPath: storagePath };
 };
 
-const uploadBytes = async (reference: any, file: File) => {
+const mockUploadBytes = async (reference: any, file: File) => {
   console.log('Mock uploadBytes called', reference, file);
   return { ref: reference };
 };
 
-const getDownloadURL = async (reference: any) => {
+const mockGetDownloadURL = async (reference: any) => {
   console.log('Mock getDownloadURL called', reference);
   return `https://mock-url/${reference.fullPath}`;
 };
 
-const deleteObject = async (reference: any) => {
+const mockDeleteObject = async (reference: any) => {
   console.log('Mock deleteObject called', reference);
   return true;
 };
 
-// Mock для недостающих методов
-const updateSessionCode = async (sessionId: string, code: string) => {
-  console.log('Mock updateSessionCode called', sessionId, code);
-  return { success: true };
+// Дополнительные методы для работы с сессиями
+const updateSessionCode = async (sessionId: string, code?: string): Promise<string> => {
+  try {
+    // Создаем случайный код, если он не был передан
+    const newCode = code || Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    // Обновляем сессию с новым кодом
+    const sessionDoc = doc(db, SESSIONS_COLLECTION, sessionId);
+    await updateDoc(sessionDoc, { 
+      code: newCode,
+      lastActivity: Timestamp.now()
+    });
+    
+    return newCode;
+  } catch (error) {
+    console.error("Error updating session code:", error);
+    throw error;
+  }
 };
 
-const saveSessionNotes = async (sessionId: string, notes: any) => {
-  console.log('Mock saveSessionNotes called', sessionId, notes);
-  return { success: true };
+const saveSessionNotes = async (sessionId: string, notesContent: string): Promise<boolean> => {
+  try {
+    const sessionDoc = doc(db, SESSIONS_COLLECTION, sessionId);
+    const sessionData = await getDoc(sessionDoc);
+    
+    if (!sessionData.exists()) {
+      return false;
+    }
+    
+    const session = { id: sessionData.id, ...sessionData.data() } as Session;
+    const notes = session.notes || [];
+    
+    // Добавляем новую заметку
+    notes.push({
+      id: Date.now().toString(),
+      content: notesContent,
+      timestamp: new Date().toISOString(),
+      authorId: session.dmId // Предполагаем, что заметки может создавать только ДМ
+    });
+    
+    // Обновляем сессию
+    await updateDoc(sessionDoc, { 
+      notes,
+      lastActivity: Timestamp.now()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error saving session notes:", error);
+    return false;
+  }
 };
 
-// Экспортируем объект с дополнительными методами
-export default {
+// Получение сессии по коду доступа
+const getSessionByCode = async (code: string): Promise<Session | null> => {
+  try {
+    const sessionsCollection = collection(db, SESSIONS_COLLECTION);
+    const q = query(sessionsCollection, where("code", "==", code));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    const sessionDoc = querySnapshot.docs[0];
+    return { id: sessionDoc.id, ...sessionDoc.data() } as Session;
+  } catch (error) {
+    console.error("Error fetching session by code:", error);
+    return null;
+  }
+};
+
+// Присоединение к сессии
+const joinSession = async (sessionId: string, user: any): Promise<boolean> => {
+  try {
+    const sessionDoc = doc(db, SESSIONS_COLLECTION, sessionId);
+    const sessionData = await getDoc(sessionDoc);
+    
+    if (!sessionData.exists()) {
+      return false;
+    }
+    
+    const session = { id: sessionData.id, ...sessionData.data() } as Session;
+    const users = session.users || [];
+    
+    // Проверяем, не присоединился ли уже пользователь
+    const existingUserIndex = users.findIndex(u => u.id === user.id);
+    
+    if (existingUserIndex >= 0) {
+      // Обновляем информацию о существующем пользователе
+      users[existingUserIndex] = { ...users[existingUserIndex], ...user, isOnline: true };
+    } else {
+      // Добавляем нового пользователя
+      users.push({ ...user, isOnline: true });
+    }
+    
+    // Обновляем сессию
+    await updateDoc(sessionDoc, { 
+      users,
+      lastActivity: Timestamp.now()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error joining session:", error);
+    return false;
+  }
+};
+
+// Выход из сессии
+const leaveSession = async (sessionId: string, userId: string): Promise<boolean> => {
+  try {
+    const sessionDoc = doc(db, SESSIONS_COLLECTION, sessionId);
+    const sessionData = await getDoc(sessionDoc);
+    
+    if (!sessionData.exists()) {
+      return false;
+    }
+    
+    const session = { id: sessionData.id, ...sessionData.data() } as Session;
+    const users = session.users || [];
+    
+    // Находим пользователя
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex >= 0) {
+      // Отмечаем пользователя как оффлайн
+      users[userIndex] = { ...users[userIndex], isOnline: false };
+      
+      // Обновляем сессию
+      await updateDoc(sessionDoc, { 
+        users,
+        lastActivity: Timestamp.now()
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error leaving session:", error);
+    return false;
+  }
+};
+
+// Получение всех активных сессий пользователя
+const getUserSessions = async (): Promise<Session[]> => {
+  // Этот метод можно реализовать позже с учетом авторизации
+  return [];
+};
+
+// Get session by ID - alias для getSession с более понятным именем
+const getSessionById = getSession;
+
+const sessionService = {
   createSession,
   getSession,
+  getSessionById,
+  getSessionByCode,
   getSessionsByDM,
+  getUserSessions,
   updateSession,
   deleteSession,
   updateSessionCode,
-  saveSessionNotes
+  saveSessionNotes,
+  joinSession,
+  leaveSession
 };
+
+export default sessionService;
