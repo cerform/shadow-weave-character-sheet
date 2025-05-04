@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -23,6 +22,12 @@ export interface ClassLevel {
   class: string;
   level: number;
   subclass?: string;
+}
+
+// Интерфейс для очков чародея
+export interface SorceryPoints {
+  current: number;
+  max: number;
 }
 
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
@@ -70,12 +75,16 @@ export interface CharacterSheet {
   backstory: string;
   xp?: number;
   inspiration?: boolean;
-  maxHp?: number;  // Добавляем максимальные хиты
-  currentHp?: number;  // Добавляем текущие хиты
-  temporaryHp?: number; // Добавляем временные хиты
-  hitDice?: string; // Добавляем кубики хитов (например, "4d6")
-  abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
-  abilityBonuses?: { // Добавляем бонусы к характеристикам
+  maxHp?: number;  // Максимальные хиты
+  currentHp?: number;  // Текущие хиты
+  temporaryHp?: number; // Временные хиты
+  hitDice?: {  // Кубики хитов
+    total: number;  // Всего кубиков
+    used: number;   // Использовано кубиков
+    value: string;  // Тип кубика (например, "d8")
+  };
+  abilityPointsUsed?: number; // Отслеживание использованных очков характеристик
+  abilityBonuses?: { // Бонусы к характеристикам
     strength: number;
     dexterity: number;
     constitution: number;
@@ -83,18 +92,20 @@ export interface CharacterSheet {
     wisdom: number;
     charisma: number;
   };
-}
-
-// Интерфейс для подклассов персонажей
-export interface CharacterSubclass {
-  name: string;
-  className: string;
-  description: string;
-  features: {
-    level: number;
-    name: string;
-    description: string;
-  }[];
+  savingThrowProficiencies?: string[]; // Владения спасбросками
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Определяем доступные классы и их подклассы

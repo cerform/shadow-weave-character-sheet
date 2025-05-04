@@ -6,10 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { DamageEvent } from '@/hooks/useDamageLog';
+import { HitPointEvent } from '@/hooks/useHitPoints';
 
 interface DamageLogProps {
-  events: DamageEvent[];
+  events: HitPointEvent[];
   undoLastEvent: () => void;
   maxEvents?: number;
   className?: string;
@@ -50,7 +50,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
   };
   
   // Функция для получения иконки события
-  const getEventIcon = (type: 'damage' | 'heal' | 'temp') => {
+  const getEventIcon = (type: 'damage' | 'heal' | 'temp' | 'death-save') => {
     switch (type) {
       case 'damage':
         return <Minus className="h-4 w-4 mr-2 text-red-500" />;
@@ -58,11 +58,13 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return <Plus className="h-4 w-4 mr-2 text-green-500" />;
       case 'temp':
         return <Shield className="h-4 w-4 mr-2 text-emerald-400" />;
+      case 'death-save':
+        return <Shield className="h-4 w-4 mr-2 text-purple-400" />;
     }
   };
   
   // Функция для получения описания события
-  const getEventDescription = (event: DamageEvent): string => {
+  const getEventDescription = (event: HitPointEvent): string => {
     switch (event.type) {
       case 'damage':
         return `Урон ${event.amount}`;
@@ -70,6 +72,30 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return `Лечение ${event.amount}`;
       case 'temp':
         return `Временные HP ${event.amount}`;
+      case 'death-save':
+        if (event.source?.includes('Критический успех')) {
+          return 'Критический успех при спасброске';
+        } else if (event.source?.includes('Критическая неудача')) {
+          return `${event.amount} провала при спасброске`;
+        } else if (event.source?.includes('Успешный')) {
+          return 'Успешный спасбросок';
+        } else {
+          return 'Проваленный спасбросок';
+        }
+    }
+  };
+  
+  // Цвета для событий
+  const getEventColor = (type: 'damage' | 'heal' | 'temp' | 'death-save'): string => {
+    switch (type) {
+      case 'damage':
+        return 'bg-red-900/30';
+      case 'heal':
+        return 'bg-green-900/30';
+      case 'temp':
+        return 'bg-emerald-900/30';
+      case 'death-save':
+        return 'bg-purple-900/30';
     }
   };
   
@@ -102,7 +128,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
             {displayEvents.map((event, index) => (
               <motion.div
                 key={event.id}
-                className="flex items-center py-1 px-2 rounded-md mb-1 bg-black/30"
+                className={`flex items-center py-1 px-2 rounded-md mb-1 ${getEventColor(event.type)}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, height: 0 }}

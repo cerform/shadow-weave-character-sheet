@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -8,17 +8,21 @@ import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useToast } from '@/hooks/use-toast';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PopoverTrigger, PopoverContent, Popover } from '@/components/ui/popover';
 import { HPBar } from './HPBar';
 import { DamageLog } from './DamageLog';
-import { useDamageLog } from '@/hooks/useDamageLog';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
-import { RestPanel } from './RestPanel';
+import { useHitPoints } from '@/hooks/useHitPoints';
+import {
+  calculateArmorClass,
+  getInitiativeModifier,
+  calculateCarryingCapacity,
+  getHitDieTypeByClass
+} from '@/utils/characterUtils';
 
 interface ResourcePanelProps {
   currentHp: number;
@@ -26,53 +30,54 @@ interface ResourcePanelProps {
   onHpChange: (value: number) => void;
 }
 
-export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelProps) => {
+export const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
+  currentHp, 
+  maxHp, 
+  onHpChange 
+}) => {
   const { character, updateCharacter } = useContext(CharacterContext);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   const [showHitDiceRoller, setShowHitDiceRoller] = useState(false);
   const [showHealingRoller, setShowHealingRoller] = useState(false);
+  const [showDeathSaveRoller, setShowDeathSaveRoller] = useState(false);
   const [hpAdjustValue, setHpAdjustValue] = useState(1);
-  const initializedRef = useRef(false);
+  const [isShortResting, setIsShortResting] = useState(false);
+  const [isLongResting, setIsLongResting] = useState(false);
   
-  // Используем хук для управления уроном и здоровьем
-  const { 
-    currentHp: logCurrentHp, 
-    tempHp, 
-    events, 
-    applyDamage, 
-    applyHealing, 
-    addTempHp, 
+  // Получаем constitution из character
+  const constitution = character?.abilities?.constitution || 10;
+  
+  // Используем хук для управления HP
+  const {
+    currentHp: hitPoints,
+    maxHp: maxHitPoints,
+    tempHp,
+    events,
+    isUnconscious,
+    deathSaves,
+    applyDamage,
+    applyHealing,
+    setTemporaryHp,
     undoLastEvent,
-    setHp,
-    setTempHp
-  } = useDamageLog(currentHp, maxHp, (hp, tempHp) => {
-    // Избегаем повторных обновлений при инициализации
-    if (!initializedRef.current) return;
-    
-    onHpChange(hp);
-    updateCharacter({ 
-      currentHp: hp,
-      temporaryHp: tempHp
-    });
+    rollHitDieHealing,
+    shortRest,
+    longRest,
+    rollDeathSave
+  } = useHitPoints({
+    currentHp,
+    maxHp,
+    constitution,
+    onHitPointChange: (hp, tempHp, deathSaves) => {
+      onHpChange(hp);
+      updateCharacter({
+        currentHp: hp,
+        temporaryHp: tempHp,
+        deathSaves
+      });
+    }
   });
-  
-  // Синхронизируем текущее HP и временные HP с данными персонажа
-  useEffect(() => {
-    // Используем тихий режим при первоначальной загрузке
-    const silent = !initializedRef.current;
-    
-    setHp(currentHp, silent);
-    if (character?.temporaryHp !== undefined) {
-      setTempHp(character.temporaryHp, silent);
-    }
-    
-    // После первой синхронизации отмечаем компонент как инициализированный
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-    }
-  }, [currentHp, character?.temporaryHp, setHp, setTempHp]);
   
   // Предопределенные значения для быстрого изменения HP
   const quickDamageValues = [1, 5, 10, 50, 100];
@@ -81,67 +86,140 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   
   // Обработчики событий для бросков кубиков
   const handleHealingRollComplete = (result: number) => {
-    applyHealing(result, "Лечебный бросок");
+    applyHealing(result, "Бросок лечения");
     setShowHealingRoller(false);
   };
   
+  const handleDeathSaveRollComplete = (result: number) => {
+    rollDeathSave(result);
+    setShowDeathSaveRoller(false);
+  };
+  
   const handleHitDiceRollComplete = (result: number) => {
-    const conMod = character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0;
-    const healingAmount = result + conMod;
-    
-    applyHealing(healingAmount, "Hit Die");
+    const healingAmount = rollHitDieHealing(result);
     setShowHitDiceRoller(false);
+    
+    // Уменьшаем доступные Hit Dice
+    if (character && character.hitDice) {
+      const updatedHitDice = {
+        ...character.hitDice,
+        used: Math.min(character.hitDice.total, (character.hitDice.used || 0) + 1)
+      };
+      
+      updateCharacter({
+        hitDice: updatedHitDice
+      });
+    }
+  };
+  
+  // Обработчики для отдыха
+  const handleShortRest = () => {
+    if (!character) return;
+    
+    setIsShortResting(true);
+    
+    // Имитируем загрузку
+    setTimeout(() => {
+      // Восстанавливаем Hit Dice (до 1/2 от максимума)
+      let hitDiceToRestore = 0;
+      if (character.hitDice) {
+        const maxRestore = Math.max(1, Math.floor(character.level / 2));
+        hitDiceToRestore = Math.min(
+          maxRestore,
+          character.hitDice.total - (character.hitDice.total - character.hitDice.used)
+        );
+        
+        const updatedHitDice = {
+          ...character.hitDice,
+          used: Math.max(0, character.hitDice.used - hitDiceToRestore)
+        };
+        
+        updateCharacter({
+          hitDice: updatedHitDice
+        });
+      }
+      
+      // Проводим короткий отдых
+      shortRest();
+      
+      setIsShortResting(false);
+    }, 1500);
+  };
+  
+  const handleLongRest = () => {
+    if (!character) return;
+    
+    setIsLongResting(true);
+    
+    // Имитируем загрузку
+    setTimeout(() => {
+      // Восстанавливаем все Hit Dice (до половины от максимума)
+      if (character.hitDice) {
+        const maxRestore = Math.max(1, Math.floor(character.hitDice.total / 2));
+        const updatedHitDice = {
+          ...character.hitDice,
+          used: Math.max(0, character.hitDice.used - maxRestore)
+        };
+        
+        updateCharacter({
+          hitDice: updatedHitDice,
+          temporaryHp: 0
+        });
+      }
+      
+      // Восстанавливаем ячейки заклинаний
+      let updatedSpellSlots = { ...character.spellSlots };
+      if (updatedSpellSlots) {
+        for (const level in updatedSpellSlots) {
+          if (updatedSpellSlots.hasOwnProperty(level)) {
+            updatedSpellSlots[level] = {
+              ...updatedSpellSlots[level],
+              used: 0
+            };
+          }
+        }
+        
+        updateCharacter({
+          spellSlots: updatedSpellSlots
+        });
+      }
+      
+      // Восстанавливаем очки чародея
+      if (character.sorceryPoints && character.className?.includes('Чародей')) {
+        updateCharacter({
+          sorceryPoints: {
+            current: character.level,
+            max: character.level
+          }
+        });
+      }
+      
+      // Проводим длинный отдых
+      longRest();
+      
+      setIsLongResting(false);
+    }, 2000);
   };
   
   // Вспомогательные функции
-  const getInitiative = () => {
-    if (!character?.abilities) return '+0';
-    const dexMod = Math.floor((character.abilities.DEX - 10) / 2);
-    return dexMod >= 0 ? `+${dexMod}` : `${dexMod}`;
-  };
-  
-  const getArmorClass = () => {
-    if (!character?.abilities) return 10;
+  const getHitDieByClass = (characterClass?: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
+    if (!characterClass) return "d8";
     
-    const dexMod = Math.floor((character.abilities.DEX - 10) / 2);
-    let ac = 10 + dexMod;
-    
-    if (character.className?.includes('Монах')) {
-      const wisMod = Math.floor((character.abilities.WIS - 10) / 2);
-      ac += wisMod;
-    } else if (character.className?.includes('Варвар')) {
-      const conMod = Math.floor((character.abilities.CON - 10) / 2);
-      ac += conMod;
+    const hitDieType = getHitDieTypeByClass(characterClass);
+    switch (hitDieType) {
+      case "d4": return "d4";
+      case "d6": return "d6";
+      case "d8": return "d8";
+      case "d10": return "d10";
+      case "d12": return "d12";
+      default: return "d8";
     }
-    
-    return ac;
   };
   
-  const getCarryingCapacity = () => {
-    if (!character?.abilities?.STR) return "0";
-    const capacity = character.abilities.STR * 15;
-    return `${capacity} фунтов`;
-  };
-  
-  const getHitDieByClass = (characterClass: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
-    const hitDice: Record<string, "d4" | "d6" | "d8" | "d10" | "d12"> = {
-      "Варвар": "d12",
-      "Воин": "d10",
-      "Паладин": "d10",
-      "Следопыт": "d10",
-      "Жрец": "d8",
-      "Друид": "d8",
-      "Монах": "d8",
-      "Плут": "d8",
-      "Бард": "d8",
-      "Колдун": "d8",
-      "Чернокнижник": "d8",
-      "Волшебник": "d6",
-      "Чародей": "d6"
-    };
-    
-    return hitDice[characterClass] || "d8";
-  };
+  // Блокируем использование Hit Die, если все использованы
+  const hitDiceAvailable = character?.hitDice 
+    ? character.hitDice.total - character.hitDice.used
+    : 0;
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
@@ -151,8 +229,8 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         {/* HP и Temp HP бары */}
         <div>
           <HPBar 
-            currentHp={logCurrentHp} 
-            maxHp={maxHp} 
+            currentHp={hitPoints} 
+            maxHp={maxHitPoints} 
             tempHp={tempHp} 
             showValues={true}
             height="1.5rem"
@@ -258,7 +336,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                   value={tempHp}
                   onChange={(e) => {
                     const value = Math.max(0, parseInt(e.target.value) || 0);
-                    addTempHp(value, "Ввод временного HP");
+                    setTemporaryHp(value, "Ручное изменение");
                   }}
                   className="h-8 text-sm"
                   style={{
@@ -283,7 +361,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                           key={`temp-${value}`}
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => addTempHp(value, "Временные хиты")}
+                          onClick={() => setTemporaryHp(value, "Временные хиты")}
                           className="justify-start h-7"
                         >
                           <Shield className="h-3 w-3 mr-1 text-emerald-400" /> {value} HP
@@ -292,7 +370,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => addTempHp(0, "Сброс временных хитов")}
+                        onClick={() => setTemporaryHp(0, "Сброс временных хитов")}
                         className="justify-start h-7 text-red-400"
                       >
                         Сбросить все
@@ -303,6 +381,26 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               </div>
             </div>
           </div>
+          
+          {/* Состояние персонажа и спасброски от смерти */}
+          {isUnconscious && (
+            <div className="mb-3 border border-red-900/50 rounded-lg p-2 bg-red-900/10">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold text-red-500">Персонаж без сознания</span>
+                <span className="text-xs text-red-400">
+                  Спасброски от смерти: {deathSaves.successes}/3 успехов, {deathSaves.failures}/3 провалов
+                </span>
+              </div>
+              
+              <Button 
+                variant="destructive" 
+                className="w-full h-8 text-sm"
+                onClick={() => setShowDeathSaveRoller(true)}
+              >
+                Сделать спасбросок от смерти
+              </Button>
+            </div>
+          )}
           
           {/* Броски кубиков для лечения */}
           <div className="flex justify-between gap-2 mb-2">
@@ -344,8 +442,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     size="sm" 
                     variant="outline" 
                     className="w-full flex items-center gap-1"
+                    disabled={hitDiceAvailable <= 0}
                   >
-                    <Dices className="h-3 w-3" /> Hit Die
+                    <Dices className="h-3 w-3" /> Hit Die ({hitDiceAvailable})
                   </Button>
                 </motion.div>
               </SheetTrigger>
@@ -358,9 +457,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                 </SheetHeader>
                 <div className="h-[80vh]">
                   <DiceRoller3DFixed
-                    initialDice={getHitDieByClass(character?.className || '')}
+                    initialDice={getHitDieByClass(character?.className)}
                     hideControls={false}
-                    modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
+                    modifier={getNumericModifier(constitution)}
                     onRollComplete={handleHitDiceRollComplete}
                     themeColor={currentTheme.accent}
                   />
@@ -368,6 +467,30 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               </SheetContent>
             </Sheet>
           </div>
+          
+          {/* Для спасбросков от смерти отдельное окно */}
+          <Sheet open={showDeathSaveRoller} onOpenChange={setShowDeathSaveRoller}>
+            <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
+              <SheetHeader className="p-4">
+                <SheetTitle>Спасбросок от смерти</SheetTitle>
+                <SheetDescription>
+                  10+: Успех (3 успеха = стабилизация), 
+                  1-9: Провал (3 провала = смерть),
+                  20: Критический успех (1 HP),  
+                  1: Критический провал (2 провала)
+                </SheetDescription>
+              </SheetHeader>
+              <div className="h-[80vh]">
+                <DiceRoller3DFixed
+                  initialDice="d20"
+                  hideControls={false}
+                  modifier={0}
+                  onRollComplete={handleDeathSaveRollComplete}
+                  themeColor={currentTheme.accent}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
           
           {/* Журнал урона/лечения */}
           {events.length > 0 && (
@@ -393,7 +516,14 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                 <Shield className="h-4 w-4 text-primary" />
               </div>
               <div className="text-sm text-muted-foreground">Класс Брони</div>
-              <div className="text-xl font-bold text-primary">{getArmorClass() || "10"}</div>
+              <div className="text-xl font-bold text-primary">
+                {character?.abilities ? calculateArmorClass(
+                  character.abilities.dexterity,
+                  character.abilities.constitution,
+                  character.abilities.wisdom,
+                  character.className
+                ) : 10}
+              </div>
             </motion.div>
             
             <motion.div
@@ -402,7 +532,11 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               className="bg-primary/10 p-3 rounded-lg text-center"
             >
               <div className="text-sm text-muted-foreground mb-1">Инициатива</div>
-              <div className="text-xl font-bold text-primary">{getInitiative() || "+0"}</div>
+              <div className="text-xl font-bold text-primary">
+                {character?.abilities ? 
+                  getInitiativeModifier(character.abilities.dexterity) : 
+                  "+0"}
+              </div>
             </motion.div>
           </div>
         </div>
@@ -419,16 +553,55 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-primary">Грузоподъёмность</span>
             <span className="text-sm text-primary">
-              {getCarryingCapacity()}
+              {character?.abilities ? 
+                calculateCarryingCapacity(character.abilities.strength) : 
+                "0 фунтов"}
             </span>
           </div>
         </div>
         
         <Separator />
         
-        {/* Компактная панель отдыха */}
-        <div className="mt-2">
-          <RestPanel compact={true} />
+        {/* Панель отдыха */}
+        <div>
+          <div className="flex flex-col space-y-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={isShortResting ? undefined : handleShortRest}
+              disabled={isShortResting || isLongResting}
+              className={`w-full flex items-center justify-center gap-1 ${isShortResting ? 'animate-pulse' : ''}`}
+              style={{
+                color: currentTheme.textColor,
+                borderColor: currentTheme.accent
+              }}
+            >
+              {isShortResting ? (
+                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Короткий отдых
+            </Button>
+            
+            <Button 
+              size="sm"
+              onClick={isLongResting ? undefined : handleLongRest}
+              disabled={isShortResting || isLongResting}
+              className={`w-full flex items-center justify-center gap-1 ${isLongResting ? 'animate-pulse' : ''}`}
+              style={{
+                color: currentTheme.buttonText || '#FFFFFF',
+                backgroundColor: isLongResting ? `${currentTheme.accent}80` : currentTheme.accent
+              }}
+            >
+              {isLongResting ? (
+                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Длинный отдых
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
