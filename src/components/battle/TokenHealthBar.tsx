@@ -18,11 +18,17 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   const safeCurrentHP = isNaN(currentHP) ? 0 : Math.max(0, currentHP);
   const safeMaxHP = isNaN(maxHP) || maxHP <= 0 ? 1 : maxHP;
   
-  // Для правильного обновления используем локальное состояние с useEffect
+  // Для анимированного обновления используем локальное состояние с useEffect
   const [healthPercentage, setHealthPercentage] = useState(0);
+  const [displayedCurrentHP, setDisplayedCurrentHP] = useState(safeCurrentHP);
+  const [displayedMaxHP, setDisplayedMaxHP] = useState(safeMaxHP);
   
+  // Обновляем локальное состояние при изменении props
   useEffect(() => {
-    // Расчет процента здоровья при изменении props
+    setDisplayedCurrentHP(safeCurrentHP);
+    setDisplayedMaxHP(safeMaxHP);
+    
+    // Расчет процента здоровья
     const calculatedPercentage = safeMaxHP > 0 
       ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) 
       : 0;
@@ -65,7 +71,7 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
       
       {showValue && (
         <div className="absolute -bottom-4 text-xs font-bold text-white text-shadow">
-          {safeCurrentHP}/{safeMaxHP}
+          {displayedCurrentHP}/{displayedMaxHP}
         </div>
       )}
     </div>

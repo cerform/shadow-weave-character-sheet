@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PopoverTrigger, PopoverContent, Popover } from '@/components/ui/popover';
-import { SpellSlotsPopover } from './SpellSlotsPopover';
 import { RestPanel } from './RestPanel';
 
 interface ResourcePanelProps {
@@ -32,51 +31,69 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   
   const [showHitDiceRoller, setShowHitDiceRoller] = useState(false);
   const [showHealingRoller, setShowHealingRoller] = useState(false);
-  const [temporaryHp, setTemporaryHp] = useState(character?.temporaryHp || 0);
   const [hpAdjustValue, setHpAdjustValue] = useState(1);
   
+  // Используем state для отслеживания временных HP
+  const [temporaryHp, setTemporaryHp] = useState(0);
+  
+  // Синхронизируем временные HP с данными персонажа
+  useEffect(() => {
+    if (character?.temporaryHp !== undefined) {
+      setTemporaryHp(character.temporaryHp);
+    }
+  }, [character?.temporaryHp]);
+  
+  // Функция для изменения HP (урон или лечение)
   const handleHpAdjust = (amount: number) => {
-    // Если урон (отрицательное значение), то сначала снимаем временные HP
+    if (!character) return;
+    
+    // Если это урон (отрицательное значение), сначала применяем к временным HP
     if (amount < 0) {
+      const damage = Math.abs(amount);
+      let remainingDamage = damage;
+      let newTempHp = temporaryHp;
+      
+      // Если есть временные HP, сначала уменьшаем их
       if (temporaryHp > 0) {
-        const newTempHp = Math.max(0, temporaryHp + amount);
-        const remainingDamage = temporaryHp + amount < 0 ? temporaryHp + amount : 0;
-        
-        setTemporaryHp(newTempHp);
-        updateCharacter({ temporaryHp: newTempHp });
-        
-        // Если после вычета урона из temp HP остался еще урон, применяем к обычному HP
-        if (remainingDamage < 0) {
-          const newHp = Math.max(0, currentHp + remainingDamage);
-          onHpChange(newHp);
+        if (temporaryHp >= damage) {
+          // Временных HP достаточно, чтобы поглотить весь урон
+          newTempHp = temporaryHp - damage;
+          remainingDamage = 0;
+        } else {
+          // Временных HP не хватает, оставшийся урон идет к обычным HP
+          newTempHp = 0;
+          remainingDamage = damage - temporaryHp;
         }
         
-        toast({
-          title: "Изменение HP",
-          description: `Временное HP: ${newTempHp} (${amount})`,
-        });
-      } else {
-        // Если нет временных HP, просто уменьшаем обычные HP
-        const newHp = Math.max(0, currentHp + amount);
-        onHpChange(newHp);
-        
-        toast({
-          title: "Изменение HP",
-          description: `Здоровье: ${newHp} (${amount})`,
-        });
+        // Обновляем временные HP
+        setTemporaryHp(newTempHp);
+        updateCharacter({ temporaryHp: newTempHp });
       }
+      
+      // Если после вычета из временного HP остался урон, применяем его к обычным HP
+      if (remainingDamage > 0) {
+        const newCurrentHp = Math.max(0, currentHp - remainingDamage);
+        onHpChange(newCurrentHp);
+      }
+      
+      // Показываем сообщение о полученном уроне
+      toast({
+        title: "Урон получен",
+        description: `Урон: ${damage} (Обычные HP: -${Math.min(currentHp, remainingDamage)}, Временные HP: -${damage - remainingDamage})`,
+      });
     } else {
-      // Если лечение (положительное значение), восстанавливаем только обычные HP до максимума
-      const newHp = Math.min(maxHp, currentHp + amount);
-      onHpChange(newHp);
+      // Для лечения (положительное значение) увеличиваем только обычные HP, но не выше максимума
+      const newCurrentHp = Math.min(maxHp, currentHp + amount);
+      onHpChange(newCurrentHp);
       
       toast({
-        title: "Изменение HP",
-        description: `Здоровье: ${newHp} (+${amount})`,
+        title: "Лечение получено",
+        description: `Восстановлено HP: +${newCurrentHp - currentHp}`,
       });
     }
   };
   
+  // Функция для добавления временных HP
   const handleAddTemporaryHp = (value: number) => {
     // Временные HP не складываются, берется наибольшее значение
     const newTempHp = Math.max(temporaryHp, value);
@@ -84,55 +101,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     updateCharacter({ temporaryHp: newTempHp });
     
     toast({
-      title: "Временное HP",
+      title: "Временное HP добавлено",
       description: `Установлено значение: ${newTempHp}`,
     });
-  };
-  
-  // Обработчик использования ячеек заклинаний
-  const handleUseSpellSlot = (level: number) => {
-    if (!character?.spellSlots) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    
-    if (updatedSpellSlots[level] && updatedSpellSlots[level].used < updatedSpellSlots[level].max) {
-      updatedSpellSlots[level].used += 1;
-      updateCharacter({ spellSlots: updatedSpellSlots });
-      
-      toast({
-        title: "Ячейка использована",
-        description: `Использована ячейка ${level} уровня. Осталось: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used}`,
-      });
-    }
-  };
-  
-  // Обработчик восстановления ячеек заклинаний
-  const handleRestoreSpellSlot = (level: number) => {
-    if (!character?.spellSlots) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    
-    if (updatedSpellSlots[level] && updatedSpellSlots[level].used > 0) {
-      updatedSpellSlots[level].used -= 1;
-      updateCharacter({ spellSlots: updatedSpellSlots });
-      
-      toast({
-        title: "Ячейка восстановлена",
-        description: `Восстановлена ячейка ${level} уровня. Доступно: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used + 1}`,
-      });
-    }
-  };
-  
-  const totalCurrentHp = currentHp + temporaryHp;
-  const effectiveMaxHp = maxHp + (temporaryHp > 0 ? temporaryHp : 0);
-  
-  // Определяем цвет полосы HP в зависимости от процента здоровья
-  const getHpBarColor = () => {
-    const basePercentage = maxHp > 0 ? (currentHp / maxHp) * 100 : 0;
-    if (basePercentage <= 25) return 'bg-red-500';
-    if (basePercentage <= 50) return 'bg-orange-500';
-    if (basePercentage <= 75) return 'bg-yellow-500';
-    return 'bg-green-500';
   };
   
   // Вычисляем бонус инициативы
@@ -193,6 +164,13 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     });
   };
   
+  // Рассчитываем общие значения HP для правильного отображения
+  const totalCurrentHp = currentHp;
+  const totalMaxHp = maxHp;
+  const effectiveMaxHp = maxHp + temporaryHp;
+  const healthPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
+  const tempHpPercentage = effectiveMaxHp > 0 ? (temporaryHp / effectiveMaxHp) * 100 : 0;
+  
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <h3 className="text-lg font-semibold mb-4 text-primary">Ресурсы</h3>
@@ -205,7 +183,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               <span className="text-sm font-medium text-primary">Здоровье</span>
             </div>
             <span className="text-sm text-primary">
-              {currentHp} / {maxHp}
+              {totalCurrentHp} / {totalMaxHp}
               {temporaryHp > 0 && <span className="ml-1 text-emerald-400">(+{temporaryHp})</span>}
             </span>
           </div>
@@ -214,8 +192,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
           <div className="relative h-3">
             {/* Base HP bar */}
             <Progress 
-              value={maxHp > 0 ? (currentHp / maxHp) * 100 : 0} 
+              value={healthPercentage} 
               className="h-3" 
+              indicatorClassName={`${healthPercentage > 60 ? 'bg-green-500' : healthPercentage > 30 ? 'bg-orange-500' : 'bg-red-500'}`}
             />
             
             {/* Temporary HP overlay */}
@@ -223,7 +202,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               <div 
                 className="absolute top-0 right-0 h-3 bg-emerald-400/70 rounded-r-full" 
                 style={{ 
-                  width: `${(temporaryHp / effectiveMaxHp) * 100}%`,
+                  width: `${tempHpPercentage}%`,
                   boxShadow: '0 0 5px rgba(52, 211, 153, 0.7)'
                 }}
               />
@@ -432,17 +411,6 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         </div>
         
         <Separator />
-        
-        {/* Отображение слотов заклинаний */}
-        {character?.spellSlots && Object.keys(character.spellSlots).length > 0 && (
-          <div>
-            <SpellSlotsPopover 
-              spellSlots={character.spellSlots}
-              onUseSlot={handleUseSpellSlot}
-              onRestoreSlot={handleRestoreSpellSlot}
-            />
-          </div>
-        )}
         
         {/* Компактная панель отдыха */}
         <div className="mt-2">

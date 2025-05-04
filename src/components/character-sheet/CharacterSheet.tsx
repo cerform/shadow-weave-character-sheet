@@ -19,7 +19,6 @@ import { CharacterTabs } from './CharacterTabs';
 import { ResourcePanel } from './ResourcePanel';
 import { RestPanel } from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
-import { SpellSlotsPopover } from './SpellSlotsPopover';
 import LevelUpPanel from './LevelUpPanel';
 import { SkillsPanel } from './SkillsPanel';
 
@@ -248,86 +247,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             
             <LevelUpPanel />
             
-            <RestPanel />
-            
-            {character?.spellSlots && Object.keys(character.spellSlots).length > 0 && (
-              <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-                <h3 className="text-lg font-semibold mb-4" style={{ color: currentTheme.textColor }}>
-                  Магия
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <SpellSlotsPopover 
-                    spellSlots={character.spellSlots}
-                    onUseSlot={handleUseSpellSlot}
-                    onRestoreSlot={handleRestoreSpellSlot}
-                  />
-                  
-                  {character.className?.toLowerCase().includes('чародей') && character.sorceryPoints && (
-                    <Card className="p-3 w-full mt-2 bg-card/50">
-                      <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.textColor }}>
-                        Очки чародейства
-                      </h4>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <span className="text-lg font-bold" style={{ color: currentTheme.textColor }}>
-                            {character.sorceryPoints.current}
-                          </span>
-                          <span style={{ color: currentTheme.mutedTextColor }}>
-                            /{character.sorceryPoints.max}
-                          </span>
-                        </div>
-                        <div className="space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              if (character.sorceryPoints && character.sorceryPoints.current < character.sorceryPoints.max) {
-                                updateCharacter({
-                                  sorceryPoints: {
-                                    ...character.sorceryPoints,
-                                    current: character.sorceryPoints.current + 1
-                                  }
-                                });
-                              }
-                            }}
-                            disabled={character.sorceryPoints.current >= character.sorceryPoints.max}
-                            style={{
-                              borderColor: currentTheme.accent,
-                              color: character.sorceryPoints.current >= character.sorceryPoints.max ? 
-                                `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                            }}
-                          >
-                            +
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              if (character.sorceryPoints && character.sorceryPoints.current > 0) {
-                                updateCharacter({
-                                  sorceryPoints: {
-                                    ...character.sorceryPoints,
-                                    current: character.sorceryPoints.current - 1
-                                  }
-                                });
-                              }
-                            }}
-                            disabled={character.sorceryPoints.current <= 0}
-                            style={{
-                              borderColor: currentTheme.accent,
-                              color: character.sorceryPoints.current <= 0 ? 
-                                `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                            }}
-                          >
-                            -
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  )}
-                </div>
-              </Card>
-            )}
+            {/* Убираем отсюда панель слотов заклинаний */}
           </div>
           
           {/* Основной контент с вкладками */}
