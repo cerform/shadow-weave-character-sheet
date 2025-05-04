@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { HitPointEvent } from '@/hooks/useHitPoints';
-import { motion } from "framer-motion";
+import { HitPointEvent } from '@/types/character';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DamageLogProps {
   events: HitPointEvent[];
@@ -20,35 +21,28 @@ export const DamageLog: React.FC<DamageLogProps> = ({
   maxEvents = 10,
   className = ""
 }) => {
+  const [displayEvents, setDisplayEvents] = useState<HitPointEvent[]>([]);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
-  // Получаем события для отображения
-  const displayEvents = events.slice(0, maxEvents);
-  
-  // Функция для форматирования времени события
-  const formatTimestamp = (timestamp: Date): string => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    
-    if (diff < 60000) {
-      return 'только что';
+
+  // Обновляем отображаемые события при изменении пропса events
+  useEffect(() => {
+    // Ограничиваем количество отображаемых событий
+    setDisplayEvents(events.slice(0, maxEvents));
+  }, [events, maxEvents]);
+
+  // Если событий нет, не отображаем компонент
+  if (displayEvents.length === 0) {
+    return null;
+  }
+
+  // Обработчик отмены последнего действия
+  const handleUndo = () => {
+    if (displayEvents.length > 0) {
+      undoLastEvent();
     }
-    
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) {
-      return `${minutes} мин назад`;
-    }
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-      return `${hours} ч назад`;
-    }
-    
-    const days = Math.floor(hours / 24);
-    return `${days} д назад`;
   };
-  
+
   // Функция для получения иконки события
   const getEventIcon = (type: 'damage' | 'heal' | 'temp' | 'death-save') => {
     switch (type) {
@@ -62,7 +56,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return <Shield className="h-4 w-4 mr-2 text-purple-400" />;
     }
   };
-  
+
   // Функция для получения описания события
   const getEventDescription = (event: HitPointEvent): string => {
     switch (event.type) {
@@ -99,52 +93,61 @@ export const DamageLog: React.FC<DamageLogProps> = ({
     }
   };
 
-  // Если нет событий, не отображаем лог
-  if (displayEvents.length === 0) {
-    return null;
-  }
+  // Функция для форматирования времени события
+  const formatEventTime = (timestamp: Date): string => {
+    const hours = timestamp.getHours().toString().padStart(2, '0');
+    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+    const seconds = timestamp.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
 
   return (
-    <div className={`mt-2 ${className}`}>
-      <div className="flex justify-between items-center mb-1">
-        <h4 className="text-sm font-medium">Журнал урона/лечения</h4>
-        <button 
-          onClick={undoLastEvent}
-          className="text-xs text-blue-500 hover:underline"
+    <div className={`mt-4 ${className}`}>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-semibold">Журнал событий:</h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleUndo} 
+          disabled={displayEvents.length === 0}
+          className="h-7 text-xs"
         >
-          Отменить последнее
-        </button>
+          Отменить
+        </Button>
       </div>
-      
-      <ScrollArea 
-        className={`border rounded-lg h-32 bg-black/20 backdrop-blur-sm`}
-        style={{ borderColor: `${currentTheme.accent}40` }}
+
+      <div
+        className="bg-black/70 rounded-md p-2 border border-primary/20"
+        style={{ maxHeight: "200px" }}
       >
-        <div className="p-2">
-          <motion.div layout>
-            {displayEvents.map((event) => (
-              <motion.div 
+        <ScrollArea className="h-[150px]">
+          <AnimatePresence initial={false}>
+            {displayEvents.map((event, index) => (
+              <motion.div
                 key={event.id}
                 className={`flex items-center py-1 px-2 rounded-md mb-1 ${getEventColor(event.type)}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
               >
-                <div className="flex items-center flex-1">
+                <div className="flex items-center flex-grow">
                   {getEventIcon(event.type)}
-                  <span className="text-sm">{getEventDescription(event)}</span>
+                  <span className="text-xs">{getEventDescription(event)}</span>
                 </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-xs opacity-60">{formatTimestamp(event.timestamp)}</span>
+                <div className="text-xs text-gray-400">
                   {event.source && (
-                    <span className="text-xs opacity-60 max-w-[120px] truncate">{event.source}</span>
+                    <span className="text-gray-500 mr-2 text-xs">
+                      {event.source}
+                    </span>
                   )}
+                  {formatEventTime(event.timestamp)}
                 </div>
               </motion.div>
             ))}
-          </motion.div>
-        </div>
-      </ScrollArea>
+          </AnimatePresence>
+        </ScrollArea>
+      </div>
     </div>
   );
 };

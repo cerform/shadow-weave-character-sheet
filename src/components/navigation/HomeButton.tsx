@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface HomeButtonProps {
   className?: string;
@@ -15,16 +15,21 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   showText = true,
   variant = "outline"
 }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/');
+  };
+
   return (
     <Button 
       variant={variant}
-      asChild
+      onClick={handleClick}
       className={`flex items-center gap-2 ${className}`}
     >
-      <Link to="/">
-        <Home className="size-4" />
-        {showText && "На главную"}
-      </Link>
+      <Home className="size-4" />
+      {showText && "На главную"}
     </Button>
   );
 };

@@ -10,6 +10,7 @@ export interface CharacterSpell {
   components?: string;
   duration?: string;
   prepared?: boolean;
+  ritual?: boolean;
   // Добавим недостающие поля для совместимости с существующим кодом
   verbal?: boolean;
   somatic?: boolean;
@@ -168,4 +169,13 @@ export interface CharacterSubclass {
     name: string;
     description: string;
   }[];
+}
+
+// Интерфейс для событий изменения хит-поинтов
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'heal' | 'temp' | 'death-save';
+  amount: number;
+  source?: string;
+  timestamp: Date;
 }
