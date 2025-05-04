@@ -2,7 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ClassRequirement, MulticlassRequirements } from '@/types/character';
+
+interface ClassRequirement {
+  abilities: Record<string, number>;
+  description: string;
+}
+
+interface MulticlassRequirements {
+  [className: string]: ClassRequirement;
+}
 
 // Правильно определяем требования к мультиклассированию согласно интерфейсу ClassRequirement
 const multiclassRequirements: MulticlassRequirements = {

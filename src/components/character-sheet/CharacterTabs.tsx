@@ -2,11 +2,11 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SpellsTab } from './tabs/SpellsTab';
-import { EquipmentTab } from './tabs/EquipmentTab';
-import { Background } from './tabs/Background';
 import { AbilitiesTab } from './tabs/AbilitiesTab';
 import { CombatTab } from './tabs/CombatTab';
 import { FeaturesTab } from './tabs/FeaturesTab';
+import { BackgroundTab } from './tabs/BackgroundTab';
+import { EquipmentTab } from './tabs/EquipmentTab';
 import { NotesTab } from './tabs/NotesTab';
 
 interface CharacterTabsProps {
@@ -50,7 +50,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: 
       </TabsContent>
       
       <TabsContent value="background" className="focus-visible:outline-none">
-        <Background character={character} onUpdate={onUpdate} />
+        <BackgroundTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
       <TabsContent value="notes" className="focus-visible:outline-none">
