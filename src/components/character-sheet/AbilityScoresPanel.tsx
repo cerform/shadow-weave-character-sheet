@@ -1,63 +1,39 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { getModifierFromAbilityScore } from '@/utils/characterUtils';
 
 interface AbilityScoresPanelProps {
   character: any;
 }
 
 const AbilityScoresPanel: React.FC<AbilityScoresPanelProps> = ({ character }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
-  // Calculate ability modifier
-  const getModifier = (score: number) => {
-    const mod = Math.floor((score - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
-  };
-  
-  // Get ability scores from character
-  const abilities = character?.abilities || {
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10
-  };
+  const abilities = [
+    { key: 'strength', name: 'Сила', short: 'СИЛ' },
+    { key: 'dexterity', name: 'Ловкость', short: 'ЛОВ' },
+    { key: 'constitution', name: 'Телосложение', short: 'ТЕЛ' },
+    { key: 'intelligence', name: 'Интеллект', short: 'ИНТ' },
+    { key: 'wisdom', name: 'Мудрость', short: 'МДР' },
+    { key: 'charisma', name: 'Харизма', short: 'ХАР' },
+  ];
 
-  // Define ability score labels
-  const abilityLabels = {
-    strength: 'СИЛ',
-    dexterity: 'ЛОВ',
-    constitution: 'ВЫН',
-    intelligence: 'ИНТ',
-    wisdom: 'МДР',
-    charisma: 'ХАР'
+  const getAbilityScore = (key: string) => {
+    if (!character || !character.abilities) return 10;
+    return character.abilities[key] || 10;
   };
 
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
       <CardContent className="p-4">
-        <h3 className="text-lg font-semibold mb-3" style={{ color: currentTheme.textColor }}>
-          Характеристики
-        </h3>
-        <div className="grid grid-cols-3 gap-2">
-          {Object.entries(abilityLabels).map(([key, label]) => (
-            <div 
-              key={key}
-              className="flex flex-col items-center bg-secondary/50 rounded-md p-2"
-              style={{ borderColor: currentTheme.accent }}
-            >
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className="text-lg font-bold" style={{ color: currentTheme.textColor }}>
-                {abilities[key as keyof typeof abilities]}
-              </span>
-              <span className="text-xs" style={{ color: currentTheme.accent }}>
-                {getModifier(abilities[key as keyof typeof abilities])}
-              </span>
+        <h3 className="text-lg font-semibold mb-3">Характеристики</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {abilities.map((ability) => (
+            <div key={ability.key} className="text-center p-2 border border-primary/20 rounded-md hover:bg-primary/5">
+              <div className="text-sm text-muted-foreground">{ability.short}</div>
+              <div className="text-xl font-bold">{getAbilityScore(ability.key)}</div>
+              <div className="text-sm font-medium">
+                {getModifierFromAbilityScore(getAbilityScore(ability.key))}
+              </div>
             </div>
           ))}
         </div>

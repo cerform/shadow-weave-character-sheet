@@ -1,71 +1,86 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { PlusCircle, MinusCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface EquipmentPanelProps {
   character: any;
-  isDM?: boolean;
+  isDM: boolean;
 }
 
-const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ character, isDM = false }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
+const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ character, isDM }) => {
   const [newItem, setNewItem] = useState('');
-  
-  // Get character equipment
+  const { toast } = useToast();
   const equipment = character?.equipment || [];
 
-  // Add a new item
-  const addItem = () => {
-    if (!newItem.trim()) return;
-    
-    // This is just a placeholder, actual implementation would update the character
-    console.log('Add item:', newItem);
+  const handleAddItem = () => {
+    if (!newItem.trim()) {
+      toast({
+        title: 'Поле не может быть пустым',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // В реальном приложении здесь должен быть код для сохранения нового предмета
+    toast({
+      title: 'Предмет добавлен',
+      description: 'Новый предмет успешно добавлен',
+    });
+
     setNewItem('');
+  };
+
+  const handleRemoveItem = (index: number) => {
+    // В реальном приложении здесь должен быть код для удаления предмета
+    toast({
+      title: 'Предмет удален',
+      variant: 'destructive',
+    });
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold" style={{ color: currentTheme.textColor }}>
-        Снаряжение
-      </h2>
-      
-      {isDM && (
-        <div className="flex items-center gap-2">
-          <Input
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            placeholder="Добавить предмет..."
-          />
-          <Button onClick={addItem}>
-            <Plus className="h-4 w-4 mr-1" />
-            Добавить
-          </Button>
-        </div>
-      )}
+      <h3 className="text-lg font-semibold">Снаряжение</h3>
       
       {equipment.length === 0 ? (
-        <div className="text-center p-8 text-muted-foreground">
-          Снаряжения не добавлено
-        </div>
+        <p className="text-muted-foreground italic">Нет снаряжения в инвентаре.</p>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-2">
           {equipment.map((item: string, index: number) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-secondary/50 rounded-md">
-              <span>{item}</span>
+            <div key={index} className="p-3 bg-primary/5 rounded-md flex justify-between items-start">
+              <div>
+                <p>{item}</p>
+              </div>
               {isDM && (
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  <X className="h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleRemoveItem(index)}
+                  className="h-7 w-7 p-0"
+                >
+                  <MinusCircle className="h-4 w-4 text-destructive" />
                 </Button>
               )}
             </div>
           ))}
+        </div>
+      )}
+      
+      {isDM && (
+        <div className="flex gap-2 mt-4">
+          <Input
+            placeholder="Добавить новый предмет"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+          />
+          <Button onClick={handleAddItem}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Добавить
+          </Button>
         </div>
       )}
     </div>

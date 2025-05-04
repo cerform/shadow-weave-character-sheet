@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CharacterSheet as CharacterSheetType } from '@/types/character';
 import CharacterInfoPanel from './CharacterInfoPanel';
@@ -17,7 +18,8 @@ import { SessionContext } from '@/contexts/SessionContext';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { socket } from '@/lib/socket';
-import { useRouter } from 'next/navigation';
+// Заменяем импорт из next/navigation
+import { useNavigate } from 'react-router-dom';
 import { Skeleton } from "@/components/ui/skeleton"
 import { ModeToggle } from "@/components/ModeToggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -38,7 +40,8 @@ const CharacterSheet = ({ character, isDM = false }) => {
   const { session, addCharacterToSession, removeCharacterFromSession } = React.useContext(SessionContext);
   const { toast } = useToast();
   const { currentUser, isOfflineMode } = useAuth();
-  const router = useRouter();
+  // Заменяем router из next на navigate из react-router
+  const navigate = useNavigate();
   
   // Состояние для хранения информации о персонаже в формате PDF
   const [pdfData, setPdfData] = useState<CharacterSheetType | null>(null);
@@ -166,7 +169,8 @@ const CharacterSheet = ({ character, isDM = false }) => {
               onClick={() => {
                 if (confirm("Вы уверены, что хотите удалить этого персонажа?")) {
                   localStorage.removeItem('dnd-characters');
-                  router.push('/');
+                  // Заменяем router.push на navigate
+                  navigate('/');
                 }
               }}
             >

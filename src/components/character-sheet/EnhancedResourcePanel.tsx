@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,9 +28,9 @@ export const EnhancedResourcePanel: React.FC = () => {
   const [healValue, setHealValue] = useState(1);
   const [tempHpValue, setTempHpValue] = useState(1);
   
-  // Получаем модификатор телосложения
+  // Получаем модификатор телосложения, исправляем обращение к полю constitution
   const constitutionModifier = character?.abilities
-    ? getNumericModifier(character.abilities.constitution || character.abilities.CON || 10)
+    ? getNumericModifier(character.abilities.constitution || 10)
     : 0;
   
   // Инициализируем систему здоровья

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { useTheme } from '@/contexts/ThemeContext'; // Updated import
-import { useSession } from '@/contexts/SessionContext';
+import { useTheme } from '@/contexts/ThemeContext'; 
+// Используем наш созданный хук вместо отсутствующего
+import { SessionContext } from '@/contexts/SessionContext';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { ThemeSelector } from '@/components/character-sheet/ThemeSelector';
 import { ArrowLeft, Dices, Users, MessageSquare, Swords } from 'lucide-react';
@@ -15,7 +16,9 @@ import { DicePanel } from '@/components/character-sheet/DicePanel';
 const PlayerSessionPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { currentSession } = useSession();
+  // Получаем контекст напрямую вместо использования хука
+  const sessionContext = React.useContext(SessionContext);
+  const currentSession = sessionContext?.session;
   
   const player = currentSession?.players.find(p => p.connected) || null;
   const character = player?.character || null;

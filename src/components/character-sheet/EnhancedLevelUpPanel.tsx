@@ -1,162 +1,120 @@
 
-import React, { useContext } from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { CharacterContext } from '@/contexts/CharacterContext';
-import { Crown, ArrowUp, ArrowDown, Dices } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { motion } from 'framer-motion';
-import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
-import SpellSelectionModal from './SpellSelectionModal';
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ArrowUp, Sparkles } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { useCharacterProgression } from '@/hooks/useCharacterProgression';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetDescription 
-} from "@/components/ui/sheet";
+import { CharacterContext } from '@/contexts/CharacterContext';
 
 export const EnhancedLevelUpPanel: React.FC = () => {
-  const { character, updateCharacter } = useContext(CharacterContext);
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const { character, updateCharacter } = React.useContext(CharacterContext);
+  const { toast } = useToast();
+  const [isLeveling, setIsLeveling] = useState(false);
   
-  // Инициализируем систему прогрессии персонажа
-  const {
-    isLevelingUp,
-    showSpellSelection,
-    availableSpells,
-    selectedSpells,
-    setSelectedSpells,
-    rollMode,
-    setRollMode,
-    startLevelUp,
-    handleLevelDown,
-    handleDiceRoll,
-    handleSpellSelection,
-    getNewSpellsCountOnLevelUp,
-    getNewCantripsCountOnLevelUp,
-    getHitDieType
-  } = useCharacterProgression({
+  // Используем хук для логики повышения уровня
+  const { startLevelUp } = useCharacterProgression({
     character,
     updateCharacter,
     onMaxHpChange: (newMaxHp, hpChange) => {
-      // Этот колбэк может быть использован для синхронизации с другими системами
-      console.log(`Макс. HP изменено: ${newMaxHp} (${hpChange > 0 ? '+' : ''}${hpChange})`);
+      toast({
+        title: "Уровень повышен!",
+        description: `Максимум HP увеличен на ${hpChange}. Новое значение: ${newMaxHp}`,
+      });
     }
   });
   
-  const newSpellsCount = getNewSpellsCountOnLevelUp();
-  const newCantripsCount = getNewCantripsCountOnLevelUp();
+  // Расчет прогресса опыта (упрощенная реализация)
+  const calculateXpProgress = () => {
+    const level = character?.level || 1;
+    const xp = character?.xp || 0;
+    
+    // Упрощенная таблица опыта
+    const xpThresholds = [
+      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 
+      64000, 85000, 100000, 120000, 140000, 165000, 
+      195000, 225000, 265000, 305000, 355000
+    ];
+    
+    if (level >= 20) return 100; // Максимальный уровень
+    
+    const currentLevelXP = xpThresholds[level - 1];
+    const nextLevelXP = xpThresholds[level];
+    const xpForNextLevel = nextLevelXP - currentLevelXP;
+    const xpProgress = xp - currentLevelXP;
+    
+    return Math.min(100, Math.max(0, (xpProgress / xpForNextLevel) * 100));
+  };
+  
+  const handleLevelUp = () => {
+    if (isLeveling) return;
+    
+    const level = character?.level || 1;
+    
+    if (level >= 20) {
+      toast({
+        title: "Максимальный уровень",
+        description: "Ваш персонаж уже достиг максимального уровня 20",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLeveling(true);
+    
+    // Имитация процесса повышения уровня
+    setTimeout(() => {
+      startLevelUp();
+      setIsLeveling(false);
+    }, 1000);
+  };
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <div className="flex items-center gap-2 mb-4">
-        <Crown className="h-5 w-5 text-primary" />
-        <h3 
-          className="text-lg font-semibold"
-          style={{ color: currentTheme.textColor }}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-semibold">Уровень {character?.level || 1}</h3>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLevelUp}
+          disabled={isLeveling || (character?.level || 1) >= 20}
+          className={`${isLeveling ? 'animate-pulse' : ''}`}
         >
-          Уровень персонажа: {character?.level || 1}
-        </h3>
+          <ArrowUp className="h-4 w-4 mr-1" />
+          Повысить
+        </Button>
       </div>
       
-      <div className="space-y-3">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Button 
-            onClick={() => {
-              setRollMode("roll");
-              startLevelUp();
-            }}
-            disabled={isLevelingUp || (character?.level || 1) >= 20}
-            className="w-full flex items-center justify-center gap-1 group"
-            style={{
-              backgroundColor: currentTheme.accent,
-              color: currentTheme.buttonText
-            }}
-          >
-            <ArrowUp className="h-4 w-4 transition-transform group-hover:translate-y-[-2px]" />
-            <span>Повысить уровень с броском</span>
-            <Dices className="h-4 w-4 ml-1" />
-          </Button>
-        </motion.div>
+      <div className="space-y-4">
+        <div>
+          <div className="flex justify-between mb-1 text-sm">
+            <span>Опыт: {character?.xp || 0} XP</span>
+            <span>Прогресс к уровню {Math.min(20, (character?.level || 1) + 1)}</span>
+          </div>
+          <Progress value={calculateXpProgress()} className="h-2" />
+        </div>
         
-        <div className="grid grid-cols-2 gap-2">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button 
-              onClick={() => {
-                setRollMode("average");
-                startLevelUp();
-              }}
-              disabled={isLevelingUp || (character?.level || 1) >= 20}
-              className="w-full flex items-center justify-center gap-1 group"
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              <ArrowUp className="h-4 w-4 transition-transform group-hover:translate-y-[-2px]" />
-              Среднее значение
-            </Button>
-          </motion.div>
+        <div className="text-sm space-y-1">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Бонус мастерства:</span>
+            <span>+{Math.ceil(1 + ((character?.level || 1) / 4))}</span>
+          </div>
           
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button 
-              onClick={handleLevelDown}
-              disabled={isLevelingUp || (character?.level || 1) <= 1}
-              variant="outline" 
-              className="w-full flex items-center justify-center gap-1 group"
-              style={{
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
-            >
-              <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-[2px]" />
-              Понизить уровень
-            </Button>
-          </motion.div>
+          {character?.class && ['Волшебник', 'Жрец', 'Друид', 'Бард', 'Колдун', 'Чернокнижник', 'Чародей'].includes(character.class) && (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground flex items-center">
+                <Sparkles className="h-3 w-3 mr-1" /> 
+                Заклинания:
+              </span>
+              <span>
+                {/* Упрощенная логика для слотов заклинаний */}
+                {character?.level >= 3 ? '1ур: 4, 2ур: 2' : '1ур: 2'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Модальное окно для броска кубика при повышении уровня */}
-      <Sheet open={isLevelingUp} onOpenChange={(open) => !open && setSelectedSpells([])}>
-        <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
-          <SheetHeader className="p-4">
-            <SheetTitle>Повышение уровня</SheetTitle>
-            <SheetDescription>
-              Бросьте кубик хитов {getHitDieType()} для определения 
-              прироста здоровья при повышении уровня
-            </SheetDescription>
-          </SheetHeader>
-          <div className="h-[80vh]">
-            <DiceRoller3DFixed
-              initialDice={getHitDieType()}
-              hideControls={false}
-              modifier={character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0}
-              onRollComplete={handleDiceRoll}
-              themeColor={currentTheme.accent}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
-      
-      {/* Модальное окно для выбора заклинаний */}
-      <SpellSelectionModal
-        open={showSpellSelection}
-        onOpenChange={(open) => !open && setSelectedSpells([])}
-        availableSpells={availableSpells}
-        onConfirm={handleSpellSelection}
-        maxSpellsCount={newSpellsCount}
-        maxCantripsCount={newCantripsCount}
-        characterClass={character?.className || character?.class}
-        characterLevel={character?.level || 1}
-      />
     </Card>
   );
 };

@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
 
+// Определяем все возможные темы для соответствия типу Theme
+type ThemeType = "light" | "dark" | "system" | "warlock" | "druid" | "bard" | string;
+
 export function ModeToggle() {
   const { setTheme } = useTheme();
 
@@ -24,22 +27,22 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => setTheme("light" as ThemeType)}>
           Светлая
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => setTheme("dark" as ThemeType)}>
           Темная
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => setTheme("system" as ThemeType)}>
           Системная
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("warlock")}>
+        <DropdownMenuItem onClick={() => setTheme("warlock" as ThemeType)}>
           Чернокнижник
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("druid")}>
+        <DropdownMenuItem onClick={() => setTheme("druid" as ThemeType)}>
           Друид
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("bard")}>
+        <DropdownMenuItem onClick={() => setTheme("bard" as ThemeType)}>
           Бард
         </DropdownMenuItem>
       </DropdownMenuContent>
