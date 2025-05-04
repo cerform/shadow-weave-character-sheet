@@ -19,13 +19,17 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
   
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+  
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       <HomeButton />
       
       <Button 
         variant="outline" 
-        onClick={() => navigate('/handbook')}
+        onClick={() => handleNavigate('/handbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -35,7 +39,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => navigate('/spellbook')}
+        onClick={() => handleNavigate('/spellbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -43,11 +47,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         {!isMobile ? "Книга заклинаний" : ""}
       </Button>
       
-      {/* Показывать кнопку боевой карты только Мастерам */}
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={() => navigate('/dm/battle')}
+          onClick={() => handleNavigate('/dm/battle')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
         >
@@ -58,7 +61,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => navigate('/character-creation')}
+        onClick={() => handleNavigate('/character-creation')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -69,7 +72,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={() => navigate('/dm-dashboard')}
+          onClick={() => handleNavigate('/dm-dashboard')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
         >

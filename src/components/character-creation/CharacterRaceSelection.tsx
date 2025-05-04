@@ -6,7 +6,6 @@ import NavigationButtons from "./NavigationButtons";
 import { 
   SelectionCard,
   SelectionCardGrid,
-  SelectionSubOption
 } from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
 import { useTheme } from "@/hooks/use-theme";
