@@ -27,22 +27,27 @@ export const HPBar: React.FC<HPBarProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
+  // Безопасные значения для расчетов
+  const safeCurrentHp = isNaN(currentHp) ? 0 : Math.max(0, currentHp);
+  const safeMaxHp = isNaN(maxHp) || maxHp <= 0 ? 1 : maxHp;
+  const safeTempHp = isNaN(tempHp) ? 0 : Math.max(0, tempHp);
+  
   // Обработка изменения HP для анимации
   useEffect(() => {
-    if (currentHp !== prevCurrentHp) {
+    if (safeCurrentHp !== prevCurrentHp) {
       setIsAnimating(true);
       const timer = setTimeout(() => {
         setIsAnimating(false);
-        setPrevCurrentHp(currentHp);
+        setPrevCurrentHp(safeCurrentHp);
       }, 600);
       
       return () => clearTimeout(timer);
     }
-  }, [currentHp, prevCurrentHp]);
+  }, [safeCurrentHp, prevCurrentHp]);
   
   // Расчет процентов для HP баров
-  const healthPercentage = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
-  const tempHpPercentage = Math.max(0, Math.min(100, (tempHp / maxHp) * 100));
+  const healthPercentage = Math.max(0, Math.min(100, (safeCurrentHp / safeMaxHp) * 100));
+  const tempHpPercentage = Math.max(0, Math.min(100, (safeTempHp / safeMaxHp) * 100));
   
   // Определяем цвет обычного HP на основе процента здоровья
   const getHealthColor = () => {
@@ -62,9 +67,9 @@ export const HPBar: React.FC<HPBarProps> = ({
             </span>
           </div>
           <span className="text-sm" style={{ color: currentTheme.textColor }}>
-            {currentHp} / {maxHp}
-            {tempHp > 0 && (
-              <span className="ml-1 text-emerald-400">(+{tempHp})</span>
+            {safeCurrentHp} / {safeMaxHp}
+            {safeTempHp > 0 && (
+              <span className="ml-1 text-emerald-400">(+{safeTempHp})</span>
             )}
           </span>
         </div>
@@ -78,7 +83,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         <motion.div 
           className={`absolute top-0 left-0 h-full transition-all ${getHealthColor()}`} 
           style={{ width: `${healthPercentage}%` }}
-          initial={{ width: `${prevCurrentHp / maxHp * 100}%` }}
+          initial={{ width: `${prevCurrentHp / safeMaxHp * 100}%` }}
           animate={{ width: `${healthPercentage}%` }}
           transition={{ duration: 0.3 }}
         />
@@ -87,8 +92,8 @@ export const HPBar: React.FC<HPBarProps> = ({
         <AnimatePresence>
           {isAnimating && (
             <motion.div 
-              className={`absolute top-0 left-0 h-full ${currentHp < prevCurrentHp ? 'bg-red-500' : 'bg-green-500'}/30`}
-              style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / maxHp) * 100)}%` }}
+              className={`absolute top-0 left-0 h-full ${safeCurrentHp < prevCurrentHp ? 'bg-red-500' : 'bg-green-500'}/30`}
+              style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / safeMaxHp) * 100)}%` }}
               initial={{ opacity: 0.7 }}
               animate={{ opacity: 0 }}
               exit={{ opacity: 0 }}
@@ -98,7 +103,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         </AnimatePresence>
         
         {/* Временное HP */}
-        {tempHp > 0 && (
+        {safeTempHp > 0 && (
           <motion.div
             className="absolute top-0 h-full bg-emerald-400/70"
             style={{ 

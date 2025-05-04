@@ -65,13 +65,12 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   const quickHealValues = [1, 5, 10, 50, 100];
   const quickTempHpValues = [5, 10, 25, 50];
   
-  // Обработчик результата броска кубика для лечения
+  // Обработчики событий для бросков кубиков
   const handleHealingRollComplete = (result: number) => {
     applyDamage(result, "Лечебный бросок");
     setShowHealingRoller(false);
   };
   
-  // Обработчик результата броска Hit Die
   const handleHitDiceRollComplete = (result: number) => {
     const conMod = character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0;
     const healingAmount = result + conMod;
@@ -80,21 +79,17 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     setShowHitDiceRoller(false);
   };
   
-  // Вычисляем бонус инициативы
+  // Вспомогательные функции
   const getInitiative = () => {
     if (!character?.abilities) return '+0';
     const dexMod = Math.floor((character.abilities.DEX - 10) / 2);
     return dexMod >= 0 ? `+${dexMod}` : `${dexMod}`;
   };
   
-  // Вычисляем класс брони
   const getArmorClass = () => {
     if (!character?.abilities) return 10;
     
-    // Базовый класс брони 10 + модификатор Ловкости
     const dexMod = Math.floor((character.abilities.DEX - 10) / 2);
-    
-    // Для разных классов можно добавить бонусы
     let ac = 10 + dexMod;
     
     if (character.className?.includes('Монах')) {
@@ -108,14 +103,12 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     return ac;
   };
   
-  // Вычисляем грузоподъемность
   const getCarryingCapacity = () => {
     if (!character?.abilities?.STR) return "0";
     const capacity = character.abilities.STR * 15;
     return `${capacity} фунтов`;
   };
   
-  // Получаем тип кубика хитов для DiceRoller
   const getHitDieByClass = (characterClass: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
     const hitDice: Record<string, "d4" | "d6" | "d8" | "d10" | "d12"> = {
       "Варвар": "d12",
@@ -133,7 +126,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
       "Чародей": "d6"
     };
     
-    return hitDice[characterClass] || "d8"; // По умолчанию d8
+    return hitDice[characterClass] || "d8";
   };
   
   return (
@@ -141,8 +134,8 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
       <h3 className="text-lg font-semibold mb-4 text-primary">Ресурсы</h3>
       
       <div className="space-y-4">
+        {/* HP и Temp HP бары */}
         <div>
-          {/* Используем компонент HP бара */}
           <HPBar 
             currentHp={logCurrentHp} 
             maxHp={maxHp} 
@@ -152,9 +145,60 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
             className="mb-3"
           />
           
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div>
-              <Label htmlFor="adjust-hp" className="text-xs text-primary mb-1 block">Изменить HP</Label>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {/* Панель быстрых кнопок урона */}
+            <div className="col-span-3">
+              <Label className="text-xs text-primary mb-1 block">Быстрые действия</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Урон */}
+                <div className="bg-black/20 p-2 rounded-md">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Minus className="h-3 w-3 text-red-500" />
+                    <span className="text-xs text-primary">Урон</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {quickDamageValues.map(value => (
+                      <motion.div key={`damage-${value}`} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="h-6 px-2 text-xs bg-red-900/20 hover:bg-red-900/30"
+                          onClick={() => applyDamage(-value, `Быстрый урон ${value}`)}
+                        >
+                          {value}
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Лечение */}
+                <div className="bg-black/20 p-2 rounded-md">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Plus className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-primary">Лечение</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {quickHealValues.map(value => (
+                      <motion.div key={`heal-${value}`} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="h-6 px-2 text-xs bg-green-900/20 hover:bg-green-900/30"
+                          onClick={() => applyDamage(value, `Быстрое лечение ${value}`)}
+                        >
+                          {value}
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Ручной ввод урона/лечения */}
+            <div className="col-span-2">
+              <Label htmlFor="adjust-hp" className="text-xs text-primary mb-1 block">Ввод значения</Label>
               <div className="flex gap-1">
                 <Input 
                   id="adjust-hp"
@@ -172,9 +216,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     size="sm" 
                     variant="outline" 
                     onClick={() => applyDamage(-hpAdjustValue, "Ввод урона")}
-                    style={{
-                      borderColor: `${currentTheme.accent}60`
-                    }}
+                    className="bg-red-900/20 hover:bg-red-900/30 h-8"
                   >
                     <Minus className="h-4 w-4 text-red-500" />
                   </Button>
@@ -184,9 +226,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     size="sm" 
                     variant="outline" 
                     onClick={() => applyDamage(hpAdjustValue, "Ввод лечения")}
-                    style={{
-                      borderColor: `${currentTheme.accent}60`
-                    }}
+                    className="bg-green-900/20 hover:bg-green-900/30 h-8"
                   >
                     <Plus className="h-4 w-4 text-green-500" />
                   </Button>
@@ -194,6 +234,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
               </div>
             </div>
             
+            {/* Временное HP */}
             <div>
               <Label htmlFor="temp-hp" className="text-xs text-primary mb-1 block">Временное HP</Label>
               <div className="flex gap-1">
@@ -216,31 +257,31 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     <Button 
                       size="sm" 
                       variant="outline"
-                      style={{
-                        borderColor: `${currentTheme.accent}60`
-                      }}
+                      className="bg-emerald-900/20 hover:bg-emerald-900/30 h-8"
                     >
-                      <Plus className="h-4 w-4 text-emerald-400" />
+                      <Shield className="h-4 w-4 text-emerald-400" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-40 p-2">
-                    <div className="grid gap-2">
+                    <div className="grid gap-1">
                       {quickTempHpValues.map(value => (
                         <Button 
                           key={`temp-${value}`}
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => addTempHp(value, "Быстрые временные хиты")}
+                          onClick={() => addTempHp(value, "Временные хиты")}
+                          className="justify-start h-7"
                         >
-                          +{value} Temp HP
+                          <Shield className="h-3 w-3 mr-1 text-emerald-400" /> {value} HP
                         </Button>
                       ))}
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         onClick={() => addTempHp(0, "Сброс временных хитов")}
+                        className="justify-start h-7 text-red-400"
                       >
-                        Сбросить
+                        Сбросить все
                       </Button>
                     </div>
                   </PopoverContent>
@@ -249,45 +290,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
             </div>
           </div>
           
-          {/* Быстрый урон и лечение */}
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <Label className="text-xs text-primary mb-1 block">Быстрый урон</Label>
-              <div className="flex flex-wrap gap-1">
-                {quickDamageValues.map(value => (
-                  <motion.div key={`damage-${value}`} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => applyDamage(-value, `Быстрый урон ${value}`)}
-                    >
-                      -{value}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-xs text-primary mb-1 block">Быстрое лечение</Label>
-              <div className="flex flex-wrap gap-1">
-                {quickHealValues.map(value => (
-                  <motion.div key={`heal-${value}`} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => applyDamage(value, `Быстрое лечение ${value}`)}
-                    >
-                      +{value}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
+          {/* Броски кубиков для лечения */}
           <div className="flex justify-between gap-2 mb-2">
             <Sheet open={showHealingRoller} onOpenChange={setShowHealingRoller}>
               <SheetTrigger asChild>
@@ -295,10 +298,9 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="w-full flex items-center gap-1"
-                    style={{ borderColor: `${currentTheme.accent}60` }}
+                    className="w-full flex items-center gap-1 bg-green-900/20 hover:bg-green-900/30"
                   >
-                    <Dices className="h-3 w-3" /> +d8
+                    <Dices className="h-3 w-3" /> Бросок лечения
                   </Button>
                 </motion.div>
               </SheetTrigger>
@@ -328,7 +330,6 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                     size="sm" 
                     variant="outline" 
                     className="w-full flex items-center gap-1"
-                    style={{ borderColor: `${currentTheme.accent}60` }}
                   >
                     <Dices className="h-3 w-3" /> Hit Die
                   </Button>
@@ -366,6 +367,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         
         <Separator />
         
+        {/* Блок с характеристиками боя */}
         <div>
           <div className="grid grid-cols-2 gap-4">
             <motion.div 
@@ -393,6 +395,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         
         <Separator />
         
+        {/* Блок с второстепенными характеристиками */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-primary">Скорость</span>

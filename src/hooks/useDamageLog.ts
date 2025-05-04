@@ -32,7 +32,7 @@ export const useDamageLog = (
     const eventId = crypto.randomUUID();
     
     if (amount < 0) {
-      // Это урон (отрицательное число)
+      // Отрицательное значение означает урон (amount < 0)
       const damage = Math.abs(amount);
       let remainingDamage = damage;
       
@@ -46,7 +46,7 @@ export const useDamageLog = (
           setEvents((prev) => [
             {
               id: eventId + "-temp",
-              type: 'damage',
+              type: 'damage', 
               amount: absorbedByTemp,
               source: source || 'Временное HP',
               timestamp: new Date()
@@ -58,7 +58,10 @@ export const useDamageLog = (
       
       // Если остался урон после временных HP
       if (remainingDamage > 0) {
+        // Уменьшаем текущее HP, не допуская значений < 0
         setCurrentHp((prev) => Math.max(0, prev - remainingDamage));
+        
+        // Добавляем событие урона в лог
         setEvents((prev) => [
           {
             id: eventId,
@@ -82,12 +85,12 @@ export const useDamageLog = (
           toast({
             title: "Урон получен",
             description: `${damage} урона${source ? ` от ${source}` : ''}`,
-            variant: "destructive"
+            variant: "destructive" 
           });
         }
       }
     } else {
-      // Это лечение (положительное число)
+      // Положительное значение означает лечение (amount > 0)
       const wasUnconscious = currentHp === 0;
       const newHp = Math.min(maxHp, currentHp + amount);
       setCurrentHp(newHp);
