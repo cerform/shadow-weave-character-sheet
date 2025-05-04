@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
       if (remainingDamage > 0) {
         const newCurrentHp = Math.max(0, currentHp - remainingDamage);
         onHpChange(newCurrentHp);
+        updateCharacter({ currentHp: newCurrentHp });
       }
       
       // Показываем сообщение о полученном уроне
@@ -84,6 +86,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
       // Для лечения (положительное значение) увеличиваем только обычные HP, но не выше максимума
       const newCurrentHp = Math.min(maxHp, currentHp + amount);
       onHpChange(newCurrentHp);
+      updateCharacter({ currentHp: newCurrentHp });
       
       toast({
         title: "Лечение получено",
@@ -192,7 +195,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
             {/* Base HP bar */}
             <Progress 
               value={healthPercentage} 
-              className={`h-3 ${healthPercentage > 60 ? 'bg-green-500' : healthPercentage > 30 ? 'bg-orange-500' : 'bg-red-500'}`}
+              className="h-3"
             />
             
             {/* Temporary HP overlay */}
