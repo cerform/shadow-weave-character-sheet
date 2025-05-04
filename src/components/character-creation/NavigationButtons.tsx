@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
@@ -29,24 +29,32 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
-  // Оптимизированные обработчики для навигации с явным предотвращением событий
-  const handlePrevStep = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Оптимизированные обработчики для навигации с использованием useCallback
+  const handlePrevStep = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    // Явное предотвращение событий
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     
     if (!isFirstStep) {
-      prevStep();
+      // Небольшая задержка для завершения всех асинхронных операций
+      setTimeout(() => {
+        prevStep();
+      }, 10);
     }
-  };
+  }, [isFirstStep, prevStep]);
   
-  const handleNextStep = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleNextStep = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    // Явное предотвращение событий
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     
     if (!isNextDisabled) {
-      nextStep();
+      // Небольшая задержка для завершения всех асинхронных операций
+      setTimeout(() => {
+        nextStep();
+      }, 10);
     }
-  };
+  }, [isNextDisabled, nextStep]);
   
   return (
     <div className="flex justify-between pt-8 mt-2">

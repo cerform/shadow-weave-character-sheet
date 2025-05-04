@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -38,17 +38,24 @@ const HomeButton: React.FC<HomeButtonProps> = ({
     textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)"
   };
   
-  // Оптимизированный обработчик навигации
-  const handleHomeNavigation = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Оптимизированный обработчик навигации с использованием useCallback
+  const handleHomeNavigation = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    // Предотвращаем стандартное поведение и всплытие события
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     
     // Проверяем, не находимся ли мы уже на главной странице
-    if (location.pathname === '/') return;
+    if (location.pathname === '/') {
+      console.log("Уже на главной странице, навигация не требуется");
+      return;
+    }
     
-    // Используем replace вместо push для предотвращения накопления истории браузера
-    navigate('/', { replace: true });
-  };
+    // Делаем небольшую задержку перед навигацией, чтобы дать время завершиться другим процессам
+    setTimeout(() => {
+      // Используем replace вместо push для предотвращения накопления истории браузера
+      navigate('/', { replace: true });
+    }, 10);
+  }, [navigate, location.pathname]);
   
   return (
     <Button 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dices } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -17,15 +17,24 @@ export const FloatingDiceButton = () => {
   const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsOpen(true);
-  };
+  const handleButtonClick = useCallback((e: React.MouseEvent) => {
+    // Предотвращаем стандартное поведение браузера
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    
+    // Небольшая задержка перед открытием панели
+    setTimeout(() => {
+      setIsOpen(true);
+    }, 10);
+  }, []);
+  
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setIsOpen(open);
+  }, []);
   
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
         <Button 
           size="lg" 
           className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 

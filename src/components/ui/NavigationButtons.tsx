@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { BookOpen, Scroll, Map, Users, Book } from "lucide-react";
@@ -37,19 +37,24 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
 
-  // Оптимизированная функция для навигации
-  const handleNavigation = (e: React.MouseEvent, path: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Оптимизированная функция для навигации с использованием useCallback
+  const handleNavigation = useCallback((e: React.MouseEvent, path: string) => {
+    // Предотвращаем стандартное поведение и всплытие события
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     
     // Если мы уже на этой странице, ничего не делаем
     if (location.pathname === path) {
+      console.log(`Уже на странице ${path}, навигация не требуется`);
       return;
     }
     
-    // Используем replace вместо push для предотвращения накопления истории браузера
-    navigate(path, { replace: true });
-  };
+    // Делаем небольшую задержку перед навигацией
+    setTimeout(() => {
+      // Используем replace вместо push для предотвращения накопления истории браузера
+      navigate(path, { replace: true });
+    }, 10);
+  }, [navigate, location.pathname]);
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
