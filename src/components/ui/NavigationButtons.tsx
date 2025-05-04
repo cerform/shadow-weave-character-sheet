@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 export interface NavigationButtonsProps {
   prevStep: () => void;
   nextStep: () => void;
-  nextDisabled?: boolean; // Добавляем опциональный параметр nextDisabled
+  nextDisabled?: boolean;
   className?: string;
 }
 

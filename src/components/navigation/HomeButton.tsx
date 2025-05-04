@@ -2,9 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCharacterCreation } from '@/hooks/useCharacterCreation';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 interface HomeButtonProps {
   className?: string;
@@ -18,8 +18,8 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   variant = "outline"
 }) => {
   const navigate = useNavigate();
-  const { resetCharacter } = useCharacterCreation();
   const { toast } = useToast();
+  const { activeTheme, currentThemeStyles } = useUserTheme();
   
   const handleNavigateHome = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,9 +29,6 @@ const HomeButton: React.FC<HomeButtonProps> = ({
       title: "Переход на главную",
       description: "Возвращаемся на главную страницу...",
     });
-    
-    // Сбрасываем состояние персонажа перед навигацией
-    resetCharacter();
     
     // Используем setTimeout для обеспечения плавного перехода
     setTimeout(() => {
@@ -44,6 +41,7 @@ const HomeButton: React.FC<HomeButtonProps> = ({
       variant={variant}
       className={`flex items-center gap-2 ${className}`}
       onClick={handleNavigateHome}
+      style={{ borderColor: currentThemeStyles?.accent }}
     >
       <Home className="size-4" />
       {showText && "На главную"}

@@ -1,3 +1,4 @@
+
 import { SpellData } from './types';
 import { CharacterSpell } from '@/types/character';
 
@@ -15,10 +16,10 @@ export const filterSpellsBySearchTerm = (spells: any[], searchTerm: string): any
 // Функция для конвертации CharacterSpell в SpellData
 export const convertToSpellData = (spell: CharacterSpell): SpellData => {
   return {
-    id: spell.id,
+    id: spell.id || Math.random().toString(),
     name: spell.name,
     level: spell.level,
-    description: spell.description,
+    description: spell.description || "",
     school: spell.school || "Преобразование", // Устанавливаем значение по умолчанию
     castingTime: spell.castingTime || "1 действие", // Устанавливаем значение по умолчанию
     range: spell.range || "На себя", // Устанавливаем значение по умолчанию
@@ -31,8 +32,10 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     isConcentration: spell.concentration,
     ritual: spell.ritual,
     concentration: spell.concentration,
-    classes: spell.classes,
+    classes: spell.classes || [],
     higherLevels: spell.higherLevels,
+    // Добавляем toString для совместимости
+    toString: () => spell.name
   };
 };
 
@@ -108,6 +111,19 @@ export const formatClasses = (classes: string[] | string | undefined): string =>
   return "Нет данных";
 };
 
+// Безопасная функция для проверки наличия класса в списке классов заклинания
+export const hasClass = (classes: string[] | string | undefined, className: string): boolean => {
+  if (!classes) return false;
+  
+  if (isStringArray(classes)) {
+    return classes.some(c => c.toLowerCase().includes(className.toLowerCase()));
+  } else if (isString(classes)) {
+    return classes.toLowerCase().includes(className.toLowerCase());
+  }
+  
+  return false;
+};
+
 // Вспомогательные функции для проверки типов
 export function isString(value: any): value is string {
   return typeof value === 'string';
@@ -115,4 +131,13 @@ export function isString(value: any): value is string {
 
 export function isStringArray(value: any): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
+}
+
+// Безопасное форматирование массива в строку
+export function safeJoin(value: string[] | string | undefined, separator: string = ', '): string {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.join(separator);
+  }
+  return value;
 }

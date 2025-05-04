@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import NotFoundPage from './NotFoundPage';
+import NotFound from './NotFound';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
-import { useCharacter, Character } from '@/contexts/CharacterContext';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 const CharacterViewPage: React.FC = () => {
   const { character, characters } = useCharacter();
@@ -12,7 +13,7 @@ const CharacterViewPage: React.FC = () => {
   const selectedCharacter = character || characters.find(char => char.id === id) || null;
 
   if (!selectedCharacter && id) {
-    return <NotFoundPage />;
+    return <NotFound />;
   }
 
   return (
