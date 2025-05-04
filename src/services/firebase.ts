@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -46,7 +45,7 @@ const analyticsPromise = initializeAnalytics();
 
 // Initialize other Firebase services immediately
 const firebaseAuth = getAuth(app);
-const db = getFirestore(app);
+const firestore = getFirestore(app);
 const storage = getStorage(app);
 
 // Провайдеры аутентификации
@@ -73,7 +72,7 @@ const formatFirebaseError = (error: any): string => {
   };
   
   // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
-  return errorMessages[errorCode] || error.message || 'Произошла неизвестная ошибка при аутентификации.';
+  return errorMessages[errorCode] || error.message || 'Прои��ошла неизвестная ошибка при аутентификации.';
 };
 
 // Функции для аутентификации
@@ -137,4 +136,4 @@ const auth = {
   }
 };
 
-export { app, db, storage, auth, firebaseAuth, analyticsPromise };
+export { app, firestore, storage, auth, firebaseAuth, analyticsPromise };

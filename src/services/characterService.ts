@@ -1,9 +1,8 @@
 
 import { CharacterSheet } from '../types/character';
-import { auth } from './firebase';
+import { auth, firestore } from './firebase';
 import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { firestore } from './firebase';
 
 class CharacterService {
   async getCharactersByUserId(): Promise<CharacterSheet[]> {
