@@ -72,33 +72,161 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Определяем максимальное количество заклинаний, которые может выбрать персонаж
-  const getMaxSpellsCount = () => {
-    // Это примерные цифры, их нужно адаптировать под правила D&D 5e
-    const classSpellCounts: Record<string, number> = {
-      "Волшебник": 6 + Math.max(0, Math.floor((character.abilityScores?.intelligence || 10) - 10) / 2),
-      "Жрец": 4 + Math.max(0, Math.floor((character.abilityScores?.wisdom || 10) - 10) / 2),
-      "Друид": 4 + Math.max(0, Math.floor((character.abilityScores?.wisdom || 10) - 10) / 2),
-      "Бард": 4 + Math.max(0, Math.floor((character.abilityScores?.charisma || 10) - 10) / 2),
-      "Колдун": 2 + Math.max(0, Math.floor((character.abilityScores?.charisma || 10) - 10) / 2),
-      "Паладин": 2 + Math.max(0, Math.floor((character.abilityScores?.charisma || 10) - 10) / 2),
-      "Следопыт": 2 + Math.max(0, Math.floor((character.abilityScores?.wisdom || 10) - 10) / 2)
-    };
+  // Определяем максимальное количество заклинаний для каждого класса в соответствии с PHB
+  const getMaxSpellsCount = (): number => {
+    if (!character.class) return 0;
     
-    return classSpellCounts[character.class] || 0;
+    const classLevel = character.level || 1;
+    
+    // Данные согласно PHB (Player's Handbook)
+    switch (character.class) {
+      case "Паладин":
+        // Паладины получают заклинания со 2-го уровня
+        if (classLevel < 2) return 0;
+        // Половина уровня + модификатор Харизмы (минимум 1)
+        const chaModifier = Math.max(0, Math.floor((character.abilities?.charisma || 10) - 10) / 2);
+        return Math.max(1, Math.floor(classLevel / 2) + chaModifier);
+      
+      case "Следопыт":
+        // Следопыты получают заклинания со 2-го уровня
+        if (classLevel < 2) return 0;
+        // Половина уровня + модификатор Мудрости (минимум 1)
+        const wisModifier = Math.max(0, Math.floor((character.abilities?.wisdom || 10) - 10) / 2);
+        return Math.max(1, Math.floor(classLevel / 2) + wisModifier);
+      
+      case "Бард":
+        // Известные заклинания для барда по уровням
+        const bardSpellsByLevel = [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22];
+        return bardSpellsByLevel[classLevel] || 0;
+      
+      case "Колдун":
+        // Известные заклинания для колдуна по уровням
+        const warlockSpellsByLevel = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15];
+        return warlockSpellsByLevel[classLevel] || 0;
+      
+      case "Чародей":
+        // Известные заклинания для чародея по уровням
+        const sorcererSpellsByLevel = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15];
+        return sorcererSpellsByLevel[classLevel] || 0;
+      
+      case "Волшебник":
+        // Волшебники работают иначе - они записывают в книгу заклинаний
+        // Базовое количество + 2 за каждый уровень
+        return 6 + (classLevel - 1) * 2;
+      
+      case "Жрец":
+      case "Друид":
+        // Жрецы и Друиды готовят заклинания: уровень + модификатор основной характеристики
+        const mainModifier = character.class === "Жрец" 
+          ? Math.max(0, Math.floor((character.abilities?.wisdom || 10) - 10) / 2)
+          : Math.max(0, Math.floor((character.abilities?.wisdom || 10) - 10) / 2);
+        return classLevel + mainModifier;
+      
+      default:
+        return 0;
+    }
+  };
+
+  // Получение количества доступных заговоров
+  const getMaxCantripsCount = (): number => {
+    if (!character.class) return 0;
+    
+    const classLevel = character.level || 1;
+    
+    switch (character.class) {
+      case "Бард":
+        // Заговоры для барда: 2 на 1 уровне, +1 на 10-м уровне
+        return classLevel >= 10 ? 3 : 2;
+      
+      case "Жрец":
+        // Заговоры для жреца: 3 на 1 уровне, +1 на 4-м и 10-м уровнях
+        if (classLevel >= 10) return 5;
+        if (classLevel >= 4) return 4;
+        return 3;
+      
+      case "Друид":
+        // Заговоры для друида: 2 на 1 уровне, +1 на 4-м и 10-м уровнях
+        if (classLevel >= 10) return 4;
+        if (classLevel >= 4) return 3;
+        return 2;
+      
+      case "Волшебник":
+        // Заговоры для волшебника: 3 на 1 уровне, +1 на 4-м и 10-м уровнях
+        if (classLevel >= 10) return 5;
+        if (classLevel >= 4) return 4;
+        return 3;
+      
+      case "Чародей":
+        // Заговоры для чародея: 4 на 1 уровне, +1 на 4-м и 10-м уровнях
+        if (classLevel >= 10) return 6;
+        if (classLevel >= 4) return 5;
+        return 4;
+      
+      case "Колдун":
+        // Заговоры для колдуна: 2 на 1 уровне, +1 на 4-м и 10-м уровнях
+        if (classLevel >= 10) return 4;
+        if (classLevel >= 4) return 3;
+        return 2;
+      
+      case "Паладин":
+        // Паладины не получают заговоры
+        return 0;
+      
+      case "Следопыт":
+        // Следопыты не получают заговоры
+        return 0;
+      
+      default:
+        return 0;
+    }
   };
 
   const getAvailableSpellLevels = () => {
     // Каждый класс имеет доступ к разным уровням заклинаний в зависимости от своего уровня
     const characterLevel = character.level || 1;
     
-    // Примерные значения, нужно будет адаптировать под правила D&D 5e
-    if (characterLevel >= 17) return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    if (characterLevel >= 13) return [0, 1, 2, 3, 4, 5, 6, 7];
-    if (characterLevel >= 9) return [0, 1, 2, 3, 4, 5];
-    if (characterLevel >= 5) return [0, 1, 2, 3];
-    if (characterLevel >= 3) return [0, 1, 2];
-    return [0, 1];
+    switch (character.class) {
+      case "Волшебник":
+      case "Жрец":
+      case "Друид":
+      case "Бард":
+      case "Чародей":
+        // Полные заклинатели
+        if (characterLevel >= 17) return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        if (characterLevel >= 15) return [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        if (characterLevel >= 13) return [0, 1, 2, 3, 4, 5, 6, 7];
+        if (characterLevel >= 11) return [0, 1, 2, 3, 4, 5, 6];
+        if (characterLevel >= 9) return [0, 1, 2, 3, 4, 5];
+        if (characterLevel >= 7) return [0, 1, 2, 3, 4];
+        if (characterLevel >= 5) return [0, 1, 2, 3];
+        if (characterLevel >= 3) return [0, 1, 2];
+        return [0, 1];
+      
+      case "Колдун":
+        // Колдун получает меньше ячеек, но все высшего уровня
+        if (characterLevel >= 17) return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        if (characterLevel >= 15) return [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        if (characterLevel >= 13) return [0, 1, 2, 3, 4, 5, 6, 7];
+        if (characterLevel >= 11) return [0, 1, 2, 3, 4, 5];
+        if (characterLevel >= 9) return [0, 1, 2, 3, 4, 5];
+        if (characterLevel >= 7) return [0, 1, 2, 3, 4];
+        if (characterLevel >= 5) return [0, 1, 2, 3];
+        if (characterLevel >= 3) return [0, 1, 2];
+        return [0, 1];
+      
+      case "Паладин":
+      case "Следопыт":
+        // Полузаклинатели
+        if (characterLevel >= 17) return [0, 1, 2, 3, 4, 5];
+        if (characterLevel >= 13) return [0, 1, 2, 3, 4];
+        if (characterLevel >= 9) return [0, 1, 2, 3];
+        if (characterLevel >= 5) return [0, 1, 2];
+        if (characterLevel >= 2) return [0, 1]; // Заклинания с 2-го уровня
+        return [0]; // Только заговоры на 1-м уровне (которых у них нет по PHB)
+      
+      default:
+        return [0];
+    }
   };
 
   useEffect(() => {
@@ -120,12 +248,22 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
       // Если заклинание уже выбрано, удаляем его
       setSelectedSpells(selectedSpells.filter(s => s.name !== spell.name));
     } else {
-      // Проверяем лимит заклинаний
-      if (selectedSpells.length < getMaxSpellsCount()) {
+      // Проверяем лимит заклинаний по уровню
+      const isCantrip = spell.level === 0;
+      const selectedCantripsCount = selectedSpells.filter(s => s.level === 0).length;
+      const selectedRegularSpellsCount = selectedSpells.filter(s => s.level > 0).length;
+      
+      const maxCantrips = getMaxCantripsCount();
+      const maxRegularSpells = getMaxSpellsCount() - getMaxCantripsCount(); // Общее минус заговоры
+      
+      if ((isCantrip && selectedCantripsCount < maxCantrips) || 
+          (!isCantrip && selectedRegularSpellsCount < maxRegularSpells)) {
         setSelectedSpells([...selectedSpells, spell]);
       } else {
         // Можно добавить оповещение о том, что достигнут лимит заклинаний
-        alert(`Вы не можете выбрать больше ${getMaxSpellsCount()} заклинаний`);
+        alert(isCantrip 
+          ? `Вы не можете выбрать больше ${maxCantrips} заговоров` 
+          : `Вы не можете выбрать больше ${maxRegularSpells} заклинаний`);
       }
     }
   };
@@ -144,6 +282,13 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   };
 
   const spellLevels = getAvailableSpellLevels();
+  const maxCantrips = getMaxCantripsCount();
+  const maxRegularSpells = Math.max(0, getMaxSpellsCount() - maxCantrips); // Не допускаем отрицательные значения
+  
+  // Разделяем выбранные заклинания на заговоры и обычные заклинания
+  const selectedCantrips = selectedSpells.filter(s => s.level === 0);
+  const selectedRegularSpells = selectedSpells.filter(s => s.level > 0);
+  
   const shouldDisableNext = character.class && getMaxSpellsCount() > 0 && selectedSpells.length === 0;
 
   return (
@@ -154,12 +299,18 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         <div>
           <Label className="text-white">Класс: {character.class}</Label>
         </div>
-        <div>
+        <div className="flex flex-col items-end gap-1">
           <Badge 
             style={{backgroundColor: currentTheme.accent}}
             className="text-white font-medium"
           >
-            Выбрано заклинаний: {selectedSpells.length} / {getMaxSpellsCount()}
+            Выбрано заговоров: {selectedCantrips.length} / {maxCantrips}
+          </Badge>
+          <Badge 
+            style={{backgroundColor: currentTheme.accent}}
+            className="text-white font-medium"
+          >
+            Выбрано заклинаний: {selectedRegularSpells.length} / {maxRegularSpells}
           </Badge>
         </div>
       </div>

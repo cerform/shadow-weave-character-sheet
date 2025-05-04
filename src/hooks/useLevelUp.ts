@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
+import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellProcessors';
 
 // Вспомогательные функции для логики повышения уровня
 const getHitDieValue = (characterClass: string): number => {
@@ -91,39 +92,32 @@ const getNewSpellsCountOnLevelUp = (character: any): number => {
   if (!character) return 0;
   
   const characterClass = character.class || character.className;
-  if (!characterClass) return 0;
-  
   const currentLevel = character.level || 1;
   const newLevel = currentLevel + 1;
   
-  // Определяем количество новых заклинаний в зависимости от класса
-  if (characterClass === "Волшебник") {
-    return 2; // Волшебники получают 2 новых заклинания за уровень
-  } else if (["Жрец", "Друид"].includes(characterClass)) {
-    // Жрецы и друиды знают все заклинания своего класса, но готовят ограниченное число
-    const wisModifier = character.abilities?.WIS 
-      ? Math.floor((character.abilities.WIS - 10) / 2) 
-      : 0;
-    return Math.max(1, wisModifier + newLevel);
-  } else if (characterClass === "Бард") {
-    // Барды получают новые заклинания на определенных уровнях
-    if ([3, 5, 7, 9, 11, 13, 15, 17].includes(newLevel)) return 1;
-    else return 0;
-  } else if (["Колдун", "Чернокнижник"].includes(characterClass)) {
-    // Колдуны получают новые заклинания на определенных уровнях
-    if ([3, 5, 7, 9, 11, 13, 15, 17].includes(newLevel)) return 1;
-    else return 0;
-  } else if (["Паладин", "Следопыт"].includes(characterClass)) {
-    // Паладины и следопыты получают доступ к новым заклинаниям на определенных уровнях
-    if ([5, 9, 13, 17].includes(newLevel)) return 1;
-    else return 0;
-  } else if (characterClass === "Чародей") {
-    // Чародеи получают новые заклинания на определенных уровнях
-    if ([3, 5, 7, 9, 11, 13, 15, 17].includes(newLevel)) return 1;
-    else return 0;
-  }
+  // Используем функцию-калькулятор из spellProcessors
+  const currentSpells = calculateAvailableSpellsByClassAndLevel(
+    characterClass, 
+    currentLevel,
+    {
+      wisdom: character.abilities?.wisdom,
+      charisma: character.abilities?.charisma,
+      intelligence: character.abilities?.intelligence
+    }
+  );
   
-  return 0;
+  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
+    characterClass, 
+    newLevel,
+    {
+      wisdom: character.abilities?.wisdom,
+      charisma: character.abilities?.charisma,
+      intelligence: character.abilities?.intelligence
+    }
+  );
+  
+  // Возвращаем разницу между новым и текущим количеством заклинаний
+  return Math.max(0, newLevelSpells.spells - currentSpells.spells);
 };
 
 // Определение количества новых заговоров при повышении уровня
@@ -131,17 +125,32 @@ const getNewCantripsCountOnLevelUp = (character: any): number => {
   if (!character) return 0;
   
   const characterClass = character.class || character.className;
-  if (!characterClass) return 0;
-  
   const currentLevel = character.level || 1;
   const newLevel = currentLevel + 1;
   
-  // Для большинства классов заговоры добавляются на 4м и 10м уровнях
-  if (["Волшебник", "Жрец", "Друид", "Бард", "Колдун", "Чернокнижник", "Чародей"].includes(characterClass)) {
-    if ([4, 10].includes(newLevel)) return 1;
-  }
+  // Используем функцию-калькулятор из spellProcessors
+  const currentSpells = calculateAvailableSpellsByClassAndLevel(
+    characterClass, 
+    currentLevel,
+    {
+      wisdom: character.abilities?.wisdom,
+      charisma: character.abilities?.charisma,
+      intelligence: character.abilities?.intelligence
+    }
+  );
   
-  return 0;
+  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
+    characterClass, 
+    newLevel,
+    {
+      wisdom: character.abilities?.wisdom,
+      charisma: character.abilities?.charisma,
+      intelligence: character.abilities?.intelligence
+    }
+  );
+  
+  // Возвращаем разницу между новым и текущим количеством заговоров
+  return Math.max(0, newLevelSpells.cantrips - currentSpells.cantrips);
 };
 
 // Основной хук для управления повышением уровня
