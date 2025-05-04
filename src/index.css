@@ -1,6 +1,155 @@
 
-/* Добавляем новые стили для карточек с учетом динамических тем */
-/* Эти стили нужно добавить в конец файла */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.5% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Добавляем стили для тем D&D */
+/* Базовые стили для различных тем */
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #1a56db;
+  --accent: #4c6ef5;
+  --card: #ffffff;
+  --card-foreground: #000000;
+}
+
+.theme-dark {
+  --background: #121212;
+  --foreground: #ffffff;
+  --primary: #4c6ef5;
+  --accent: #6366f1;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+}
+
+.theme-fantasy {
+  --background: #2c2a35;
+  --foreground: #e6d8b5;
+  --primary: #9d7e59;
+  --accent: #b69f7e;
+  --card: #353441;
+  --card-foreground: #e6d8b5;
+}
+
+.theme-cyber {
+  --background: #0c0c14;
+  --foreground: #00ffaa;
+  --primary: #00aaff;
+  --accent: #ff00aa;
+  --card: #14141e;
+  --card-foreground: #c8f5ff;
+}
+
+.theme-nature {
+  --background: #1d332a;
+  --foreground: #e5f5eb;
+  --primary: #5a9e7a;
+  --accent: #8cc474;
+  --card: #2a4438;
+  --card-foreground: #e5f5eb;
+}
+
+/* Анимация для плавных переходов тем */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Плавные переходы для элементов UI */
+button, a, input, select, .card {
+  transition: 
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Для устранения мерцания при загрузке */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
 /* Стили для карточек */
 .card, [class*="bg-card"] {
@@ -60,29 +209,60 @@ button:hover {
 .theme-warlock {
   --theme-accent: #9061F9;
   --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-wizard {
   --theme-accent: #3B82F6;
   --theme-glow: 0 0 15px rgba(59, 130, 246, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-druid {
   --theme-accent: #10B981;
   --theme-glow: 0 0 15px rgba(16, 185, 129, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-warrior {
   --theme-accent: #F43F5E;
   --theme-glow: 0 0 15px rgba(244, 63, 94, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-bard {
   --theme-accent: #F59E0B;
   --theme-glow: 0 0 15px rgba(245, 158, 11, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-default {
   --theme-accent: #8B5A2B;
   --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
+}
+
+/* Дополнительные стили для улучшения контраста */
+.bg-background, body, .app-container {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  background-image: url('/lovable-uploads/3678611a-a17a-4a81-8df0-c56c63cfcf0d.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.text-foreground {
+  color: #FFFFFF !important;
+}
+
+.text-muted-foreground {
+  color: #DDDDDD !important;
 }

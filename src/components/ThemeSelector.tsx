@@ -44,7 +44,8 @@ const ThemeSelector = () => {
           style={{ 
             borderColor: currentTheme.accent,
             color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}30`
+            boxShadow: `0 0 5px ${currentTheme.accent}30`,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)'
           }}
         >
           <Palette className="h-5 w-5" />
@@ -61,7 +62,8 @@ const ThemeSelector = () => {
         style={{ 
           backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
           borderColor: currentTheme.accent,
-          boxShadow: currentTheme.glow
+          boxShadow: currentTheme.glow,
+          color: currentTheme.textColor
         }}
       >
         <DropdownMenuLabel 

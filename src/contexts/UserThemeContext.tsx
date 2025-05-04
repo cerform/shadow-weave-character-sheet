@@ -15,7 +15,7 @@ export const UserThemeContext = createContext<UserThemeContextType | undefined>(
 export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, updateUserTheme } = useSessionStore();
   const { setTheme } = useTheme();
-  const [activeTheme, setActiveTheme] = useState(() => {
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
     // При монтировании проверяем сохраненную тему в localStorage
     const savedTheme = localStorage.getItem('theme');
     return savedTheme || 'default';

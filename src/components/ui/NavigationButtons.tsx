@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useDeviceType } from '@/hooks/use-mobile';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -16,8 +18,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const { currentUser } = useAuth();
   const isDM = currentUser?.isDM;
   const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
+  const { activeTheme } = useUserTheme();
+  
+  // Используем активную тему из UserThemeContext с запасным вариантом из ThemeContext
+  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
   
@@ -25,7 +31,8 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const buttonStyle = {
     color: currentTheme.buttonText || '#FFFFFF',
     borderColor: currentTheme.accent,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)'
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
   
   // Функция для корректной навигации

@@ -2,9 +2,11 @@
 import { useContext } from 'react';
 import { ThemeContext, Theme } from '@/contexts/ThemeContext';
 import { themes } from '@/lib/themes';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+  const userTheme = useUserTheme();
   
   if (!context) {
     console.error('useTheme должен использоваться внутри ThemeProvider');
@@ -17,13 +19,17 @@ export const useTheme = () => {
     };
   }
   
+  // Приоритет отдаем пользовательской теме, если она существует
+  const effectiveTheme = userTheme?.activeTheme || context.theme;
+  
   // Получаем активные стили темы
-  const themeKey = (context.theme || 'default') as keyof typeof themes;
+  const themeKey = (effectiveTheme || 'default') as keyof typeof themes;
   const themeStyles = themes[themeKey] || themes.default;
   
   return {
     ...context,
-    themeStyles
+    themeStyles,
+    effectiveTheme
   };
 };
 
