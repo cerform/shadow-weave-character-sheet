@@ -1,394 +1,306 @@
-import React, { useState, useContext } from 'react';
-import { Character, CharacterContext } from '@/contexts/CharacterContext';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { FileText } from "lucide-react";
-import { jsPDF } from "jspdf";
-import autoTable from 'jspdf-autotable';
+import React, { useState, useEffect, useRef } from 'react';
+import { CharacterSheet as CharacterSheetType } from '@/types/character';
+import CharacterInfoPanel from './CharacterInfoPanel';
+import AbilityScoresPanel from './AbilityScoresPanel';
+import SkillsPanel from './SkillsPanel';
+import CombatStatsPanel from './CombatStatsPanel';
+import FeaturesTab from './FeaturesTab';
+import EquipmentPanel from './EquipmentPanel';
+import SpellsPanel from './SpellsPanel';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useSession } from '@/contexts/SessionContext';
-import { useNavigate } from 'react-router-dom';
-import NavigationButtons from "@/components/ui/NavigationButtons";
-import { StatsPanel } from './StatsPanel';
-import { CharacterTabs } from './CharacterTabs';
-import { ResourcePanel } from './ResourcePanel';
-import { RestPanel } from './RestPanel';
-import { ThemeSelector } from './ThemeSelector';
-import LevelUpPanel from './LevelUpPanel';
-import { SkillsPanel } from './SkillsPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "@/components/ui/card"
+import { useWindowSize } from '@/hooks/useWindowSize';
+import { CharacterContext } from '@/contexts/CharacterContext';
+import { SessionContext } from '@/contexts/SessionContext';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
+import { socket } from '@/lib/socket';
+import { useRouter } from 'next/navigation';
+import { Skeleton } from "@/components/ui/skeleton"
+import { ModeToggle } from "@/components/ModeToggle"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Edit, UserPlus, Save, Download, Trash2 } from 'lucide-react';
+import CharacterEditModal from './CharacterEditModal';
+import PDFGenerator from './PDFGenerator';
+import EnhancedResourcePanel from './EnhancedResourcePanel';
+import EnhancedLevelUpPanel from './EnhancedLevelUpPanel';
 
-interface CharacterSheetProps {
-  character: Character | null;
-  isDM?: boolean; 
-}
-
-const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false }) => {
-  const { updateCharacter } = useContext(CharacterContext);
-  const [showSessionDialog, setShowSessionDialog] = useState(false);
-  const [showCombatDialog, setShowCombatDialog] = useState(false);
-  const [sessionCode, setSessionCode] = useState('');
-  const [activeTab, setActiveTab] = useState("abilities");
-  const { toast } = useToast();
+const CharacterSheet = ({ character, isDM = false }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState('features');
   const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  const { joinSession } = useSession();
-  const navigate = useNavigate();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const { width } = useWindowSize();
+  const { updateCharacter } = React.useContext(CharacterContext);
+  const { session, addCharacterToSession, removeCharacterFromSession } = React.useContext(SessionContext);
+  const { toast } = useToast();
+  const { currentUser, isOfflineMode } = useAuth();
+  const router = useRouter();
   
-  const handleCharacterSave = () => {
-    toast({
-      title: "Персонаж сохранен!",
-      description: "Ваш персонаж успешно сохранен.",
-    });
-  };
-
-  const handleExportToPdf = () => {
-    if (!character) {
-      toast({
-        title: "Ошибка",
-        description: "Нет данных для экспорта.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const doc = new jsPDF();
-
-    doc.text(`Character Sheet: ${character.name}`, 10, 10);
-
-    autoTable(doc, {
-      startY: 20,
-      head: [['Attribute', 'Value']],
-      body: [
-        ['Name', character.name],
-        ['Class', character.className || ''],
-        ['Race', character.race || ''],
-        ['Level', character.level?.toString() || '1'],
-        ['Experience', (character.level || 0).toString()], 
-        ['Alignment', character.alignment || ''],
-      ],
-    });
-
-    doc.save(`${character.name}.pdf`);
-  };
+  // Состояние для хранения информации о персонаже в формате PDF
+  const [pdfData, setPdfData] = useState<CharacterSheetType | null>(null);
   
-  const handleJoinSession = () => {
-    if (!sessionCode.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите код сессии.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!character) {
-      toast({
-        title: "Ошибка",
-        description: "Персонаж не выбран.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const joined = joinSession(sessionCode, { name: character.name, character });
-    
-    if (joined) {
-      toast({
-        title: "Успех",
-        description: "Вы успешно присоединились к сессии.",
-      });
-      setShowSessionDialog(false);
-      navigate('/player-session');
-    } else {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось присоединиться к сессии. Проверьте код.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleHpChange = (newHp: number) => {
+  // Функция для обновления информации о персонаже
+  const handleUpdateCharacter = (updates: Partial<CharacterSheetType>) => {
     if (!character) return;
     
-    updateCharacter({
-      currentHp: newHp
-    });
+    const updatedCharacter = { ...character, ...updates };
+    updateCharacter(updatedCharacter);
     
-    toast({
-      title: "Здоровье обновлено",
-      description: `Текущее здоровье: ${newHp}`,
-    });
+    // Отправляем изменения на сервер, если мы в сессии и не в автономном режиме
+    if (session && !isOfflineMode) {
+      socket?.emit('updateCharacter', {
+        characterId: character.id,
+        updates: updates
+      });
+    }
   };
   
-  const handleUseSpellSlot = (level: number) => {
-    if (!character || !character.spellSlots) return;
+  // Функция для добавления персонажа в сессию
+  const handleAddCharacterToSession = async () => {
+    if (!character) return;
     
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo || slotInfo.used >= slotInfo.max) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: slotInfo.used + 1
-    };
-    
-    updateCharacter({ spellSlots: updatedSpellSlots });
-    
-    toast({
-      title: "Слот заклинания использован",
-      description: `Использован слот ${level} уровня`,
-    });
+    try {
+      // Вызываем функцию добавления персонажа в сессию
+      await addCharacterToSession(character);
+      
+      toast({
+        title: "Персонаж добавлен в сессию",
+        description: `Персонаж ${character.name} успешно добавлен в текущую сессию.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка при добавлении персонажа",
+        description: error.message || "Не удалось добавить персонажа в сессию.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleRestoreSpellSlot = (level: number) => {
-    if (!character || !character.spellSlots) return;
+  // Функция для удаления персонажа из сессии
+  const handleRemoveCharacterFromSession = async () => {
+    if (!character) return;
     
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo || slotInfo.used <= 0) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: slotInfo.used - 1
-    };
-    
-    updateCharacter({ spellSlots: updatedSpellSlots });
-    
-    toast({
-      title: "Слот заклинания восстановлен",
-      description: `Восстановлен слот ${level} уровня`,
-    });
+    try {
+      // Вызываем функцию удаления персонажа из сессии
+      await removeCharacterFromSession(character.id);
+      
+      toast({
+        title: "Персонаж удален из сессии",
+        description: `Персонаж ${character.name} успешно удален из текущей сессии.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка при удалении персонажа",
+        description: error.message || "Не удалось удалить персонажа из сессии.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div 
-      className="min-h-screen py-4"
-      style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
-        color: currentTheme.textColor
-      }}
-    >
-      <div className="container mx-auto py-4 px-2">
-    
-        <NavigationButtons className="mb-4" />
-        
-        <div className="flex justify-end mb-4">
-          <ThemeSelector />
-        </div>
-      
-        <Card className="bg-card/30 backdrop-blur-sm border-primary/20 mb-4">
-          <CardHeader>
-            <CardTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
-              {character ? character.name : 'Новый персонаж'}
-            </CardTitle>
-            <CardDescription style={{ color: currentTheme.mutedTextColor }}>
-              {character ? (
-                <>
-                  {character.className || ''} {character.race ? `, ${character.race}` : ''} 
-                  {character.level ? `, Уровень ${character.level}` : ''}
-                </>
-              ) : 'Создайте своего персонажа'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-between items-center flex-wrap gap-4">
-            <div>
-              <Button 
-                onClick={handleCharacterSave} 
-                className="mr-2"
-                style={{
-                  backgroundColor: currentTheme.accent,
-                  color: currentTheme.buttonText
-                }}
-              >
-                Сохранить
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleExportToPdf}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor
-                }}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Экспорт в PDF
-              </Button>
-            </div>
-            <Button 
-              onClick={() => setShowSessionDialog(true)}
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              Присоединиться к сессии
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Обновленная сетка с измененным расположением панелей */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-6">
-          {/* Левая панель с ресурсами вверху */}
-          <div className="md:col-span-3 space-y-4">
-            <ResourcePanel 
-              currentHp={character?.currentHp || 0}
-              maxHp={character?.maxHp || 0}
-              onHpChange={handleHpChange}
-            />
-            
-            <StatsPanel character={character} />
-            
-            <LevelUpPanel />
-            
-            {/* Убираем отсюда панель слотов заклинаний */}
-          </div>
+    <div className="container mx-auto py-4 px-4 md:px-0">
+      {/* Шапка */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4">
+          {character?.image ? (
+            <Avatar>
+              <AvatarImage src={character.image} alt={character?.name} />
+              <AvatarFallback>{character?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          ) : (
+            <Avatar>
+              <AvatarFallback>{character?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          )}
           
-          {/* Основной контент с вкладками */}
-          <div className="md:col-span-6">
-            <CharacterTabs 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-            />
-          </div>
-          
-          {/* Правая панель с навыками */}
-          <div className="md:col-span-3">
-            <SkillsPanel character={character} />
+          <div>
+            <h1 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
+              {character?.name || <Skeleton />}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {character?.race} {character?.class} ({character?.level} уровень)
+            </p>
           </div>
         </div>
         
-        <div className="flex justify-end mt-8">
-          <Button 
-            onClick={handleCharacterSave} 
-            className="mr-2"
-            style={{
-              backgroundColor: currentTheme.accent,
-              color: currentTheme.buttonText
-            }}
-          >
-            Сохранить
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleExportToPdf}
-            style={{
-              borderColor: currentTheme.accent,
-              color: currentTheme.textColor
-            }}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Экспорт в PDF
-          </Button>
-          {isDM && (
+        <div className="flex items-center space-x-2">
+          {/* Кнопка редактирования (только для DM или в автономном режиме) */}
+          {(isDM || isOfflineMode) && (
             <Button 
-              onClick={() => setShowCombatDialog(true)} 
-              className="ml-2"
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
+              variant="outline" 
+              size="icon" 
+              onClick={() => setIsEditing(true)}
+              style={{ color: currentTheme.accent, borderColor: currentTheme.accent }}
             >
-              В бой!
+              <Edit className="h-4 w-4" />
             </Button>
           )}
-        </div>
-        
-        <Dialog open={showSessionDialog} onOpenChange={setShowSessionDialog}>
-          <DialogContent 
-            className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20"
-            style={{
-              backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-              borderColor: currentTheme.accent
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle style={{ color: currentTheme.textColor }}>
-                Присоединиться к сессии
-              </DialogTitle>
-              <DialogDescription style={{ color: currentTheme.mutedTextColor }}>
-                Введите код сессии, чтобы присоединиться к игре.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="sessionCode" className="text-right" style={{ color: currentTheme.textColor }}>
-                  Код сессии
-                </Label>
-                <Input 
-                  id="sessionCode" 
-                  value={sessionCode}
-                  onChange={(e) => setSessionCode(e.target.value)}
-                  className="col-span-3"
-                  style={{
-                    backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.5)'}`,
-                    color: currentTheme.textColor,
-                    borderColor: currentTheme.accent
-                  }}
-                />
-              </div>
-            </div>
+          
+          {/* Кнопка сохранения (только для DM или в автономном режиме) */}
+          {(isDM || isOfflineMode) && (
             <Button 
-              onClick={handleJoinSession}
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
+              variant="outline" 
+              size="icon"
+              style={{ color: currentTheme.accent, borderColor: currentTheme.accent }}
             >
-              Присоединиться
+              <Save className="h-4 w-4" />
             </Button>
-          </DialogContent>
-        </Dialog>
-        
-        {isDM && (
-          <Dialog open={showCombatDialog} onOpenChange={setShowCombatDialog}>
-            <DialogContent 
-              className="sm:max-w-[425px] bg-card/30 backdrop-blur-sm border-primary/20"
-              style={{
-                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-                borderColor: currentTheme.accent
+          )}
+          
+          {/* Кнопка генерации PDF */}
+          <PDFGenerator character={character} setPdfData={setPdfData}>
+            <Button variant="outline" size="icon" style={{ color: currentTheme.accent, borderColor: currentTheme.accent }}>
+              <Download className="h-4 w-4" />
+            </Button>
+          </PDFGenerator>
+          
+          {/* Кнопка удаления (только для DM или в автономном режиме) */}
+          {(isDM || isOfflineMode) && (
+            <Button 
+              variant="destructive" 
+              size="icon"
+              onClick={() => {
+                if (confirm("Вы уверены, что хотите удалить этого персонажа?")) {
+                  localStorage.removeItem('dnd-characters');
+                  router.push('/');
+                }
               }}
             >
-              <DialogHeader>
-                <DialogTitle style={{ color: currentTheme.textColor }}>
-                  Начать бой
-                </DialogTitle>
-                <DialogDescription style={{ color: currentTheme.mutedTextColor }}>
-                  Вы готовы к бою!
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <p style={{ color: currentTheme.textColor }}>
-                  Вы уверены, что хотите начать бой?
-                </p>
-              </div>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* Кнопка добавления/удаления из сессии */}
+          {session && (
+            character?.id === session.characterId ? (
               <Button 
-                onClick={() => {
-                  toast({
-                    title: "В бой!",
-                    description: "Начинаем бой!",
-                  });
-                  setShowCombatDialog(false);
-                }}
-                style={{
-                  backgroundColor: currentTheme.accent,
-                  color: currentTheme.buttonText
-                }}
+                variant="secondary" 
+                size="sm"
+                onClick={handleRemoveCharacterFromSession}
               >
-                В бой!
+                Удалить из сессии
               </Button>
-            </DialogContent>
-          </Dialog>
-        )}
+            ) : (
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleAddCharacterToSession}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Добавить в сессию
+              </Button>
+            )
+          )}
+          
+          {/* Переключатель темы */}
+          <ModeToggle />
+        </div>
       </div>
+      
+      {/* Модальное окно редактирования */}
+      <CharacterEditModal 
+        open={isEditing} 
+        onOpenChange={setIsEditing} 
+        character={character} 
+        updateCharacter={handleUpdateCharacter} 
+      />
+      
+      {/* ContentWrapper с обновленными компонентами */}
+      <ContentWrapper>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Левая колонка */}
+          <div className="md:col-span-4 lg:col-span-3">
+            <div className="space-y-4">
+              {/* Информация о персонаже */}
+              <CharacterInfoPanel character={character} />
+              
+              {/* Характеристики */}
+              <AbilityScoresPanel character={character} />
+              
+              {/* Используем улучшенную панель ресурсов */}
+              <EnhancedResourcePanel />
+              
+              {/* Используем улучшенную панель повышения уровня */}
+              <EnhancedLevelUpPanel />
+              
+              {/* Навыки */}
+              <SkillsPanel character={character} />
+            </div>
+          </div>
+          
+          {/* Средняя колонка (Features/Equipment) */}
+          <div className="md:col-span-8 lg:col-span-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList>
+                <TabsTrigger value="features">Особенности</TabsTrigger>
+                <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
+              </TabsList>
+              <TabsContent value="features">
+                <Card>
+                  <CardContent className="p-4">
+                    <FeaturesTab character={character} isDM={isDM || isOfflineMode} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="equipment">
+                <Card>
+                  <CardContent className="p-4">
+                    <EquipmentPanel character={character} isDM={isDM || isOfflineMode} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          {/* Правая колонка (Spells) */}
+          <div className="md:col-span-12 lg:col-span-3">
+            {character?.class === 'Волшебник' || character?.class === 'Жрец' || character?.class === 'Друид' || character?.class === 'Бард' || character?.class === 'Колдун' || character?.class === 'Чернокнижник' || character?.class === 'Чародей' ? (
+              <SpellsPanel character={character} isDM={isDM || isOfflineMode} />
+            ) : (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-muted-foreground">
+                    Этот класс не использует заклинания.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </ContentWrapper>
+      
+      {/* Подвал */}
+      <footer className="py-6 text-center text-muted-foreground">
+        {width < 768 ? (
+          <>
+            <p className="text-sm">
+              DnD Character Sheet App
+            </p>
+            <p className="text-xs">
+              Created by Foxik
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm">
+              DnD Character Sheet App - Created by Foxik
+            </p>
+          </>
+        )}
+      </footer>
     </div>
   );
 };
+
+// Обертка контента для стилизации
+const ContentWrapper = ({ children }) => (
+  <div className="bg-secondary rounded-md p-4">
+    {children}
+  </div>
+);
 
 export default CharacterSheet;

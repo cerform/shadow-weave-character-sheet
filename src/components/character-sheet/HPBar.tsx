@@ -12,6 +12,7 @@ interface HPBarProps {
   showValues?: boolean;
   height?: string;
   className?: string;
+  showDelta?: boolean;
 }
 
 export const HPBar: React.FC<HPBarProps> = ({ 
@@ -20,7 +21,8 @@ export const HPBar: React.FC<HPBarProps> = ({
   tempHp = 0,
   showValues = true,
   height = '1.5rem',
-  className = ''
+  className = '',
+  showDelta = true
 }) => {
   const [prevCurrentHp, setPrevCurrentHp] = useState(currentHp);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -43,7 +45,7 @@ export const HPBar: React.FC<HPBarProps> = ({
     }
     
     // Анимируем только при реальных изменениях
-    if (safeCurrentHp !== prevCurrentHp) {
+    if (safeCurrentHp !== prevCurrentHp && showDelta) {
       setIsAnimating(true);
       const timer = setTimeout(() => {
         setIsAnimating(false);
@@ -52,7 +54,7 @@ export const HPBar: React.FC<HPBarProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [safeCurrentHp, prevCurrentHp]);
+  }, [safeCurrentHp, prevCurrentHp, showDelta]);
   
   // Расчет процентов для HP баров
   const healthPercentage = Math.max(0, Math.min(100, (safeCurrentHp / safeMaxHp) * 100));
@@ -114,7 +116,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         
         {/* Индикатор изменения HP */}
         <AnimatePresence>
-          {isAnimating && (
+          {isAnimating && showDelta && (
             <motion.div 
               className={`absolute top-0 left-0 h-full ${getAnimationColor()}`}
               style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / safeMaxHp) * 100)}%` }}
