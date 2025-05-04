@@ -19,6 +19,12 @@ export const useCharacterCreation = () => {
     background: "",
     alignment: "",
     abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -34,16 +40,21 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    skills: [],
+    skills: {}, // Инициализируем как объект, а не массив
     languages: [],
     equipment: [],
     spells: [],
-    proficiencies: [],
+    proficiencies: {
+      armor: [],
+      weapons: [],
+      tools: [],
+      languages: []
+    }, // Инициализируем как объект
     features: [],
     personalityTraits: "",
-    ideals: "",
-    bonds: "",
-    flaws: "",
+    ideals: [],
+    bonds: [],
+    flaws: [],
     appearance: "",
     backstory: ""
   });

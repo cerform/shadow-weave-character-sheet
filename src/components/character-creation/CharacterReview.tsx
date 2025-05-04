@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,6 +160,21 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
 
+  // Хелпер для безопасного получения характеристики
+  const getAbilityValue = (shortName: string, fullName: string): number => {
+    if (abilities) {
+      // Пробуем сначала короткое имя
+      if (shortName in abilities) {
+        return (abilities as any)[shortName];
+      }
+      // Потом полное имя
+      if (fullName in abilities) {
+        return (abilities as any)[fullName];
+      }
+    }
+    return 10; // Значение по умолчанию
+  };
+
   // Обработчик изменения данных о внешности
   const handleAppearanceChange = (key: string, value: string) => {
     setAppearanceDetails(prev => ({
@@ -172,7 +186,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     updateCharacter({ [key]: value } as any);
   };
 
-  // Получаем доступные характеристики персонажа
+  // Получаем доступные характеристики персонажа с безопасным доступом к ним
   const abilities = character.stats || character.abilities || {
     strength: 10,
     dexterity: 10,
@@ -243,7 +257,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           </CardContent>
         </Card>
 
-        {/* Характеристики */}
+        {/* Характеристики - исправляем доступ к свойствам */}
         <Card className="bg-black/50 border border-gray-700">
           <CardHeader>
             <CardTitle className="text-yellow-400">Характеристики</CardTitle>
@@ -251,49 +265,49 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           <CardContent className="grid grid-cols-3 gap-3">
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">СИЛ</span>
-              <span className="text-xl font-bold text-white">{abilities.strength || abilities.STR || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('STR', 'strength')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.strength || abilities.STR || 10)}
+                {getAbilityModifier(getAbilityValue('STR', 'strength'))}
               </span>
             </div>
             
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">ЛОВ</span>
-              <span className="text-xl font-bold text-white">{abilities.dexterity || abilities.DEX || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('DEX', 'dexterity')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.dexterity || abilities.DEX || 10)}
+                {getAbilityModifier(getAbilityValue('DEX', 'dexterity'))}
               </span>
             </div>
             
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">ТЕЛ</span>
-              <span className="text-xl font-bold text-white">{abilities.constitution || abilities.CON || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('CON', 'constitution')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.constitution || abilities.CON || 10)}
+                {getAbilityModifier(getAbilityValue('CON', 'constitution'))}
               </span>
             </div>
             
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">ИНТ</span>
-              <span className="text-xl font-bold text-white">{abilities.intelligence || abilities.INT || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('INT', 'intelligence')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.intelligence || abilities.INT || 10)}
+                {getAbilityModifier(getAbilityValue('INT', 'intelligence'))}
               </span>
             </div>
             
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">МДР</span>
-              <span className="text-xl font-bold text-white">{abilities.wisdom || abilities.WIS || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('WIS', 'wisdom')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.wisdom || abilities.WIS || 10)}
+                {getAbilityModifier(getAbilityValue('WIS', 'wisdom'))}
               </span>
             </div>
             
             <div className="flex flex-col items-center p-2 bg-black/30 rounded-md border border-gray-700">
               <span className="text-sm text-gray-400">ХАР</span>
-              <span className="text-xl font-bold text-white">{abilities.charisma || abilities.CHA || 10}</span>
+              <span className="text-xl font-bold text-white">{getAbilityValue('CHA', 'charisma')}</span>
               <span className="text-sm font-medium text-yellow-400">
-                {getAbilityModifier(abilities.charisma || abilities.CHA || 10)}
+                {getAbilityModifier(getAbilityValue('CHA', 'charisma'))}
               </span>
             </div>
           </CardContent>

@@ -1,109 +1,103 @@
 
-import { db } from './firebase';
-import { collection, addDoc, doc, updateDoc, getDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
 import { CharacterSheet } from '@/types/character';
 
-/**
- * Сохраняет персонажа в базу данных
- * @param character Данные персонажа
- * @returns Объект с id сохраненного персонажа
- */
+// Имитация сервиса для работы с персонажами
+// В реальном приложении здесь будут API-вызовы к бэкенду
+
+const LOCAL_STORAGE_KEY = 'dnd-characters';
+
+// Получение всех персонажей текущего пользователя
+export const getCharactersByUserId = async (userId?: string): Promise<CharacterSheet[]> => {
+  try {
+    const charactersJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!charactersJson) {
+      return [];
+    }
+
+    const allCharacters: CharacterSheet[] = JSON.parse(charactersJson);
+    
+    // Фильтруем по userId, если он передан
+    if (userId) {
+      return allCharacters.filter(char => char.userId === userId);
+    }
+    
+    return allCharacters;
+  } catch (error) {
+    console.error('Ошибка при получении персонажей:', error);
+    return [];
+  }
+};
+
+// Получение персонажа по id
+export const getCharacterById = async (id: string): Promise<CharacterSheet | null> => {
+  try {
+    const charactersJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!charactersJson) {
+      return null;
+    }
+
+    const allCharacters: CharacterSheet[] = JSON.parse(charactersJson);
+    return allCharacters.find(char => char.id === id) || null;
+  } catch (error) {
+    console.error('Ошибка при получении персонажа по id:', error);
+    return null;
+  }
+};
+
+// Сохранение персонажа
 export const saveCharacter = async (character: CharacterSheet): Promise<{id: string}> => {
   try {
-    // Проверяем наличие id (для обновления существующего персонажа)
-    if (character.id) {
-      // Обновляем существующего персонажа
-      const characterRef = doc(db, 'characters', character.id);
-      
-      // Добавляем timestamp обновления
-      const updatedCharacter = { 
-        ...character, 
-        updatedAt: new Date().toISOString() 
-      };
-      
-      await updateDoc(characterRef, updatedCharacter);
-      
-      return { id: character.id };
-    } else {
-      // Создаем нового персонажа
-      const characterData = { 
-        ...character,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      const docRef = await addDoc(collection(db, 'characters'), characterData);
-      
-      return { id: docRef.id };
+    let allCharacters: CharacterSheet[] = [];
+    const charactersJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+    
+    if (charactersJson) {
+      allCharacters = JSON.parse(charactersJson);
     }
+    
+    // Генерируем id, если его нет
+    if (!character.id) {
+      character.id = Math.random().toString(36).substr(2, 9);
+    }
+    
+    // Обновляем или добавляем
+    const existingIndex = allCharacters.findIndex(char => char.id === character.id);
+    
+    if (existingIndex >= 0) {
+      allCharacters[existingIndex] = {...character};
+    } else {
+      allCharacters.push({...character});
+    }
+    
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allCharacters));
+    return { id: character.id };
   } catch (error) {
     console.error('Ошибка при сохранении персонажа:', error);
     throw new Error('Не удалось сохранить персонажа');
   }
 };
 
-/**
- * Получает персонажа по его ID
- * @param id ID персонажа
- * @returns Данные персонажа или null
- */
-export const getCharacterById = async (id: string): Promise<CharacterSheet | null> => {
+// Удаление персонажа
+export const deleteCharacter = async (id: string): Promise<{success: boolean}> => {
   try {
-    const characterRef = doc(db, 'characters', id);
-    const characterDoc = await getDoc(characterRef);
-    
-    if (characterDoc.exists()) {
-      const characterData = characterDoc.data() as CharacterSheet;
-      return { ...characterData, id: characterDoc.id };
+    const charactersJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!charactersJson) {
+      return { success: false };
     }
-    
-    return null;
-  } catch (error) {
-    console.error('Ошибка при получении персонажа:', error);
-    throw new Error('Не удалось получить персонажа');
-  }
-};
 
-/**
- * Получает всех персонажей пользователя
- * @param userId ID пользователя
- * @returns Массив персонажей
- */
-export const getCharactersByUserId = async (userId: string): Promise<CharacterSheet[]> => {
-  try {
-    const charactersQuery = query(
-      collection(db, 'characters'),
-      where('userId', '==', userId)
-    );
+    let allCharacters: CharacterSheet[] = JSON.parse(charactersJson);
+    allCharacters = allCharacters.filter(char => char.id !== id);
     
-    const querySnapshot = await getDocs(charactersQuery);
-    
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    } as CharacterSheet));
-  } catch (error) {
-    console.error('Ошибка при получении персонажей пользователя:', error);
-    throw new Error('Не удалось получить персонажей');
-  }
-};
-
-/**
- * Удаляет персонажа по его ID
- * @param id ID персонажа
- */
-export const deleteCharacter = async (id: string): Promise<void> => {
-  try {
-    await deleteDoc(doc(db, 'characters', id));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allCharacters));
+    return { success: true };
   } catch (error) {
     console.error('Ошибка при удалении персонажа:', error);
-    throw new Error('Не удалось удалить персонажа');
+    return { success: false };
   }
 };
 
 export default {
-  saveCharacter,
-  getCharacterById,
   getCharactersByUserId,
+  getCharacterById,
+  saveCharacter,
   deleteCharacter
 };

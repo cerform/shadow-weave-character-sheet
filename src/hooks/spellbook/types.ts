@@ -7,7 +7,7 @@ export interface SpellData {
   name: string;
   name_en?: string;
   level: number;
-  school: string;
+  school: string; // Теперь обязательное поле
   castingTime: string;
   range: string;
   components: string;

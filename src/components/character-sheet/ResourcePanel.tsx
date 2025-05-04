@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,7 +112,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
     }
   };
 
-  // Обработчики для отдыха
+  // Обрабо��чики для отдыха
   const handleShortRest = () => {
     if (!character) return;
   
@@ -489,7 +488,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                   initialDice={getHitDieByClass(character?.className)}
                   hideControls={false}
                   modifier={getNumericModifier(constitution)}
-                  onRollComplete={handleHitDiceRollComplete}
+                  onRollComplete={handleHitDieRollComplete}
                   themeColor={currentTheme.accent}
                 />
               </div>

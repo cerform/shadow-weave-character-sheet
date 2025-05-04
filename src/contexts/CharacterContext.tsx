@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints } from '@/types/character';
+import { SorceryPoints, CharacterSheet } from '@/types/character';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -103,12 +102,17 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     if (!character) return;
     
     try {
-      const updatedCharacter = { ...character, updatedAt: new Date().toISOString() };
+      const updatedCharacter = { 
+        ...character, 
+        updatedAt: new Date().toISOString(),
+        // Добавляем обязательное поле
+        backstory: character.backstory || ''
+      };
       if (!updatedCharacter.createdAt) {
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter);
+      const savedChar = await characterService.saveCharacter(updatedCharacter as any);
       if (savedChar) {
         setCharacter(updatedCharacter);
       }
@@ -123,7 +127,8 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получаем список персонажей пользователя
   const getUserCharacters = async () => {
     try {
-      const fetchedCharacters = await characterService.getCharacters();
+      // Изменяем на getCharactersByUserId, так как getCharacters не существует
+      const fetchedCharacters = await characterService.getCharactersByUserId();
       setCharacters(fetchedCharacters);
       return fetchedCharacters;
     } catch (error) {

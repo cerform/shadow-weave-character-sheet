@@ -32,18 +32,23 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   
   const [background, setBackground] = useState(character.background || "");
   const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || "");
-  const [ideals, setIdeals] = useState(character.ideals || "");
-  const [bonds, setBonds] = useState(character.bonds || "");
-  const [flaws, setFlaws] = useState(character.flaws || "");
+  const [ideals, setIdeals] = useState<string>(character.ideals ? (Array.isArray(character.ideals) ? character.ideals.join(', ') : character.ideals) : "");
+  const [bonds, setBonds] = useState<string>(character.bonds ? (Array.isArray(character.bonds) ? character.bonds.join(', ') : character.bonds) : "");
+  const [flaws, setFlaws] = useState<string>(character.flaws ? (Array.isArray(character.flaws) ? character.flaws.join(', ') : character.flaws) : "");
   const [backstory, setBackstory] = useState(character.backstory || "");
 
   const handleNext = () => {
+    // Преобразуем строки в массивы
+    const idealsArray = ideals.split(',').map(item => item.trim()).filter(Boolean);
+    const bondsArray = bonds.split(',').map(item => item.trim()).filter(Boolean);
+    const flawsArray = flaws.split(',').map(item => item.trim()).filter(Boolean);
+    
     const updates = {
       background,
       personalityTraits,
-      ideals,
-      bonds,
-      flaws,
+      ideals: idealsArray,
+      bonds: bondsArray,
+      flaws: flawsArray,
       backstory
     };
 
