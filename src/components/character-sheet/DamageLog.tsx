@@ -122,7 +122,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
       >
         <div className="p-2">
           <motion.div layout>
-            {displayEvents.map((event, index) => (
+            {displayEvents.map((event) => (
               <motion.div 
                 key={event.id}
                 className={`flex items-center py-1 px-2 rounded-md mb-1 ${getEventColor(event.type)}`}

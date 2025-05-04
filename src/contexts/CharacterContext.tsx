@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
 import { SorceryPoints } from '@/types/character';
@@ -148,7 +149,10 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   
   // При инициализации получаем список персонажей
   useEffect(() => {
-    getUserCharacters();
+    const loadCharacters = async () => {
+      await getUserCharacters();
+    };
+    loadCharacters();
   }, []);
   
   return (

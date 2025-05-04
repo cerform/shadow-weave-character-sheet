@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,27 +30,35 @@ const Index = () => {
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
   const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
+  const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
 
   // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
   useEffect(() => {
-    console.log("Index: Обновляем список персонажей");
-    
-    try {
-      const chars = getUserCharacters();
+    const fetchCharacters = async () => {
+      console.log("Index: Обновляем список персонажей");
+      setIsLoadingCharacters(true);
       
-      // Проверяем, что полученные данные являются массивом
-      if (Array.isArray(chars)) {
-        console.log("Index: Персонажи пользователя", chars);
-        setUserCharacters(chars);
-      } else {
-        console.error("Index: getUserCharacters вернул не массив:", chars);
+      try {
+        const chars = await getUserCharacters();
+        
+        // Проверяем, что полученные данные являются массивом
+        if (Array.isArray(chars)) {
+          console.log("Index: Персонажи пользователя", chars);
+          setUserCharacters(chars);
+        } else {
+          console.error("Index: getUserCharacters вернул не массив:", chars);
+          setUserCharacters([]);
+        }
+      } catch (error) {
+        console.error("Index: Ошибка при получении персонажей:", error);
         setUserCharacters([]);
+      } finally {
+        setIsLoadingCharacters(false);
       }
-    } catch (error) {
-      console.error("Index: Ошибка при получении персонажей:", error);
-      setUserCharacters([]);
-    }
-  }, [isAuthenticated, getUserCharacters, characters]);
+    };
+    
+    fetchCharacters();
+  }, [isAuthenticated, characters]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -97,17 +105,6 @@ const Index = () => {
     boxShadow: currentTheme.glow,
     transition: 'all 0.3s ease'
   };
-
-  // Update the navigation links to include new pages
-  const menuItems = [
-    { title: "Главная", path: "/home", icon: Home },
-    { title: "Создание персонажа", path: "/character-creation", icon: UserPlus },
-    { title: "Лист персонажа", path: "/character-sheet", icon: FileText },
-    { title: "Руководство игрока", path: "/handbook", icon: BookOpen },
-    { title: "Книга заклинаний", path: "/spellbook", icon: BookOpen },
-    { title: "Боевая карта", path: "/battle", icon: Swords },
-    { title: "Панель мастера", path: "/dm", icon: Crown },
-  ];
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
@@ -175,9 +172,11 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => navigate("/character-creation")} className="w-full gap-2">
-                    <Plus className="size-4" />
-                    Создать персонажа
+                  <Button asChild className="w-full gap-2">
+                    <Link to="/character-creation">
+                      <Plus className="size-4" />
+                      Создать персонажа
+                    </Link>
                   </Button>
                   
                   <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
@@ -217,8 +216,10 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/join")} className="w-full">
-                    Присоединиться к сессии
+                  <Button asChild className="w-full">
+                    <Link to="/join">
+                      Присоединиться к сессии
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -240,8 +241,10 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/dm")} className="w-full">
-                    Панель мастера
+                  <Button asChild className="w-full">
+                    <Link to="/dm">
+                      Панель мастера
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -261,8 +264,10 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/handbook")} className="w-full">
-                    Открыть руководство
+                  <Button asChild className="w-full">
+                    <Link to="/handbook">
+                      Открыть руководство
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -281,8 +286,10 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate("/spellbook")} className="w-full">
-                    Открыть книгу заклинаний
+                  <Button asChild className="w-full">
+                    <Link to="/spellbook">
+                      Открыть книгу заклинаний
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -295,7 +302,14 @@ const Index = () => {
               {isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}
             </h3>
             
-            {userCharacters && userCharacters.length > 0 ? (
+            {isLoadingCharacters ? (
+              <div 
+                className="backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground"
+                style={cardStyle}
+              >
+                Загрузка персонажей...
+              </div>
+            ) : userCharacters && userCharacters.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userCharacters.map((char) => (
                   <Card 

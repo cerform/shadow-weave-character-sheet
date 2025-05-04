@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
@@ -29,31 +29,42 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
-  const navigate = useNavigate();
   
   const handlePrevStep = () => {
-    if (isFirstStep) {
-      // Если это первый шаг, возвращаемся на главную страницу
-      navigate('/');
-    } else {
-      // Иначе переходим к предыдущему шагу
+    if (!isFirstStep) {
       prevStep();
     }
   };
   
   return (
     <div className="flex justify-between pt-8 mt-2">
-      <Button 
-        variant="outline" 
-        onClick={handlePrevStep}
-        className={`
-          flex items-center gap-2 px-4 py-2 
-          bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
-        `}
-      >
-        <ArrowLeft className="size-4" />
-        {!isMobile && (isFirstStep ? "На главную" : "Назад")}
-      </Button>
+      {isFirstStep ? (
+        <Button 
+          variant="outline" 
+          asChild
+          className={`
+            flex items-center gap-2 px-4 py-2 
+            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
+          `}
+        >
+          <Link to="/">
+            <ArrowLeft className="size-4" />
+            {!isMobile && "На главную"}
+          </Link>
+        </Button>
+      ) : (
+        <Button 
+          variant="outline" 
+          onClick={handlePrevStep}
+          className={`
+            flex items-center gap-2 px-4 py-2 
+            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
+          `}
+        >
+          <ArrowLeft className="size-4" />
+          {!isMobile && "Назад"}
+        </Button>
+      )}
       
       {!hideNextButton && (
         <Button 

@@ -10,6 +10,12 @@ export interface CharacterSpell {
   components?: string;
   duration?: string;
   prepared?: boolean;
+  // Добавим недостающие поля для совместимости с существующим кодом
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  higherLevels?: string;
+  classes?: string[];
 }
 
 export interface ClassFeature {
