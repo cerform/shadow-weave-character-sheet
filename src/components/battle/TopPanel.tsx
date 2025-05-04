@@ -16,7 +16,7 @@ const TopPanel: React.FC<{ className?: string }> = ({ className = '' }) => {
       <NavigationButtons 
         prevStep={prevStep} 
         nextStep={nextStep} 
-        disableNext={false} // Используем disableNext вместо nextDisabled
+        disableNext={false}
       />
     </Card>
   );

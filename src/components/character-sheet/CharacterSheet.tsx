@@ -1,7 +1,7 @@
 
 // Импортируем все необходимые компоненты и хуки
 import React, { useState, useContext } from 'react';
-import { CharacterContext } from '@/contexts/CharacterContext';
+import { CharacterContext, Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";

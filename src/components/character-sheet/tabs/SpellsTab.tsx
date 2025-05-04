@@ -1,8 +1,8 @@
-import React, { useContext, useState, useMemo } from 'react';
+import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails, getSpellsByLevel } from "@/data/spells"; // Removing getSpellsByLevels since it doesn't exist
+import { getSpellDetails } from "@/data/spells"; // Removing getSpellsByLevels since it doesn't exist
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Book, Plus, Search, Filter, XCircle } from "lucide-react"; 
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CharacterSpell } from '@/types/character';
 import { useDeviceType } from '@/hooks/use-mobile';
 import { Wand, Search, Plus, Info, Trash2 } from 'lucide-react';
+import { isString, isStringArray, safeJoin } from '@/hooks/spellbook/filterUtils';
 
 export const SpellsTab = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -259,17 +260,54 @@ export const SpellsTab = () => {
     );
   }
 
-  // Функция для форматирования списка классов
-  const formatClassList = (classes: string[] | string | undefined): string => {
-    if (!classes) return "Нет данных";
+  // Добавляем функцию для проверки типа spell
+  const isCharacterSpell = (spell: string | CharacterSpell): spell is CharacterSpell => {
+    return typeof spell === 'object' && spell !== null;
+  };
+
+  // Функция для преобразования строки в CharacterSpell
+  const getSpellObject = (spellName: string): CharacterSpell => {
+    const spellDetails = getSpellDetails(spellName);
+    if (spellDetails) return spellDetails;
     
-    if (Array.isArray(classes)) {
-      return classes.join(', ');
-    } else if (typeof classes === 'string') {
-      return classes;
+    return {
+      name: spellName,
+      level: 0,
+      description: "",
+      school: ""
+    };
+  };
+  
+  // Функция для получения уровня заклинания, обрабатывает строки и объекты
+  const getSpellLevel = (spell: string | CharacterSpell): number => {
+    if (isCharacterSpell(spell)) {
+      return spell.level;
+    } else {
+      const details = getSpellDetails(spell);
+      return details?.level || 0;
     }
-    
-    return "Нет данных";
+  };
+  
+  // Функция для получения имени заклинания, обрабатывает строки и объекты
+  const getSpellName = (spell: string | CharacterSpell): string => {
+    if (isCharacterSpell(spell)) {
+      return spell.name;
+    } else {
+      return spell;
+    }
+  };
+  
+  // Функция для поиска заклинания по имени, поддерживает оба типа
+  const findSpellByName = (spellName: string, spells: (string | CharacterSpell)[]): boolean => {
+    return spells.some(spell => {
+      const name = isCharacterSpell(spell) ? spell.name : spell;
+      return name.toLowerCase() === spellName.toLowerCase();
+    });
+  };
+  
+  // Функция для безопасного отображения свойства classes
+  const formatClassList = (classes: string[] | string | undefined): string => {
+    return safeJoin(classes);
   };
 
   return (

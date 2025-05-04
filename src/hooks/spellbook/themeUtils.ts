@@ -1,45 +1,48 @@
 
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '../use-theme';
 import { themes } from '@/lib/themes';
 
-// Получение цветов для значков на основе текущей темы
+// Хук для получения темы заклинаний
 export const useSpellTheme = () => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
+  // Функция для получения цвета бейджа заклинания по уровню
   const getBadgeColor = (level: number) => {
-    // Цвета на основе выбранной темы
-    const levelColors: { [key: number]: string } = {
-      0: `bg-stone-800 text-white border border-${currentTheme.accent}`,
-      1: `bg-blue-900 text-white border border-${currentTheme.accent}`,
-      2: `bg-green-900 text-white border border-${currentTheme.accent}`,
-      3: `bg-yellow-900 text-white border border-${currentTheme.accent}`,
-      4: `bg-orange-900 text-white border border-${currentTheme.accent}`,
-      5: `bg-red-900 text-white border border-${currentTheme.accent}`,
-      6: `bg-purple-900 text-white border border-${currentTheme.accent}`,
-      7: `bg-pink-900 text-white border border-${currentTheme.accent}`,
-      8: `bg-indigo-900 text-white border border-${currentTheme.accent}`,
-      9: `bg-cyan-900 text-white border border-${currentTheme.accent}`,
-    };
-
-    return levelColors[level] || "bg-gray-800 text-white";
-  };
-
-  const getSchoolBadgeColor = (school: string) => {
-    const schoolColors: { [key: string]: string } = {
-      'Преобразование': 'bg-blue-900 text-white',
-      'Воплощение': 'bg-red-900 text-white',
-      'Вызов': 'bg-orange-900 text-white',
-      'Прорицание': 'bg-purple-900 text-white',
-      'Очарование': 'bg-pink-900 text-white',
-      'Иллюзия': 'bg-indigo-900 text-white',
-      'Некромантия': 'bg-green-900 text-white',
-      'Ограждение': 'bg-yellow-900 text-white',
-    };
-
-    return schoolColors[school] || "bg-gray-800 text-white";
+    const colors = {
+      0: '#808080', // Заговоры - серый
+      1: '#3b82f6', // 1 уровень - синий
+      2: '#10b981', // 2 уровень - зеленый
+      3: '#f59e0b', // 3 уровень - желтый
+      4: '#ef4444', // 4 уровень - красный
+      5: '#8b5cf6', // 5 уровень - фиолетовый
+      6: '#ec4899', // 6 уровень - розовый
+      7: '#06b6d4', // 7 уровень - голубой
+      8: '#9333ea', // 8 уровень - пурпурный
+      9: '#dc2626', // 9 уровень - темно-красный
+    }[level] || currentTheme.accent;
+    return colors;
   };
   
-  return { currentTheme, getBadgeColor, getSchoolBadgeColor };
+  // Функция для получения цвета бейджа школы магии
+  const getSchoolBadgeColor = (school: string) => {
+    const colors = {
+      'Воплощение': '#ef4444', // Красный
+      'Некромантия': '#9333ea', // Фиолетовый
+      'Очарование': '#ec4899', // Розовый
+      'Преобразование': '#3b82f6', // Синий
+      'Призыв': '#f59e0b', // Оранжевый
+      'Прорицание': '#06b6d4', // Голубой
+      'Иллюзия': '#8b5cf6', // Светло-фиолетовый
+      'Ограждение': '#10b981', // Зеленый
+    }[school] || '#6b7280'; // Серый по умолчанию
+    return colors;
+  };
+  
+  return {
+    currentTheme,
+    getBadgeColor,
+    getSchoolBadgeColor
+  };
 };

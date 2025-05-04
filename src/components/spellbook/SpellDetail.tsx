@@ -53,7 +53,7 @@ const SpellDetail: React.FC<SpellDetailProps> = ({ spell, isDrawer = false }) =>
           >
             {spell.school}
           </Badge>
-          {spell.ritual && (
+          {spell.isRitual && (
             <Badge
               variant="outline"
               style={{ 
@@ -65,7 +65,7 @@ const SpellDetail: React.FC<SpellDetailProps> = ({ spell, isDrawer = false }) =>
               Ритуал
             </Badge>
           )}
-          {spell.concentration && (
+          {spell.isConcentration && (
             <Badge
               variant="outline"
               style={{ 
@@ -122,14 +122,14 @@ const SpellDetail: React.FC<SpellDetailProps> = ({ spell, isDrawer = false }) =>
         </div>
       </div>
       
-      {(spell.higherLevel || spell.higherLevels) && (
+      {(spell.higherLevels || spell.higherLevel) && (
         <div>
           <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
             На более высоких уровнях
           </h3>
           <div className="prose prose-sm max-w-none dark:prose-invert" style={{ color: currentTheme.textColor }}>
-            {spell.higherLevel && (<p>{spell.higherLevel}</p>)}
             {spell.higherLevels && (<p>{spell.higherLevels}</p>)}
+            {spell.higherLevel && (<p>{spell.higherLevel}</p>)}
           </div>
         </div>
       )}

@@ -1,108 +1,155 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { CharacterSheet } from '@/types/character';
-import NavigationButtons from '@/components/character-creation/NavigationButtons';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CharacterClassProps {
   character: Partial<CharacterSheet>;
   updateCharacter: (updates: Partial<CharacterSheet>) => void;
-  prevStep: () => void;
   nextStep: () => void;
+  prevStep: () => void;
 }
 
-const CharacterClass: React.FC<CharacterClassProps> = ({
-  character,
-  updateCharacter,
-  prevStep,
-  nextStep,
-}) => {
-  const [selectedClass, setSelectedClass] = useState<string>(character.class || '');
+// Базовые классы D&D 5e
+const classes = [
+  {
+    id: "barbarian",
+    name: "Варвар",
+    description: "Свирепый воин первобытного происхождения, который может впасть в ярость в бою",
+    hitDice: "d12",
+    primaryAbility: "Сила",
+    savingThrows: ["Сила", "Телосложение"]
+  },
+  {
+    id: "bard",
+    name: "Бард",
+    description: "Вдохновляющий маг, чья сила проистекает из музыки его сердца",
+    hitDice: "d8",
+    primaryAbility: "Харизма",
+    savingThrows: ["Ловкость", "Харизма"]
+  },
+  {
+    id: "cleric",
+    name: "Жрец",
+    description: "Жрец различных божеств с уникальной сферой магической силы",
+    hitDice: "d8",
+    primaryAbility: "Мудрость",
+    savingThrows: ["Мудрость", "Харизма"]
+  },
+  {
+    id: "druid",
+    name: "Друид",
+    description: "Священник природы, владеющий древней магией и способностью менять форму",
+    hitDice: "d8",
+    primaryAbility: "Мудрость",
+    savingThrows: ["Интеллект", "Мудрость"]
+  }
+];
 
-  const handleNext = () => {
-    updateCharacter({
+const CharacterClass: React.FC<CharacterClassProps> = ({ 
+  character, 
+  updateCharacter, 
+  nextStep, 
+  prevStep 
+}) => {
+  const { toast } = useToast();
+  const [selectedClass, setSelectedClass] = useState(character.class || "");
+  const [selectedLevel, setSelectedLevel] = useState(character.level || 1);
+  
+  // Получение информации о выбранном классе
+  const classInfo = classes.find(c => c.id === selectedClass);
+  
+  // Обработчик сохранения данных и перехода к следующему шагу
+  const handleNextStep = () => {
+    if (!selectedClass) {
+      toast({
+        title: "Класс не выбран",
+        description: "Пожалуйста, выберите класс для вашего персонажа",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const updates: Partial<CharacterSheet> = { 
       class: selectedClass,
-    });
+      className: classInfo?.name,
+      level: selectedLevel
+    };
+    
+    updateCharacter(updates);
     nextStep();
   };
-
-  const classes = [
-    { name: "Бард", description: "Барды - универсальные мастера, сочетающие магию и боевые искусства с помощью музыки." },
-    { name: "Варвар", description: "Варвары - свирепые воины, полагающиеся на инстинкт и ярость в бою." },
-    { name: "Воин", description: "Воины - эксперты военного искусства и мастера многих видов оружия." },
-    { name: "Волшебник", description: "Волшебники - исследователи мистических искусств, обладающие обширными знаниями о магии." },
-    { name: "Друид", description: "Друиды - хранители природы, способные превращаться в животных и управлять стихиями." },
-    { name: "Жрец", description: "Жрецы - посланники богов, наделённые божественной силой для исцеления и защиты." },
-    { name: "Колдун", description: "Колдуны - маги, получившие силу от могущественного покровителя." },
-    { name: "Монах", description: "Монахи - мастера боевых искусств, использующие энергию ци для удивительных подвигов." },
-    { name: "Паладин", description: "Паладины - благородные воины, клянущиеся защищать добро и справедливость." },
-    { name: "Плут", description: "Плуты - ловкие и хитрые авантюристы, мастера скрытности и обмана." },
-    { name: "Следопыт", description: "Следопыты - смертельно опасные охотники и проводники в дикой местности." },
-    { name: "Чародей", description: "Чародеи - маги с врожденным даром к магии, текущей в их крови." }
-  ];
-
-  const selectedClassInfo = classes.find(c => c.name === selectedClass);
-
+  
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Выбор класса</h2>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-center mb-4">Выбор класса</h1>
       
-      <Card className="mb-6">
-        <CardContent className="pt-6 space-y-4">
-          <div>
-            <Label htmlFor="class" className="block mb-2">Выберите класс персонажа</Label>
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger id="class">
-                <SelectValue placeholder="Выберите класс" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.name} value={cls.name}>
-                    {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {selectedClassInfo && (
-            <div className="mt-6 p-4 border rounded-lg">
-              <h3 className="text-xl font-semibold mb-2">{selectedClassInfo.name}</h3>
-              <p className="text-muted-foreground">{selectedClassInfo.description}</p>
-              
-              <Tabs defaultValue="overview" className="mt-4">
-                <TabsList>
-                  <TabsTrigger value="overview">Обзор</TabsTrigger>
-                  <TabsTrigger value="abilities">Способности</TabsTrigger>
-                  <TabsTrigger value="proficiencies">Владения</TabsTrigger>
-                </TabsList>
-                <ScrollArea className="h-64 mt-2">
-                  <TabsContent value="overview" className="p-2">
-                    <p>Описание класса {selectedClassInfo.name}</p>
-                  </TabsContent>
-                  <TabsContent value="abilities" className="p-2">
-                    <p>Способности класса {selectedClassInfo.name}</p>
-                  </TabsContent>
-                  <TabsContent value="proficiencies" className="p-2">
-                    <p>Владения класса {selectedClassInfo.name}</p>
-                  </TabsContent>
-                </ScrollArea>
-              </Tabs>
+      <Card className="p-6">
+        <div className="mb-6">
+          <Label htmlFor="class-select" className="block mb-2">Класс персонажа</Label>
+          <Select
+            value={selectedClass}
+            onValueChange={setSelectedClass}
+          >
+            <SelectTrigger id="class-select">
+              <SelectValue placeholder="Выберите класс" />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {classInfo && (
+          <div className="bg-primary-foreground/10 p-4 rounded-md mb-6">
+            <h3 className="font-bold mb-2">{classInfo.name}</h3>
+            <p className="text-sm mb-2">{classInfo.description}</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>Кость хитов: {classInfo.hitDice}</div>
+              <div>Основная характеристика: {classInfo.primaryAbility}</div>
+              <div className="col-span-2">Спасброски: {classInfo.savingThrows.join(", ")}</div>
             </div>
-          )}
-        </CardContent>
+          </div>
+        )}
+        
+        <div className="mb-6">
+          <Label htmlFor="level-select" className="block mb-2">Уровень</Label>
+          <Select
+            value={selectedLevel.toString()}
+            onValueChange={(val) => setSelectedLevel(parseInt(val))}
+          >
+            <SelectTrigger id="level-select">
+              <SelectValue placeholder="Выберите уровень" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((level) => (
+                <SelectItem key={level} value={level.toString()}>{level}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={prevStep}
+          >
+            Назад
+          </Button>
+          <Button
+            onClick={handleNextStep}
+            disabled={!selectedClass}
+          >
+            Далее
+          </Button>
+        </div>
       </Card>
-
-      <NavigationButtons
-        prevStep={prevStep}
-        nextStep={handleNext}
-        allowNext={selectedClass !== ''}
-        isFirstStep={false}
-      />
     </div>
   );
 };

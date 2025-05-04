@@ -2,128 +2,111 @@
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from './types';
 
-// Вспомогательные функции для проверки типа
-export const isString = (value: unknown): value is string => {
+// Функция для проверки, является ли значение строкой
+export const isString = (value: any): value is string => {
   return typeof value === 'string';
 };
 
-export const isStringArray = (value: unknown): value is string[] => {
+// Функция для проверки, является ли значение массивом строк
+export const isStringArray = (value: any): value is string[] => {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
 };
 
-// Преобразование CharacterSpell в SpellData
-export const convertToSpellData = (spell: CharacterSpell): SpellData => {
-  return {
-    id: spell.id || 0,
-    isRitual: spell.ritual || false,
-    isConcentration: spell.concentration || false,
-    name: spell.name,
-    level: spell.level,
-    description: spell.description,
-    school: spell.school,
-    castingTime: spell.castingTime || 'Не указано',
-    range: spell.range || 'Не указано',
-    components: spell.components || 'Не указано',
-    duration: spell.duration || 'Не указано',
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    higherLevels: spell.higherLevels || '',
-    prepared: spell.prepared || false,
-    classes: spell.classes || [],
-    toString: function() {
-      return this.name;
-    }
-  };
+// Безопасное соединение значений в строку
+export const safeJoin = (classes: string[] | string | undefined): string => {
+  if (!classes) return '';
+  if (isStringArray(classes)) return classes.join(', ');
+  if (isString(classes)) return classes;
+  return '';
 };
 
-// Фильтрация заклинаний по поисковому запросу
+// Фильтр заклинаний по поисковому запросу
 export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: string): CharacterSpell[] => {
   if (!searchTerm) return spells;
-  
-  const term = searchTerm.toLowerCase();
-  
-  return spells.filter(spell =>
-    spell.name.toLowerCase().includes(term) ||
-    (spell.description && spell.description.toLowerCase().includes(term)) ||
-    (spell.school && spell.school.toLowerCase().includes(term))
-  );
-};
-
-// Фильтрация заклинаний по уровню
-export const filterSpellsByLevel = (spells: CharacterSpell[], levels: number[]): CharacterSpell[] => {
-  if (!levels.length) return spells;
-  
-  return spells.filter(spell => levels.includes(spell.level));
-};
-
-// Фильтрация заклинаний по школе
-export const filterSpellsBySchool = (spells: CharacterSpell[], schools: string[]): CharacterSpell[] => {
-  if (!schools.length) return spells;
-  
-  return spells.filter(spell => schools.includes(spell.school));
-};
-
-// Фильтрация заклинаний по классу
-export const filterSpellsByClass = (spells: CharacterSpell[], classes: string[]): CharacterSpell[] => {
-  if (!classes.length) return spells;
+  const lowerSearchTerm = searchTerm.toLowerCase();
   
   return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    if (isString(spell.classes)) {
-      return classes.includes(spell.classes);
+    if (isString(spell)) {
+      return spell.toLowerCase().includes(lowerSearchTerm);
     }
-    
-    if (isStringArray(spell.classes)) {
-      return spell.classes.some(cls => classes.includes(cls));
+    if (typeof spell === 'object' && spell && spell.name) {
+      return spell.name.toLowerCase().includes(lowerSearchTerm);
     }
-    
     return false;
   });
 };
 
-// Извлечение всех уникальных классов из заклинаний
+// Фильтр заклинаний по уровню
+export const filterSpellsByLevel = (spells: CharacterSpell[], activeLevels: number[]): CharacterSpell[] => {
+  if (!activeLevels.length) return spells;
+  
+  return spells.filter(spell => {
+    if (typeof spell === 'object' && spell && typeof spell.level === 'number') {
+      return activeLevels.includes(spell.level);
+    }
+    return false;
+  });
+};
+
+// Фильтр заклинаний по школе магии
+export const filterSpellsBySchool = (spells: CharacterSpell[], activeSchools: string[]): CharacterSpell[] => {
+  if (!activeSchools.length) return spells;
+  
+  return spells.filter(spell => {
+    if (typeof spell === 'object' && spell && spell.school) {
+      return activeSchools.includes(spell.school);
+    }
+    return false;
+  });
+};
+
+// Фильтр заклинаний по классу
+export const filterSpellsByClass = (spells: CharacterSpell[], activeClasses: string[]): CharacterSpell[] => {
+  if (!activeClasses.length) return spells;
+  
+  return spells.filter(spell => {
+    if (typeof spell === 'object' && spell && spell.classes) {
+      if (isStringArray(spell.classes)) {
+        return spell.classes.some(cls => activeClasses.includes(cls));
+      } 
+      if (isString(spell.classes)) {
+        return activeClasses.includes(spell.classes);
+      }
+    }
+    return false;
+  });
+};
+
+// Функция для извлечения всех уникальных классов из заклинаний
 export const extractClasses = (spells: CharacterSpell[]): string[] => {
-  const classesSet = new Set<string>();
+  const classes = new Set<string>();
   
   spells.forEach(spell => {
-    if (!spell.classes) return;
-    
-    if (isString(spell.classes)) {
-      classesSet.add(spell.classes);
-    } else if (isStringArray(spell.classes)) {
-      spell.classes.forEach(cls => classesSet.add(cls));
+    if (typeof spell === 'object' && spell && spell.classes) {
+      if (isStringArray(spell.classes)) {
+        spell.classes.forEach(cls => classes.add(cls));
+      } else if (isString(spell.classes)) {
+        classes.add(spell.classes);
+      }
     }
   });
   
-  return Array.from(classesSet).sort();
+  return Array.from(classes).sort();
 };
 
-// Форматирование списка классов для отображения
-export const formatClasses = (classes: string[] | string): string => {
-  if (!classes) return 'Нет классов';
-  
+// Функция для форматирования списка классов
+export const formatClasses = (classes: string[] | string | undefined): string => {
   return safeJoin(classes);
 };
 
-// Helper to safely join strings or arrays or handle a single string
-export const safeJoin = (value: string | string[], separator: string = ', '): string => {
-  if (!value) return '';
-  if (Array.isArray(value)) return value.join(separator);
-  return value;
-};
-
-// Функция для безопасного преобразования spell к определенному типу для SpellPanel
-export const safeSpellConversion = (spell: string | CharacterSpell): CharacterSpell => {
-  if (typeof spell === 'string') {
-    // Найдите данные о заклинании в вашем словаре заклинаний или верните базовый объект
-    return {
-      name: spell,
-      level: 0, // уровень по умолчанию
-      description: '',
-      school: 'Неизвестная'
-    };
-  }
-  return spell;
+// Конвертация CharacterSpell в SpellData
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    ...spell,
+    id: typeof spell.id === 'number' ? spell.id : 0,
+    isRitual: !!spell.ritual,
+    isConcentration: !!spell.concentration,
+    castingTime: spell.castingTime || "",
+    toString: () => spell.name,
+  };
 };

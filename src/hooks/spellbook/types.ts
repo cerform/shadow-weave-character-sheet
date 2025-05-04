@@ -3,12 +3,15 @@ import { CharacterSpell } from '@/types/character';
 import { Dispatch, SetStateAction } from 'react';
 
 // Типы для работы с заклинаниями
-export interface SpellData extends CharacterSpell {
+export interface SpellData extends Omit<CharacterSpell, 'ritual' | 'concentration'> {
   id: number;
   isRitual: boolean;
   isConcentration: boolean;
   castingTime: string;
   toString: () => string;
+  higherLevels?: string;
+  higherLevel?: string;
+  source?: string;
 }
 
 // Тип для возвращаемого значения хука useSpellbook

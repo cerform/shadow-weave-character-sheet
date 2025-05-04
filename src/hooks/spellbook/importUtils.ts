@@ -1,74 +1,49 @@
 
-import { CharacterSpell } from "@/types/character";
+import { CharacterSpell } from '@/types/character';
 
 // Функция для импорта заклинаний из текста
-export const importSpellsFromText = (text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] => {
-  // Проверка на пустой текст
-  if (!text || text.trim() === '') {
-    return [];
-  }
-
+export const importSpellsFromText = (text: string): CharacterSpell[] => {
   try {
-    // Попытка парсинга JSON строки
-    const parsedData = JSON.parse(text);
+    // Разделяем текст на строки
+    const lines = text.split('\n').filter(line => line.trim() !== '');
     
-    // Проверяем, является ли результат массивом
-    if (Array.isArray(parsedData)) {
-      return parsedData.map(spell => {
-        // Добавляем toString метод для отображения
-        return {
-          ...spell,
-          toString: function() { return this.name }
-        };
-      });
-    } else if (typeof parsedData === 'object' && parsedData !== null) {
-      // Если получен одиночный объект, оборачиваем его в массив
-      const spellWithToString = {
-        ...parsedData,
-        toString: function() { return this.name }
-      };
-      return [spellWithToString];
-    }
-  } catch (error) {
-    // Если не удалось распарсить как JSON, попробуем разбор текста
-    console.log("Не удалось распарсить как JSON, пробуем разбор текста");
+    // Паттерн для определения заклинаний
+    const spellPattern = /^(.+) \((\d)(?:st|nd|rd|th) уровень\)$/;
+    const cantripsPattern = /^(.+) \(заговор\)$/;
     
-    // Простая эвристика для разбора текста на строки и поиска заклинаний
-    const lines = text.split('\n');
-    const newSpells: CharacterSpell[] = [];
+    const spells: CharacterSpell[] = [];
     
     lines.forEach(line => {
-      const trimmedLine = line.trim();
+      let match = line.match(spellPattern);
       
-      // Пропускаем пустые строки
-      if (!trimmedLine) return;
-      
-      // Ищем существующее заклинание по имени
-      const existingSpell = existingSpells.find(spell => 
-        spell.name.toLowerCase() === trimmedLine.toLowerCase()
-      );
-      
-      if (existingSpell) {
-        // Копируем найденное заклинание
-        const spellCopy = { 
-          ...existingSpell,
-          toString: function() { return this.name }
-        };
-        newSpells.push(spellCopy);
-      } else {
-        // Создаем новое заклинание с минимальной информацией
-        newSpells.push({
-          name: trimmedLine,
-          level: 0, // По умолчанию заговор
-          school: "Преобразование", // По умолчанию
-          description: "Описание отсутствует",
-          toString: function() { return this.name }
+      if (match) {
+        const [, name, levelStr] = match;
+        const level = parseInt(levelStr);
+        
+        spells.push({
+          name: name.trim(),
+          level,
+          description: '',
+          school: ''
         });
+      } else {
+        match = line.match(cantripsPattern);
+        if (match) {
+          const [, name] = match;
+          
+          spells.push({
+            name: name.trim(),
+            level: 0,
+            description: '',
+            school: ''
+          });
+        }
       }
     });
     
-    return newSpells;
+    return spells;
+  } catch (error) {
+    console.error('Ошибка при импорте заклинаний из текста:', error);
+    return [];
   }
-  
-  return [];
 };

@@ -9,7 +9,7 @@ export interface NavigationButtonsProps {
   nextLabel?: string;
   disableNext?: boolean;
   allowNext?: boolean;
-  nextDisabled?: boolean; // Добавляем свойство nextDisabled для обратной совместимости
+  nextDisabled?: boolean; // Явно добавляем свойство nextDisabled
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -19,7 +19,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = "Далее",
   disableNext = false,
   allowNext = true,
-  nextDisabled // Добавляем поддержку свойства nextDisabled
+  nextDisabled // Поддерживаем свойство nextDisabled
 }) => {
   // Используем nextDisabled, если он передан, иначе используем логику disableNext || !allowNext
   const isNextDisabled = nextDisabled !== undefined ? nextDisabled : (disableNext || !allowNext);
