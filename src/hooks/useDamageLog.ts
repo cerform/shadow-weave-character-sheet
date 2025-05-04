@@ -1,305 +1,146 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useCallback } from 'react';
+import { HealthEvent } from './useHealthSystem';
 
-export interface DamageEvent {
-  id: string;
-  type: 'damage' | 'heal' | 'temp';
-  amount: number;
-  source?: string;
-  timestamp: Date;
+interface UseDamageLogReturn {
+  currentHp: number;
+  tempHp: number;
+  events: HealthEvent[];
+  applyDamage: (amount: number, source?: string) => void;
+  applyHealing: (amount: number, source?: string) => void;
+  addTempHp: (amount: number, source?: string) => void;
+  undoLastEvent: () => void;
+  setHp: (value: number, silent?: boolean) => void;
+  setTempHp: (value: number, silent?: boolean) => void;
 }
 
 export const useDamageLog = (
-  initialHp: number,
-  maxHp: number,
-  onHpChange: (hp: number, tempHp: number) => void
-) => {
-  const [currentHp, setCurrentHp] = useState(initialHp);
-  const [tempHp, setTempHp] = useState(0);
-  const [events, setEvents] = useState<DamageEvent[]>([]);
-  const { toast } = useToast();
+  initialCurrentHp: number,
+  initialMaxHp: number,
+  onChange?: (hp: number, tempHp: number) => void
+): UseDamageLogReturn => {
+  const [currentHp, setCurrentHpState] = useState<number>(initialCurrentHp);
+  const [tempHp, setTempHpState] = useState<number>(0);
+  const [events, setEvents] = useState<HealthEvent[]>([]);
   
-  // Реф для отслеживания инициализации хука
-  const isInitialized = useRef(false);
-  // Реф для предотвращения дублирования уведомлений
-  const notificationCooldown = useRef(false);
-
-  // Обновляем значения HP и сообщаем наверх через колбэк
-  useEffect(() => {
-    // Предотвращаем повторные уведомления при первичной инициализации
-    if (!isInitialized.current) {
-      isInitialized.current = true;
-      return;
+  // Функция установки HP с возможностью "тихого" режима
+  const setHp = useCallback((value: number, silent: boolean = false): void => {
+    const newValue = Math.max(0, Math.min(value, initialMaxHp));
+    setCurrentHpState(newValue);
+    
+    if (!silent && onChange) {
+      onChange(newValue, tempHp);
     }
+  }, [initialMaxHp, tempHp, onChange]);
+  
+  // Функция установки временного HP с возможностью "тихого" режима
+  const setTempHp = useCallback((value: number, silent: boolean = false): void => {
+    const newValue = Math.max(0, value);
+    setTempHpState(newValue);
     
-    // Вызываем колбэк без отображения уведомлений при начальной загрузке
-    onHpChange(currentHp, tempHp);
-  }, [currentHp, tempHp, onHpChange]);
-
-  // Функция для показа уведомлений с предотвращением спама
-  const showNotification = useCallback((title: string, description: string, variant?: "default" | "destructive") => {
-    // Проверяем, не в режиме кулдауна ли уведомления
-    if (notificationCooldown.current) return;
-    
-    // Устанавливаем кулдаун на 500мс, чтобы предотвратить спам
-    notificationCooldown.current = true;
-    
-    toast({
-      title,
-      description,
-      variant
-    });
-    
-    // Снимаем кулдаун через 500мс
-    setTimeout(() => {
-      notificationCooldown.current = false;
-    }, 500);
-  }, [toast]);
-
-  // Применяем событие получения урона
-  const applyDamage = useCallback((amount: number, source?: string) => {
-    if (amount <= 0) {
-      console.error("applyDamage должен вызываться с положительным значением для нанесения урона");
-      return;
+    if (!silent && onChange) {
+      onChange(currentHp, newValue);
     }
-
-    const eventId = crypto.randomUUID();
-    const damageAmount = amount;
-    let remainingDamage = damageAmount;
+  }, [currentHp, onChange]);
+  
+  // Применение урона
+  const applyDamage = useCallback((amount: number, source?: string): void => {
+    if (amount <= 0) return;
     
-    // Если есть временные HP, сначала снимаем их
+    // Создаем новое событие урона
+    const event: HealthEvent = {
+      type: 'damage',
+      amount,
+      source,
+      timestamp: Date.now()
+    };
+    
+    // Добавляем в историю событий
+    setEvents(prev => [event, ...prev]);
+    
+    // Применяем урон сначала к временным хитам
     if (tempHp > 0) {
-      const absorbedByTemp = Math.min(tempHp, damageAmount);
-      setTempHp((prev) => Math.max(0, prev - absorbedByTemp));
-      remainingDamage -= absorbedByTemp;
-      
-      if (absorbedByTemp > 0) {
-        setEvents((prev) => [
-          {
-            id: eventId + "-temp",
-            type: 'damage', 
-            amount: absorbedByTemp,
-            source: source || 'Временное HP',
-            timestamp: new Date()
-          },
-          ...prev
-        ]);
-      }
-    }
-    
-    // Если остался урон после временных HP
-    if (remainingDamage > 0) {
-      // Уменьшаем текущее HP, не допуская значений < 0
-      setCurrentHp((prev) => Math.max(0, prev - remainingDamage));
-      
-      // Добавляем событие урона в лог
-      setEvents((prev) => [
-        {
-          id: eventId,
-          type: 'damage',
-          amount: remainingDamage,
-          source,
-          timestamp: new Date()
-        },
-        ...prev
-      ]);
-      
-      // Проверяем на статус "в сознании/без сознания"
-      const newHp = Math.max(0, currentHp - remainingDamage);
-      if (newHp === 0) {
-        showNotification(
-          "Персонаж без сознания!", 
-          `HP снижено до 0${source ? ` от ${source}` : ''}`,
-          "destructive"
-        );
+      if (tempHp >= amount) {
+        // Все поглощается временными хитами
+        setTempHp(tempHp - amount);
       } else {
-        showNotification(
-          "Урон получен", 
-          `${damageAmount} урона${source ? ` от ${source}` : ''}`,
-          "destructive"
-        );
+        // Часть поглощается временными хитами, остальное идет по основным хитам
+        const remainingDamage = amount - tempHp;
+        setTempHp(0);
+        setHp(Math.max(0, currentHp - remainingDamage));
       }
-    }
-  }, [currentHp, tempHp, showNotification]);
-
-  // Применяем событие получения лечения
-  const applyHealing = useCallback((amount: number, source?: string) => {
-    if (amount <= 0) {
-      console.error("applyHealing должен вызываться с положительным значением для лечения");
-      return;
-    }
-
-    const eventId = crypto.randomUUID();
-    const wasUnconscious = currentHp === 0;
-    const newHp = Math.min(maxHp, currentHp + amount);
-    setCurrentHp(newHp);
-    
-    setEvents((prev) => [
-      {
-        id: eventId,
-        type: 'heal',
-        amount,
-        source,
-        timestamp: new Date()
-      },
-      ...prev
-    ]);
-    
-    if (wasUnconscious && newHp > 0) {
-      showNotification(
-        "Персонаж пришел в сознание!",
-        `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-        "default"
-      );
     } else {
-      showNotification(
-        "Лечение получено",
-        `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-        "default"
-      );
+      // Все идет по основным хитам
+      setHp(Math.max(0, currentHp - amount));
     }
-  }, [currentHp, maxHp, showNotification]);
-
-  // Добавляем временные хиты
-  const addTempHp = useCallback((amount: number, source?: string) => {
-    // Временные хиты не складываются, берется наибольшее значение
-    if (amount > tempHp) {
-      setTempHp(amount);
-      setEvents((prev) => [
-        {
-          id: crypto.randomUUID(),
-          type: 'temp',
-          amount,
-          source,
-          timestamp: new Date()
-        },
-        ...prev
-      ]);
-      
-      showNotification(
-        "Временные HP получены",
-        `${amount} временных HP${source ? ` от ${source}` : ''}`,
-        "default"
-      );
-    } else if (amount === tempHp) {
-      showNotification(
-        "Временные HP обновлены",
-        `${amount} временных HP${source ? ` от ${source}` : ''}`,
-        "default"
-      );
-    } else if (amount > 0) {
-      showNotification(
-        "Временные HP не изменились",
-        `У вас уже ${tempHp} временных HP (больше чем ${amount})`,
-        "default"
-      );
+  }, [currentHp, tempHp, setHp, setTempHp]);
+  
+  // Применение лечения
+  const applyHealing = useCallback((amount: number, source?: string): void => {
+    if (amount <= 0) return;
+    
+    // Создаем новое событие лечения
+    const event: HealthEvent = {
+      type: 'healing',
+      amount,
+      source,
+      timestamp: Date.now()
+    };
+    
+    // Добавляем в историю событий
+    setEvents(prev => [event, ...prev]);
+    
+    // Применяем лечение (не превышая максимум)
+    setHp(Math.min(currentHp + amount, initialMaxHp));
+  }, [currentHp, initialMaxHp, setHp]);
+  
+  // Добавление временных хитов
+  const addTempHp = useCallback((amount: number, source?: string): void => {
+    if (amount < 0) return;
+    
+    // Создаем новое событие временных хитов
+    const event: HealthEvent = {
+      type: 'temp_hp',
+      amount,
+      source,
+      timestamp: Date.now()
+    };
+    
+    // Добавляем в историю событий
+    if (amount > 0) {
+      setEvents(prev => [event, ...prev]);
     }
-  }, [tempHp, showNotification]);
-
-  // Отменяем последнее изменение HP
-  const undoLastEvent = useCallback(() => {
+    
+    // Временные хиты не суммируются, берется наибольшее значение
+    setTempHp(Math.max(tempHp, amount));
+  }, [tempHp, setTempHp]);
+  
+  // Отмена последнего события
+  const undoLastEvent = useCallback((): void => {
     if (events.length === 0) return;
     
     const lastEvent = events[0];
-    setEvents((prev) => prev.slice(1));
     
-    // Отменяем эффект последнего события
+    // Удаляем событие из истории
+    setEvents(prev => prev.slice(1));
+    
+    // Отменяем эффект события в зависимости от типа
     switch (lastEvent.type) {
       case 'damage':
-        setCurrentHp((prev) => Math.min(maxHp, prev + lastEvent.amount));
+        // Восстанавливаем хиты
+        setHp(Math.min(currentHp + lastEvent.amount, initialMaxHp));
         break;
-      case 'heal':
-        setCurrentHp((prev) => Math.max(0, prev - lastEvent.amount));
+      case 'healing':
+        // Убираем лечение
+        setHp(Math.max(0, currentHp - lastEvent.amount));
         break;
-      case 'temp':
-        // Находим предыдущее событие с временными хитами
-        const prevTempEvent = events.slice(1).find(e => e.type === 'temp');
-        setTempHp(prevTempEvent?.amount || 0);
+      case 'temp_hp':
+        // Убираем временные хиты
+        setTempHp(Math.max(0, tempHp - lastEvent.amount));
         break;
     }
-    
-    showNotification(
-      "Отменено последнее событие",
-      `${lastEvent.type === 'damage' ? 'Урон' : lastEvent.type === 'heal' ? 'Лечение' : 'Временные HP'} ${lastEvent.amount}`,
-      "default"
-    );
-  }, [events, maxHp, showNotification]);
-
-  // Прямое обновление HP с отключением уведомлений
-  const setHp = useCallback((hp: number, silent: boolean = false) => {
-    const oldHp = currentHp;
-    const newHp = Math.max(0, Math.min(maxHp, hp));
-    
-    setCurrentHp(newHp);
-    
-    // Если значение изменилось и не в тихом режиме, добавляем событие в журнал
-    if (newHp !== oldHp && !silent) {
-      const difference = newHp - oldHp;
-      
-      setEvents((prev) => [
-        {
-          id: crypto.randomUUID(),
-          type: difference > 0 ? 'heal' : 'damage',
-          amount: Math.abs(difference),
-          source: 'Ручное изменение',
-          timestamp: new Date()
-        },
-        ...prev
-      ]);
-      
-      if (difference > 0) {
-        showNotification(
-          "Здоровье изменено",
-          `+${difference} HP (ручное изменение)`,
-          "default"
-        );
-      } else if (difference < 0) {
-        showNotification(
-          "Здоровье изменено",
-          `-${Math.abs(difference)} HP (ручное изменение)`,
-          "destructive"
-        );
-      }
-    }
-  }, [currentHp, maxHp, showNotification]);
+  }, [events, currentHp, initialMaxHp, tempHp, setHp, setTempHp]);
   
-  // Прямое обновление временного HP
-  const setTempHpValue = useCallback((hp: number, silent: boolean = false) => {
-    const oldTempHp = tempHp;
-    const newTempHp = Math.max(0, hp);
-    
-    setTempHp(newTempHp);
-    
-    // Если значение изменилось и не в тихом режиме, добавляем событие в журнал
-    if (newTempHp !== oldTempHp && !silent) {
-      setEvents((prev) => [
-        {
-          id: crypto.randomUUID(),
-          type: 'temp',
-          amount: newTempHp,
-          source: 'Ручное изменение',
-          timestamp: new Date()
-        },
-        ...prev
-      ]);
-      
-      if (newTempHp > oldTempHp) {
-        showNotification(
-          "Временные HP изменены",
-          `Установлено ${newTempHp} временных HP`,
-          "default"
-        );
-      } else {
-        showNotification(
-          "Временные HP изменены",
-          `Установлено ${newTempHp} временных HP`,
-          "default"
-        );
-      }
-    }
-  }, [tempHp, showNotification]);
-
   return {
     currentHp,
     tempHp,
@@ -309,6 +150,6 @@ export const useDamageLog = (
     addTempHp,
     undoLastEvent,
     setHp,
-    setTempHp: setTempHpValue
+    setTempHp
   };
 };

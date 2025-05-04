@@ -24,22 +24,22 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => setTheme("light" as Theme)}>
           Светлая
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => setTheme("dark" as Theme)}>
           Темная
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => setTheme("system" as Theme)}>
           Системная
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("warlock")}>
+        <DropdownMenuItem onClick={() => setTheme("warlock" as Theme)}>
           Чернокнижник
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("druid")}>
+        <DropdownMenuItem onClick={() => setTheme("druid" as Theme)}>
           Друид
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("bard")}>
+        <DropdownMenuItem onClick={() => setTheme("bard" as Theme)}>
           Бард
         </DropdownMenuItem>
       </DropdownMenuContent>

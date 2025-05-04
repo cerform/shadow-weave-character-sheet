@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dice, Heart } from 'lucide-react';
+import { Dices, Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { 
   Progress,
@@ -99,7 +99,7 @@ export const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculator
             variant="outline"
             className="flex items-center"
           >
-            <Dice className="mr-2 h-4 w-4" />
+            <Dices className="mr-2 h-4 w-4" />
             {isCalculating ? 'Расчет...' : 'Пересчитать'}
           </Button>
         </div>

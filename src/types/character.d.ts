@@ -71,12 +71,12 @@ export interface CharacterSheet {
   flaws: string;
   appearance: string;
   backstory: string;
-  xp?: number;
+  xp: number;  // Добавляем xp как обязательное поле
   inspiration?: boolean;
   maxHp?: number;  // Добавляем максимальные хиты
   currentHp?: number;  // Добавляем текущие хиты
   temporaryHp?: number; // Добавляем временные хиты
-  hitDice?: string; // Добавляем кубики хитов (например, "4d6")
+  hitDice?: string | number; // Добавляем кубики хитов (например, "4d6")
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
   abilityBonuses?: AbilityScores;
   image?: string;

@@ -1,216 +1,206 @@
-
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CharacterBasicInfo } from './CharacterBasicInfo';
+import { CharacterAbilityScores } from './CharacterAbilityScores';
+import { CharacterClassSelector } from './CharacterClassSelector';
+import { CharacterBackgroundSelector } from './CharacterBackgroundSelector';
+import { CharacterSkillsSelector } from './CharacterSkillsSelector';
+import { CharacterEquipmentSelector } from './CharacterEquipmentSelector';
+import { CharacterPersonality } from './CharacterPersonality';
+import { CharacterReview } from './CharacterReview';
+import { CharacterAppearance } from './CharacterAppearance';
+import { CharacterSpellsSelector } from './CharacterSpellsSelector';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import CharacterBasicInfo from './CharacterBasicInfo';
-import CharacterRaceSelection from './CharacterRaceSelection';
-import CharacterClassSelection from './CharacterClassSelection';
-import CharacterAbilityScores from './CharacterAbilityScores';
-import CharacterMulticlassing from './CharacterMulticlassing';
-import CharacterBackground from './CharacterBackground';
-import CharacterEquipmentSelection from './CharacterEquipmentSelection';
-import CharacterSpellSelection from './CharacterSpellSelection';
-import CharacterReview from './CharacterReview';
-import CharacterLevelSelection from './CharacterLevelSelection';
-import CharacterLanguagesSelection from './CharacterLanguagesSelection';
-import CharacterSubclassSelection from './CharacterSubclassSelection';
-import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import { CharacterSheet } from '@/types/character.d';
-import { steps } from '@/config/characterCreationSteps';
+import { CharacterRaceSelector } from './CharacterRaceSelector';
+import { CharacterHitPointsCalculator } from './CharacterHitPointsCalculator';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
-// Импорт даннных о подклассах для проверки их наличия
-import { subclassData } from '@/data/subclasses';
-
-interface CharacterCreationContentProps {
-  currentStep: number;
-  character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
-  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[][];
-  getModifier: (abilityScore: number) => string;
-  rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
-  abilityScorePoints: number;
-  isMagicClass: boolean;
-  rollsHistory: { ability: string; rolls: number[]; total: number }[];
-  onLevelChange: (level: number) => void;
-  maxAbilityScore?: number;
-}
-
-const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
-  currentStep,
-  character,
-  updateCharacter,
-  nextStep,
-  prevStep,
-  abilitiesMethod,
-  setAbilitiesMethod,
-  diceResults,
-  getModifier,
-  rollAllAbilities,
-  rollSingleAbility,
-  abilityScorePoints,
-  isMagicClass,
-  rollsHistory,
-  onLevelChange,
-  maxAbilityScore
-}) => {
-  // Проверка, есть ли подклассы для выбранного класса
-  const hasSubclasses = () => {
-    if (!character.class) return false;
-    const classSubclasses = subclassData[character.class];
-    return classSubclasses && Object.keys(classSubclasses).length > 0;
-  };
-
-  // Функция для рендеринга текущего шага создания персонажа
-  const renderCreationStep = () => {
+export const CharacterCreationContent: React.FC = () => {
+  const {
+    currentStep,
+    character,
+    availablePoints,
+    abilityScoreMethod,
+    handleNextStep,
+    handlePrevStep,
+    handleAbilityScoreMethodChange,
+    handleAbilityScoreChange,
+    handleRaceChange,
+    handleClassChange,
+    handleBackgroundChange,
+    handleSkillChange,
+    handleEquipmentChange,
+    handlePersonalityChange,
+    handleAppearanceChange,
+    handleSpellChange,
+    handleSubmit,
+    steps,
+    isSubmitDisabled,
+    handleAlignmentChange,
+    handleNameChange,
+    handleGenderChange,
+    handleBackstoryChange,
+    handleIdealsChange,
+    handleBondsChange,
+    handleFlawsChange,
+    handleProficiencyChange,
+    handleLevelChange,
+    handleAdditionalClassChange,
+    handleSubclassChange,
+    handleAbilityPointsUsedChange,
+    handleImageChange,
+    handleHitPointsCalculated
+  } = useCharacterCreation();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  
+  const renderStepContent = () => {
     switch (currentStep) {
-      case 0: // Выбор расы
-        return (
-          <CharacterRaceSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 1: // Выбор класса
-        return (
-          <CharacterClassSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 2: // Выбор архетипа (подкласса)
-        return (
-          <CharacterSubclassSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 3: // Выбор уровня
-        return (
-          <CharacterLevelSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            onLevelChange={onLevelChange}
-          />
-        );
-      case 4: // Характеристики
-        return (
-          <CharacterAbilityScores 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            abilitiesMethod={abilitiesMethod}
-            setAbilitiesMethod={setAbilitiesMethod}
-            diceResults={diceResults}
-            getModifier={getModifier}
-            rollAllAbilities={rollAllAbilities}
-            rollSingleAbility={rollSingleAbility}
-            abilityScorePoints={abilityScorePoints}
-            rollsHistory={rollsHistory}
-            maxAbilityScore={maxAbilityScore}
-          />
-        );
-      case 5: // Здоровье (HP) - новый шаг
-        return (
-          <CharacterHitPointsCalculator
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 6: // Мультиклассирование
-        return (
-          <CharacterMulticlassing 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            getModifier={getModifier}
-          />
-        );
-      case 7: // Выбор заклинаний
-        // Проверяем, является ли класс магическим
-        if (!isMagicClass) {
-          // Автоматически переходим к следующему шагу с задержкой
-          setTimeout(() => nextStep(), 0);
-          // Возвращаем пустой фрагмент во время перехода
-          return <></>;
-        }
-        return (
-          <CharacterSpellSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 8: // Выбор снаряжения
-        return (
-          <CharacterEquipmentSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 9: // Выбор языков
-        return (
-          <CharacterLanguagesSelection 
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 10: // Выбор личностных черт
-        return (
-          <CharacterBasicInfo 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 11: // Предыстория
-        return (
-          <CharacterBackground 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 12: // Просмотр и завершение
-        return (
-          <CharacterReview 
-            character={character}
-            prevStep={prevStep}
-            updateCharacter={updateCharacter}
-          />
-        );
+      case 1:
+        return <CharacterBasicInfo 
+                 character={character}
+                 onNameChange={handleNameChange}
+                 onGenderChange={handleGenderChange}
+                 onAlignmentChange={handleAlignmentChange}
+                 onBackstoryChange={handleBackstoryChange}
+                 onIdealsChange={handleIdealsChange}
+                 onBondsChange={handleBondsChange}
+                 onFlawsChange={handleFlawsChange}
+                 onImageChange={handleImageChange}
+               />;
+      case 2:
+        return <CharacterRaceSelector 
+                 character={character}
+                 onRaceChange={handleRaceChange}
+               />;
+      case 3:
+        return <CharacterClassSelector 
+                 character={character} 
+                 onClassChange={handleClassChange}
+                 onLevelChange={handleLevelChange}
+                 onAdditionalClassChange={handleAdditionalClassChange}
+                 onSubclassChange={handleSubclassChange}
+               />;
+      case 4:
+        return <CharacterHitPointsCalculator 
+                 level={character.level}
+                 characterClass={character.class}
+                 constitutionModifier={0}
+                 onHitPointsCalculated={handleHitPointsCalculated}
+               />;
+      case 5:
+        return <CharacterAbilityScores
+                 character={character}
+                 availablePoints={availablePoints}
+                 abilityScoreMethod={abilityScoreMethod}
+                 onAbilityScoreMethodChange={handleAbilityScoreMethodChange}
+                 onAbilityScoreChange={handleAbilityScoreChange}
+                 onAbilityPointsUsedChange={handleAbilityPointsUsedChange}
+               />;
+      case 6:
+        return <CharacterBackgroundSelector 
+                 character={character}
+                 onBackgroundChange={handleBackgroundChange}
+                 onProficiencyChange={handleProficiencyChange}
+               />;
+      case 7:
+        return <CharacterSkillsSelector 
+                 character={character}
+                 onSkillChange={handleSkillChange}
+               />;
+      case 8:
+        return <CharacterEquipmentSelector 
+                 character={character}
+                 onEquipmentChange={handleEquipmentChange}
+               />;
+      case 9:
+        return <CharacterSpellsSelector 
+                 character={character}
+                 onSpellChange={handleSpellChange}
+               />;
+      case 10:
+        return <CharacterPersonality 
+                 character={character}
+                 onPersonalityChange={handlePersonalityChange}
+               />;
+      case 11:
+        return <CharacterAppearance 
+                 character={character}
+                 onAppearanceChange={handleAppearanceChange}
+               />;
+      case 12:
+        return <CharacterReview character={character} />;
       default:
-        return (
-          <div className="p-6 text-center">
-            <p>Неизвестный шаг создания персонажа.</p>
-          </div>
-        );
+        return <div>Шаг не найден</div>;
     }
   };
 
-  return renderCreationStep();
-};
+  const handleSubmitCharacter = async () => {
+    setIsSubmitting(true);
+    try {
+      await handleSubmit();
+      toast({
+        title: "Персонаж создан!",
+        description: "Вы успешно создали персонажа.",
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка создания персонажа",
+        description: "Произошла ошибка при создании персонажа.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-export default CharacterCreationContent;
+  return (
+    <div className="flex flex-col h-full">
+      {/* Шаги в виде табов */}
+      <Tabs value={`step-${currentStep}`} className="flex-1 flex flex-col">
+        <TabsList className="flex-none">
+          {steps.map((step) => (
+            <TabsTrigger value={`step-${step.step}`} key={step.step} disabled={step.step > currentStep}>
+              {step.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {/* Контент текущего шага */}
+        <div className="flex-1 overflow-auto p-4">
+          {renderStepContent()}
+        </div>
+
+        {/* Кнопки навигации */}
+        <div className="flex justify-between p-4">
+          <Button variant="outline" onClick={handlePrevStep} disabled={currentStep === 1}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Назад
+          </Button>
+          {currentStep < steps.length ? (
+            <Button onClick={handleNextStep}>
+              Вперед
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleSubmitCharacter} disabled={isSubmitting || isSubmitDisabled}>
+              {isSubmitting ? (
+                <>
+                  Создание...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Создать персонажа
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </Tabs>
+    </div>
+  );
+};

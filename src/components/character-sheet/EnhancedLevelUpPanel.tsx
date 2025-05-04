@@ -1,123 +1,154 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, Sparkles } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { useCharacterProgression } from '@/hooks/useCharacterProgression';
+import { ArrowUp, Award } from "lucide-react";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 import { CharacterContext } from '@/contexts/CharacterContext';
+import { useContext } from 'react';
+import { CharacterSheet } from '@/types/character';
 
-export const EnhancedLevelUpPanel: React.FC = () => {
-  const { character, updateCharacter } = React.useContext(CharacterContext);
+export function EnhancedLevelUpPanel() {
+  const { character, updateCharacter } = useContext(CharacterContext);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { toast } = useToast();
-  const [isLeveling, setIsLeveling] = useState(false);
   
-  // Используем хук для логики повышения уровня
-  const { startLevelUp } = useCharacterProgression({
-    character,
-    updateCharacter,
-    onMaxHpChange: (newMaxHp, hpChange) => {
-      toast({
-        title: "Уровень повышен!",
-        description: `Максимум HP увеличен на ${hpChange}. Новое значение: ${newMaxHp}`,
-      });
-    }
-  });
+  // Состояние для отображения анимации
+  const [isLevelingUp, setIsLevelingUp] = useState(false);
   
-  // Расчет прогресса опыта (упрощенная реализация)
-  const calculateXpProgress = () => {
-    const level = character?.level || 1;
-    // Используем безопасное получение xp с проверкой на undefined
-    const characterXp = character?.xp !== undefined ? character.xp : 0;
-    
-    // Упрощенная таблица опыта
-    const xpThresholds = [
-      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 
-      64000, 85000, 100000, 120000, 140000, 165000, 
-      195000, 225000, 265000, 305000, 355000
-    ];
-    
-    if (level >= 20) return 100; // Максимальный уровень
-    
-    const currentLevelXP = xpThresholds[level - 1];
-    const nextLevelXP = xpThresholds[level];
-    const xpForNextLevel = nextLevelXP - currentLevelXP;
-    const xpProgress = characterXp - currentLevelXP;
-    
-    return Math.min(100, Math.max(0, (xpProgress / xpForNextLevel) * 100));
+  // Таблица опыта для уровней
+  const xpTable: Record<number, number> = {
+    1: 0,
+    2: 300,
+    3: 900,
+    4: 2700,
+    5: 6500,
+    6: 14000,
+    7: 23000,
+    8: 34000,
+    9: 48000,
+    10: 64000,
+    11: 85000,
+    12: 100000,
+    13: 120000,
+    14: 140000,
+    15: 165000,
+    16: 195000,
+    17: 225000,
+    18: 265000,
+    19: 305000,
+    20: 355000
   };
   
+  // Текущий уровень и опыт персонажа
+  const currentLevel = character?.level || 1;
+  const currentXP = character?.xp || 0;
+  
+  // Вычисляем следующий уровень и требуемый опыт
+  const nextLevel = currentLevel < 20 ? currentLevel + 1 : 20;
+  const xpForNextLevel = xpTable[nextLevel];
+  const xpForCurrentLevel = xpTable[currentLevel];
+  
+  // Вычисляем прогресс к следующему уровню
+  let levelProgress = 0;
+  if (currentLevel < 20) {
+    levelProgress = Math.floor(
+      ((currentXP - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100
+    );
+  } else {
+    levelProgress = 100; // На 20 уровне прогресс всегда 100%
+  }
+  
+  // Обработчик нажатия кнопки повышения уровня
   const handleLevelUp = () => {
-    if (isLeveling) return;
-    
-    const level = character?.level || 1;
-    
-    if (level >= 20) {
-      toast({
-        title: "Максимальный уровень",
-        description: "Ваш персонаж уже достиг максимального уровня 20",
-        variant: "destructive",
-      });
+    if (currentLevel >= 20 || currentXP < xpForNextLevel) {
       return;
     }
     
-    setIsLeveling(true);
+    setIsLevelingUp(true);
     
-    // Имитация процесса повышения уровня
+    // Имитация обработки повышения уровня
     setTimeout(() => {
-      startLevelUp();
-      setIsLeveling(false);
-    }, 1000);
+      // Обновляем уровень персонажа
+      const updatedCharacter: Partial<CharacterSheet> = {
+        level: nextLevel
+      };
+      
+      updateCharacter(updatedCharacter);
+      
+      // Отображаем уведомление о повышении уровня
+      toast({
+        title: "Поздравляем!",
+        description: `Ваш персонаж достиг ${nextLevel} уровня.`,
+      });
+      
+      setIsLevelingUp(false);
+    }, 1500);
   };
   
+  // Функция для добавления опыта (для тестирования)
+  const addExperience = (amount: number) => {
+    if (!character) return;
+    
+    const newXP = (character.xp || 0) + amount;
+    updateCharacter({ xp: newXP });
+    
+    toast({
+      title: "Опыт получен",
+      description: `+${amount} XP`
+    });
+  };
+
   return (
-    <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold">Уровень {character?.level || 1}</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleLevelUp}
-          disabled={isLeveling || (character?.level || 1) >= 20}
-          className={`${isLeveling ? 'animate-pulse' : ''}`}
-        >
-          <ArrowUp className="h-4 w-4 mr-1" />
-          Повысить
-        </Button>
-      </div>
-      
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between mb-1 text-sm">
-            <span>Опыт: {character?.xp !== undefined ? character.xp : 0} XP</span>
-            <span>Прогресс к уровню {Math.min(20, (character?.level || 1) + 1)}</span>
-          </div>
-          <Progress value={calculateXpProgress()} className="h-2" />
+    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+      <CardContent className="p-4">
+        <h3 className="flex items-center text-lg font-semibold mb-3" style={{ color: currentTheme.textColor }}>
+          <Award className="mr-2 h-5 w-5" style={{ color: currentTheme.accent }} /> 
+          Прогресс персонажа
+        </h3>
+        
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm">Уровень {currentLevel}</span>
+          <span className="text-sm">{currentXP} / {xpForNextLevel} XP</span>
         </div>
         
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Бонус мастерства:</span>
-            <span>+{Math.ceil(1 + ((character?.level || 1) / 4))}</span>
-          </div>
+        <Progress value={levelProgress} className="h-2 mb-4" />
+        
+        <div className="flex justify-between items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1 h-9"
+            onClick={() => addExperience(100)}
+          >
+            +100 XP
+          </Button>
           
-          {character?.class && ['Волшебник', 'Жрец', 'Друид', 'Бард', 'Колдун', 'Чернокнижник', 'Чародей'].includes(character.class) && (
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground flex items-center">
-                <Sparkles className="h-3 w-3 mr-1" /> 
-                Заклинания:
-              </span>
-              <span>
-                {/* Упрощенная логика для слотов заклинаний */}
-                {character?.level >= 3 ? '1ур: 4, 2ур: 2' : '1ур: 2'}
-              </span>
-            </div>
-          )}
+          <Button 
+            onClick={handleLevelUp}
+            disabled={currentLevel >= 20 || currentXP < xpForNextLevel || isLevelingUp}
+            className="flex items-center gap-1 flex-1 h-9"
+            style={{
+              background: currentTheme.accent,
+              opacity: currentLevel >= 20 || currentXP < xpForNextLevel ? 0.5 : 1
+            }}
+          >
+            <ArrowUp className="h-4 w-4" />
+            {isLevelingUp ? "Повышение..." : "Повысить уровень"}
+          </Button>
         </div>
-      </div>
+        
+        {currentLevel >= 20 && (
+          <div className="mt-2 text-xs text-center text-muted-foreground">
+            Достигнут максимальный уровень
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
-};
+}
 
 export default EnhancedLevelUpPanel;

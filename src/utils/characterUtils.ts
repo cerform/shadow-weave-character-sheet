@@ -198,3 +198,32 @@ export const normalizeAbilities = (abilities: any): any => {
   
   return abilities; // Возвращаем как есть, если формат неизвестен
 };
+
+/**
+ * Gets character's constitution modifier
+ */
+export const getConstitutionModifier = (character: any): number => {
+  if (!character || !character.abilities) return 0;
+  
+  // Try to get from full name first
+  if (character.abilities.constitution !== undefined) {
+    return getNumericModifier(character.abilities.constitution);
+  }
+  
+  // Try abbreviation
+  if (character.abilities.CON !== undefined) {
+    return getNumericModifier(character.abilities.CON);
+  }
+  
+  // Try old stats format
+  if (character.stats) {
+    if (character.stats.constitution !== undefined) {
+      return getNumericModifier(character.stats.constitution);
+    }
+    if (character.stats.CON !== undefined) {
+      return getNumericModifier(character.stats.CON);
+    }
+  }
+  
+  return 0;
+};

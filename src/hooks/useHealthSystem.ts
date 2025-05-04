@@ -29,7 +29,7 @@ export const useHealthSystem = ({
   // Основные состояния здоровья
   const [currentHp, setCurrentHp] = useState<number>(initialCurrentHp);
   const [maxHp, setMaxHp] = useState<number>(initialMaxHp);
-  const [tempHp, setTempHp] = useState<number>(initialTempHp);
+  const [tempHp, setTempHpState] = useState<number>(initialTempHp);
 
   // Журнал событий здоровья
   const [events, setEvents] = useState<HealthEvent[]>([]);
@@ -59,7 +59,7 @@ export const useHealthSystem = ({
 
   // Установка значений временного HP с возможностью "тихого" режима
   const setTempHp = useCallback((value: number, silent: boolean = false) => {
-    setTempHp(Math.max(0, value));
+    setTempHpState(Math.max(0, value));
     if (!silent && onHealthChange) {
       onHealthChange(currentHp, maxHp, value);
     }
@@ -84,18 +84,18 @@ export const useHealthSystem = ({
     if (tempHp > 0) {
       if (tempHp >= amount) {
         // Достаточно временных хитов, чтобы поглотить весь урон
-        setTempHp(tempHp - amount);
+        setTempHpState(tempHp - amount);
       } else {
         // Временных хитов не хватает, остаток идет в основные хиты
         const remainingDamage = amount - tempHp;
-        setTempHp(0);
+        setTempHpState(0);
         setCurrentHp(Math.max(0, currentHp - remainingDamage));
       }
     } else {
       // Нет временных хитов, весь урон идет в основные хиты
       setCurrentHp(Math.max(0, currentHp - amount));
     }
-  }, [currentHp, tempHp, setCurrentHp, setTempHp]);
+  }, [currentHp, tempHp]);
 
   // Применение лечения
   const applyHealing = useCallback((amount: number, source?: string) => {
@@ -134,8 +134,8 @@ export const useHealthSystem = ({
     }
 
     // Временные хиты не суммируются, берется наибольшее значение
-    setTempHp(Math.max(tempHp, amount));
-  }, [tempHp, setTempHp]);
+    setTempHpState(Math.max(tempHp, amount));
+  }, [tempHp]);
 
   // Отмена последнего события здоровья
   const undoLastEvent = useCallback(() => {
@@ -159,10 +159,10 @@ export const useHealthSystem = ({
         break;
       case 'temp_hp':
         // Отмена добавления временных хитов
-        setTempHp(Math.max(0, tempHp - lastEvent.amount));
+        setTempHpState(Math.max(0, tempHp - lastEvent.amount));
         break;
     }
-  }, [events, currentHp, maxHp, tempHp, setCurrentHp, setTempHp]);
+  }, [events, currentHp, maxHp, tempHp, setCurrentHp]);
 
   return {
     currentHp,
