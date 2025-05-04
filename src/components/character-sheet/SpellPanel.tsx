@@ -1,826 +1,403 @@
-import React, { useContext, useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CharacterContext } from '@/contexts/CharacterContext';
-import { useToast } from "@/hooks/use-toast"; 
-import { Wand, ZapOff, Book, Info, Search } from "lucide-react";
-import { DicePanel } from './DicePanel';
-import { getSpellDetails, getAllSpells } from '@/data/spells';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CharacterSpell } from '@/types/character';
+import { Character } from '@/contexts/CharacterContext';
+import { Book, Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck } from 'lucide-react';
+import SpellDescription from './SpellDescription';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-export const SpellPanel = () => {
-  const { character, updateCharacter } = useContext(CharacterContext);
-  const { toast } = useToast();
-  const [selectedSpellLevel, setSelectedSpellLevel] = useState<number | null>(null);
-  const [isAddSpellOpen, setIsAddSpellOpen] = useState(false);
+interface SpellPanelProps {
+  character: Character | null;
+  onUpdate: (character: Character) => void;
+}
+
+const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterLevel, setFilterLevel] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const [expandedSpells, setExpandedSpells] = useState<string[]>([]);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+
+  // Вспомогательная функция для безопасного преобразования строки или массива в строку
+  const safeJoin = (value: string | string[] | undefined, separator: string = ', '): string => {
+    if (!value) return '';
+    if (Array.isArray(value)) return value.join(separator);
+    return value.toString();
+  };
 
   // Группировка заклинаний по уровням
   const spellsByLevel = React.useMemo(() => {
-    if (!character?.spells || character.spells.length === 0) {
-      return { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
-    }
-    
-    // Группируем заклинания по уровням
-    const spellsGrouped: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
-    
-    character.spells.forEach((spellName) => {
-      // Получаем уровень заклинания из словаря заклинаний
-      const spellDetails = getSpellDetails(spellName);
-      const level = spellDetails?.level || 0;
-      
-      if (!spellsGrouped[level]) spellsGrouped[level] = [];
-      spellsGrouped[level].push(spellName);
-    });
-    
-    return spellsGrouped;
+    if (!character?.spells || !Array.isArray(character.spells)) return {};
+
+    const spells = character.spells.filter(spell => 
+      typeof spell === 'object' && spell !== null
+    ) as CharacterSpell[];
+
+    return spells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
+      const level = spell.level || 0;
+      if (!acc[level]) acc[level] = [];
+      acc[level].push(spell);
+      return acc;
+    }, {});
   }, [character?.spells]);
 
-  // Функция для получения школы заклинания и цвета
-  const getSpellSchool = (spellName: string): { name: string; color: string } => {
-    const details = getSpellDetails(spellName);
-    const school = details?.school || "Неизвестная";
-    
-    const schoolColors: Record<string, string> = {
-      "Воплощение": "bg-red-500/20",
-      "Ограждение": "bg-blue-500/20",
-      "Иллюзия": "bg-purple-500/20",
-      "Некромантия": "bg-green-500/20",
-      "Призывание": "bg-amber-500/20",
-      "Прорицание": "bg-cyan-500/20",
-      "Очарование": "bg-pink-500/20",
-      "Преобразование": "bg-emerald-500/20",
-      "Зачарование": "bg-violet-500/20",
-      "Вызов": "bg-yellow-500/20"
-    };
-    
-    return {
-      name: school,
-      color: schoolColors[school] || "bg-primary/20"
-    };
-  };
+  // Фильтрация заклинаний по поиску и вкладке
+  const filteredSpells = React.useMemo(() => {
+    if (!character?.spells || !Array.isArray(character.spells)) return [];
 
-  // Обработчик применения заклинания
-  const castSpell = (spellName: string, level: number) => {
-    if (!character) return;
-    
-    // Если это заговор, его можно использовать без ячеек
-    if (level === 0) {
-      toast({
-        title: "Заклинание произнесено",
-        description: `Вы использовали заговор ${spellName}`,
-      });
-      return;
-    }
-    
-    // Проверяем наличие ячеек заклинаний для этого уровня
-    const spellSlots = character.spellSlots || {};
-    
-    if (!spellSlots[level] || spellSlots[level].max - spellSlots[level].used <= 0) {
-      toast({
-        title: "Ошибка применения заклинания",
-        description: `У вас нет доступных ячеек ${level}-го уровня`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Обновляем количество использованных ячеек
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = { 
-      ...updatedSpellSlots[level], 
-      used: updatedSpellSlots[level].used + 1 
-    };
-    
-    updateCharacter({ spellSlots: updatedSpellSlots });
-    
-    toast({
-      title: "Заклинание произнесено",
-      description: `Вы использовали ${spellName} (${level} уровень). Осталось ячеек: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used}`,
-    });
-  };
-  
-  // Преобразование очков чародея в ячейки заклинаний
-  const convertSorceryPoints = (spellLevel: number) => {
-    if (!character) return;
-    
-    // Стоимость создания ячейки заклинания в очках чародея
-    const costMap: Record<number, number> = {
-      1: 2,
-      2: 3,
-      3: 5,
-      4: 6, 
-      5: 7
-    };
-    
-    const cost = costMap[spellLevel];
-    
-    if (!cost) {
-      toast({
-        title: "Ошибка",
-        description: "Невозможно создать ячейку этого уровня",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Проверяем, достаточно ли очков чародея
-    const currentPoints = character.sorceryPoints?.current || 0;
-    
-    if (currentPoints < cost) {
-      toast({
-        title: "Недостаточно очков чародея",
-        description: `Требуется ${cost} очков, у вас ${currentPoints}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Создаём новую ячейку заклинания
-    const updatedSpellSlots = { ...character.spellSlots };
-    
-    if (!updatedSpellSlots[spellLevel]) {
-      updatedSpellSlots[spellLevel] = { max: 0, used: 0 };
-    }
-    
-    updatedSpellSlots[spellLevel].max += 1;
-    
-    // Обновляем очки чародея
-    const updatedSorceryPoints = {
-      ...character.sorceryPoints,
-      current: currentPoints - cost
-    };
-    
-    updateCharacter({ 
-      spellSlots: updatedSpellSlots,
-      sorceryPoints: updatedSorceryPoints
-    });
-    
-    toast({
-      title: "Ячейка создана",
-      description: `Вы создали ячейку ${spellLevel} уровня за ${cost} очков чародея`
-    });
-  };
-  
-  // Преобразование ячеек заклинаний в очки чародея
-  const convertSpellSlotToSorceryPoints = (spellLevel: number) => {
-    if (!character) return;
-    
-    // Проверяем наличие ячейки заклинания нужного уровня
-    const spellSlots = character.spellSlots || {};
-    
-    if (!spellSlots[spellLevel] || spellSlots[spellLevel].max - spellSlots[spellLevel].used <= 0) {
-      toast({
-        title: "Ошибка конвертации",
-        description: `У вас нет доступных ячеек ${spellLevel}-го уровня`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Получаем очки чародея за ячейку (по уровню ячейки)
-    const pointsGained = spellLevel;
-    
-    // Обновляем к��личество использованных ячеек
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[spellLevel] = { 
-      ...updatedSpellSlots[spellLevel], 
-      used: updatedSpellSlots[spellLevel].used + 1 
-    };
-    
-    // Обновляем очки чародея
-    const currentPoints = character.sorceryPoints?.current || 0;
-    const maxPoints = character.sorceryPoints?.max || character.level || 0;
-    
-    const updatedSorceryPoints = {
-      current: Math.min(currentPoints + pointsGained, maxPoints),
-      max: maxPoints
-    };
-    
-    updateCharacter({ 
-      spellSlots: updatedSpellSlots,
-      sorceryPoints: updatedSorceryPoints
-    });
-    
-    toast({
-      title: "Конвертация успешна",
-      description: `Вы получили ${pointsGained} очков чародея`
-    });
-  };
-  
-  // Функция вывода статуса ячеек заклинаний
-  const renderSpellSlots = () => {
-    if (!character?.spellSlots || Object.keys(character.spellSlots).length === 0) {
-      return <div className="text-center py-4 text-primary/80">Нет доступных ячеек заклинаний</div>;
-    }
-    
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {Object.entries(character.spellSlots).map(([level, slot]) => {
-          const usedCount = slot.used;
-          const maxCount = slot.max;
-          if (maxCount === 0) return null;
-          
-          return (
-            <div key={level} className="p-3 bg-primary/10 rounded-lg text-center">
-              <div className="text-sm text-muted-foreground mb-1">{level}-го уровня</div>
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: maxCount }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`size-6 rounded-full border border-primary/50 ${i < maxCount - usedCount ? 'bg-primary' : ''}`}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-  
-  // Отображение очков чародея, если они есть
-  const renderSorceryPoints = () => {
-    if (!character?.sorceryPoints || character.sorceryPoints.max === 0) {
-      return null;
-    }
-    
-    const { current, max } = character.sorceryPoints;
-    
-    return (
-      <div>
-        <h4 className="text-md font-medium mt-6 mb-2 text-primary">Очки чародея</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-primary/10 rounded-lg">
-            <div className="text-sm text-muted-foreground mb-1">Очки чародея</div>
-            <div className="flex justify-start gap-2">
-              {Array.from({ length: max }).map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`size-6 rounded-full border border-primary/50 ${i < current ? 'bg-primary' : ''}`}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="p-3 bg-primary/10 rounded-lg text-center">
-            <div className="text-sm text-muted-foreground mb-1">Доступно</div>
-            <div className="text-xl font-bold text-primary">{current}/{max}</div>
-          </div>
-        </div>
-        
-        <div className="mt-4 space-y-2">
-          <h4 className="text-md font-medium text-primary">Метамагия</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" disabled={current < 1}>
-              Осторожное заклинание (1)
-            </Button>
-            <Button variant="outline" size="sm" disabled={current < 1}>
-              Усиленное заклинание (1)
-            </Button>
-            <Button variant="outline" size="sm" disabled={current < 1}>
-              Увеличенное заклинание (1)
-            </Button>
-            <Button variant="outline" size="sm" disabled={current < 2}>
-              Отдалённое заклинание (2)
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+    const spells = character.spells.filter(spell => 
+      typeof spell === 'object' && spell !== null
+    ) as CharacterSpell[];
 
-  // Функция для добавления заклинания
-  const addSpell = (spellName: string) => {
-    if (!character?.spells) {
-      updateCharacter({ spells: [spellName] });
-      toast({
-        title: "Заклинание добавлено",
-        description: `${spellName} добавлено в ваш список заклинаний`,
-      });
-      return;
-    }
-    
-    // Проверяем, есть ли уже такое заклинание
-    if (character.spells.includes(spellName)) {
-      toast({
-        title: "Внимание",
-        description: `Заклинание ${spellName} уже в вашем списке`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Добавляем новое заклинание
-    const updatedSpells = [...character.spells, spellName];
-    updateCharacter({ spells: updatedSpells });
-    
-    toast({
-      title: "Заклинание добавлено",
-      description: `${spellName} добавлено в ваш список заклинаний`,
-    });
-    
-    setIsAddSpellOpen(false);
-  };
-
-  // Функция для удаления заклинания
-  const removeSpell = (spellName: string) => {
-    if (!character?.spells) return;
-    
-    const updatedSpells = character.spells.filter(spell => spell !== spellName);
-    updateCharacter({ spells: updatedSpells });
-    
-    toast({
-      title: "Заклинание удалено",
-      description: `${spellName} удалено из вашего списка заклинаний`,
-    });
-  };
-  
-  // Функция для отображения заклинаний определенного уровня
-  const renderSpellsByLevel = (level: number) => {
-    const spells = spellsByLevel[level] || [];
-    
-    if (spells.length === 0) {
-      return <p className="text-sm text-muted-foreground">Нет известных заклинаний этого уровня</p>;
-    }
-    
-    return (
-      <div className="space-y-2">
-        {spells.map((spellName, index) => {
-          const spellDetails = getSpellDetails(spellName);
-          const school = getSpellSchool(spellName);
-          
-          return (
-            <HoverCard key={index}>
-              <HoverCardTrigger asChild>
-                <div className="p-2 bg-primary/5 rounded-md hover:bg-primary/10 cursor-pointer flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <h5 className="font-medium text-primary">{spellName}</h5>
-                    {school && (
-                      <span className={`text-xs px-2 py-1 rounded ${school.color}`}>
-                        {school.name}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeSpell(spellName);
-                      }}
-                    >
-                      <span className="sr-only">Удалить</span>
-                      ✕
-                    </Button>
-                    
-                    {level === 0 ? (
-                      <Button size="sm" variant="outline" onClick={() => castSpell(spellName, level)}>
-                        <Wand className="h-4 w-4 mr-1" />
-                        Использовать
-                      </Button>
-                    ) : (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            <Wand className="h-4 w-4 mr-1" />
-                            Произнести
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Использовать заклинание {spellName}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <p>Выберите уровень ячейки заклинания:</p>
-                            <div className="grid grid-cols-3 gap-2">
-                              {Object.entries(character?.spellSlots || {})
-                                .filter(([slotLevel, slot]) => Number(slotLevel) >= level && slot.max - slot.used > 0)
-                                .map(([slotLevel, _]) => (
-                                  <Button 
-                                    key={slotLevel}
-                                    variant={selectedSpellLevel === Number(slotLevel) ? "default" : "outline"}
-                                    onClick={() => setSelectedSpellLevel(Number(slotLevel))}
-                                  >
-                                    {slotLevel} уровень
-                                  </Button>
-                                ))}
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                              <Button 
-                                variant="default" 
-                                disabled={selectedSpellLevel === null}
-                                onClick={() => {
-                                  if (selectedSpellLevel !== null) {
-                                    castSpell(spellName, selectedSpellLevel);
-                                    setSelectedSpellLevel(null);
-                                  }
-                                }}
-                              >
-                                Применить
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </div>
-                </div>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-lg">{spellName}</h4>
-                    <Badge className={school.color}>
-                      {level === 0 ? "Заговор" : `${level} уровень`}
-                    </Badge>
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">{school.name}</p>
-                  
-                  {spellDetails?.castingTime && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <span className="font-medium">Время накладывания: </span>{spellDetails.castingTime}
-                    </div>
-                  )}
-                  
-                  {spellDetails?.range && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <span className="font-medium">Дистанция: </span>{spellDetails.range}
-                    </div>
-                  )}
-                  
-                  {spellDetails?.components && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <span className="font-medium">Компоненты: </span>{spellDetails.components}
-                    </div>
-                  )}
-                  
-                  {spellDetails?.duration && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <span className="font-medium">Длительность: </span>{spellDetails.duration}
-                    </div>
-                  )}
-                  
-                  <Separator className="my-2" />
-                  
-                  <p className="text-sm">{spellDetails?.description}</p>
-                  
-                  {spellDetails?.higherLevels && (
-                    <div className="pt-2 text-sm">
-                      <span className="font-medium">На более высоком уровне: </span>
-                      {spellDetails.higherLevels}
-                    </div>
-                  )}
-                  
-                  {spellDetails?.classes && (
-                    <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                      Классы: {spellDetails.classes.join(", ")}
-                    </div>
-                  )}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Фильтрация заклинаний для диалога добавления
-  const getFilteredSpells = () => {
-    let allSpells = getAllSpells().map(spell => spell.name);
-    
-    // Фильтр по поисковому запросу
-    if (searchTerm) {
-      allSpells = allSpells.filter(
-        spellName => spellName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Фильтр по уровню
-    if (filterLevel !== null) {
-      allSpells = allSpells.filter(spellName => {
-        const details = getSpellDetails(spellName);
-        return details?.level === filterLevel;
-      });
-    }
-    
-    return allSpells;
-  };
-
-  // Сгруппированные заклинания для диалога добавления
-  const groupedFilteredSpells = React.useMemo(() => {
-    const spells = getFilteredSpells();
-    const grouped: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
-    
-    spells.forEach(spellName => {
-      const details = getSpellDetails(spellName);
-      const level = details?.level || 0;
+    return spells.filter(spell => {
+      const matchesSearch = searchTerm === '' || 
+        spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        spell.description.toLowerCase().includes(searchTerm.toLowerCase());
       
-      if (!grouped[level]) grouped[level] = [];
-      grouped[level].push(spellName);
+      const matchesTab = activeTab === 'all' || 
+        (activeTab === 'prepared' && spell.prepared) ||
+        (activeTab === 'cantrips' && spell.level === 0) ||
+        (activeTab === spell.level.toString());
+      
+      return matchesSearch && matchesTab;
+    });
+  }, [character?.spells, searchTerm, activeTab]);
+
+  // Обработчик переключения развернутого состояния заклинания
+  const toggleSpellExpanded = (spellId: string) => {
+    setExpandedSpells(prev => 
+      prev.includes(spellId) 
+        ? prev.filter(id => id !== spellId)
+        : [...prev, spellId]
+    );
+  };
+
+  // Обработчик переключения подготовленного состояния заклинания
+  const toggleSpellPrepared = (spellId: string | number | undefined) => {
+    if (!character || !spellId) return;
+    
+    const updatedSpells = (character.spells as CharacterSpell[]).map(spell => {
+      if ((spell.id?.toString() || '') === spellId.toString()) {
+        return { ...spell, prepared: !spell.prepared };
+      }
+      return spell;
     });
     
-    return grouped;
-  }, [searchTerm, filterLevel]);
+    onUpdate({ ...character, spells: updatedSpells });
+  };
 
-  return (
-    <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-primary">Заклинания</h3>
-        <Button size="sm" variant="outline" onClick={() => setIsAddSpellOpen(true)}>
-          + Добавить заклинание
-        </Button>
+  // Получение класса для границы карточки заклинания
+  const getSpellBorderClass = (spell: CharacterSpell) => {
+    if (spell.prepared) {
+      return 'border-l-4 border-l-primary';
+    }
+    return '';
+  };
+
+  // Получение варианта для бейджа школы магии
+  const getSchoolVariant = (school: string) => {
+    switch (school.toLowerCase()) {
+      case 'воплощение': return 'destructive';
+      case 'некромантия': return 'outline';
+      case 'очарование': return 'secondary';
+      case 'преобразование': return 'default';
+      case 'прорицание': return 'accent';
+      case 'вызов': return 'warning';
+      case 'ограждение': return 'info';
+      case 'иллюзия': return 'subtle';
+      default: return 'default';
+    }
+  };
+
+  // Получение текстового представления уровня заклинания
+  const getSpellLevelText = (level: number) => {
+    if (level === 0) return 'Заговор';
+    return `${level} уровень`;
+  };
+
+  // Рендер свойств заклинания
+  const renderSpellProperties = (spell: CharacterSpell) => {
+    const components = [
+      spell.verbal && 'В',
+      spell.somatic && 'С',
+      spell.material && 'М'
+    ].filter(Boolean).join(', ');
+    
+    return (
+      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mt-2">
+        <div><span className="font-medium">Время накл.:</span> {spell.castingTime || 'Не указано'}</div>
+        <div><span className="font-medium">Дальность:</span> {spell.range || 'Не указано'}</div>
+        <div><span className="font-medium">Компоненты:</span> {components || 'Не указано'}</div>
+        <div><span className="font-medium">Длительность:</span> {spell.duration || 'Не указано'}</div>
+        <div className="col-span-2"><span className="font-medium">Классы:</span> {safeJoin(spell.classes)}</div>
       </div>
-      
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="list">Заклинания</TabsTrigger>
-          <TabsTrigger value="slots">Ячейки</TabsTrigger>
-          <TabsTrigger value="roll">Проверки</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="list" className="space-y-4">
-          {character?.spells?.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Book className="h-16 w-16 text-primary/30 mb-4" />
-              <h4 className="text-xl font-medium mb-2">Нет заклинаний</h4>
-              <p className="text-muted-foreground text-center mb-4">
-                У вас пока нет изученных заклинаний. Добавьте новые заклинания, чтобы они появились здесь.
-              </p>
-              <Button onClick={() => setIsAddSpellOpen(true)}>
-                Добавить заклинание
+    );
+  };
+
+  // Рендер карточки заклинания
+  const renderSpellCard = (spell: CharacterSpell) => {
+    return (
+      <Card key={spell.id || spell.name} className={`spell-card transition-all ${getSpellBorderClass(spell)}`}>
+        <CardHeader className="p-3 pb-1">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-base mr-2">{spell.name}</CardTitle>
+            <div className="flex items-center space-x-1">
+              {spell.level > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => toggleSpellPrepared(spell.id)}
+                  title={spell.prepared ? "Убрать из подготовленных" : "Подготовить заклинание"}
+                >
+                  {spell.prepared ? 
+                    <BookmarkCheck className="h-4 w-4 text-primary" /> : 
+                    <Bookmark className="h-4 w-4" />
+                  }
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => toggleSpellExpanded(spell.id?.toString() || spell.name)}
+              >
+                {expandedSpells.includes(spell.id?.toString() || spell.name) ? 
+                  <ChevronUp className="h-4 w-4" /> : 
+                  <ChevronDown className="h-4 w-4" />
+                }
               </Button>
             </div>
-          ) : (
-            <ScrollArea className="h-[500px] pr-4">
-              <div className="space-y-4">
-                {/* Заговоры */}
-                {spellsByLevel[0]?.length > 0 && (
-                  <div>
-                    <h4 className="text-md font-medium mb-2 text-primary">Заговоры</h4>
-                    {renderSpellsByLevel(0)}
-                  </div>
-                )}
-                
-                {/* Заклинания по уровням */}
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => {
-                  if (spellsByLevel[level]?.length > 0) {
-                    return (
-                      <div key={level}>
-                        <h4 className="text-md font-medium mb-2 text-primary">{level}-го уровня</h4>
-                        {renderSpellsByLevel(level)}
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            </ScrollArea>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="slots">
-          <div className="space-y-4">
-            <h4 className="text-md font-medium mb-2 text-primary">Ячейки заклинаний</h4>
-            {renderSpellSlots()}
-            
-            {/* Отображаем очки чародея, если они есть */}
-            {renderSorceryPoints()}
-            
-            {/* Конвертация очков и ячеек */}
-            {character?.sorceryPoints && character.sorceryPoints.max > 0 && (
-              <div className="mt-6">
-                <h4 className="text-md font-medium mb-2 text-primary">Конвертация ресурсов</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2 text-primary/90">Создать ячейку</h5>
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map(level => (
-                        <Button 
-                          key={level} 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full" 
-                          disabled={character.sorceryPoints.current < level + 1}
-                          onClick={() => convertSorceryPoints(level)}
-                        >
-                          <Wand className="h-4 w-4 mr-1" />
-                          {level} уровень ({level + 1} очков)
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h5 className="text-sm font-medium mb-2 text-primary/90">Получить очки</h5>
-                    <div className="space-y-2">
-                      {Object.keys(character.spellSlots || {}).map(level => {
-                        const slot = character.spellSlots[Number(level)];
-                        const available = slot.max - slot.used > 0;
-                        
-                        return Number(level) > 0 ? (
-                          <Button 
-                            key={level} 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full" 
-                            disabled={!available}
-                            onClick={() => convertSpellSlotToSorceryPoints(Number(level))}
-                          >
-                            <ZapOff className="h-4 w-4 mr-1" />
-                            {level} уровень ({level} очков)
-                          </Button>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
-        </TabsContent>
+          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+            <Badge variant={getSchoolVariant(spell.school)}>{spell.school}</Badge>
+            <span>{getSpellLevelText(spell.level)}</span>
+          </div>
+        </CardHeader>
         
-        <TabsContent value="roll">
-          <DicePanel />
-        </TabsContent>
-      </Tabs>
-      
-      {/* Диалог добавления заклинания */}
-      <Dialog open={isAddSpellOpen} onOpenChange={setIsAddSpellOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Добавить заклинание</DialogTitle>
-          </DialogHeader>
+        <CardContent className="p-3 pt-1">
+          <SpellDescription
+            description={spell.description}
+            higherLevels={spell.higherLevels || ''}
+            expanded={expandedSpells.includes(spell.id?.toString() || spell.name)}
+          />
           
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="relative flex-1">
-                <Input
-                  type="text"
-                  placeholder="Поиск заклинаний..."
-                  className="w-full py-2 px-4 pl-9 bg-background border border-input rounded-md"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div className="absolute left-3 top-2.5">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Badge
-                variant={filterLevel === null ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setFilterLevel(null)}
-              >
-                Все уровни
-              </Badge>
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                <Badge
-                  key={level}
-                  variant={filterLevel === level ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setFilterLevel(level)}
-                >
-                  {level === 0 ? "Заговоры" : `${level} ур.`}
-                </Badge>
-              ))}
-            </div>
-            
-            <ScrollArea className="h-[50vh]">
-              <div className="space-y-4">
-                {Object.entries(groupedFilteredSpells)
-                  .filter(([_, spells]) => spells.length > 0)
-                  .sort(([a], [b]) => Number(a) - Number(b))
-                  .map(([level, spells]) => (
-                    <div key={level}>
-                      <h4 className="text-md font-medium mb-2">
-                        {Number(level) === 0 ? "Заговоры" : `${level}-го уровня`}
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {spells.map(spellName => {
-                          const school = getSpellSchool(spellName);
-                          const alreadyAdded = character?.spells?.includes(spellName);
-                          
-                          return (
-                            <div 
-                              key={spellName}
-                              className={`p-2 rounded-md flex items-center justify-between ${
-                                alreadyAdded 
-                                  ? 'bg-gray-200 dark:bg-gray-700 opacity-50' 
-                                  : 'bg-primary/5 hover:bg-primary/10 cursor-pointer'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{spellName}</span>
-                                <span className={`text-xs px-2 py-1 rounded ${school.color}`}>
-                                  {school.name}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <HoverCard>
-                                  <HoverCardTrigger>
-                                    <Button size="icon" variant="ghost" className="h-8 w-8">
-                                      <Info className="h-4 w-4" />
-                                    </Button>
-                                  </HoverCardTrigger>
-                                  <HoverCardContent className="w-80">
-                                    <SpellDetailsCard spellName={spellName} />
-                                  </HoverCardContent>
-                                </HoverCard>
-                                
-                                <Button
-                                  size="sm"
-                                  disabled={alreadyAdded}
-                                  onClick={() => addSpell(spellName)}
-                                >
-                                  {alreadyAdded ? "Добавлено" : "Добавить"}
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-                }
-                
-                {Object.values(groupedFilteredSpells).every(spells => spells.length === 0) && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">Заклинания не найдены</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
-  );
-};
+          {expandedSpells.includes(spell.id?.toString() || spell.name) && (
+            renderSpellProperties(spell)
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
-// Компонент для отображения деталей заклинания
-const SpellDetailsCard = ({ spellName }: { spellName: string }) => {
-  const details = getSpellDetails(spellName);
-  
-  if (!details) {
-    return <div>Информация о заклинании отсутствует</div>;
-  }
-  
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <h4 className="font-semibold text-lg">{spellName}</h4>
-        <Badge className="bg-primary/20">
-          {details.level === 0 ? "Заговор" : `${details.level} уровень`}
-        </Badge>
-      </div>
-      
-      <p className="text-xs text-muted-foreground">{details.school}</p>
-      
-      <div className="py-2">
-        <div className="text-xs text-muted-foreground mt-1">
-          <span className="font-medium">Время накладывания: </span>{details.castingTime}
+  // Рендер списка заклинаний по уровням
+  const renderSpellsByLevel = () => {
+    if (!character?.spells || character.spells.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <Book className="mx-auto h-12 w-12 mb-2 opacity-20" />
+          <p>У вас пока нет заклинаний</p>
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          <span className="font-medium">Дистанция: </span>{details.range}
+      );
+    }
+
+    // Если есть поиск, показываем все заклинания в одном списке
+    if (searchTerm) {
+      return (
+        <div className="space-y-3">
+          {filteredSpells.length > 0 ? (
+            filteredSpells.map(spell => renderSpellCard(spell))
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              <p>Заклинания не найдены</p>
+            </div>
+          )}
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          <span className="font-medium">Компоненты: </span>{details.components}
+      );
+    }
+
+    // Если выбрана конкретная вкладка, показываем только эти заклинания
+    if (activeTab !== 'all') {
+      return (
+        <div className="space-y-3">
+          {filteredSpells.length > 0 ? (
+            filteredSpells.map(spell => renderSpellCard(spell))
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              <p>Заклинания не найдены</p>
+            </div>
+          )}
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          <span className="font-medium">Длительность: </span>{details.duration}
-        </div>
-      </div>
-      
-      <Separator className="my-2" />
-      
-      <div className="space-y-2">
-        <p className="text-sm">{details.description}</p>
-        {details.higherLevels && (
-          <div className="pt-2 text-sm">
-            <p className="font-medium">На более высоком уровне:</p>
-            <p>{details.higherLevels}</p>
+      );
+    }
+
+    // Иначе группируем по уровням
+    return (
+      <div className="space-y-6">
+        {Object.entries(spellsByLevel).sort(([a], [b]) => Number(a) - Number(b)).map(([level, spells]) => (
+          <div key={level}>
+            <h3 className="text-lg font-semibold mb-2">
+              {Number(level) === 0 ? 'Заговоры' : `${level} уровень`}
+            </h3>
+            <div className="space-y-3">
+              {spells.map(spell => renderSpellCard(spell))}
+            </div>
           </div>
-        )}
+        ))}
       </div>
-      
-      <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-        Классы: {details.classes?.join(", ")}
+    );
+  };
+
+  // Получение количества подготовленных заклинаний
+  const getPreparedSpellsCount = () => {
+    if (!character?.spells || !Array.isArray(character.spells)) return 0;
+    
+    return (character.spells as CharacterSpell[])
+      .filter(spell => spell.prepared && spell.level > 0)
+      .length;
+  };
+
+  // Получение максимального количества подготовленных заклинаний
+  const getMaxPreparedSpells = () => {
+    if (!character) return 0;
+    
+    const spellcastingAbility = character.className === 'Волшебник' ? 'intelligence' : 
+                               character.className === 'Жрец' || character.className === 'Друид' ? 'wisdom' : 
+                               'charisma';
+    
+    const abilityModifier = Math.floor((character.abilities?.[spellcastingAbility] - 10) / 2);
+    const classLevel = character.level || 1;
+    
+    return Math.max(1, abilityModifier + classLevel);
+  };
+
+  // Получение информации о ячейках заклинаний
+  const getSpellSlotInfo = () => {
+    if (!character?.spellSlots) return null;
+    
+    return Object.entries(character.spellSlots)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([level, slots]) => ({
+        level: Number(level),
+        used: slots.used || 0,
+        max: slots.max || 0
+      }))
+      .filter(slot => slot.max > 0);
+  };
+
+  // Обработчик изменения использованных ячеек заклинаний
+  const handleSpellSlotChange = (level: number, used: number) => {
+    if (!character?.spellSlots) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = { 
+      ...updatedSpellSlots[level],
+      used: Math.max(0, Math.min(used, updatedSpellSlots[level].max))
+    };
+    
+    onUpdate({ ...character, spellSlots: updatedSpellSlots });
+  };
+
+  // Рендер информации о ячейках заклинаний
+  const renderSpellSlots = () => {
+    const spellSlots = getSpellSlotInfo();
+    if (!spellSlots || spellSlots.length === 0) return null;
+    
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-4">
+        {spellSlots.map(slot => (
+          <div key={slot.level} className="flex flex-col items-center p-2 border rounded-md">
+            <div className="text-xs text-muted-foreground mb-1">{slot.level} уровень</div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => handleSpellSlotChange(slot.level, slot.used - 1)}
+                disabled={slot.used <= 0}
+              >
+                <span>-</span>
+              </Button>
+              <span className="text-sm font-medium">
+                {slot.used}/{slot.max}
+              </span>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => handleSpellSlotChange(slot.level, slot.used + 1)}
+                disabled={slot.used >= slot.max}
+              >
+                <span>+</span>
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
+    );
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+        <div>
+          <h2 className="text-xl font-bold flex items-center">
+            <Sparkles className="mr-2 h-5 w-5 text-primary" />
+            Книга заклинаний
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Подготовлено: {getPreparedSpellsCount()}/{getMaxPreparedSpells()}
+          </p>
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск заклинаний..."
+            className="pl-8 pr-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-9 w-9"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {renderSpellSlots()}
+
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
+          <TabsTrigger value="all">Все</TabsTrigger>
+          <TabsTrigger value="prepared">Подготовленные</TabsTrigger>
+          <TabsTrigger value="cantrips">Заговоры</TabsTrigger>
+          <TabsTrigger value="1">1 уровень</TabsTrigger>
+          <TabsTrigger value="2">2 уровень</TabsTrigger>
+          <TabsTrigger value="3">3 уровень</TabsTrigger>
+          <TabsTrigger value="4">4 уровень</TabsTrigger>
+          <TabsTrigger value="5">5 уровень</TabsTrigger>
+        </TabsList>
+
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          {renderSpellsByLevel()}
+        </ScrollArea>
+      </Tabs>
     </div>
   );
 };
+
+export default SpellPanel;

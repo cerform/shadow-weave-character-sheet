@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,8 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CharacterSpell } from '@/types/character';
 import { useDeviceType } from '@/hooks/use-mobile';
 
-export const SpellsTab = () => {
-  const { character, updateCharacter } = useContext(CharacterContext);
+export const SpellsTab = ({ character, onUpdate }) => {
+  const { character: characterState, updateCharacter } = useContext(CharacterContext);
   const [openDialog, setOpenDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState<number | null>(null);
@@ -258,6 +257,13 @@ export const SpellsTab = () => {
       </div>
     );
   }
+
+  // Вспомогательная функция для безопасного преобразования строки или массива в строку
+  const safeJoin = (value: string | string[] | undefined, separator: string = ', '): string => {
+    if (!value) return '';
+    if (Array.isArray(value)) return value.join(separator);
+    return value.toString();
+  };
 
   return (
     <div className="space-y-4">
@@ -777,3 +783,5 @@ export const SpellsTab = () => {
     </div>
   );
 };
+
+export default SpellsTab;

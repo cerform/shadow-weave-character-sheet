@@ -236,9 +236,12 @@ export interface Character {
   image?: string;
 }
 
+// Интерфейс для событий изменения хит-поинтов
+// Расширим типы для совместимости с DamageLog
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'healing' | 'tempHP';
+  // Обновляем типы для совместимости с компонентом DamageLog
+  type: 'damage' | 'healing' | 'tempHP' | 'heal' | 'temp' | 'death-save';
   amount: number;
   source: string;
   timestamp: Date;

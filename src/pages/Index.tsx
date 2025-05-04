@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,14 +30,20 @@ const Index = () => {
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
   const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Загружаем персонажей пользователя при изменении авторизации или списка персонажей
+  // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
   useEffect(() => {
     const fetchCharacters = async () => {
-      console.log("Index: Обновляем список персонажей");
+      console.log("Index: Загружаем список персонажей");
+      
+      if (isLoadingCharacters) return; // Предотвращаем повторные запросы
+      
       setIsLoadingCharacters(true);
       
       try {
+        // Запрашиваем персонажей только при изменении статуса авторизации
+        // или при первом рендере
         const chars = await getUserCharacters();
         
         // Проверяем, что полученные данные являются массивом
@@ -54,11 +59,37 @@ const Index = () => {
         setUserCharacters([]);
       } finally {
         setIsLoadingCharacters(false);
+        setHasInitialized(true);
       }
     };
     
-    fetchCharacters();
-  }, [isAuthenticated, characters]);
+    // Загружаем персонажей только если пользователь авторизован и компонент еще не инициализирован
+    if (isAuthenticated && !hasInitialized) {
+      fetchCharacters();
+    }
+  }, [isAuthenticated, getUserCharacters, hasInitialized, isLoadingCharacters]);
+
+  // Обработчик для принудительного обновления списка персонажей
+  const handleRefreshCharacters = useCallback(async () => {
+    setIsLoadingCharacters(true);
+    try {
+      const chars = await getUserCharacters();
+      if (Array.isArray(chars)) {
+        setUserCharacters(chars);
+      }
+    } catch (error) {
+      console.error("Ошибка при обновлении персонажей:", error);
+    } finally {
+      setIsLoadingCharacters(false);
+    }
+  }, [getUserCharacters]);
+
+  // Обновляем список после удаления персонажа
+  useEffect(() => {
+    if (!isLoadingCharacters && hasInitialized && Array.isArray(characters)) {
+      setUserCharacters(characters);
+    }
+  }, [characters, isLoadingCharacters, hasInitialized]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
