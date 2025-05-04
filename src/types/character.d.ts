@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -42,6 +41,21 @@ export type AbilityScores = {
   CHA?: number;
 };
 
+// Interfaces for spell slots and sorcery points
+export interface SpellSlot {
+  used: number;
+  max: number;
+}
+
+export interface SpellSlots {
+  [level: string]: SpellSlot;
+}
+
+export interface SorceryPoints {
+  current: number;
+  max: number;
+}
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string; 
@@ -80,6 +94,9 @@ export interface CharacterSheet {
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
   abilityBonuses?: AbilityScores;
   image?: string;
+  // Добавляем новые свойства для заклинаний и ресурсов
+  spellSlots?: SpellSlots;
+  sorceryPoints?: SorceryPoints;
 }
 
 // Для совместимости с существующим кодом

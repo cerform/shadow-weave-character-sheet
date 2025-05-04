@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character';
+import { CharacterSheet, AbilityScores, SpellSlots, SorceryPoints } from '@/types/character';
 
 // Define the Character type that aligns with CharacterSheet
 export type Character = CharacterSheet;

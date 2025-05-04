@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { CharacterSheet, AbilityScoreMethod } from "@/types/character";
@@ -11,7 +12,7 @@ interface CharacterAbilityScoresProps {
   onAbilityPointsUsedChange?: (points: number) => void;
 }
 
-const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
+export const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   character,
   availablePoints,
   abilityScoreMethod,
