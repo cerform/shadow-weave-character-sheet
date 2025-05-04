@@ -2,8 +2,8 @@ export interface CharacterSpell {
   id?: number;
   name: string;
   level: number;
-  description: string;
-  school: string;
+  description?: string;
+  school?: string;
   castingTime?: string;
   range?: string;
   components?: string;
@@ -236,8 +236,7 @@ export interface Character {
   image?: string;
 }
 
-// Интерфейс для событий изменения хит-поинтов
-// Расширим типы для совместимости с DamageLog
+// Обновляем интерфейс для событий изменения хит-поинтов
 export interface HitPointEvent {
   id: string;
   // Обновляем типы для совместимости с компонентом DamageLog
@@ -245,4 +244,11 @@ export interface HitPointEvent {
   amount: number;
   source: string;
   timestamp: Date;
+}
+
+// Добавляем интерфейс ResourcePanelProps для улучшения типизации
+export interface ResourcePanelProps {
+  character: Character | null;
+  onUpdate: (character: Partial<Character>) => void;
+  isDM?: boolean;
 }

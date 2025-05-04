@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { getNumericModifier } from "@/utils/abilityScoreUtils";
-import { DiceRoller3D } from 'dice-roller-3d';
+import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
 import { getHitDieByClass } from '@/utils/classUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -18,7 +18,7 @@ interface ResourcePanelProps {
   isDM?: boolean;
 }
 
-const ResourcePanel = ({ character, onUpdate, isDM = false }) => {
+const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
   const [currentHp, setCurrentHp] = useState(character?.currentHp || 0);
   const [maxHp, setMaxHp] = useState(character?.maxHp || 0);
   const [tempHp, setTempHp] = useState(character?.temporaryHp || 0);
@@ -105,14 +105,11 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }) => {
   };
 
   // Функция для обработки результата броска кубов хитов
-  const handleHitDieRollComplete = (result: {
-    total: number;
-    details: { dice: number[], modifier: number }
-  }) => {
+  const handleHitDieRollComplete = (result: number) => {
     if (!character) return;
     
     // Обрабатываем результат броска кубиков хитов
-    const healingAmount = result.total;
+    const healingAmount = result;
     
     // Восстанавливаем хиты, но не больше максимального значения
     let newHp = (character.currentHp || 0) + healingAmount;
@@ -274,7 +271,7 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }) => {
       
       <div className="dice-roller-container hidden">
         <DiceRoller3D
-          diceType={getHitDieByClass(character?.className)}
+          initialDice={getHitDieByClass(character?.className)}
           hideControls={false}
           modifier={getNumericModifier(constitution)}
           onRollComplete={handleHitDieRollComplete}

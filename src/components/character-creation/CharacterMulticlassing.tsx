@@ -4,10 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ClassRequirement, MulticlassRequirements } from '@/types/character';
 
-// Правильно определяем требования к мультиклассированию согласно обновленному интерфейсу
+// Правильно определяем требования к мультиклассированию согласно интерфейсу ClassRequirement
 const multiclassRequirements: MulticlassRequirements = {
   "Бард": {
-    abilities: { charisma: 13 },
+    abilities: { charisma: 13 }, // Исправление: используем объект с abilities вместо прямого объекта
     description: "Харизма 13 или выше"
   },
   "Варвар": {
