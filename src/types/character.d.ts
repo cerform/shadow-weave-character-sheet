@@ -25,7 +25,7 @@ export interface Proficiencies {
 export interface SorceryPoints {
   max: number;
   used: number;
-  current?: number; // Added for backward compatibility
+  current?: number; // Для совместимости с интерфейсами
 }
 
 export interface CharacterSpell {
@@ -45,9 +45,9 @@ export interface CharacterSpell {
   prepared: boolean;
   ritual?: boolean;
   concentration?: boolean;
-  classes?: string | string[]; // Added to match usage in components
-  higherLevels?: string; // Added to match usage in components
-  higherLevel?: string; // Alternative field name used in some places
+  classes?: string | string[]; // Для совместимости с компонентами
+  higherLevels?: string; // Для совместимости с компонентами
+  higherLevel?: string; // Альтернативное имя поля в некоторых местах
 }
 
 export interface HitPointEvent {
@@ -56,7 +56,7 @@ export interface HitPointEvent {
   timestamp: number;
   source?: string;
   id?: string;
-  amount?: number; // Alias for value used in some components
+  amount?: number; // Псевдоним для value, используемый в некоторых компонентах
 }
 
 export interface CharacterSheet {
@@ -70,7 +70,7 @@ export interface CharacterSheet {
   subclass?: string;
   level: number;
   abilities: AbilityScores;
-  stats?: {  // Added to match usage in components
+  stats?: {  // Добавлено для совместимости
     strength: number;
     dexterity: number;
     constitution: number;
@@ -80,10 +80,10 @@ export interface CharacterSheet {
   };
   skills?: { [key: string]: { proficient: boolean; expertise: boolean; bonus?: number } };
   savingThrows?: { [key: string]: boolean };
-  proficiencies: string[] | Proficiencies;  // Allow both formats for backward compatibility
+  proficiencies: string[] | Proficiencies;  // Оба формата для обратной совместимости
   proficiencyBonus?: number;
   equipment: string[];
-  spells: string[] | CharacterSpell[];  // Allow both formats for backward compatibility
+  spells: string[] | CharacterSpell[];  // Оба формата для обратной совместимости
   languages: string[];
   gender: string;
   alignment: string;
@@ -113,12 +113,12 @@ export interface CharacterSheet {
   image?: string;
   skillProficiencies?: { [skillName: string]: boolean };
   savingThrowProficiencies?: { [ability: string]: boolean };
-  features?: string[]; // Added to match usage in LevelBasedFeatures.tsx
-  personalityTraits?: string; // Added for background info
-  ideals?: string; // Added for background info
-  bonds?: string; // Added for background info
-  flaws?: string; // Added for background info
-  abilityPointsUsed?: number; // Added for character creation
+  features?: string[]; // Добавлено для использования в LevelBasedFeatures.tsx
+  personalityTraits?: string; // Добавлено для информации о предыстории
+  ideals?: string; // Добавлено для информации о предыстории
+  bonds?: string; // Добавлено для информации о предыстории
+  flaws?: string; // Добавлено для информации о предыстории
+  abilityPointsUsed?: number; // Добавлено для создания персонажа
 }
 
 export interface ClassRequirement {
@@ -133,24 +133,24 @@ export interface ClassRequirement {
   description: string;
 }
 
-// Types for racial traits and features
+// Типы для расовых особенностей и черт
 export interface RacialTraits {
   race: string;
-  abilityScoreIncrease: string | number; // Updated to accept both string and number
-  abilityBonuses?: any; // Added to support usage in racial traits data
+  abilityScoreIncrease: string | number; // Обновлено для поддержки строк и чисел
+  abilityBonuses?: any; // Добавлено для поддержки данных в racial traits
   age: string;
   alignment: string;
   size: string;
-  speed: string | number; // Updated to accept both string and number
+  speed: string | number; // Обновлено для поддержки строк и чисел
   languages: string[];
   features: { name: string; description: string }[];
 }
 
-// Types for class features
+// Типы для особенностей классов
 export interface ClassFeatures {
   name: string;
   hitDice: string;
-  primaryAbility: string[] | string; // Updated to accept both string and string[]
+  primaryAbility: string[] | string; // Обновлено для поддержки строк и массивов строк
   savingThrowProficiencies: string[];
   armorProficiencies: string[];
   weaponProficiencies: string[];
@@ -166,7 +166,7 @@ export interface ClassFeatures {
   };
 }
 
-// Types for backgrounds
+// Типы для предысторий
 export interface Background {
   name: string;
   skillProficiencies: string[];
@@ -178,24 +178,24 @@ export interface Background {
     description: string;
   };
   suggestedCharacteristics?: {
-    personalityTraits?: string[]; // Updated to match usage
+    personalityTraits?: string[]; // Обновлено для соответствия использованию
     ideals?: string[];
     bonds?: string[];
     flaws?: string[];
   };
-  personalityTraits?: string[]; // Added to match usage in data files
-  ideals?: string[]; // Added to match usage in data files
-  bonds?: string[]; // Added to match usage in data files
-  flaws?: string[]; // Added to match usage in data files
+  personalityTraits?: string[]; // Добавлено для соответствия использованию в файлах данных
+  ideals?: string[]; // Добавлено для соответствия использованию в файлах данных
+  bonds?: string[]; // Добавлено для соответствия использованию в файлах данных
+  flaws?: string[]; // Добавлено для соответствия использованию в файлах данных
 }
 
-// Ability score caps
+// Пределы значений характеристик
 export const ABILITY_SCORE_CAPS = {
   MIN: 1,
   DEFAULT: 10, 
   MAX: 20,
   ABSOLUTE_MAX: 30,
-  BASE_CAP: 20,          // Added to match usage in components
-  EPIC_CAP: 22,          // Added to match usage in components
-  LEGENDARY_CAP: 24      // Added to match usage in components
+  BASE_CAP: 20,          // Добавлено для использования в компонентах
+  EPIC_CAP: 22,          // Добавлено для использования в компонентах
+  LEGENDARY_CAP: 24      // Добавлено для использования в компонентах
 };

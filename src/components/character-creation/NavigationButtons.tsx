@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Save } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
 import HomeButton from '@/components/navigation/HomeButton';
@@ -15,6 +15,7 @@ interface NavigationButtonsProps {
   disableNext?: boolean; 
   nextLabel?: string;
   isLastStep?: boolean;
+  onSave?: () => void;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -25,7 +26,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   hideNextButton = false,
   disableNext,
   nextLabel = "Далее",
-  isLastStep = false
+  isLastStep = false,
+  onSave
 }) => {
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
@@ -34,6 +36,14 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const handlePrevStep = () => {
     if (!isFirstStep) {
       prevStep();
+    }
+  };
+
+  const handleNextOrSave = () => {
+    if (isLastStep && onSave) {
+      onSave();
+    } else {
+      nextStep();
     }
   };
   
@@ -55,7 +65,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {!hideNextButton && (
         <Button 
           variant="default" 
-          onClick={nextStep}
+          onClick={handleNextOrSave}
           disabled={isNextDisabled}
           className={`
             flex items-center gap-2 px-4 py-2
@@ -66,8 +76,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
                 : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
           `}
         >
-          {!isMobile && <span>{nextLabel}</span>}
-          {isLastStep ? <CheckCircle className="size-4" /> : <ArrowRight className="size-4" />}
+          {!isMobile && <span>{isLastStep ? "Сохранить персонажа" : nextLabel}</span>}
+          {isLastStep ? (
+            <Save className="size-4" />
+          ) : (
+            <ArrowRight className="size-4" />
+          )}
         </Button>
       )}
     </div>

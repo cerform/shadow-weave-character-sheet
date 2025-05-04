@@ -1,9 +1,12 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
-import { Check } from 'lucide-react';
+import { CheckCircle, Save } from 'lucide-react';
 import { CharacterSheet } from '@/types/character';
+import { useNavigate } from 'react-router-dom';
+import characterService from '@/services/characterService';
 
 interface Props {
   character: CharacterSheet;
@@ -14,6 +17,7 @@ interface Props {
 
 const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter, setCurrentStep }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Конвертируем заклинания в строки для отображения
   const formatSpells = (spells: CharacterSheet['spells'] | string[]): JSX.Element => {
@@ -35,6 +39,40 @@ const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter
         })}
       </div>
     );
+  };
+
+  // Функция для сохранения персонажа
+  const handleSaveCharacter = async () => {
+    try {
+      // Убеждаемся, что все обязательные поля заполнены
+      if (!character.name) {
+        toast({
+          title: "Ошибка",
+          description: "Имя персонажа должно быть заполнено",
+          variant: "destructive"
+        });
+        setCurrentStep(7); // Переход к шагу деталей персонажа
+        return;
+      }
+
+      // Сохраняем персонажа
+      const result = await characterService.saveCharacter(character);
+      
+      toast({
+        title: "Успешно",
+        description: "Персонаж успешно сохранен",
+        variant: "default"
+      });
+
+      // Перенаправляем на страницу просмотра персонажа
+      navigate(`/character-sheet/${result.id}`);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось сохранить персонажа",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -70,7 +108,6 @@ const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter
           </Card>
         </div>
         
-        {/* Отображение заклинаний с использованием formatSpells */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
@@ -95,6 +132,36 @@ const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter
               )}
             </CardContent>
           </Card>
+        </div>
+        
+        {character.backstory && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Предыстория персонажа</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap text-sm">{character.backstory}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        <div className="flex justify-between pt-8">
+          <Button 
+            variant="outline" 
+            onClick={prevStep}
+            className="bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
+          >
+            Назад
+          </Button>
+          
+          <Button 
+            variant="default" 
+            onClick={handleSaveCharacter}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Сохранить персонажа
+          </Button>
         </div>
       </div>
     </div>
