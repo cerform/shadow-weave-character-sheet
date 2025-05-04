@@ -1,6 +1,6 @@
 
 // Вспомогательные функции для работы с заклинаниями
-import { CharacterSpell, SpellData } from '@/types/character';
+import { CharacterSpell } from '@/types/character';
 
 // Функция для извлечения имён заклинаний из массива
 export const extractSpellNames = (spells: (string | CharacterSpell)[]): string[] => {
@@ -27,7 +27,7 @@ export const safeSome = (text: string | null | undefined, searchTerm: string): b
 };
 
 // Функция для фильтрации заклинаний
-export const safeFilter = (spells: SpellData[], filterFn: (spell: SpellData) => boolean): SpellData[] => {
+export const safeFilter = (spells: any[], filterFn: (spell: any) => boolean): any[] => {
   if (!spells || !Array.isArray(spells)) return [];
   return spells.filter(filterFn);
 };
@@ -71,16 +71,16 @@ export const normalizeSpells = (spells: any[], allSpellsData: any[]): CharacterS
 };
 
 // Безопасное получение свойства заклинания
-export const safeGet = (spell: SpellData | undefined, property: string, defaultValue: any = ''): any => {
+export const safeGet = (spell: any | undefined, property: string, defaultValue: any = ''): any => {
   if (!spell) return defaultValue;
   return spell[property] ?? defaultValue;
 };
 
 export default {
+  extractSpellNames,
   safeJoin,
   normalizeSpells,
   safeSome,
   safeFilter,
-  safeGet,
-  extractSpellNames
+  safeGet
 };

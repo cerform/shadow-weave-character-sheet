@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -77,7 +78,7 @@ const JoinSessionPage: React.FC = () => {
                 <label
                   key={character.id}
                   className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-secondary/50 ${selectedCharacter?.id === character.id ? 'bg-secondary' : ''}`}
-                  style={{ borderColor: currentTheme.secondary }}
+                  style={{ borderColor: currentTheme.accent }}
                 >
                   <input
                     type="radio"
@@ -87,7 +88,7 @@ const JoinSessionPage: React.FC = () => {
                     onChange={() => setSelectedCharacter(character)}
                   />
                   <Avatar className="mr-2">
-                    <AvatarImage src={character.image} alt={character.name} />
+                    <AvatarImage src={character.avatarUrl || ''} alt={character.name} />
                     <AvatarFallback>{character.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span>{character.name} - {character.class}</span>

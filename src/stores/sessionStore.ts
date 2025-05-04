@@ -62,15 +62,37 @@ export const useSessionStore = create<SessionStore>()(
             throw new Error("Пользователь не авторизован");
           }
           
-          const session = await sessionService.createSession(name, description);
-          if (!session) {
+          const sessionData = await sessionService.createSession(name, description);
+          if (!sessionData) {
             throw new Error("Ошибка при создании сессии");
           }
           
+          // Создаем полный объект Session из полученных данных
+          const newSession: Session = {
+            id: sessionData.id,
+            title: name,
+            description: description || '',
+            dmId: currentUser.uid,
+            players: [],
+            startTime: new Date().toISOString(),
+            isActive: true,
+            notes: [],
+            createdAt: new Date().toISOString(),
+            code: uuidv4().substring(0, 6).toUpperCase(),
+            name: name,
+            users: [{
+              id: currentUser.uid,
+              name: currentUser.displayName || 'Мастер',
+              themePreference: 'dark',
+              isOnline: true,
+              isDM: true
+            }]
+          };
+          
           // Обновляем состояние
           set(state => ({
-            sessions: [...state.sessions, session],
-            currentSession: session,
+            sessions: [...state.sessions, newSession],
+            currentSession: newSession,
             currentUser: {
               id: currentUser.uid,
               name: currentUser.displayName || 'Мастер',
@@ -82,7 +104,7 @@ export const useSessionStore = create<SessionStore>()(
           }));
           
           toast.success("Сессия успешно создана");
-          return session;
+          return newSession;
         } catch (error: any) {
           set({ loading: false, error: error.message });
           toast.error(error.message);
@@ -132,7 +154,7 @@ export const useSessionStore = create<SessionStore>()(
               race: character.race || '',
               class: (character as Character).class || (character as Character).className || '',
               level: character.level || 1,
-              avatarUrl: (character as Character).image
+              avatarUrl: (character as Character).avatarUrl
             };
           }
           
@@ -146,8 +168,10 @@ export const useSessionStore = create<SessionStore>()(
           };
           
           // Присоединяемся к сессии
-          const joined = await sessionService.joinSession(session.id, user);
-          if (!joined) {
+          const joinResult = await sessionService.joinSession(session.id, user);
+          
+          // Если joinResult имеет значение null или undefined, также считаем операцию неудачной
+          if (joinResult === false) {
             throw new Error("Не удалось присоединиться к сессии");
           }
           
@@ -266,9 +290,10 @@ export const useSessionStore = create<SessionStore>()(
             if (get().currentSession?.id === sessionId) {
               set({ currentSession: updatedSession });
             }
+            return true;
           }
           
-          return joined;
+          return false;
         } catch (error) {
           console.error("Ошибка при добавлении пользователя:", error);
           return false;
@@ -313,12 +338,8 @@ export const useSessionStore = create<SessionStore>()(
       
       deleteCharacter: async (characterId: string): Promise<boolean> => {
         try {
-          const result = await characterService.deleteCharacter(characterId);
-          
-          if (typeof result === 'undefined') {
-            return true;
-          }
-          return false;
+          await characterService.deleteCharacter(characterId);
+          return true;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
           return false;

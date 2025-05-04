@@ -1,144 +1,53 @@
 
-// Определение основных типов и интерфейсов
-export interface CharacterSheet {
-  id?: string;
-  name: string;
-  level: number;
-  race?: string;
-  subrace?: string;
-  class?: string;
-  className?: string;
-  subclass?: string;
-  background?: string;
-  alignment?: string;
-  abilities?: AbilityScores;
-  hitPoints?: {
-    current: number;
-    maximum: number;
-    temporary?: number;
-  };
-  hitDice?: {
-    total: number;
-    current?: number;
-    value?: string;
-    used?: number;
-  };
-  proficiencies?: Proficiencies;
-  equipment?: Equipment[];
-  features?: (Feature | string)[];
-  spells?: (string | CharacterSpell)[];
-  personalityTraits?: string[];
-  ideals?: string[];
-  bonds?: string[];
-  flaws?: string[];
-  backstory?: string;
+import { CharacterSheet, SpellSlots, Proficiencies, AbilityScores } from './character.types';
+
+export type { CharacterSheet, SpellSlots, Proficiencies, AbilityScores };
+
+// Экспортируем константы для ограничений характеристик
+export const ABILITY_SCORE_CAPS = {
+  MIN: 3,
+  MAX: 18
+};
+
+// Character interface
+export interface Character {
+  id: string;
   userId?: string;
-  // Дополнительные поля
-  experience?: number;
-  experiencePoints?: number;
-  proficiencyBonus?: number;
-  inspiration?: boolean;
-  armorClass?: number;
-  initiative?: number;
-  speed?: number;
+  name: string;
+  race: string;
+  subrace?: string;
+  className: string;
+  class: string;
+  level: number;
+  abilities: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  spells?: string[];
+  spellSlots?: SpellSlots;
+  gender?: string;
+  alignment?: string;
+  background?: string;
+  equipment?: any[];
+  languages?: string[];
+  proficiencies?: Proficiencies;
+  features?: any[];
   maxHp?: number;
   currentHp?: number;
-  temporaryHp?: number;
-  tempHp?: number;
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
-  savingThrows?: SaveProficiencies;
-  skills?: SkillProficiencies;
-  passivePerception?: number;
-  languages?: string[];
-  conditions?: string[];
-  resources?: Resource[];
-  notes?: string;
-  coins?: {
-    copper?: number;
-    silver?: number;
-    electrum?: number;
-    gold?: number;
-    platinum?: number;
-  };
-  // Дополнительные данные для рас
-  size?: string;
-  gender?: string;
   age?: number;
-  // Внешний вид
-  appearance?: {
-    age: number;
-    height: string;
-    weight: string;
-    eyes: string;
-    skin: string;
-    hair: string;
-  };
-  // Характеристики для заклинателей
-  spellcastingAbility?: 'intelligence' | 'wisdom' | 'charisma';
-  spellSaveDC?: number;
-  spellAttackBonus?: number;
-  spellSlots?: SpellSlots;
-  spellsKnown?: number; // для колдунов и чародеев
-  // Для отслеживания мультиклассирования
-  classes?: { class: string, level: number }[];
-  // Очки колдовства для чародеев
-  sorceryPoints?: SorceryPoints;
-  // Дополнительные поля, которые могут пригодиться
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface AbilityScores {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
-  [key: string]: number | undefined;
-}
-
-export interface HitPoints {
-  current: number;
-  maximum: number;
-  temporary?: number;
-}
-
-export interface Proficiencies {
-  weapons?: string[];
-  armor?: string[];
-  tools?: string[];
-  languages?: string[];
-  savingThrows?: string[];
-  skills?: string[];
-  [key: string]: string[] | undefined;
-}
-
-export interface Equipment {
-  name: string;
-  quantity: number;
-  weight?: number;
-  value?: number;
-  description?: string;
-  equipped?: boolean;
-  toString?: () => string;
-}
-
-export interface Feature {
-  name: string;
-  source: string;
-  description: string;
-  level?: number;
-  toString?: () => string;
+  avatarUrl?: string;
 }
 
 export interface CharacterSpell {
@@ -164,6 +73,7 @@ export interface CharacterSpell {
   [key: string]: any;
 }
 
+// Дополнительные типы, необходимые для работы с заклинаниями
 export interface SpellData {
   id?: string | number;
   name: string;
@@ -186,177 +96,3 @@ export interface SpellData {
   duration?: string;
   [key: string]: any;
 }
-
-export interface SaveProficiencies {
-  strength?: boolean;
-  dexterity?: boolean;
-  constitution?: boolean;
-  intelligence?: boolean;
-  wisdom?: boolean;
-  charisma?: boolean;
-}
-
-export interface SkillProficiencies {
-  acrobatics?: boolean;
-  animalHandling?: boolean;
-  arcana?: boolean;
-  athletics?: boolean;
-  deception?: boolean;
-  history?: boolean;
-  insight?: boolean;
-  intimidation?: boolean;
-  investigation?: boolean;
-  medicine?: boolean;
-  nature?: boolean;
-  perception?: boolean;
-  performance?: boolean;
-  persuasion?: boolean;
-  religion?: boolean;
-  sleightOfHand?: boolean;
-  stealth?: boolean;
-  survival?: boolean;
-}
-
-export interface Resource {
-  name: string;
-  max: number;
-  current: number;
-  shortRest?: boolean;
-  longRest?: boolean;
-}
-
-export interface SpellSlots {
-  1: { max: number; current: number };
-  2: { max: number; current: number };
-  3: { max: number; current: number };
-  4: { max: number; current: number };
-  5: { max: number; current: number };
-  6: { max: number; current: number };
-  7: { max: number; current: number };
-  8: { max: number; current: number };
-  9: { max: number; current: number };
-  [key: string]: { max: number; current: number };
-}
-
-export interface SorceryPoints {
-  total: number;
-  used: number;
-  max?: number;
-  current?: number;
-}
-
-export interface Character extends CharacterSheet {
-  features: (Feature | string)[];
-}
-
-export interface ClassRequirement {
-  abilityRequirements?: {
-    strength?: number;
-    dexterity?: number;
-    constitution?: number;
-    intelligence?: number;
-    wisdom?: number;
-    charisma?: number;
-  };
-  abilityScore?: keyof AbilityScores;
-  minValue?: number;
-  description?: string;
-}
-
-export interface Background {
-  name: string;
-  description: string;
-  skillProficiencies: string[];
-  toolProficiencies?: string[];
-  languages?: string[];
-  equipment: string[];
-  feature: {
-    name: string;
-    description: string;
-  };
-  personalityTraits: string[];
-  ideals: string[];
-  bonds: string[];
-  flaws: string[];
-  suggestedCharacteristics?: string;
-}
-
-export interface ClassFeatures {
-  [level: string]: {
-    features: { name: string; description: string; }[];
-    spellsKnown?: number;
-    cantripsKnown?: number;
-    spellSlots?: {
-      1?: number;
-      2?: number;
-      3?: number;
-      4?: number;
-      5?: number;
-      6?: number;
-      7?: number;
-      8?: number;
-      9?: number;
-    };
-  };
-}
-
-export interface HitPointEvent {
-  id?: string | number;
-  type: 'damage' | 'healing' | 'temp' | 'tempHP' | 'heal' | 'death-save';
-  value?: number;
-  amount?: number;
-  source?: string;
-  timestamp: number;
-}
-
-export interface RacialTraits {
-  race: string;
-  abilityBonuses: {
-    [key: string]: number;
-  };
-  traits: string[];
-  languages: string[];
-  speed: number;
-  size: string;
-  subRaces?: {
-    name: string;
-    abilityBonuses: {
-      [key: string]: number;
-    };
-    traits: string[];
-    [key: string]: any;
-  }[];
-  specialAbilities?: {
-    name: string;
-    description: string;
-  }[];
-  [key: string]: any;
-}
-
-// Экспортируем константу, а не тип
-export const ABILITY_SCORE_CAPS = {
-  DEFAULT: 10,
-  BASE_CAP: 20,
-  RACIAL_CAP: 17,
-  ASI_CAP: 20,
-  MAGIC_CAP: 30,
-  MIN: 1,
-  MAX: 20,
-  ABSOLUTE_MAX: 30,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24,
-};
-
-// Defining constants for ability score caps (kept for backwards compatibility)
-export const ABILITY_SCORE_CAPS_CONSTANTS = {
-  MIN: 1,
-  DEFAULT: 10, 
-  MAX: 20,
-  ABSOLUTE_MAX: 30,
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24,
-  RACIAL_CAP: 17,
-  ASI_CAP: 20,
-  MAGIC_CAP: 30
-};
