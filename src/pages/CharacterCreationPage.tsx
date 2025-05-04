@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,6 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { steps } from "@/config/characterCreationSteps";
 import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 
-// Импортируем данные о подклассах
-import { subclassData } from '@/data/subclasses';
-
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -43,26 +41,10 @@ const CharacterCreationPage = () => {
     console.log(`Уровень: ${character.level}, доступные очки: ${calculatedPoints}`);
   }, [character.level, baseAbilityScorePoints, getAbilityScorePointsByLevel]);
   
-  // Проверка на наличие подклассов для текущего класса
-  const hasSubclassesForClass = () => {
-    if (!character.class) return false;
-    const classSubclasses = subclassData[character.class];
-    return classSubclasses && Object.keys(classSubclasses).length > 0;
-  };
-
   // Обновляем конфигурацию хука useCreationStep с актуальной информацией
   const { currentStep, nextStep, prevStep, setCurrentStep, visibleSteps } = useCreationStep({
-    isMagicClass: isMagicClass(),
-    hasSubclasses: hasSubclassesForClass()
+    isMagicClass: isMagicClass()
   });
-
-  // Обновляем шаг при изменении класса персонажа
-  useEffect(() => {
-    // Когда класс меняется, обновляем hasSubclasses
-    if (character.class) {
-      console.log(`Класс выбран: ${character.class}, имеет подклассы: ${hasSubclassesForClass()}`);
-    }
-  }, [character.class]);
 
   // Определяем максимальное значение для характеристик на основе уровня
   const [maxAbilityScore, setMaxAbilityScore] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
@@ -173,7 +155,6 @@ const CharacterCreationPage = () => {
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
             isMagicClass={isMagicClass()}
-            hasSubclasses={hasSubclassesForClass()}
           />
         </div>
 

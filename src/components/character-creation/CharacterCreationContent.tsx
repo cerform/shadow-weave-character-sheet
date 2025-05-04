@@ -8,12 +8,8 @@ import CharacterBackground from './CharacterBackground';
 import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
-import CharacterSubclassSelection from './CharacterSubclassSelection';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { CharacterSheet } from '@/types/character.d';
-
-// Импорт даннных о подклассах для проверки их наличия
-import { subclassData } from '@/data/subclasses';
 
 interface CharacterCreationContentProps {
   currentStep: number;
@@ -52,13 +48,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   onLevelChange,
   maxAbilityScore
 }) => {
-  // Проверка, есть ли подклассы для выбранного класса
-  const hasSubclasses = () => {
-    if (!character.class) return false;
-    const classSubclasses = subclassData[character.class];
-    return classSubclasses && Object.keys(classSubclasses).length > 0;
-  };
-
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
     switch (currentStep) {
@@ -71,7 +60,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 1: // Выбор класса
+      case 1: // Выбор класса и подкласса
         return (
           <CharacterClassSelection 
             character={character} 
@@ -80,16 +69,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 2: // Выбор архетипа (подкласса)
-        return (
-          <CharacterSubclassSelection
-            character={character}
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 3: // Характеристики
+      case 2: // Характеристики
         return (
           <CharacterAbilityScores 
             character={character} 
@@ -107,7 +87,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 4: // Предыстория
+      case 3: // Предыстория
         return (
           <CharacterBackground 
             character={character} 
@@ -116,7 +96,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 5: // Здоровье (новый шаг)
+      case 4: // Здоровье (обновленный индекс с 5 на 4)
         return (
           <CharacterHitPointsCalculator
             character={character}
@@ -125,7 +105,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 6: // Выбор снаряжения
+      case 5: // Выбор снаряжения (обновленный индекс с 6 на 5)
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -134,7 +114,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Детали персонажа
+      case 6: // Детали персонажа (обновленный индекс с 7 на 6)
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -143,7 +123,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Выбор заклинаний
+      case 7: // Выбор заклинаний (обновленный индекс с 8 на 7)
         // Проверяем, является ли класс магическим
         if (!isMagicClass) {
           // Автоматически переходим к следующему шагу с задержкой
@@ -159,7 +139,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 9: // Просмотр и завершение (индекс изменился с 8 на 9)
+      case 8: // Просмотр и завершение (обновленный индекс с 9 на 8)
         return (
           <CharacterReview 
             character={character}

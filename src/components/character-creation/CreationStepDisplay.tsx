@@ -25,7 +25,6 @@ interface CreationStepDisplayProps {
   currentStep: number;
   setCurrentStep: (step: number) => void;
   isMagicClass?: boolean;
-  hasSubclasses?: boolean;
 }
 
 const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
@@ -33,15 +32,13 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   currentStep,
   setCurrentStep,
   isMagicClass = false,
-  hasSubclasses = true,
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
   // Получаем видимые шаги с учетом фильтрации
   const visibleSteps = getCharacterSteps({
-    isMagicClass,
-    hasSubclasses
+    isMagicClass
   });
 
   return (

@@ -6,7 +6,6 @@ interface UseCreationStepConfig {
   isMagicClass?: boolean;
   characterClass?: string;
   character?: any;
-  hasSubclasses?: boolean;
 }
 
 export const useCreationStep = (config?: UseCreationStepConfig) => {
@@ -14,8 +13,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
   
   // Получаем отфильтрованные шаги на основе текущей конфигурации
   const visibleSteps = getCharacterSteps({
-    isMagicClass: config?.isMagicClass,
-    hasSubclasses: config?.hasSubclasses
+    isMagicClass: config?.isMagicClass
   });
 
   // Переход к следующему шагу с учетом фильтрации
@@ -52,7 +50,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
 
   // Обновляем currentStepId, если шаг стал недоступен после изменения фильтров
   useEffect(() => {
-    console.log(`Конфигурация шагов изменилась: isMagicClass=${config?.isMagicClass}, hasSubclasses=${config?.hasSubclasses}`);
+    console.log(`Конфигурация шагов изменилась: isMagicClass=${config?.isMagicClass}`);
     console.log(`Видимые шаги:`, visibleSteps.map(s => s.id));
 
     const currentStepExists = visibleSteps.some(step => step.id === currentStepId);
@@ -65,7 +63,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
-  }, [config?.isMagicClass, config?.hasSubclasses]);
+  }, [config?.isMagicClass]);
 
   // Вычисляем процент завершения создания персонажа
   const calculateProgress = (): number => {

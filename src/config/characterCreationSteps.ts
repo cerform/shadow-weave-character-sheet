@@ -8,62 +8,52 @@ export const steps = [
   {
     id: 1,
     name: "Класс",
-    description: "Выбор класса персонажа"
+    description: "Выбор класса и специализации персонажа"
   },
   {
     id: 2,
-    name: "Архетип",
-    description: "Выбор специализации класса",
-    optional: true // Помечаем шаг как опциональный
-  },
-  {
-    id: 3,
     name: "Характеристики",
     description: "Распределение базовых характеристик"
   },
   {
-    id: 4,
+    id: 3,
     name: "Предыстория",
     description: "Выбор предыстории персонажа"
   },
   {
-    id: 5,
+    id: 4,
     name: "Здоровье",
     description: "Расчет очков здоровья персонажа"
   },
   {
-    id: 6,
+    id: 5,
     name: "Снаряжение",
     description: "Выбор начального снаряжения"
   },
   {
-    id: 7,
+    id: 6,
     name: "Детали",
     description: "Внешность, личность и связи"
   },
   {
-    id: 8,
+    id: 7,
     name: "Заклинания",
     description: "Выбор заклинаний для заклинателей",
     optional: true,
     onlyFor: "magic"
   },
   {
-    id: 9,
+    id: 8,
     name: "Завершение",
     description: "Проверка и финализация персонажа"
   }
 ];
 
 // Функция для получения видимых шагов на основе фильтрации
-export const getCharacterSteps = (config?: { isMagicClass?: boolean; hasSubclasses?: boolean }) => {
+export const getCharacterSteps = (config?: { isMagicClass?: boolean }) => {
   return steps.filter(step => {
     // Фильтруем шаги заклинаний для немагических классов
     if (step.id === 7 && step.onlyFor === "magic" && config?.isMagicClass === false) {
-      return false;
-    }
-    // Фильтруем шаг архетипа для классов без подклассов
-    if (step.id === 2 && step.optional && config?.hasSubclasses === false) {
       return false;
     }
     return true;
