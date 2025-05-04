@@ -130,6 +130,20 @@ export const useCharacterCreation = () => {
     return xpByLevel[level - 1];
   };
   
+  // Расчет количества очков для распределения характеристик в зависимости от уровня
+  const getAbilityScorePointsByLevel = (basePoints: number = 27): number => {
+    let totalPoints = basePoints;
+    
+    // Добавляем бонусы за уровни
+    const level = getTotalLevel();
+    
+    if (level >= 5) totalPoints += 3;
+    if (level >= 10) totalPoints += 2; // Всего +5 на 10 уровне
+    if (level >= 15) totalPoints += 2; // Всего +7 на 15 уровне
+    
+    return totalPoints;
+  };
+  
   // Обработчик для изменения уровня персонажа
   const handleLevelChange = (level: number) => {
     // Проверяем, не превышает ли общий уровень 20 с учетом мультикласса
@@ -191,6 +205,7 @@ export const useCharacterCreation = () => {
     handleLevelChange,
     getTotalLevel,
     getAllClasses,
-    convertToCharacter // При использовании этой функции теперь будет возвращаться Character с обязательным полем class
+    getAbilityScorePointsByLevel,
+    convertToCharacter
   };
 };

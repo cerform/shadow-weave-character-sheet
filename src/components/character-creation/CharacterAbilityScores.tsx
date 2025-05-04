@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
@@ -54,7 +55,22 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   // Определяем максимальное значение для характеристик на основе уровня персонажа
   const [maxStatValue, setMaxStatValue] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
   
+  // Определяем количество очков для распределения в зависимости от уровня
+  const [adjustedPointsLeft, setAdjustedPointsLeft] = useState<number>(abilityScorePoints);
+  const [totalPointsAvailable, setTotalPointsAvailable] = useState<number>(abilityScorePoints);
+  
   useEffect(() => {
+    // Базовое количество очков
+    let basePoints = abilityScorePoints;
+    
+    // Добавляем дополнительные очки в зависимости от уровня
+    if (character.level >= 5) basePoints += 3;
+    if (character.level >= 10) basePoints += 2; // Всего +5 на 10 уровне
+    if (character.level >= 15) basePoints += 2; // Всего +7 на 15 уровне
+    
+    setTotalPointsAvailable(basePoints);
+    setAdjustedPointsLeft(basePoints);
+    
     // Устанавливаем максимальное значение в зависимости от уровня
     if (character.level >= 16) {
       setMaxStatValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
@@ -71,9 +87,18 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         description: `На уровне ${character.level} максимальное значение характеристики: ${character.level >= 16 ? 24 : 22}`,
       });
     }
-  }, [character.level, toast]);
+  }, [character.level, toast, abilityScorePoints]);
+  
+  // Для отслеживания использованных очков в point buy
+  const [pointsLeft, setPointsLeft] = useState(totalPointsAvailable);
 
-  const [pointsLeft, setPointsLeft] = useState(abilityScorePoints);
+  useEffect(() => {
+    // При изменении метода расчета характеристик обновляем доступные очки
+    if (abilitiesMethod === "pointbuy") {
+      setPointsLeft(totalPointsAvailable);
+    }
+  }, [abilitiesMethod, totalPointsAvailable]);
+
   const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
     strength: null,
     dexterity: null,
@@ -87,11 +112,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   const POINT_COSTS: {[key: number]: number} = {
     8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
   };
-
-  // Обновляем доступные очки при изменении abilityScorePoints
-  useEffect(() => {
-    setPointsLeft(abilityScorePoints);
-  }, [abilityScorePoints]);
 
   useEffect(() => {
     if (abilitiesMethod === "standard") {
@@ -114,12 +134,12 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         wisdom: 8,
         charisma: 8,
       });
-      setPointsLeft(abilityScorePoints);
+      setPointsLeft(totalPointsAvailable);
       
       // Уведомляем о доступных очках
       toast({
         title: "Доступные очки",
-        description: `У вас ${abilityScorePoints} очков для распределения характеристик`
+        description: `У вас ${totalPointsAvailable} очков для распределения характеристик`
       });
     } else if (abilitiesMethod === "roll") {
       // При выборе метода бросков сбрасываем назначенные кости
@@ -132,7 +152,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
         charisma: null,
       });
     }
-  }, [abilitiesMethod, abilityScorePoints, toast]);
+  }, [abilitiesMethod, totalPointsAvailable, toast]);
 
   // Обработчики для Point Buy
   const incrementStat = (stat: keyof typeof stats) => {
@@ -192,7 +212,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     updateCharacter({ 
       abilities: stats,
       stats: stats,
-      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? abilityScorePoints - pointsLeft : undefined
+      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
     });
     nextStep();
   };
@@ -224,7 +244,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
             decrementStat={decrementStat}
             getModifier={getModifier}
             getPointCost={getPointCost}
-            abilityScorePoints={abilityScorePoints}
+            abilityScorePoints={totalPointsAvailable}
             maxAbilityScore={maxStatValue}
           />
         )}

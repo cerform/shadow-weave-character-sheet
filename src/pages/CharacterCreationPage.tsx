@@ -31,8 +31,18 @@ const CharacterCreationPage = () => {
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
   
   // Custom hooks
-  const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange } = useCharacterCreation();
-  const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
+  const { character, updateCharacter, isMagicClass, getModifier, handleLevelChange, getAbilityScorePointsByLevel } = useCharacterCreation();
+  const { diceResults, rollAllAbilities, rollSingleAbility, abilityScorePoints: baseAbilityScorePoints, rollsHistory } = useAbilitiesRoller(abilitiesMethod, character.level);
+  
+  // Расчет очков характеристик с учетом уровня
+  const [adjustedAbilityScorePoints, setAdjustedAbilityScorePoints] = useState<number>(baseAbilityScorePoints);
+  
+  // Обновляем количество очков характеристик при изменении уровня
+  useEffect(() => {
+    const calculatedPoints = getAbilityScorePointsByLevel(baseAbilityScorePoints);
+    setAdjustedAbilityScorePoints(calculatedPoints);
+    console.log(`Уровень: ${character.level}, доступные очки: ${calculatedPoints}`);
+  }, [character.level, baseAbilityScorePoints, getAbilityScorePointsByLevel]);
   
   // Проверка на наличие подклассов для текущего класса
   const hasSubclassesForClass = () => {
@@ -202,7 +212,7 @@ const CharacterCreationPage = () => {
           getModifier={getModifierString}
           rollAllAbilities={rollAllAbilities}
           rollSingleAbility={handleRollSingleAbility}
-          abilityScorePoints={abilityScorePoints}
+          abilityScorePoints={adjustedAbilityScorePoints}
           isMagicClass={isMagicClass()}
           rollsHistory={rollsHistory}
           onLevelChange={handleLevelChange}
