@@ -11,7 +11,8 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import type { CharacterSheet, Character, Equipment } from '@/types/character';
+import type { CharacterSheet, Character } from '@/types/character';
+import type { Equipment } from '@/types/character';
 
 interface CharacterCreationContentProps {
   currentStep: number;
@@ -75,7 +76,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 0: // Выбор расы
         return (
           <CharacterRaceSelection 
-            character={character as any} 
+            character={character as Character} 
             updateCharacter={updateCharacter as any}
             nextStep={nextStep}
             prevStep={prevStep}
@@ -125,7 +126,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 6: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
-            initialEquipment={character.equipment}
+            initialEquipment={character.equipment as Equipment[]}
             onChange={(equipment) => updateCharacter({ equipment })}
           />
         );

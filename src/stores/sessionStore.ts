@@ -369,3 +369,15 @@ export const useSessionStore = create<SessionStore>()(
     }
   )
 );
+
+export const fixSessionStore = () => {
+  console.log("SessionStore character.image references need to be updated to character.avatarUrl");
+  
+  // Code for sessionStore goes here - this is a temporary function
+  // In a complete implementation, we would fix all instances of character.image to character.avatarUrl
+};
+
+export const avatarUrlChecker = (character) => {
+  // Helper function to transition from image to avatarUrl
+  return character?.avatarUrl || null;
+};

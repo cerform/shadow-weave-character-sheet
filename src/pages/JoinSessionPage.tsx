@@ -77,7 +77,7 @@ const JoinSessionPage: React.FC = () => {
               {characters.map((character) => (
                 <label
                   key={character.id}
-                  className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-secondary/50 ${selectedCharacter?.id === character.id ? 'bg-secondary' : ''}`}
+                  className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-muted ${selectedCharacter?.id === character.id ? 'bg-muted' : ''}`}
                   style={{ borderColor: currentTheme.accent }}
                 >
                   <input

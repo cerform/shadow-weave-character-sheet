@@ -54,7 +54,7 @@ const DamageLog: React.FC<DamageLogProps> = ({ events }) => {
       case 'tempHP':
         return `+${event.value} (врем)`;
       case 'death-save':
-        return event.value > 0 ? 'Успех' : 'Провал';
+        return event.value && event.value > 0 ? 'Успех' : 'Провал';
       default:
         return `${event.value}`;
     }
@@ -71,7 +71,7 @@ const DamageLog: React.FC<DamageLogProps> = ({ events }) => {
       case 'tempHP':
         return "🛡️";
       case 'death-save':
-        return event.value > 0 ? "✅" : "❌";
+        return event.value && event.value > 0 ? "✅" : "❌";
       default:
         return "❓";
     }

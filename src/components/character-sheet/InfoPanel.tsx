@@ -18,7 +18,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ character }) => {
           <div className="space-y-2">
             <p><span className="font-medium">Имя:</span> {character.name}</p>
             <p><span className="font-medium">Раса:</span> {character.race} {character.subrace ? `(${character.subrace})` : ''}</p>
-            <p><span className="font-medium">Класс:</span> {character.class || character.className} {character.subclass ? `(${character.subclass})` : ''}</p>
+            <p><span className="font-medium">Класс:</span> {character.class || character.className} {character.subclass && `(${character.subclass})`}</p>
             <p><span className="font-medium">Предыстория:</span> {character.background}</p>
             <p><span className="font-medium">Мировоззрение:</span> {character.alignment}</p>
             {character.gender && <p><span className="font-medium">Пол:</span> {character.gender}</p>}

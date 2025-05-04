@@ -4,7 +4,6 @@ import { Character } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Исправляем интерфейс, добавляя updateCharacter
 export interface CharacterReviewProps {
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
@@ -18,7 +17,6 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
   setCurrentStep, 
   prevStep 
 }) => {
-  // Реализация компонента
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
       <CardHeader>
@@ -64,7 +62,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <h3 className="text-lg font-semibold mb-2">Снаряжение</h3>
               <ul className="list-disc list-inside">
                 {character.equipment.map((item, index) => (
-                  <li key={index}>{item.name} (x{item.quantity})</li>
+                  <li key={index}>{typeof item === 'string' ? item : item.name} {typeof item !== 'string' && `(x${item.quantity})`}</li>
                 ))}
               </ul>
             </div>

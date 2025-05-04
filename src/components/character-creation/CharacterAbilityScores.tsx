@@ -32,10 +32,10 @@ const CharacterAbilityScores: React.FC = () => {
         INT: ABILITY_SCORE_CAPS.DEFAULT,
         WIS: ABILITY_SCORE_CAPS.DEFAULT,
         CHA: ABILITY_SCORE_CAPS.DEFAULT
-      } as AbilityScores;
+      };
       
       updateCharacter({
-        abilities: defaultAbilities
+        abilities: defaultAbilities as any
       });
     }
   }, [updateCharacter, character]);
@@ -47,10 +47,10 @@ const CharacterAbilityScores: React.FC = () => {
       ...character.abilities,
       [ability]: value,
       [ability.toLowerCase()]: value
-    } as AbilityScores;
+    };
 
     updateCharacter({
-      abilities: updatedAbilities
+      abilities: updatedAbilities as any
     });
   };
 

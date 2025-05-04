@@ -7,12 +7,12 @@ export interface AbilityScores {
   intelligence: number;
   wisdom: number;
   charisma: number;
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
   [key: string]: number | undefined;
 }
 
@@ -43,6 +43,7 @@ export interface SpellSlots {
   8: { max: number; current: number };
   9: { max: number; current: number };
   [key: number]: { max: number; current: number };
+  [key: string]: { max: number; current: number };
 }
 
 export interface Equipment {
@@ -153,4 +154,5 @@ export interface CharacterSheet {
   // Дополнительные поля, которые могут пригодиться
   createdAt?: string;
   updatedAt?: string;
+  avatarUrl?: string;
 }

@@ -5,8 +5,16 @@ export type { CharacterSheet, SpellSlots, Proficiencies, AbilityScores };
 
 // Экспортируем константы для ограничений характеристик
 export const ABILITY_SCORE_CAPS = {
+  DEFAULT: 10,
   MIN: 3,
-  MAX: 18
+  MAX: 18,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24,
+  RACIAL_CAP: 17,
+  ASI_CAP: 20,
+  MAGIC_CAP: 30,
+  ABSOLUTE_MAX: 30
 };
 
 // Character interface
@@ -18,6 +26,7 @@ export interface Character {
   subrace?: string;
   className: string;
   class: string;
+  subclass?: string;
   level: number;
   abilities: {
     STR: number;
@@ -35,19 +44,49 @@ export interface Character {
   };
   spells?: string[];
   spellSlots?: SpellSlots;
+  hitPoints?: {
+    current: number;
+    maximum: number;
+    temporary?: number;
+  };
+  hitDice?: {
+    total: number;
+    current?: number;
+    value?: string;
+    used?: number;
+  };
+  temporaryHp?: number;
   gender?: string;
   alignment?: string;
   background?: string;
-  equipment?: any[];
+  equipment?: Equipment[];
   languages?: string[];
   proficiencies?: Proficiencies;
-  features?: any[];
+  features?: Feature[];
   maxHp?: number;
   currentHp?: number;
   age?: number;
   createdAt?: string;
   updatedAt?: string;
   avatarUrl?: string;
+}
+
+export interface Equipment {
+  name: string;
+  quantity: number;
+  weight?: number;
+  value?: number;
+  description?: string;
+  equipped?: boolean;
+  toString?: () => string;
+}
+
+export interface Feature {
+  name: string;
+  source: string;
+  description: string;
+  level?: number;
+  toString?: () => string;
 }
 
 export interface CharacterSpell {
@@ -95,4 +134,13 @@ export interface SpellData {
   ritual?: boolean;
   duration?: string;
   [key: string]: any;
+}
+
+export interface HitPointEvent {
+  id?: string | number;
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  value?: number;
+  amount?: number;
+  source?: string;
+  timestamp: number;
 }
