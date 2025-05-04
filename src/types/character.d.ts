@@ -1,5 +1,5 @@
 export interface CharacterSpell {
-  id?: number;
+  id?: string | number;
   name: string;
   level: number;
   description?: string;

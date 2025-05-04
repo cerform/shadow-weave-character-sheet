@@ -75,19 +75,15 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
     if (!character || !spellId) return;
     
     const normalizedSpells = normalizeSpells(character.spells);
-    const updatedSpells = normalizedSpells.map(spell => {
+    const updatedSpellsObjects = normalizedSpells.map(spell => {
       if ((spell.id?.toString() || '') === spellId.toString()) {
         return { ...spell, prepared: !spell.prepared };
       }
       return spell;
     });
     
-    // Конвертируем обратно в строки, если необходимо
-    if (Array.isArray(character.spells) && character.spells.length > 0 && typeof character.spells[0] === 'string') {
-      onUpdate({ ...character, spells: updatedSpells.map(spell => spell.name) });
-    } else {
-      onUpdate({ ...character, spells: updatedSpells });
-    }
+    // Обновляем состояние персонажа с новыми заклинаниями
+    onUpdate({ ...character, spells: updatedSpellsObjects });
   };
 
   // Получение класса для границы карточки заклинания

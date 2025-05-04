@@ -15,7 +15,7 @@ export function isStringArray(value: any): value is string[] {
 
 // Конвертер из CharacterSpell в SpellData
 export const convertToSpellData = (spell: CharacterSpell): SpellData => ({
-  id: spell.id,
+  id: spell.id?.toString(),
   name: spell.name,
   level: spell.level,
   school: spell.school || 'Unknown', 

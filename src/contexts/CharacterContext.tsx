@@ -12,13 +12,13 @@ export interface AbilityScores {
   WIS: number;
   CHA: number;
   
-  // Для совместимости с CharacterSheet
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
+  // Для совместимости с CharacterSheet - делаем эти поля также обязательными
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
 }
 
 // Интерфейс персонажа для хранения в CharacterContext

@@ -1,7 +1,12 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MulticlassRequirements, ClassRequirement } from '@/types/character';
+import { ClassRequirement } from '@/types/character';
+
+// Определяем корректную структуру для мультиклассирования
+interface MulticlassRequirements {
+  [className: string]: ClassRequirement;
+}
 
 // Define correct multiclass requirements interface structure
 const MULTICLASS_REQUIREMENTS: MulticlassRequirements = {

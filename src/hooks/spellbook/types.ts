@@ -1,6 +1,6 @@
 
 export interface SpellData {
-  id?: string;
+  id?: string | number;
   name: string;
   level: number;
   school: string; // Убрал необязательность

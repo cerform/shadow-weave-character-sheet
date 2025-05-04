@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -9,12 +8,10 @@ import {
   filterSpellsByClass,
   extractClasses,
   formatClasses,
-  convertToSpellData,
-  isString,
-  isStringArray
+  convertToSpellData
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
-import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
+import { importSpellsFromTextUtil } from './importUtils';
 import { CharacterSpell } from '@/types/character';
 
 export * from './types';
@@ -38,7 +35,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     // Преобразуем CharacterSpell[] в SpellData[]
     if (allSpells && allSpells.length > 0) {
       const convertedSpells: SpellData[] = allSpells.map(spell => ({
-        id: spell.id,
+        id: spell.id?.toString(),
         name: spell.name,
         level: spell.level,
         school: spell.school || 'Unknown',
@@ -79,7 +76,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
 
     // Преобразуем CharacterSpell[] в SpellData[]
     const convertedSpells: SpellData[] = result.map(spell => ({
-      id: spell.id,
+      id: spell.id?.toString(),
       name: spell.name,
       level: spell.level,
       school: spell.school || 'Unknown',
@@ -150,6 +147,15 @@ export const useSpellbook = (): UseSpellbookReturn => {
     // Этот метод будет обновлять данные в data/spells
   };
 
+  const getBadgeColor = (type: string): string => {
+    // Ваша реализация получения цвета для бейджа
+    return currentTheme.accent || '#000000';
+  };
+
+  const importSpellsFromText = (text: string): any[] => {
+    return importSpellsFromTextUtil(text);
+  };
+
   const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
   const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
 
@@ -175,7 +181,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText: importSpellsFromTextUtil
+    importSpellsFromText
   };
 };
 

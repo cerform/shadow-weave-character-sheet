@@ -16,7 +16,7 @@ export function normalizeSpells(spells: unknown): CharacterSpell[] {
     if (typeof spell === 'string') {
       // Convert string to basic CharacterSpell object
       return {
-        id: spell,
+        id: undefined, // no need to assign a specific id
         name: spell,
         level: 0,
         school: 'Unknown',
@@ -33,7 +33,7 @@ export function normalizeSpells(spells: unknown): CharacterSpell[] {
     } else {
       // Fall back to a default spell object
       return {
-        id: 'unknown',
+        id: undefined,
         name: 'Unknown Spell',
         level: 0,
         school: 'Unknown',

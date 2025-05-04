@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -297,39 +296,30 @@ export const useSessionStore = create<SessionStore>()(
         }
       },
       
-      saveCharacter: async (character: Character) => {
+      saveCharacter: async (character: Character): Promise<boolean> => {
         try {
           const result = await characterService.saveCharacter(character);
           
-          if (result) {
-            // Обновляем список персонажей
-            await get().fetchCharacters();
+          if (result && result.id) {
             return true;
           }
-          
-          return Boolean(result);
+          return false;
         } catch (error) {
           console.error("Ошибка при сохранении персонажа:", error);
           return false;
         }
       },
       
-      deleteCharacter: async (characterId: string) => {
+      deleteCharacter: async (characterId: string): Promise<boolean> => {
         try {
           const result = await characterService.deleteCharacter(characterId);
           
-          if (result) {
-            // Обновляем список персонажей
-            await get().fetchCharacters();
-            toast.success("Персонаж успешно удален");
-          } else {
-            toast.error("Не удалось удалить персонажа");
+          if (typeof result === 'undefined') {
+            return true;
           }
-          
-          return Boolean(result);
+          return false;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
-          toast.error("Не удалось удалить персонажа");
           return false;
         }
       },

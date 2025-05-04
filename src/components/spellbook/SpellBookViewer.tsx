@@ -18,7 +18,7 @@ const SpellBookViewer = () => {
   
   const [spellsData, setSpellsData] = useState<SpellData[]>(
     allSpells.map(spell => ({
-      id: spell.id,
+      id: spell.id?.toString(),
       name: spell.name,
       level: spell.level,
       school: spell.school || 'Unknown',
