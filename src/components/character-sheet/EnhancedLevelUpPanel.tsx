@@ -28,7 +28,7 @@ export const EnhancedLevelUpPanel: React.FC = () => {
   // Расчет прогресса опыта (упрощенная реализация)
   const calculateXpProgress = () => {
     const level = character?.level || 1;
-    const xp = character?.xp || 0;
+    const xp = character?.xp !== undefined ? character.xp : 0; // Безопасно получаем xp
     
     // Упрощенная таблица опыта
     const xpThresholds = [
@@ -89,7 +89,7 @@ export const EnhancedLevelUpPanel: React.FC = () => {
       <div className="space-y-4">
         <div>
           <div className="flex justify-between mb-1 text-sm">
-            <span>Опыт: {character?.xp || 0} XP</span>
+            <span>Опыт: {character?.xp !== undefined ? character.xp : 0} XP</span>
             <span>Прогресс к уровню {Math.min(20, (character?.level || 1) + 1)}</span>
           </div>
           <Progress value={calculateXpProgress()} className="h-2" />

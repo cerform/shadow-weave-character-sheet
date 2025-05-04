@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixe
 import { useHealthSystem } from '@/hooks/useHealthSystem';
 import { useRestSystem } from '@/hooks/useRestSystem';
 import { getNumericModifier } from '@/utils/characterUtils';
+import { CharacterSheet } from '@/types/character';
 
 export const EnhancedResourcePanel: React.FC = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -28,7 +30,7 @@ export const EnhancedResourcePanel: React.FC = () => {
   const [healValue, setHealValue] = useState(1);
   const [tempHpValue, setTempHpValue] = useState(1);
   
-  // Получаем модификатор телосложения, исправляем обращение к полю constitution
+  // Получаем модификатор телосложения
   const constitutionModifier = character?.abilities
     ? getNumericModifier(character.abilities.constitution || 10)
     : 0;
@@ -49,11 +51,13 @@ export const EnhancedResourcePanel: React.FC = () => {
     initialTempHp: character?.temporaryHp || 0,
     constitutionModifier,
     onHealthChange: (newCurrentHp, newMaxHp, newTempHp) => {
-      updateCharacter({
+      // Создаем обновление правильного типа
+      const updates: Partial<CharacterSheet> = {
         currentHp: newCurrentHp,
         maxHp: newMaxHp,
         temporaryHp: newTempHp
-      });
+      };
+      updateCharacter(updates);
     }
   });
   
@@ -116,6 +120,21 @@ export const EnhancedResourcePanel: React.FC = () => {
   const handleHealingRollComplete = (result: number) => {
     applyHealing(result, 'Лечебное заклинание');
     setShowHealingRoller(false);
+  };
+  
+  // Безопасное получение типа кубика хитов для использования с DiceRoller3DFixed
+  const getSafeDiceType = (): "d4" | "d6" | "d8" | "d10" | "d12" | "d20" | "d100" => {
+    const diceType = getHitDieType();
+    // Преобразуем в один из допустимых типов для компонента DiceRoller3DFixed
+    switch (diceType) {
+      case "d4": return "d4";
+      case "d6": return "d6";
+      case "d8": return "d8";
+      case "d10": return "d10";
+      case "d12": return "d12";
+      case "d20": return "d20";
+      default: return "d8"; // Значение по умолчанию
+    }
   };
   
   return (
@@ -333,7 +352,7 @@ export const EnhancedResourcePanel: React.FC = () => {
           </SheetHeader>
           <div className="h-[80vh]">
             <DiceRoller3DFixed
-              initialDice={getHitDieType()}
+              initialDice={getSafeDiceType()}
               hideControls={false}
               modifier={constitutionModifier}
               onRollComplete={handleHitDieRollComplete}

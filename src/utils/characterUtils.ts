@@ -23,8 +23,8 @@ export const getProficiencyBonus = (level: number): number => {
 /**
  * Gets the hit die type based on character class
  */
-export const getHitDieType = (characterClass: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
-  const hitDice: Record<string, "d4" | "d6" | "d8" | "d10" | "d12"> = {
+export const getHitDieType = (characterClass: string): string => {
+  const hitDice: Record<string, string> = {
     "Варвар": "d12",
     "Воин": "d10",
     "Паладин": "d10",
@@ -80,6 +80,7 @@ export const calculateMaxHitPoints = (
   characterClass: string, 
   constitutionModifier: number
 ): number => {
+  // Получаем значение кубика хитов для класса
   const hitDieValue = getHitDieValue(characterClass);
   
   // Первый уровень: максимальное значение кубика + модификатор телосложения

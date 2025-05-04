@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-interface HealthEvent {
+export interface HealthEvent {
   type: 'damage' | 'healing' | 'temp_hp';
   amount: number;
   source?: string;

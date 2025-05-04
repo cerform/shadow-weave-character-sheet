@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
 
-// Определяем все возможные темы для соответствия типу Theme
-type ThemeType = "light" | "dark" | "system" | "warlock" | "druid" | "bard" | string;
+// Определяем тип для темы, чтобы соответствовать типу Theme из ThemeContext
+export type ThemeType = "light" | "dark" | "system" | "warlock" | "wizard" | "druid" | "warrior" | "bard" | "default";
 
 export function ModeToggle() {
   const { setTheme } = useTheme();

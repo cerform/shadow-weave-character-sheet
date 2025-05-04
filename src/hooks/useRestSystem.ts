@@ -30,7 +30,13 @@ export function useRestSystem({
 
   // Получаем текущее количество доступных кубиков хитов
   const getCurrentHitDice = (): number => {
-    return character?.hitDice || getMaxHitDice();
+    // Если hitDice уже число, просто вернем его
+    if (typeof character?.hitDice === 'number') {
+      return character.hitDice;
+    }
+    
+    // Если hitDice строка или undefined, вернем максимальное значение
+    return getMaxHitDice();
   };
 
   // Функция для короткого отдыха
