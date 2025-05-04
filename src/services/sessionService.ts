@@ -1,10 +1,9 @@
-import { auth, db } from './firebase';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db, storage } from './firebase';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
-import { useCharacter, Character } from '@/contexts/CharacterContext';
+import { Character } from '@/contexts/CharacterContext';
 import characterService from './characterService';
-import { serverTimestamp, ref, uploadBytes, getDownloadURL, deleteObject, storage } from 'firebase/storage';
 
 // Экспортируем сервис персонажей
 export { characterService };
@@ -76,7 +75,7 @@ export const sessionService = {
       
       const sessions: Session[] = [];
       querySnapshot.forEach((doc) => {
-        sessions.push({ id: doc.id, ...doc.data() } as Session);\
+        sessions.push({ id: doc.id, ...doc.data() } as Session);
       });
       
       // TODO: получение сессий, где пользователь - игрок
