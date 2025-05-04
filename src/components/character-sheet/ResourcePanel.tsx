@@ -169,9 +169,8 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   // Рассчитываем общие значения HP для правильного отображения
   const totalCurrentHp = currentHp;
   const totalMaxHp = maxHp;
-  const effectiveMaxHp = maxHp + temporaryHp;
   const healthPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
-  const tempHpPercentage = effectiveMaxHp > 0 ? (temporaryHp / effectiveMaxHp) * 100 : 0;
+  const tempHpPercentage = temporaryHp > 0 ? (temporaryHp / totalMaxHp) * 100 : 0;
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
@@ -191,18 +190,25 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
           </div>
           
           {/* HP Bar with two layers */}
-          <div className="relative h-3">
+          <div className="relative h-3 overflow-hidden rounded-full bg-gray-800">
             {/* Base HP bar */}
-            <Progress 
-              value={healthPercentage} 
-              className="h-3"
+            <div
+              className={`absolute top-0 left-0 h-full ${
+                healthPercentage > 60
+                  ? 'bg-green-500'
+                  : healthPercentage > 30
+                  ? 'bg-orange-500'
+                  : 'bg-red-500'
+              }`}
+              style={{ width: `${healthPercentage}%` }}
             />
             
             {/* Temporary HP overlay */}
             {temporaryHp > 0 && (
-              <div 
-                className="absolute top-0 right-0 h-3 bg-emerald-400/70 rounded-r-full" 
-                style={{ 
+              <div
+                className="absolute top-0 h-full bg-emerald-400/70"
+                style={{
+                  left: `${healthPercentage}%`,
                   width: `${tempHpPercentage}%`,
                   boxShadow: '0 0 5px rgba(52, 211, 153, 0.7)'
                 }}
