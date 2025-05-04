@@ -302,7 +302,7 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
       )}
 
       <NavigationButtons
-        allowNext={selectedClass && (!hasSubclasses(selectedClass) || selectedSubclass)}
+        allowNext={!!selectedClass && (!hasSubclasses(selectedClass) || !!selectedSubclass)}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}
@@ -312,3 +312,4 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
 };
 
 export default CharacterClassSelection;
+
