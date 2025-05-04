@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Check, X, Trash2, Sparkles } from 'lucide-react';
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Badge } from '@/components/ui/badge';
+import { characterSpellToString } from '@/utils/characterSpellUtils';
 
 interface Props {
   character: any;
@@ -291,6 +292,12 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   
   const shouldDisableNext = character.class && getMaxSpellsCount() > 0 && selectedSpells.length === 0;
 
+  // Функция для получения названия уровня заклинаний
+  const getLevelName = (level: number): string => {
+    if (level === 0) return "Заговоры";
+    return `${level}`;
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Выбор заклинаний</h2>
@@ -351,25 +358,32 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         </Card>
       )}
       
+      {/* Переработанный интерфейс выбора заклинаний */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 w-full bg-black/40">
+        {/* Компактная навигация по уровням заклинаний */}
+        <TabsList className="flex flex-wrap justify-center w-full bg-black/40 p-1 gap-1">
           {spellLevels.map(level => (
             <TabsTrigger 
               key={level} 
               value={level.toString()}
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="flex items-center justify-center h-8 w-8 rounded-full data-[state=active]:bg-primary data-[state=active]:text-white"
+              title={getLevelName(level)}
             >
-              {level === 0 ? "Заговоры" : `Уровень ${level}`}
+              {level === 0 ? <Sparkles size={16} /> : level}
             </TabsTrigger>
           ))}
         </TabsList>
         
+        {/* Содержимое вкладок */}
         {spellLevels.map(level => (
           <TabsContent key={level} value={level.toString()}>
             <Card className="border-primary/20 bg-black/60">
-              <CardContent className="pt-4">
+              <CardHeader className="pb-2">
+                <CardTitle>{level === 0 ? "Заговоры" : `Заклинания ${level} уровня`}</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <ScrollArea className="h-[400px] pr-4">
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {availableSpells
                       .filter(spell => spell && spell.level === level)
                       .map((spell, index) => {
