@@ -1,7 +1,7 @@
 
 import { CharacterSpell } from '@/types/character';
 
-export const level4Part2: CharacterSpell[] = [
+export const level4Part2Spells: CharacterSpell[] = [
   {
     name: "Перевоплощение",
     level: 4,
@@ -72,4 +72,5 @@ export const level4Part2: CharacterSpell[] = [
   }
 ];
 
-export default level4Part2;
+// Дополнительно экспортируем как default для обратной совместимости
+export default level4Part2Spells;

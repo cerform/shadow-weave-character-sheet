@@ -13,6 +13,18 @@ export const safeJoin = (value: any): string => {
   return String(value || "");
 };
 
+// Функция для безопасной проверки, содержится ли подстрока в строке
+export const safeSome = (text: string | null | undefined, searchTerm: string): boolean => {
+  if (!text) return false;
+  return text.toLowerCase().includes(searchTerm.toLowerCase());
+};
+
+// Функция для фильтрации заклинаний
+export const safeFilter = (spells: SpellData[], filterFn: (spell: SpellData) => boolean): SpellData[] => {
+  if (!spells || !Array.isArray(spells)) return [];
+  return spells.filter(filterFn);
+};
+
 // Преобразование списка заклинаний к единому формату
 export const normalizeSpells = (spells: any[], allSpellsData: any[]): CharacterSpell[] => {
   if (!spells || !Array.isArray(spells)) return [];
@@ -49,18 +61,6 @@ export const normalizeSpells = (spells: any[], allSpellsData: any[]): CharacterS
       prepared: false
     } as CharacterSpell;
   });
-};
-
-// Функция для безопасной проверки, содержится ли подстрока в строке
-export const safeSome = (text: string | null | undefined, searchTerm: string): boolean => {
-  if (!text) return false;
-  return text.toLowerCase().includes(searchTerm.toLowerCase());
-};
-
-// Функция для фильтрации заклинаний
-export const safeFilter = (spells: SpellData[], filterFn: (spell: SpellData) => boolean): SpellData[] => {
-  if (!spells || !Array.isArray(spells)) return [];
-  return spells.filter(filterFn);
 };
 
 // Безопасное получение свойства заклинания

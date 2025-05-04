@@ -1,4 +1,7 @@
-export const level4Part3 = [
+
+import { CharacterSpell } from '@/types/character';
+
+export const level4Part3Spells: CharacterSpell[] = [
   {
     name: "Призыв малого элементаля",
     level: 4,
@@ -9,7 +12,7 @@ export const level4Part3 = [
     verbal: true,
     somatic: true,
     material: true,
-    prepared: false, // Добавлено недостающее поле
+    prepared: false,
     concentration: true,
     ritual: false,
     duration: "Концентрация, вплоть до 1 часа",
@@ -26,7 +29,7 @@ export const level4Part3 = [
     verbal: true,
     somatic: true,
     material: true,
-    prepared: false, // Добавлено недостающее поле
+    prepared: false,
     concentration: true,
     ritual: false,
     duration: "Концентрация, вплоть до 1 часа",
@@ -36,4 +39,4 @@ export const level4Part3 = [
 ];
 
 // Экспорт по умолчанию для обратной совместимости
-export default level4Part3;
+export default level4Part3Spells;

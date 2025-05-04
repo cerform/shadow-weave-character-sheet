@@ -1,12 +1,15 @@
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
-import { Character } from '@/types/character';
+import { Character, CharacterSheet } from '@/types/character';
 
 // Контекст для работы с персонажем
-interface CharacterContextType {
+export interface CharacterContextType {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   updateCharacter: (updates: Partial<Character>) => void;
+  characters?: Character[];
+  getUserCharacters?: () => Promise<Character[]>;
+  deleteCharacter?: (id: string) => Promise<void>;
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
@@ -25,6 +28,8 @@ interface CharacterProviderProps {
 
 export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
+  // Для совместимости добавляем пустой массив characters
+  const [characters, setCharacters] = useState<Character[]>([]);
 
   const updateCharacter = (updates: Partial<Character>) => {
     setCharacter(prev => {
@@ -33,11 +38,32 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     });
   };
 
+  // Заглушки для функций, которые используются в Home.tsx и Index.tsx
+  const getUserCharacters = async () => {
+    return characters;
+  };
+
+  const deleteCharacter = async (id: string) => {
+    setCharacters(prev => prev.filter(char => char.id !== id));
+  };
+
   return (
-    <CharacterContext.Provider value={{ character, setCharacter, updateCharacter }}>
+    <CharacterContext.Provider 
+      value={{ 
+        character, 
+        setCharacter, 
+        updateCharacter,
+        characters,
+        getUserCharacters,
+        deleteCharacter 
+      }}
+    >
       {children}
     </CharacterContext.Provider>
   );
 };
+
+// Экспортируем Character и CharacterSheet из контекста для обратной совместимости
+export { Character };
 
 export default CharacterContext;

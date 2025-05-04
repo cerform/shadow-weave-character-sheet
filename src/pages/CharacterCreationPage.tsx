@@ -20,7 +20,7 @@ import HomeButton from "@/components/navigation/HomeButton";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
-import { ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { ABILITY_SCORE_CAPS } from "@/types/character";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
@@ -60,6 +60,12 @@ const CharacterCreationPage = () => {
       setMaxAbilityScore(ABILITY_SCORE_CAPS.BASE_CAP);
     }
   }, [character.level]);
+
+  // Функция для преобразования модификатора в строку
+  const getModifierString = (abilityScore: number): string => {
+    const mod = Math.floor((abilityScore - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
 
   // Тема для отображения
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -127,7 +133,7 @@ const CharacterCreationPage = () => {
             abilitiesMethod={abilitiesMethod}
             setAbilitiesMethod={setAbilitiesMethod}
             diceResults={diceResults}
-            getModifier={getModifier}
+            getModifier={getModifierString}
             rollAllAbilities={rollAllAbilities}
             rollSingleAbility={rollSingleAbility}
             abilityScorePoints={adjustedAbilityScorePoints}

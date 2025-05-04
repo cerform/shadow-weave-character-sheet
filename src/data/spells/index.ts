@@ -1,17 +1,17 @@
 
-import { cantrips } from './cantrips'; 
-import { level0Spells } from './level0';
-import { level1Spells } from './level1';
-import { level2Spells } from './level2';
-import { level3Spells } from './level3';
-import { level4Spells } from './level4';
-import { level4Part2Spells } from './level4_part2';
-import { level4Part3Spells } from './level4_part3';
-import { level5Spells } from './level5';
-import { level6Spells } from './level6';
-import { level7Spells } from './level7';
-import { level8Spells } from './level8';
-import { level9Spells } from './level9';
+import cantrips from './cantrips'; 
+import level0Spells from './level0';
+import level1Spells from './level1';
+import level2Spells from './level2';
+import level3Spells from './level3';
+import level4Spells from './level4';
+import level4Part2Spells from './level4_part2';
+import level4Part3Spells from './level4_part3';
+import level5Spells from './level5';
+import level6Spells from './level6';
+import level7Spells from './level7';
+import level8Spells from './level8';
+import level9Spells from './level9';
 
 // Объединяем заклинания одного уровня из разных файлов
 const combinedLevel4 = [...level4Spells, ...level4Part2Spells, ...level4Part3Spells];
@@ -56,6 +56,11 @@ export const getSpellsByClass = (className: string) => {
     
     return spell.classes === className;
   });
+};
+
+// Выставляем функцию getSpellsByLevel для обратной совместимости
+export const getSpellsByLevel = (level: number) => {
+  return spellsByLevel[level] || [];
 };
 
 // Экспорт по умолчанию для обратной совместимости

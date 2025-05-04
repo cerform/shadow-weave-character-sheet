@@ -1,10 +1,7 @@
-
 import { useState, useMemo } from 'react';
-import { Character } from '@/contexts/CharacterContext';
-import { RacialTraits, ClassFeatures, Background } from '@/types/character.d';
-import { ABILITY_SCORE_CAPS } from '@/constants/abilityScores';
-import { simpleArray } from '@/lib/simpleArray';
-import { useToast } from './use-toast';
+import { Character } from '@/types/character';
+import { RacialTraits, ClassFeatures, Background, ABILITY_SCORE_CAPS } from '@/types/character';
+import { useToast } from '@/components/ui/use-toast';
 import { racialTraits } from '@/data/racialTraits';
 import { classFeatures } from '@/data/classFeatures';
 import { backgrounds } from '@/data/backgrounds';

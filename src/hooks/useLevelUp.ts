@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
+import { getSpellsByClass, spellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellProcessors';
 

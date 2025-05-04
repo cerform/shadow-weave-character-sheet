@@ -12,7 +12,11 @@ export interface CharacterSheet {
   background?: string;
   alignment?: string;
   abilities?: AbilityScores;
-  hitPoints?: HitPoints;
+  hitPoints?: {
+    current: number;
+    maximum: number;
+    temporary?: number;
+  };
   hitDice?: {
     total: number;
     current?: number;
@@ -20,7 +24,7 @@ export interface CharacterSheet {
     used?: number;
   };
   proficiencies?: Proficiencies;
-  equipment?: Equipment[] | string[];
+  equipment?: Equipment[];
   features?: Feature[] | string[];
   spells?: (string | CharacterSpell)[];
   personalityTraits?: string[];
@@ -276,10 +280,7 @@ export interface Background {
 
 export interface ClassFeatures {
   [level: string]: {
-    features: {
-      name: string;
-      description: string;
-    }[];
+    features: { name: string; description: string; }[];
     spellsKnown?: number;
     cantripsKnown?: number;
     spellSlots?: {
@@ -317,3 +318,28 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24,
 };
+
+// Для экспорта типа RacialTraits
+export interface RacialTraits {
+  race: string;
+  abilityBonuses: {
+    [key: string]: number;
+  };
+  traits: string[];
+  languages: string[];
+  speed: number;
+  size: string;
+  subRaces?: {
+    name: string;
+    abilityBonuses: {
+      [key: string]: number;
+    };
+    traits: string[];
+    [key: string]: any;
+  }[];
+  specialAbilities?: {
+    name: string;
+    description: string;
+  }[];
+  [key: string]: any;
+}
