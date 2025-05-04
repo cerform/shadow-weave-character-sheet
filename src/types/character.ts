@@ -1,5 +1,5 @@
 
-// Импортируем всё из character.d.ts
+// Import types directly from character.d.ts
 import {
   CharacterSheet,
   AbilityScores,
@@ -23,7 +23,7 @@ import {
   ABILITY_SCORE_CAPS
 } from './character.d';
 
-// Реэкспортируем всё
+// Re-export all types
 export {
   CharacterSheet,
   AbilityScores,
@@ -47,7 +47,7 @@ export {
   ABILITY_SCORE_CAPS
 };
 
-// Определение констант для ограничений характеристик (уже есть в character.d.ts, но оставим для совместимости)
+// Defining constants for ability score caps (kept for backwards compatibility)
 export const ABILITY_SCORE_CAPS_CONSTANTS = {
   MIN: 1,
   DEFAULT: 10, 

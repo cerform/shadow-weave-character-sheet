@@ -61,7 +61,11 @@ export const filterSpellsByClass = (spells: SpellData[], classes: string[]): Spe
       );
     }
     
-    return classes.some(className => safeSome(spell.classes as string, className));
+    if (typeof spell.classes === 'string') {
+      return classes.some(className => safeSome(spell.classes as string, className));
+    }
+    
+    return false;
   });
 };
 
@@ -69,9 +73,9 @@ export const filterSpellsByClass = (spells: SpellData[], classes: string[]): Spe
 export const filterByClass = filterSpellsByClass;
 
 // Функция для фильтрации по подготовленным заклинаниям
-export const filterSpellsByPrepared = (spells: CharacterSpell[], showPrepared: boolean): CharacterSpell[] => {
+export const filterSpellsByPrepared = (spells: SpellData[], showPrepared: boolean): SpellData[] => {
   if (!showPrepared) return spells;
-  return safeFilter(spells, (spell) => spell.prepared);
+  return safeFilter(spells, (spell) => spell.prepared === true);
 };
 
 // Функция для извлечения доступных классов из списка заклинаний

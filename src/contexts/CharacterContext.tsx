@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
-import { Character, CharacterSheet } from '@/types/character';
+import type { Character, CharacterSheet } from '@/types/character';
 
 // Контекст для работы с персонажем
 export interface CharacterContextType {
@@ -62,8 +62,5 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     </CharacterContext.Provider>
   );
 };
-
-// Экспортируем Character и CharacterSheet из контекста для обратной совместимости
-export { Character };
 
 export default CharacterContext;

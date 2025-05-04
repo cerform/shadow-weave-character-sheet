@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Book, Plus, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import classFeatures from '@/data/classFeatures';
 
 interface LevelBasedFeaturesProps {
   character: CharacterSheet;
@@ -28,41 +27,46 @@ export const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
   const [selectedFeatures, setSelectedFeatures] = useState<(string | Feature)[]>([]);
   const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
 
-  // Получаем доступные особенности класса на основе выбранного класса и уровня
+  // Get available class features based on selected class and level
   useEffect(() => {
-    if (!character.characterClass) return;
+    if (!character.class) return;
 
-    const classFeaturesByLevel = classFeatures[character.characterClass.toLowerCase()];
+    const classFeaturesByLevel = getClassFeatures(character.class.toLowerCase());
     if (!classFeaturesByLevel) return;
 
     const level = character.level || 1;
     let features: Feature[] = [];
 
-    // Собираем доступные особенности из данных по классу
-    if (classFeaturesByLevel && typeof classFeaturesByLevel === 'object') {
-      if (Array.isArray(classFeaturesByLevel.features)) {
-        features = classFeaturesByLevel.features.filter(f => (f.level || 1) <= level);
-      }
+    // Collect available features from class data
+    if (classFeaturesByLevel && Array.isArray(classFeaturesByLevel.features)) {
+      features = classFeaturesByLevel.features
+        .filter(f => (f.level || 1) <= level)
+        .map(f => ({
+          name: f.name, 
+          description: f.description || '',
+          source: character.class || '',
+          level: f.level || 1
+        }));
     }
 
     setAvailableFeatures(features);
-  }, [character.characterClass, character.level]);
+  }, [character.class, character.level]);
 
-  // Устанавливаем выбранные особенности из персонажа при загрузке
+  // Set selected features from character when loaded
   useEffect(() => {
     if (character.features) {
       setSelectedFeatures(character.features);
     }
   }, [character.features]);
 
-  // Обновляем персонажа при изменении выбранных особенностей
+  // Update character when selected features change
   useEffect(() => {
     onUpdate({ features: selectedFeatures });
   }, [selectedFeatures, onUpdate]);
 
-  // Добавляем особенность
+  // Add feature
   const addFeature = (feature: Feature | string) => {
-    // Проверяем, нет ли уже такой особенности
+    // Check if feature already exists
     const exists = selectedFeatures.some(f => 
       typeof f === 'string' && typeof feature === 'string' 
         ? f === feature 
@@ -76,21 +80,34 @@ export const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
     }
   };
 
-  // Удаляем особенность
+  // Remove feature
   const removeFeature = (index: number) => {
     setSelectedFeatures(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Форматирование названия особенности для отображения
+  // Format feature name for display
   const formatFeatureName = (feature: Feature | string): string => {
     if (typeof feature === 'string') return feature;
     return feature.name;
   };
 
-  // Форматирование описания особенности для отображения
+  // Format feature description for display
   const formatFeatureDescription = (feature: Feature | string): string => {
     if (typeof feature === 'string') return '';
     return feature.description || '';
+  };
+
+  // Mock function to get class features - this would normally come from your data files
+  const getClassFeatures = (className: string): { features: { name: string; description: string; level?: number }[] } => {
+    // This is a placeholder; you should replace with actual data from your classFeatures import
+    return {
+      features: [
+        { name: "Мастерство", description: "Вы получаете бонус мастерства +2", level: 1 },
+        { name: "Боевой стиль", description: "Вы выбираете боевой стиль", level: 1 },
+        { name: "Второе дыхание", description: "Восстановление 1d10 + уровень бойца HP", level: 1 },
+        { name: "Серия атак", description: "Вы можете атаковать дважды", level: 5 },
+      ]
+    };
   };
 
   return (

@@ -1,5 +1,5 @@
 
-// Убираем declare module и вместо этого сделаем правильные экспорты
+// Use proper export syntax without declare module
 export interface CharacterSheet {
   id?: string;
   name: string;
@@ -88,7 +88,7 @@ export interface CharacterSheet {
   sorceryPoints?: SorceryPoints;
 }
 
-export type AbilityScores = {
+export interface AbilityScores {
   strength: number;
   dexterity: number;
   constitution: number;
@@ -102,7 +102,7 @@ export type AbilityScores = {
   WIS?: number;
   CHA?: number;
   [key: string]: number | undefined;
-};
+}
 
 export interface HitPoints {
   current: number;
@@ -319,7 +319,6 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,
 };
 
-// Для экспорта типа RacialTraits
 export interface RacialTraits {
   race: string;
   abilityBonuses: {

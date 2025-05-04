@@ -25,3 +25,8 @@ export const formatModifier = (modifier: number): string => {
 export const getModifier = (score: number): string => {
   return formatModifier(getNumericModifier(score));
 };
+
+/**
+ * Alias for getNumericModifier for backwards compatibility
+ */
+export const calculateAbilityModifier = getNumericModifier;

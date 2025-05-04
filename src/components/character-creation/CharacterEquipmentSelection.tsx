@@ -18,42 +18,35 @@ export const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionPr
   const [equipment, setEquipment] = useState<Equipment[]>(initialEquipment);
   const [newEquipmentName, setNewEquipmentName] = useState('');
   
-  // Сохраняем в state строковый массив для совместимости
-  const [equipmentAsStrings, setEquipmentAsStrings] = useState<string[]>(
+  // Track equipment names for compatibility and display
+  const [equipmentNames, setEquipmentNames] = useState<string[]>(
     initialEquipment.map(item => typeof item === 'string' ? item : (item.name || String(item)))
   );
 
-  // Обновляем родительский компонент при изменении списка снаряжения
+  // Update parent component when equipment list changes
   useEffect(() => {
-    // Преобразуем массив оборудования в формат Equipment[]
-    const formattedEquipment = equipment.map(item => {
-      if (typeof item === 'string') {
-        return { name: item };
-      }
-      return item;
-    });
-    
-    onChange(formattedEquipment);
+    onChange(equipment);
   }, [equipment, onChange]);
 
-  // Добавляем новый предмет снаряжения
+  // Add new equipment item
   const addEquipment = () => {
     if (!newEquipmentName.trim()) return;
     
-    // Создаем новый объект Equipment
-    const newItem: Equipment = { name: newEquipmentName.trim() };
+    // Create new equipment object with required properties
+    const newItem: Equipment = { 
+      name: newEquipmentName.trim(),
+      quantity: 1
+    };
     
     setEquipment(prev => [...prev, newItem]);
-    // Обновляем также строковое представление для совместимости
-    setEquipmentAsStrings(prev => [...prev, newEquipmentName.trim()]);
-    
+    setEquipmentNames(prev => [...prev, newEquipmentName.trim()]);
     setNewEquipmentName('');
   };
 
-  // Удаляем предмет снаряжения
+  // Remove equipment item
   const removeEquipment = (index: number) => {
     setEquipment(prev => prev.filter((_, i) => i !== index));
-    setEquipmentAsStrings(prev => prev.filter((_, i) => i !== index));
+    setEquipmentNames(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -64,7 +57,7 @@ export const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionPr
         {equipment.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <div className="flex-grow p-2 bg-secondary/20 rounded-md">
-              {typeof item === 'string' ? item : item.name || String(item)}
+              {item.name} {item.quantity > 1 && `(${item.quantity})`}
             </div>
             <Button
               variant="destructive"

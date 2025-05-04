@@ -1,34 +1,18 @@
 
 import React from 'react';
-import { CharacterSheet, Equipment } from '@/types/character';
+import { CharacterSheet, Equipment, Feature, CharacterSpell } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Shield, Sword, Book, Heart } from 'lucide-react';
-import { calculateAbilityModifier } from '@/utils/characterUtils';
+import { getNumericModifier } from '@/utils/abilityScoreUtils';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
+  onUpdate?: (updates: Partial<CharacterSheet>) => void;
 }
 
-export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) => {
-  const {
-    name,
-    race,
-    background,
-    characterClass,
-    subclass,
-    abilityScores,
-    alignment,
-    hitPoints,
-    proficiencies,
-    equipment,
-    languages,
-    features,
-    spellcasting,
-    spells
-  } = character;
-  
+export const CharacterReview: React.FC<CharacterReviewProps> = ({ character, onUpdate }) => {
   // Функция для форматирования названий
   const formatName = (text: string = ''): string => {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
@@ -36,8 +20,8 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
   
   // Функция для получения строкового представления способностей и модификаторов
   const getAbilityDisplay = (abilityName: string): string => {
-    const score = abilityScores[abilityName.toLowerCase() as keyof typeof abilityScores] || 10;
-    const modifier = calculateAbilityModifier(score);
+    const score = character.abilities?.[abilityName.toLowerCase() as keyof typeof character.abilities] || 10;
+    const modifier = getNumericModifier(score);
     const sign = modifier >= 0 ? '+' : '';
     return `${score} (${sign}${modifier})`;
   };
@@ -52,21 +36,21 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="font-bold text-lg mb-2">{name || "Безымянный герой"}</h3>
+              <h3 className="font-bold text-lg mb-2">{character.name || "Безымянный герой"}</h3>
               
               <div className="space-y-2">
                 <p>
-                  <span className="font-semibold">Раса:</span> {formatName(race)}
+                  <span className="font-semibold">Раса:</span> {formatName(character.race)}
                 </p>
                 <p>
-                  <span className="font-semibold">Класс:</span> {formatName(characterClass)}
-                  {subclass && ` (${formatName(subclass)})`}
+                  <span className="font-semibold">Класс:</span> {formatName(character.class)}
+                  {character.subclass && ` (${formatName(character.subclass)})`}
                 </p>
                 <p>
-                  <span className="font-semibold">Предыстория:</span> {formatName(background)}
+                  <span className="font-semibold">Предыстория:</span> {formatName(character.background)}
                 </p>
                 <p>
-                  <span className="font-semibold">Мировоззрение:</span> {formatName(alignment)}
+                  <span className="font-semibold">Мировоззрение:</span> {formatName(character.alignment)}
                 </p>
               </div>
             </div>
@@ -77,7 +61,7 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
                   <Heart size={24} className="text-red-500" />
                 </div>
                 <h3 className="font-bold text-xl">
-                  {hitPoints?.current || 0} / {hitPoints?.maximum || hitPoints?.current || 0}
+                  {character.hitPoints?.current || 0} / {character.hitPoints?.maximum || character.hitPoints?.current || 0}
                 </h3>
                 <p className="text-sm text-muted-foreground">Хиты</p>
               </div>
@@ -105,15 +89,9 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
               </div>
               
               <div className="space-y-2">
-                {Array.isArray(proficiencies) ? (
-                  <div className="flex flex-wrap gap-1">
-                    {proficiencies.map((prof, i) => (
-                      <Badge key={i} variant="outline">{prof}</Badge>
-                    ))}
-                  </div>
-                ) : (
+                {character.proficiencies && typeof character.proficiencies === 'object' && (
                   <div>
-                    {Object.entries(proficiencies || {}).map(([category, profs]) => (
+                    {Object.entries(character.proficiencies).map(([category, profs]) => (
                       <div key={category} className="mb-2">
                         <p className="text-sm font-medium mb-1">{formatName(category)}:</p>
                         <div className="flex flex-wrap gap-1">
@@ -123,6 +101,17 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                
+                {character.languages && character.languages.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-sm font-medium mb-1">Языки:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {character.languages.map((lang, i) => (
+                        <Badge key={i} variant="outline">{lang}</Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -135,9 +124,12 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
               </div>
               
               <div className="space-y-1">
-                {equipment && Array.isArray(equipment) && equipment.map((item, i) => (
+                {character.equipment && Array.isArray(character.equipment) && character.equipment.map((item, i) => (
                   <div key={i} className="text-sm py-1 border-b border-gray-200 dark:border-gray-800">
-                    {typeof item === 'string' ? item : (item?.name || String(item))}
+                    {typeof item === 'string' 
+                      ? item 
+                      : `${item.name}${item.quantity > 1 ? ` (${item.quantity})` : ''}`
+                    }
                   </div>
                 ))}
               </div>
@@ -153,7 +145,7 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
             </div>
             
             <div className="space-y-2">
-              {features && Array.isArray(features) && features.map((feature, i) => {
+              {character.features && Array.isArray(character.features) && character.features.map((feature, i) => {
                 const featureName = typeof feature === 'string' ? feature : feature.name;
                 const featureDescription = typeof feature !== 'string' ? feature.description : '';
                 
@@ -169,16 +161,19 @@ export const CharacterReview: React.FC<CharacterReviewProps> = ({ character }) =
             </div>
           </section>
           
-          {spells && spells.length > 0 && (
+          {character.spells && character.spells.length > 0 && (
             <>
               <Separator className="my-4" />
               
               <section>
                 <h3 className="font-semibold mb-3">Заклинания</h3>
                 <div className="flex flex-wrap gap-1">
-                  {spells.map((spell, i) => (
-                    <Badge key={i}>{spell.name}</Badge>
-                  ))}
+                  {character.spells.map((spell, i) => {
+                    const spellName = typeof spell === 'string' ? spell : spell.name;
+                    return (
+                      <Badge key={i}>{spellName}</Badge>
+                    );
+                  })}
                 </div>
               </section>
             </>
