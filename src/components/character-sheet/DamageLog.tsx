@@ -49,6 +49,30 @@ export const DamageLog: React.FC<DamageLogProps> = ({
     return `${days} д. назад`;
   };
   
+  // Функция для получения иконки события
+  const getEventIcon = (type: 'damage' | 'heal' | 'temp') => {
+    switch (type) {
+      case 'damage':
+        return <Minus className="h-4 w-4 mr-2 text-red-500" />;
+      case 'heal':
+        return <Plus className="h-4 w-4 mr-2 text-green-500" />;
+      case 'temp':
+        return <Shield className="h-4 w-4 mr-2 text-emerald-400" />;
+    }
+  };
+  
+  // Функция для получения описания события
+  const getEventDescription = (event: DamageEvent): string => {
+    switch (event.type) {
+      case 'damage':
+        return `Урон ${event.amount}`;
+      case 'heal':
+        return `Лечение ${event.amount}`;
+      case 'temp':
+        return `Временные HP ${event.amount}`;
+    }
+  };
+  
   return (
     <div className={`rounded-lg overflow-hidden ${className}`}>
       <div className="flex justify-between items-center mb-2">
@@ -84,23 +108,13 @@ export const DamageLog: React.FC<DamageLogProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {event.type === 'damage' ? (
-                  <Minus className="h-4 w-4 mr-2 text-red-500" />
-                ) : event.type === 'heal' ? (
-                  <Plus className="h-4 w-4 mr-2 text-green-500" />
-                ) : (
-                  <Shield className="h-4 w-4 mr-2 text-emerald-400" />
-                )}
+                {getEventIcon(event.type)}
                 
                 <div 
                   className="flex-1 text-xs"
                   style={{ color: currentTheme.textColor }}
                 >
-                  <span>
-                    {event.type === 'damage' ? `Урон ${event.amount}` : 
-                     event.type === 'heal' ? `Лечение ${event.amount}` : 
-                     `Временные HP ${event.amount}`}
-                  </span>
+                  <span>{getEventDescription(event)}</span>
                   {event.source && (
                     <span className="text-gray-400 ml-1">
                       от {event.source}

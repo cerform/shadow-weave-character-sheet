@@ -25,101 +25,114 @@ export const useDamageLog = (
     onHpChange(currentHp, tempHp);
   }, [currentHp, tempHp, onHpChange]);
 
-  // Применяем событие получения урона/лечения
+  // Применяем событие получения урона
   const applyDamage = useCallback((amount: number, source?: string) => {
     if (amount === 0) return;
+    
+    // Проверяем, что это действительно урон (отрицательное число)
+    if (amount >= 0) {
+      console.error("applyDamage должен вызываться с отрицательным значением для нанесения урона");
+      return;
+    }
 
     const eventId = crypto.randomUUID();
+    const damageAmount = Math.abs(amount); // Преобразуем к положительному числу для удобства
+    let remainingDamage = damageAmount;
     
-    if (amount < 0) {
-      // Отрицательное значение означает урон (amount < 0)
-      const damage = Math.abs(amount);
-      let remainingDamage = damage;
+    // Если есть временные HP, сначала снимаем их
+    if (tempHp > 0) {
+      const absorbedByTemp = Math.min(tempHp, damageAmount);
+      setTempHp((prev) => Math.max(0, prev - absorbedByTemp));
+      remainingDamage -= absorbedByTemp;
       
-      // Если есть временные HP, сначала снимаем их
-      if (tempHp > 0) {
-        const absorbedByTemp = Math.min(tempHp, damage);
-        setTempHp((prev) => Math.max(0, prev - absorbedByTemp));
-        remainingDamage -= absorbedByTemp;
-        
-        if (absorbedByTemp > 0) {
-          setEvents((prev) => [
-            {
-              id: eventId + "-temp",
-              type: 'damage', 
-              amount: absorbedByTemp,
-              source: source || 'Временное HP',
-              timestamp: new Date()
-            },
-            ...prev
-          ]);
-        }
-      }
-      
-      // Если остался урон после временных HP
-      if (remainingDamage > 0) {
-        // Уменьшаем текущее HP, не допуская значений < 0
-        setCurrentHp((prev) => Math.max(0, prev - remainingDamage));
-        
-        // Добавляем событие урона в лог
+      if (absorbedByTemp > 0) {
         setEvents((prev) => [
           {
-            id: eventId,
-            type: 'damage',
-            amount: remainingDamage,
-            source,
+            id: eventId + "-temp",
+            type: 'damage', 
+            amount: absorbedByTemp,
+            source: source || 'Временное HP',
             timestamp: new Date()
           },
           ...prev
         ]);
-        
-        // Проверяем на статус "в сознании/без сознания"
-        const newHp = Math.max(0, currentHp - remainingDamage);
-        if (newHp === 0) {
-          toast({
-            title: "Персонаж без сознания!",
-            description: `HP снижено до 0${source ? ` от ${source}` : ''}`,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Урон получен",
-            description: `${damage} урона${source ? ` от ${source}` : ''}`,
-            variant: "destructive" 
-          });
-        }
       }
-    } else {
-      // Положительное значение означает лечение (amount > 0)
-      const wasUnconscious = currentHp === 0;
-      const newHp = Math.min(maxHp, currentHp + amount);
-      setCurrentHp(newHp);
+    }
+    
+    // Если остался урон после временных HP
+    if (remainingDamage > 0) {
+      // Уменьшаем текущее HP, не допуская значений < 0
+      setCurrentHp((prev) => Math.max(0, prev - remainingDamage));
       
+      // Добавляем событие урона в лог
       setEvents((prev) => [
         {
           id: eventId,
-          type: 'heal',
-          amount,
+          type: 'damage',
+          amount: remainingDamage,
           source,
           timestamp: new Date()
         },
         ...prev
       ]);
       
-      if (wasUnconscious && newHp > 0) {
+      // Проверяем на статус "в сознании/без сознания"
+      const newHp = Math.max(0, currentHp - remainingDamage);
+      if (newHp === 0) {
         toast({
-          title: "Персонаж пришел в сознание!",
-          description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
-          variant: "default"
+          title: "Персонаж без сознания!",
+          description: `HP снижено до 0${source ? ` от ${source}` : ''}`,
+          variant: "destructive"
         });
       } else {
         toast({
-          title: "Лечение получено",
-          description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+          title: "Урон получен",
+          description: `${damageAmount} урона${source ? ` от ${source}` : ''}`,
+          variant: "destructive" 
         });
       }
     }
-  }, [currentHp, tempHp, maxHp, toast]);
+  }, [currentHp, tempHp, toast]);
+
+  // Применяем событие получения лечения
+  const applyHealing = useCallback((amount: number, source?: string) => {
+    if (amount === 0) return;
+    
+    // Проверяем, что это действительно лечение (положительное число)
+    if (amount <= 0) {
+      console.error("applyHealing должен вызываться с положительным значением для лечения");
+      return;
+    }
+
+    const eventId = crypto.randomUUID();
+    const wasUnconscious = currentHp === 0;
+    const newHp = Math.min(maxHp, currentHp + amount);
+    setCurrentHp(newHp);
+    
+    setEvents((prev) => [
+      {
+        id: eventId,
+        type: 'heal',
+        amount,
+        source,
+        timestamp: new Date()
+      },
+      ...prev
+    ]);
+    
+    if (wasUnconscious && newHp > 0) {
+      toast({
+        title: "Персонаж пришел в сознание!",
+        description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Лечение получено",
+        description: `Восстановлено ${amount} HP${source ? ` от ${source}` : ''}`,
+      });
+    }
+  }, [currentHp, maxHp, toast]);
 
   // Добавляем временные хиты
   const addTempHp = useCallback((amount: number, source?: string) => {
@@ -233,6 +246,7 @@ export const useDamageLog = (
     tempHp,
     events,
     applyDamage,
+    applyHealing,
     addTempHp,
     undoLastEvent,
     setHp,

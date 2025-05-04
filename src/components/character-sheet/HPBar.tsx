@@ -56,8 +56,18 @@ export const HPBar: React.FC<HPBarProps> = ({
     return 'bg-red-500';
   };
   
+  // ARIA атрибуты для доступности
+  const ariaLabel = `Здоровье: ${safeCurrentHp} из ${safeMaxHp}${safeTempHp > 0 ? `, временных: ${safeTempHp}` : ''}`;
+  
   return (
-    <div className={`w-full ${className}`}>
+    <div 
+      className={`w-full ${className}`}
+      role="progressbar" 
+      aria-valuenow={safeCurrentHp} 
+      aria-valuemin={0} 
+      aria-valuemax={safeMaxHp}
+      aria-label={ariaLabel}
+    >
       {showValues && (
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center">
@@ -76,7 +86,7 @@ export const HPBar: React.FC<HPBarProps> = ({
       )}
       
       <div 
-        className={`relative w-full overflow-hidden rounded-full bg-gray-800/50`} 
+        className="relative w-full overflow-hidden rounded-full bg-gray-800/50" 
         style={{ height }}
       >
         {/* Основная полоса здоровья */}
@@ -92,7 +102,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         <AnimatePresence>
           {isAnimating && (
             <motion.div 
-              className={`absolute top-0 left-0 h-full ${safeCurrentHp < prevCurrentHp ? 'bg-red-500' : 'bg-green-500'}/30`}
+              className={`absolute top-0 left-0 h-full ${safeCurrentHp < prevCurrentHp ? 'bg-red-500/30' : 'bg-green-500/30'}`}
               style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / safeMaxHp) * 100)}%` }}
               initial={{ opacity: 0.7 }}
               animate={{ opacity: 0 }}
