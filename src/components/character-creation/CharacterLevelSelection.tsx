@@ -37,9 +37,9 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   // Обновляем уведомление о влиянии уровня на характеристики
   useEffect(() => {
     if (level >= 16) {
-      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${ABILITY_SCORE_CAPS.LEGENDARY_CAP}.`);
+      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${ABILITY_SCORE_CAPS.ABSOLUTE_MAX}.`);
     } else if (level >= 10) {
-      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${ABILITY_SCORE_CAPS.EPIC_CAP}.`);
+      setStatCapAlert(`На ${level} уровне максимальное значение характеристики составляет ${22}.`);
     } else {
       setStatCapAlert(null);
     }

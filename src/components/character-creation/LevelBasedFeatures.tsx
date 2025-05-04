@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,13 +100,22 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
       updateCharacter({ abilities: updatedAbilities });
     }
     
-    // Добавляем особенность в список особенностей персонажа
-    const features = character.features || [];
-    features.push(`Увеличение характеристик (${selectedAbilityIncreaseType === 'single_2' ? 
+    // Create a features array if it doesn't exist
+    let characterFeatures: string[] = [];
+    if (Array.isArray(character.features)) {
+      characterFeatures = [...character.features];
+    } else if (character.features) {
+      // If features exists but is not an array, convert it
+      characterFeatures = [String(character.features)];
+    }
+
+    characterFeatures.push(`Увеличение характеристик (${selectedAbilityIncreaseType === 'single_2' ? 
       abilityIncreases.first.ability + ' +2' : 
       abilityIncreases.first.ability + ' +1, ' + abilityIncreases.second.ability + ' +1'})`);
+
+    // Set the features in character
+    updateCharacter({ features: characterFeatures });
     
-    updateCharacter({ features });
     setShowAbilityIncreaseModal(false);
   };
 
@@ -232,7 +240,7 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
                   <div className="mt-3 pt-3 border-t border-border">
                     {feature.type === 'extra_attack' && (
                       <p className="text-sm">
-                        На 5 уровне вы получаете способность совершать дополнительную атаку в свой ход.
+                        На 5 уровне вы получаете способность сов��ршать дополнительную атаку в свой ход.
                       </p>
                     )}
                     {feature.type === 'spell_level' && (

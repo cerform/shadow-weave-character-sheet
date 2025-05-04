@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
@@ -44,16 +43,16 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   
   // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
   const [stats, setStats] = useState({
-    strength: character?.stats?.strength || character?.abilities?.strength || character?.abilities?.STR || 10,
-    dexterity: character?.stats?.dexterity || character?.abilities?.dexterity || character?.abilities?.DEX || 10,
-    constitution: character?.stats?.constitution || character?.abilities?.constitution || character?.abilities?.CON || 10,
-    intelligence: character?.stats?.intelligence || character?.abilities?.intelligence || character?.abilities?.INT || 10,
-    wisdom: character?.stats?.wisdom || character?.abilities?.wisdom || character?.abilities?.WIS || 10,
-    charisma: character?.stats?.charisma || character?.abilities?.charisma || character?.abilities?.CHA || 10,
+    strength: character?.abilities?.strength || character?.abilities?.STR || 10,
+    dexterity: character?.abilities?.dexterity || character?.abilities?.DEX || 10,
+    constitution: character?.abilities?.constitution || character?.abilities?.CON || 10,
+    intelligence: character?.abilities?.intelligence || character?.abilities?.INT || 10,
+    wisdom: character?.abilities?.wisdom || character?.abilities?.WIS || 10,
+    charisma: character?.abilities?.charisma || character?.abilities?.CHA || 10,
   });
   
   // Определяем максимальное значение для характеристик на основе уровня персонажа
-  const [maxStatValue, setMaxStatValue] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
+  const [maxStatValue, setMaxStatValue] = useState<number>(ABILITY_SCORE_CAPS.MAX);
   
   // Определяем количество очков для распределения в зависимости от уровня
   const [adjustedPointsLeft, setAdjustedPointsLeft] = useState<number>(abilityScorePoints);
@@ -64,11 +63,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     if (maxAbilityScore) {
       setMaxStatValue(maxAbilityScore);
     } else if (character.level >= 16) {
-      setMaxStatValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
+      setMaxStatValue(ABILITY_SCORE_CAPS.ABSOLUTE_MAX);
     } else if (character.level >= 10) {
-      setMaxStatValue(ABILITY_SCORE_CAPS.EPIC_CAP);
+      setMaxStatValue(22);
     } else {
-      setMaxStatValue(ABILITY_SCORE_CAPS.BASE_CAP);
+      setMaxStatValue(ABILITY_SCORE_CAPS.MAX);
     }
     
     // Уведомляем об изменении лимита
@@ -225,20 +224,10 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       wisdom: stats.wisdom,
       charisma: stats.charisma
     };
-
-    const statsFormat = {
-      strength: stats.strength,
-      dexterity: stats.dexterity,
-      constitution: stats.constitution,
-      intelligence: stats.intelligence,
-      wisdom: stats.wisdom,
-      charisma: stats.charisma
-    };
     
     // Сохраняем в оба поля abilities и stats для совместимости
     updateCharacter({ 
       abilities: abilitiesFormat,
-      stats: statsFormat,
       abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
     });
     nextStep();

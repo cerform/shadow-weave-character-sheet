@@ -63,6 +63,15 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
     }
   };
 
+  // Helper to get current sorcery points safely
+  const getSorceryPointsCurrent = () => {
+    if (!character?.sorceryPoints) return 0;
+    // Check if we have current property, otherwise use (max - used)
+    return character.sorceryPoints.current !== undefined 
+      ? character.sorceryPoints.current 
+      : (character.sorceryPoints.max - character.sorceryPoints.used);
+  };
+
   // Отображение слотов заклинаний
   const renderSpellSlots = () => {
     if (!character?.spellSlots || Object.keys(character.spellSlots).length === 0) {
@@ -198,7 +207,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
                 Очки чародейства
               </span>
               <span className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
-                {character.sorceryPoints.current}/{character.sorceryPoints.max}
+                {getSorceryPointsCurrent()}/{character.sorceryPoints.max}
               </span>
             </div>
             <div className="flex justify-between">
@@ -208,7 +217,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
                     key={i}
                     className="w-5 h-5 rounded-full"
                     style={{
-                      backgroundColor: i < character.sorceryPoints.current ? 
+                      backgroundColor: i < getSorceryPointsCurrent() ? 
                         `${currentTheme.accent}` : "transparent",
                       border: `1px solid ${currentTheme.accent}`,
                     }}
@@ -221,47 +230,74 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
                   variant="outline"
                   className="h-6 w-6 p-0"
                   onClick={() => {
-                    if (character.sorceryPoints && character.sorceryPoints.current < character.sorceryPoints.max) {
-                      updateCharacter({
-                        sorceryPoints: {
-                          ...character.sorceryPoints,
-                          current: character.sorceryPoints.current + 1
+                    if (character.sorceryPoints) {
+                      if (character.sorceryPoints.current !== undefined) {
+                        // For objects with current property
+                        if (character.sorceryPoints.current < character.sorceryPoints.max) {
+                          updateCharacter({
+                            sorceryPoints: {
+                              ...character.sorceryPoints,
+                              current: character.sorceryPoints.current + 1
+                            }
+                          });
                         }
-                      });
+                      } else {
+                        // For objects with used property
+                        if (character.sorceryPoints.used > 0) {
+                          updateCharacter({
+                            sorceryPoints: {
+                              ...character.sorceryPoints,
+                              used: character.sorceryPoints.used - 1
+                            }
+                          });
+                        }
+                      }
                     }
                   }}
-                  disabled={character.sorceryPoints?.current >= character.sorceryPoints?.max}
+                  disabled={getSorceryPointsCurrent() >= character.sorceryPoints.max}
                   style={{
                     borderColor: currentTheme.accent,
-                    color: character.sorceryPoints?.current >= character.sorceryPoints?.max ? 
-                      `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                    color: getSorceryPointsCurrent() >= character.sorceryPoints.max ? 
+                      `${currentTheme.mutedTextColor}80` : currentTheme.accent
                   }}
-                >
-                  +
-                </Button>
+                >+</Button>
+                
                 <Button 
                   size="sm" 
                   variant="outline"
                   className="h-6 w-6 p-0"
                   onClick={() => {
-                    if (character.sorceryPoints && character.sorceryPoints.current > 0) {
-                      updateCharacter({
-                        sorceryPoints: {
-                          ...character.sorceryPoints,
-                          current: character.sorceryPoints.current - 1
+                    if (character.sorceryPoints) {
+                      if (character.sorceryPoints.current !== undefined) {
+                        // For objects with current property
+                        if (character.sorceryPoints.current > 0) {
+                          updateCharacter({
+                            sorceryPoints: {
+                              ...character.sorceryPoints,
+                              current: character.sorceryPoints.current - 1
+                            }
+                          });
                         }
-                      });
+                      } else {
+                        // For objects with used property
+                        if (character.sorceryPoints.used < character.sorceryPoints.max) {
+                          updateCharacter({
+                            sorceryPoints: {
+                              ...character.sorceryPoints,
+                              used: character.sorceryPoints.used + 1
+                            }
+                          });
+                        }
+                      }
                     }
                   }}
-                  disabled={character.sorceryPoints?.current <= 0}
+                  disabled={getSorceryPointsCurrent() <= 0}
                   style={{
                     borderColor: currentTheme.accent,
-                    color: character.sorceryPoints?.current <= 0 ? 
-                      `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                    color: getSorceryPointsCurrent() <= 0 ? 
+                      `${currentTheme.mutedTextColor}80` : currentTheme.accent
                   }}
-                >
-                  -
-                </Button>
+                >-</Button>
               </div>
             </div>
           </div>

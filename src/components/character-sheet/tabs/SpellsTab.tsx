@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +113,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
         <div><span className="font-medium">Дальность:</span> {spell.range || 'Не указано'}</div>
         <div><span className="font-medium">Компоненты:</span> {components || 'Не указано'}</div>
         <div><span className="font-medium">Длительность:</span> {spell.duration || 'Не указано'}</div>
-        <div className="col-span-2"><span className="font-medium">Классы:</span> {safeJoin(spell.classes)}</div>
+        <div className="col-span-2"><span className="font-medium">Классы:</span> {safeJoin(getSpellClasses(spell))}</div>
       </div>
     );
   };
@@ -162,7 +161,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
         <CardContent className="p-3 pt-1">
           <SpellDescription
             description={spell.description || ''}
-            higherLevels={spell.higherLevels || ''}
+            higherLevels={spell.higherLevels || spell.higherLevel || ""}
             expanded={expandedSpells.includes(spell.id?.toString() || spell.name)}
           />
           
@@ -285,4 +284,20 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
       </Tabs>
     </div>
   );
+};
+
+const getSpellClasses = (spell: any) => {
+  if (!spell) return "";
+  
+  if (spell.classes) {
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.join(", ");
+    }
+    return spell.classes;
+  }
+  return "";
+};
+
+const getSpellHigherLevels = (spell: any) => {
+  return spell.higherLevels || spell.higherLevel || "";
 };

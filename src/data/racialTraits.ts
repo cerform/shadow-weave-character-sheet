@@ -1,4 +1,3 @@
-
 import { RacialTraits } from "@/types/character";
 
 export const racialTraits: RacialTraits[] = [
@@ -22,7 +21,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Дварфийский"],
-    speed: 25
+    speed: "25"
   },
   {
     race: "Эльф",
@@ -44,7 +43,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Эльфийский"],
-    speed: 30
+    speed: "30"
   },
   {
     race: "Человек",
@@ -63,7 +62,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Дополнительный язык на выбор"],
-    speed: 30
+    speed: "30"
   },
   {
     race: "Полурослик",
@@ -85,7 +84,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Полуросликов"],
-    speed: 25
+    speed: "25"
   },
   {
     race: "Драконорождённый",
@@ -104,7 +103,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Драконий"],
-    speed: 30
+    speed: "30"
   },
   {
     race: "Гном",
@@ -122,7 +121,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Гномий"],
-    speed: 25
+    speed: "25"
   },
   {
     race: "Полуэльф",
@@ -144,7 +143,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Эльфийский", "Дополнительный язык на выбор"],
-    speed: 30,
+    speed: "30",
     extraAbilityPoints: 2
   },
   {
@@ -168,7 +167,7 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Орочий"],
-    speed: 30
+    speed: "30"
   },
   {
     race: "Тифлинг",
@@ -191,6 +190,6 @@ export const racialTraits: RacialTraits[] = [
       }
     ],
     languages: ["Общий", "Инфернальный"],
-    speed: 30
+    speed: "30"
   }
 ];

@@ -25,6 +25,7 @@ export interface Proficiencies {
 export interface SorceryPoints {
   max: number;
   used: number;
+  current?: number; // Added for backward compatibility
 }
 
 export interface CharacterSpell {
@@ -44,6 +45,15 @@ export interface CharacterSpell {
   prepared: boolean;
   ritual?: boolean;
   concentration?: boolean;
+  classes?: string | string[]; // Added to match usage in components
+  higherLevels?: string; // Added to match usage in components
+}
+
+export interface HitPointEvent {
+  type: 'damage' | 'heal' | 'temp';
+  value: number;
+  timestamp: number;
+  source?: string;
 }
 
 export interface CharacterSheet {
@@ -92,6 +102,19 @@ export interface CharacterSheet {
   image?: string;
   skillProficiencies?: { [skillName: string]: boolean };
   savingThrowProficiencies?: { [ability: string]: boolean };
+  stats?: {  // Added to match usage in components
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  features?: string[]; // Added to match usage in LevelBasedFeatures.tsx
+  personalityTraits?: string; // Added for background info
+  ideals?: string; // Added for background info
+  bonds?: string; // Added for background info
+  flaws?: string; // Added for background info
 }
 
 export interface ClassRequirement {
@@ -109,11 +132,11 @@ export interface ClassRequirement {
 // Types for racial traits and features
 export interface RacialTraits {
   race: string;
-  abilityScoreIncrease: string;
+  abilityScoreIncrease: string | number; // Updated to accept both string and number
   age: string;
   alignment: string;
   size: string;
-  speed: string;
+  speed: string | number; // Updated to accept both string and number
   languages: string[];
   features: { name: string; description: string }[];
 }
@@ -122,7 +145,7 @@ export interface RacialTraits {
 export interface ClassFeatures {
   name: string;
   hitDice: string;
-  primaryAbility: string[];
+  primaryAbility: string[] | string; // Updated to accept both string and string[]
   savingThrowProficiencies: string[];
   armorProficiencies: string[];
   weaponProficiencies: string[];
@@ -150,11 +173,15 @@ export interface Background {
     description: string;
   };
   suggestedCharacteristics?: {
-    personalityTraits: string[];
-    ideals: string[];
-    bonds: string[];
-    flaws: string[];
+    personalityTraits?: string[]; // Updated to match usage
+    ideals?: string[];
+    bonds?: string[];
+    flaws?: string[];
   };
+  personalityTraits?: string[]; // Added to match usage in data files
+  ideals?: string[]; // Added to match usage in data files
+  bonds?: string[]; // Added to match usage in data files
+  flaws?: string[]; // Added to match usage in data files
 }
 
 // Ability score caps
@@ -162,5 +189,8 @@ export const ABILITY_SCORE_CAPS = {
   MIN: 1,
   DEFAULT: 10, 
   MAX: 20,
-  ABSOLUTE_MAX: 30
+  ABSOLUTE_MAX: 30,
+  BASE_CAP: 20,          // Added to match usage in components
+  EPIC_CAP: 22,          // Added to match usage in components
+  LEGENDARY_CAP: 24      // Added to match usage in components
 };
