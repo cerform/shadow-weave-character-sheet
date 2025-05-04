@@ -104,11 +104,7 @@ export const extractClasses = (spells: CharacterSpell[]): string[] => {
 export const formatClasses = (classes: string[] | string): string => {
   if (!classes) return 'Нет классов';
   
-  if (isString(classes)) {
-    return classes;
-  }
-  
-  return classes.join(', ');
+  return safeJoin(classes);
 };
 
 // Helper to safely join strings or arrays or handle a single string
@@ -116,4 +112,18 @@ export const safeJoin = (value: string | string[], separator: string = ', '): st
   if (!value) return '';
   if (Array.isArray(value)) return value.join(separator);
   return value;
+};
+
+// Функция для безопасного преобразования spell к определенному типу для SpellPanel
+export const safeSpellConversion = (spell: string | CharacterSpell): CharacterSpell => {
+  if (typeof spell === 'string') {
+    // Найдите данные о заклинании в вашем словаре заклинаний или верните базовый объект
+    return {
+      name: spell,
+      level: 0, // уровень по умолчанию
+      description: '',
+      school: 'Неизвестная'
+    };
+  }
+  return spell;
 };

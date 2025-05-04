@@ -9,6 +9,7 @@ export interface NavigationButtonsProps {
   nextLabel?: string;
   disableNext?: boolean;
   allowNext?: boolean;
+  nextDisabled?: boolean; // Добавляем свойство nextDisabled для обратной совместимости
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -17,8 +18,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   prevLabel = "Назад",
   nextLabel = "Далее",
   disableNext = false,
-  allowNext = true
+  allowNext = true,
+  nextDisabled // Добавляем поддержку свойства nextDisabled
 }) => {
+  // Используем nextDisabled, если он передан, иначе используем логику disableNext || !allowNext
+  const isNextDisabled = nextDisabled !== undefined ? nextDisabled : (disableNext || !allowNext);
+  
   return (
     <div className="flex justify-between mt-4">
       <Button 
@@ -29,7 +34,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       </Button>
       <Button 
         onClick={nextStep}
-        disabled={disableNext || !allowNext}
+        disabled={isNextDisabled}
       >
         {nextLabel}
       </Button>

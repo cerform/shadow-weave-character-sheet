@@ -121,10 +121,58 @@ export const useCharacterCreation = () => {
     }
   };
 
+  // Функция сброса персонажа
+  const resetCharacter = () => {
+    setCharacter({
+      name: '',
+      race: '',
+      subrace: '',
+      class: '',
+      subclass: '',
+      level: 1,
+      background: '',
+      alignment: '',
+      abilities: {
+        STR: 10,
+        DEX: 10,
+        CON: 10,
+        INT: 10,
+        WIS: 10,
+        CHA: 10,
+        strength: 10,
+        dexterity: 10,
+        constitution: 10,
+        intelligence: 10,
+        wisdom: 10,
+        charisma: 10
+      },
+      backstory: '',
+      maxHp: 0,
+      currentHp: 0,
+      spells: [],
+      equipment: [],
+      proficiencies: {
+        armor: [],
+        weapons: [],
+        tools: [],
+        languages: []
+      },
+      languages: []
+    });
+    
+    setActiveStep(0);
+    
+    toast({
+      title: "Персонаж сброшен",
+      description: "Все данные персонажа были сброшены"
+    });
+  };
+
   return {
     character,
     updateCharacter,
     saveCharacter,
+    resetCharacter,
     activeStep,
     setActiveStep
   };

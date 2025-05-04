@@ -11,7 +11,6 @@ import CharacterBackground from './CharacterBackground';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterEquipment from './CharacterEquipment';
 import CharacterReview from './CharacterReview';
-import { CharacterSheet } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 
 const CharacterCreationContent: React.FC = () => {
@@ -71,14 +70,24 @@ const CharacterCreationContent: React.FC = () => {
     }
   };
 
-  // Создаем нужную часть CharacterSheet для CharacterBackground
-  const backgroundCharacterData = {
+  // Создаем объект с базовыми данными для CharacterBackground
+  const backgroundCharacter = {
     background: character.background || '',
     backstory: character.backstory || '',
     personalityTraits: character.personalityTraits || '',
     ideals: character.ideals || '',
     bonds: character.bonds || '',
     flaws: character.flaws || ''
+  };
+
+  // Необходимо создать объект, который соответствует требованиям CharacterSheet
+  // но мы знаем, что мы используем только часть полей в процессе создания
+  const characterForCreation = {
+    ...character,
+    name: character.name || '',  // Установим дефолтное значение для обязательного поля
+    level: character.level || 1,
+    background: character.background || '',  // Установим дефолтное значение для обязательного поля
+    backstory: character.backstory || '',  // Установим дефолтное значение для обязательного поля
   };
 
   return (
@@ -103,57 +112,62 @@ const CharacterCreationContent: React.FC = () => {
           
           <TabsContent value="0">
             <CharacterBasics 
-              nextStep={nextStep} 
               character={character} 
               updateCharacter={updateCharacter} 
+              nextStep={nextStep}
             />
           </TabsContent>
           
           <TabsContent value="1">
             <CharacterAbilities 
-              prevStep={prevStep} 
-              nextStep={nextStep} 
               character={character} 
               updateCharacter={updateCharacter} 
+              prevStep={prevStep} 
+              nextStep={nextStep}
             />
           </TabsContent>
           
           <TabsContent value="2">
             <CharacterClass 
-              prevStep={prevStep} 
-              nextStep={nextStep} 
               character={character} 
               updateCharacter={updateCharacter} 
+              prevStep={prevStep} 
+              nextStep={nextStep}
             />
           </TabsContent>
           
           <TabsContent value="3">
-            <CharacterBackground prevStep={prevStep} nextStep={nextStep} />
+            <CharacterBackground
+              prevStep={prevStep} 
+              nextStep={nextStep}
+              character={backgroundCharacter}
+              updateCharacter={updateCharacter}
+            />
           </TabsContent>
           
           <TabsContent value="4">
             <CharacterSpellSelection 
-              prevStep={prevStep} 
-              nextStep={nextStep} 
               character={character} 
               updateCharacter={updateCharacter} 
+              prevStep={prevStep} 
+              nextStep={nextStep}
             />
           </TabsContent>
           
           <TabsContent value="5">
             <CharacterEquipment 
-              prevStep={prevStep} 
-              nextStep={nextStep} 
               character={character} 
               updateCharacter={updateCharacter} 
+              prevStep={prevStep} 
+              nextStep={nextStep}
             />
           </TabsContent>
           
           <TabsContent value="6">
             <CharacterReview 
-              prevStep={prevStep} 
-              character={character} 
+              character={characterForCreation}
               updateCharacter={updateCharacter} 
+              prevStep={prevStep} 
               onSave={handleSave}
             />
           </TabsContent>

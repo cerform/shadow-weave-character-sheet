@@ -1,90 +1,75 @@
 
-import * as React from "react"
+import { useEffect, useState } from 'react';
 
-const MOBILE_BREAKPOINT = 768
+// Возвращаемые типы устройств
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(false)
+// Хук для определения типа устройства на основе ширины экрана
+export const useDeviceType = (): DeviceType => {
+  const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
 
-  React.useEffect(() => {
-    // Функция для определения мобильного устройства
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    
-    // Проверяем сразу при загрузке
-    checkMobile()
-    
-    // И добавляем слушатель события для изменения размера окна
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
-
-  return isMobile
-}
-
-// Расширенный хук для определения типа устройства (телефон, планшет, десктоп)
-export function useDeviceType() {
-  const [deviceType, setDeviceType] = React.useState<"mobile" | "tablet" | "desktop">("desktop")
-
-  React.useEffect(() => {
-    const checkDeviceType = () => {
+  useEffect(() => {
+    // Функция для определения текущего типа устройства
+    const updateDeviceType = () => {
       const width = window.innerWidth;
-      if (width < 768) {
-        setDeviceType("mobile")
-      } else if (width >= 768 && width < 1024) {
-        setDeviceType("tablet")
+      if (width <= 640) {
+        setDeviceType('mobile');
+      } else if (width <= 1024) {
+        setDeviceType('tablet');
       } else {
-        setDeviceType("desktop")
+        setDeviceType('desktop');
       }
-    }
-    
-    checkDeviceType()
-    
-    // Добавляем слушатель события для изменения размера окна
-    const resizeHandler = () => {
-      checkDeviceType()
-    }
-    
-    window.addEventListener("resize", resizeHandler)
-    return () => window.removeEventListener("resize", resizeHandler)
-  }, [])
+    };
 
-  return deviceType
-}
+    // Вызываем функцию сразу же для инициализации значения
+    updateDeviceType();
 
-// Хук для проверки ориентации устройства
-export function useOrientation() {
-  const [orientation, setOrientation] = React.useState<"portrait" | "landscape">(
-    typeof window !== "undefined" 
-      ? window.innerHeight > window.innerWidth ? "portrait" : "landscape"
-      : "portrait"
-  )
+    // Подписываемся на изменение размера окна
+    window.addEventListener('resize', updateDeviceType);
 
-  React.useEffect(() => {
-    const handleOrientationChange = () => {
-      setOrientation(
-        window.innerHeight > window.innerWidth ? "portrait" : "landscape"
-      )
-    }
-
-    // Проверяем ориентацию при монтировании
-    handleOrientationChange()
-    
-    window.addEventListener("resize", handleOrientationChange)
-    
-    // В современных браузерах событие orientationchange устарело
-    if (typeof window.orientation !== 'undefined') {
-      window.addEventListener("orientationchange", handleOrientationChange)
-    }
-
+    // Отписываемся при размонтировании компонента
     return () => {
-      window.removeEventListener("resize", handleOrientationChange)
-      if (typeof window.orientation !== 'undefined') {
-        window.removeEventListener("orientationchange", handleOrientationChange)
-      }
-    }
-  }, [])
+      window.removeEventListener('resize', updateDeviceType);
+    };
+  }, []);
 
-  return orientation
-}
+  return deviceType;
+};
+
+// Хук useMediaQuery для более точного контроля над брейкпоинтами
+export const useMediaQuery = (query: string): boolean => {
+  // Создаем медиа-запрос
+  const getMatches = (): boolean => {
+    // Проверка на наличие window для SSR
+    if (typeof window !== 'undefined') {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  };
+
+  const [matches, setMatches] = useState<boolean>(getMatches());
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    
+    // Определяем начальное состояние
+    setMatches(mediaQuery.matches);
+
+    // Создаем слушатель изменений
+    const handleChange = () => {
+      setMatches(mediaQuery.matches);
+    };
+
+    // Слушаем события для modern browsers
+    mediaQuery.addEventListener('change', handleChange);
+    
+    // Отписываемся при размонтировании
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, [query]);
+
+  return matches;
+};
+
+export default useDeviceType;

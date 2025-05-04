@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { CharacterSheet, ClassLevel, MulticlassRequirements } from "@/types/character.d";
+import { CharacterSheet, ClassLevel, MulticlassRequirements } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { classes } from "@/data/classes";
 import { Plus, Minus } from "lucide-react";
@@ -50,7 +50,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [selectedClassDetails, setSelectedClassDetails] = useState<any>(null);
-  const [totalLevel, setTotalLevel] = useState<number>(character.level);
+  const [totalLevel, setTotalLevel] = useState<number>(character.level || 1);
 
   // Проверка требований к характеристикам для мультиклассирования
   const checkRequirements = (className: string): boolean => {
@@ -59,10 +59,11 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     const requirements = multiclassRequirements[className];
     
     for (const ability in requirements) {
+      if (ability === 'description') continue; // Пропускаем описание
       const requiredValue = requirements[ability];
-      const characterValue = character.abilities[ability as keyof typeof character.abilities];
+      const characterValue = character.abilities?.[ability as keyof typeof character.abilities];
       
-      if (characterValue < requiredValue) {
+      if (typeof characterValue !== 'number' || characterValue < requiredValue) {
         return false;
       }
     }
@@ -82,7 +83,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
   
   useEffect(() => {
     // Подсчитываем общий уровень персонажа
-    let total = character.level;
+    let total = character.level || 1;
     additionalClasses.forEach(cls => {
       total += cls.level;
     });
@@ -103,9 +104,15 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     // Проверяем, соответствуют ли характеристики требованиям класса
     if (!checkRequirements(selectedClass)) {
       const requirements = multiclassRequirements[selectedClass];
-      const requirementsList = Object.entries(requirements)
-        .map(([ability, value]) => `${getAbilityName(ability)}: ${value}`)
-        .join(", ");
+      const reqList: string[] = [];
+      
+      // Формируем список требований
+      for (const ability in requirements) {
+        if (ability === 'description') continue;
+        reqList.push(`${getAbilityName(ability)}: ${requirements[ability]}`);
+      }
+      
+      const requirementsList = reqList.join(", ");
       
       toast({
         title: "Недостаточно характеристик",
@@ -162,7 +169,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     if (level < 1 || level > 19) return;
     
     // Проверяем, не превышает ли общий уровень 20
-    let totalWithoutThis = character.level;
+    let totalWithoutThis = character.level || 1;
     additionalClasses.forEach((cls, i) => {
       if (i !== index) totalWithoutThis += cls.level;
     });
@@ -205,24 +212,30 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     if (!className || !multiclassRequirements[className]) return null;
     
     const requirements = multiclassRequirements[className];
+    const reqItems: React.ReactNode[] = [];
+    
+    // Формируем элементы списка требований
+    for (const ability in requirements) {
+      if (ability === 'description') continue;
+      const value = requirements[ability];
+      const characterValue = character.abilities?.[ability as keyof typeof character.abilities];
+      const isMet = typeof characterValue === 'number' && characterValue >= value;
+      
+      reqItems.push(
+        <li key={ability} className={isMet ? "text-green-500" : "text-red-500"}>
+          {getAbilityName(ability)}: {value} 
+          {isMet 
+            ? ` (✓ у вас ${characterValue})` 
+            : ` (✗ у вас ${characterValue})`}
+        </li>
+      );
+    }
     
     return (
       <div className="mt-2 text-sm">
         <p className="font-medium">Требования к характеристикам:</p>
         <ul className="list-disc list-inside">
-          {Object.entries(requirements).map(([ability, value]) => {
-            const characterValue = character.abilities[ability as keyof typeof character.abilities];
-            const isMet = characterValue >= value;
-            
-            return (
-              <li key={ability} className={isMet ? "text-green-500" : "text-red-500"}>
-                {getAbilityName(ability)}: {value} 
-                {isMet 
-                  ? ` (✓ у вас ${characterValue})` 
-                  : ` (✗ у вас ${characterValue})`}
-              </li>
-            );
-          })}
+          {reqItems}
         </ul>
       </div>
     );
@@ -392,7 +405,7 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
               
               <TabsContent value="features" className="mt-0">
                 <div className="space-y-4">
-                  {selectedClassDetails.features
+                  {selectedClassDetails.features && selectedClassDetails.features
                     .filter((feature: any) => feature.level <= selectedLevel)
                     .map((feature: any, index: number) => (
                     <div key={index}>

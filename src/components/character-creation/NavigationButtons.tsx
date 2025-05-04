@@ -32,7 +32,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   const navigate = useNavigate();
-  const { resetCharacter } = useCharacterCreation();
   const { toast } = useToast();
   
   const handlePrevStep = () => {
@@ -47,9 +46,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       title: "Переход на главную",
       description: "Возвращаемся на главную страницу...",
     });
-    
-    // Сбрасываем состояние персонажа перед навигацией
-    resetCharacter();
     
     // Используем setTimeout для обеспечения плавного перехода
     setTimeout(() => {

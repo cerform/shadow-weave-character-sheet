@@ -56,12 +56,20 @@ export interface SorceryPoints {
   max: number;
 }
 
+// Добавляем MulticlassRequirements, которое используется в CharacterMulticlassing
+export interface MulticlassRequirements {
+  [key: string]: {
+    [key: string]: number;
+    description?: string;
+  }
+}
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string;
   id?: string;
   img?: string;
-  name: string;
+  name: string; // Обязательное поле
   class?: string;
   subclass?: string;
   classes?: ClassLevel[];
