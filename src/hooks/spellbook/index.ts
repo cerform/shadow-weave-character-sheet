@@ -18,6 +18,7 @@ import { importSpellsFromText } from './importUtils';
 import { CharacterSpell } from '@/types/character';
 
 export * from './types';
+// Экспортируем функцию importSpellsFromText из текущего файла
 export { importSpellsFromText };
 
 export const useSpellbook = (): UseSpellbookReturn => {

@@ -24,6 +24,7 @@ export interface SpellData {
   concentration?: boolean;
   higherLevel?: string;
   higherLevels?: string;
+  toString?: () => string; // Добавляем toString как опциональный метод
 }
 
 // Интерфейс для возвращаемого значения хука useSpellbook

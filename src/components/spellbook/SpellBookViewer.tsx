@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
-import { useSpellbook, importSpellsFromText } from '@/hooks/spellbook';
-import { SpellData } from '@/hooks/spellbook/types';
-import { CharacterSpell } from '@/types/character';
-import { getAllSpells } from '@/data/spells'; // Правильный импорт
 
-// fix для импорта модуля с заклинаниями
-const spells = getAllSpells();
+import React, { useState, useRef } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { useSpellbook } from "@/hooks/spellbook";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sparkles, BookOpen, Search, Filter, X, Book, Download } from "lucide-react";
+import SpellDetail from './SpellDetail';
+import { SpellData } from "@/hooks/spellbook/types";
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useToast } from "@/hooks/use-toast";
+import { CharacterSpell } from '@/types/character';
+import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
 
 const SpellBookViewer: React.FC = () => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
   const {
     filteredSpells,
     searchTerm,
@@ -29,7 +26,7 @@ const SpellBookViewer: React.FC = () => {
     isModalOpen,
     activeSchool,
     activeClass,
-    currentTheme: spellTheme,
+    currentTheme,
     allLevels,
     allSchools,
     allClasses,
@@ -41,253 +38,464 @@ const SpellBookViewer: React.FC = () => {
     clearFilters,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
   } = useSpellbook();
   
-  const [importText, setImportText] = useState('');
+  const { toast } = useToast();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importText, setImportText] = useState("");
   const [importedSpells, setImportedSpells] = useState<CharacterSpell[]>([]);
   
-  const handleImportChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setImportText(e.target.value);
-  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const handleImportSpells = () => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
     try {
-      // Используем импортированную функцию напрямую
-      const newSpells = importSpellsFromText(importText, []);
-      
-      if (newSpells && newSpells.length > 0) {
-        setImportedSpells(newSpells);
-      }
+      const text = await file.text();
+      setImportText(text);
     } catch (error) {
-      console.error("Ошибка при импорте заклинаний:", error);
+      console.error("Error reading file:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось прочитать файл",
+        variant: "destructive"
+      });
     }
   };
-
-  // Конвертируем CharacterSpell[] в SpellData[] с обязательными полями
-  const convertToSafeSpellData = (spell: CharacterSpell): SpellData => {
-    return {
-      name: spell.name,
-      level: spell.level,
-      description: spell.description,
-      school: spell.school || "Преобразование",
-      castingTime: spell.castingTime || "1 действие",
-      range: spell.range || "60 футов",
-      components: spell.components || "В, С",
-      duration: spell.duration || "Мгновенно",
-      classes: spell.classes,
-      ritual: spell.ritual,
-      concentration: spell.concentration,
-    };
+  
+  const handleImport = () => {
+    try {
+      const spells = importSpellsFromText(importText, []);
+      setImportedSpells(spells);
+      
+      toast({
+        title: "Импорт успешен",
+        description: `Импортировано ${spells.length} заклинаний`,
+      });
+    } catch (error) {
+      console.error("Error importing spells:", error);
+      toast({
+        title: "Ошибка импорта",
+        description: "Не удалось импортировать заклинания",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Функция для безопасного доступа к свойствам классов
+  const safeFormatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return "Нет данных";
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    } else if (typeof classes === 'string') {
+      return classes;
+    }
+    
+    return "Нет данных";
   };
 
-  // При использовании:
-  const spellsAsSpellData: SpellData[] = (spells || []).map(convertToSafeSpellData);
-
   return (
-    <div className="container py-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Книга заклинаний</h1>
-        <div className="flex items-center space-x-2">
-          <Input
-            type="search"
-            placeholder="Поиск заклинания..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-          <Button variant="outline" onClick={clearFilters}>Сбросить фильтры</Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        {/* Filters */}
-        <div className="col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Уровень</CardTitle>
-              <CardDescription>Выберите уровни заклинаний</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex flex-wrap gap-1">
-                {allLevels.map(level => (
-                  <Badge
-                    key={level}
-                    variant={activeLevel.includes(level) ? "default" : "outline"}
-                    onClick={() => toggleLevel(level)}
-                    className="cursor-pointer"
+    <div className="container mx-auto px-4 py-6">
+      <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+        <CardHeader>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <CardTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
+                Книга заклинаний
+              </CardTitle>
+              <CardDescription style={{ color: currentTheme.mutedTextColor }}>
+                Поиск и просмотр заклинаний D&D 5e
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                <Download className="mr-2 h-4 w-4" />
+                Импорт
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Фильтры для десктопа */}
+            <div className="hidden md:flex flex-col w-60 space-y-6">
+              <div>
+                <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                  Уровень
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {allLevels.map(level => (
+                    <Badge 
+                      key={level} 
+                      variant={activeLevel.includes(level) ? "default" : "outline"}
+                      className="cursor-pointer select-none"
+                      style={{ 
+                        backgroundColor: activeLevel.includes(level) ? getBadgeColor(level) : "transparent",
+                        color: activeLevel.includes(level) ? "white" : currentTheme.textColor,
+                        borderColor: getBadgeColor(level),
+                      }}
+                      onClick={() => toggleLevel(level)}
+                    >
+                      {level === 0 ? "Заговор" : `${level} круг`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                  Школа
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {allSchools.map(school => (
+                    <Badge 
+                      key={school} 
+                      variant={activeSchool.includes(school) ? "default" : "outline"}
+                      className="cursor-pointer select-none"
+                      style={{ 
+                        backgroundColor: activeSchool.includes(school) ? getSchoolBadgeColor(school) : "transparent",
+                        color: activeSchool.includes(school) ? "white" : currentTheme.textColor,
+                        borderColor: getSchoolBadgeColor(school),
+                      }}
+                      onClick={() => toggleSchool(school)}
+                    >
+                      {school}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                  Класс
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {allClasses.map(className => (
+                    <Badge 
+                      key={className} 
+                      variant={activeClass.includes(className) ? "default" : "outline"}
+                      className="cursor-pointer select-none"
+                      style={{ 
+                        backgroundColor: activeClass.includes(className) ? currentTheme.accent : "transparent",
+                        color: activeClass.includes(className) ? "white" : currentTheme.textColor,
+                        borderColor: currentTheme.accent,
+                      }}
+                      onClick={() => toggleClass(className)}
+                    >
+                      {className}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+                <Button 
+                  variant="ghost" 
+                  className="mt-2" 
+                  onClick={clearFilters}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Сбросить фильтры
+                </Button>
+              )}
+            </div>
+            
+            {/* Основной контент */}
+            <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary/50" />
+                  <Input 
+                    className="pl-9 bg-card/30 backdrop-blur-sm border-primary/20"
+                    placeholder="Поиск заклинаний..." 
+                    value={searchTerm} 
+                    onChange={e => setSearchTerm(e.target.value)}
                     style={{
-                      backgroundColor: activeLevel.includes(level) ? spellTheme.accent : 'transparent',
-                      color: activeLevel.includes(level) ? spellTheme.textColor : spellTheme.accent,
-                      borderColor: spellTheme.accent
+                      color: currentTheme.textColor
                     }}
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 md:hidden"
+                    onClick={() => setIsFilterDrawerOpen(true)}
                   >
-                    {level === 0 ? 'Заговор' : level}
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <ScrollArea className="h-[60vh] pr-4">
+                  {filteredSpells.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {filteredSpells.map(spell => (
+                        <Card 
+                          key={spell.id || spell.name} 
+                          className="cursor-pointer hover:bg-primary/5 transition border-primary/20 bg-card/30 backdrop-blur-sm"
+                          onClick={() => handleOpenSpell(spell)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-medium text-base mb-1" style={{ color: currentTheme.textColor }}>
+                                {spell.name}
+                              </h3>
+                              <Badge 
+                                style={{ 
+                                  backgroundColor: getBadgeColor(spell.level),
+                                  color: "white"
+                                }}
+                              >
+                                {spell.level === 0 ? "Заговор" : `${spell.level} круг`}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-1 mb-2">
+                              <Badge 
+                                variant="outline"
+                                style={{ 
+                                  backgroundColor: `${getSchoolBadgeColor(spell.school)}30`,
+                                  color: currentTheme.textColor,
+                                  borderColor: getSchoolBadgeColor(spell.school)
+                                }}
+                              >
+                                {spell.school}
+                              </Badge>
+                              {spell.ritual && (
+                                <Badge 
+                                  variant="outline"
+                                  style={{ 
+                                    backgroundColor: `${currentTheme.accent}20`,
+                                    color: currentTheme.textColor,
+                                    borderColor: currentTheme.accent
+                                  }}
+                                >
+                                  Ритуал
+                                </Badge>
+                              )}
+                              {spell.concentration && (
+                                <Badge 
+                                  variant="outline"
+                                  style={{ 
+                                    backgroundColor: `${currentTheme.accent}20`,
+                                    color: currentTheme.textColor,
+                                    borderColor: currentTheme.accent
+                                  }}
+                                >
+                                  Концентрация
+                                </Badge>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                                <strong>Время накладывания:</strong> {spell.castingTime}
+                              </p>
+                              <p className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                                <strong>Дистанция:</strong> {spell.range}
+                              </p>
+                              <p className="text-xs mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                                <strong>Длительность:</strong> {spell.duration}
+                              </p>
+                              <p className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
+                                <strong>Классы:</strong> {safeFormatClasses(spell.classes)}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40">
+                      <BookOpen className="h-12 w-12 mb-4 text-primary/30" />
+                      <p className="text-lg font-medium mb-1" style={{ color: currentTheme.textColor }}>
+                        Заклинания не найдены
+                      </p>
+                      <p className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
+                        Попробуйте изменить параметры поиска
+                      </p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <p className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
+            Всего заклинаний: {filteredSpells.length}
+          </p>
+        </CardFooter>
+      </Card>
+      
+      {/* Отображение деталей заклинания */}
+      {isDesktop ? (
+        <Dialog open={isModalOpen} onOpenChange={handleClose}>
+          <DialogContent className="sm:max-w-[600px] bg-card/30 backdrop-blur-sm border-primary/20">
+            {selectedSpell && <SpellDetail spell={selectedSpell} />}
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Drawer open={isModalOpen} onClose={handleClose}>
+          <DrawerContent className="bg-card/95 backdrop-blur-sm border-t border-primary/20">
+            <DrawerHeader>
+              <DrawerTitle>{selectedSpell?.name}</DrawerTitle>
+              <DrawerDescription>
+                {selectedSpell?.level === 0 ? "Заговор" : `${selectedSpell?.level} круг`} ({selectedSpell?.school})
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 py-2 pb-8">
+              {selectedSpell && <SpellDetail spell={selectedSpell} isDrawer />}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+      
+      {/* Фильтры для мобильных устройств */}
+      <Drawer open={isFilterDrawerOpen} onClose={() => setIsFilterDrawerOpen(false)}>
+        <DrawerContent className="bg-card/95 backdrop-blur-sm border-t border-primary/20">
+          <DrawerHeader>
+            <DrawerTitle>Фильтры</DrawerTitle>
+            <DrawerDescription>
+              Выберите фильтры для поиска заклинаний
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 py-2 pb-8 space-y-6">
+            <div>
+              <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                Уровень
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {allLevels.map(level => (
+                  <Badge 
+                    key={level} 
+                    variant={activeLevel.includes(level) ? "default" : "outline"}
+                    className="cursor-pointer select-none"
+                    style={{ 
+                      backgroundColor: activeLevel.includes(level) ? getBadgeColor(level) : "transparent",
+                      color: activeLevel.includes(level) ? "white" : currentTheme.textColor,
+                      borderColor: getBadgeColor(level),
+                    }}
+                    onClick={() => toggleLevel(level)}
+                  >
+                    {level === 0 ? "Заговор" : `${level} круг`}
                   </Badge>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Школа</CardTitle>
-              <CardDescription>Выберите школы магии</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex flex-wrap gap-1">
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                Школа
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
                 {allSchools.map(school => (
-                  <Badge
-                    key={school}
+                  <Badge 
+                    key={school} 
                     variant={activeSchool.includes(school) ? "default" : "outline"}
-                    onClick={() => toggleSchool(school)}
-                    className="cursor-pointer"
-                    style={{
-                      backgroundColor: activeSchool.includes(school) ? spellTheme.accent : 'transparent',
-                      color: activeSchool.includes(school) ? spellTheme.textColor : spellTheme.accent,
-                      borderColor: spellTheme.accent
+                    className="cursor-pointer select-none"
+                    style={{ 
+                      backgroundColor: activeSchool.includes(school) ? getSchoolBadgeColor(school) : "transparent",
+                      color: activeSchool.includes(school) ? "white" : currentTheme.textColor,
+                      borderColor: getSchoolBadgeColor(school),
                     }}
+                    onClick={() => toggleSchool(school)}
                   >
                     {school}
                   </Badge>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Классы</CardTitle>
-              <CardDescription>Выберите классы, использующие заклинания</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex flex-wrap gap-1">
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                Класс
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
                 {allClasses.map(className => (
-                  <Badge
-                    key={className}
+                  <Badge 
+                    key={className} 
                     variant={activeClass.includes(className) ? "default" : "outline"}
-                    onClick={() => toggleClass(className)}
-                    className="cursor-pointer"
-                    style={{
-                      backgroundColor: activeClass.includes(className) ? spellTheme.accent : 'transparent',
-                      color: activeClass.includes(className) ? spellTheme.textColor : spellTheme.accent,
-                      borderColor: spellTheme.accent
+                    className="cursor-pointer select-none"
+                    style={{ 
+                      backgroundColor: activeClass.includes(className) ? currentTheme.accent : "transparent",
+                      color: activeClass.includes(className) ? "white" : currentTheme.textColor,
+                      borderColor: currentTheme.accent,
                     }}
+                    onClick={() => toggleClass(className)}
                   >
                     {className}
                   </Badge>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Spell List */}
-        <div className="col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Список заклинаний</CardTitle>
-              <CardDescription>Нажмите на заклинание, чтобы увидеть детали</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
-                <div className="grid gap-2">
-                  {filteredSpells.map(spell => (
-                    <Card
-                      key={spell.name}
-                      className="cursor-pointer hover:bg-secondary"
-                      onClick={() => handleOpenSpell(spell)}
-                    >
-                      <CardContent className="flex justify-between items-center">
-                        <div className="flex flex-col">
-                          <CardTitle className="text-sm">{spell.name}</CardTitle>
-                          <CardDescription className="text-xs">
-                            {formatClasses(spell.classes)}
-                          </CardDescription>
-                        </div>
-                        <Badge variant="secondary" style={{backgroundColor: getBadgeColor(spell.level)}}>
-                          {spell.level === 0 ? 'Заговор' : spell.level}
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Import Section */}
-        <div className="col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Импорт заклинаний</CardTitle>
-              <CardDescription>Импортируйте заклинания из текста</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col space-y-4">
-              <textarea
-                placeholder="Вставьте сюда текст для импорта..."
-                className="w-full h-32 border rounded-md p-2 text-black"
-                value={importText}
-                onChange={handleImportChange}
-              />
-              <Button onClick={handleImportSpells}>Импортировать</Button>
-              {importedSpells.length > 0 && (
-                <div className="space-y-2">
-                  <p>Импортированные заклинания:</p>
-                  {importedSpells.map(spell => (
-                    <div key={spell.name} className="text-sm">
-                      {spell.name} (Уровень {spell.level})
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Spell Detail Modal */}
-      <Dialog open={isModalOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl">
+            </div>
+            
+            {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+              <Button 
+                variant="ghost" 
+                className="mt-2 w-full" 
+                onClick={clearFilters}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Сбросить фильтры
+              </Button>
+            )}
+            
+            <Button 
+              className="w-full mt-2"
+              onClick={() => setIsFilterDrawerOpen(false)}
+            >
+              Применить
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+      
+      {/* Диалог импорта заклинаний */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-card/30 backdrop-blur-sm border-primary/20">
           <DialogHeader>
-            <DialogTitle>{selectedSpell?.name}</DialogTitle>
+            <DialogTitle>Импорт заклинаний</DialogTitle>
             <DialogDescription>
-              <Badge variant="secondary" style={{backgroundColor: getSchoolBadgeColor(selectedSpell?.school || '')}}>
-                {selectedSpell?.school}
-              </Badge>
-              <Badge variant="secondary" style={{backgroundColor: getBadgeColor(selectedSpell?.level || 0)}}>
-                {selectedSpell?.level === 0 ? 'Заговор' : selectedSpell?.level}
-              </Badge>
+              Вставьте JSON или текст с заклинаниями для импорта
             </DialogDescription>
           </DialogHeader>
-          <Card>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Описание</h3>
-                {Array.isArray(selectedSpell?.description) ? (
-                  selectedSpell?.description.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))
-                ) : (
-                  <p>{selectedSpell?.description}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Информация</h3>
-                <p><strong>Время кастинга:</strong> {selectedSpell?.castingTime}</p>
-                <p><strong>Дистанция:</strong> {selectedSpell?.range}</p>
-                <p><strong>Компоненты:</strong> {selectedSpell?.components}</p>
-                <p><strong>Длительность:</strong> {selectedSpell?.duration}</p>
-                {selectedSpell?.higherLevels && (
-                  <p><strong>На больших уровнях:</strong> {selectedSpell?.higherLevels}</p>
-                )}
-                {selectedSpell?.classes && (
-                  <p><strong>Классы:</strong> {formatClasses(selectedSpell?.classes)}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="importText">Текст для импорта</Label>
+              <textarea 
+                id="importText"
+                className="w-full h-32 p-2 border rounded-md bg-card/30"
+                placeholder="Вставьте JSON или список заклинаний, по одному на строку"
+                value={importText} 
+                onChange={e => setImportText(e.target.value)}
+              />
+            </div>
+            <div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Загрузить из файла
+              </Button>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept=".json,.txt"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
+            <Button 
+              className="w-full"
+              onClick={handleImport}
+              disabled={!importText}
+            >
+              Импортировать
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

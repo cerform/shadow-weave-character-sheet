@@ -1,4 +1,3 @@
-
 import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CharacterSpell } from '@/types/character';
 import { useDeviceType } from '@/hooks/use-mobile';
+import { Wand, Search, Plus, Info, Trash2 } from 'lucide-react';
 
 export const SpellsTab = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -259,6 +259,19 @@ export const SpellsTab = () => {
     );
   }
 
+  // Функция для форматирования списка классов
+  const formatClassList = (classes: string[] | string | undefined): string => {
+    if (!classes) return "Нет данных";
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    } else if (typeof classes === 'string') {
+      return classes;
+    }
+    
+    return "Нет данных";
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -446,7 +459,7 @@ export const SpellsTab = () => {
                           </div>
                           
                           <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                            Классы: {details?.classes?.join(", ")}
+                            Классы: {formatClassList(details?.classes)}
                           </div>
                         </div>
                       </HoverCardContent>
@@ -552,7 +565,7 @@ export const SpellsTab = () => {
                                     </div>
                                     
                                     <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                      Классы: {details?.classes?.join(", ")}
+                                      Классы: {formatClassList(details?.classes)}
                                     </div>
                                   </div>
                                 </HoverCardContent>
@@ -633,7 +646,7 @@ export const SpellsTab = () => {
                               </div>
                               
                               <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                Классы: {details?.classes?.join(", ")}
+                                Классы: {formatClassList(details?.classes)}
                               </div>
                             </div>
                           </HoverCardContent>

@@ -80,7 +80,7 @@ export const SpellPanel = () => {
       return;
     }
     
-    // Проверяем наличие ячеек заклинаний для этого уровня
+    // Проверяем наличие ячеек заклинаний д��я этого уровня
     const spellSlots = character.spellSlots || {};
     
     if (!spellSlots[level] || spellSlots[level].max - spellSlots[level].used <= 0) {
@@ -534,6 +534,19 @@ export const SpellPanel = () => {
     
     return grouped;
   }, [searchTerm, filterLevel]);
+
+  // Функция для форматирования списка классов
+  const formatClassList = (classes: string[] | string | undefined): string => {
+    if (!classes) return "Нет данных";
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    } else if (typeof classes === 'string') {
+      return classes;
+    }
+    
+    return "Нет данных";
+  };
 
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20 flex-1">

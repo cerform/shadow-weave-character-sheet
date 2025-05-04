@@ -1,5 +1,6 @@
+
 import React, { useState, useContext } from 'react';
-import { Character, CharacterContext } from '@/contexts/CharacterContext';
+import { CharacterContext, Character } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,9 +15,9 @@ import { themes } from '@/lib/themes';
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import NavigationButtons from "@/components/ui/NavigationButtons";
-import { StatsPanel } from './StatsPanel';
+import StatsPanel from './StatsPanel';
 import { CharacterTabs } from './CharacterTabs';
-import { ResourcePanel } from './ResourcePanel';
+import ResourcePanel from './ResourcePanel';
 import { RestPanel } from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
 import LevelUpPanel from './LevelUpPanel';

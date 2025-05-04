@@ -1,4 +1,3 @@
-
 import { SpellData } from './types';
 import { CharacterSpell } from '@/types/character';
 
@@ -34,8 +33,6 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     concentration: spell.concentration,
     classes: spell.classes,
     higherLevels: spell.higherLevels,
-    // Добавляем toString для совместимости
-    toString: function() { return this.name; }
   };
 };
 

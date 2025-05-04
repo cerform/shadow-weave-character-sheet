@@ -1,7 +1,10 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet, Character } from '@/types/character';
+import { SorceryPoints, CharacterSheet, Character as CharacterType } from '@/types/character';
+
+// Экспортируем тип Character для использования в других компонентах
+export type Character = CharacterType;
 
 // Интерфейс для контекста персонажей
 export interface CharacterContextType {
@@ -46,17 +49,27 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       const updatedCharacter = { 
         ...character, 
         updatedAt: new Date().toISOString(),
-        backstory: character.backstory || "" // Убедимся, что backstory всегда есть
+        backstory: character.backstory || "", // Убедимся, что backstory всегда есть
+        background: character.background || "" // Убедимся, что background всегда есть
       };
+      
       if (!updatedCharacter.createdAt) {
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
       // Преобразуем Character в CharacterSheet для сохранения
+      // Обновляем преобразование, чтобы type-check проходил успешно
       const charToSave: CharacterSheet = {
         ...updatedCharacter,
-        backstory: updatedCharacter.backstory || "", // Обеспечиваем заполнение обязательного поля
-        background: updatedCharacter.background || "", // Обеспечиваем заполнение обязательного поля
+        backstory: updatedCharacter.backstory || "", 
+        background: updatedCharacter.background || "",
+        // Преобразуем proficiencies в ожидаемый формат
+        proficiencies: {
+          armor: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
+          weapons: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
+          tools: Array.isArray(updatedCharacter.proficiencies) ? [] : undefined,
+          languages: updatedCharacter.languages || []
+        }
       };
       
       const savedChar = await characterService.saveCharacter(charToSave);
@@ -76,23 +89,36 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     try {
       // Используем getCharacters вместо getCharactersByUserId
       const fetchedCharacters = await characterService.getCharacters();
-      const convertedCharacters = fetchedCharacters.map(c => ({
-        ...c,
-        backstory: c.backstory || "", // Убедимся, что backstory всегда есть
-        race: c.race || "",           // Убедимся, что race всегда есть
-        background: c.background || "", // Убедимся, что background всегда есть
-        // Добавляем другие обязательные поля, если они отсутствуют
-        class: c.class || "",
-        gender: c.gender || "",
-        abilities: c.abilities || {
-          STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
-        },
-        proficiencies: c.proficiencies || [],
-        equipment: c.equipment || [],
-        spells: c.spells || [],
-        languages: c.languages || []
-      })) as Character[];
+      
+      // Преобразуем к типу Character
+      const convertedCharacters = fetchedCharacters.map(c => {
+        // Преобразуем proficiencies в формат, ожидаемый типом Character
+        let proficienciesArray: string[] = [];
+        
+        if (c.proficiencies) {
+          const prof = c.proficiencies;
+          if (prof.armor) proficienciesArray = [...proficienciesArray, ...prof.armor];
+          if (prof.weapons) proficienciesArray = [...proficienciesArray, ...prof.weapons];
+          if (prof.tools) proficienciesArray = [...proficienciesArray, ...prof.tools];
+        }
+        
+        return {
+          ...c,
+          backstory: c.backstory || "", // Убедимся, что backstory всегда есть
+          race: c.race || "",           // Убедимся, что race всегда есть
+          background: c.background || "", // Убедимся, что background всегда есть
+          class: c.class || "",
+          gender: c.gender || "",
+          abilities: c.abilities || {
+            STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+            strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
+          },
+          proficiencies: proficienciesArray,
+          equipment: c.equipment || [],
+          spells: c.spells || [],
+          languages: c.languages || []
+        } as Character;
+      });
       
       setCharacters(convertedCharacters);
       return convertedCharacters;

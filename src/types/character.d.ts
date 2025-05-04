@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -201,7 +200,7 @@ export interface Character {
   };
   proficiencies: string[];
   equipment: string[];
-  spells: string[];
+  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
   languages: string[];
   gender: string;
   alignment: string;

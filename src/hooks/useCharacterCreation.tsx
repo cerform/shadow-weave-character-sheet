@@ -114,11 +114,11 @@ export const useCharacterCreation = () => {
         wisdom: 10,
         charisma: 10
       },
-      skills: {},  // Пустой объект вместо пустого массива
+      skills: {},
       languages: [],
       equipment: [],
       spells: [],
-      proficiencies: {  // Правильная инициализация
+      proficiencies: {
         armor: [],
         weapons: [],
         tools: [],

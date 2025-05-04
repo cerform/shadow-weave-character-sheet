@@ -1,29 +1,23 @@
 
-import { cantrips } from "./cantrips";
-import { level1 } from "./level1";
-import { level2 } from "./level2";
-import { level3 } from "./level3";
-import { level4 } from "./level4";
-// Fix the import names to match the actual exports
-import { level4Part2 } from "./level4_part2";
-import { level4Part3 } from "./level4_part3";
-import { level5 } from "./level5";
-import { level6 } from "./level6";
-import { level7 } from "./level7";
-import { level8 } from "./level8";
-import { level9 } from "./level9";
-import { CharacterSpell } from "@/types/character";
+import { CharacterSpell } from '@/types/character';
+import { cantrips } from './cantrips';
+import { level1 } from './level1';
+import { level2 } from './level2';
+import { level3 } from './level3';
+import { level4 } from './level4';
+import { level5 } from './level5';
+import { level6 } from './level6';
+import { level7 } from './level7';
+import { level8 } from './level8';
+import { level9 } from './level9';
 
-// Combine all spell levels into a single array
+// Объединяем все заклинания в один массив
 export const spells: CharacterSpell[] = [
   ...cantrips,
   ...level1,
   ...level2,
   ...level3,
   ...level4,
-  // Fixed variable names to match imports
-  ...level4Part2,
-  ...level4Part3,
   ...level5,
   ...level6,
   ...level7,
@@ -31,63 +25,57 @@ export const spells: CharacterSpell[] = [
   ...level9
 ];
 
-// Get spells by level
+// Функция для проверки, существует ли указанное заклинание
+export const spellExists = (name: string): boolean => {
+  return spells.some(spell => spell.name.toLowerCase() === name.toLowerCase());
+};
+
+// Функция для получения всех заклинаний
+export const getAllSpells = (): CharacterSpell[] => {
+  return spells;
+};
+
+// Функция для получения деталей заклинания по имени
+export const getSpellDetails = (name: string): CharacterSpell | undefined => {
+  // Проверяем, является ли name строкой
+  if (typeof name !== 'string') {
+    // Если name - объект типа CharacterSpell, возвращаем его
+    if (name && typeof name === 'object' && 'name' in name && 'level' in name) {
+      return name as CharacterSpell;
+    }
+    return undefined;
+  }
+  
+  // Ищем заклинание по имени
+  return spells.find(spell => spell.name.toLowerCase() === name.toLowerCase());
+};
+
+// Функция для безопасного доступа к свойству classes с проверкой типа
+export const getSpellClasses = (spell: CharacterSpell): string[] => {
+  if (!spell.classes) {
+    return [];
+  }
+  
+  if (Array.isArray(spell.classes)) {
+    return spell.classes;
+  }
+  
+  if (typeof spell.classes === 'string') {
+    return spell.classes.split(', ').map(c => c.trim());
+  }
+  
+  return [];
+};
+
+// Функция для фильтрации заклинаний по классу
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  return spells.filter(spell => {
+    const classes = getSpellClasses(spell);
+    return classes.some(c => c.toLowerCase().includes(className.toLowerCase()));
+  });
+};
+
+// Функция для фильтрации заклинаний по уровню
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   return spells.filter(spell => spell.level === level);
-};
-
-// Convert spell level to text
-export const spellLevelToText = (level: number): string => {
-  if (level === 0) return "Заговор";
-  return `${level}-й уровень`;
-};
-
-// Get spells by class
-export const getSpellsByClass = (className: string): CharacterSpell[] => {
-  if (!className) return [];
-  
-  const normalizedClassName = className ? className.toLowerCase() : '';
-  
-  return spells.filter((spell) => {
-    if (!spell.classes) return false;
-    
-    // Safely handle potentially undefined classes array
-    return spell.classes.some(
-      (spellClass) => 
-        spellClass && 
-        typeof spellClass === 'string' && 
-        spellClass.toLowerCase() === normalizedClassName
-    );
-  });
-};
-
-// Get spell details by name
-export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
-  if (!spellName) return undefined;
-  
-  return spells.find(
-    (spell) => spell && spell.name && spell.name.toLowerCase() === (spellName?.toLowerCase() || '')
-  );
-};
-
-// Get spells by school
-export const getSpellsBySchool = (school: string): CharacterSpell[] => {
-  if (!school) return [];
-  
-  return spells.filter(
-    (spell) => spell && spell.school && spell.school.toLowerCase() === school.toLowerCase()
-  );
-};
-
-// Get available spell schools
-export const getSpellSchools = (): string[] => {
-  const schools = new Set<string>();
-  
-  spells.forEach(spell => {
-    if (spell.school) {
-      schools.add(spell.school);
-    }
-  });
-  
-  return Array.from(schools);
 };

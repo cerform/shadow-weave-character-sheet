@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -294,6 +293,40 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, updateCharacte
       title: "Воскрешение!",
       description: `Персонаж воскрешен с ${hp} хитами.`,
     });
+  };
+  
+  // Обработчик использования зелья лечения
+  const handleHealingPotion = () => {
+    if (!character) return;
+    
+    const diceValue = "d4" as const; // Изменяем тип на допустимый
+    const rolls = [];
+    const numDice = 2;
+    let total = 0;
+    
+    for (let i = 0; i < numDice; i++) {
+      const roll = rollDie(4);
+      rolls.push(roll);
+      total += roll;
+    }
+    
+    total += 2; // Добавляем бонус +2
+    
+    const newHp = Math.min((character.currentHp || 0) + total, character.maxHp || 0);
+    
+    updateCharacter({
+      currentHp: newHp
+    });
+    
+    setDiceResult({
+      rolls,
+      bonus: 2,
+      total,
+      formula: `2${diceValue}+2`,
+      resultText: `Восстановлено ${total} хитов`
+    });
+    
+    setShowDiceResult(true);
   };
   
   return (
