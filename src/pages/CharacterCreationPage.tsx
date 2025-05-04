@@ -179,6 +179,7 @@ const CharacterCreationPage = () => {
             abilityScorePoints={adjustedAbilityScorePoints}
             isMagicClass={isMagicClass()}
             rollsHistory={rollsHistory}
+            onLevelChange={handleLevelChange}
             maxAbilityScore={maxAbilityScore}
           />
         </div>
