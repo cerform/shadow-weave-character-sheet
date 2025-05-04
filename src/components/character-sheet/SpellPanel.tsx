@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character }) => {
   const [expandedSpell, setExpandedSpell] = useState<string | null>(null);
 
   // Determine if the spells array contains strings or CharacterSpell objects
-  const isSpellObjectArray = (spells: string[] | CharacterSpell[]): spells is CharacterSpell[] => {
+  const isSpellObjectArray = (spells: any[]): spells is CharacterSpell[] => {
     return spells.length > 0 && typeof spells[0] !== 'string';
   };
 

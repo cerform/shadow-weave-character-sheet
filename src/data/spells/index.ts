@@ -1,18 +1,18 @@
 
 // Импортируем все заклинания из отдельных файлов
-import { spells as cantrips } from './cantrips';
-import { spells as level0 } from './level0';
-import { spells as level1 } from './level1';
-import { spells as level2 } from './level2';
-import { spells as level3 } from './level3';
-import { spells as level4 } from './level4';
-import { spells as level4_part2 } from './level4_part2';
-import { spells as level4_part3 } from './level4_part3';
-import { spells as level5 } from './level5';
-import { spells as level6 } from './level6';
-import { spells as level7 } from './level7';
-import { spells as level8 } from './level8';
-import { spells as level9 } from './level9';
+import cantrips from './cantrips';
+import level0 from './level0';
+import level1 from './level1';
+import level2 from './level2';
+import level3 from './level3';
+import level4 from './level4';
+import level4Part2 from './level4_part2';
+import level4Part3 from './level4_part3';
+import level5 from './level5';
+import level6 from './level6';
+import level7 from './level7';
+import level8 from './level8';
+import level9 from './level9';
 
 import { CharacterSpell } from '@/types/character';
 
@@ -21,16 +21,16 @@ export const spells: CharacterSpell[] = [
   ...cantrips,
   ...level0,
   ...level1,
-  ...level2,
-  ...level3,
-  ...level4,
-  ...level4_part2,
-  ...level4_part3,
-  ...level5,
-  ...level6,
-  ...level7,
-  ...level8,
-  ...level9
+  ...(level2 || []),
+  ...(level3?.level3Spells || []),
+  ...(level4?.level4Spells || []),
+  ...(level4Part2?.level4Part2 || []),
+  ...(level4Part3 || []),
+  ...(level5 || []),
+  ...(level6 || []),
+  ...(level7 || []),
+  ...(level8 || []),
+  ...(level9 || [])
 ];
 
 // Функция для фильтрации заклинаний по различным критериям
@@ -85,6 +85,3 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
 // Функции для получения заклинаний по уровню
 export const getCantrips = () => spells.filter(spell => spell.level === 0);
 export const getSpellsByLevel = (level: number) => spells.filter(spell => spell.level === level);
-
-// Экспортируем также отдельные наборы заклинаний
-export { cantrips, level0, level1, level2, level3, level4, level5, level6, level7, level8, level9 };

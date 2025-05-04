@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 
 export const level4Spells: CharacterSpell[] = [
@@ -155,3 +156,5 @@ export const level4Spells: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Следопыт"]
   },
 ];
+
+export default { level4Spells };

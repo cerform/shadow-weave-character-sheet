@@ -16,7 +16,7 @@ export interface CharacterSheet {
   subclass?: string;
   level: number;
   abilities: AbilityScores;
-  proficiencies: string[]; // Changed to just string[] to fix type conflicts
+  proficiencies: string[]; // Строго string[]
   equipment: string[];
   spells: string[];
   features?: string[];
@@ -124,3 +124,8 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24
 };
+
+// Тип Character для контекста
+export interface Character extends CharacterSheet {
+  features: string[];
+}

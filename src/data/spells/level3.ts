@@ -1,4 +1,6 @@
-export const level3Spells = [
+import { CharacterSpell } from '@/types/character';
+
+export const level3Spells: CharacterSpell[] = [
   {
     name: "Восставший труп",
     level: 3,
@@ -12,7 +14,7 @@ export const level3Spells = [
     material: true,
     ritual: false,
     concentration: false,
-    prepared: false, // Добавлено отсутствовавшее свойство
+    prepared: false,
     description: "Это заклинание создаёт нежить, оживляя мёртвое тело. Вы можете воскресить максимум четыре трупа среднего или маленького размера, создав из них скелетов или зомби.",
     classes: ["Волшебник", "Жрец"]
   },
@@ -376,3 +378,5 @@ export const level3Spells = [
     classes: ["Бард", "Жрец", "Колдун", "Волшебник"]
   },
 ]
+
+export default { level3Spells };
