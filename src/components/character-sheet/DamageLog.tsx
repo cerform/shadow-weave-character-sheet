@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { HitPointEvent } from '@/hooks/useHitPoints';
+import { motion } from "framer-motion";
 
 interface DamageLogProps {
   events: HitPointEvent[];
@@ -15,38 +14,39 @@ interface DamageLogProps {
   className?: string;
 }
 
-export const DamageLog: React.FC<DamageLogProps> = ({ 
-  events, 
-  undoLastEvent, 
-  maxEvents = 5,
-  className = ''
+export const DamageLog: React.FC<DamageLogProps> = ({
+  events,
+  undoLastEvent,
+  maxEvents = 10,
+  className = ""
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  const displayEvents = expanded ? events : events.slice(0, maxEvents);
+  // Получаем события для отображения
+  const displayEvents = events.slice(0, maxEvents);
   
-  if (events.length === 0) {
-    return null;
-  }
-  
-  // Функция для форматирования времени
-  const formatTimeAgo = (timestamp: Date): string => {
+  // Функция для форматирования времени события
+  const formatTimestamp = (timestamp: Date): string => {
     const now = new Date();
-    const diff = now.getTime() - new Date(timestamp).getTime();
+    const diff = now.getTime() - timestamp.getTime();
     
-    // Преобразуем разницу в минуты
+    if (diff < 60000) {
+      return 'только что';
+    }
+    
     const minutes = Math.floor(diff / 60000);
-    
-    if (minutes < 1) return 'сейчас';
-    if (minutes < 60) return `${minutes} мин. назад`;
+    if (minutes < 60) {
+      return `${minutes} мин назад`;
+    }
     
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} ч. назад`;
+    if (hours < 24) {
+      return `${hours} ч назад`;
+    }
     
     const days = Math.floor(hours / 24);
-    return `${days} д. назад`;
+    return `${days} д назад`;
   };
   
   // Функция для получения иконки события
@@ -98,76 +98,53 @@ export const DamageLog: React.FC<DamageLogProps> = ({
         return 'bg-purple-900/30';
     }
   };
-  
+
+  // Если нет событий, не отображаем лог
+  if (displayEvents.length === 0) {
+    return null;
+  }
+
   return (
-    <div className={`rounded-lg overflow-hidden ${className}`}>
-      <div className="flex justify-between items-center mb-2">
-        <h3 
-          className="text-sm font-medium"
-          style={{ color: currentTheme.textColor }}
+    <div className={`mt-2 ${className}`}>
+      <div className="flex justify-between items-center mb-1">
+        <h4 className="text-sm font-medium">Журнал урона/лечения</h4>
+        <button 
+          onClick={undoLastEvent}
+          className="text-xs text-blue-500 hover:underline"
         >
-          Журнал событий
-        </h3>
-        
-        {undoLastEvent && events.length > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={undoLastEvent}
-            className="h-7 px-2 text-xs"
-            style={{ color: currentTheme.accent }}
-          >
-            Отменить последнее
-          </Button>
-        )}
+          Отменить последнее
+        </button>
       </div>
       
-      <div className={`bg-black/30 rounded-lg p-1 ${expanded ? 'max-h-64' : 'max-h-32'}`}>
-        <ScrollArea className="h-full">
-          <AnimatePresence initial={false}>
+      <ScrollArea 
+        className={`border rounded-lg h-32 bg-black/20 backdrop-blur-sm`}
+        style={{ borderColor: `${currentTheme.accent}40` }}
+      >
+        <div className="p-2">
+          <motion.div layout>
             {displayEvents.map((event, index) => (
-              <motion.div
+              <motion.div 
                 key={event.id}
                 className={`flex items-center py-1 px-2 rounded-md mb-1 ${getEventColor(event.type)}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
               >
-                {getEventIcon(event.type)}
-                
-                <div 
-                  className="flex-1 text-xs"
-                  style={{ color: currentTheme.textColor }}
-                >
-                  <span>{getEventDescription(event)}</span>
+                <div className="flex items-center flex-1">
+                  {getEventIcon(event.type)}
+                  <span className="text-sm">{getEventDescription(event)}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs opacity-60">{formatTimestamp(event.timestamp)}</span>
                   {event.source && (
-                    <span className="text-gray-400 ml-1">
-                      от {event.source}
-                    </span>
+                    <span className="text-xs opacity-60 max-w-[120px] truncate">{event.source}</span>
                   )}
                 </div>
-                
-                <span className="text-xs text-gray-500">
-                  {formatTimeAgo(event.timestamp)}
-                </span>
               </motion.div>
             ))}
-          </AnimatePresence>
-        </ScrollArea>
-      </div>
-      
-      {events.length > maxEvents && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setExpanded(!expanded)}
-          className="w-full mt-1 h-6 text-xs"
-          style={{ color: currentTheme.mutedTextColor }}
-        >
-          {expanded ? "Свернуть" : `Показать все (${events.length})`}
-        </Button>
-      )}
+          </motion.div>
+        </div>
+      </ScrollArea>
     </div>
   );
 };

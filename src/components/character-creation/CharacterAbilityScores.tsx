@@ -44,12 +44,12 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   
   // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
   const [stats, setStats] = useState({
-    strength: character?.abilities?.strength || character?.stats?.strength || 10,
-    dexterity: character?.abilities?.dexterity || character?.stats?.dexterity || 10,
-    constitution: character?.abilities?.constitution || character?.stats?.constitution || 10,
-    intelligence: character?.abilities?.intelligence || character?.stats?.intelligence || 10,
-    wisdom: character?.abilities?.wisdom || character?.stats?.wisdom || 10,
-    charisma: character?.abilities?.charisma || character?.stats?.charisma || 10,
+    strength: character?.stats?.strength || character?.abilities?.strength || character?.abilities?.STR || 10,
+    dexterity: character?.stats?.dexterity || character?.abilities?.dexterity || character?.abilities?.DEX || 10,
+    constitution: character?.stats?.constitution || character?.abilities?.constitution || character?.abilities?.CON || 10,
+    intelligence: character?.stats?.intelligence || character?.abilities?.intelligence || character?.abilities?.INT || 10,
+    wisdom: character?.stats?.wisdom || character?.abilities?.wisdom || character?.abilities?.WIS || 10,
+    charisma: character?.stats?.charisma || character?.abilities?.charisma || character?.abilities?.CHA || 10,
   });
   
   // Определяем максимальное значение для характеристик на основе уровня персонажа
@@ -209,10 +209,36 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   };
 
   const handleNext = () => {
+    // Создаем объекты для обоих форматов abilities и stats
+    const abilitiesFormat = {
+      STR: stats.strength,
+      DEX: stats.dexterity,
+      CON: stats.constitution,
+      INT: stats.intelligence,
+      WIS: stats.wisdom,
+      CHA: stats.charisma,
+      // Для обратной совместимости
+      strength: stats.strength,
+      dexterity: stats.dexterity,
+      constitution: stats.constitution,
+      intelligence: stats.intelligence,
+      wisdom: stats.wisdom,
+      charisma: stats.charisma
+    };
+
+    const statsFormat = {
+      strength: stats.strength,
+      dexterity: stats.dexterity,
+      constitution: stats.constitution,
+      intelligence: stats.intelligence,
+      wisdom: stats.wisdom,
+      charisma: stats.charisma
+    };
+    
     // Сохраняем в оба поля abilities и stats для совместимости
     updateCharacter({ 
-      abilities: stats,
-      stats: stats,
+      abilities: abilitiesFormat,
+      stats: statsFormat,
       abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
     });
     nextStep();

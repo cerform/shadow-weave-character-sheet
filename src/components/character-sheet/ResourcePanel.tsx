@@ -1,15 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Shield, Dices, RefreshCw, Plus, Minus } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Dices, RefreshCw, Shield } from "lucide-react";
 import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PopoverTrigger, PopoverContent, Popover } from '@/components/ui/popover';
 import { HPBar } from './HPBar';
 import { DamageLog } from './DamageLog';
@@ -31,15 +30,15 @@ interface ResourcePanelProps {
   onHpChange: (value: number) => void;
 }
 
-export const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
-  currentHp, 
-  maxHp, 
-  onHpChange 
+export const ResourcePanel: React.FC<ResourcePanelProps> = ({
+  currentHp,
+  maxHp,
+  onHpChange
 }) => {
   const { character, updateCharacter } = useContext(CharacterContext);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
+
   const [showHitDiceRoller, setShowHitDiceRoller] = useState(false);
   const [showHealingRoller, setShowHealingRoller] = useState(false);
   const [showDeathSaveRoller, setShowDeathSaveRoller] = useState(false);
@@ -48,8 +47,8 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
   const [isLongResting, setIsLongResting] = useState(false);
   
   // Получаем constitution из character
-  const constitution = character?.abilities?.CON || 10;
-  
+  const constitution = character?.abilities?.CON || character?.abilities?.constitution || 10;
+
   // Используем хук для управления HP
   const {
     currentHp: hitPoints,
@@ -75,22 +74,20 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       updateCharacter({
         currentHp: hp,
         temporaryHp: tempHp,
-        deathSaves: deathSaves
+        deathSaves
       });
     }
   });
-  
+
   // Предопределенные значения для быстрого изменения HP
   const quickDamageValues = [1, 5, 10, 50, 100];
-  const quickHealValues = [1, 5, 10, 50, 100];
-  const quickTempHpValues = [5, 10, 25, 50];
   
   // Обработчики событий для бросков кубиков
   const handleHealingRollComplete = (result: number) => {
     applyHealing(result, "Бросок лечения");
     setShowHealingRoller(false);
   };
-  
+
   const handleDeathSaveRollComplete = (result: number) => {
     rollDeathSave(result);
     setShowDeathSaveRoller(false);
@@ -112,7 +109,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       });
     }
   };
-  
+
   // Обработчики для отдыха
   const handleShortRest = () => {
     if (!character) return;
@@ -186,7 +183,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       }
       
       // Восстанавливаем очки чародея
-      if (character.sorceryPoints && character.class?.includes('Чародей')) {
+      if (character.sorceryPoints && character.className?.includes('Чародей')) {
         updateCharacter({
           sorceryPoints: {
             current: character.level,
@@ -201,7 +198,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       setIsLongResting(false);
     }, 2000);
   };
-  
+
   // Вспомогательные функции
   const getHitDieByClass = (characterClass?: string): "d4" | "d6" | "d8" | "d10" | "d12" => {
     if (!characterClass) return "d8";
@@ -216,173 +213,181 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       default: return "d8";
     }
   };
-  
+
   // Блокируем использование Hit Die, если все использованы
-  const hitDiceAvailable = character?.hitDice 
+  const hitDiceAvailable = character?.hitDice
     ? character.hitDice.total - character.hitDice.used
     : 0;
   
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
       <h3 className="text-lg font-semibold mb-4 text-primary">Ресурсы</h3>
-      
       <div className="space-y-4">
-        {/* HP и Temp HP бары */}
         <div>
-          <HPBar 
-            currentHp={hitPoints} 
-            maxHp={maxHitPoints} 
-            tempHp={tempHp} 
-            showValues={true}
-            height="1.5rem"
-            className="mb-3"
-          />
-          
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            {/* Панель быстрых кнопок урона */}
-            <div className="col-span-3">
-              <Label className="text-xs text-primary mb-1 block">Быстрые действия</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {/* Урон */}
-                <div className="bg-black/20 p-2 rounded-md">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Minus className="h-3 w-3 text-red-500" />
-                    <span className="text-xs text-primary">Урон</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {quickDamageValues.map(value => (
-                      <motion.div key={`damage-${value}`} whileTap={{ scale: 0.95 }}>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-6 px-2 text-xs bg-red-900/20 hover:bg-red-900/30"
-                          onClick={() => applyDamage(value, `Быстрый урон ${value}`)}
-                        >
-                          {value}
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Лечение */}
-                <div className="bg-black/20 p-2 rounded-md">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Plus className="h-3 w-3 text-green-500" />
-                    <span className="text-xs text-primary">Лечение</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {quickHealValues.map(value => (
-                      <motion.div key={`heal-${value}`} whileTap={{ scale: 0.95 }}>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-6 px-2 text-xs bg-green-900/20 hover:bg-green-900/30"
-                          onClick={() => applyHealing(value, `Быстрое лечение ${value}`)}
-                        >
-                          {value}
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Ручной ввод урона/лечения */}
-            <div className="col-span-2">
-              <Label htmlFor="adjust-hp" className="text-xs text-primary mb-1 block">Ввод значения</Label>
-              <div className="flex gap-1">
-                <Input 
-                  id="adjust-hp"
-                  type="number" 
-                  value={hpAdjustValue}
-                  onChange={(e) => setHpAdjustValue(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="h-8 text-sm"
-                  style={{
-                    backgroundColor: `${currentTheme.cardBackground}80`,
-                    color: currentTheme.textColor
-                  }}
-                />
-                <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => applyDamage(hpAdjustValue, "Ввод урона")}
-                    className="bg-red-900/20 hover:bg-red-900/30 h-8"
-                  >
-                    <Minus className="h-4 w-4 text-red-500" />
-                  </Button>
-                </motion.div>
-                <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => applyHealing(hpAdjustValue, "Ввод лечения")}
-                    className="bg-green-900/20 hover:bg-green-900/30 h-8"
-                  >
-                    <Plus className="h-4 w-4 text-green-500" />
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
-            
-            {/* Временное HP */}
-            <div>
-              <Label htmlFor="temp-hp" className="text-xs text-primary mb-1 block">Временное HP</Label>
-              <div className="flex gap-1">
-                <Input 
-                  id="temp-hp"
-                  type="number" 
-                  value={tempHp}
-                  onChange={(e) => {
-                    const value = Math.max(0, parseInt(e.target.value) || 0);
-                    setTemporaryHp(value, "Ручное изменение");
-                  }}
-                  className="h-8 text-sm"
-                  style={{
-                    backgroundColor: `${currentTheme.cardBackground}80`,
-                    color: currentTheme.textColor
-                  }}
-                />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="bg-emerald-900/20 hover:bg-emerald-900/30 h-8"
-                    >
-                      <Shield className="h-4 w-4 text-emerald-400" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-40 p-2">
-                    <div className="grid gap-1">
-                      {quickTempHpValues.map(value => (
-                        <Button 
-                          key={`temp-${value}`}
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => setTemporaryHp(value, "Временные хиты")}
-                          className="justify-start h-7"
-                        >
-                          <Shield className="h-3 w-3 mr-1 text-emerald-400" /> {value} HP
-                        </Button>
-                      ))}
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => setTemporaryHp(0, "Сброс временных хитов")}
-                        className="justify-start h-7 text-red-400"
-                      >
-                        Сбросить все
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+          {/* HP и Temp HP бары */}
+          <div>
+            <HPBar 
+              currentHp={hitPoints}
+              maxHp={maxHitPoints}
+              tempHp={tempHp}
+              showValues={true}
+              height="1.5rem"
+            />
           </div>
           
+          {/* Кнопки быстрого урона и лечения */}
+          <div className="flex flex-wrap gap-1 mt-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-1/3 flex justify-center items-center bg-red-900/20 border-red-900/50 hover:bg-red-900/30"
+                >
+                  <Minus className="h-3 w-3 mr-1" /> Урон
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2 bg-black/90 border-red-900/30">
+                <h4 className="text-sm font-medium mb-2">Нанести урон</h4>
+                <div className="flex items-center mb-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={hpAdjustValue}
+                    onChange={(e) => setHpAdjustValue(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="h-8 text-sm bg-red-900/20 border-red-900/30"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="ml-2 h-8"
+                    onClick={() => applyDamage(hpAdjustValue, "Ручное изменение")}
+                  >
+                    Применить
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {quickDamageValues.map((value) => (
+                    <Button
+                      key={`damage-${value}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyDamage(value, "Быстрый урон")}
+                      className="flex-1 bg-red-950/30 border-red-900/20 hover:bg-red-900/30"
+                    >
+                      {value}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-1/3 flex justify-center items-center bg-green-900/20 border-green-900/50 hover:bg-green-900/30"
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Лечение
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2 bg-black/90 border-green-900/30">
+                <h4 className="text-sm font-medium mb-2">Восстановить здоровье</h4>
+                <div className="flex items-center mb-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={hpAdjustValue}
+                    onChange={(e) => setHpAdjustValue(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="h-8 text-sm bg-green-900/20 border-green-900/30"
+                  />
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="ml-2 h-8 bg-green-700 hover:bg-green-800"
+                    onClick={() => applyHealing(hpAdjustValue, "Ручное лечение")}
+                  >
+                    Применить
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {quickDamageValues.map((value) => (
+                    <Button
+                      key={`heal-${value}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyHealing(value, "Быстрое лечение")}
+                      className="flex-1 bg-green-950/30 border-green-900/20 hover:bg-green-900/30"
+                    >
+                      {value}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-1/3 flex justify-center items-center bg-emerald-900/20 border-emerald-900/50 hover:bg-emerald-900/30"
+                >
+                  <Shield className="h-3 w-3 mr-1" /> Врем. HP
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2 bg-black/90 border-emerald-900/30">
+                <h4 className="text-sm font-medium mb-2">Установить временные HP</h4>
+                <div className="flex items-center mb-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={tempHp}
+                    onChange={(e) => {
+                      const value = Math.max(0, parseInt(e.target.value) || 0);
+                      setTemporaryHp(value, "Ручное изменение");
+                    }}
+                    className="h-8 text-sm"
+                    style={{
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      borderColor: 'rgba(16, 185, 129, 0.3)'
+                    }}
+                  />
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="ml-2 h-8 bg-emerald-700 hover:bg-emerald-800"
+                    onClick={() => setTemporaryHp(hpAdjustValue, "Ручное изменение")}
+                  >
+                    Применить
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {[3, 5, 8, 10, 15].map((value) => (
+                    <Button
+                      key={`temp-${value}`}
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => setTemporaryHp(value, "Временные хиты")}
+                      className="justify-start h-7"
+                    >
+                      <Shield className="h-3 w-3 mr-1 text-emerald-400" /> {value} HP
+                    </Button>
+                  ))}
+                  <Button 
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setTemporaryHp(0, "Сброс временных хитов")}
+                    className="justify-start h-7 text-red-400"
+                  >
+                    Сбросить все
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* Состояние персонажа и спасброски от смерти */}
           {isUnconscious && (
             <div className="mb-3 border border-red-900/50 rounded-lg p-2 bg-red-900/10">
@@ -394,7 +399,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               </div>
               
               <Button 
-                variant="destructive" 
+                variant="destructive"
                 className="w-full h-8 text-sm"
                 onClick={() => setShowDeathSaveRoller(true)}
               >
@@ -407,11 +412,11 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
           <div className="flex justify-between gap-2 mb-2">
             <Sheet open={showHealingRoller} onOpenChange={setShowHealingRoller}>
               <SheetTrigger asChild>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="flex-1">
+                <motion.div className="w-1/2">
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="w-full flex items-center gap-1 bg-green-900/20 hover:bg-green-900/30"
+                    className="w-full flex items-center gap-1"
                   >
                     <Dices className="h-3 w-3" /> Бросок лечения
                   </Button>
@@ -419,9 +424,9 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               </SheetTrigger>
               <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
                 <SheetHeader className="p-4">
-                  <SheetTitle>Бросок для лечения</SheetTitle>
+                  <SheetTitle>Бросок лечения</SheetTitle>
                   <SheetDescription>
-                    Бросьте кубик d8 для восстановления здоровья
+                    Выберите кубики для броска лечения
                   </SheetDescription>
                 </SheetHeader>
                 <div className="h-[80vh]">
@@ -435,10 +440,10 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                 </div>
               </SheetContent>
             </Sheet>
-            
+
             <Sheet open={showHitDiceRoller} onOpenChange={setShowHitDiceRoller}>
               <SheetTrigger asChild>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="flex-1">
+                <motion.div className="w-1/2">
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -451,14 +456,14 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               </SheetTrigger>
               <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
                 <SheetHeader className="p-4">
-                  <SheetTitle>Hit Dice</SheetTitle>
+                  <SheetTitle>Использовать Hit Die</SheetTitle>
                   <SheetDescription>
-                    Используйте Hit Die для восстановления здоровья во время короткого отдыха
+                    Бросьте Hit Die для восстановления здоровья во время короткого отдыха
                   </SheetDescription>
                 </SheetHeader>
                 <div className="h-[80vh]">
                   <DiceRoller3DFixed
-                    initialDice={getHitDieByClass(character?.class)}
+                    initialDice={getHitDieByClass(character?.className)}
                     hideControls={false}
                     modifier={getNumericModifier(constitution)}
                     onRollComplete={handleHitDiceRollComplete}
@@ -468,7 +473,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               </SheetContent>
             </Sheet>
           </div>
-          
+
           {/* Для спасбросков от смерти отдельное окно */}
           <Sheet open={showDeathSaveRoller} onOpenChange={setShowDeathSaveRoller}>
             <SheetContent side="right" className="w-[90%] sm:max-w-md p-0">
@@ -477,7 +482,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                 <SheetDescription>
                   10+: Успех (3 успеха = стабилизация), 
                   1-9: Провал (3 провала = смерть),
-                  20: Критический успех (1 HP),  
+                  20: Критический успех (1 HP), 
                   1: Критический провал (2 провала)
                 </SheetDescription>
               </SheetHeader>
@@ -496,78 +501,77 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
           {/* Журнал урона/лечения */}
           {events.length > 0 && (
             <DamageLog 
-              events={events} 
-              undoLastEvent={undoLastEvent} 
-              className="mt-3"
+              events={events}
+              undoLastEvent={undoLastEvent}
             />
           )}
         </div>
-        
-        <Separator />
-        
-        {/* Блок с характеристиками боя */}
+
+        {/* Информация о персонаже */}
         <div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex justify-between mb-4">
             <motion.div 
-              whileHover={{ scale: 1.03 }} 
-              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }}
               className="bg-primary/10 p-3 rounded-lg text-center"
             >
-              <div className="flex justify-center mb-1">
+              <div className="flex items-center justify-center mb-1 text-primary">
                 <Shield className="h-4 w-4 text-primary" />
               </div>
               <div className="text-sm text-muted-foreground">Класс Брони</div>
               <div className="text-xl font-bold text-primary">
                 {character?.abilities ? calculateArmorClass(
-                  character.abilities.DEX,
-                  character.abilities.CON,
-                  character.abilities.WIS,
-                  character.class
+                  character.abilities.dexterity || character.abilities.DEX,
+                  character.abilities.constitution || character.abilities.CON,
+                  character.abilities.wisdom || character.abilities.WIS,
+                  character.className
                 ) : 10}
               </div>
             </motion.div>
-            
-            <motion.div
-              whileHover={{ scale: 1.03 }} 
-              whileTap={{ scale: 0.98 }}
+
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
               className="bg-primary/10 p-3 rounded-lg text-center"
             >
               <div className="text-sm text-muted-foreground mb-1">Инициатива</div>
               <div className="text-xl font-bold text-primary">
                 {character?.abilities ? 
-                  getInitiativeModifier(character.abilities.DEX) : 
+                  getInitiativeModifier(character.abilities.dexterity || character.abilities.DEX) : 
                   "+0"}
               </div>
             </motion.div>
           </div>
         </div>
-        
-        <Separator />
-        
-        {/* Блок с второстепенными характеристиками */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-primary">Скорость</span>
-            <span className="text-sm text-primary">30 футов</span>
+
+        {/* Hit Dice информация */}
+        {character?.hitDice && (
+          <div className="p-3 rounded-lg bg-primary/5 space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-primary">Hit Dice ({character.hitDice.value})</span>
+              <span className="text-sm text-primary">{character.hitDice.total - character.hitDice.used}/{character.hitDice.total}</span>
+            </div>
           </div>
-          
+        )}
+
+        <div className="p-3 rounded-lg bg-primary/5 space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-primary">Грузоподъёмность</span>
             <span className="text-sm text-primary">
               {character?.abilities ? 
-                calculateCarryingCapacity(character.abilities.STR) : 
+                calculateCarryingCapacity(character.abilities.strength || character.abilities.STR) : 
                 "0 фунтов"}
             </span>
           </div>
         </div>
-        
+
         <Separator />
-        
+
         {/* Панель отдыха */}
         <div>
           <div className="flex flex-col space-y-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={isShortResting ? undefined : handleShortRest}
               disabled={isShortResting || isLongResting}
@@ -585,7 +589,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               Короткий отдых
             </Button>
             
-            <Button 
+            <Button
               size="sm"
               onClick={isLongResting ? undefined : handleLongRest}
               disabled={isShortResting || isLongResting}

@@ -25,6 +25,13 @@ export interface ClassLevel {
   subclass?: string;
 }
 
+// Константы для ограничений значений характеристик
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,      // Базовый максимум (уровни 1-9)
+  EPIC_CAP: 22,      // Эпический максимум (уровни 10-15)
+  LEGENDARY_CAP: 24  // Легендарный максимум (уровни 16+)
+} as const;
+
 // Интерфейс для очков чародея
 export interface SorceryPoints {
   current: number;
@@ -40,12 +47,17 @@ export interface CharacterSheet {
   class?: string;
   subclass?: string;
   classes?: ClassLevel[];
+  additionalClasses?: ClassLevel[]; // Для мультиклассирования
+  className?: string; // Для обратной совместимости
   level: number;
   race?: string;
   subrace?: string;
   background?: string;
   alignment?: string;
   experience?: number;
+  gender?: string; // Поле для гендера персонажа
+  appearance?: string; // Описание внешности персонажа
+  personalityTraits?: string; // Черты личности персонажа
   abilities?: {
     STR: number;
     DEX: number;
@@ -53,6 +65,21 @@ export interface CharacterSheet {
     INT: number;
     WIS: number;
     CHA: number;
+    // Для обратной совместимости добавляем новые имена
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+  };
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
   };
   skills?: {
     [key: string]: {
@@ -70,6 +97,7 @@ export interface CharacterSheet {
     tools?: string[];
     languages?: string[];
   };
+  languages?: string[]; // Для обратной совместимости
   spells?: CharacterSpell[];
   spellcasting?: {
     ability?: string;
@@ -117,4 +145,21 @@ export interface CharacterSheet {
   updatedAt?: string;
 }
 
-// Определяем доступные классы и их подклассы
+// Требования для мультиклассирования
+export interface MulticlassRequirements {
+  [className: string]: { 
+    [ability: string]: number 
+  };
+}
+
+// Интерфейс для подклассов персонажей
+export interface CharacterSubclass {
+  name: string;
+  className: string;
+  description: string;
+  features: {
+    level: number;
+    name: string;
+    description: string;
+  }[];
+}

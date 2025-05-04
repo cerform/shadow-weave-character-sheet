@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet, ABILITY_SCORE_CAPS } from '@/types/character.d';
 import NavigationButtons from './NavigationButtons';
