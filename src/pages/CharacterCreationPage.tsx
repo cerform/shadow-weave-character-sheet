@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -131,9 +132,9 @@ const CharacterCreationPage = () => {
             abilitiesMethod={abilitiesMethod}
             setAbilitiesMethod={setAbilitiesMethod}
             diceResults={diceResults}
-            getModifier={getModifierString}
+            getModifier={getModifier}
             rollAllAbilities={rollAllAbilities}
-            rollSingleAbility={handleRollSingleAbility}
+            rollSingleAbility={rollSingleAbility}
             abilityScorePoints={adjustedAbilityScorePoints}
             isMagicClass={isMagicClass()}
             rollsHistory={rollsHistory}
