@@ -1,4 +1,3 @@
-
 export interface AbilityScores {
   STR: number;
   DEX: number;
@@ -13,6 +12,8 @@ export interface AbilityScores {
   intelligence: number;
   wisdom: number;
   charisma: number;
+  // Добавляем индексную сигнатуру для совместимости с компонентами
+  [key: string]: number;
 }
 
 export interface Proficiencies {
@@ -136,14 +137,15 @@ export interface ClassRequirement {
 // Типы для расовых особенностей и черт
 export interface RacialTraits {
   race: string;
-  abilityScoreIncrease: string | number; // Обновлено для поддержки строк и чисел
+  abilityScoreIncrease?: string | number; // Обновлено для поддержки строк и чисел
   abilityBonuses?: any; // Добавлено для поддержки данных в racial traits
-  age: string;
-  alignment: string;
-  size: string;
+  age?: string;
+  alignment?: string;
+  size?: string;
   speed: string | number; // Обновлено для поддержки строк и чисел
   languages: string[];
-  features: { name: string; description: string }[];
+  features?: { name: string; description: string }[];
+  traits?: { name: string; description: string }[]; // Добавлено для совместимости с существующими данными
 }
 
 // Типы для особенностей классов
@@ -195,7 +197,7 @@ export const ABILITY_SCORE_CAPS = {
   DEFAULT: 10, 
   MAX: 20,
   ABSOLUTE_MAX: 30,
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
+  BASE_CAP: 20,          // Добавлено для использования в компонентах
+  EPIC_CAP: 22,          // Добавлено для использования в компонентах
+  LEGENDARY_CAP: 24      // Добавлено для использования в компонентах
 };

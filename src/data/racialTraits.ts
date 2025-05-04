@@ -6,7 +6,7 @@ export const racialTraits: RacialTraits[] = [
     abilityBonuses: {
       CON: 2
     },
-    traits: [
+    features: [
       {
         name: "Тёмное зрение",
         description: "На расстоянии в 60 футов вы при тусклом освещении можете видеть так, как будто это яркое освещение, и в темноте так, как будто это тусклое освещение."
@@ -28,7 +28,7 @@ export const racialTraits: RacialTraits[] = [
     abilityBonuses: {
       DEX: 2
     },
-    traits: [
+    features: [
       {
         name: "Тёмное зрение",
         description: "На расстоянии в 60 футов вы при тусклом освещении можете видеть так, как будто это яркое освещение, и в темноте так, как будто это тусклое освещение."
@@ -55,7 +55,7 @@ export const racialTraits: RacialTraits[] = [
       WIS: 1,
       CHA: 1
     },
-    traits: [
+    features: [
       {
         name: "Разносторонность",
         description: "Вы получаете бонус +1 ко всем характеристикам."
@@ -69,7 +69,7 @@ export const racialTraits: RacialTraits[] = [
     abilityBonuses: {
       DEX: 2
     },
-    traits: [
+    features: [
       {
         name: "Везучий",
         description: "Если у вас выпало «1» на к20 при броске атаки, проверке характеристики или спасброске, вы можете перебросить кость, но должны использовать новый результат."
@@ -92,7 +92,7 @@ export const racialTraits: RacialTraits[] = [
       STR: 2,
       CHA: 1
     },
-    traits: [
+    features: [
       {
         name: "Наследие драконов",
         description: "У вас есть сопротивление к типу урона, соответствующему вашему драконьему происхождению."
@@ -110,7 +110,7 @@ export const racialTraits: RacialTraits[] = [
     abilityBonuses: {
       INT: 2
     },
-    traits: [
+    features: [
       {
         name: "Тёмное зрение",
         description: "На расстоянии в 60 футов вы при тусклом освещении можете видеть так, как будто это яркое освещение, и в темноте так, как будто это тусклое освещение."
@@ -128,7 +128,7 @@ export const racialTraits: RacialTraits[] = [
     abilityBonuses: {
       CHA: 2
     },
-    traits: [
+    features: [
       {
         name: "Наследие фей",
         description: "Вы совершаете с преимуществом спасброски от очарования, и магия не может усыпить вас."
@@ -152,7 +152,7 @@ export const racialTraits: RacialTraits[] = [
       STR: 2,
       CON: 1
     },
-    traits: [
+    features: [
       {
         name: "Тёмное зрение",
         description: "На расстоянии в 60 футов вы при тусклом освещении можете видеть так, как будто это яркое освещение, и в темноте так, как будто это тусклое освещение."
@@ -175,7 +175,7 @@ export const racialTraits: RacialTraits[] = [
       INT: 1,
       CHA: 2
     },
-    traits: [
+    features: [
       {
         name: "Тёмное зрение",
         description: "На расстоянии в 60 футов вы при тусклом освещении можете видеть так, как будто это яркое освещение, и в темноте так, как будто это тусклое освещение."

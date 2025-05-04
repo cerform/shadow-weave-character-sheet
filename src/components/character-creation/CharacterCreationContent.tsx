@@ -85,21 +85,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         );
       case 3: // Характеристики
         return (
-          <CharacterAbilityScores 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-            abilitiesMethod={abilitiesMethod}
-            setAbilitiesMethod={setAbilitiesMethod}
-            diceResults={diceResults}
-            getModifier={getModifier}
-            rollAllAbilities={rollAllAbilities}
-            rollSingleAbility={rollSingleAbility}
-            abilityScorePoints={abilityScorePoints}
-            rollsHistory={rollsHistory}
-            maxAbilityScore={maxAbilityScore}
-          />
+          <CharacterAbilityScores />
         );
       case 4: // Предыстория
         return (

@@ -1,24 +1,20 @@
-
-import { CharacterSpell } from '../../types/character';
+import { CharacterSpell } from "@/types/character";
 
 const cantrips: CharacterSpell[] = [
   {
     name: "Волшебная рука",
     level: 0,
     school: "Вызов",
-    castingTime: "1 действие",
-    range: "30 футов",
-    components: "В, С",
-    duration: "1 минута",
-    description: "Призрачная парящая рука, которая может манипулировать объектами, открывать незапертые двери и контейнеры, убирать или доставать предметы из открытых контейнеров и т.д. Рука не может атаковать, активировать магические предметы или переносить более 10 фунтов.",
+    description: "Призрачная парящая рука, которая манипулирует предметами по вашей команде",
     verbal: true,
     somatic: true,
     material: false,
-    materialComponents: "",
     prepared: false,
     ritual: false,
-    concentration: false,
-    classes: ["Бард", "Волшебник", "Колдун"]
+    castingTime: "1 действие",
+    range: "30 футов",
+    duration: "1 минута",
+    components: "В, С"
   },
   {
     name: "Малая иллюзия",
