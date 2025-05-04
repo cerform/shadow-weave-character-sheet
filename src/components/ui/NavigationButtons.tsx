@@ -36,18 +36,25 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     boxShadow: `0 0 5px ${currentTheme.accent}30`
   };
 
-  // Функция для навигации с предотвращением повторной навигации на ту же страницу
+  // Улучшенная функция для навигации с проверкой текущего маршрута
   const goTo = (path: string) => {
-    if (location.pathname !== path) {
-      navigate(path);
+    if (location.pathname === path) {
+      // Если мы уже на этой странице, ничего не делаем
+      return;
     }
+    
+    // Используем replace вместо push для предотвращения накопления истории браузера
+    navigate(path, { replace: true });
   };
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       <Button 
         variant="outline" 
-        onClick={() => goTo('/')}
+        onClick={(e) => {
+          e.preventDefault(); // Предотвращаем стандартное поведение
+          goTo('/');
+        }}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -58,7 +65,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => goTo('/handbook')}
+        onClick={(e) => {
+          e.preventDefault();
+          goTo('/handbook');
+        }}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -69,7 +79,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => goTo('/spellbook')}
+        onClick={(e) => {
+          e.preventDefault();
+          goTo('/spellbook');
+        }}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -82,7 +95,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={() => goTo('/dm/battle')}
+          onClick={(e) => {
+            e.preventDefault();
+            goTo('/dm/battle');
+          }}
           className="flex items-center gap-2 font-semibold"
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}
@@ -94,7 +110,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={() => goTo('/character-creation')}
+        onClick={(e) => {
+          e.preventDefault();
+          goTo('/character-creation');
+        }}
         className="flex items-center gap-2 font-semibold"
         size={isMobile ? "sm" : "default"}
         style={buttonStyle}
@@ -106,7 +125,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={() => goTo('/dm-dashboard')}
+          onClick={(e) => {
+            e.preventDefault();
+            goTo('/dm-dashboard');
+          }}
           className="flex items-center gap-2 font-semibold"
           size={isMobile ? "sm" : "default"}
           style={buttonStyle}

@@ -29,11 +29,26 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
+  // Оптимизированные обработчики для навигации
+  const handlePrevStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isFirstStep) {
+      prevStep();
+    }
+  };
+  
+  const handleNextStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isNextDisabled) {
+      nextStep();
+    }
+  };
+  
   return (
     <div className="flex justify-between pt-8 mt-2">
       <Button 
         variant="outline" 
-        onClick={prevStep}
+        onClick={handlePrevStep}
         disabled={isFirstStep}
         className={`
           flex items-center gap-2 px-4 py-2 
@@ -49,7 +64,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {!hideNextButton && (
         <Button 
           variant="default" 
-          onClick={nextStep}
+          onClick={handleNextStep}
           disabled={isNextDisabled}
           className={`
             flex items-center gap-2 px-4 py-2
