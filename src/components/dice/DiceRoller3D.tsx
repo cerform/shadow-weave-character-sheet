@@ -4,6 +4,7 @@ import { useGLTF, OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Button } from "@/components/ui/button";
 
 // Компонент кубика
 const Dice = ({ 

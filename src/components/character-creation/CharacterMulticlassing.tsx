@@ -7,7 +7,7 @@ import { ClassRequirement, MulticlassRequirements } from '@/types/character';
 // Правильно определяем требования к мультиклассированию согласно интерфейсу ClassRequirement
 const multiclassRequirements: MulticlassRequirements = {
   "Бард": {
-    abilities: { charisma: 13 }, // Исправление: используем объект с abilities вместо прямого объекта
+    abilities: { charisma: 13 },
     description: "Харизма 13 или выше"
   },
   "Варвар": {

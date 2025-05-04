@@ -18,7 +18,7 @@ interface ResourcePanelProps {
   isDM?: boolean;
 }
 
-const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
+export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
   const [currentHp, setCurrentHp] = useState(character?.currentHp || 0);
   const [maxHp, setMaxHp] = useState(character?.maxHp || 0);
   const [tempHp, setTempHp] = useState(character?.temporaryHp || 0);
@@ -132,7 +132,7 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps
     // Добавляем событие в лог
     const newEvent: HitPointEvent = {
       id: Math.random().toString(36).substring(2, 11),
-      type: 'healing', // Используем 'healing' вместо 'heal'
+      type: 'healing',
       amount: healingAmount,
       source: 'Кубики хитов',
       timestamp: new Date()
@@ -143,7 +143,7 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps
     // Показываем сообщение пользователю
     toast({
       title: "Восстановление хитов",
-      description: `Вы восстановили ${healingAmount} хитов, используя кубик хитов.`,
+      description: `Вы восстановили ${healingAmount} хитов, используя кубик хитов.`
     });
   };
   
