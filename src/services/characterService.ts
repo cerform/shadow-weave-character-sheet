@@ -1,352 +1,163 @@
 
-import { collection, doc, getDocs, getDoc, addDoc, setDoc, deleteDoc, query, where, serverTimestamp } from "firebase/firestore";
-import { db, auth } from "./firebase";
-import { Character } from "@/contexts/CharacterContext";
-import { getCurrentUid } from "@/utils/authHelpers";
-import { toast } from "sonner";
+import { CharacterSheet } from '@/types/character';
+import { db, auth } from './firebase';
+import { collection, addDoc, updateDoc, deleteDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
-// Коллекция персонажей в Firestore
-const charactersCollection = collection(db, "characters");
+// Получение коллекции персонажей
+const getCharactersCollection = () => {
+  return collection(db, 'characters');
+};
 
-/**
- * Сервис для работы с персонажами в Firestore
- */
-export const characterService = {
-  /**
-   * Получение всех персонажей текущего пользователя
-   * @returns Список персонажей
-   */
-  async getCharacters(): Promise<Character[]> {
-    try {
-      const uid = getCurrentUid();
-      console.log("Получение персонажей для пользователя:", uid || "не авторизован");
-      
-      if (!uid) {
-        console.info("Пользователь не авторизован, загружаем локальных персонажей");
-        // Возвращаем персонажей из локального хранилища
-        const savedCharacters = localStorage.getItem('dnd-characters');
-        if (savedCharacters) {
-          const parsed = JSON.parse(savedCharacters);
-          console.log(`Загружено ${parsed.length} персонажей из локального хранилища`);
-          return parsed;
-        }
-        return [];
-      }
-      
-      // Запрашиваем персонажей у которых userId = текущему пользователю
-      const q = query(charactersCollection, where("userId", "==", uid));
-      const snapshot = await getDocs(q);
-      
-      const characters = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      } as Character));
-      
-      console.log(`Загружено ${characters.length} персонажей из Firestore`);
-      
-      // Если персонажей из Firestore нет, пробуем локальное хранилище
-      if (characters.length === 0) {
-        const savedCharacters = localStorage.getItem('dnd-characters');
-        if (savedCharacters) {
-          const localChars = JSON.parse(savedCharacters);
-          console.log(`Загружено ${localChars.length} персонажей из локального хранилища`);
-          
-          // Синхронизируем локальных персонажей с Firestore
-          if (localChars.length > 0) {
-            console.log("Синхронизируем локальных персонажей с Firestore...");
-            for (const char of localChars) {
-              try {
-                await this.saveCharacter({...char, userId: uid});
-              } catch (e) {
-                console.error("Ошибка синхронизации персонажа:", e);
-              }
-            }
-          }
-          
-          return localChars;
-        }
-      }
-      
-      return characters;
-    } catch (error) {
-      console.error("Ошибка при получении персонажей:", error);
-      
-      // Пробуем взять из localStorage при ошибке
-      try {
-        const savedCharacters = localStorage.getItem('dnd-characters');
-        if (savedCharacters) {
-          console.log("Используем локальных персонажей из-за ошибки Firestore");
-          return JSON.parse(savedCharacters);
-        }
-      } catch (_) {}
-      
-      toast.error("Не удалось загрузить персонажей");
-      return [];
-    }
-  },
-
-  /**
-   * Сохранение персонажа в Firestore
-   * @param char Данные персонажа
-   * @returns true при успешном сохранении, иначе false
-   */
-  async saveCharacter(char: Character): Promise<boolean> {
-    try {
-      const uid = getCurrentUid();
-      console.log("Сохранение персонажа для пользователя:", uid || "не авторизован");
-      
-      // Устанавливаем или обновляем userId персонажа
-      const characterData = {
-        ...char,
-        userId: uid || char.userId,
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Если не авторизован, сохраняем только локально
-      if (!uid) {
-        console.warn("Пользователь не авторизован, сохраняем персонажа только локально");
-        
-        // Сохраняем в localStorage
-        const savedCharacters = localStorage.getItem('dnd-characters') || '[]';
-        const characters = JSON.parse(savedCharacters);
-        
-        if (characterData.id) {
-          // Обновляем существующего персонажа
-          const index = characters.findIndex((c: Character) => c.id === characterData.id);
-          if (index !== -1) {
-            characters[index] = characterData;
-          } else {
-            characters.push(characterData);
-          }
-        } else {
-          // Создаем нового персонажа с уникальным ID
-          characterData.id = crypto.randomUUID();
-          characterData.createdAt = new Date().toISOString();
-          characters.push(characterData);
-        }
-        
-        localStorage.setItem('dnd-characters', JSON.stringify(characters));
-        console.log(`Персонаж ${characterData.name} сохранен локально с ID ${characterData.id}`);
-        return true;
-      }
-      
-      // Если у персонажа уже есть ID, обновляем его
-      if (characterData.id) {
-        console.log(`Обновляем персонажа ${characterData.name} с ID ${characterData.id}`);
-        const docRef = doc(db, "characters", characterData.id);
-        await setDoc(docRef, characterData, { merge: true });
-        console.log(`Персонаж ${characterData.name} обновлен в Firestore`);
-        
-        // Также обновляем в локальном хранилище
-        this.updateLocalCharacter(characterData);
-        
-        return true;
-      } 
-      // Иначе создаем нового персонажа
-      else {
-        // Добавляем дату создания
-        characterData.createdAt = new Date().toISOString();
-        console.log(`Создаем нового персонажа ${characterData.name}`);
-        
-        const docRef = await addDoc(charactersCollection, characterData);
-        const newCharacter = { 
-          ...characterData, 
-          id: docRef.id 
-        };
-        
-        console.log(`Персонаж ${newCharacter.name} создан в Firestore с ID ${docRef.id}`);
-        
-        // Также добавляем в локальное хранилище
-        this.updateLocalCharacter(newCharacter);
-        
-        return true;
-      }
-    } catch (error) {
-      console.error("Ошибка при сохранении персонажа:", error);
-      
-      // Пытаемся сохранить локально при ошибке
-      try {
-        this.updateLocalCharacter(char);
-        console.log("Персонаж сохранен только локально из-за ошибки Firestore");
-        return true;
-      } catch (localError) {
-        console.error("Не удалось сохранить персонажа даже локально:", localError);
-      }
-      
-      toast.error("Не удалось сохранить персонажа");
-      return false;
-    }
-  },
-
-  /**
-   * Получение персонажа по ID
-   * @param id ID персонажа
-   * @returns Персонаж или null, если не найден
-   */
-  async getCharacterById(id: string): Promise<Character | null> {
-    try {
-      console.log(`Поиск персонажа с ID ${id}`);
-      
-      // Проверяем в Firestore
-      const docRef = doc(db, "characters", id);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = { id: docSnap.id, ...docSnap.data() } as Character;
-        console.log(`Персонаж ${data.name} найден в Firestore`);
-        return data;
-      } else {
-        console.log(`Персонаж с ID ${id} не найден в Firestore`);
-      }
-      
-      // Если не найден в Firestore, проверяем localStorage
+// Сохранение персонажа в Firestore
+const saveCharacter = async (character: CharacterSheet) => {
+  try {
+    // Получаем текущего пользователя
+    const user = auth.currentUser;
+    if (!user && !character.userId) {
+      console.log('Сохранение без авторизации, только в локальном хранилище');
+      // Сохраняем только локально
       const savedCharacters = localStorage.getItem('dnd-characters');
-      if (savedCharacters) {
-        const characters = JSON.parse(savedCharacters);
-        const localChar = characters.find((c: Character) => c.id === id);
-        if (localChar) {
-          console.log(`Персонаж ${localChar.name} найден в localStorage`);
-          return localChar;
-        }
-      }
+      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
       
-      console.log(`Персонаж с ID ${id} не найден`);
-      return null;
-    } catch (error) {
-      console.error("Ошибка при получении персонажа:", error);
+      // Генерируем ID, если его нет
+      const characterId = character.id || uuidv4();
+      character.id = characterId;
       
-      // Пытаемся найти в localStorage при ошибке
-      try {
-        const savedCharacters = localStorage.getItem('dnd-characters');
-        if (savedCharacters) {
-          const characters = JSON.parse(savedCharacters);
-          const localChar = characters.find((c: Character) => c.id === id);
-          if (localChar) {
-            console.log(`Персонаж ${localChar.name} найден в localStorage (при ошибке Firestore)`);
-            return localChar;
-          }
-        }
-      } catch (_) {}
+      // Если персонаж с таким ID уже существует, заменяем его
+      const existingIndex = characters.findIndex((c: any) => c.id === characterId);
       
-      toast.error("Не удалось загрузить персонажа");
-      return null;
-    }
-  },
-
-  /**
-   * Удаление персонажа
-   * @param id ID персонажа
-   * @returns true при успешном удалении, иначе false
-   */
-  async deleteCharacter(id: string): Promise<boolean> {
-    try {
-      // Удаляем из localStorage
-      this.removeLocalCharacter(id);
-      
-      const uid = getCurrentUid();
-      if (!uid) {
-        console.warn("Пользователь не авторизован, персонаж удален только локально");
-        return true;
-      }
-      
-      // Удаляем из Firestore
-      await deleteDoc(doc(db, "characters", id));
-      console.log(`Персонаж с ID ${id} удален из Firestore`);
-      
-      return true;
-    } catch (error) {
-      console.error("Ошибка при удалении персонажа:", error);
-      
-      // Удаляем только из localStorage при ошибке
-      try {
-        this.removeLocalCharacter(id);
-        console.log(`Персонаж с ID ${id} удален только локально из-за ошибки Firestore`);
-        return true;
-      } catch (localError) {
-        console.error("Не удалось удалить персонажа даже локально:", localError);
-      }
-      
-      toast.error("Не удалось удалить персонажа");
-      return false;
-    }
-  },
-  
-  /**
-   * Обновление персонажа в локальном хранилище
-   */
-  updateLocalCharacter(character: Character): void {
-    if (!character.id) return;
-    
-    try {
-      const savedCharacters = localStorage.getItem('dnd-characters') || '[]';
-      const characters = JSON.parse(savedCharacters);
-      
-      const index = characters.findIndex((c: Character) => c.id === character.id);
-      if (index !== -1) {
-        characters[index] = character;
+      if (existingIndex >= 0) {
+        characters[existingIndex] = { ...character, updatedAt: new Date().toISOString() };
       } else {
-        characters.push(character);
+        characters.push({ ...character, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       }
       
       localStorage.setItem('dnd-characters', JSON.stringify(characters));
-    } catch (error) {
-      console.error("Ошибка при обновлении локального персонажа:", error);
+      return character;
     }
-  },
-  
-  /**
-   * Удаление персонажа из локального хранилища
-   */
-  removeLocalCharacter(id: string): void {
-    try {
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      if (savedCharacters) {
-        const characters = JSON.parse(savedCharacters);
-        const filtered = characters.filter((c: Character) => c.id !== id);
-        localStorage.setItem('dnd-characters', JSON.stringify(filtered));
-        console.log(`Персонаж с ID ${id} удален из localStorage`);
-      }
-    } catch (error) {
-      console.error("Ошибка при удалении локального персонажа:", error);
+    
+    // Если есть авторизованный пользователь, сохраняем в Firestore
+    if (character.id) {
+      // Обновляем существующий документ
+      const characterRef = doc(db, 'characters', character.id);
+      await updateDoc(characterRef, { ...character, updatedAt: new Date().toISOString() });
+      return character;
+    } else {
+      // Создаем новый документ
+      const characterData = {
+        ...character,
+        userId: user?.uid,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      const docRef = await addDoc(getCharactersCollection(), characterData);
+      return { ...characterData, id: docRef.id };
     }
-  },
-  
-  /**
-   * Очистка всех персонажей пользователя
-   */
-  async clearAllCharacters(): Promise<boolean> {
-    try {
-      // Очистка localStorage
-      localStorage.setItem('dnd-characters', '[]');
-      
-      const uid = getCurrentUid();
-      if (!uid) {
-        console.warn("Пользователь не авторизован, персонажи очищены только локально");
-        return true;
-      }
-      
-      // Получаем всех персонажей пользователя из Firestore
-      const q = query(charactersCollection, where("userId", "==", uid));
-      const snapshot = await getDocs(q);
-      
-      // Удаляем каждого персонажа
-      const deletePromises = snapshot.docs.map(doc => 
-        deleteDoc(doc.ref)
-      );
-      
-      await Promise.all(deletePromises);
-      console.log(`Удалено ${snapshot.docs.length} персонажей из Firestore`);
-      
-      return true;
-    } catch (error) {
-      console.error("Ошибка при удалении всех персонажей:", error);
-      toast.error("Не удалось удалить всех персонажей");
-      return false;
-    }
+  } catch (error) {
+    console.error('Ошибка при сохранении персонажа:', error);
+    return null;
   }
 };
 
-/**
- * Метод для экспорта сервиса
- */
-export default characterService;
+// Получение персонажа по ID
+const getCharacterById = async (id: string) => {
+  try {
+    // Проверяем локальное хранилище
+    const savedCharacters = localStorage.getItem('dnd-characters');
+    if (savedCharacters) {
+      const characters = JSON.parse(savedCharacters);
+      const localCharacter = characters.find((c: any) => c.id === id);
+      if (localCharacter) {
+        return localCharacter as CharacterSheet;
+      }
+    }
+    
+    // Если персонажа нет в локальном хранилище, проверяем Firestore
+    const characterRef = doc(db, 'characters', id);
+    const characterSnap = await getDoc(characterRef);
+    
+    if (characterSnap.exists()) {
+      return { id: characterSnap.id, ...characterSnap.data() } as CharacterSheet;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Ошибка при получении персонажа:', error);
+    return null;
+  }
+};
+
+// Получение всех персонажей текущего пользователя
+const getCharacters = async () => {
+  try {
+    const user = auth.currentUser;
+    let characters: CharacterSheet[] = [];
+    
+    // Получаем персонажей из локального хранилища
+    const savedCharacters = localStorage.getItem('dnd-characters');
+    if (savedCharacters) {
+      const localCharacters = JSON.parse(savedCharacters);
+      characters = [...localCharacters];
+    }
+    
+    // Если пользователь авторизован, получаем персонажей из Firestore
+    if (user) {
+      const q = query(getCharactersCollection(), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      
+      // Объединяем с персонажами из Firestore, избегая дубликатов
+      querySnapshot.forEach((doc) => {
+        const firestoreCharacter = { id: doc.id, ...doc.data() } as CharacterSheet;
+        
+        // Проверяем, есть ли персонаж с таким ID уже в массиве
+        const existingIndex = characters.findIndex(c => c.id === firestoreCharacter.id);
+        if (existingIndex >= 0) {
+          // Если есть, заменяем его
+          characters[existingIndex] = firestoreCharacter;
+        } else {
+          // Если нет, добавляем новый
+          characters.push(firestoreCharacter);
+        }
+      });
+    }
+    
+    return characters;
+  } catch (error) {
+    console.error('Ошибка при получении персонажей:', error);
+    return [];
+  }
+};
+
+// Удаление персонажа
+const deleteCharacter = async (id: string) => {
+  try {
+    // Удаляем из локального хранилища
+    const savedCharacters = localStorage.getItem('dnd-characters');
+    if (savedCharacters) {
+      let characters = JSON.parse(savedCharacters);
+      characters = characters.filter((c: any) => c.id !== id);
+      localStorage.setItem('dnd-characters', JSON.stringify(characters));
+    }
+    
+    // Удаляем из Firestore, если пользователь авторизован
+    const user = auth.currentUser;
+    if (user) {
+      const characterRef = doc(db, 'characters', id);
+      await deleteDoc(characterRef);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Ошибка при удалении персонажа:', error);
+    return false;
+  }
+};
+
+export default {
+  getCharacters,
+  getCharacterById,
+  saveCharacter,
+  deleteCharacter
+};

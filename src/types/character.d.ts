@@ -1,9 +1,10 @@
+
 export interface CharacterSpell {
   id?: number;
   name: string;
   level: number;
   description: string;
-  school: string;  // Теперь обязательное поле
+  school: string;
   castingTime?: string;
   range?: string;
   components?: string;
@@ -14,9 +15,11 @@ export interface CharacterSpell {
   somatic?: boolean;
   material?: boolean;
   higherLevels?: string;
-  classes?: string[];
-  ritual?: boolean;  // Добавляем поле ritual
-  concentration?: boolean;  // Добавляем поле concentration
+  classes?: string[] | string;
+  ritual?: boolean;
+  concentration?: boolean;
+  // Добавляем свойство для корректной работы с отображением заклинаний
+  toString?: () => string;
 }
 
 export interface ClassFeature {
@@ -76,12 +79,12 @@ export interface CharacterSheet {
     WIS: number;
     CHA: number;
     // Для обратной совместимости добавляем новые имена
-    strength?: number;
-    dexterity?: number;
-    constitution?: number;
-    intelligence?: number;
-    wisdom?: number;
-    charisma?: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
   };
   stats?: {
     strength: number;
@@ -169,4 +172,68 @@ export interface CharacterSubclass {
     name: string;
     description: string;
   }[];
+}
+
+// Расширяем интерфейс для Character в контексте персонажей
+export interface Character {
+  id?: string;
+  userId?: string;
+  name: string;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string;
+  subclass?: string;
+  level: number;
+  abilities: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  proficiencies: string[];
+  equipment: string[];
+  spells: string[];
+  languages: string[];
+  gender: string;
+  alignment: string;
+  background: string;
+  backstory: string;  // Добавляем обязательное поле
+  appearance?: string;  // Добавляем
+  personalityTraits?: string;  // Добавляем
+  ideals?: string;  // Добавляем
+  bonds?: string;  // Добавляем
+  flaws?: string;  // Добавляем
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    value: string;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
 }

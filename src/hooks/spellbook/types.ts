@@ -49,5 +49,5 @@ export interface UseSpellbookReturn {
   getBadgeColor: (level: number) => string;
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  importSpellsFromText: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }

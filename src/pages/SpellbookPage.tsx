@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { default as SpellBookViewer } from '@/components/spellbook/SpellBookViewer';
+import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 

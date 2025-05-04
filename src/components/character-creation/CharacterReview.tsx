@@ -31,7 +31,6 @@ import { getModifierFromAbilityScore } from '@/utils/characterUtils';
 import NavigationButtons from './NavigationButtons';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { isOfflineMode } from '@/utils/authHelpers';
-import { CharacterSpell } from '@/types/character';
 
 interface CharacterReviewProps {
   character: CharacterSheet;
@@ -252,11 +251,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
     navigate("/create-session");
   };
 
-  // Вспомогательная функция для безопасной проверки заклинаний
-  const isSpellMatchingType = (spell: any, type: string): boolean => {
-    if (!spell || !spell.name) return false;
-    const spellName = spell.name.toLowerCase();
-    return spellName.includes(type.toLowerCase());
+  // Вспомогательная функция для безопасного отображения заклинаний как строк
+  const renderSpellAsString = (spell: any): string => {
+    if (!spell) return "";
+    if (typeof spell === 'string') return spell;
+    if (typeof spell === 'object' && spell.name) return spell.name;
+    return String(spell);
   };
 
   // Выводим информацию по вкладкам для лучшей организации
@@ -708,7 +708,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                         {character.race === "Гном" && "Тёмное зрение 60 футов, Гномья хитрость, Природная иллюзия"}
                         {character.race === "Полуэльф" && "Тёмное зрение 60 футов, Наследие фей, Универсальность"}
                         {character.race === "Полуорк" && "Тёмное зрение 60 футов, Грозный, Неукротимость, Дикие атаки"}
-                        {character.race === "Тифлинг" && "Тёмное зрение 60 футов, Адское сопротивление, Дьявольское наследие"}
+                        {character.race === "Тифлинг" && "Тёмное зрение 60 ф��тов, Адское сопротивление, Дьявольское наследие"}
                         {!["Эльф", "Дварф", "Человек", "Полурослик", "Драконорождённый", "Гном", "Полуэльф", "Полуорк", "Тифлинг"].includes(character.race || "") && 
                           "Информация о расовых особенностях будет добавлена при сохранении персонажа"
                         }
@@ -741,7 +741,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                         {character.class === "Паладин" && character.level >= 2 && ", Божественный удар, Божественная защита"}
                         {character.class === "Плут" && character.level >= 1 && "Компетентность, Скрытая атака, Воровской жаргон"}
                         {character.class === "Плут" && character.level >= 2 && ", Хитрое действие"}
-                        {character.class === "Следопыт" && character.level >= 1 && "Избранный враг, Исследователь природы"}
+                        {character.class === "Следопыт" && character.level >= 1 && "Избранный враг, Иссл��дователь природы"}
                         {character.class === "Следопыт" && character.level >= 2 && ", Боевой стиль"}
                         {!["Воин", "Варвар", "Жрец", "Бард", "Волшебник", "Паладин", "Плут", "Следопыт"].includes(character.class || "") && 
                           "Информация о классовых особенностях будет добавлена при сохранении персонажа"
@@ -941,106 +941,72 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                 <div className="space-y-4">
                   {/* Заговоры */}
                   <div>
-                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заговоры</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <h4 className="font-medium mb-2">Заговоры (0 уровень)</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {character.spells.filter(spell => 
-                        isSpellMatchingType(spell, 'заговор') || 
-                        isSpellMatchingType(spell, 'уровень 0')
+                        spell && typeof spell === 'object' && spell.level === 0
                       ).map((spell, index) => (
-                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
-                          <span className="text-sm">{spell}</span>
+                        <div key={index} className="py-1 px-2 bg-primary/5 rounded">
+                          {renderSpellAsString(spell)}
                         </div>
                       ))}
-                      
-                      {character.spells.filter(spell => 
-                        isSpellMatchingType(spell, 'заговор') || 
-                        isSpellMatchingType(spell, 'уровень 0')
-                      ).length === 0 && (
-                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
-                          Нет выбранных заговоров
-                        </div>
-                      )}
                     </div>
                   </div>
                   
                   {/* Заклинания 1 уровня */}
                   <div>
-                    <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 1 уровня</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <h4 className="font-medium mb-2">Заклинания 1 уровня</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {character.spells.filter(spell => 
-                        isSpellMatchingType(spell, 'уровень 1') || 
-                        isSpellMatchingType(spell, '1 уровень')
+                        spell && typeof spell === 'object' && spell.level === 1
                       ).map((spell, index) => (
-                        <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
-                          <span className="text-sm">{spell}</span>
+                        <div key={index} className="py-1 px-2 bg-primary/5 rounded">
+                          {renderSpellAsString(spell)}
                         </div>
                       ))}
-                      
-                      {character.spells.filter(spell => 
-                        isSpellMatchingType(spell, 'уровень 1') || 
-                        isSpellMatchingType(spell, '1 уровень')
-                      ).length === 0 && (
-                        <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
-                          Нет заклинаний 1 уровня
-                        </div>
-                      )}
                     </div>
                   </div>
                   
                   {/* Заклинания 2 уровня */}
                   {character.level >= 3 && (
                     <div>
-                      <h4 className="font-medium border-b border-primary/10 pb-2 mb-2">Заклинания 2 уровня</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      <h4 className="font-medium mb-2">Заклинания 2 уровня</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {character.spells.filter(spell => 
-                          isSpellMatchingType(spell, 'уровень 2') || 
-                          isSpellMatchingType(spell, '2 уровень')
+                          spell && typeof spell === 'object' && spell.level === 2
                         ).map((spell, index) => (
-                          <div key={index} className="py-1.5 px-3 bg-card/10 rounded-md border border-primary/10">
-                            <span className="text-sm">{spell}</span>
+                          <div key={index} className="py-1 px-2 bg-primary/5 rounded">
+                            {renderSpellAsString(spell)}
                           </div>
                         ))}
-                        
-                        {character.spells.filter(spell => 
-                          isSpellMatchingType(spell, 'уровень 2') || 
-                          isSpellMatchingType(spell, '2 уровень')
-                        ).length === 0 && (
-                          <div className="py-1.5 px-3 bg-card/30 rounded-md text-muted-foreground text-sm col-span-full">
-                            Нет заклинаний 2 уровня
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}
+                  
+                  {/* Заклинания 3+ уровня */}
+                  {[3, 4, 5, 6, 7, 8, 9].map(level => {
+                    const spellsOfLevel = character.spells.filter(spell => 
+                      spell && typeof spell === 'object' && spell.level === level
+                    );
+                    
+                    if (spellsOfLevel.length === 0) return null;
+                    
+                    return (
+                      <div key={level}>
+                        <h4 className="font-medium mb-2">Заклинания {level} уровня</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {spellsOfLevel.map((spell, index) => (
+                            <div key={index} className="py-1 px-2 bg-primary/5 rounded">
+                              {renderSpellAsString(spell)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="py-4 text-center">
-                  {character.class && ["Волшебник", "Жрец", "Бард", "Чародей", "Колдун", "Паладин", "Следопыт", "Друид"].includes(character.class) ? (
-                    <>
-                      <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
-                      <p className="text-sm">
-                        Вы не выб��али за��линания. Рекомендуем вернуться к шагу выбора заклинаний.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="mt-3"
-                        style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}
-                        onClick={() => goToStep(8)}
-                      >
-                        <Edit className="mr-1 size-3.5" />
-                        Выбрать заклинания
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Info className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Заклинания недоступны для вашего класса или не выбраны.
-                      </p>
-                    </>
-                  )}
-                </div>
+                <p className="text-muted-foreground">Нет известных заклинаний</p>
               )}
             </Card>
           </TabsContent>
@@ -1052,11 +1018,11 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           <div className="flex justify-between md:justify-start items-center gap-4 flex-1">
             <Button
               onClick={prevStep}
-              variant="outline"
-              className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
+              variant="ghost"
+              className="flex items-center gap-2"
             >
-              {/* Back button */}
-              <ArrowLeft className="size-4" /> Назад
+              <ArrowLeft className="size-4" />
+              Назад
             </Button>
             
             {/* Если пользователь Мастер, показываем кнопку создания сессии */}
@@ -1098,44 +1064,41 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Сохранение персонажа</DialogTitle>
+            <DialogTitle>Сохранить персонажа?</DialogTitle>
             <DialogDescription>
-              Проверьте данные персонажа перед сохранением.
+              Персонаж будет сохранен и станет доступен для игры в разделе "Мои персонажи".
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
-            <p className="mb-4">
-              Вы создали персонажа <strong>{character.name || "без имени"}</strong>:{' '}
-              {character.race} {character.class}, {character.level} уровень.
+            <p className="text-center">
+              <span className="font-semibold">{character.name}</span> 
+              {character.race && <>, {character.race}</>} 
+              {character.class && <>, {character.class} {character.level}</>}
             </p>
-            
-            {(!character.name || !character.name.trim()) && (
-              <p className="text-red-500 mb-2 text-sm">
-                ⚠️ Персонаж не имеет имени. Рекомендуется указать имя.
-              </p>
-            )}
-            
-            {(!character.maxHp || character.maxHp <= 0) && (
-              <p className="text-red-500 mb-2 text-sm">
-                ⚠️ Не рассчитаны хиты персонажа.
-              </p>
-            )}
           </div>
           
           <DialogFooter>
-            <Button
-              variant="outline"
+            <Button 
+              variant="outline" 
               onClick={() => setSaveDialogOpen(false)}
+              disabled={isSaving}
             >
               Отмена
             </Button>
-            <Button
+            <Button 
               onClick={saveCharacter}
               disabled={isSaving}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white"
+              className="flex items-center gap-2"
             >
-              {isSaving ? "Сохранение..." : "Подтвердить сохранение"}
+              {isSaving ? (
+                <>Сохранение...</>
+              ) : (
+                <>
+                  <Save className="size-4" />
+                  Сохранить
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

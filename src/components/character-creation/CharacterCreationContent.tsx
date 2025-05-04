@@ -105,9 +105,12 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         return (
           <CharacterBackground 
             character={{ 
-              ...character, 
               background: character.background || "", 
-              backstory: character.backstory || "" 
+              backstory: character.backstory || "",
+              personalityTraits: character.personalityTraits || "",
+              ideals: character.ideals || "",
+              bonds: character.bonds || "",
+              flaws: character.flaws || ""
             }}
             updateCharacter={updateCharacter}
             nextStep={nextStep}

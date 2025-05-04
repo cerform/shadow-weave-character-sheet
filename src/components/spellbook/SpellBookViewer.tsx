@@ -4,19 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { useSpellbook } from '@/hooks/spellbook';
+import { useSpellbook, importSpellsFromText } from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';
+import { CharacterSpell } from '@/types/character';
 import { getAllSpells } from '@/data/spells'; // Правильный импорт
 
 // fix для импорта модуля с заклинаниями
@@ -48,61 +41,48 @@ const SpellBookViewer: React.FC = () => {
     clearFilters,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses,
-    importSpellsFromText
+    formatClasses
   } = useSpellbook();
   
   const [importText, setImportText] = useState('');
-  const [importedSpells, setImportedSpells] = useState<SpellData[]>([]);
+  const [importedSpells, setImportedSpells] = useState<CharacterSpell[]>([]);
   
   const handleImportChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setImportText(e.target.value);
   };
   
   const handleImportSpells = () => {
-    if (importSpellsFromText) {
-      // Преобразуем CharacterSpell[] в SpellData[]
-      const convertedSpells: SpellData[] = filteredSpells.map(spell => ({
-        ...spell,
-        school: spell.school || "Преобразование", // Добавляем школу, если её нет
-        castingTime: spell.castingTime || "1 действие",
-        range: spell.range || "60 футов",
-        components: spell.components || "В, С",
-        duration: spell.duration || "Мгновенно"
-      }));
-      
-      const newSpells = importSpellsFromText(importText, convertedSpells);
+    try {
+      // Используем импортированную функцию напрямую
+      const newSpells = importSpellsFromText(importText, []);
       
       if (newSpells && newSpells.length > 0) {
-        // Преобразуем CharacterSpell[] в SpellData[]
-        const convertedNewSpells: SpellData[] = newSpells.map(spell => ({
-          ...spell,
-          school: spell.school || "Преобразование", // Добавляем школу, если её нет
-          castingTime: spell.castingTime || "1 действие",
-          range: spell.range || "60 футов",
-          components: spell.components || "В, С",
-          duration: spell.duration || "Мгновенно"
-        }));
-        
-        setImportedSpells(convertedNewSpells);
+        setImportedSpells(newSpells);
       }
+    } catch (error) {
+      console.error("Ошибка при импорте заклинаний:", error);
     }
   };
 
-  // Конвертируем CharacterSpell[] в SpellData[]
-  const convertSpellsToSpellData = (spells: any[]): SpellData[] => {
-    return spells.map(spell => ({
-      ...spell,
-      school: spell.school || "Преобразование", // Добавляем школу, если её нет
+  // Конвертируем CharacterSpell[] в SpellData[] с обязательными полями
+  const convertToSafeSpellData = (spell: CharacterSpell): SpellData => {
+    return {
+      name: spell.name,
+      level: spell.level,
+      description: spell.description,
+      school: spell.school || "Преобразование",
       castingTime: spell.castingTime || "1 действие",
       range: spell.range || "60 футов",
       components: spell.components || "В, С",
-      duration: spell.duration || "Мгновенно"
-    }));
+      duration: spell.duration || "Мгновенно",
+      classes: spell.classes,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+    };
   };
 
   // При использовании:
-  const spellsAsSpellData: SpellData[] = convertSpellsToSpellData(spells || []);
+  const spellsAsSpellData: SpellData[] = (spells || []).map(convertToSafeSpellData);
 
   return (
     <div className="container py-4">

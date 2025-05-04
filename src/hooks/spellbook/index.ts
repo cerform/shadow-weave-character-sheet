@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -13,11 +14,11 @@ import {
   isStringArray
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
-import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
+import { importSpellsFromText } from './importUtils';
 import { CharacterSpell } from '@/types/character';
 
 export * from './types';
-export { importSpellsFromTextUtil as importSpellsFromText };
+export { importSpellsFromText };
 
 export const useSpellbook = (): UseSpellbookReturn => {
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
@@ -111,12 +112,8 @@ export const useSpellbook = (): UseSpellbookReturn => {
     setSearchTerm('');
   };
 
-  const importSpells = (textData: string) => {
-    // Этот метод будет обновлять данные в data/spells
-  };
-
   const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
-  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
+  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school || "Преобразование"))).sort();
 
   return {
     filteredSpells,
@@ -140,6 +137,6 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText: importSpellsFromTextUtil
+    importSpellsFromText
   };
 };
