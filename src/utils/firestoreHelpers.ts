@@ -1,3 +1,4 @@
+
 import { db, auth } from "@/services/firebase";
 import {
   collection,
@@ -190,8 +191,7 @@ export const removeCharacterFromUser = async (uid: string, characterId: string) 
  */
 export const saveCharacterToFirestore = async (character: Character) => {
   try {
-    const savedCharacter = await characterService.saveCharacter(character);
-    return !!savedCharacter;
+    return await characterService.saveCharacter(character);
   } catch (error) {
     console.error('Ошибка при сохранении персонажа:', error);
     return false;

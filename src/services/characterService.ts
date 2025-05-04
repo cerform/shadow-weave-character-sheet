@@ -70,9 +70,9 @@ export const characterService = {
   /**
    * Сохранение персонажа в Firestore
    * @param char Данные персонажа
-   * @returns Сохраненный персонаж или null при ошибке
+   * @returns true при успешном сохранении, иначе false
    */
-  async saveCharacter(char: Character): Promise<Character | null> {
+  async saveCharacter(char: Character): Promise<boolean> {
     try {
       const uid = getCurrentUid();
       
@@ -107,7 +107,7 @@ export const characterService = {
         }
         
         localStorage.setItem('dnd-characters', JSON.stringify(characters));
-        return characterData;
+        return true;
       }
       
       // Если у персонажа уже есть ID, обновляем его
@@ -119,7 +119,7 @@ export const characterService = {
         // Также обновляем в локальном хранилище
         this.updateLocalCharacter(characterData);
         
-        return characterData;
+        return true;
       } 
       // Иначе создаем нового персонажа
       else {
@@ -137,7 +137,7 @@ export const characterService = {
         // Также добавляем в локальное хранилище
         this.updateLocalCharacter(newCharacter);
         
-        return newCharacter;
+        return true;
       }
     } catch (error) {
       console.error("Ошибка при сохранении персонажа:", error);
@@ -146,13 +146,13 @@ export const characterService = {
       try {
         this.updateLocalCharacter(char);
         console.log("Персонаж сохранен только локально из-за ошибки Firestore");
-        return char;
+        return true;
       } catch (localError) {
         console.error("Не удалось сохранить персонажа даже локально:", localError);
       }
       
       toast.error("Не удалось сохранить персонажа");
-      return null;
+      return false;
     }
   },
 
