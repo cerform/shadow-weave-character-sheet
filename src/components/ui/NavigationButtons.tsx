@@ -1,43 +1,90 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { BookOpen, Scroll, Map, Users, Book } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useDeviceType } from '@/hooks/use-mobile';
+import HomeButton from '@/components/navigation/HomeButton';
+import { Link } from 'react-router-dom';
 
-export interface NavigationButtonsProps {
-  prevStep: () => void;
-  nextStep: () => void;
-  prevLabel?: string;
-  nextLabel?: string;
-  disableNext?: boolean;
-  allowNext?: boolean;
-  nextDisabled?: boolean; // Явно добавляем свойство nextDisabled
+interface NavigationButtonsProps {
+  className?: string;
 }
 
-const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  prevStep,
-  nextStep,
-  prevLabel = "Назад",
-  nextLabel = "Далее",
-  disableNext = false,
-  allowNext = true,
-  nextDisabled // Поддерживаем свойство nextDisabled
-}) => {
-  // Используем nextDisabled, если он передан, иначе используем логику disableNext || !allowNext
-  const isNextDisabled = nextDisabled !== undefined ? nextDisabled : (disableNext || !allowNext);
+export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
+  const { currentUser } = useAuth();
+  const isDM = currentUser?.isDM;
+  
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
   
   return (
-    <div className="flex justify-between mt-4">
+    <div className={`flex flex-wrap gap-2 ${className}`}>
+      <HomeButton />
+      
       <Button 
         variant="outline" 
-        onClick={prevStep}
+        className="flex items-center gap-2"
+        size={isMobile ? "sm" : "default"}
+        asChild
       >
-        {prevLabel}
+        <Link to="/handbook">
+          <BookOpen className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile && "Руководство игрока"}
+        </Link>
       </Button>
+      
       <Button 
-        onClick={nextStep}
-        disabled={isNextDisabled}
+        variant="outline" 
+        className="flex items-center gap-2"
+        size={isMobile ? "sm" : "default"}
+        asChild
       >
-        {nextLabel}
+        <Link to="/spellbook">
+          <Scroll className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile && "Книга заклинаний"}
+        </Link>
       </Button>
+      
+      {isDM && (
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          size={isMobile ? "sm" : "default"}
+          asChild
+        >
+          <Link to="/dm/battle">
+            <Map className={isMobile ? "size-4" : "size-4"} />
+            {!isMobile && "Боевая карта"}
+          </Link>
+        </Button>
+      )}
+      
+      <Button 
+        variant="outline" 
+        className="flex items-center gap-2"
+        size={isMobile ? "sm" : "default"}
+        asChild
+      >
+        <Link to="/character-creation">
+          <Users className={isMobile ? "size-4" : "size-4"} />
+          {!isMobile && "Создание персонажа"}
+        </Link>
+      </Button>
+      
+      {isDM && (
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          size={isMobile ? "sm" : "default"}
+          asChild
+        >
+          <Link to="/dm-dashboard">
+            <Book className={isMobile ? "size-4" : "size-4"} />
+            {!isMobile && "Панель Мастера"}
+          </Link>
+        </Button>
+      )}
     </div>
   );
 };

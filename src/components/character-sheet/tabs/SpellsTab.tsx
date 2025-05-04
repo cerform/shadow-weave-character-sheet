@@ -1,20 +1,20 @@
-import React, { useContext, useState } from 'react';
+
+import React, { useContext, useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CharacterContext } from '@/contexts/CharacterContext';
-import { useToast } from "@/hooks/use-toast"; 
-import { Wand, ZapOff, Book, Info, Search, Plus } from "lucide-react";
-import { DicePanel } from '../DicePanel';
-import { getSpellDetails, getAllSpells } from '@/data/spells';
+import { CharacterContext } from "@/contexts/CharacterContext";
+import { getSpellDetails, getSpellsByLevel } from "@/data/spells"; // Removing getSpellsByLevels since it doesn't exist
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Book, Plus, Search, Filter, XCircle } from "lucide-react"; 
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CharacterSpell } from '@/types/character';
-import { isString, safeJoin, isCharacterSpell, stringToSpell, convertStringsToSpells } from '@/hooks/spellbook/filterUtils';
 import { useDeviceType } from '@/hooks/use-mobile';
 
 export const SpellsTab = () => {
@@ -27,19 +27,6 @@ export const SpellsTab = () => {
   const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
   const deviceType = useDeviceType();
   const { toast } = useToast();
-  
-  // Функция для получения заклинаний как строк
-  const getCharacterSpellNames = (): string[] => {
-    if (!character?.spells) return [];
-
-    // Если заклинания хранятся как объекты CharacterSpell
-    if (Array.isArray(character.spells) && character.spells.length > 0 && typeof character.spells[0] !== 'string') {
-      return (character.spells as CharacterSpell[]).map(spell => spell.name);
-    }
-    
-    // Если заклинания хранятся как строки
-    return character.spells as string[];
-  };
   
   // Функция для переключения выбора уровней заклинаний
   const toggleLevelFilter = (level: number) => {
@@ -58,19 +45,16 @@ export const SpellsTab = () => {
   };
   
   // Group spells by level
-  const spellsByLevel = useMemo(() => {
-    const spellNames = getCharacterSpellNames();
-    return spellNames?.reduce((acc: {[key: string]: string[]}, spellName: string) => {
-      const spellDetails = getSpellDetails(spellName);
-      const level = spellDetails?.level ?? 0;
-      
-      if (!acc[level]) {
-        acc[level] = [];
-      }
-      acc[level].push(spellName);
-      return acc;
-    }, {}) || {};
-  }, [character?.spells]);
+  const spellsByLevel = character?.spells?.reduce((acc: {[key: string]: string[]}, spell: string) => {
+    const spellDetails = getSpellDetails(spell);
+    const level = spellDetails?.level ?? 0;
+    
+    if (!acc[level]) {
+      acc[level] = [];
+    }
+    acc[level].push(spell);
+    return acc;
+  }, {}) || {};
 
   const getLevelName = (level: number): string => {
     return level === 0 ? "Заговоры" : `${level} круг`;
@@ -91,7 +75,7 @@ export const SpellsTab = () => {
     
     return schoolColors[school] || "bg-primary/20";
   };
-  
+
   // Улучшенный рендеринг компонентов для описания заклинаний
   const renderComponents = (components?: string) => {
     if (!components) return null;
@@ -220,12 +204,11 @@ export const SpellsTab = () => {
 
   // Фильтрация заклинаний для текущего отображения в зависимости от выбранных фильтров
   const filteredSpells = useMemo(() => {
-    const spellNames = getCharacterSpellNames();
-    if (!spellNames || spellNames.length === 0) return [];
+    if (!character?.spells) return [];
     
     // Если есть выбранные уровни для фильтрации
     if (selectedLevels.length > 0) {
-      return spellNames.filter(spellName => {
+      return character.spells.filter(spellName => {
         const spellDetails = getSpellDetails(spellName);
         
         // Проверяем, соответствует ли уровень заклинания хотя бы одному из выбранных уровней
@@ -244,7 +227,7 @@ export const SpellsTab = () => {
     }
     
     // Если нет выбранных уровней, применяем только поиск и фильтр по школе
-    return spellNames.filter(spellName => {
+    return character.spells.filter(spellName => {
       const spellDetails = getSpellDetails(spellName);
       
       // Проверяем, соответствует ли заклинание поисковому запросу
@@ -275,56 +258,6 @@ export const SpellsTab = () => {
       </div>
     );
   }
-
-  // Добавляем функцию для проверки типа spell
-  const isCharacterSpell = (spell: string | CharacterSpell): spell is CharacterSpell => {
-    return typeof spell === 'object' && spell !== null;
-  };
-
-  // Функция для преобразования строки в CharacterSpell
-  const getSpellObject = (spellName: string): CharacterSpell => {
-    const spellDetails = getSpellDetails(spellName);
-    if (spellDetails) return spellDetails;
-    
-    return {
-      name: spellName,
-      level: 0,
-      description: "",
-      school: ""
-    };
-  };
-  
-  // Функция для получения у��овня заклинания, обрабатывает строки и объекты
-  const getSpellLevel = (spell: string | CharacterSpell): number => {
-    if (isCharacterSpell(spell)) {
-      return spell.level;
-    } else {
-      const details = getSpellDetails(spell);
-      return details?.level || 0;
-    }
-  };
-  
-  // Функция для получения имени заклинания, обрабатывает строки и объекты
-  const getSpellName = (spell: string | CharacterSpell): string => {
-    if (isCharacterSpell(spell)) {
-      return spell.name;
-    } else {
-      return spell;
-    }
-  };
-  
-  // Функция для поиска заклинания по имени, поддерживает оба типа
-  const findSpellByName = (spellName: string, spells: (string | CharacterSpell)[]): boolean => {
-    return spells.some(spell => {
-      const name = isCharacterSpell(spell) ? spell.name : spell;
-      return name.toLowerCase() === spellName.toLowerCase();
-    });
-  };
-  
-  // Функция для безопасного отображения свойства classes
-  const formatClassList = (classes: string[] | string | undefined): string => {
-    return safeJoin(classes);
-  };
 
   return (
     <div className="space-y-4">
@@ -513,7 +446,7 @@ export const SpellsTab = () => {
                           </div>
                           
                           <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                            Классы: {formatClassList(details?.classes)}
+                            Классы: {details?.classes?.join(", ")}
                           </div>
                         </div>
                       </HoverCardContent>
@@ -619,7 +552,7 @@ export const SpellsTab = () => {
                                     </div>
                                     
                                     <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                      Классы: {formatClassList(details?.classes)}
+                                      Классы: {details?.classes?.join(", ")}
                                     </div>
                                   </div>
                                 </HoverCardContent>
@@ -700,7 +633,7 @@ export const SpellsTab = () => {
                               </div>
                               
                               <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                Классы: {formatClassList(details?.classes)}
+                                Классы: {details?.classes?.join(", ")}
                               </div>
                             </div>
                           </HoverCardContent>

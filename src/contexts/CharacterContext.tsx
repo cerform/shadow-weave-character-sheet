@@ -1,9 +1,27 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
+import { SorceryPoints } from '@/types/character';
 
-// Экспортируем тип Character для использования в других компонентах
+// Интерфейс для характеристик
+export interface AbilityScores {
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
+  
+  // Для совместимости с CharacterSheet
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+}
+
+// Интерфейс персонажа для хранения в CharacterContext
 export interface Character {
   id?: string;
   userId?: string;
@@ -14,33 +32,14 @@ export interface Character {
   className?: string;
   subclass?: string;
   level: number;
-  abilities: {
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
+  abilities: AbilityScores;
   proficiencies: string[];
   equipment: string[];
-  spells: CharacterSpell[] | string[];
+  spells: string[];
   languages: string[];
   gender: string;
   alignment: string;
   background: string;
-  backstory: string;
-  appearance?: string;
-  personalityTraits?: string;
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
@@ -67,7 +66,6 @@ export interface Character {
   image?: string;
 }
 
-// Интерфейс для контекста персонажей
 export interface CharacterContextType {
   character: Character | null;
   setCharacter: (character: Character | null) => void;
@@ -78,7 +76,6 @@ export interface CharacterContextType {
   deleteCharacter: (id: string) => Promise<void>;
 }
 
-// Создание контекста
 export const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
@@ -89,17 +86,6 @@ export const CharacterContext = createContext<CharacterContextType>({
   deleteCharacter: async () => {},
 });
 
-// Функция для проверки, является ли объект CharacterSpell
-const isCharacterSpell = (obj: any): obj is CharacterSpell => {
-  return obj && typeof obj === 'object' && 'name' in obj && 'level' in obj;
-};
-
-// Функция для преобразования смешанного массива в массив строк
-const convertSpellsToStrings = (spells: (CharacterSpell | string)[]): string[] => {
-  return spells.map(spell => typeof spell === 'string' ? spell : spell.name);
-};
-
-// Провайдер контекста
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -117,38 +103,12 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     if (!character) return;
     
     try {
-      const updatedCharacter = { 
-        ...character, 
-        updatedAt: new Date().toISOString(),
-        backstory: character.backstory || "", // Убедимся, что backstory всегда есть
-        background: character.background || "" // Убедимся, что background всегда есть
-      };
-      
+      const updatedCharacter = { ...character, updatedAt: new Date().toISOString() };
       if (!updatedCharacter.createdAt) {
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      // Преобразуем Character в CharacterSheet для сохранения
-      const charToSave: CharacterSheet = {
-        ...updatedCharacter,
-        backstory: updatedCharacter.backstory || "", 
-        background: updatedCharacter.background || "",
-        // Конвертируем spells в массив CharacterSpell
-        spells: Array.isArray(updatedCharacter.spells) 
-          ? updatedCharacter.spells.map(spell => 
-              typeof spell === 'string' ? { name: spell, level: 0, description: '', school: '' } : spell
-            ) 
-          : [],
-        // Преобразуем proficiencies в ожидаемый формат
-        proficiencies: {
-          armor: [],
-          weapons: [],
-          tools: [],
-          languages: updatedCharacter.languages || []
-        }
-      };
-      
-      const savedChar = await characterService.saveCharacter(charToSave);
+      const savedChar = await characterService.saveCharacter(updatedCharacter);
       if (savedChar) {
         setCharacter(updatedCharacter);
       }
@@ -163,32 +123,9 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получаем список персонажей пользователя
   const getUserCharacters = async () => {
     try {
-      // Используем getCharacters вместо getCharactersByUserId
       const fetchedCharacters = await characterService.getCharacters();
-      
-      // Преобразуем к типу Character
-      const convertedCharacters = fetchedCharacters.map(c => {
-        return {
-          ...c,
-          backstory: c.backstory || "", // Убедимся, что backstory всегда есть
-          race: c.race || "",           // Убедимся, что race всегда есть
-          background: c.background || "", // Убедимся, что background всегда есть
-          class: c.class || "",
-          gender: c.gender || "",
-          abilities: c.abilities || {
-            STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-            strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
-          },
-          proficiencies: [], // Исправлено
-          equipment: c.equipment || [],
-          // Обрабатываем заклинания правильно
-          spells: c.spells || [],
-          languages: c.languages || []
-        } as Character;
-      });
-      
-      setCharacters(convertedCharacters);
-      return convertedCharacters;
+      setCharacters(fetchedCharacters);
+      return fetchedCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       return [];

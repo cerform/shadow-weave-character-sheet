@@ -300,7 +300,7 @@ export const useSessionStore = create<SessionStore>()(
             get().fetchCharacters();
           }
           
-          return true; // Возвращаем boolean вместо Character или false
+          return success;
         } catch (error) {
           console.error("Ошибка при сохранении персонажа:", error);
           return false;
@@ -329,23 +329,16 @@ export const useSessionStore = create<SessionStore>()(
       
       clearAllCharacters: async () => {
         try {
-          // Проверяем наличие метода clearAllCharacters
-          if (typeof characterService.deleteCharacter !== 'function') {
-            console.error("Метод clearAllCharacters не найден");
-            return false;
+          const cleared = await characterService.clearAllCharacters();
+          
+          if (cleared) {
+            set({ characters: [] });
+            toast.success("Все персонажи удалены");
+          } else {
+            toast.error("Не удалось удалить персонажей");
           }
           
-          // Удаляем все персонажи по одному
-          const characters = get().characters;
-          for (const char of characters) {
-            if (char.id) {
-              await characterService.deleteCharacter(char.id);
-            }
-          }
-          
-          set({ characters: [] });
-          toast.success("Все персонажи удалены");
-          return true;
+          return cleared;
         } catch (error) {
           console.error("Ошибка при удалении всех персонажей:", error);
           toast.error("Не удалось удалить персонажей");

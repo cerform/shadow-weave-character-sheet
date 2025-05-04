@@ -3,9 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import HomeButton from '@/components/navigation/HomeButton';
 
 interface NavigationButtonsProps {
   nextStep: () => void;
@@ -31,8 +30,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
-  const navigate = useNavigate();
-  const { toast } = useToast();
   
   const handlePrevStep = () => {
     if (!isFirstStep) {
@@ -40,44 +37,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     }
   };
   
-  const handleNavigateHome = () => {
-    // Показываем уведомление о переходе
-    toast({
-      title: "Переход на главную",
-      description: "Возвращаемся на главную страницу...",
-    });
-    
-    // Используем setTimeout для обеспечения плавного перехода
-    setTimeout(() => {
-      navigate('/');
-    }, 300);
-  };
-  
   return (
     <div className="flex justify-between pt-8 mt-2">
       {isFirstStep ? (
-        <Button 
-          variant="outline" 
-          onClick={handleNavigateHome}
-          className={`
-            flex items-center gap-2 px-4 py-2 
-            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
-          `}
-        >
-          <ArrowLeft className="size-4" />
-          {!isMobile && "На главную"}
-        </Button>
+        <HomeButton variant="outline" className="bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500" />
       ) : (
         <Button 
           variant="outline" 
           onClick={handlePrevStep}
-          className={`
-            flex items-center gap-2 px-4 py-2 
-            bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500
-          `}
+          className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white hover:bg-gray-800 border-gray-700 hover:border-gray-500"
         >
           <ArrowLeft className="size-4" />
-          {!isMobile && "Назад"}
+          {!isMobile && <span>Назад</span>}
         </Button>
       )}
       
@@ -95,7 +66,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
                 : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
           `}
         >
-          {!isMobile && nextLabel}
+          {!isMobile && <span>{nextLabel}</span>}
           {isLastStep ? <CheckCircle className="size-4" /> : <ArrowRight className="size-4" />}
         </Button>
       )}

@@ -1,165 +1,134 @@
 
+import { SpellData } from './types';
 import { CharacterSpell } from '@/types/character';
 
-/**
- * Проверяет, является ли значение строкой
- */
-export const isString = (value: unknown): value is string => {
-  return typeof value === 'string';
-};
-
-/**
- * Проверяет, является ли значение массивом строк
- */
-export const isStringArray = (value: unknown): value is string[] => {
+// Класс типа guard для проверки строк в массиве
+export function isStringArray(value: any): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
-};
+}
 
-/**
- * Безопасно объединяет строки или массивы строк через разделитель
- */
-export const safeJoin = (value: string[] | string | undefined, separator: string = ', '): string => {
-  if (!value) return '';
-  
-  if (isStringArray(value)) {
-    return value.join(separator);
+// Проверка, что значение является строкой
+export function isString(value: any): value is string {
+  return typeof value === 'string';
+}
+
+// Конвертер из CharacterSpell в SpellData
+export const convertToSpellData = (spell: CharacterSpell): SpellData => ({
+  ...spell,
+  id: spell.id !== undefined ? spell.id : undefined,
+  isRitual: spell.ritual || false,
+  isConcentration: spell.concentration || false
+});
+
+// Функция для фильтрации заклинаний по поисковому запросу
+export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: string): CharacterSpell[] => {
+  if (searchTerm.trim() === '') {
+    return spells;
   }
-  
-  if (isString(value)) {
-    return value;
+
+  const term = searchTerm.toLowerCase();
+  return spells.filter(spell => {
+    // Проверка имени заклинания
+    const nameMatch = spell.name.toLowerCase().includes(term);
+    
+    // Проверка описания заклинания
+    const descriptionMatch = spell.description ? spell.description.toLowerCase().includes(term) : false;
+    
+    // Проверка классов заклинания
+    let classesMatch = false;
+    if (spell.classes) {
+      // Если classes - строка
+      if (isString(spell.classes)) {
+        classesMatch = spell.classes.toLowerCase().includes(term);
+      }
+      // Если classes - массив строк
+      else if (isStringArray(spell.classes)) {
+        classesMatch = spell.classes.some(cls => isString(cls) && cls.toLowerCase().includes(term));
+      }
+    }
+    
+    return nameMatch || descriptionMatch || classesMatch;
+  });
+};
+
+// Функция для фильтрации заклинаний по уровню
+export const filterSpellsByLevel = (spells: CharacterSpell[], activeLevels: number[]): CharacterSpell[] => {
+  if (activeLevels.length === 0) {
+    return spells;
   }
-  
-  return '';
+  return spells.filter(spell => activeLevels.includes(spell.level));
 };
 
-/**
- * Функция для работы с заклинаниями в разных форматах
- */
-export const getSpellName = (spell: string | CharacterSpell): string => {
-  if (typeof spell === 'string') {
-    return spell;
+// Функция для фильтрации заклинаний по школе
+export const filterSpellsBySchool = (spells: CharacterSpell[], activeSchools: string[]): CharacterSpell[] => {
+  if (activeSchools.length === 0) {
+    return spells;
   }
-  return spell.name;
+  return spells.filter(spell => activeSchools.includes(spell.school));
 };
 
-/**
- * Преобразовывает строку в CharacterSpell
- */
-export const stringToSpell = (spellName: string): CharacterSpell => {
-  return {
-    name: spellName,
-    level: 0,
-    description: '',
-    school: ''
-  };
+// Функция для фильтрации заклинаний по классам
+export const filterSpellsByClass = (spells: CharacterSpell[], activeClasses: string[]): CharacterSpell[] => {
+  if (activeClasses.length === 0) {
+    return spells;
+  }
+
+  return spells.filter(spell => {
+    // Если классы не определены, заклинание не соответствует фильтру
+    if (!spell.classes) return false;
+    
+    // Проверка если classes - строка
+    if (isString(spell.classes)) {
+      const spellClassesStr = spell.classes;
+      return activeClasses.some(cls => 
+        isString(cls) && spellClassesStr.toLowerCase().includes(cls.toLowerCase())
+      );
+    } 
+    // Проверка если classes - массив строк
+    else if (isStringArray(spell.classes)) {
+      return spell.classes.some(spellClass => 
+        activeClasses.some(cls => 
+          isString(cls) && isString(spellClass) && 
+          spellClass.toLowerCase().includes(cls.toLowerCase())
+        )
+      );
+    }
+    return false;
+  });
 };
 
-/**
- * Проверяет, является ли значение объектом CharacterSpell
- */
-export const isCharacterSpell = (spell: string | CharacterSpell): spell is CharacterSpell => {
-  return typeof spell === 'object' && spell !== null && 'name' in spell;
-};
-
-/**
- * Конвертирует массив строк в массив CharacterSpell
- */
-export const convertStringsToSpells = (spells: (string | CharacterSpell)[]): CharacterSpell[] => {
-  return spells.map(spell => isString(spell) ? stringToSpell(spell) : spell);
-};
-
-/**
- * Конвертирует массив CharacterSpell в массив строк (имён заклинаний)
- */
-export const extractSpellNames = (spells: CharacterSpell[]): string[] => {
-  return spells.map(spell => spell.name);
-};
-
-/**
- * Извлекает уникальные классы из списка заклинаний
- */
+// Извлечение уникальных классов из заклинаний
 export const extractClasses = (spells: CharacterSpell[]): string[] => {
   const classesSet = new Set<string>();
   
   spells.forEach(spell => {
-    if (!spell.classes) return;
-    
-    if (isStringArray(spell.classes)) {
-      spell.classes.forEach(cls => classesSet.add(cls));
-    } else if (isString(spell.classes)) {
-      classesSet.add(spell.classes);
+    if (spell.classes) {
+      // Если classes - строка, разделяем по запятым
+      if (isString(spell.classes)) {
+        const classesString = spell.classes;
+        classesString.split(',').forEach(cls => 
+          classesSet.add(cls.trim())
+        );
+      } else if (isStringArray(spell.classes)) {
+        // Если classes - массив строк, добавляем каждый элемент
+        spell.classes.forEach(cls => {
+          if (isString(cls)) {
+            classesSet.add(cls.trim());
+          }
+        });
+      }
     }
   });
   
   return Array.from(classesSet).sort();
 };
 
-/**
- * Функция форматирования списка классов
- */
+// Форматирование классов для отображения
 export const formatClasses = (classes: string[] | string | undefined): string => {
-  return safeJoin(classes);
-};
-
-/**
- * Фильтрует заклинания по поисковому запросу
- */
-export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: string): CharacterSpell[] => {
-  if (!searchTerm) return spells;
-  const lowerCaseTerm = searchTerm.toLowerCase();
-  return spells.filter(spell => getSpellName(spell).toLowerCase().includes(lowerCaseTerm));
-};
-
-/**
- * Фильтрует заклинания по уровням
- */
-export const filterSpellsByLevel = (spells: CharacterSpell[], levels: number[]): CharacterSpell[] => {
-  if (!levels.length) return spells;
-  return spells.filter(spell => levels.includes(spell.level));
-};
-
-/**
- * Фильтрует заклинания по школам
- */
-export const filterSpellsBySchool = (spells: CharacterSpell[], schools: string[]): CharacterSpell[] => {
-  if (!schools.length) return spells;
-  return spells.filter(spell => spell.school && schools.includes(spell.school));
-};
-
-/**
- * Фильтрует заклинания по классам
- */
-export const filterSpellsByClass = (spells: CharacterSpell[], classes: string[]): CharacterSpell[] => {
-  if (!classes.length) return spells;
+  if (!classes) return '';
   
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    if (isStringArray(spell.classes)) {
-      return spell.classes.some(cls => classes.includes(cls));
-    }
-    
-    if (isString(spell.classes)) {
-      return classes.includes(spell.classes);
-    }
-    
-    return false;
-  });
-};
-
-/**
- * Преобразует объект CharacterSpell в SpellData
- */
-export const convertToSpellData = (spell: CharacterSpell): any => {
-  return {
-    ...spell,
-    id: spell.id || 0,
-    isRitual: spell.ritual || false,
-    isConcentration: spell.concentration || false,
-    castingTime: spell.castingTime || 'Не указано',
-    range: spell.range || 'Не указано',
-    components: spell.components || 'Не указано',
-    duration: spell.duration || 'Не указано',
-    toString: () => spell.name
-  };
+  if (Array.isArray(classes)) {
+    return classes.join(', ');
+  }
+  return classes;
 };

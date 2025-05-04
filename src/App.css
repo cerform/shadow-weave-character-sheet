@@ -1,108 +1,225 @@
-
-/* Основные стили для всего приложения */
-:root {
-  --theme-accent: #ff5722;
-  --theme-glow: rgba(255, 87, 34, 0.4);
-  --theme-text-color: #ffffff;
-  --theme-muted-text-color: #cccccc;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  color: var(--theme-text-color);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  min-height: 100vh;
-  background-color: #111;
-  background-image: radial-gradient(circle at center, #222 0%, #111 100%);
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
 .app-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-}
-
-.content-wrapper {
-  flex: 1;
-  padding: 16px;
-  padding-top: 60px; /* Чтобы контент не перекрывался с навигацией */
   width: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--theme-text-color, #FFFFFF);
 }
 
-/* Стили для тем */
-.theme-default {
-  --theme-accent: #ff5722;
-  --theme-glow: rgba(255, 87, 34, 0.4);
+/* Базовый фон для приложения - создадим атмосферу фэнтези */
+body {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  background-image: url('/assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  font-family: 'Roboto', sans-serif;
 }
 
-.theme-wizard {
-  --theme-accent: #3b82f6;
-  --theme-glow: rgba(59, 130, 246, 0.4);
+/* Улучшаем читаемость текста */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--theme-text-color, #FFFFFF) !important;
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Заголовок приложения */
+h1 {
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Второй заголовок */
+h2 {
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+}
+
+/* Третий заголовок */
+h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+}
+
+/* Обеспечиваем хорошие отступы */
+.container {
+  padding: 1rem !important;
+}
+
+/* Улучшаем стили для кнопок */
+button, .btn {
+  border-radius: 0.375rem !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.5rem 1rem !important;
+  border: 1px solid var(--theme-accent, #8B5A2B) !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  color: var(--theme-text-color, #FFFFFF) !important;
+  transition: all 0.3s ease !important;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8) !important;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--theme-accent, #8B5A2B) !important;
+  box-shadow: 0 0 10px var(--theme-accent, #8B5A2B) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Стилизация карточек */
+.card {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid var(--theme-accent, #8B5A2B) !important;
+  border-radius: 0.5rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.3s ease !important;
+}
+
+.card:hover {
+  box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
+}
+
+/* Убираем резкие края элементов */
+* {
+  border-radius: 0.25rem;
+}
+
+/* Стилизация для dropdown меню */
+.dropdown-content {
+  background-color: rgba(0, 0, 0, 0.95) !important;
+  border: 1px solid var(--theme-accent, #8B5A2B) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Для всех выпадающих меню и диалогов */
+[role="dialog"],
+[data-radix-popper-content-wrapper] {
+  z-index: 100 !important;
+}
+
+/* Улучшение контрастности для всплывающих сообщений */
+[role="status"] {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid var(--theme-accent, #8B5A2B) !important;
+  color: var(--theme-text-color, #FFFFFF) !important;
+}
+
+/* Стили для различных тем */
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #1a56db;
+  --accent: #4c6ef5;
+  --card: #ffffff;
+  --card-foreground: #000000;
+}
+
+.theme-dark {
+  --background: #121212;
+  --foreground: #ffffff;
+  --primary: #4c6ef5;
+  --accent: #6366f1;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+}
+
+.theme-fantasy {
+  --background: #2c2a35;
+  --foreground: #e6d8b5;
+  --primary: #9d7e59;
+  --accent: #b69f7e;
+  --card: #353441;
+  --card-foreground: #e6d8b5;
+}
+
+.theme-cyber {
+  --background: #0c0c14;
+  --foreground: #00ffaa;
+  --primary: #00aaff;
+  --accent: #ff00aa;
+  --card: #14141e;
+  --card-foreground: #c8f5ff;
+}
+
+.theme-nature {
+  --background: #1d332a;
+  --foreground: #e5f5eb;
+  --primary: #5a9e7a;
+  --accent: #8cc474;
+  --card: #2a4438;
+  --card-foreground: #e5f5eb;
 }
 
 .theme-warlock {
-  --theme-accent: #9333ea;
-  --theme-glow: rgba(147, 51, 234, 0.4);
+  --theme-accent: #9061F9;
+  --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
+}
+
+.theme-wizard {
+  --theme-accent: #3B82F6;
+  --theme-glow: 0 0 15px rgba(59, 130, 246, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-druid {
-  --theme-accent: #10b981;
-  --theme-glow: rgba(16, 185, 129, 0.4);
+  --theme-accent: #10B981;
+  --theme-glow: 0 0 15px rgba(16, 185, 129, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-warrior {
-  --theme-accent: #ef4444;
-  --theme-glow: rgba(239, 68, 68, 0.4);
+  --theme-accent: #F43F5E;
+  --theme-glow: 0 0 15px rgba(244, 63, 94, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
 .theme-bard {
-  --theme-accent: #fbbf24;
-  --theme-glow: rgba(251, 191, 36, 0.4);
+  --theme-accent: #F59E0B;
+  --theme-glow: 0 0 15px rgba(245, 158, 11, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
-/* Вспомогательные классы */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE и Edge */
-  scrollbar-width: none;  /* Firefox */
+.theme-default {
+  --theme-accent: #8B5A2B;
+  --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari и Opera */
+/* Стили для перетаскиваемой кнопки кубиков */
+.dice-button-container {
+  touch-action: none; /* Отключаем стандартное поведение касаний браузера */
+  user-select: none; /* Запрещаем выделение */
 }
 
-/* Анимации */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.dice-button-container.dragging {
+  opacity: 0.8;
+  cursor: grabbing;
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.pulse {
-  animation: pulse 2s infinite;
-}
-
-/* Респонсивность */
+/* Медиа-запрос для мобильных устройств */
 @media (max-width: 768px) {
-  .content-wrapper {
-    padding: 12px;
-    padding-top: 50px;
+  .dice-button-container {
+    width: 70px;
+    height: 70px;
+  }
+  .dice-button-container button {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  .dice-button-container button svg {
+    width: 40px !important;
+    height: 40px !important;
   }
 }

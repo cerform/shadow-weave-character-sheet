@@ -1,122 +1,93 @@
 
-import { CharacterSpell } from '@/types/character';
-import { isString, isStringArray, safeJoin } from '@/hooks/spellbook/filterUtils';
+import { cantrips } from "./cantrips";
+import { level1 } from "./level1";
+import { level2 } from "./level2";
+import { level3 } from "./level3";
+import { level4 } from "./level4";
+// Fix the import names to match the actual exports
+import { level4Part2 } from "./level4_part2";
+import { level4Part3 } from "./level4_part3";
+import { level5 } from "./level5";
+import { level6 } from "./level6";
+import { level7 } from "./level7";
+import { level8 } from "./level8";
+import { level9 } from "./level9";
+import { CharacterSpell } from "@/types/character";
 
-// Список заклинаний
+// Combine all spell levels into a single array
 export const spells: CharacterSpell[] = [
-  {
-    id: 1,
-    name: "Волшебная стрела",
-    level: 1,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "120 футов",
-    components: "В, С",
-    duration: "Мгновенная",
-    description: "Вы создаете три светящиеся стрелы из силового поля. Каждая стрела поражает существо по вашему выбору, которое вы можете видеть в пределах дистанции. Стрела наносит урон силовым полем 1d4 + 1.",
-    higherLevels: "Если вы накладываете это заклинание, используя ячейку 2 уровня или выше, вы создаете одну дополнительную стрелу за каждый уровень ячейки выше первого.",
-    classes: ["Волшебник", "Чародей"],
-    verbal: true,
-    somatic: true,
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 2,
-    name: "Огненный шар",
-    level: 3,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "150 футов",
-    components: "В, С, М (крошечный шарик летучей серы)",
-    duration: "Мгновенная",
-    description: "Из вашего пальца вылетает яркая полоска, летящая к выбранной точке в пределах дистанции, а затем распускается с низким грохотом и взрывается огнём. Все существа в пределах 20-футовой сферы с центром в этой точке должны совершить спасбросок Ловкости. Цель получает урон огнём 8d6 при провале или половину этого урона при успехе.",
-    higherLevels: "Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше третьего.",
-    classes: ["Волшебник", "Чародей"],
-    verbal: true,
-    somatic: true,
-    material: true,
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 3,
-    name: "Лечение ран",
-    level: 1,
-    school: "Преобразование",
-    castingTime: "1 действие",
-    range: "Касание",
-    components: "В, С",
-    duration: "Мгновенная",
-    description: "Существо, которого вы касаетесь, восстанавливает количество хитов, равное 1d8 + модификатор вашей базовой характеристики. Это заклинание не оказывает никакого эффекта на нежить и конструктов.",
-    higherLevels: "Если вы накладываете это заклинание, используя ячейку 2-го уровня или выше, лечение увеличивается на 1d8 за каждый уровень ячейки выше первого.",
-    classes: ["Бард", "Друид", "Жрец", "Паладин", "Следопыт"],
-    verbal: true,
-    somatic: true,
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 4,
-    name: "Малая иллюзия",
-    level: 0,
-    school: "Иллюзия",
-    castingTime: "1 действие",
-    range: "30 футов",
-    components: "С, М (кусочек овечьей шерсти)",
-    duration: "1 минута",
-    description: "Вы создаете либо звук, либо образ объекта, который существует, пока активно заклинание. Иллюзия оканчивается, когда вы повторно накладываете это заклинание.",
-    classes: ["Волшебник", "Бард"],
-    somatic: true,
-    material: true,
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 5,
-    name: "Щит",
-    level: 1,
-    school: "Ограждение",
-    castingTime: "1 реакция",
-    range: "На себя",
-    components: "В, С",
-    duration: "1 раунд",
-    description: "Невидимый барьер из магической силы появляется и защищает вас. До начала вашего следующего хода вы получаете бонус +5 к КД, включая спровоцировавшую атаку, и не получаете урона от магической ракеты.",
-    classes: ["Волшебник", "Чародей"],
-    verbal: true,
-    somatic: true,
-    ritual: false,
-    concentration: false
-  }
+  ...cantrips,
+  ...level1,
+  ...level2,
+  ...level3,
+  ...level4,
+  // Fixed variable names to match imports
+  ...level4Part2,
+  ...level4Part3,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9
 ];
 
-// Helper function for getting spells by class
-export const getSpellsByClass = (className: string): CharacterSpell[] => {
-  if (!className) return [];
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    if (isString(spell.classes)) {
-      return spell.classes === className;
-    }
-    if (isStringArray(spell.classes)) {
-      return spell.classes.some(cls => cls === className);
-    }
-    return false;
-  });
-};
-
-// Helper function for getting spells by level
+// Get spells by level
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   return spells.filter(spell => spell.level === level);
 };
 
-// Helper function for getting spell details by name
-export const getSpellDetails = (spellName: string): CharacterSpell | null => {
-  if (!spellName) return null;
-  return spells.find(spell => spell.name === spellName) || null;
+// Convert spell level to text
+export const spellLevelToText = (level: number): string => {
+  if (level === 0) return "Заговор";
+  return `${level}-й уровень`;
 };
 
-// Exporting a function to get all spells
-export const getAllSpells = () => {
-  return spells;
+// Get spells by class
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  if (!className) return [];
+  
+  const normalizedClassName = className ? className.toLowerCase() : '';
+  
+  return spells.filter((spell) => {
+    if (!spell.classes) return false;
+    
+    // Safely handle potentially undefined classes array
+    return spell.classes.some(
+      (spellClass) => 
+        spellClass && 
+        typeof spellClass === 'string' && 
+        spellClass.toLowerCase() === normalizedClassName
+    );
+  });
+};
+
+// Get spell details by name
+export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
+  if (!spellName) return undefined;
+  
+  return spells.find(
+    (spell) => spell && spell.name && spell.name.toLowerCase() === (spellName?.toLowerCase() || '')
+  );
+};
+
+// Get spells by school
+export const getSpellsBySchool = (school: string): CharacterSpell[] => {
+  if (!school) return [];
+  
+  return spells.filter(
+    (spell) => spell && spell.school && spell.school.toLowerCase() === school.toLowerCase()
+  );
+};
+
+// Get available spell schools
+export const getSpellSchools = (): string[] => {
+  const schools = new Set<string>();
+  
+  spells.forEach(spell => {
+    if (spell.school) {
+      schools.add(spell.school);
+    }
+  });
+  
+  return Array.from(schools);
 };

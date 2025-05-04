@@ -1,123 +1,120 @@
 
-import { CharacterSheet, Character, CharacterSpell } from '@/types/character';
+import { CharacterSheet } from '@/types/character';
+import { Character } from '@/contexts/CharacterContext';
 
+/**
+ * Преобразует объект CharacterSheet в объект Character для сохранения
+ */
 export const convertToCharacter = (sheet: CharacterSheet): Character => {
-  // Создаем базовую структуру персонажа
-  const character: Character = {
-    id: sheet.id,
-    userId: sheet.userId,
-    name: sheet.name || "",
-    race: sheet.race || "",
-    subrace: sheet.subrace,
-    class: sheet.class || "",
-    subclass: sheet.subclass,
-    level: sheet.level || 1,
-    background: sheet.background || "",
-    alignment: sheet.alignment || "",
-    gender: sheet.gender || "",
-    backstory: sheet.backstory || "",
-    appearance: sheet.appearance,
-    personalityTraits: sheet.personalityTraits,
-    ideals: sheet.ideals,
-    bonds: sheet.bonds,
-    flaws: sheet.flaws,
+  // Расчет максимального HP на основе класса и уровня
+  const calculateMaxHp = (): number => {
+    // Базовое значение в зависимости от класса
+    const baseHpByClass: {[key: string]: number} = {
+      "Варвар": 12,
+      "Воин": 10,
+      "Паладин": 10,
+      "Следопыт": 10,
+      "Монах": 8,
+      "Плут": 8,
+      "Бард": 8,
+      "Жрец": 8,
+      "Друид": 8,
+      "Волшебник": 6,
+      "Чародей": 6,
+      "Колдун": 8
+    };
     
-    // Конвертируем abilities
-    abilities: {
-      STR: sheet.abilities?.STR || sheet.abilities?.strength || 10,
-      DEX: sheet.abilities?.DEX || sheet.abilities?.dexterity || 10,
-      CON: sheet.abilities?.CON || sheet.abilities?.constitution || 10,
-      INT: sheet.abilities?.INT || sheet.abilities?.intelligence || 10,
-      WIS: sheet.abilities?.WIS || sheet.abilities?.wisdom || 10,
-      CHA: sheet.abilities?.CHA || sheet.abilities?.charisma || 10,
-      strength: sheet.abilities?.strength || sheet.abilities?.STR || 10,
-      dexterity: sheet.abilities?.dexterity || sheet.abilities?.DEX || 10,
-      constitution: sheet.abilities?.constitution || sheet.abilities?.CON || 10,
-      intelligence: sheet.abilities?.intelligence || sheet.abilities?.INT || 10,
-      wisdom: sheet.abilities?.wisdom || sheet.abilities?.WIS || 10,
-      charisma: sheet.abilities?.charisma || sheet.abilities?.CHA || 10
-    },
+    // Убедимся, что у нас есть класс перед вычислением HP
+    const characterClass = sheet.class || "Воин"; // По умолчанию "Воин", если класс не указан
+    const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
+    const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
     
-    // Конвертируем базовые массивы
-    languages: sheet.languages || sheet.proficiencies?.languages || [],
+    // HP первого уровня = максимум хитов кости + модификатор телосложения
+    let maxHp = baseHp + constitutionMod;
     
-    // Обрабатываем навыки
-    skillProficiencies: convertSkillsToSkillProficiencies(sheet.skills),
+    // Для каждого уровня выше первого добавляем среднее значение кости хитов + модификатор телосложения
+    if (sheet.level > 1) {
+      maxHp += ((baseHp / 2 + 1) + constitutionMod) * (sheet.level - 1);
+    }
     
-    // Обрабатываем спасброски
-    savingThrowProficiencies: sheet.savingThrows,
-    
-    // Обрабатываем боевые характеристики
-    maxHp: sheet.maxHp,
-    currentHp: sheet.currentHp,
-    temporaryHp: sheet.temporaryHp,
-    hitDice: sheet.hitDice,
-    deathSaves: sheet.deathSaves,
-    
-    // Обрабатываем заклинания
-    spellSlots: sheet.spellSlots,
-    sorceryPoints: sheet.sorceryPoints,
-    
-    // Временные поля для совместимости
-    createdAt: sheet.createdAt,
-    updatedAt: sheet.updatedAt,
-    
-    // Преобразуем спеллы CharacterSpell[] в массив строк для совместимости с Character
-    spells: convertSpellsToStringArray(sheet.spells),
-    
-    // Конвертируем equipment в строковый массив
-    equipment: sheet.equipment || [],
-    
-    // Конвертируем proficiencies в строковый массив
-    proficiencies: convertProficienciesToStringArray(sheet.proficiencies),
-    
-    // Дополнительные поля для совместимости
-    image: sheet.img
+    return Math.round(maxHp);
   };
   
-  return character;
-};
-
-// Вспомогательная функция для конвертации объекта skills в объект skillProficiencies
-const convertSkillsToSkillProficiencies = (skills?: {[key: string]: {proficient: boolean; expertise: boolean; bonus?: number}}): {[skillName: string]: boolean} | undefined => {
-  if (!skills) return undefined;
+  // Вычисляем максимальные хиты
+  const maxHp = sheet.maxHp || calculateMaxHp();
   
-  const skillProficiencies: {[skillName: string]: boolean} = {};
+  // Преобразуем структуру заклинаний
+  const spellsArray = sheet.spells || [];
   
-  for (const [skill, details] of Object.entries(skills)) {
-    skillProficiencies[skill] = !!details.proficient;
+  // Определяем слоты заклинаний в зависимости от класса и уровня
+  const spellSlots: Record<number, { max: number; used: number }> = {};
+  
+  // Определяем класс персонажа, обеспечивая непустое значение
+  const characterClass = sheet.class || "";
+  
+  // Заполняем слоты заклинаний для заклинателей
+  if (["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(characterClass)) {
+    // Упрощённая логика слотов заклинаний
+    const level = sheet.level;
+    
+    if (level >= 1) spellSlots[1] = { max: Math.min(4, level), used: 0 };
+    if (level >= 3) spellSlots[2] = { max: Math.min(3, level - 2), used: 0 };
+    if (level >= 5) spellSlots[3] = { max: Math.min(3, level - 4), used: 0 };
+    if (level >= 7) spellSlots[4] = { max: Math.min(3, level - 6), used: 0 };
+    if (level >= 9) spellSlots[5] = { max: Math.min(2, level - 8), used: 0 };
+    if (level >= 11) spellSlots[6] = { max: Math.min(1, level - 10), used: 0 };
+    if (level >= 13) spellSlots[7] = { max: Math.min(1, level - 12), used: 0 };
+    if (level >= 15) spellSlots[8] = { max: Math.min(1, level - 14), used: 0 };
+    if (level >= 17) spellSlots[9] = { max: Math.min(1, level - 16), used: 0 };
+  } 
+  // Для полузаклинателей (паладины, следопыты)
+  else if (["Паладин", "Следопыт"].includes(characterClass)) {
+    const level = sheet.level;
+    
+    if (level >= 2) spellSlots[1] = { max: Math.min(3, level - 1), used: 0 };
+    if (level >= 5) spellSlots[2] = { max: Math.min(2, level - 4), used: 0 };
+    if (level >= 9) spellSlots[3] = { max: Math.min(2, level - 8), used: 0 };
+    if (level >= 13) spellSlots[4] = { max: Math.min(1, level - 12), used: 0 };
+    if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
   }
   
-  return skillProficiencies;
+  return {
+    id: sheet.id || "",
+    userId: sheet.userId,
+    name: sheet.name || "Безымянный",
+    race: sheet.race || "",
+    // Используем свойство subrace как отдельное поле только если оно есть в Character
+    ...(sheet.subrace && { subrace: sheet.subrace }),
+    className: sheet.class || "",
+    class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
+    level: sheet.level || 1,
+    abilities: {
+      STR: sheet.abilities.strength || 10,
+      DEX: sheet.abilities.dexterity || 10,
+      CON: sheet.abilities.constitution || 10,
+      INT: sheet.abilities.intelligence || 10,
+      WIS: sheet.abilities.wisdom || 10,
+      CHA: sheet.abilities.charisma || 10
+    },
+    spells: spellsArray,
+    spellSlots: spellSlots,
+    gender: sheet.gender || "",
+    alignment: sheet.alignment || "",
+    background: sheet.background || "",
+    equipment: sheet.equipment || [],
+    languages: sheet.languages || [],
+    proficiencies: sheet.proficiencies || [],
+    maxHp: maxHp,
+    currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
 };
 
-// Вспомогательная функция для преобразования объектов CharacterSpell в строки
-const convertSpellsToStringArray = (spells?: CharacterSpell[]): string[] => {
-  if (!spells) return [];
-  
-  // Для совместимости с Character.spells, преобразуем каждое заклинание в строку по имени
-  return spells.map(spell => spell.name);
-};
-
-// Вспомогательная функция для объединения proficiencies в массив строк
-const convertProficienciesToStringArray = (proficiencies?: {
-  armor?: string[];
-  weapons?: string[];
-  tools?: string[];
-  languages?: string[];
-}): string[] => {
-  if (!proficiencies) return [];
-  
-  const allProficiencies: string[] = [];
-  
-  // Добавляем все доступные профициенции в общий массив
-  if (proficiencies.armor) allProficiencies.push(...proficiencies.armor);
-  if (proficiencies.weapons) allProficiencies.push(...proficiencies.weapons);
-  if (proficiencies.tools) allProficiencies.push(...proficiencies.tools);
-  
-  return allProficiencies;
-};
-
-export default {
-  convertToCharacter
+/**
+ * Функция для получения модификатора из значения характеристики
+ */
+export const getModifierFromAbilityScore = (score: number): string => {
+  const mod = Math.floor((score - 10) / 2);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
 };

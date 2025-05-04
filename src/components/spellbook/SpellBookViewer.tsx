@@ -1,23 +1,29 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-import { useSpellbook, SpellData } from "@/hooks/spellbook";
-import { importSpellsFromText } from "@/hooks/spellbook/importUtils";
-import { CharacterSpell } from "@/types/character";
-import { convertToSpellData } from "@/hooks/spellbook/filterUtils";
-import { Filter, Search, Plus, BookOpen, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Book, ArrowLeft, BookOpen, Filter, Search, Home, X } from "lucide-react";
+import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
+import NavigationButtons from "@/components/ui/NavigationButtons";
+import { ThemeSelector } from "@/components/character-sheet/ThemeSelector"; 
+import { useNavigate } from 'react-router-dom';
+import { useSpellbook } from '@/hooks/spellbook';
+import { SpellData } from '@/hooks/spellbook/types';
+import SpellFilters from './SpellFilters';
+import SpellList from './SpellList';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger, 
+  SheetClose 
+} from "@/components/ui/sheet";
+import { useIsMobile } from '@/hooks/use-mobile';
 
-export const SpellBookViewer = () => {
-  const { 
+const SpellBookViewer: React.FC = () => {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const {
     filteredSpells,
     searchTerm,
     setSearchTerm,
@@ -26,6 +32,10 @@ export const SpellBookViewer = () => {
     isModalOpen,
     activeSchool,
     activeClass,
+    currentTheme,
+    allLevels,
+    allSchools,
+    allClasses,
     handleOpenSpell,
     handleClose,
     toggleLevel,
@@ -35,475 +45,239 @@ export const SpellBookViewer = () => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    currentTheme,
-    allLevels,
-    allSchools,
-    allClasses
   } = useSpellbook();
 
-  const { toast } = useToast();
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importText, setImportText] = useState('');
-  const [userSpellbook, setUserSpellbook] = useState<SpellData[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    // При загрузке компонента проверяем локальное хранилище
-    const savedSpells = localStorage.getItem('userSpellbook');
-    if (savedSpells) {
-      try {
-        const parsedSpells = JSON.parse(savedSpells);
-        const spellDataArray = parsedSpells.map((spell: CharacterSpell) => convertToSpellData(spell));
-        setUserSpellbook(spellDataArray);
-      } catch (e) {
-        console.error('Ошибка при загрузке книги заклинаний:', e);
-      }
-    }
-  }, []);
-
-  const saveUserSpellbook = (spells: SpellData[]) => {
-    localStorage.setItem('userSpellbook', JSON.stringify(spells));
-    setUserSpellbook(spells);
+  // Оборачиваем функции для сохранения состояния открытия sheet при выборе фильтров
+  const handleToggleLevel = (level: number) => {
+    toggleLevel(level);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleToggleSchool = (school: string) => {
+    toggleSchool(school);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleToggleClass = (className: string) => {
+    toggleClass(className);
+    // Удаляем автоматическое закрытие
+  };
+  
+  const handleClearFilters = () => {
+    clearFilters();
+    // Удаляем автоматическое закрытие
   };
 
-  const handleImport = () => {
-    try {
-      if (!importText.trim()) {
-        toast({
-          title: "Внимание",
-          description: "Текст для импорта пуст",
-          variant: "default"
-        });
-        return;
-      }
+  // Навигационные кнопки для мобильной версии
+  const MobileNavigation = () => (
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-accent z-30 flex justify-around p-2">
+      <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+        <Home className="h-5 w-5" />
+      </Button>
+      <Button variant="ghost" size="icon" onClick={() => navigate('/handbook')}>
+        <BookOpen className="h-5 w-5" />
+      </Button>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Filter className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[85%] sm:w-[385px] pt-10">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Фильтры заклинаний</h2>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon">
+                <X className="h-5 w-5" />
+              </Button>
+            </SheetClose>
+          </div>
+          <div className="h-[calc(100vh-100px)] overflow-auto pb-16">
+            <SpellFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              activeLevel={activeLevel}
+              toggleLevel={handleToggleLevel}
+              activeSchool={activeSchool}
+              toggleSchool={handleToggleSchool}
+              activeClass={activeClass}
+              toggleClass={handleToggleClass}
+              clearFilters={handleClearFilters}
+              allLevels={allLevels}
+              allSchools={allSchools}
+              allClasses={allClasses}
+              getBadgeColor={getBadgeColor}
+              getSchoolBadgeColor={getSchoolBadgeColor}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(true)}>
+        <Search className="h-5 w-5" />
+      </Button>
+    </div>
+  );
 
-      const importedSpells = importSpellsFromText(importText, []);
-      
-      if (importedSpells.length === 0) {
-        toast({
-          title: "Внимание",
-          description: "Не удалось импортировать заклинания из текста",
-          variant: "default"
-        });
-        return;
-      }
-
-      // Конвертируем в SpellData
-      const newSpellsData = importedSpells.map(spell => {
-        return convertToSpellData({
-          ...spell,
-          // Если не хватает обязательных полей, добавляем значения по умолчанию
-          isRitual: spell.ritual || false,
-          isConcentration: spell.concentration || false,
-          castingTime: spell.castingTime || "1 действие"
-        });
-      });
-
-      // Объединяем с существующими, избегая дубликатов
-      const updatedSpellbook = [...userSpellbook];
-      newSpellsData.forEach(newSpell => {
-        if (!updatedSpellbook.some(s => s.name === newSpell.name)) {
-          updatedSpellbook.push(newSpell);
-        }
-      });
-
-      saveUserSpellbook(updatedSpellbook);
-      
-      toast({
-        title: "Импорт успешен",
-        description: `Добавлено ${newSpellsData.length} заклинаний в вашу книгу`,
-      });
-      
-      setImportDialogOpen(false);
-      setImportText('');
-    } catch (error) {
-      console.error('Ошибка при импорте заклинаний:', error);
-      toast({
-        title: "Ошибка импорта",
-        description: "Произошла ошибка при импорте заклинаний",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddToSpellbook = (spell: CharacterSpell) => {
-    // Проверяем, есть ли уже такое заклинание
-    if (userSpellbook.some(s => s.name === spell.name)) {
-      toast({
-        title: "Заклинание уже добавлено",
-        description: `${spell.name} уже присутствует в вашей книге заклинаний`,
-        variant: "default"
-      });
-      return;
-    }
-
-    try {
-      const spellData = convertToSpellData({
-        ...spell,
-        // Если не хватает обязательных полей для SpellData, добавляем 
-        isRitual: spell.ritual || false,
-        isConcentration: spell.concentration || false
-      });
-      
-      const updatedSpellbook = [...userSpellbook, spellData];
-      saveUserSpellbook(updatedSpellbook);
-      
-      toast({
-        title: "Заклинание добавлено",
-        description: `${spell.name} добавлено в вашу книгу заклинаний`,
-      });
-    } catch (error) {
-      console.error('Ошибка при добавлении заклинания:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось добавить заклинание",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveFromSpellbook = (spellName: string) => {
-    const updatedSpellbook = userSpellbook.filter(s => s.name !== spellName);
-    saveUserSpellbook(updatedSpellbook);
-    
-    toast({
-      title: "Заклинание удалено",
-      description: `${spellName} удалено из вашей книги заклинаний`,
-    });
-  };
-
-  const clearSpellbook = () => {
-    if (confirm("Вы действительно хотите очистить всю книгу заклинаний?")) {
-      saveUserSpellbook([]);
-      toast({
-        title: "Книга очищена",
-        description: "Все заклинания удалены из вашей книги заклинаний",
-      });
-    }
-  };
-
-  // Группируем заклинания в книге по уровням
-  const spellsByLevel = userSpellbook.reduce((acc, spell) => {
-    const level = spell.level;
-    if (!acc[level]) acc[level] = [];
-    acc[level].push(spell);
-    return acc;
-  }, {} as {[key: number]: SpellData[]});
+  // Содержимое для мобильны�� фильтров
+  const MobileFilters = () => (
+    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+      <SheetContent side="right" className="w-[85%] sm:w-[385px] pt-10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Поиск заклинаний</h2>
+          <SheetClose asChild>
+            <Button variant="ghost" size="icon">
+              <X className="h-5 w-5" />
+            </Button>
+          </SheetClose>
+        </div>
+        <div className="h-[calc(100vh-100px)] overflow-auto pb-16">
+          <SpellFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            activeLevel={activeLevel}
+            toggleLevel={handleToggleLevel}
+            activeSchool={activeSchool}
+            toggleSchool={handleToggleSchool}
+            activeClass={activeClass}
+            toggleClass={handleToggleClass}
+            clearFilters={handleClearFilters}
+            allLevels={allLevels}
+            allSchools={allSchools}
+            allClasses={allClasses}
+            getBadgeColor={getBadgeColor}
+            getSchoolBadgeColor={getSchoolBadgeColor}
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <Card className="bg-card/30 backdrop-blur-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6" />
-              <span>Книга заклинаний</span>
-            </div>
-            <div className="space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setImportDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Импортировать
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? "Готово" : "Редактировать"}
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <Tabs defaultValue="spellbook">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="spellbook">Мои заклинания</TabsTrigger>
-              <TabsTrigger value="catalog">Каталог</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="spellbook">
-              {userSpellbook.length === 0 ? (
-                <div className="text-center py-10">
-                  <BookOpen className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Ваша книга заклинаний пуста</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Добавьте заклинания из каталога или импортируйте их из текста
-                  </p>
-                  <Button onClick={() => clearSpellbook()} variant="outline" className="mx-auto" disabled={true}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Очистить книгу
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Всего заклинаний: {userSpellbook.length}</h3>
-                    <Button onClick={() => clearSpellbook()} variant="outline" size="sm" className="text-red-500 hover:text-red-600">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Очистить книгу
-                    </Button>
-                  </div>
-                  
-                  <ScrollArea className="h-[60vh]">
-                    {Object.entries(spellsByLevel)
-                      .sort(([a], [b]) => Number(a) - Number(b))
-                      .map(([level, spells]) => (
-                        <div key={level} className="mb-6">
-                          <h3 className="font-semibold mb-2">
-                            {level === '0' ? 'Заговоры' : `${level} уровень`}
-                            <Badge 
-                              variant="secondary" 
-                              className="ml-2"
-                            >
-                              {spells.length}
-                            </Badge>
-                          </h3>
-                          <div className="grid grid-cols-1 gap-2">
-                            {spells.map((spell) => (
-                              <div 
-                                key={spell.name} 
-                                className="p-3 bg-background/80 hover:bg-background rounded-md flex justify-between items-center cursor-pointer border border-muted"
-                                onClick={() => handleOpenSpell(spell)}
-                              >
-                                <div>
-                                  <div className="font-medium">{spell.name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {spell.school} • {spell.castingTime}
-                                  </div>
-                                </div>
-                                
-                                {isEditing && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveFromSpellbook(spell.name);
-                                    }}
-                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Удалить</span>
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                  </ScrollArea>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="catalog">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Поиск заклинаний..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" size="icon" onClick={() => clearFilters()}>
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-1 mb-4">
-                <h4 className="text-sm font-medium mr-2 flex items-center">Уровни:</h4>
-                {allLevels.map((level) => (
-                  <Badge
-                    key={level}
-                    variant={activeLevel.includes(level) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    style={activeLevel.includes(level) ? {backgroundColor: getBadgeColor(level)} : {}}
-                    onClick={() => toggleLevel(level)}
-                  >
-                    {level === 0 ? "Заговор" : level}
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="flex flex-wrap gap-1 mb-4">
-                <h4 className="text-sm font-medium mr-2 flex items-center">Школы:</h4>
-                {allSchools.map((school) => (
-                  <Badge
-                    key={school}
-                    variant={activeSchool.includes(school) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    style={activeSchool.includes(school) ? {backgroundColor: getSchoolBadgeColor(school)} : {}}
-                    onClick={() => toggleSchool(school)}
-                  >
-                    {school}
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="flex flex-wrap gap-1 mb-4">
-                <h4 className="text-sm font-medium mr-2 flex items-center">Классы:</h4>
-                {allClasses.map((className) => (
-                  <Badge
-                    key={className}
-                    variant={activeClass.includes(className) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleClass(className)}
-                  >
-                    {className}
-                  </Badge>
-                ))}
-              </div>
-              
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-2">
-                  {filteredSpells.length > 0 ? (
-                    filteredSpells.map((spell) => (
-                      <div 
-                        key={spell.id} 
-                        className="p-3 bg-background/80 hover:bg-background rounded-md flex justify-between items-center cursor-pointer border border-muted"
-                        onClick={() => handleOpenSpell(spell)}
-                      >
-                        <div>
-                          <div className="font-medium">{spell.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {spell.school} • {spell.level === 0 ? "Заговор" : `${spell.level} уровень`} • {formatClasses(spell.classes || [])}
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToSpellbook(spell);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Добавить
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-10">
-                      <p className="text-muted-foreground">Заклинания не найдены</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      {/* Модальное окно детальной информации о заклинании */}
-      {selectedSpell && isModalOpen && (
-        <Dialog open={isModalOpen} onOpenChange={handleClose}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="flex justify-between items-center">
-                <span>{selectedSpell.name}</span>
-                <Badge 
-                  className="ml-2"
-                  style={{backgroundColor: getBadgeColor(selectedSpell.level)}}
-                >
-                  {selectedSpell.level === 0 ? "Заговор" : `${selectedSpell.level} уровень`}
-                </Badge>
-              </DialogTitle>
-              <DialogDescription>
-                <Badge variant="outline">{selectedSpell.school}</Badge>
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid grid-cols-2 gap-4 py-2">
-              <div>
-                <span className="font-medium text-sm">Время накладывания: </span>
-                <span className="text-sm">{selectedSpell.castingTime}</span>
-              </div>
-              <div>
-                <span className="font-medium text-sm">Дистанция: </span>
-                <span className="text-sm">{selectedSpell.range}</span>
-              </div>
-              <div>
-                <span className="font-medium text-sm">Компоненты: </span>
-                <span className="text-sm">{selectedSpell.components}</span>
-              </div>
-              <div>
-                <span className="font-medium text-sm">Длительность: </span>
-                <span className="text-sm">{selectedSpell.duration}</span>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div className="space-y-4">
-              <p>{selectedSpell.description}</p>
-              
-              {selectedSpell.higherLevels && (
-                <div>
-                  <h3 className="font-semibold">На больших уровнях:</h3>
-                  <p>{selectedSpell.higherLevels}</p>
-                </div>
-              )}
-            </div>
-            
-            <Separator />
-            
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                {selectedSpell.classes && Array.isArray(selectedSpell.classes) 
-                  ? selectedSpell.classes.join(', ')
-                  : selectedSpell.classes}
-              </div>
-              
-              <Button 
-                onClick={() => {
-                  handleAddToSpellbook(selectedSpell);
-                  handleClose();
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Добавить в книгу
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      {/* Диалог импорта заклинаний */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Импорт заклинаний</DialogTitle>
-            <DialogDescription>
-              Вставьте список заклинаний в текстовом формате
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Textarea
-            placeholder="Введите заклинания по одному в строке, например:
-Волшебная стрела (1st уровень)
-Огненный шар (3rd уровень)
-Малая иллюзия (заговор)"
-            rows={10}
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            className="font-mono"
-          />
-          
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleImport}>Импортировать</Button>
+    <div className="container mx-auto py-8 px-4 max-w-6xl pb-20 md:pb-8">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="bg-background/50"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Book className="h-6 w-6" />
+            {isMobile ? "Книга заклинаний" : "Книга заклинаний D&D 5e"}
+          </h1>
+        </div>
+        {!isMobile && (
+          <div>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/handbook')}
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="size-4" />
+              Руководство игрока
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
+      
+      <div className="mb-4 flex justify-end">
+        <ThemeSelector />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Боковая панель фильтров - скрыта на мобильных */}
+        {!isMobile && (
+          <div className="md:col-span-1 space-y-6">
+            <SpellFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              activeLevel={activeLevel}
+              toggleLevel={toggleLevel}
+              activeSchool={activeSchool}
+              toggleSchool={toggleSchool}
+              activeClass={activeClass}
+              toggleClass={toggleClass}
+              clearFilters={clearFilters}
+              allLevels={allLevels}
+              allSchools={allSchools}
+              allClasses={allClasses}
+              getBadgeColor={getBadgeColor}
+              getSchoolBadgeColor={getSchoolBadgeColor}
+            />
+            <NavigationButtons className="flex flex-col w-full" />
+          </div>
+        )}
+
+        <div className="md:col-span-3">
+          {isMobile && (
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="h-4 w-4 absolute top-3 left-3 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Искать заклинание..."
+                  className="w-full pl-10 py-2 rounded-lg border border-accent bg-background/60"
+                />
+              </div>
+            </div>
+          )}
+
+          <Card className="border border-accent bg-card/70 h-full">
+            <CardContent className="p-0">
+              <div className="p-4 bg-card/60 border-b border-accent flex items-center justify-between">
+                <h3 className="text-xl font-semibold">
+                  {filteredSpells.length} заклинаний найдено
+                </h3>
+                {isMobile && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsFilterOpen(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Фильтры
+                  </Button>
+                )}
+              </div>
+              <SpellList 
+                spells={filteredSpells}
+                getBadgeColor={getBadgeColor}
+                getSchoolBadgeColor={getSchoolBadgeColor}
+                currentTheme={currentTheme}
+                handleOpenSpell={handleOpenSpell}
+                formatClasses={formatClasses}
+              />
+            </CardContent>
+            <CardFooter className="border-t border-border p-4 bg-card/60">
+              <div className="text-sm text-muted-foreground">
+                Источник: D&D 5e Player's Handbook
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+
+      {selectedSpell && (
+        <SpellDetailModal 
+          open={isModalOpen} 
+          onClose={handleClose} 
+          spell={selectedSpell} 
+        />
+      )}
+
+      {/* Мобильная навигация и фильтры */}
+      {isMobile && (
+        <>
+          <MobileNavigation />
+          <MobileFilters />
+        </>
+      )}
     </div>
   );
 };

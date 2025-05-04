@@ -1,176 +1,177 @@
 
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useCharacterCreation } from "@/hooks/useCharacterCreation";
-import { CharacterSheet } from '@/types/character';
-
-// Импорт компонентов для шагов создания персонажа
-import CharacterBasics from './CharacterBasics';
-import CharacterAbilities from './CharacterAbilities';
-import CharacterClass from './CharacterClass';
+import React from 'react';
+import CharacterBasicInfo from './CharacterBasicInfo';
+import CharacterRaceSelection from './CharacterRaceSelection';
+import CharacterClassSelection from './CharacterClassSelection';
+import CharacterLevelSelection from './CharacterLevelSelection';
+import CharacterMulticlassing from './CharacterMulticlassing';
+import CharacterAbilityScores from './CharacterAbilityScores';
 import CharacterBackground from './CharacterBackground';
-import CharacterEquipment from './CharacterEquipment';
+import CharacterEquipmentSelection from './CharacterEquipmentSelection';
+import CharacterSpellSelection from './CharacterSpellSelection';
+import CharacterReview from './CharacterReview';
+import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
+import { CharacterSheet } from '@/types/character.d';
 
-// Компонент для отображения шага создания персонажа
-const CharacterCreationContent = () => {
-  const { toast } = useToast();
-  // Инициализация хука создания персонажа
-  const { 
-    character, 
-    updateCharacter, 
-    saveCharacter, 
-    activeStep, 
-    nextStep, 
-    prevStep,
-    resetCharacter
-  } = useCharacterCreation();
-  
-  // Обработчик для сохранения персонажа
-  const handleSaveCharacter = async () => {
-    try {
-      await saveCharacter();
-      toast({
-        title: "Персонаж сохранен",
-        description: "Ваш персонаж успешно сохранен!"
-      });
-    } catch (error) {
-      console.error("Ошибка при сохранении персонажа", error);
-      toast({
-        title: "Ошибка сохранения",
-        description: "Не удалось сохранить персонажа",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Отображение текущего шага создания персонажа
-  const renderStep = () => {
-    switch(activeStep) {
-      case 0:
+interface CharacterCreationContentProps {
+  currentStep: number;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
+  setAbilitiesMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
+  diceResults: number[][];
+  getModifier: (abilityScore: number) => string;
+  rollAllAbilities: () => void;
+  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
+  abilityScorePoints: number;
+  isMagicClass: boolean;
+  rollsHistory: { ability: string; rolls: number[]; total: number }[];
+  onLevelChange: (level: number) => void;
+  maxAbilityScore?: number;
+  setCurrentStep: (step: number) => void;
+}
+
+const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
+  currentStep,
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep,
+  abilitiesMethod,
+  setAbilitiesMethod,
+  diceResults,
+  getModifier,
+  rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints,
+  isMagicClass,
+  rollsHistory,
+  onLevelChange,
+  maxAbilityScore,
+  setCurrentStep
+}) => {
+  // Функция для рендеринга текущего шага создания персонажа
+  const renderCreationStep = () => {
+    switch (currentStep) {
+      case 0: // Выбор расы
         return (
-          <CharacterBasics 
-            character={character}
+          <CharacterRaceSelection 
+            character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
         );
-      case 1:
+      case 1: // Выбор класса и подкласса
         return (
-          <CharacterAbilities 
-            character={character}
+          <CharacterClassSelection 
+            character={character} 
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
         );
-      case 2:
+      case 2: // Выбор основного уровня персонажа
         return (
-          <CharacterClass 
+          <CharacterLevelSelection
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
+            onLevelChange={onLevelChange}
           />
         );
-      case 3:
+      case 3: // Характеристики
+        return (
+          <CharacterAbilityScores 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+            abilitiesMethod={abilitiesMethod}
+            setAbilitiesMethod={setAbilitiesMethod}
+            diceResults={diceResults}
+            getModifier={getModifier}
+            rollAllAbilities={rollAllAbilities}
+            rollSingleAbility={rollSingleAbility}
+            abilityScorePoints={abilityScorePoints}
+            rollsHistory={rollsHistory}
+            maxAbilityScore={maxAbilityScore}
+          />
+        );
+      case 4: // Предыстория
         return (
           <CharacterBackground 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 5: // Здоровье
+        return (
+          <CharacterHitPointsCalculator
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
         );
-      case 4:
+      case 6: // Выбор снаряжения
         return (
-          <CharacterEquipment 
+          <CharacterEquipmentSelection 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 7: // Детали персонажа
+        return (
+          <CharacterBasicInfo 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 8: // Выбор заклинаний
+        // Проверяем, является ли класс магическим
+        if (!isMagicClass) {
+          // Автоматически переходим к следующему шагу с задержкой
+          setTimeout(() => nextStep(), 0);
+          // Возвращаем пустой фрагмент во время перехода
+          return <></>;
+        }
+        return (
+          <CharacterSpellSelection
             character={character}
             updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
         );
-      case 5:
-        // Последний шаг - сводка по персонажу
+      case 9: // Просмотр и завершение
         return (
-          <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-center mb-4">Сводка персонажа</h1>
-            
-            <Card className="p-6">
-              <h2 className="text-xl font-bold mb-4">{character.name || "Безымянный"}</h2>
-              
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <h3 className="font-medium">Базовая информация</h3>
-                  <p>Класс: {character.className || character.class || "Не выбран"}</p>
-                  <p>Уровень: {character.level || 1}</p>
-                  <p>Раса: {character.race || "Не выбрана"}</p>
-                  <p>Предыстория: {character.background || "Не выбрана"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium">Характеристики</h3>
-                  <p>СИЛ: {character.abilities?.STR || "-"}</p>
-                  <p>ЛОВ: {character.abilities?.DEX || "-"}</p>
-                  <p>ТЕЛ: {character.abilities?.CON || "-"}</p>
-                  <p>ИНТ: {character.abilities?.INT || "-"}</p>
-                  <p>МДР: {character.abilities?.WIS || "-"}</p>
-                  <p>ХАР: {character.abilities?.CHA || "-"}</p>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-medium mb-2">Снаряжение</h3>
-                <div className="bg-primary-foreground/10 p-2 rounded-md">
-                  {character.equipment && character.equipment.length > 0 ? (
-                    <ul className="list-disc list-inside">
-                      {character.equipment.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground">Снаряжение не выбрано</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex justify-between">
-                <Button 
-                  variant="outline"
-                  onClick={prevStep}
-                >
-                  Назад
-                </Button>
-                <div className="space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={resetCharacter}
-                  >
-                    Сбросить
-                  </Button>
-                  <Button 
-                    onClick={handleSaveCharacter}
-                  >
-                    Сохранить персонажа
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <CharacterReview 
+            character={character}
+            prevStep={prevStep}
+            updateCharacter={updateCharacter}
+            setCurrentStep={setCurrentStep}
+          />
         );
       default:
-        return <div>Неизвестный шаг</div>;
+        return (
+          <div className="p-6 text-center">
+            <p>Неизвестный шаг создания персонажа.</p>
+          </div>
+        );
     }
   };
-  
-  return (
-    <div className="container mx-auto py-8">
-      {renderStep()}
-    </div>
-  );
+
+  return renderCreationStep();
 };
 
 export default CharacterCreationContent;

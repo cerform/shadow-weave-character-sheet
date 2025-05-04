@@ -46,6 +46,7 @@ const CharacterBasicInfo: React.FC<CharacterBasicInfoProps> = ({
             <Label htmlFor="name" className="text-foreground block mb-2 font-semibold">Имя персонажа</Label>
             <Input
               id="name"
+              name="character-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -58,6 +59,7 @@ const CharacterBasicInfo: React.FC<CharacterBasicInfoProps> = ({
             <Label htmlFor="gender" className="text-foreground block mb-2 font-semibold">Пол</Label>
             <select
               id="gender"
+              name="gender"
               value={gender}
               onChange={(e) => setGender(e.target.value)}
               className="w-full p-2 border rounded bg-background text-foreground"
@@ -74,6 +76,7 @@ const CharacterBasicInfo: React.FC<CharacterBasicInfoProps> = ({
             <Label htmlFor="alignment" className="text-foreground block mb-2 font-semibold">Мировоззрение</Label>
             <select
               id="alignment"
+              name="alignment"
               value={alignment}
               onChange={(e) => setAlignment(e.target.value)}
               className="w-full p-2 border rounded bg-background text-foreground"

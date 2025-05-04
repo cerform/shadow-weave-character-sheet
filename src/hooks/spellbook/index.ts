@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { spells as allSpells, getSpellsByClass } from '@/data/spells';
+import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
 import { 
   filterSpellsBySearchTerm, 
@@ -11,60 +10,14 @@ import {
   formatClasses,
   convertToSpellData,
   isString,
-  isStringArray,
-  safeJoin
+  isStringArray
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
+import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
 import { CharacterSpell } from '@/types/character';
-import { importSpellsFromText as importFromText } from './importUtils';
 
 export * from './types';
-// Экспортируем функцию importSpellsFromText
-export const importSpellsFromText = (text: string): CharacterSpell[] => {
-  try {
-    // Разделяем текст на строки
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-    
-    // Паттерн для определения заклинаний
-    const spellPattern = /^(.+) \((\d)(?:st|nd|rd|th) уровень\)$/;
-    const cantripsPattern = /^(.+) \(заговор\)$/;
-    
-    const spells: CharacterSpell[] = [];
-    
-    lines.forEach(line => {
-      let match = line.match(spellPattern);
-      
-      if (match) {
-        const [, name, levelStr] = match;
-        const level = parseInt(levelStr);
-        
-        spells.push({
-          name: name.trim(),
-          level,
-          description: '',
-          school: ''
-        });
-      } else {
-        match = line.match(cantripsPattern);
-        if (match) {
-          const [, name] = match;
-          
-          spells.push({
-            name: name.trim(),
-            level: 0,
-            description: '',
-            school: ''
-          });
-        }
-      }
-    });
-    
-    return spells;
-  } catch (error) {
-    console.error('Ошибка при импорте заклинаний из текста:', error);
-    return [];
-  }
-};
+export { importSpellsFromTextUtil as importSpellsFromText };
 
 export const useSpellbook = (): UseSpellbookReturn => {
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
@@ -158,8 +111,12 @@ export const useSpellbook = (): UseSpellbookReturn => {
     setSearchTerm('');
   };
 
+  const importSpells = (textData: string) => {
+    // Этот метод будет обновлять данные в data/spells
+  };
+
   const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
-  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school || "Преобразование"))).sort();
+  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
 
   return {
     filteredSpells,
@@ -183,6 +140,6 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText
+    importSpellsFromText: importSpellsFromTextUtil
   };
 };

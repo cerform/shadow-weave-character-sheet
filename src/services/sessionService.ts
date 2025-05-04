@@ -1,9 +1,22 @@
-import { auth, db } from './firebase';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { Session, User as SessionUser } from '../types/session';
+import { db, storage, auth as firebaseAuth } from './firebase';
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { useCharacter, Character } from '@/contexts/CharacterContext';
-import characterService from './characterService';
+import { Character } from '@/contexts/CharacterContext';
+import { Session, User } from '@/types/session';
+import { getCurrentUid } from '@/utils/authHelpers';
+import { toast } from 'sonner';
 
 // Импортируем сервис персонажей
 import characterService from './characterService';
@@ -127,7 +140,7 @@ export const sessionService = {
   },
   
   // Присоединение к сессии
-  joinSession: async (sessionId: string, user: SessionUser): Promise<boolean> => {
+  joinSession: async (sessionId: string, user: User): Promise<boolean> => {
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
       const sessionSnap = await getDoc(sessionRef);

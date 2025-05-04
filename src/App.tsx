@@ -8,7 +8,6 @@ import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
 import { UserThemeProvider } from './contexts/UserThemeContext';
-import GlobalNavigation from './components/navigation/GlobalNavigation';
 import './App.css';
 
 import Index from './pages/Index';
@@ -54,27 +53,24 @@ const App = () => {
               <SessionProvider>
                 <SocketProvider>
                   <div className="app-container">
-                    <GlobalNavigation />
-                    <div className="content-wrapper pt-16"> {/* Добавляем отступ для навигации */}
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/auth" element={<AuthPage />} />
-                        <Route path="/sheet" element={<CharacterSheetPage />} />
-                        <Route path="/character-creation" element={<CharacterCreationPage />} />
-                        <Route path="/character/:id" element={<CharacterViewPage />} />
-                        <Route path="/join" element={<JoinSessionPage />} />
-                        <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
-                        <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-                        <Route path="/dm-session/:id" element={<DMSessionPage />} />
-                        <Route path="/play" element={<PlayerSessionPage />} />
-                        <Route path="/spellbook" element={<SpellbookPage />} />
-                        <Route path="/handbook" element={<HandbookPage />} />
-                        <Route path="/characters" element={<CharactersListPage />} />
-                        <Route path="/battle" element={<PlayBattlePage />} />
-                        <Route path="/dm/battle" element={<PlayBattlePage />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </div>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/sheet" element={<CharacterSheetPage />} />
+                      <Route path="/character-creation" element={<CharacterCreationPage />} />
+                      <Route path="/character/:id" element={<CharacterViewPage />} />
+                      <Route path="/join" element={<JoinSessionPage />} />
+                      <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
+                      <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                      <Route path="/dm-session/:id" element={<DMSessionPage />} />
+                      <Route path="/play" element={<PlayerSessionPage />} />
+                      <Route path="/spellbook" element={<SpellbookPage />} />
+                      <Route path="/handbook" element={<HandbookPage />} />
+                      <Route path="/characters" element={<CharactersListPage />} />
+                      <Route path="/battle" element={<PlayBattlePage />} />
+                      <Route path="/dm/battle" element={<PlayBattlePage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
                     <AppDiceButton />
                     <Toaster />
                   </div>

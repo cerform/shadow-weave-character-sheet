@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CharacterContext, Character } from '@/contexts/CharacterContext';
+import { Character } from '@/contexts/CharacterContext';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useContext } from 'react';
+import { CharacterContext } from '@/contexts/CharacterContext';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Circle, CheckCircle2 } from 'lucide-react';
 
@@ -77,13 +79,11 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
     return (
       <div className="space-y-2">
         {Object.entries(character.spellSlots)
-          .filter(([_, slot]) => slot && typeof slot === 'object' && slot.max > 0)
+          .filter(([_, slot]) => slot.max > 0)
           .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
           .map(([level, slot]) => {
-            if (!slot || typeof slot !== 'object') return null;
-            
-            const usedCount = slot.used || 0;
-            const maxCount = slot.max || 0;
+            const usedCount = slot.used;
+            const maxCount = slot.max;
             
             return (
               <div key={level} className="flex flex-col">
@@ -270,5 +270,3 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
     </Card>
   );
 };
-
-export default StatsPanel;
