@@ -325,7 +325,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
                 value={appearanceDetails.height}
                 onChange={(e) => handleAppearanceChange('height', e.target.value)}
                 className="bg-black/30 border-gray-700 text-white"
-                placeholder="Например: 5'10\"/178 см"
+                placeholder={"Например: 5'10\"/178 см"}
               />
             </div>
             
