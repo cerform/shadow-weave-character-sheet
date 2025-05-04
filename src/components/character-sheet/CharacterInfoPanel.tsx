@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { themes } from '@/lib/themes';
 
 interface CharacterInfoPanelProps {

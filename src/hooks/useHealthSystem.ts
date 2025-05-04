@@ -1,8 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+// Экспортируем тип события здоровья
+export type HealthEventType = 'damage' | 'healing' | 'temp_hp';
 
 export interface HealthEvent {
-  type: 'damage' | 'healing' | 'temp_hp';
+  type: HealthEventType;
   amount: number;
   source?: string;
   timestamp: number;
@@ -16,171 +19,162 @@ interface UseHealthSystemProps {
   onHealthChange?: (currentHp: number, maxHp: number, tempHp: number) => void;
 }
 
-export function useHealthSystem({
+export const useHealthSystem = ({
   initialCurrentHp = 0,
   initialMaxHp = 1,
   initialTempHp = 0,
   constitutionModifier = 0,
-  onHealthChange
-}: UseHealthSystemProps) {
-  const [currentHp, setCurrentHp] = useState(initialCurrentHp);
-  const [maxHp, setMaxHp] = useState(initialMaxHp);
-  const [tempHp, setTempHp] = useState(initialTempHp);
+  onHealthChange,
+}: UseHealthSystemProps) => {
+  // Основные состояния здоровья
+  const [currentHp, setCurrentHp] = useState<number>(initialCurrentHp);
+  const [maxHp, setMaxHp] = useState<number>(initialMaxHp);
+  const [tempHp, setTempHp] = useState<number>(initialTempHp);
+
+  // Журнал событий здоровья
   const [events, setEvents] = useState<HealthEvent[]>([]);
 
-  // Обработка урона
-  const applyDamage = (amount: number, source: string = 'Урон') => {
-    if (amount <= 0) return;
-
-    let newTempHp = tempHp;
-    let newCurrentHp = currentHp;
-    let damageToHp = amount;
-
-    // Сначала урон идет по временным хитам
-    if (tempHp > 0) {
-      if (tempHp >= amount) {
-        newTempHp -= amount;
-        damageToHp = 0;
-      } else {
-        damageToHp -= tempHp;
-        newTempHp = 0;
-      }
-    }
-
-    // Затем урон идет по обычным хитам
-    if (damageToHp > 0) {
-      newCurrentHp = Math.max(0, newCurrentHp - damageToHp);
-    }
-
-    // Регистрируем событие
-    const newEvent: HealthEvent = {
-      type: 'damage',
-      amount: amount,
-      source: source,
-      timestamp: Date.now()
-    };
-
-    setTempHp(newTempHp);
-    setCurrentHp(newCurrentHp);
-    setEvents(prev => [newEvent, ...prev]);
-
-    if (onHealthChange) {
-      onHealthChange(newCurrentHp, maxHp, newTempHp);
-    }
-  };
-
-  // Обработка лечения
-  const applyHealing = (amount: number, source: string = 'Лечение') => {
-    if (amount <= 0) return;
-
-    // Лечение не может превысить максимальные хиты
-    const newCurrentHp = Math.min(currentHp + amount, maxHp);
-
-    // Регистрируем событие
-    const newEvent: HealthEvent = {
-      type: 'healing',
-      amount: amount,
-      source: source,
-      timestamp: Date.now()
-    };
-
-    setCurrentHp(newCurrentHp);
-    setEvents(prev => [newEvent, ...prev]);
-
-    if (onHealthChange) {
-      onHealthChange(newCurrentHp, maxHp, tempHp);
-    }
-  };
-
-  // Добавление временных хитов
-  const addTempHp = (amount: number, source: string = 'Временные HP') => {
-    if (amount <= 0) return;
-
-    // Временные хиты не складываются, берем максимальное значение
-    const newTempHp = Math.max(tempHp, amount);
-
-    // Регистрируем событие
-    const newEvent: HealthEvent = {
-      type: 'temp_hp',
-      amount: amount,
-      source: source,
-      timestamp: Date.now()
-    };
-
-    setTempHp(newTempHp);
-    setEvents(prev => [newEvent, ...prev]);
-
-    if (onHealthChange) {
-      onHealthChange(currentHp, maxHp, newTempHp);
-    }
-  };
-
-  // Отмена последнего действия
-  const undoLastEvent = () => {
-    if (events.length === 0) return;
-
-    const [lastEvent, ...restEvents] = events;
-    setEvents(restEvents);
-
-    switch (lastEvent.type) {
-      case 'damage':
-        // Восстановление хитов от урона
-        let restoredCurrentHp = currentHp;
-        let restoredTempHp = tempHp;
-
-        // Если были потрачены обычные хиты
-        if (currentHp < maxHp) {
-          const hpToRestore = Math.min(lastEvent.amount, maxHp - currentHp);
-          restoredCurrentHp += hpToRestore;
-          
-          // Если осталось еще урона для восстановления временных хитов
-          const remainingDamage = lastEvent.amount - hpToRestore;
-          if (remainingDamage > 0) {
-            restoredTempHp += remainingDamage;
-          }
-        } else {
-          // Если все обычные хиты целы, значит весь урон был по временным хитам
-          restoredTempHp += lastEvent.amount;
-        }
-
-        setCurrentHp(restoredCurrentHp);
-        setTempHp(restoredTempHp);
-        break;
-
-      case 'healing':
-        // Отмена лечения
-        setCurrentHp(Math.max(0, currentHp - lastEvent.amount));
-        break;
-
-      case 'temp_hp':
-        // Отмена временных хитов сложнее, т.к. они могли уже быть потрачены
-        // Упрощенный подход - просто сбросить до 0, если они были основным источником
-        if (lastEvent.amount >= tempHp) {
-          setTempHp(0);
-        }
-        break;
-    }
-
+  // Эффект для вызова обработчика при изменении состояния здоровья
+  useEffect(() => {
     if (onHealthChange) {
       onHealthChange(currentHp, maxHp, tempHp);
     }
-  };
+  }, [currentHp, maxHp, tempHp, onHealthChange]);
 
-  // Инициализация и синхронизация значений
-  useEffect(() => {
-    setCurrentHp(initialCurrentHp);
-    setMaxHp(initialMaxHp);
-    setTempHp(initialTempHp);
-  }, [initialCurrentHp, initialMaxHp, initialTempHp]);
+  // Установка значений HP с возможностью "тихого" режима (без уведомления)
+  const setHp = useCallback((value: number, silent: boolean = false) => {
+    setCurrentHp(Math.max(0, Math.min(value, maxHp)));
+    if (!silent && onHealthChange) {
+      onHealthChange(value, maxHp, tempHp);
+    }
+  }, [maxHp, tempHp, onHealthChange]);
+
+  // Установка значений максимального HP с возможностью "тихого" режима
+  const setMaxHitPoints = useCallback((value: number, silent: boolean = false) => {
+    setMaxHp(Math.max(1, value));
+    if (!silent && onHealthChange) {
+      onHealthChange(currentHp, value, tempHp);
+    }
+  }, [currentHp, tempHp, onHealthChange]);
+
+  // Установка значений временного HP с возможностью "тихого" режима
+  const setTempHp = useCallback((value: number, silent: boolean = false) => {
+    setTempHp(Math.max(0, value));
+    if (!silent && onHealthChange) {
+      onHealthChange(currentHp, maxHp, value);
+    }
+  }, [currentHp, maxHp, onHealthChange]);
+
+  // Применение урона
+  const applyDamage = useCallback((amount: number, source?: string) => {
+    if (amount <= 0) return;
+
+    // Создаем новое событие
+    const event: HealthEvent = {
+      type: 'damage',
+      amount,
+      source,
+      timestamp: Date.now(),
+    };
+
+    // Добавляем событие в журнал
+    setEvents(prev => [event, ...prev]);
+
+    // Обработка урона с учетом временных хитов
+    if (tempHp > 0) {
+      if (tempHp >= amount) {
+        // Достаточно временных хитов, чтобы поглотить весь урон
+        setTempHp(tempHp - amount);
+      } else {
+        // Временных хитов не хватает, остаток идет в основные хиты
+        const remainingDamage = amount - tempHp;
+        setTempHp(0);
+        setCurrentHp(Math.max(0, currentHp - remainingDamage));
+      }
+    } else {
+      // Нет временных хитов, весь урон идет в основные хиты
+      setCurrentHp(Math.max(0, currentHp - amount));
+    }
+  }, [currentHp, tempHp, setCurrentHp, setTempHp]);
+
+  // Применение лечения
+  const applyHealing = useCallback((amount: number, source?: string) => {
+    if (amount <= 0) return;
+
+    // Создаем новое событие
+    const event: HealthEvent = {
+      type: 'healing',
+      amount,
+      source,
+      timestamp: Date.now(),
+    };
+
+    // Добавляем событие в журнал
+    setEvents(prev => [event, ...prev]);
+
+    // Лечение не может превышать максимальное здоровье
+    setCurrentHp(Math.min(currentHp + amount, maxHp));
+  }, [currentHp, maxHp, setCurrentHp]);
+
+  // Добавление временных хитов
+  const addTempHp = useCallback((amount: number, source?: string) => {
+    if (amount < 0) return;
+
+    // Создаем новое событие
+    const event: HealthEvent = {
+      type: 'temp_hp',
+      amount,
+      source,
+      timestamp: Date.now(),
+    };
+
+    // Добавляем событие в журнал только если это не сброс (amount > 0)
+    if (amount > 0) {
+      setEvents(prev => [event, ...prev]);
+    }
+
+    // Временные хиты не суммируются, берется наибольшее значение
+    setTempHp(Math.max(tempHp, amount));
+  }, [tempHp, setTempHp]);
+
+  // Отмена последнего события здоровья
+  const undoLastEvent = useCallback(() => {
+    if (events.length === 0) return;
+
+    // Получаем последнее событие
+    const lastEvent = events[0];
+
+    // Удаляем его из журнала
+    setEvents(prev => prev.slice(1));
+
+    // Восстанавливаем состояние на основе типа события
+    switch (lastEvent.type) {
+      case 'damage':
+        // Отмена урона - восстановление хитов
+        setCurrentHp(Math.min(currentHp + lastEvent.amount, maxHp));
+        break;
+      case 'healing':
+        // Отмена лечения - уменьшение хитов
+        setCurrentHp(Math.max(0, currentHp - lastEvent.amount));
+        break;
+      case 'temp_hp':
+        // Отмена добавления временных хитов
+        setTempHp(Math.max(0, tempHp - lastEvent.amount));
+        break;
+    }
+  }, [events, currentHp, maxHp, tempHp, setCurrentHp, setTempHp]);
 
   return {
     currentHp,
     maxHp,
     tempHp,
     events,
+    setHp,
+    setMaxHitPoints,
+    setTempHp,
     applyDamage,
     applyHealing,
     addTempHp,
     undoLastEvent
   };
-}
+};

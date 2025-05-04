@@ -1,38 +1,36 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { CharacterSheet as CharacterSheetType } from '@/types/character';
+import React, { useState, useEffect, useCallback } from "react";
 import CharacterInfoPanel from './CharacterInfoPanel';
 import AbilityScoresPanel from './AbilityScoresPanel';
 import SkillsPanel from './SkillsPanel';
-import CombatStatsPanel from './CombatStatsPanel';
-import FeaturesTab from './FeaturesTab';
-import EquipmentPanel from './EquipmentPanel';
-import SpellsPanel from './SpellsPanel';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { SessionContext } from '@/contexts/SessionContext';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { socket } from '@/lib/socket';
-// Заменяем импорт из next/navigation
-import { useNavigate } from 'react-router-dom';
-import { Skeleton } from "@/components/ui/skeleton"
-import { ModeToggle } from "@/components/ModeToggle"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Edit, UserPlus, Save, Download, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Используем react-router-dom вместо next/navigation
+import { Skeleton } from "@/components/ui/skeleton";
+import { ModeToggle } from "@/components/ModeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Edit, UserPlus, Save, Download, Trash2, BookOpen } from 'lucide-react';
 import CharacterEditModal from './CharacterEditModal';
 import PDFGenerator from './PDFGenerator';
 import EnhancedResourcePanel from './EnhancedResourcePanel';
 import EnhancedLevelUpPanel from './EnhancedLevelUpPanel';
+import FeaturesTab from './FeaturesTab';
+import EquipmentPanel from './EquipmentPanel';
+import SpellsPanel from './SpellsPanel';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { CharacterTabs } from './CharacterTabs';
 
 const CharacterSheet = ({ character, isDM = false }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('features');
+  const [activeTab, setActiveTab] = useState('abilities');
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { width } = useWindowSize();
@@ -40,17 +38,19 @@ const CharacterSheet = ({ character, isDM = false }) => {
   const { session, addCharacterToSession, removeCharacterFromSession } = React.useContext(SessionContext);
   const { toast } = useToast();
   const { currentUser, isOfflineMode } = useAuth();
-  // Заменяем router из next на navigate из react-router
   const navigate = useNavigate();
   
   // Состояние для хранения информации о персонаже в формате PDF
-  const [pdfData, setPdfData] = useState<CharacterSheetType | null>(null);
+  const [pdfData, setPdfData] = useState(null);
   
   // Функция для обновления информации о персонаже
-  const handleUpdateCharacter = (updates: Partial<CharacterSheetType>) => {
+  const handleUpdateCharacter = (updates) => {
     if (!character) return;
     
-    const updatedCharacter = { ...character, ...updates };
+    const updatedCharacter = {
+      ...character,
+      ...updates
+    };
     updateCharacter(updatedCharacter);
     
     // Отправляем изменения на сервер, если мы в сессии и не в автономном режиме
@@ -74,7 +74,7 @@ const CharacterSheet = ({ character, isDM = false }) => {
         title: "Персонаж добавлен в сессию",
         description: `Персонаж ${character.name} успешно добавлен в текущую сессию.`,
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Ошибка при добавлении персонажа",
         description: error.message || "Не удалось добавить персонажа в сессию.",
@@ -95,7 +95,7 @@ const CharacterSheet = ({ character, isDM = false }) => {
         title: "Персонаж удален из сессии",
         description: `Персонаж ${character.name} успешно удален из текущей сессии.`,
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Ошибка при удалении персонажа",
         description: error.message || "Не удалось удалить персонажа из сессии.",
@@ -169,7 +169,6 @@ const CharacterSheet = ({ character, isDM = false }) => {
               onClick={() => {
                 if (confirm("Вы уверены, что хотите удалить этого персонажа?")) {
                   localStorage.removeItem('dnd-characters');
-                  // Заменяем router.push на navigate
                   navigate('/');
                 }
               }}
@@ -213,98 +212,153 @@ const CharacterSheet = ({ character, isDM = false }) => {
         updateCharacter={handleUpdateCharacter} 
       />
       
-      {/* ContentWrapper с обновленными компонентами */}
-      <ContentWrapper>
+      {/* Основное содержимое с трехколоночной структурой */}
+      <div className="bg-secondary rounded-md p-4">
+        {/* Табы для мобильного отображения */}
+        {width < 768 && (
+          <CharacterTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        )}
+        
+        {/* Трехколоночный макет для десктопа */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Левая колонка */}
-          <div className="md:col-span-4 lg:col-span-3">
-            <div className="space-y-4">
-              {/* Информация о персонаже */}
-              <CharacterInfoPanel character={character} />
-              
-              {/* Характеристики */}
-              <AbilityScoresPanel character={character} />
-              
-              {/* Используем улучшенную панель ресурсов */}
-              <EnhancedResourcePanel />
-              
-              {/* Используем улучшенную панель повышения уровня */}
-              <EnhancedLevelUpPanel />
-              
-              {/* Навыки */}
-              <SkillsPanel character={character} />
-            </div>
-          </div>
-          
-          {/* Средняя колонка (Features/Equipment) */}
-          <div className="md:col-span-8 lg:col-span-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList>
-                <TabsTrigger value="features">Особенности</TabsTrigger>
-                <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-              </TabsList>
-              <TabsContent value="features">
-                <Card>
-                  <CardContent className="p-4">
-                    <FeaturesTab character={character} isDM={isDM || isOfflineMode} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="equipment">
-                <Card>
-                  <CardContent className="p-4">
-                    <EquipmentPanel character={character} isDM={isDM || isOfflineMode} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-          
-          {/* Правая колонка (Spells) */}
-          <div className="md:col-span-12 lg:col-span-3">
-            {character?.class === 'Волшебник' || character?.class === 'Жрец' || character?.class === 'Друид' || character?.class === 'Бард' || character?.class === 'Колдун' || character?.class === 'Чернокнижник' || character?.class === 'Чародей' ? (
-              <SpellsPanel character={character} isDM={isDM || isOfflineMode} />
-            ) : (
+          {/* Левая колонка: Ресурсы, Отдых, Магия */}
+          <div className="md:col-span-3 space-y-4">
+            <EnhancedResourcePanel />
+            
+            {/* Показываем панель заклинаний только для магических классов */}
+            {character?.class && ['Волшебник', 'Жрец', 'Друид', 'Бард', 'Колдун', 'Чернокнижник', 'Чародей', 'Паладин', 'Следопыт'].includes(character.class) && (
               <Card>
                 <CardContent className="p-4">
-                  <p className="text-muted-foreground">
-                    Этот класс не использует заклинания.
-                  </p>
+                  <h3 className="text-lg font-semibold mb-2">Заклинания</h3>
+                  <div className="text-sm text-muted-foreground">
+                    <div className="flex justify-between mb-1">
+                      <span>1-й уровень:</span>
+                      <span>3/3</span>
+                    </div>
+                    <div className="flex justify-between mb-1">
+                      <span>2-й уровень:</span>
+                      <span>2/2</span>
+                    </div>
+                    <Button size="sm" className="w-full mt-2">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Книга заклинаний
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
           </div>
+          
+          {/* Средняя колонка: Характеристики, Спасброски, Табы руководства */}
+          <div className="md:col-span-6 space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full grid grid-cols-3">
+                <TabsTrigger value="abilities">Характеристики</TabsTrigger>
+                <TabsTrigger value="features">Особенности</TabsTrigger>
+                <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-4">
+                <TabsContent value="abilities">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-3">Характеристики</h3>
+                          <div className="grid grid-cols-3 gap-3">
+                            {['СИЛ', 'ЛОВ', 'ТЕЛ', 'ИНТ', 'МДР', 'ХАР'].map((ability, index) => (
+                              <div key={ability} className="text-center p-2 border border-primary/20 rounded-md hover:bg-primary/5">
+                                <div className="text-sm text-muted-foreground">{ability}</div>
+                                <div className="text-xl font-bold">
+                                  {character?.abilities ? 
+                                    (character.abilities[Object.keys(character.abilities)[index]] || 10) : 10}
+                                </div>
+                                <div className="text-sm font-medium">
+                                  {character?.abilities ? 
+                                    (Math.floor((character.abilities[Object.keys(character.abilities)[index]] - 10) / 2) >= 0 ? 
+                                      `+${Math.floor((character.abilities[Object.keys(character.abilities)[index]] - 10) / 2)}` : 
+                                      Math.floor((character.abilities[Object.keys(character.abilities)[index]] - 10) / 2)) : '+0'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-semibold mb-3">Спасброски</h3>
+                          <div className="space-y-2">
+                            {['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'].map((save) => (
+                              <div key={save} className="flex justify-between items-center p-2 border border-primary/10 rounded-md hover:bg-primary/5">
+                                <span>{save}</span>
+                                <span>+2</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold mb-3">Боевые характеристики</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="text-center p-3 border border-primary/20 rounded-md bg-primary/5">
+                            <div className="text-sm text-muted-foreground">КБ</div>
+                            <div className="text-xl font-bold">14</div>
+                          </div>
+                          <div className="text-center p-3 border border-primary/20 rounded-md bg-primary/5">
+                            <div className="text-sm text-muted-foreground">Инициатива</div>
+                            <div className="text-xl font-bold">+2</div>
+                          </div>
+                          <div className="text-center p-3 border border-primary/20 rounded-md bg-primary/5">
+                            <div className="text-sm text-muted-foreground">Скорость</div>
+                            <div className="text-xl font-bold">30 фт</div>
+                          </div>
+                          <div className="text-center p-3 border border-primary/20 rounded-md bg-primary/5">
+                            <div className="text-sm text-muted-foreground">Бонус мастерства</div>
+                            <div className="text-xl font-bold">+2</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="features">
+                  <Card>
+                    <CardContent className="p-4">
+                      <FeaturesTab character={character} isDM={isDM || isOfflineMode} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="equipment">
+                  <Card>
+                    <CardContent className="p-4">
+                      <EquipmentPanel character={character} isDM={isDM || isOfflineMode} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </div>
+            </Tabs>
+            
+            <CharacterInfoPanel character={character} />
+          </div>
+          
+          {/* Правая колонка: Навыки, Повышение уровня */}
+          <div className="md:col-span-3 space-y-4">
+            <SkillsPanel character={character} />
+            <EnhancedLevelUpPanel />
+          </div>
         </div>
-      </ContentWrapper>
+      </div>
       
       {/* Подвал */}
       <footer className="py-6 text-center text-muted-foreground">
-        {width < 768 ? (
-          <>
-            <p className="text-sm">
-              DnD Character Sheet App
-            </p>
-            <p className="text-xs">
-              Created by Foxik
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm">
-              DnD Character Sheet App - Created by Foxik
-            </p>
-          </>
-        )}
+        <p className="text-sm">
+          DnD Character Sheet App - Created by Foxik
+        </p>
       </footer>
     </div>
   );
 };
-
-// Обертка контента для стилизации
-const ContentWrapper = ({ children }) => (
-  <div className="bg-secondary rounded-md p-4">
-    {children}
-  </div>
-);
 
 export default CharacterSheet;

@@ -28,7 +28,8 @@ export const EnhancedLevelUpPanel: React.FC = () => {
   // Расчет прогресса опыта (упрощенная реализация)
   const calculateXpProgress = () => {
     const level = character?.level || 1;
-    const xp = character?.xp !== undefined ? character.xp : 0; // Безопасно получаем xp
+    // Используем безопасное получение xp с проверкой на undefined
+    const characterXp = character?.xp !== undefined ? character.xp : 0;
     
     // Упрощенная таблица опыта
     const xpThresholds = [
@@ -42,7 +43,7 @@ export const EnhancedLevelUpPanel: React.FC = () => {
     const currentLevelXP = xpThresholds[level - 1];
     const nextLevelXP = xpThresholds[level];
     const xpForNextLevel = nextLevelXP - currentLevelXP;
-    const xpProgress = xp - currentLevelXP;
+    const xpProgress = characterXp - currentLevelXP;
     
     return Math.min(100, Math.max(0, (xpProgress / xpForNextLevel) * 100));
   };

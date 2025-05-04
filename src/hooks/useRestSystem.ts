@@ -1,125 +1,141 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { getNumericModifier, getHitDieType } from '@/utils/characterUtils';
 import { CharacterSheet } from '@/types/character';
-import { getHitDieType, getHitDieValue, getNumericModifier } from '@/utils/characterUtils';
 
 interface UseRestSystemProps {
-  character: any;
+  character: CharacterSheet | null;
   updateCharacter: (updates: Partial<CharacterSheet>) => void;
   onHealthRestore?: (amount: number, isLongRest: boolean) => void;
 }
 
-export function useRestSystem({
+export const useRestSystem = ({
   character,
   updateCharacter,
   onHealthRestore
-}: UseRestSystemProps) {
+}: UseRestSystemProps) => {
   const [isShortResting, setIsShortResting] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
-
-  // Получаем тип кубика хитов для класса
-  const getHitDieTypeForCharacter = (): string => {
-    if (!character) return 'd8';
-    return getHitDieType(character.class || character.className || '');
-  };
-
-  // Получаем максимальное количество кубиков хитов (равно уровню)
-  const getMaxHitDice = (): number => {
-    return character?.level || 1;
-  };
-
-  // Получаем текущее количество доступных кубиков хитов
-  const getCurrentHitDice = (): number => {
-    // Если hitDice уже число, просто вернем его
-    if (typeof character?.hitDice === 'number') {
+  
+  // Получение типа кубика хитов для класса персонажа
+  const getHitDieTypeForCharacter = useCallback((): string => {
+    if (!character?.class) return 'd8';
+    return getHitDieType(character.class);
+  }, [character?.class]);
+  
+  // Получение текущего количества кубиков хитов
+  const getCurrentHitDice = useCallback((): number => {
+    if (!character?.hitDice) return character?.level || 1;
+    
+    // Если hitDice хранится в формате "2d8", извлекаем число
+    if (typeof character.hitDice === 'string' && character.hitDice.includes('d')) {
+      const match = character.hitDice.match(/^(\d+)d/);
+      if (match && match[1]) {
+        return parseInt(match[1], 10);
+      }
+    }
+    
+    // Если hitDice хранится как число
+    if (typeof character.hitDice === 'number') {
       return character.hitDice;
     }
     
-    // Если hitDice строка или undefined, вернем максимальное значение
-    return getMaxHitDice();
-  };
-
-  // Функция для короткого отдыха
-  const takeShortRest = async () => {
-    if (isShortResting || isLongResting) return;
-
-    setIsShortResting(true);
-    
-    try {
-      // Имитация времени короткого отдыха
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // При коротком отдыхе ничего автоматически не восстанавливается
-      // Игрок может использовать кубики хитов для восстановления
-      updateCharacter({
-        // После короткого отдыха некоторые способности могут восстанавливаться
-        // Зависит от класса персонажа
-      });
-    } catch (error) {
-      console.error('Ошибка при коротком отдыхе:', error);
-    } finally {
-      setIsShortResting(false);
-    }
-  };
-
-  // Функция для длинного отдыха
-  const takeLongRest = async () => {
-    if (isShortResting || isLongResting) return;
-
-    setIsLongResting(true);
-    
-    try {
-      // Имитация времени длинного отдыха
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // При длинном отдыхе восстанавливаются все хиты
-      const maxHp = character?.maxHp || 0;
-      
-      // Восстанавливается минимум половина максимального количества кубиков хитов
-      const maxHitDice = getMaxHitDice();
-      const hitDiceToRestore = Math.max(1, Math.floor(maxHitDice / 2));
-      const currentHitDice = getCurrentHitDice();
-      const newHitDice = Math.min(maxHitDice, currentHitDice + hitDiceToRestore);
-      
-      // Обновляем персонажа
-      updateCharacter({
-        currentHp: maxHp,
-        temporaryHp: 0,
-        hitDice: newHitDice
-      });
-      
-      // Вызываем callback для обновления HP, если он предоставлен
-      if (onHealthRestore) {
-        onHealthRestore(maxHp, true);
-      }
-    } catch (error) {
-      console.error('Ошибка при длинном отдыхе:', error);
-    } finally {
-      setIsLongResting(false);
-    }
-  };
-
+    // По умолчанию возвращаем уровень персонажа
+    return character?.level || 1;
+  }, [character?.hitDice, character?.level]);
+  
+  // Получение максимального количества кубиков хитов (равно уровню персонажа)
+  const getMaxHitDice = useCallback((): number => {
+    return character?.level || 1;
+  }, [character?.level]);
+  
   // Использование кубика хитов для восстановления здоровья
-  const useHitDie = (rollResult: number) => {
-    const currentHitDice = getCurrentHitDice();
-    if (currentHitDice <= 0) return false;
-
-    const constitutionModifier = getNumericModifier(character?.abilities?.constitution || 10);
-    const healAmount = Math.max(1, rollResult + constitutionModifier);
+  const useHitDie = useCallback((rollResult: number): void => {
+    if (!character) return;
+    
+    const currentDice = getCurrentHitDice();
+    if (currentDice <= 0) return;
+    
+    // Получаем модификатор телосложения
+    const conModifier = character.abilities?.constitution 
+      ? getNumericModifier(character.abilities.constitution)
+      : (character.abilities?.CON ? getNumericModifier(character.abilities.CON) : 0);
+    
+    // Рассчитываем восстановленное здоровье (результат броска + модификатор телосложения)
+    const healingAmount = rollResult + conModifier;
+    
+    // Обновляем количество кубиков хитов
+    const newHitDice = currentDice - 1;
+    
+    // Обновляем кубики хитов в том же формате, в котором они хранились
+    let updatedHitDice: string | number = newHitDice;
+    if (typeof character.hitDice === 'string' && character.hitDice.includes('d')) {
+      const dieType = getHitDieTypeForCharacter();
+      updatedHitDice = `${newHitDice}${dieType}`;
+    }
     
     // Обновляем персонажа
     updateCharacter({
-      hitDice: currentHitDice - 1
+      hitDice: updatedHitDice,
     });
     
-    // Вызываем callback для обновления HP, если он предоставлен
+    // Вызываем обработчик восстановления здоровья, если он предоставлен
     if (onHealthRestore) {
-      onHealthRestore(healAmount, false);
+      onHealthRestore(Math.max(1, healingAmount), false);
+    }
+  }, [character, getCurrentHitDice, getHitDieTypeForCharacter, onHealthRestore, updateCharacter]);
+  
+  // Короткий отдых (восстанавливает некоторые ресурсы)
+  const takeShortRest = useCallback(async (): Promise<void> => {
+    if (!character || isShortResting || isLongResting) return;
+    
+    setIsShortResting(true);
+    
+    // Имитация времени отдыха
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Тут можно добавить восстановление других ресурсов при коротком отдыхе
+    
+    setIsShortResting(false);
+  }, [character, isShortResting, isLongResting]);
+  
+  // Длинный отдых (полностью восстанавливает здоровье и ресурсы)
+  const takeLongRest = useCallback(async (): Promise<void> => {
+    if (!character || isShortResting || isLongResting) return;
+    
+    setIsLongResting(true);
+    
+    // Имитация времени отдыха
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Восстанавливаем кубики хитов (минимум половина от максимального количества)
+    const maxDice = getMaxHitDice();
+    const restoredDice = Math.max(Math.floor(maxDice / 2), 1);
+    let currentDice = getCurrentHitDice();
+    let newDice = Math.min(maxDice, currentDice + restoredDice);
+    
+    // Обновляем кубики хитов в том же формате, в котором они хранились
+    let updatedHitDice: string | number = newDice;
+    if (typeof character.hitDice === 'string' && character.hitDice.includes('d')) {
+      const dieType = getHitDieTypeForCharacter();
+      updatedHitDice = `${newDice}${dieType}`;
     }
     
-    return true;
-  };
-
+    // Обновляем информацию о персонаже
+    updateCharacter({
+      hitDice: updatedHitDice,
+      temporaryHp: 0 // Сбрасываем временные хиты после длинного отдыха
+    });
+    
+    // Вызываем обработчик восстановления здоровья, если он предоставлен
+    if (onHealthRestore) {
+      // Полное восстановление здоровья
+      onHealthRestore(character.maxHp || 0, true);
+    }
+    
+    setIsLongResting(false);
+  }, [character, isShortResting, isLongResting, getMaxHitDice, getCurrentHitDice, getHitDieTypeForCharacter, onHealthRestore, updateCharacter]);
+  
   return {
     isShortResting,
     isLongResting,
@@ -130,4 +146,4 @@ export function useRestSystem({
     getCurrentHitDice,
     getMaxHitDice
   };
-}
+};

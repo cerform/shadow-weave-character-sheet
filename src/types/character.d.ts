@@ -25,6 +25,23 @@ export interface ClassLevel {
   subclass?: string;
 }
 
+// Интерфейс для характеристик персонажа
+export type AbilityScores = {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+  // Для обратной совместимости со старым форматом
+  STR?: number;
+  DEX?: number;
+  CON?: number;
+  INT?: number;
+  WIS?: number;
+  CHA?: number;
+};
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string; 
@@ -40,22 +57,8 @@ export interface CharacterSheet {
   level: number;
   background: string;
   alignment: string;
-  abilities: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  stats?: {  // Поле stats для совместимости
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
+  abilities: AbilityScores;
+  stats?: AbilityScores;  // Поле stats для совместимости
   skills: string[];
   languages: string[];
   equipment: string[];
@@ -75,15 +78,12 @@ export interface CharacterSheet {
   temporaryHp?: number; // Добавляем временные хиты
   hitDice?: string; // Добавляем кубики хитов (например, "4d6")
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
-  abilityBonuses?: { // Добавляем бонусы к характеристикам
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
+  abilityBonuses?: AbilityScores;
+  image?: string;
 }
+
+// Для совместимости с существующим кодом
+export type Character = CharacterSheet;
 
 // Интерфейс для подклассов персонажей
 export interface CharacterSubclass {

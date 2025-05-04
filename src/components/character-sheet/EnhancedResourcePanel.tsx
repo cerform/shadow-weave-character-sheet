@@ -4,20 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Heart, Shield, Dices, RefreshCw, Plus, Minus, Clock, Bed } from 'lucide-react';
 import { CharacterContext } from '@/contexts/CharacterContext';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { themes } from '@/lib/themes';
 import { HPBar } from './HPBar';
 import { DamageLog } from './DamageLog';
-import { motion } from 'framer-motion';
-import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 import { useHealthSystem } from '@/hooks/useHealthSystem';
 import { useRestSystem } from '@/hooks/useRestSystem';
-import { getNumericModifier } from '@/utils/characterUtils';
-import { CharacterSheet } from '@/types/character';
+import { getAbilityScore, getNumericModifier } from '@/utils/characterUtils';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 
 export const EnhancedResourcePanel: React.FC = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -31,9 +28,8 @@ export const EnhancedResourcePanel: React.FC = () => {
   const [tempHpValue, setTempHpValue] = useState(1);
   
   // Получаем модификатор телосложения
-  const constitutionModifier = character?.abilities
-    ? getNumericModifier(character.abilities.constitution || 10)
-    : 0;
+  const constitutionScore = getAbilityScore(character, 'constitution');
+  const constitutionModifier = getNumericModifier(constitutionScore);
   
   // Инициализируем систему здоровья
   const {
@@ -51,13 +47,12 @@ export const EnhancedResourcePanel: React.FC = () => {
     initialTempHp: character?.temporaryHp || 0,
     constitutionModifier,
     onHealthChange: (newCurrentHp, newMaxHp, newTempHp) => {
-      // Создаем обновление правильного типа
-      const updates: Partial<CharacterSheet> = {
+      // Используем интерфейс CharacterSheet для обновлений
+      updateCharacter({
         currentHp: newCurrentHp,
         maxHp: newMaxHp,
         temporaryHp: newTempHp
-      };
-      updateCharacter(updates);
+      });
     }
   });
   
@@ -132,7 +127,6 @@ export const EnhancedResourcePanel: React.FC = () => {
       case "d8": return "d8";
       case "d10": return "d10";
       case "d12": return "d12";
-      case "d20": return "d20";
       default: return "d8"; // Значение по умолчанию
     }
   };
@@ -171,7 +165,7 @@ export const EnhancedResourcePanel: React.FC = () => {
                         size="sm"
                         variant="destructive"
                         className="h-7 text-xs"
-                        onClick={() => applyDamage(value)}
+                        onClick={() => applyDamage(value, `Быстрый урон ${value}`)}
                       >
                         {value}
                       </Button>
@@ -192,7 +186,7 @@ export const EnhancedResourcePanel: React.FC = () => {
                         size="sm"
                         variant="secondary"
                         className="h-7 text-xs bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-500"
-                        onClick={() => applyHealing(value)}
+                        onClick={() => applyHealing(value, `Быстрое лечение ${value}`)}
                       >
                         {value}
                       </Button>
@@ -219,7 +213,7 @@ export const EnhancedResourcePanel: React.FC = () => {
                 <Button 
                   variant="destructive" 
                   className="rounded-l-none" 
-                  onClick={() => applyDamage(damageValue)}
+                  onClick={() => applyDamage(damageValue, 'Ввод урона')}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -239,7 +233,7 @@ export const EnhancedResourcePanel: React.FC = () => {
                 />
                 <Button 
                   className="rounded-l-none bg-emerald-600 hover:bg-emerald-700" 
-                  onClick={() => applyHealing(healValue)}
+                  onClick={() => applyHealing(healValue, 'Ввод лечения')}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -259,7 +253,7 @@ export const EnhancedResourcePanel: React.FC = () => {
                 />
                 <Button 
                   className="rounded-l-none bg-cyan-600 hover:bg-cyan-700" 
-                  onClick={() => addTempHp(tempHpValue)}
+                  onClick={() => addTempHp(tempHpValue, 'Ввод временного HP')}
                 >
                   <Shield className="h-4 w-4" />
                 </Button>

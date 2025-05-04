@@ -94,3 +94,107 @@ export const calculateMaxHitPoints = (
   
   return Math.max(1, maxHp); // Минимум 1 хит-поинт
 };
+
+/**
+ * Получает значение характеристики с учетом разных форматов данных
+ */
+export const getAbilityScore = (character: any, abilityKey: string): number => {
+  if (!character) return 10;
+  
+  // Проверяем новый формат abilities
+  if (character.abilities) {
+    // Пробуем получить по полному имени (strength, dexterity, etc)
+    if (character.abilities[abilityKey] !== undefined) {
+      return character.abilities[abilityKey];
+    }
+    
+    // Пробуем получить по сокращению (STR, DEX, etc)
+    const abbreviation = getAbbreviationFromKey(abilityKey);
+    if (abbreviation && character.abilities[abbreviation] !== undefined) {
+      return character.abilities[abbreviation];
+    }
+  }
+  
+  // Проверяем старый формат stats
+  if (character.stats) {
+    if (character.stats[abilityKey] !== undefined) {
+      return character.stats[abilityKey];
+    }
+    
+    const abbreviation = getAbbreviationFromKey(abilityKey);
+    if (abbreviation && character.stats[abbreviation] !== undefined) {
+      return character.stats[abbreviation];
+    }
+  }
+  
+  return 10; // Значение по умолчанию
+};
+
+/**
+ * Преобразует полное имя характеристики в сокращение и наоборот
+ */
+export const getAbbreviationFromKey = (key: string): string | null => {
+  const mapping: Record<string, string> = {
+    'strength': 'STR',
+    'dexterity': 'DEX',
+    'constitution': 'CON',
+    'intelligence': 'INT',
+    'wisdom': 'WIS',
+    'charisma': 'CHA',
+    'STR': 'strength',
+    'DEX': 'dexterity',
+    'CON': 'constitution',
+    'INT': 'intelligence',
+    'WIS': 'wisdom',
+    'CHA': 'charisma'
+  };
+  
+  return mapping[key] || null;
+};
+
+/**
+ * Преобразует характеристики из одного формата в другой
+ */
+export const normalizeAbilities = (abilities: any): any => {
+  if (!abilities) return null;
+  
+  // Если есть STR, DEX и т.д., преобразуем в полные имена
+  if (abilities.STR !== undefined) {
+    return {
+      strength: abilities.STR,
+      dexterity: abilities.DEX,
+      constitution: abilities.CON,
+      intelligence: abilities.INT,
+      wisdom: abilities.WIS,
+      charisma: abilities.CHA,
+      // Сохраняем оригинальные для обратной совместимости
+      STR: abilities.STR,
+      DEX: abilities.DEX,
+      CON: abilities.CON,
+      INT: abilities.INT,
+      WIS: abilities.WIS,
+      CHA: abilities.CHA
+    };
+  }
+  
+  // Если есть strength, dexterity и т.д., преобразуем в сокращения
+  if (abilities.strength !== undefined) {
+    return {
+      STR: abilities.strength,
+      DEX: abilities.dexterity,
+      CON: abilities.constitution,
+      INT: abilities.intelligence,
+      WIS: abilities.wisdom,
+      CHA: abilities.charisma,
+      // Сохраняем оригинальные для обратной совместимости
+      strength: abilities.strength,
+      dexterity: abilities.dexterity,
+      constitution: abilities.constitution,
+      intelligence: abilities.intelligence,
+      wisdom: abilities.wisdom,
+      charisma: abilities.charisma
+    };
+  }
+  
+  return abilities; // Возвращаем как есть, если формат неизвестен
+};
