@@ -135,6 +135,14 @@ interface UserDataForSync {
   campaigns?: string[];
 }
 
+// Интерфейс для данных пользователя из Firestore
+interface FirestoreUserData {
+  id: string;
+  characters?: string[];
+  campaigns?: string[];
+  [key: string]: any;
+}
+
 /**
  * Синхронизация данных пользователя с Firestore
  * @param userData Данные пользователя для синхронизации
@@ -148,7 +156,7 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
     console.log("Синхронизация пользователя с Firestore:", uid);
     
     // Получаем текущие данные пользователя из Firestore
-    const currentData = await getUserData(uid);
+    const currentData = await getUserData(uid) as FirestoreUserData | null;
     
     // Данные для обновления
     const updateData = {
@@ -165,12 +173,12 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
     } else {
       // Если у пользователя уже есть персонажи, сохраняем их
       if (currentData.characters && Array.isArray(currentData.characters) && currentData.characters.length > 0) {
-        updateData.characters = [...new Set([...currentData.characters, ...(userData.characters || [])])];
+        updateData.characters = [...new Set([...(currentData.characters), ...(userData.characters || [])])];
       }
       
       // Если у пользователя уже есть кампании, сохраняем их
       if (currentData.campaigns && Array.isArray(currentData.campaigns) && currentData.campaigns.length > 0) {
-        updateData.campaigns = [...new Set([...currentData.campaigns, ...(userData.campaigns || [])])];
+        updateData.campaigns = [...new Set([...(currentData.campaigns), ...(userData.campaigns || [])])];
       }
     }
     
