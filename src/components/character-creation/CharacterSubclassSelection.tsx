@@ -54,16 +54,8 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   
   const availableSubclasses = getAvailableSubclasses();
 
-  // При монтировании компонента и при изменении класса проверяем наличие подклассов
-  useEffect(() => {
-    if (availableSubclasses.length === 0) {
-      // Добавляем небольшую задержку, чтобы UI успел обновиться
-      const timer = setTimeout(() => {
-        nextStep();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [character.class, availableSubclasses.length, nextStep]);
+  // Удаляем автоматический переход к следующему шагу, если нет подклассов
+  // Вместо этого будем обрабатывать это в CharacterClassSelection
   
   const handleNext = () => {
     if (selectedSubclass || availableSubclasses.length === 0) {
@@ -88,9 +80,22 @@ const CharacterSubclassSelection: React.FC<CharacterSubclassSelectionProps> = ({
   
   const subclassInfo = getSubclassInfo();
   
-  // Если для класса нет доступных подклассов, сразу переходим к следующему шагу
+  // Если для класса нет доступных подклассов, сообщаем пользователю
   if (availableSubclasses.length === 0) {
-    return null; // Возвращаем null, чтобы компонент не рендерился, так как мы сразу переходим к следующему шагу
+    return (
+      <div className="space-y-4">
+        <SectionHeader
+          title="Архетипы недоступны"
+          description={`Для класса ${character.class} нет доступных архетипов. Вы можете перейти к следующему шагу.`}
+        />
+        <NavigationButtons
+          allowNext={true}
+          nextStep={nextStep}
+          prevStep={prevStep}
+          isFirstStep={false}
+        />
+      </div>
+    );
   }
 
   return (

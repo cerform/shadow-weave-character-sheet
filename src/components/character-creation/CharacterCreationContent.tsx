@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
@@ -85,13 +85,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           />
         );
       case 2: // Выбор архетипа (подкласса)
-        // Проверяем, есть ли подклассы для выбранного класса
-        if (!hasSubclasses()) {
-          // Автоматически переходим к следующему шагу с задержкой
-          setTimeout(() => nextStep(), 0);
-          // Возвращаем пустой фрагмент во время перехода
-          return <></>;
-        }
         return (
           <CharacterSubclassSelection
             character={character}

@@ -48,8 +48,8 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
       // Показываем подходящую подсказку в зависимости от наличия подклассов
       if (hasSubclasses(selectedClass)) {
         toast({
-          title: "Выбор класса завершен",
-          description: "На следующем шаге вам нужно будет выбрать архетип для вашего класса.",
+          title: "Класс выбран",
+          description: "Теперь выберите архетип для вашего класса.",
         });
       } else {
         toast({

@@ -47,9 +47,12 @@ const CharacterCreationPage = () => {
     hasSubclasses: hasSubclassesForClass()
   });
 
-  // Обновляем hasSubclasses при изменении класса персонажа
+  // Обновляем шаг при изменении класса персонажа
   useEffect(() => {
-    // При изменении класса конфигурация обновится автоматически через хук
+    // Когда класс меняется, обновляем hasSubclasses
+    if (character.class) {
+      console.log(`Класс выбран: ${character.class}, имеет подклассы: ${hasSubclassesForClass()}`);
+    }
   }, [character.class]);
 
   // Определяем максимальное значение для характеристик на основе уровня
@@ -179,7 +182,6 @@ const CharacterCreationPage = () => {
         />
       </div>
 
-      {/* Основная область контента с шагами создания персонажа */}
       <div 
         className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg animate-fade-in"
         style={{ 

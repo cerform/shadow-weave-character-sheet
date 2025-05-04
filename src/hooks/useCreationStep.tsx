@@ -21,17 +21,20 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
   // Переход к следующему шагу с учетом фильтрации
   const nextStep = () => {
     const nextId = getNextStepID(currentStepId, visibleSteps);
+    console.log(`Переход к следующему шагу: с ${currentStepId} на ${nextId}`);
     setCurrentStepId(nextId);
   };
 
   // Переход к предыдущему шагу с учетом фильтрации
   const prevStep = () => {
     const prevId = getPrevStepID(currentStepId, visibleSteps);
+    console.log(`Переход к предыдущему шагу: с ${currentStepId} на ${prevId}`);
     setCurrentStepId(prevId);
   };
 
   // Функция для установки шага по индексу, проверяя его доступность
   const setCurrentStep = (stepId: number) => {
+    console.log(`Установка текущего шага на ${stepId}`);
     // Проверяем, существует ли шаг в отфильтрованном списке
     const stepExists = visibleSteps.some(step => step.id === stepId);
     
@@ -42,12 +45,16 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       const closestStep = visibleSteps.reduce((prev, curr) => 
         Math.abs(curr.id - stepId) < Math.abs(prev.id - stepId) ? curr : prev
       );
+      console.log(`Шаг ${stepId} недоступен, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
   };
 
   // Обновляем currentStepId, если шаг стал недоступен после изменения фильтров
   useEffect(() => {
+    console.log(`Конфигурация шагов изменилась: isMagicClass=${config?.isMagicClass}, hasSubclasses=${config?.hasSubclasses}`);
+    console.log(`Видимые шаги:`, visibleSteps.map(s => s.id));
+
     const currentStepExists = visibleSteps.some(step => step.id === currentStepId);
     
     if (!currentStepExists && visibleSteps.length > 0) {
@@ -55,9 +62,10 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       const closestStep = visibleSteps.reduce((prev, curr) => 
         Math.abs(curr.id - currentStepId) < Math.abs(prev.id - currentStepId) ? curr : prev
       );
+      console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
-  }, [config?.isMagicClass, config?.hasSubclasses, visibleSteps]);
+  }, [config?.isMagicClass, config?.hasSubclasses]);
 
   return {
     currentStep: currentStepId,
