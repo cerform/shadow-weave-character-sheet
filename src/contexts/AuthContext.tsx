@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/services/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
-import { getCurrentUser, getCurrentUid, isAuthenticated } from '@/utils/authHelpers';
-import { FirestoreUserData } from '@/utils/firestoreHelpers';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 // Интерфейс для текущего пользователя
@@ -25,11 +23,35 @@ interface AuthContextType {
   currentUser: CurrentUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isOfflineMode: boolean; // Добавлено свойство для автономного режима
   register: (email: string, password: string, username: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (isDM: boolean) => Promise<void>; // Добавлен метод для входа через Google
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: { displayName?: string; photoURL?: string; username?: string; isDM?: boolean }) => Promise<void>;
+  updateUser: (userData: Partial<CurrentUser>) => Promise<void>; // Добавлен метод для обновления пользователя
+}
+
+// Интерфейс для данных пользователя в Firestore
+interface FirestoreUserData {
+  displayName?: string;
+  email?: string;
+  isDM?: boolean;
+  characters?: string[];
+  createdAt: string | Date;
+  updatedAt?: string | Date;
+  photoURL?: string;
+  username?: string;
+  settings?: {
+    theme?: string;
+    language?: string;
+    notifications?: {
+      email?: boolean;
+      push?: boolean;
+      inApp?: boolean;
+    }
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +67,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOfflineMode, setIsOfflineMode] = useState(false); // Состояние автономного режима
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -116,6 +139,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Вспомогательная функция для получения текущего UID
+  const getCurrentUid = (): string | null => {
+    return firebaseAuth.currentUser?.uid || null;
+  };
+
   // При изменении состояния авторизации обновляем текущего пользователя
   useEffect(() => {
     setIsLoading(true);
@@ -139,6 +167,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isDM: firestoreData?.isDM || false,
             characters: firestoreData?.characters || []
           });
+          
+          // Отключаем автономный режим, так как пользователь авторизован
+          setIsOfflineMode(false);
         } catch (error) {
           console.error("AuthProvider: Ошибка при получении данных пользователя:", error);
           setCurrentUser(null);
@@ -233,6 +264,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  // Вход через Google
+  const googleLogin = async (isDM: boolean) => {
+    try {
+      setIsLoading(true);
+      const userCredential = await auth.loginWithGoogle();
+      
+      if (userCredential) {
+        const username = userCredential.displayName || "Пользователь Google";
+        const email = userCredential.email;
+        
+        // Синхронизируем данные пользователя с Firestore
+        await syncUserWithFirestore({ username, email, isDM });
+        
+        // Получаем дополнительные данные пользователя из Firestore
+        const firestoreData = await getCurrentUserWithData();
+        
+        toast({
+          title: "Успешный вход через Google",
+          description: "Вы вошли в свой аккаунт через Google"
+        });
+        
+        // Обновляем текущего пользователя
+        setCurrentUser({
+          uid: userCredential.uid,
+          email: userCredential.email,
+          displayName: userCredential.displayName,
+          photoURL: userCredential.photoURL,
+          username: firestoreData?.username || username,
+          isDM: firestoreData?.isDM || isDM,
+          characters: firestoreData?.characters || []
+        });
+        
+        navigate('/');
+      }
+    } catch (error: any) {
+      console.error("Ошибка при входе через Google:", error);
+      toast({
+        title: "Ошибка входа через Google",
+        description: error.message || "Не удалось войти через Google. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Выход из аккаунта
   const logout = async () => {
     try {
@@ -319,15 +396,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Обновление пользователя (для ProfilePage)
+  const updateUser = async (userData: Partial<CurrentUser>) => {
+    try {
+      setIsLoading(true);
+      
+      if (!currentUser) {
+        throw new Error("Пользователь не авторизован");
+      }
+      
+      // Синхронизируем данные пользователя с Firestore
+      await syncUserWithFirestore({
+        username: userData.username,
+        isDM: userData.isDM
+      });
+      
+      // Обновляем локальное состояние пользователя
+      setCurrentUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...userData
+        };
+      });
+      
+      toast({
+        title: "Данные обновлены",
+        description: "Информация пользователя успешно обновлена"
+      });
+    } catch (error: any) {
+      console.error("Ошибка при обновлении данных пользователя:", error);
+      toast({
+        title: "Ошибка обновления",
+        description: error.message || "Не удалось обновить данные пользователя. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Включение автономного режима
+  const enableOfflineMode = () => {
+    setIsOfflineMode(true);
+    toast({
+      title: "Автономный режим включен",
+      description: "Вы работаете без подключения к сети"
+    });
+  };
+
   const value = {
     currentUser,
     isLoading,
     isAuthenticated: !!currentUser,
+    isOfflineMode,
     register,
     login,
+    googleLogin,
     logout,
     resetPassword,
-    updateProfile
+    updateProfile,
+    updateUser
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Save, User, Camera } from "lucide-react";
@@ -15,7 +14,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
-  const { currentUser, updateUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [username, setUsername] = useState<string>("");
@@ -73,10 +72,8 @@ const ProfilePage = () => {
 
   const handleSaveProfile = () => {
     if (currentUser) {
-      updateUser({
-        ...currentUser,
+      updateProfile({
         username,
-        email
       });
       
       toast({
@@ -177,6 +174,7 @@ const ProfilePage = () => {
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full"
+                    disabled
                   />
                 </div>
               </div>

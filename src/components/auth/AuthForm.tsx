@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,7 +59,7 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     
     try {
       setLoading(true);
-      await register(email, password, name, false);
+      await register(email, password, name);
       toast.success('Регистрация успешна');
       navigate(redirectTo);
     } catch (error: any) {
