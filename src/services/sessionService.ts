@@ -17,101 +17,12 @@ import { Character } from '@/contexts/CharacterContext';
 import { Session, User } from '@/types/session';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { toast } from 'sonner';
-import { 
-  saveCharacterToFirestore, 
-  getUserCharacters as getUserCharactersFromFirestore,
-  deleteCharacterFromFirestore,
-  clearAllUserCharacters
-} from '@/utils/firestoreHelpers';
 
-// Сервис для работы с персонажами в Firebase
-export const characterService = {
-  // Получение всех персонажей текущего пользователя
-  getCharacters: async (): Promise<Character[]> => {
-    try {
-      console.log("Запрашиваем персонажей из Firestore...");
-      const characters = await getUserCharactersFromFirestore();
-      console.log(`Загружено ${characters.length} персонажей из Firestore`);
-      return characters;
-    } catch (error) {
-      console.error("Ошибка при получении персонажей:", error);
-      toast.error("Не удалось загрузить персонажей");
-      return [];
-    }
-  },
-  
-  // Сохранение персонажа
-  saveCharacter: async (character: Character): Promise<boolean> => {
-    try {
-      console.log("Сохраняем персонажа:", character.name);
-      const result = await saveCharacterToFirestore(character);
-      if (result) {
-        toast.success(`Персонаж ${character.name} сохранен`);
-      }
-      return result;
-    } catch (error) {
-      console.error("Ошибка при сохранении персонажа:", error);
-      toast.error("Не удалось сохранить персонажа");
-      return false;
-    }
-  },
-  
-  // Получение персонажа по ID
-  getCharacterById: async (characterId: string): Promise<Character | null> => {
-    const uid = getCurrentUid();
-    if (!uid) {
-      toast.error("Необходимо войти в систему");
-      return null;
-    }
-    
-    try {
-      const characterRef = doc(db, 'characters', characterId);
-      const characterSnap = await getDoc(characterRef);
-      
-      if (characterSnap.exists()) {
-        return { id: characterSnap.id, ...characterSnap.data() } as Character;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Ошибка при получении персонажа:", error);
-      toast.error("Не удалось загрузить персонажа");
-      return null;
-    }
-  },
-  
-  // Удаление персонажа
-  deleteCharacter: async (characterId: string): Promise<boolean> => {
-    try {
-      console.log("Удаляем персонажа:", characterId);
-      const result = await deleteCharacterFromFirestore(characterId);
-      if (result) {
-        toast.success("Персонаж успешно удален");
-      }
-      return result;
-    } catch (error) {
-      console.error("Ошибка при удалении персонажа:", error);
-      toast.error("Не удалось удалить персонажа");
-      return false;
-    }
-  },
-  
-  // Очистка всех персонажей пользователя
-  clearAllCharacters: async (): Promise<boolean> => {
-    try {
-      console.log("Очищаем всех персонажей пользователя");
-      const result = await clearAllUserCharacters();
-      if (result) {
-        toast.success("Все персонажи удалены");
-      }
-      return result;
-    } catch (error) {
-      console.error("Ошибка при очистке персонажей:", error);
-      toast.error("Не удалось удалить персонажей");
-      return false;
-    }
-  }
-};
+// Импортируем сервис персонажей
+import characterService from './characterService';
+
+// Экспортируем сервис персонажей
+export { characterService };
 
 // Сервис для работы с сессиями
 export const sessionService = {
