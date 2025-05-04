@@ -32,7 +32,7 @@ export const useDamageLog = (
     const eventId = crypto.randomUUID();
     
     if (amount < 0) {
-      // Это урон
+      // Это урон (отрицательное число)
       const damage = Math.abs(amount);
       let remainingDamage = damage;
       
@@ -87,7 +87,7 @@ export const useDamageLog = (
         }
       }
     } else {
-      // Это лечение
+      // Это лечение (положительное число)
       const wasUnconscious = currentHp === 0;
       const newHp = Math.min(maxHp, currentHp + amount);
       setCurrentHp(newHp);

@@ -5,7 +5,6 @@ import { DamageEvent } from '@/hooks/useDamageLog';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Heart, Plus, Minus, Undo } from 'lucide-react';
-import { format } from 'date-fns';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +27,14 @@ export const DamageLog: React.FC<DamageLogProps> = ({
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   const displayEvents = expanded ? events : events.slice(0, maxEvents);
+  
+  // Простая функция форматирования времени
+  const formatTime = (date: Date) => {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
   
   if (events.length === 0) {
     return null;
@@ -107,7 +114,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
                 </div>
                 
                 <span className="text-xs text-gray-500">
-                  {format(new Date(event.timestamp), 'HH:mm:ss')}
+                  {formatTime(event.timestamp)}
                 </span>
               </motion.div>
             ))}
