@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet, CharacterSpell } from '@/types/character';
 import NavigationButtons from '@/components/character-creation/NavigationButtons';
@@ -10,32 +9,17 @@ import { Search, Plus, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { spells } from '@/data/spells';
+import { getAllSpells, getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 
-// Функция для получения заклинаний по классу
-const getSpellsByClass = (className: string) => {
+// Использование импортированных функций
+const getClassSpells = (className: string) => {
   if (!className) return [];
-  
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase().includes(className.toLowerCase());
-    }
-    
-    if (Array.isArray(spell.classes)) {
-      return spell.classes.some(c => 
-        c.toLowerCase().includes(className.toLowerCase())
-      );
-    }
-    
-    return false;
-  });
+  return getSpellsByClass(className);
 };
 
 // Функция для получения заклинаний по уровню
-const getSpellsByLevel = (level: number) => {
-  return spells.filter(spell => spell.level === level);
+const getLevelSpells = (level: number) => {
+  return getSpellsByLevel(level);
 };
 
 interface CharacterSpellSelectionProps {
@@ -75,7 +59,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   useEffect(() => {
     // Загружаем заклинания для выбранного класса
     if (character.class) {
-      const classSpells = getSpellsByClass(character.class);
+      const classSpells = getClassSpells(character.class);
       setAvailableSpells(classSpells);
     }
   }, [character.class]);

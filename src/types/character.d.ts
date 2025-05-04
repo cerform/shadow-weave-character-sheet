@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -56,12 +55,22 @@ export interface SorceryPoints {
   max: number;
 }
 
-// Обновляем интерфейс MulticlassRequirements, чтобы исправить ошибку типов
+// Обновляем интерфейс MulticlassRequirements
 export interface MulticlassRequirements {
   [key: string]: {
     [key: string]: number;
     description: string;
   }
+}
+
+// Обновляем, чтобы требования к мультиклассам были более конкретными
+export interface ClassRequirement {
+  abilities: {[key: string]: number};
+  description: string;
+}
+
+export interface MulticlassRequirements {
+  [key: string]: ClassRequirement;
 }
 
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
@@ -220,7 +229,7 @@ export interface Character {
   deathSaves?: {
     successes: number;
     failures: number;
-  };
+    };
   spellSlots?: {
     [level: string]: {
       max: number;

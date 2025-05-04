@@ -1,23 +1,21 @@
-import React, { useContext, useState, useMemo } from 'react';
+import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CharacterContext } from "@/contexts/CharacterContext";
-import { getSpellDetails } from "@/data/spells"; 
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Book } from "lucide-react"; 
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CharacterContext } from '@/contexts/CharacterContext';
+import { useToast } from "@/hooks/use-toast"; 
+import { Wand, ZapOff, Book, Info, Search, Plus } from "lucide-react";
+import { DicePanel } from '../DicePanel';
+import { getSpellDetails, getAllSpells } from '@/data/spells';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { CharacterSpell } from '@/types/character';
+import { isString, safeJoin, isCharacterSpell, stringToSpell, convertStringsToSpells } from '@/hooks/spellbook/filterUtils';
 import { useDeviceType } from '@/hooks/use-mobile';
-import { Wand, Info, Trash2, Plus, Search, Filter, XCircle } from 'lucide-react';
-import { isString, safeJoin, isCharacterSpell, stringToSpell } from '@/hooks/spellbook/filterUtils';
-import { getSpellsByLevel } from '@/data/spells';
 
 export const SpellsTab = () => {
   const { character, updateCharacter } = useContext(CharacterContext);

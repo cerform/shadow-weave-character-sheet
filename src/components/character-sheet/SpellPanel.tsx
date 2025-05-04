@@ -1,4 +1,3 @@
-
 import React, { useContext, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { CharacterSpell } from '@/types/character';
-import { isString, safeJoin, isCharacterSpell, stringToSpell } from '@/hooks/spellbook/filterUtils';
+import { isString, safeJoin, isCharacterSpell, stringToSpell, convertStringsToSpells } from '@/hooks/spellbook/filterUtils';
 
 export const SpellPanel = () => {
   const { character, updateCharacter } = useContext(CharacterContext);
@@ -25,36 +24,39 @@ export const SpellPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<number | null>(null);
 
-  // Функция для получения заклинаний как строк
-  const getCharacterSpellNames = (): string[] => {
+  // Функция для получения заклинаний как объектов CharacterSpell
+  const getCharacterSpells = (): CharacterSpell[] => {
     if (!character?.spells) return [];
 
-    // Если заклинания хранятся как объекты CharacterSpell
-    if (Array.isArray(character.spells) && character.spells.length > 0 && typeof character.spells[0] !== 'string') {
-      return (character.spells as CharacterSpell[]).map(spell => spell.name);
+    // Преобразуем смешанный массив или строки в объекты CharacterSpell
+    if (Array.isArray(character.spells)) {
+      return convertStringsToSpells(character.spells);
     }
     
-    // Если заклинания хранятся как строки
-    return character.spells as string[];
+    return [];
+  };
+  
+  // Функция для получения имен заклинаний
+  const getCharacterSpellNames = (): string[] => {
+    const spells = getCharacterSpells();
+    return spells.map(spell => spell.name);
   };
   
   // Группировка заклинаний по уровням
   const spellsByLevel = React.useMemo(() => {
-    const spellNames = getCharacterSpellNames();
-    if (!spellNames || spellNames.length === 0) {
+    const spells = getCharacterSpells();
+    if (!spells || spells.length === 0) {
       return { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
     }
     
     // Группируем заклинания по уровням
     const spellsGrouped: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
     
-    spellNames.forEach((spellName) => {
-      // Получаем уровень заклинания из словаря заклинаний
-      const spellDetails = getSpellDetails(spellName);
-      const level = spellDetails?.level || 0;
+    spells.forEach((spell) => {
+      const level = spell.level || 0;
       
       if (!spellsGrouped[level]) spellsGrouped[level] = [];
-      spellsGrouped[level].push(spellName);
+      spellsGrouped[level].push(spell.name);
     });
     
     return spellsGrouped;
@@ -97,7 +99,7 @@ export const SpellPanel = () => {
       return;
     }
     
-    // Проверяем наличие ячеек заклинаний д��я этого уровня
+    // Проверяем наличие ячеек заклинаний для этого уровня
     const spellSlots = character.spellSlots || {};
     
     if (!spellSlots[level] || spellSlots[level].max - spellSlots[level].used <= 0) {
@@ -123,7 +125,7 @@ export const SpellPanel = () => {
       description: `Вы использовали ${spellName} (${level} уровень). Осталось ячеек: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used}`,
     });
   };
-  
+
   // Преобразование очков чародея в ячейки заклинаний
   const convertSorceryPoints = (spellLevel: number) => {
     if (!character) return;
@@ -190,7 +192,7 @@ export const SpellPanel = () => {
   const convertSpellSlotToSorceryPoints = (spellLevel: number) => {
     if (!character) return;
     
-    // Проверяем наличие ячейки заклинания нужного уровня
+    // Проверяем на��ичие ячейки заклинания нужного уровня
     const spellSlots = character.spellSlots || {};
     
     if (!spellSlots[spellLevel] || spellSlots[spellLevel].max - spellSlots[spellLevel].used <= 0) {
@@ -318,7 +320,10 @@ export const SpellPanel = () => {
   const addSpell = (spellName: string) => {
     const spellNames = getCharacterSpellNames();
     if (!spellNames || !character?.spells) {
-      updateCharacter({ spells: [spellName] });
+      // Создаем новый объект заклинания
+      const newSpell = stringToSpell(spellName);
+      updateCharacter({ spells: [newSpell] });
+      
       toast({
         title: "Заклинание добавлено",
         description: `${spellName} добавлено в ваш список заклинаний`,
@@ -336,11 +341,11 @@ export const SpellPanel = () => {
       return;
     }
     
-    // Добавляем новое заклинание
-    const updatedSpells = Array.isArray(character.spells) 
-      ? [...character.spells, spellName]
-      : [spellName];
-      
+    // Получаем текущие заклинания и добавляем новое
+    const currentSpells = getCharacterSpells();
+    const spellToAdd = stringToSpell(spellName);
+    const updatedSpells = [...currentSpells, spellToAdd];
+    
     updateCharacter({ spells: updatedSpells });
     
     toast({
@@ -355,19 +360,8 @@ export const SpellPanel = () => {
   const removeSpell = (spellName: string) => {
     if (!character?.spells) return;
     
-    let updatedSpells;
-    
-    if (Array.isArray(character.spells) && character.spells.length > 0) {
-      if (typeof character.spells[0] === 'string') {
-        // Если это массив строк
-        updatedSpells = (character.spells as string[]).filter(spell => spell !== spellName);
-      } else {
-        // Если это массив объектов CharacterSpell
-        updatedSpells = (character.spells as CharacterSpell[]).filter(spell => spell.name !== spellName);
-      }
-    } else {
-      updatedSpells = [];
-    }
+    const spells = getCharacterSpells();
+    const updatedSpells = spells.filter(spell => spell.name !== spellName);
     
     updateCharacter({ spells: updatedSpells });
     
@@ -382,7 +376,7 @@ export const SpellPanel = () => {
     const spells = spellsByLevel[level] || [];
     
     if (spells.length === 0) {
-      return <p className="text-sm text-muted-foreground">Нет известных заклинаний этого уровня</p>;
+      return <p className="text-sm text-muted-foreground">Нет известных заклинани�� этого уровня</p>;
     }
     
     return (
@@ -703,7 +697,7 @@ export const SpellPanel = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Диалог добавления заклинания */}
+      {/* Диалог добавления заклин��ния */}
       <Dialog open={isAddSpellOpen} onOpenChange={setIsAddSpellOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>

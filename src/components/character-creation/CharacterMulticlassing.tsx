@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CharacterSheet, MulticlassRequirements } from '@/types/character';
+import { CharacterSheet, ClassRequirement } from '@/types/character';
 
 interface CharacterMulticlassingProps {
   character: Partial<CharacterSheet>;
@@ -14,57 +14,53 @@ interface CharacterMulticlassingProps {
 }
 
 // Требования для мультиклассирования
-const multiclassRequirements: MulticlassRequirements = {
+const multiclassRequirements: {[key: string]: ClassRequirement} = {
   barbarian: {
-    STR: 13,
+    abilities: { STR: 13 },
     description: "Сила 13 или выше"
   },
   bard: {
-    CHA: 13,
+    abilities: { CHA: 13 },
     description: "Харизма 13 или выше"
   },
   cleric: {
-    WIS: 13,
+    abilities: { WIS: 13 },
     description: "Мудрость 13 или выше"
   },
   druid: {
-    WIS: 13,
+    abilities: { WIS: 13 },
     description: "Мудрость 13 или выше"
   },
   fighter: {
-    STR: 13,
-    DEX: 13,
+    abilities: { STR: 13, DEX: 13 },
     description: "Сила 13 или Ловкость 13 или выше"
   },
   monk: {
-    DEX: 13,
-    WIS: 13,
+    abilities: { DEX: 13, WIS: 13 },
     description: "Ловкость 13 и Мудрость 13 или выше"
   },
   paladin: {
-    STR: 13,
-    CHA: 13,
+    abilities: { STR: 13, CHA: 13 },
     description: "Сила 13 и Харизма 13 или выше"
   },
   ranger: {
-    DEX: 13,
-    WIS: 13,
+    abilities: { DEX: 13, WIS: 13 },
     description: "Ловкость 13 и Мудрость 13 или выше"
   },
   rogue: {
-    DEX: 13,
+    abilities: { DEX: 13 },
     description: "Ловкость 13 или выше"
   },
   sorcerer: {
-    CHA: 13,
+    abilities: { CHA: 13 },
     description: "Харизма 13 или выше"
   },
   warlock: {
-    CHA: 13,
+    abilities: { CHA: 13 },
     description: "Харизма 13 или выше"
   },
   wizard: {
-    INT: 13,
+    abilities: { INT: 13 },
     description: "Интеллект 13 или выше"
   }
 };
@@ -103,19 +99,19 @@ const CharacterMulticlassing: React.FC<CharacterMulticlassingProps> = ({
     if (!req) return true;
     
     // Проверяем каждое требование
-    for (const [ability, value] of Object.entries(req)) {
-      if (ability === 'description') continue;
-      
+    if (req.abilities.STR && req.abilities.DEX) {
       // Для классов с альтернативными требованиями (например, воин)
-      if (ability === 'STR' && req.DEX && (character.abilities.STR >= value || character.abilities.DEX >= req.DEX)) {
-        continue;
+      if (character.abilities.STR >= req.abilities.STR || character.abilities.DEX >= req.abilities.DEX) {
+        return true;
       }
-      
-      // Для обычных требований, проверяем что это числовое свойство
-      if (typeof value === 'number' && typeof character.abilities[ability] === 'number') {
-        if (character.abilities[ability] < value) {
-          return false;
-        }
+      return false;
+    }
+    
+    // Для классов с обязательным сочетанием требований (например, паладин)
+    for (const ability in req.abilities) {
+      if (typeof character.abilities[ability] === 'number' && 
+          character.abilities[ability] < req.abilities[ability]) {
+        return false;
       }
     }
     

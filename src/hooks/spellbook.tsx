@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
 import { spells } from '@/data/spells';
@@ -9,11 +9,12 @@ import {
   filterSpellsByLevel, 
   filterSpellsBySchool,
   filterSpellsByClass,
-  extractClasses,
   formatClasses,
   convertToSpellData,
   isString,
-  isStringArray 
+  isStringArray,
+  safeJoin,
+  extractClasses
 } from './spellbook/filterUtils';
 import { useSpellTheme } from './spellbook/themeUtils';
 import { CharacterSpell } from '@/types/character';
@@ -185,15 +186,49 @@ export const useSpellbook = (): UseSpellbookReturn => {
     activeSchool,
     activeClass,
     currentTheme,
-    allLevels,
-    allSchools,
+    allLevels: Array.from(new Set(spells.map(spell => spell.level))).sort(),
+    allSchools: Array.from(new Set(spells.map(spell => spell.school || "Преобразование"))).sort(),
     allClasses,
-    handleOpenSpell,
-    handleClose,
-    toggleLevel,
-    toggleSchool,
-    toggleClass,
-    clearFilters,
+    handleOpenSpell: (spell: SpellData) => {
+      setSelectedSpell(spell);
+      setIsModalOpen(true);
+    },
+    handleClose: () => {
+      setIsModalOpen(false);
+    },
+    toggleLevel: (level: number) => {
+      setActiveLevel(prev => {
+        if (prev.includes(level)) {
+          return prev.filter(l => l !== level);
+        } else {
+          return [...prev, level];
+        }
+      });
+    },
+    toggleSchool: (school: string) => {
+      setActiveSchool(prev => {
+        if (prev.includes(school)) {
+          return prev.filter(s => s !== school);
+        } else {
+          return [...prev, school];
+        }
+      });
+    },
+    toggleClass: (className: string) => {
+      setActiveClass(prev => {
+        if (prev.includes(className)) {
+          return prev.filter(c => c !== className);
+        } else {
+          return [...prev, className];
+        }
+      });
+    },
+    clearFilters: () => {
+      setActiveLevel([]);
+      setActiveSchool([]);
+      setActiveClass([]);
+      setSearchTerm('');
+    },
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
