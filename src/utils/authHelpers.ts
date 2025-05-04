@@ -1,4 +1,8 @@
 
+import { auth } from '@/services/firebase';
+import { getDoc, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/services/firebase';
+
 // Флаги для отслеживания вывода предупреждений
 let authWarningShown = false;
 let firestoreWarningShown = false;
@@ -45,6 +49,62 @@ export const isUserAuthenticated = (): boolean => {
     return !!auth.currentUser;
   } catch (error) {
     showWarningOnce("Ошибка при проверке аутентификации, используется автономный режим", 'auth');
+    return false;
+  }
+};
+
+/**
+ * Получает данные пользователя по UID
+ * @param uid ID пользователя
+ * @returns Данные пользователя или null
+ */
+export const getUserData = async (uid: string) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      return { id: userSnap.id, ...userSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Ошибка при получении данных пользователя:', error);
+    return null;
+  }
+};
+
+/**
+ * Создание или обновление документа пользователя
+ * @param uid ID пользователя
+ * @param userData Данные пользователя
+ */
+export const updateUserData = async (uid: string, userData: any) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    
+    // Проверяем существует ли документ
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      // Обновление существующего документа
+      await updateDoc(userRef, {
+        ...userData,
+        lastLogin: serverTimestamp()
+      });
+    } else {
+      // Создание нового документа
+      await setDoc(userRef, {
+        ...userData,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        characters: userData.characters || [],
+        campaigns: userData.campaigns || []
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Ошибка при обновлении данных пользователя:', error);
     return false;
   }
 };
