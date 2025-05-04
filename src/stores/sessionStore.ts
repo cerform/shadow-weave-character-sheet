@@ -62,14 +62,8 @@ export const useSessionStore = create<SessionStore>()(
             throw new Error("Пользователь не авторизован");
           }
           
-          const sessionData = await sessionService.createSession(name, description);
-          if (!sessionData) {
-            throw new Error("Ошибка при создании сессии");
-          }
-          
-          // Создаем полный объект Session из полученных данных
-          const newSession: Session = {
-            id: sessionData.id,
+          // Создаем данные для новой сессии
+          const sessionData: Omit<Session, "id" | "createdAt" | "lastActivity"> = {
             title: name,
             description: description || '',
             dmId: currentUser.uid,
@@ -77,7 +71,6 @@ export const useSessionStore = create<SessionStore>()(
             startTime: new Date().toISOString(),
             isActive: true,
             notes: [],
-            createdAt: new Date().toISOString(),
             code: uuidv4().substring(0, 6).toUpperCase(),
             name: name,
             users: [{
@@ -87,6 +80,19 @@ export const useSessionStore = create<SessionStore>()(
               isOnline: true,
               isDM: true
             }]
+          };
+          
+          // Вызываем сервис для создания сессии
+          const result = await sessionService.createSession(sessionData, currentUser.uid);
+          if (!result) {
+            throw new Error("Ошибка при создании сессии");
+          }
+          
+          // Создаем полный объект Session из полученных данных
+          const newSession: Session = {
+            id: result.id,
+            ...sessionData,
+            createdAt: new Date().toISOString()
           };
           
           // Обновляем состояние
@@ -212,9 +218,6 @@ export const useSessionStore = create<SessionStore>()(
         
         try {
           const deleted = await sessionService.deleteSession(sessionId);
-          if (!deleted) {
-            throw new Error("Не удалось удалить сессию");
-          }
           
           set(state => ({
             sessions: state.sessions.filter(s => s.id !== sessionId),
@@ -339,6 +342,12 @@ export const useSessionStore = create<SessionStore>()(
       deleteCharacter: async (characterId: string): Promise<boolean> => {
         try {
           await characterService.deleteCharacter(characterId);
+          
+          // Обновляем список персонажей после удаления
+          set(state => ({
+            characters: state.characters.filter(c => c.id !== characterId)
+          }));
+          
           return true;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);

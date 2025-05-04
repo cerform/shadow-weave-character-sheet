@@ -1,4 +1,3 @@
-
 import { db, storage } from './firebase';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, Timestamp } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes as storageUploadBytes, getDownloadURL as storageGetDownloadURL, deleteObject as storageDeleteObject } from "firebase/storage";
@@ -7,7 +6,7 @@ import axios from 'axios';
 
 const SESSIONS_COLLECTION = 'sessions';
 
-const createSession = async (session: Omit<Session, 'id' | 'createdAt' | 'lastActivity'>, dmId: string): Promise<{ id: string }> => {
+const createSession = async (session: Omit<Session, 'id' | 'createdAt' | 'lastActivity'>, dmId: string): Promise<{ id: string } | null> => {
   try {
     const sessionsCollection = collection(db, SESSIONS_COLLECTION);
     const newSession = {
@@ -22,7 +21,7 @@ const createSession = async (session: Omit<Session, 'id' | 'createdAt' | 'lastAc
     return { id: docRef.id };
   } catch (error) {
     console.error("Error creating session:", error);
-    throw error;
+    return null;
   }
 };
 
@@ -71,13 +70,14 @@ const updateSession = async (id: string, updates: Partial<Session>): Promise<voi
   }
 };
 
-const deleteSession = async (id: string): Promise<void> => {
+const deleteSession = async (id: string): Promise<boolean> => {
   try {
     const sessionDoc = doc(db, SESSIONS_COLLECTION, id);
     await deleteDoc(sessionDoc);
+    return true;
   } catch (error) {
     console.error("Error deleting session:", error);
-    throw error;
+    return false;
   }
 };
 
@@ -107,7 +107,7 @@ const updateSessionCode = async (sessionId: string, code?: string): Promise<stri
     // Создаем случайный код, если он не был передан
     const newCode = code || Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    // Обновляем сессию с новым кодом
+    // Обн��вляем сессию с новым кодом
     const sessionDoc = doc(db, SESSIONS_COLLECTION, sessionId);
     await updateDoc(sessionDoc, { 
       code: newCode,
