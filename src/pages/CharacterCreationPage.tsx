@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ import { steps } from "@/config/characterCreationSteps";
 import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 
 // Импортируем данные о подклассах
-import { subclassData } from "@/data/subclasses";
+import { subclassData } from '@/data/subclasses';
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
@@ -126,15 +125,8 @@ const CharacterCreationPage = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen w-full bg-cover bg-center bg-fixed"
-      style={{ 
-        backgroundImage: 'url("/lovable-uploads/43dc3cd0-ed20-4d92-8064-6ce14d96c90b.png")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <div className="min-h-screen w-full backdrop-blur-sm backdrop-brightness-50 p-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="min-h-screen w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <Button 
             onClick={goToHomePage} 

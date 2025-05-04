@@ -9,6 +9,7 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterSubclassSelection from './CharacterSubclassSelection';
+import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { CharacterSheet } from '@/types/character.d';
 
 // Импорт даннных о подклассах для проверки их наличия
@@ -115,7 +116,16 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 5: // Выбор снаряжения
+      case 5: // Здоровье (новый шаг)
+        return (
+          <CharacterHitPointsCalculator
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 6: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -124,7 +134,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 6: // Детали персонажа
+      case 7: // Детали персонажа
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -133,7 +143,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Выбор заклинаний
+      case 8: // Выбор заклинаний
         // Проверяем, является ли класс магическим
         if (!isMagicClass) {
           // Автоматически переходим к следующему шагу с задержкой
@@ -149,7 +159,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Просмотр и завершение
+      case 9: // Просмотр и завершение (индекс изменился с 8 на 9)
         return (
           <CharacterReview 
             character={character}

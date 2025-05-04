@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useDeviceType } from '@/hooks/use-mobile';
 
 interface NavigationButtonsProps {
@@ -12,6 +12,7 @@ interface NavigationButtonsProps {
   hideNextButton?: boolean;
   disableNext?: boolean; 
   nextLabel?: string;
+  isLastStep?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -21,7 +22,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isFirstStep = false,
   hideNextButton = false,
   disableNext,
-  nextLabel = "Далее"
+  nextLabel = "Далее",
+  isLastStep = false
 }) => {
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
   const deviceType = useDeviceType();
@@ -53,11 +55,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             flex items-center gap-2 px-4 py-2
             ${isNextDisabled 
               ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed' 
-              : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
+              : isLastStep
+                ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                : 'bg-yellow-600 hover:bg-yellow-700 text-white'}
           `}
         >
           {!isMobile && nextLabel}
-          <ArrowRight className="size-4" />
+          {isLastStep ? <CheckCircle className="size-4" /> : <ArrowRight className="size-4" />}
         </Button>
       )}
     </div>

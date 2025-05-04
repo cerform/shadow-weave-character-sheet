@@ -28,23 +28,28 @@ export const steps = [
   },
   {
     id: 5,
+    name: "Здоровье",
+    description: "Расчет очков здоровья персонажа"
+  },
+  {
+    id: 6,
     name: "Снаряжение",
     description: "Выбор начального снаряжения"
   },
   {
-    id: 6,
+    id: 7,
     name: "Детали",
     description: "Внешность, личность и связи"
   },
   {
-    id: 7,
+    id: 8,
     name: "Заклинания",
     description: "Выбор заклинаний для заклинателей",
     optional: true,
     onlyFor: "magic"
   },
   {
-    id: 8,
+    id: 9,
     name: "Завершение",
     description: "Проверка и финализация персонажа"
   }
