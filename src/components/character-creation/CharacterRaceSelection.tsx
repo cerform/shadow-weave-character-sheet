@@ -5,15 +5,19 @@ import { CharacterSheet } from "@/types/character.d";
 import NavigationButtons from "./NavigationButtons";
 import { 
   SelectionCard,
-  SelectionCardBadge, 
   SelectionCardGrid,
-  SelectionSubOptionsContainer,
   SelectionSubOption
 } from "@/components/ui/selection-card";
 import SectionHeader from "@/components/ui/section-header";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CharacterRaceSelectionProps {
   character: CharacterSheet;
@@ -90,79 +94,93 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   };
   
   return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Выберите расу"
-        description="Раса определяет внешний вид персонажа и дает врожденные способности."
-      />
-      
-      <SelectionCardGrid>
-        {races.map((race) => {
-          const isSelected = selectedRace === race.name;
-          const raceHasSubraces = race.subRaces && race.subRaces.length > 0;
-          
-          return (
-            <SelectionCard
-              key={race.name}
-              title={race.name}
-              description={race.description}
-              selected={isSelected}
-              onClick={() => handleRaceSelect(race.name)}
-              badges={race.abilityBonuses ? (
-                <SelectionCardBadge>{race.abilityBonuses}</SelectionCardBadge>
-              ) : undefined}
-            >
-              {raceHasSubraces && isSelected && (
-                <div className="mt-4 space-y-2">
-                  <h4 className="text-sm font-medium">Доступные подрасы:</h4>
-                  <div className="bg-black/40 p-3 rounded-lg border border-primary/30">
-                    <div className="flex flex-wrap gap-2">
-                      {race.subRaces?.map((subrace) => {
-                        const isSubraceSelected = selectedSubrace === subrace;
-                        
-                        return (
-                          <button
-                            key={subrace}
-                            onClick={(e) => {
-                              e.stopPropagation(); // Предотвращаем всплытие события
-                              handleSubraceSelect(subrace);
-                            }}
-                            className={`
-                              px-3 py-1.5 rounded text-sm font-medium transition-all duration-200
-                              ${isSubraceSelected
-                                ? 'bg-primary text-white shadow-md scale-105'
-                                : 'bg-black/60 text-white hover:bg-white/20'
-                              }
-                              ${isSubraceSelected ? 'border border-white' : 'border border-primary/30'}
-                            `}
-                            style={{
-                              backgroundColor: isSubraceSelected ? currentTheme.accent : undefined,
-                              boxShadow: isSubraceSelected ? `0 0 8px ${currentTheme.accent}` : undefined
-                            }}
-                          >
-                            <span className="flex items-center gap-1.5">
-                              {subrace}
-                              {isSubraceSelected && <Check className="h-3 w-3" />}
-                            </span>
-                          </button>
-                        );
-                      })}
+    <TooltipProvider>
+      <div className="space-y-6">
+        <SectionHeader
+          title="Выберите расу"
+          description="Раса определяет внешний вид персонажа и дает врожденные способности."
+        />
+        
+        <SelectionCardGrid>
+          {races.map((race) => {
+            const isSelected = selectedRace === race.name;
+            const raceHasSubraces = race.subRaces && race.subRaces.length > 0;
+            
+            return (
+              <SelectionCard
+                key={race.name}
+                title={race.name}
+                description={race.description}
+                selected={isSelected}
+                onClick={() => handleRaceSelect(race.name)}
+              >
+                {/* Заменяем бэджи на кнопку с всплывающей подсказкой */}
+                <div className="mt-2 flex items-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors">
+                        <Info className="h-3.5 w-3.5" />
+                        <span>Бонусы характеристик</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black/90 text-white border-primary/30">
+                      <p>{race.abilityBonuses}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                
+                {raceHasSubraces && isSelected && (
+                  <div className="mt-4 space-y-2">
+                    <h4 className="text-sm font-medium">Доступные подрасы:</h4>
+                    <div className="bg-black/40 p-3 rounded-lg border border-primary/30">
+                      <div className="flex flex-wrap gap-2">
+                        {race.subRaces?.map((subrace) => {
+                          const isSubraceSelected = selectedSubrace === subrace;
+                          
+                          return (
+                            <button
+                              key={subrace}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Предотвращаем всплытие события
+                                handleSubraceSelect(subrace);
+                              }}
+                              className={`
+                                px-3 py-1.5 rounded text-sm font-medium transition-all duration-200
+                                ${isSubraceSelected
+                                  ? 'bg-primary text-white shadow-md scale-105'
+                                  : 'bg-black/60 text-white hover:bg-white/20'
+                                }
+                                ${isSubraceSelected ? 'border border-white' : 'border border-primary/30'}
+                              `}
+                              style={{
+                                backgroundColor: isSubraceSelected ? currentTheme.accent : undefined,
+                                boxShadow: isSubraceSelected ? `0 0 8px ${currentTheme.accent}` : undefined
+                              }}
+                            >
+                              <span className="flex items-center gap-1.5">
+                                {subrace}
+                                {isSubraceSelected && <Check className="h-3 w-3" />}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </SelectionCard>
-          );
-        })}
-      </SelectionCardGrid>
-      
-      <NavigationButtons
-        allowNext={canProceed()}
-        nextStep={handleNext}
-        prevStep={prevStep}
-        isFirstStep={true}
-      />
-    </div>
+                )}
+              </SelectionCard>
+            );
+          })}
+        </SelectionCardGrid>
+        
+        <NavigationButtons
+          allowNext={canProceed()}
+          nextStep={handleNext}
+          prevStep={prevStep}
+          isFirstStep={true}
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 

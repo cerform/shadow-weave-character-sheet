@@ -58,7 +58,7 @@ export const steps = [
 export const getCharacterSteps = (config?: { isMagicClass?: boolean }) => {
   return steps.filter(step => {
     // Фильтруем шаги заклинаний для немагических классов
-    if (step.id === 7 && step.onlyFor === "magic" && config?.isMagicClass === false) {
+    if (step.id === 8 && step.onlyFor === "magic" && config?.isMagicClass === false) {
       return false;
     }
     return true;
