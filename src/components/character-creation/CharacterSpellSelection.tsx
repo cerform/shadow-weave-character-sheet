@@ -21,7 +21,50 @@ interface Props {
 }
 
 const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, nextStep, prevStep }) => {
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(character.spells || []);
+  // Преобразуем массив строк или массив объектов в массив объектов CharacterSpell
+  const normalizeSpells = (spells: any[] | undefined): CharacterSpell[] => {
+    if (!spells || spells.length === 0) return [];
+    
+    return spells.map(spell => {
+      // Если spell уже объект с именем, возвращаем его
+      if (typeof spell === 'object' && spell.name) {
+        return spell;
+      }
+      // Если spell - строка (имя заклинания), конвертируем в объект
+      if (typeof spell === 'string') {
+        const spellDetails = getSpellsByName(spell);
+        return spellDetails || { 
+          name: spell, 
+          level: 0, 
+          school: "Неизвестная", 
+          castingTime: "-", 
+          range: "-", 
+          components: "-", 
+          duration: "-",
+          description: "Нет описания"
+        };
+      }
+      // Если ничего не подходит, возвращаем заглушку
+      return { 
+        name: "Неизвестное заклинание", 
+        level: 0, 
+        school: "Неизвестная", 
+        castingTime: "-", 
+        range: "-", 
+        components: "-", 
+        duration: "-",
+        description: "Нет описания"
+      };
+    });
+  };
+  
+  // Вспомогательная функция для получения детальной информации о заклинании по имени
+  const getSpellsByName = (spellName: string): CharacterSpell | null => {
+    const allClassSpells = getSpellsByClass(character.class);
+    return allClassSpells.find(spell => spell.name === spellName) || null;
+  };
+
+  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(normalizeSpells(character.spells));
   const [availableSpells, setAvailableSpells] = useState<CharacterSpell[]>([]);
   const [activeTab, setActiveTab] = useState<string>("0");
   
@@ -88,8 +131,10 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
   };
 
   const handleSaveSpells = () => {
+    // Сохраняем только имена заклинаний, чтобы избежать проблемы с рендерингом объектов
+    const spellNames = selectedSpells.map(spell => spell.name);
     updateCharacter({
-      spells: selectedSpells
+      spells: spellNames
     });
     nextStep();
   };
