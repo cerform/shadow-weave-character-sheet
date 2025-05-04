@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -12,7 +11,7 @@ interface DiceRoller3DFixedProps {
   fixedPosition?: boolean;
   themeColor?: string;
   playerName?: string;
-  initialCount?: number;
+  diceCount?: number;
 }
 
 export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
@@ -23,7 +22,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   fixedPosition = false,
   themeColor,
   playerName,
-  initialCount = 1
+  diceCount = 1
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
@@ -46,7 +45,7 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
   return (
     <DiceBox3D
       diceType={actualDiceType}
-      diceCount={initialCount}
+      diceCount={diceCount}
       modifier={modifier}
       onRollComplete={handleRollComplete}
       hideControls={hideControls}

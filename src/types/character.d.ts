@@ -25,43 +25,6 @@ export interface ClassLevel {
   subclass?: string;
 }
 
-// Интерфейс для характеристик персонажа
-export type AbilityScores = {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-  // Для обратной совместимости со старым форматом
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
-};
-
-// Interfaces for spell slots and sorcery points
-export interface SpellSlot {
-  used: number;
-  max: number;
-}
-
-export interface SpellSlots {
-  [level: string]: SpellSlot;
-}
-
-export interface SorceryPoints {
-  current: number;
-  max: number;
-}
-
-// Интерфейс для сохранения владений спасбросками
-export interface SavingThrowProficiencies {
-  [key: string]: boolean;
-}
-
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string; 
@@ -77,8 +40,22 @@ export interface CharacterSheet {
   level: number;
   background: string;
   alignment: string;
-  abilities: AbilityScores;
-  stats?: AbilityScores;  // Поле stats для совместимости
+  abilities: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  stats?: {  // Поле stats для совместимости
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
   skills: string[];
   languages: string[];
   equipment: string[];
@@ -91,27 +68,22 @@ export interface CharacterSheet {
   flaws: string;
   appearance: string;
   backstory: string;
-  xp: number;  // Добавляем xp как обязательное поле
+  xp?: number;
   inspiration?: boolean;
   maxHp?: number;  // Добавляем максимальные хиты
   currentHp?: number;  // Добавляем текущие хиты
   temporaryHp?: number; // Добавляем временные хиты
-  hitDice?: string | number; // Добавляем кубики хитов (например, "4d6")
+  hitDice?: string; // Добавляем кубики хитов (например, "4d6")
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
-  abilityBonuses?: AbilityScores;
-  image?: string;
-  // Добавляем новые свойства для заклинаний и ресурсов
-  spellSlots?: SpellSlots;
-  sorceryPoints?: SorceryPoints;
-  // Добавляем владения спасбросками
-  savingThrowProficiencies?: SavingThrowProficiencies;
-  // Добавляем дату создания
-  createdAt?: string;
-  updatedAt?: string;
+  abilityBonuses?: { // Добавляем бонусы к характеристикам
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
 }
-
-// Для совместимости с существующим кодом
-export type Character = CharacterSheet;
 
 // Интерфейс для подклассов персонажей
 export interface CharacterSubclass {

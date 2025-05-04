@@ -19,12 +19,12 @@ export const AbilitiesTab = () => {
 
   // Получение значений способностей из персонажа или использование значений по умолчанию
   const abilities = {
-    STR: character?.abilities?.STR || character?.abilities?.strength || 10,
-    DEX: character?.abilities?.DEX || character?.abilities?.dexterity || 10,
-    CON: character?.abilities?.CON || character?.abilities?.constitution || 10,
-    INT: character?.abilities?.INT || character?.abilities?.intelligence || 10,
-    WIS: character?.abilities?.WIS || character?.abilities?.wisdom || 10,
-    CHA: character?.abilities?.CHA || character?.abilities?.charisma || 10
+    STR: character?.abilities?.STR || 10,
+    DEX: character?.abilities?.DEX || 10,
+    CON: character?.abilities?.CON || 10,
+    INT: character?.abilities?.INT || 10,
+    WIS: character?.abilities?.WIS || 10,
+    CHA: character?.abilities?.CHA || 10
   };
   
   // Получение бонуса мастерства на основе уровня

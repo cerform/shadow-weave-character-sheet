@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 import { RestPanel } from './RestPanel';
-import { HealthEvent } from '@/hooks/useHealthSystem';
 
 interface ResourcePanelProps {
   currentHp: number;

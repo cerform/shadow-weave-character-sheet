@@ -1,7 +1,13 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTheme } from '@/contexts/ThemeContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AbilitiesTab } from './tabs/AbilitiesTab';
+import { CombatTab } from './tabs/CombatTab';
+import { SpellsTab } from './tabs/SpellsTab';
+import { FeaturesTab } from './tabs/FeaturesTab';
+import { HandbookTab } from './tabs/HandbookTab';
+import { BackgroundTab } from './tabs/BackgroundTab';
+import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Activity, Sword, BookOpen, Sparkles, ScrollText, Shield } from "lucide-react";
 
@@ -85,6 +91,32 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             <BookOpen className="h-5 w-5" />
           </TabsTrigger>
         </TabsList>
+
+        <div className="border-t border-primary/20 pt-4 mt-1" />
+
+        <TabsContent value="abilities">
+          <AbilitiesTab />
+        </TabsContent>
+        
+        <TabsContent value="combat">
+          <CombatTab />
+        </TabsContent>
+        
+        <TabsContent value="spells">
+          <SpellsTab />
+        </TabsContent>
+        
+        <TabsContent value="features">
+          <FeaturesTab />
+        </TabsContent>
+        
+        <TabsContent value="background">
+          <BackgroundTab />
+        </TabsContent>
+        
+        <TabsContent value="handbook">
+          <HandbookTab />
+        </TabsContent>
       </Tabs>
     </div>
   );

@@ -1,74 +1,62 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-export type Theme = 'light' | 'dark' | 'system' | 'warlock' | 'druid' | 'bard';
+export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-  defaultTheme?: Theme;
-  storageKey?: string;
-}
-
-type ThemeProviderState = {
+interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+}
+
+const defaultThemeContext: ThemeContextType = {
+  theme: 'default',
+  setTheme: () => {},
 };
 
-const initialState: ThemeProviderState = {
-  theme: 'system',
-  setTheme: () => null,
-};
+export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
 
-export const ThemeContext = createContext<ThemeProviderState>(initialState);
+export const useTheme = () => useContext(ThemeContext);
 
-export function ThemeProvider({
-  children,
-  defaultTheme = 'system',
-  storageKey = 'vite-ui-theme',
-  ...props
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+interface ThemeProviderProps {
+  children: ReactNode;
+}
 
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>('default');
+
+  // Загружаем сохраненную тему при инициализации
   useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // Remove all theme classes
-    root.classList.remove('light', 'dark', 'warlock', 'druid', 'bard');
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      
-      root.classList.add(systemTheme);
-      return;
+    try {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature', 'warlock', 'wizard', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
+        setTheme(savedTheme as Theme);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке темы из localStorage:', error);
     }
+  }, []);
 
-    root.classList.add(theme);
-  }, [theme]);
-
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
+  // Сохраняем тему при изменении
+  const handleSetTheme = (newTheme: Theme) => {
+    try {
+      setTheme(newTheme);
+      localStorage.setItem('theme', newTheme);
+      console.log('Тема изменена на:', newTheme);
+      
+      // Применяем класс темы к корневому элементу
+      document.documentElement.setAttribute('data-theme', newTheme);
+      document.body.className = '';
+      document.body.classList.add(`theme-${newTheme}`);
+    } catch (error) {
+      console.error('Ошибка при сохранении темы в localStorage:', error);
+    }
   };
 
   return (
-    <ThemeContext.Provider {...props} value={value}>
+    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
-  return context;
 };
+
+export default ThemeProvider;
