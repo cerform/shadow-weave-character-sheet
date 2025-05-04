@@ -101,7 +101,7 @@ const CharacterSheetPage = () => {
     >
       <CharacterSheet 
         character={character} 
-        isDM={isDM} // В автономном режиме разрешаем доступ как DM
+        isDM={isDM}
       />
       
       {isConnected && sessionData && (

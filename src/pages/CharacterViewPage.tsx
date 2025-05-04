@@ -35,31 +35,20 @@ const CharacterViewPage = () => {
           return;
         }
         
-        console.log("Загрузка персонажа с ID:", id);
-        
         // Проверка авторизации
         const currentUser = auth.currentUser;
-        console.log("Текущий пользователь:", currentUser ? currentUser.email : "Не авторизован");
         
         // Пробуем загрузить персонажа через сервис
         let foundCharacter = null;
         
         try {
-          console.log("Пытаемся загрузить из Firestore...");
           foundCharacter = await characterService.getCharacterById(id);
-          
-          if (foundCharacter) {
-            console.log("Персонаж загружен из Firestore:", foundCharacter.name);
-          } else {
-            console.log("Персонаж не найден в Firestore");
-          }
         } catch (error) {
           console.error("Ошибка при загрузке персонажа из Firestore:", error);
         }
         
         // Если персонаж не найден через сервис или в оффлайн-режиме, проверяем localStorage
         if (!foundCharacter || isOfflineMode()) {
-          console.log("Пытаемся загрузить из localStorage...");
           const savedCharacters = localStorage.getItem("dnd-characters");
           
           if (savedCharacters) {
@@ -67,22 +56,17 @@ const CharacterViewPage = () => {
             const localCharacter = characters.find((char: Character) => char.id === id);
             
             if (localCharacter) {
-              console.log(`Персонаж ${localCharacter.name} найден в localStorage ${isOfflineMode() ? "(при оффлайн-режиме)" : "(при ошибке Firestore)"}`);
               foundCharacter = localCharacter;
               
               // Если пользователь авторизован и не в оффлайн-режиме, синхронизируем с Firestore
               if (currentUser && !isOfflineMode()) {
-                console.log("Синхронизируем персонажа с Firestore...");
                 try {
                   foundCharacter.userId = currentUser.uid;
                   await characterService.saveCharacter(foundCharacter);
-                  console.log("Персонаж синхронизирован с Firestore");
                 } catch (syncError) {
                   console.error("Ошибка синхронизации с Firestore:", syncError);
                 }
               }
-            } else {
-              console.log("Персонаж не найден в localStorage");
             }
           }
         }
