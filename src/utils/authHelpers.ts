@@ -7,8 +7,13 @@ import { getUserData, updateUserData } from "./firestoreHelpers";
  * @returns UID пользователя или null, если пользователь не авторизован
  */
 export const getCurrentUid = (): string | null => {
-  const user = auth.currentUser;
-  return user ? user.uid : null;
+  try {
+    const user = auth.currentUser;
+    return user ? user.uid : null;
+  } catch (error) {
+    console.warn("Ошибка при получении UID пользователя:", error);
+    return null;
+  }
 };
 
 /**
@@ -16,7 +21,12 @@ export const getCurrentUid = (): string | null => {
  * @returns true если пользователь авторизован, иначе false
  */
 export const isUserAuthenticated = (): boolean => {
-  return !!auth.currentUser;
+  try {
+    return !!auth.currentUser;
+  } catch (error) {
+    console.warn("Ошибка при проверке аутентификации:", error);
+    return false;
+  }
 };
 
 /**
@@ -25,10 +35,15 @@ export const isUserAuthenticated = (): boolean => {
  * @returns Результат выполнения функции или исключение, если пользователь не авторизован
  */
 export const requireAuth = async <T>(callback: () => Promise<T>): Promise<T> => {
-  if (!isUserAuthenticated()) {
-    throw new Error("Действие требует авторизации. Пожалуйста, войдите в свой аккаунт.");
+  try {
+    if (!isUserAuthenticated()) {
+      throw new Error("Действие требует авторизации. Пожалуйста, войдите в свой аккаунт.");
+    }
+    return await callback();
+  } catch (error) {
+    console.warn("Ошибка при проверке аутентификации:", error);
+    throw new Error("Действие требует авторизации. Приложение работает в автономном режиме.");
   }
-  return await callback();
 };
 
 interface UserDataForSync {
@@ -46,10 +61,10 @@ interface UserDataForSync {
  * @returns true если данные успешно синхронизированы, иначе false
  */
 export const syncUserWithFirestore = async (userData: UserDataForSync) => {
-  const uid = getCurrentUid();
-  if (!uid) return false;
-  
   try {
+    const uid = getCurrentUid();
+    if (!uid) return false;
+    
     console.log("Синхронизация пользователя с Firestore:", uid);
     
     // Получаем текущие данные пользователя из Firestore
@@ -93,10 +108,10 @@ export const syncUserWithFirestore = async (userData: UserDataForSync) => {
  * @returns Данные пользователя или null
  */
 export const getCurrentUserWithData = async () => {
-  const uid = getCurrentUid();
-  if (!uid) return null;
-  
   try {
+    const uid = getCurrentUid();
+    if (!uid) return null;
+    
     return await getUserData(uid);
   } catch (error) {
     console.error("Ошибка при получении данных пользователя:", error);

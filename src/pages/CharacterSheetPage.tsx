@@ -13,7 +13,7 @@ const CharacterSheetPage = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const { isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
-  const { currentUser } = useAuth(); 
+  const { currentUser, isOfflineMode } = useAuth(); 
   
   // Загрузка персонажа из локального хранилища
   useEffect(() => {
@@ -89,7 +89,7 @@ const CharacterSheetPage = () => {
     >
       <CharacterSheet 
         character={character} 
-        isDM={currentUser?.isDM === true}
+        isDM={currentUser?.isDM === true || isOfflineMode} // В автономном режиме разрешаем доступ как DM
       />
       
       {isConnected && sessionData && (
