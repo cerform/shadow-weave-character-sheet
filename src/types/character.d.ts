@@ -1,3 +1,4 @@
+
 export interface AbilityScores {
   STR: number;
   DEX: number;
@@ -146,6 +147,7 @@ export interface RacialTraits {
   languages: string[];
   features?: { name: string; description: string }[];
   traits?: { name: string; description: string }[]; // Добавлено для совместимости с существующими данными
+  extraAbilityPoints?: number; // Добавлено для рас с дополнительными очками характеристик
 }
 
 // Типы для особенностей классов

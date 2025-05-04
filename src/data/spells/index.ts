@@ -1,3 +1,4 @@
+
 import cantrips from './cantrips';
 import level1 from './level1';
 import { level2 } from "./level2";
@@ -14,7 +15,7 @@ import { CharacterSpell } from "@/types/character";
 import { safeSome, safeFilter } from '@/utils/spellUtils';
 
 // Combine all spells into a single array
-export const spells = [
+export const spells: CharacterSpell[] = [
   ...cantrips,
   ...level1,
   ...level2,

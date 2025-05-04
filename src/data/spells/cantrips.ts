@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from "@/types/character";
 
 const cantrips: CharacterSpell[] = [

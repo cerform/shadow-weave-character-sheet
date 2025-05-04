@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
+import { importSpellsFromText } from '@/utils/spellBatchImporter';
 import { spells as allSpells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
@@ -22,8 +22,16 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const handleImport = () => {
     try {
       setIsProcessing(true);
-      const updatedSpells = importSpellsFromText(inputText, allSpells);
-      const newCount = updatedSpells.length - allSpells.length;
+      // Ensure all spells have the required prepared field
+      const spellsWithPreparedField = allSpells.map(spell => {
+        if (spell.prepared === undefined) {
+          return {...spell, prepared: false};
+        }
+        return spell;
+      });
+      
+      const updatedSpells = importSpellsFromText(inputText, spellsWithPreparedField);
+      const newCount = updatedSpells.length - spellsWithPreparedField.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
       if (onImport) {
