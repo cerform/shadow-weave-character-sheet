@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen, Sparkles } from 'lucide-react';
+import { BookOpen, Sparkles, Circle, CheckCircle2 } from 'lucide-react';
 
 interface SpellSlotsProps {
   spellSlots: Record<number, { max: number; used: number }>;
@@ -42,7 +42,9 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
           <BookOpen className="w-5 h-5 mr-2" />
           Слоты заклинаний
           <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {orderedLevels.length}
+            {orderedLevels.reduce((acc, level) => {
+              return acc + (spellSlots[level].max - spellSlots[level].used);
+            }, 0)}
           </span>
         </Button>
       </PopoverTrigger>
@@ -69,7 +71,6 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
             {orderedLevels.map(level => {
               const { max, used } = spellSlots[level];
               const remaining = max - used;
-              const percentage = (remaining / max) * 100;
               
               return (
                 <div key={level} className="space-y-2">
@@ -82,29 +83,23 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
                     </span>
                   </div>
                   
-                  <div className="w-full bg-muted h-2 rounded-full overflow-hidden"
-                       style={{ backgroundColor: `${currentTheme.accent}30` }}>
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: currentTheme.accent
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     {[...Array(max)].map((_, i) => (
                       <div
                         key={i}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all`}
                         style={{
-                          backgroundColor: i < used ? `${currentTheme.accent}40` : currentTheme.accent,
+                          backgroundColor: i < used ? `${currentTheme.accent}20` : `${currentTheme.accent}40`,
+                          border: `1px solid ${currentTheme.accent}`,
                           color: currentTheme.buttonText
                         }}
                         onClick={() => i >= used ? onUseSlot(level) : onRestoreSlot(level)}
                       >
-                        {i < used ? '✓' : ''}
+                        {i < used ? (
+                          <Circle className="w-4 h-4" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
                       </div>
                     ))}
                   </div>

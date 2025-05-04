@@ -15,18 +15,6 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Рассчитываем бонус мастерства на основе уровня
-  const calculateProficiencyBonus = () => {
-    if (!character || !character.level) return 2;
-    
-    const level = character.level;
-    if (level < 5) return 2;
-    if (level < 9) return 3;
-    if (level < 13) return 4;
-    if (level < 17) return 5;
-    return 6; // Уровни 17-20
-  };
-
   // Получаем модификатор для характеристики
   const getModifier = (score: number | undefined) => {
     if (score === undefined) return "+0";
@@ -36,19 +24,6 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
 
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20 p-4">
-      {/* Информация о бонусе мастерства - компактный формат */}
-      <div className="mb-4 rounded-lg bg-primary/10 p-3 flex justify-between items-center">
-        <div>
-          <h3 className="text-sm font-medium text-primary mb-1">Бонус мастерства</h3>
-          <p className="text-xs text-muted-foreground">
-            Уровень: {character?.level || 1}
-          </p>
-        </div>
-        <div className="text-xl font-bold text-primary bg-primary/20 h-10 w-10 rounded-full flex items-center justify-center">
-          +{calculateProficiencyBonus()}
-        </div>
-      </div>
-
       <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.textColor }}>
         Спасброски
       </h3>

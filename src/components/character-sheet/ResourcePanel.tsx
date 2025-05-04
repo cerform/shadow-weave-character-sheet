@@ -4,17 +4,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Shield, Dices, Clock } from 'lucide-react';
+import { Heart, Shield, Dices } from 'lucide-react';
 import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 import { DiceRoller3DFixed } from '@/components/character-sheet/DiceRoller3DFixed';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PopoverTrigger, PopoverContent, Popover } from '@/components/ui/popover';
+import { SpellSlotsPopover } from './SpellSlotsPopover';
+import { RestPanel } from './RestPanel';
 
 interface ResourcePanelProps {
   currentHp: number;
@@ -87,9 +89,42 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     });
   };
   
+  // Обработчик использования ячеек заклинаний
+  const handleUseSpellSlot = (level: number) => {
+    if (!character?.spellSlots) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    
+    if (updatedSpellSlots[level] && updatedSpellSlots[level].used < updatedSpellSlots[level].max) {
+      updatedSpellSlots[level].used += 1;
+      updateCharacter({ spellSlots: updatedSpellSlots });
+      
+      toast({
+        title: "Ячейка использована",
+        description: `Использована ячейка ${level} уровня. Осталось: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used}`,
+      });
+    }
+  };
+  
+  // Обработчик восстановления ячеек заклинаний
+  const handleRestoreSpellSlot = (level: number) => {
+    if (!character?.spellSlots) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    
+    if (updatedSpellSlots[level] && updatedSpellSlots[level].used > 0) {
+      updatedSpellSlots[level].used -= 1;
+      updateCharacter({ spellSlots: updatedSpellSlots });
+      
+      toast({
+        title: "Ячейка восстановлена",
+        description: `Восстановлена ячейка ${level} уровня. Доступно: ${updatedSpellSlots[level].max - updatedSpellSlots[level].used + 1}`,
+      });
+    }
+  };
+  
   const totalCurrentHp = currentHp + temporaryHp;
   const effectiveMaxHp = maxHp + (temporaryHp > 0 ? temporaryHp : 0);
-  const hpPercentage = effectiveMaxHp > 0 ? (totalCurrentHp / effectiveMaxHp) * 100 : 0;
   
   // Определяем цвет полосы HP в зависимости от процента здоровья
   const getHpBarColor = () => {
@@ -180,7 +215,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
             {/* Base HP bar */}
             <Progress 
               value={maxHp > 0 ? (currentHp / maxHp) * 100 : 0} 
-              className={`h-3 ${getHpBarColor()}`} 
+              className="h-3" 
             />
             
             {/* Temporary HP overlay */}
@@ -398,13 +433,20 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
         
         <Separator />
         
-        <div>
-          <h4 className="text-sm font-medium mb-2 text-primary">Hit Dice</h4>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-primary">
-              {character?.level || 1}d{getHitDieByClass(character?.className || '')}
-            </span>
+        {/* Отображение слотов заклинаний */}
+        {character?.spellSlots && Object.keys(character.spellSlots).length > 0 && (
+          <div>
+            <SpellSlotsPopover 
+              spellSlots={character.spellSlots}
+              onUseSlot={handleUseSpellSlot}
+              onRestoreSlot={handleRestoreSpellSlot}
+            />
           </div>
+        )}
+        
+        {/* Компактная панель отдыха */}
+        <div className="mt-2">
+          <RestPanel compact={true} />
         </div>
       </div>
     </Card>

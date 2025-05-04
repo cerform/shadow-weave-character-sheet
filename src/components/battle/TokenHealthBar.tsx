@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface TokenHealthBarProps {
   currentHP: number;
@@ -18,8 +18,17 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   const safeCurrentHP = isNaN(currentHP) ? 0 : Math.max(0, currentHP);
   const safeMaxHP = isNaN(maxHP) || maxHP <= 0 ? 1 : maxHP;
   
-  // Расчет процента здоровья (предотвращаем деление на ноль)
-  const healthPercentage = safeMaxHP > 0 ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) : 0;
+  // Для правильного обновления используем локальное состояние с useEffect
+  const [healthPercentage, setHealthPercentage] = useState(0);
+  
+  useEffect(() => {
+    // Расчет процента здоровья при изменении props
+    const calculatedPercentage = safeMaxHP > 0 
+      ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) 
+      : 0;
+    
+    setHealthPercentage(calculatedPercentage);
+  }, [safeCurrentHP, safeMaxHP]);
   
   // Определяем цвет полоски здоровья в зависимости от процента
   const getHealthColor = (percent: number) => {

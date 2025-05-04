@@ -8,7 +8,11 @@ import { Clock } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-export const RestPanel = () => {
+interface RestPanelProps {
+  compact?: boolean;
+}
+
+export const RestPanel = ({ compact = false }: RestPanelProps) => {
   const { character, updateCharacter } = useContext(CharacterContext);
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -92,6 +96,7 @@ export const RestPanel = () => {
     // Обновляем персонажа БЕЗ изменения темы
     updateCharacter({
       currentHp: fullHp,
+      temporaryHp: 0, // Сбрасываем временное здоровье
       spellSlots: updatedSpellSlots,
       sorceryPoints: sorceryPoints
     });
@@ -123,6 +128,38 @@ export const RestPanel = () => {
     
     return hitDiceValues[className] || 8;
   };
+
+  if (compact) {
+    return (
+      <div className="flex flex-col space-y-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleShortRest}
+          className="w-full"
+          style={{
+            color: currentTheme.buttonText || '#FFFFFF',
+            borderColor: currentTheme.accent
+          }}
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          Короткий отдых
+        </Button>
+        <Button 
+          size="sm"
+          onClick={handleLongRest}
+          className="w-full"
+          style={{
+            color: currentTheme.buttonText || '#FFFFFF',
+            backgroundColor: currentTheme.accent
+          }}
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          Длинный отдых
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">

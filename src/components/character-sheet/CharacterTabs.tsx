@@ -22,12 +22,11 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
   const currentTheme = themes[themeKey] || themes.default;
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 mt-4">
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-6 sm:grid-cols-6">
           <TabsTrigger 
             value="abilities"
-            className="p-2"
             style={{
               color: activeTab === "abilities" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "abilities" ? `${currentTheme.accent}20` : "transparent"
@@ -39,7 +38,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="combat"
-            className="p-2"
             style={{
               color: activeTab === "combat" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "combat" ? `${currentTheme.accent}20` : "transparent"
@@ -51,7 +49,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="spells"
-            className="p-2"
             style={{
               color: activeTab === "spells" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "spells" ? `${currentTheme.accent}20` : "transparent"
@@ -63,7 +60,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="features"
-            className="p-2"
             style={{
               color: activeTab === "features" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "features" ? `${currentTheme.accent}20` : "transparent"
@@ -75,7 +71,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="background"
-            className="p-2"
             style={{
               color: activeTab === "background" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "background" ? `${currentTheme.accent}20` : "transparent"
@@ -87,7 +82,6 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
           
           <TabsTrigger 
             value="handbook"
-            className="p-2"
             style={{
               color: activeTab === "handbook" ? currentTheme.textColor : currentTheme.mutedTextColor,
               backgroundColor: activeTab === "handbook" ? `${currentTheme.accent}20` : "transparent"

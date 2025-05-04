@@ -6,7 +6,6 @@ import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import OBSLayout from "@/components/OBSLayout"; 
 
 const CharacterSheetPage = () => {
   const [character, setCharacter] = useState<any>(null);
