@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getNumericModifier } from '@/utils/characterUtils';
@@ -209,7 +208,7 @@ export function useHitPoints({
         timestamp: new Date()
       }, ...prev]);
     } else {
-      // Если персонаж уже на максимуме здоровья
+      // Если персонаж уже на максиму��е здоровья
       toast({
         title: "Лечение невозможно",
         description: "Персонаж уже имеет максимальное количество HP",
@@ -409,17 +408,20 @@ export function useHitPoints({
     if (hitDiceToUse > 0) {
       const constitutionMod = getNumericModifier(constitution);
       const averageHitDieValue = 4.5; // Среднее между 1 и 8 (для d8)
-      const healingAmount = Math.max(1, Math.floor(hitDiceToUse * (averageHitDieValue + constitutionMod)));
+      const estimatedHealingAmount = Math.max(1, Math.floor(hitDiceToUse * (averageHitDieValue + constitutionMod)));
       
-      applyHealing(healingAmount, "Короткий отдых");
+      applyHealing(estimatedHealingAmount, "Короткий отдых");
+      
+      toast({
+        title: "Короткий отдых завершен",
+        description: `Восстановлено ${hitDiceToUse} Hit Dice и ${estimatedHealingAmount} HP`,
+      });
+    } else {
+      toast({
+        title: "Короткий отдых завершен",
+        description: "Отдых без использования Hit Dice",
+      });
     }
-    
-    toast({
-      title: "Короткий отдых завершен",
-      description: hitDiceToUse > 0 
-        ? `Восстановлено ${hitDiceToUse} Hit Dice и ${healingAmount} HP`
-        : "Отдых без использования Hit Dice",
-    });
   };
   
   // Длинный отдых

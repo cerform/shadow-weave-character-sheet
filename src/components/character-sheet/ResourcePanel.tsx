@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,8 @@ import {
   calculateArmorClass,
   getInitiativeModifier,
   calculateCarryingCapacity,
-  getHitDieTypeByClass
+  getHitDieTypeByClass,
+  getNumericModifier
 } from '@/utils/characterUtils';
 
 interface ResourcePanelProps {
@@ -47,7 +47,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
   const [isLongResting, setIsLongResting] = useState(false);
   
   // Получаем constitution из character
-  const constitution = character?.abilities?.constitution || 10;
+  const constitution = character?.abilities?.CON || 10;
   
   // Используем хук для управления HP
   const {
@@ -74,7 +74,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       updateCharacter({
         currentHp: hp,
         temporaryHp: tempHp,
-        deathSaves
+        deathSaves: deathSaves
       });
     }
   });
@@ -185,7 +185,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
       }
       
       // Восстанавливаем очки чародея
-      if (character.sorceryPoints && character.className?.includes('Чародей')) {
+      if (character.sorceryPoints && character.class?.includes('Чародей')) {
         updateCharacter({
           sorceryPoints: {
             current: character.level,
@@ -457,7 +457,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                 </SheetHeader>
                 <div className="h-[80vh]">
                   <DiceRoller3DFixed
-                    initialDice={getHitDieByClass(character?.className)}
+                    initialDice={getHitDieByClass(character?.class)}
                     hideControls={false}
                     modifier={getNumericModifier(constitution)}
                     onRollComplete={handleHitDiceRollComplete}
@@ -518,10 +518,10 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               <div className="text-sm text-muted-foreground">Класс Брони</div>
               <div className="text-xl font-bold text-primary">
                 {character?.abilities ? calculateArmorClass(
-                  character.abilities.dexterity,
-                  character.abilities.constitution,
-                  character.abilities.wisdom,
-                  character.className
+                  character.abilities.DEX,
+                  character.abilities.CON,
+                  character.abilities.WIS,
+                  character.class
                 ) : 10}
               </div>
             </motion.div>
@@ -534,7 +534,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
               <div className="text-sm text-muted-foreground mb-1">Инициатива</div>
               <div className="text-xl font-bold text-primary">
                 {character?.abilities ? 
-                  getInitiativeModifier(character.abilities.dexterity) : 
+                  getInitiativeModifier(character.abilities.DEX) : 
                   "+0"}
               </div>
             </motion.div>
@@ -554,7 +554,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
             <span className="text-sm font-medium text-primary">Грузоподъёмность</span>
             <span className="text-sm text-primary">
               {character?.abilities ? 
-                calculateCarryingCapacity(character.abilities.strength) : 
+                calculateCarryingCapacity(character.abilities.STR) : 
                 "0 фунтов"}
             </span>
           </div>
