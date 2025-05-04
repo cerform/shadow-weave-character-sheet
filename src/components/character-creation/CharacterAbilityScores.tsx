@@ -19,7 +19,7 @@ const CharacterAbilityScores: React.FC = () => {
   useEffect(() => {
     // Initialize abilities with default values if they are not already set
     if (!character || !character.abilities) {
-      const defaultAbilities: AbilityScores = {
+      const defaultAbilities = {
         strength: ABILITY_SCORE_CAPS.DEFAULT,
         dexterity: ABILITY_SCORE_CAPS.DEFAULT,
         constitution: ABILITY_SCORE_CAPS.DEFAULT,
@@ -31,9 +31,9 @@ const CharacterAbilityScores: React.FC = () => {
         CON: ABILITY_SCORE_CAPS.DEFAULT,
         INT: ABILITY_SCORE_CAPS.DEFAULT,
         WIS: ABILITY_SCORE_CAPS.DEFAULT,
-        CHA: ABILITY_SCORE_CAPS.DEFAULT,
-        [key: string]: number // Для индексной сигнатуры
-      };
+        CHA: ABILITY_SCORE_CAPS.DEFAULT
+        // Removing the problematic index signature here
+      } as AbilityScores;
       
       updateCharacter({
         abilities: defaultAbilities
@@ -47,8 +47,8 @@ const CharacterAbilityScores: React.FC = () => {
     const updatedAbilities = {
       ...character.abilities,
       [ability]: value,
-      [ability.toLowerCase()]: value,
-      [key: string]: number // Для индексной сигнатуры
+      [ability.toLowerCase()]: value
+      // Removing the problematic index signature here
     } as AbilityScores;
 
     updateCharacter({
