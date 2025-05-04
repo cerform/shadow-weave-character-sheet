@@ -1,25 +1,10 @@
-import { db, storage, auth as firebaseAuth } from './firebase';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { auth, db } from './firebase';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/contexts/CharacterContext';
-import { Session, User } from '@/types/session';
-import { getCurrentUid } from '@/utils/authHelpers';
-import { toast } from 'sonner';
-
-// Импортируем сервис персонажей
+import { useCharacter, Character } from '@/contexts/CharacterContext';
 import characterService from './characterService';
+import { serverTimestamp, ref, uploadBytes, getDownloadURL, deleteObject, storage } from 'firebase/storage';
 
 // Экспортируем сервис персонажей
 export { characterService };
@@ -91,7 +76,7 @@ export const sessionService = {
       
       const sessions: Session[] = [];
       querySnapshot.forEach((doc) => {
-        sessions.push({ id: doc.id, ...doc.data() } as Session);
+        sessions.push({ id: doc.id, ...doc.data() } as Session);\
       });
       
       // TODO: получение сессий, где пользователь - игрок
@@ -140,7 +125,7 @@ export const sessionService = {
   },
   
   // Присоединение к сессии
-  joinSession: async (sessionId: string, user: User): Promise<boolean> => {
+  joinSession: async (sessionId: string, user: SessionUser): Promise<boolean> => {
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
       const sessionSnap = await getDoc(sessionRef);
@@ -336,3 +321,8 @@ export const storageService = {
 };
 
 export default { characterService, sessionService, storageService };
+
+// Helper function to get current user ID
+const getCurrentUid = () => {
+  return auth.currentUser?.uid;
+};

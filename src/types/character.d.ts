@@ -4,20 +4,22 @@ export interface CharacterSpell {
   name: string;
   level: number;
   description: string;
-  school?: string;
+  school: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
   prepared?: boolean;
-  ritual?: boolean;
   // Добавим недостающие поля для совместимости с существующим кодом
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  concentration?: boolean;
   higherLevels?: string;
-  classes?: string[];
+  classes?: string[] | string;
+  ritual?: boolean;
+  concentration?: boolean;
+  // Вместо прототипа, добавляем функцию как опциональное свойство
+  toString?: () => string;
 }
 
 export interface ClassFeature {
@@ -46,12 +48,30 @@ export interface SorceryPoints {
   max: number;
 }
 
+// Обновляем интерфейс MulticlassRequirements
+export interface MulticlassRequirements {
+  [key: string]: {
+    [key: string]: number;
+    description: string;
+  }
+}
+
+// Обновляем, чтобы требования к мультиклассам были более конкретными
+export interface ClassRequirement {
+  abilities: {[key: string]: number};
+  description: string;
+}
+
+export interface MulticlassRequirements {
+  [key: string]: ClassRequirement;
+}
+
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
 export interface CharacterSheet {
   userId?: string;
   id?: string;
   img?: string;
-  name: string;
+  name: string; // Обязательное поле
   class?: string;
   subclass?: string;
   classes?: ClassLevel[];
@@ -60,15 +80,15 @@ export interface CharacterSheet {
   level: number;
   race?: string;
   subrace?: string;
-  background?: string;
+  background: string;  // Теперь обязательное поле
   alignment?: string;
   experience?: number;
   gender?: string; // Поле для гендера персонажа
   appearance?: string; // Описание внешности персонажа
   personalityTraits?: string; // Черты личности персонажа
-  ideals?: string[]; // Изменено с string | string[] на string[]
-  bonds?: string[]; // Изменено с string | string[] на string[]
-  flaws?: string[]; // Изменено с string | string[] на string[]
+  ideals?: string; // Изменено с string[] на string
+  bonds?: string; // Изменено с string[] на string
+  flaws?: string; // Изменено с string[] на string
   abilities?: {
     STR: number;
     DEX: number;
@@ -77,12 +97,12 @@ export interface CharacterSheet {
     WIS: number;
     CHA: number;
     // Для обратной совместимости добавляем новые имена
-    strength?: number;
-    dexterity?: number;
-    constitution?: number;
-    intelligence?: number;
-    wisdom?: number;
-    charisma?: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
   };
   stats?: {
     strength: number;
@@ -118,7 +138,7 @@ export interface CharacterSheet {
   equipment?: string[];
   features?: string[];
   traits?: string[];
-  backstory: string;
+  backstory: string;  // Теперь обязательное поле
   xp?: number;
   inspiration?: boolean;
   maxHp?: number;  // Максимальные хиты
@@ -151,39 +171,68 @@ export interface CharacterSheet {
   sorceryPoints?: SorceryPoints;
   createdAt?: string;
   updatedAt?: string;
-  // Добавляем физические характеристики
-  age?: string;
-  height?: string;
-  weight?: string;
-  eyes?: string;
-  skin?: string;
-  hair?: string;
 }
 
-// Требования для мультиклассирования
-export interface MulticlassRequirements {
-  [className: string]: { 
-    [ability: string]: number 
-  };
-}
-
-// Интерфейс для подклассов персонажей
-export interface CharacterSubclass {
+// Расширяем интерфейс для Character в контексте персонажей
+export interface Character {
+  id?: string;
+  userId?: string;
   name: string;
-  className: string;
-  description: string;
-  features: {
-    level: number;
-    name: string;
-    description: string;
-  }[];
-}
-
-// Интерфейс для событий изменения хит-поинтов
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'heal' | 'temp' | 'death-save';
-  amount: number;
-  source?: string;
-  timestamp: Date;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string;
+  subclass?: string;
+  level: number;
+  abilities: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  proficiencies: string[];
+  equipment: string[];
+  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
+  languages: string[];
+  gender: string;
+  alignment: string;
+  background: string;
+  backstory: string;  // Добавляем обязательное поле
+  appearance?: string;  // Добавляем
+  personalityTraits?: string;  // Добавляем
+  ideals?: string;  // Добавляем
+  bonds?: string;  // Добавляем
+  flaws?: string;  // Добавляем
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    value: string;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+    };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
 }
