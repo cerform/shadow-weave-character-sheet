@@ -2,10 +2,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
 import { Theme, useTheme } from '@/contexts/ThemeContext';
+import { themes } from '@/lib/themes';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
   activeTheme: string;
+  currentThemeStyles: any; // Добавляем текущие стили темы
 }
 
 export const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
@@ -18,6 +20,10 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const savedTheme = localStorage.getItem('theme');
     return savedTheme || 'default';
   });
+  
+  // Получаем актуальные стили для текущей темы
+  const themeKey = activeTheme as keyof typeof themes;
+  const currentThemeStyles = themes[themeKey] || themes.default;
   
   // Применяем тему при монтировании и при изменении текущего пользователя
   useEffect(() => {
@@ -39,6 +45,8 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   // Функция для применения темы к документу
   const applyThemeToDocument = (theme: string) => {
+    console.log('Применяем тему:', theme);
+    
     // Удаляем все классы тем
     document.body.classList.forEach(className => {
       if (className.startsWith('theme-')) {
@@ -50,13 +58,25 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     document.body.classList.add(`theme-${theme}`);
     document.documentElement.setAttribute('data-theme', theme);
     
+    // Получаем стили для выбранной темы
+    const themeKey = theme as keyof typeof themes;
+    const themeStyles = themes[themeKey] || themes.default;
+    
+    // Применяем CSS переменные к корневому элементу для более гибкой стилизации
+    document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
+    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
+    document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
+    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    
     // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
-    document.documentElement.style.setProperty('--text-color', '#FFFFFF');
-    document.documentElement.style.setProperty('--muted-text-color', '#DDDDDD');
+    document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
+    document.documentElement.style.setProperty('--muted-text-color', themeStyles.mutedTextColor || '#DDDDDD');
   };
   
   // Функция для изменения темы пользователя
   const setUserTheme = (theme: string) => {
+    console.log('Переключаем на тему:', theme);
+    
     // Применяем тему
     applyThemeToDocument(theme);
     
@@ -72,7 +92,7 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   return (
-    <UserThemeContext.Provider value={{ setUserTheme, activeTheme }}>
+    <UserThemeContext.Provider value={{ setUserTheme, activeTheme, currentThemeStyles }}>
       {children}
     </UserThemeContext.Provider>
   );

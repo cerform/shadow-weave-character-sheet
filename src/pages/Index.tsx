@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
+import { useUserTheme } from "@/hooks/use-user-theme";
+import { themes } from "@/lib/themes";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCharacter } from "@/contexts/CharacterContext";
@@ -17,8 +19,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const Index = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { activeTheme } = useUserTheme();
   const { currentUser, isAuthenticated, logout } = useAuth();
   const { characters, getUserCharacters, setCharacter, deleteCharacter } = useCharacter();
+  
+  // Используем тему из хука для получения стилей
+  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
   const [userCharacters, setUserCharacters] = useState<any[]>([]);
@@ -83,6 +90,14 @@ const Index = () => {
     }
   };
 
+  // Динамические стили для карточек на основе текущей темы
+  const cardStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderColor: currentTheme.accent,
+    boxShadow: currentTheme.glow,
+    transition: 'all 0.3s ease'
+  };
+
   // Update the navigation links to include new pages
   const menuItems = [
     { title: "Главная", path: "/home", icon: Home },
@@ -95,7 +110,7 @@ const Index = () => {
   ];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
         <header className="text-center mb-6">
           <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
@@ -146,7 +161,10 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             {/* Колонка игрока */}
             <div className="grid grid-cols-1 gap-4">
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card 
+                className="backdrop-blur-sm transition-shadow" 
+                style={cardStyle}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="size-5" />
@@ -185,7 +203,10 @@ const Index = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Swords className="size-5" />
@@ -205,7 +226,10 @@ const Index = () => {
             
             {/* Колонка мастера */}
             <div className="grid grid-cols-1 gap-4">
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="size-5" />
@@ -223,7 +247,10 @@ const Index = () => {
               </Card>
 
               {/* Две отдельные карточки для Руководства и Книги заклинаний */}
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="size-5" />
@@ -240,7 +267,10 @@ const Index = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-card/30 backdrop-blur-sm border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-shadow">
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Book className="size-5" />
@@ -270,7 +300,8 @@ const Index = () => {
                 {userCharacters.map((char) => (
                   <Card 
                     key={char.id}
-                    className="bg-card/30 backdrop-blur-sm hover:bg-card/40 transition-colors"
+                    className="backdrop-blur-sm hover:bg-card/40 transition-all"
+                    style={cardStyle}
                   >
                     <CardContent className="p-4 relative">
                       <div className="flex items-center gap-3 cursor-pointer" onClick={() => loadCharacter(char)}>
@@ -322,7 +353,10 @@ const Index = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-card/30 backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground">
+              <div 
+                className="backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground"
+                style={cardStyle}
+              >
                 {isAuthenticated ? 
                   "У вас пока нет сохраненных персонажей" : 
                   "Создайте персонажа или войдите в аккаунт, чтобы увидеть своих персонажей"
