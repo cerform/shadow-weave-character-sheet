@@ -57,12 +57,12 @@ export interface MulticlassRequirements {
 
 // Обновляем, чтобы требования к мультиклассам были более конкретными
 export interface ClassRequirement {
-  abilities: {[key: string]: number};
+  abilities: { [key: string]: number };
   description: string;
 }
 
 export interface MulticlassRequirements {
-  [key: string]: ClassRequirement;
+  [className: string]: ClassRequirement;
 }
 
 // Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF

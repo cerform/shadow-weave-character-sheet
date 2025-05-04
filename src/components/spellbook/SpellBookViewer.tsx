@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
-import { useSpellbook } from '@/hooks/spellbook';
+import useSpellbook from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CharacterSpell } from '@/types/character';
 import { spells as allSpells } from '@/data/spells';
 
 const SpellBookViewer = () => {
@@ -28,12 +27,13 @@ const SpellBookViewer = () => {
       components: spell.components || '',
       duration: spell.duration || '',
       description: spell.description || '',
-      classes: spell.classes,
+      classes: spell.classes || [],
       isRitual: spell.ritual || false,
       isConcentration: spell.concentration || false,
       verbal: spell.verbal || false,
       somatic: spell.somatic || false,
-      material: spell.material || false
+      material: spell.material || false,
+      higherLevel: spell.higherLevels || ''
     }))
   );
 

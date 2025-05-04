@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
 import { safeJoin, normalizeSpells } from '@/utils/spellUtils';
+import SpellDescription from '../SpellDescription';
 
 interface SpellsTabProps {
   character: any;
@@ -81,16 +81,16 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
     return '';
   };
 
-  const getSchoolVariant = (school: string) => {
+  const getSchoolVariant = (school: string): "destructive" | "outline" | "secondary" | "default" => {
     switch (school?.toLowerCase()) {
       case 'воплощение': return 'destructive';
       case 'некромантия': return 'outline';
       case 'очарование': return 'secondary';
       case 'преобразование': return 'default';
-      case 'прорицание': return 'default'; // Changed from 'accent'
-      case 'вызов': return 'secondary'; // Changed from 'warning'
-      case 'ограждение': return 'default'; // Changed from 'info'
-      case 'иллюзия': return 'outline'; // Changed from 'subtle'
+      case 'прорицание': return 'default';
+      case 'вызов': return 'secondary';
+      case 'ограждение': return 'default';
+      case 'иллюзия': return 'outline';
       default: return 'default';
     }
   };
@@ -122,9 +122,9 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const renderSpellCard = (spell: CharacterSpell) => {
     return (
       <Card key={spell.id || spell.name} className={`spell-card transition-all ${getSpellBorderClass(spell)}`}>
-        <CardHeader className="p-3 pb-1">
+        <div className="p-3 pb-1">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-base mr-2">{spell.name}</CardTitle>
+            <h3 className="text-base mr-2 font-semibold">{spell.name}</h3>
             <div className="flex items-center space-x-1">
               {spell.level > 0 && (
                 <Button
@@ -157,24 +157,14 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
             <Badge variant={getSchoolVariant(spell.school || '')}>{spell.school}</Badge>
             <span>{getSpellLevelText(spell.level)}</span>
           </div>
-        </CardHeader>
+        </div>
         
         <CardContent className="p-3 pt-1">
-          <div className="text-sm">
-            {expandedSpells.includes(spell.id?.toString() || spell.name) ? (
-              <>
-                <p className="whitespace-pre-wrap">{spell.description}</p>
-                {spell.higherLevels && (
-                  <div className="mt-2">
-                    <p className="font-medium">На больших уровнях:</p>
-                    <p className="whitespace-pre-wrap">{spell.higherLevels}</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="whitespace-pre-wrap">{spell.description?.substring(0, 100)}{spell.description?.length > 100 ? '...' : ''}</p>
-            )}
-          </div>
+          <SpellDescription
+            description={spell.description || ''}
+            higherLevels={spell.higherLevels || ''}
+            expanded={expandedSpells.includes(spell.id?.toString() || spell.name)}
+          />
           
           {expandedSpells.includes(spell.id?.toString() || spell.name) && (
             renderSpellProperties(spell)

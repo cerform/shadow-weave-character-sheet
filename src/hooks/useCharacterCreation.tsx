@@ -1,246 +1,146 @@
 
-import { useState } from "react";
-import { CharacterSheet, ClassLevel } from "@/types/character";
-import { useToast } from "@/hooks/use-toast";
-import { convertToCharacter } from "@/utils/characterConverter";
-import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
-import { getCurrentUid } from "@/utils/authHelpers";
+import { useState, useMemo } from 'react';
+import { Character } from '@/contexts/CharacterContext';
+import { RacialTraits, ClassFeatures, Background, ABILITY_SCORE_CAPS } from '@/types/character';
+import { simpleArray } from '@/lib/simpleArray';
+import { useToast } from './use-toast';
+import { racialTraits } from '@/data/racialTraits';
+import { classFeatures } from '@/data/classFeatures';
+import { backgrounds } from '@/data/backgrounds';
+import { useNavigate } from 'react-router-dom';
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
-  const [character, setCharacter] = useState<CharacterSheet>({
-    name: "",
-    gender: "",
-    race: "",
-    class: "",
-    subclass: "",
-    additionalClasses: [],
+  const navigate = useNavigate();
+  
+  // Базовое состояние персонажа
+  const [character, setCharacter] = useState<Character>({
+    name: '',
+    race: '',
+    class: '',
     level: 1,
-    background: "",
-    alignment: "",
     abilities: {
-      // Add legacy ability score properties
       STR: 10,
       DEX: 10,
       CON: 10,
       INT: 10,
       WIS: 10,
       CHA: 10,
-      // Add new ability score properties
       strength: 10,
       dexterity: 10,
-      constitution: 10,
+      constitution: 10, 
       intelligence: 10,
       wisdom: 10,
       charisma: 10
     },
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    // Initialize with empty objects instead of arrays
-    skills: {},
-    savingThrows: {},
-    proficiencies: {
-      armor: [],
-      weapons: [],
-      tools: [],
-      languages: []
-    },
-    languages: [],
+    proficiencies: [],
     equipment: [],
     spells: [],
-    features: [],
-    personalityTraits: "",
-    ideals: "",
-    bonds: "",
-    flaws: "",
-    appearance: "",
-    backstory: ""
+    languages: [],
+    gender: '',
+    alignment: '',
+    background: ''
   });
 
-  const updateCharacter = (updates: Partial<CharacterSheet>) => {
-    // Если обновляются abilities, также обновляем и stats для совместимости
-    if (updates.abilities) {
-      updates.stats = {
-        strength: updates.abilities.strength,
-        dexterity: updates.abilities.dexterity,
-        constitution: updates.abilities.constitution,
-        intelligence: updates.abilities.intelligence,
-        wisdom: updates.abilities.wisdom,
-        charisma: updates.abilities.charisma
-      };
-    }
-    // Если обновляются stats, также обновляем и abilities для совместимости
-    else if (updates.stats) {
-      updates.abilities = {
-        STR: updates.stats.strength,
-        DEX: updates.stats.dexterity,
-        CON: updates.stats.constitution,
-        INT: updates.stats.intelligence,
-        WIS: updates.stats.wisdom,
-        CHA: updates.stats.charisma,
-        strength: updates.stats.strength,
-        dexterity: updates.stats.dexterity,
-        constitution: updates.stats.constitution,
-        intelligence: updates.stats.intelligence,
-        wisdom: updates.stats.wisdom,
-        charisma: updates.stats.charisma
-      };
-    }
-    
-    // Добавляем userId из текущего авторизованного пользователя, если он доступен
-    const uid = getCurrentUid();
-    if (uid && !character.userId) {
-      updates.userId = uid;
-    }
-    
+  // Обновление характеристик персонажа
+  const updateCharacter = (updates: Partial<Character>) => {
     setCharacter(prev => ({ ...prev, ...updates }));
-    console.log("Персонаж обновлен:", { ...character, ...updates });
   };
 
-  // Проверяем, является ли класс магическим
-  const checkMagicClass = () => {
-    if (!character.class) return false;
-    return checkIsMagicClass(character.class);
-  };
-
-  // Получаем общий уровень персонажа (основной + мультикласс)
-  const getTotalLevel = (): number => {
-    let totalLevel = character.level;
-    
-    if (character.additionalClasses && character.additionalClasses.length > 0) {
-      character.additionalClasses.forEach(cls => {
-        totalLevel += cls.level;
-      });
-    }
-    
-    return totalLevel;
-  };
-
-  // Получаем бонус мастерства на основе общего уровня
-  const getProficiencyBonus = (): number => {
-    const level = getTotalLevel();
-    if (level < 5) return 2;
-    if (level < 9) return 3;
-    if (level < 13) return 4;
-    if (level < 17) return 5;
-    return 6; // 17+ уровень
-  };
-
-  // Вычисляем модификатор характеристики
-  const getModifier = (score: number): string => {
-    return getModifierFromAbilityScore(score);
-  };
-  
-  // Получаем особенности подкласса, доступные для текущего уровня
-  const getAvailableSubclassFeatures = (): string[] => {
-    if (!character.subclass) return [];
-    
-    // Здесь будет логика получения особенностей на основе подкласса и уровня
-    // Пример возвращаемых данных:
-    return [
-      `${character.subclass} (подкласс ${character.class})`
-    ];
-  };
-  
-  // Получаем доступные классовые особенности на основе уровня
-  const getClassFeatures = (): string[] => {
-    // Здесь будет логика получения особенностей на основе класса и уровня
-    return [];
-  };
-  
-  // Рассчитываем опыт необходимый для текущего уровня
-  const getRequiredXP = (): number => {
-    const xpByLevel = [
-      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
-      85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
-    ];
-    
-    const level = Math.min(20, Math.max(1, getTotalLevel()));
-    return xpByLevel[level - 1];
-  };
-  
-  // Расчет количества очков для распределения характеристик в зависимости от уровня
-  const getAbilityScorePointsByLevel = (basePoints: number = 27): number => {
-    let totalPoints = basePoints;
-    
-    // Добавляем бонусы за уровни
-    const level = getTotalLevel();
-    
-    if (level >= 5) totalPoints += 3;
-    if (level >= 10) totalPoints += 2; // Всего +5 на 10 уровне
-    if (level >= 15) totalPoints += 2; // Всего +7 на 15 уровне
-    
-    return totalPoints;
-  };
-  
-  // Обработчик для изменения уровня персонажа
+  // Обработчик смены уровня персонажа
   const handleLevelChange = (level: number) => {
-    // Проверяем, не превышает ли общий уровень 20 с учетом мультикласса
-    let additionalLevels = 0;
-    if (character.additionalClasses) {
-      additionalLevels = character.additionalClasses.reduce(
-        (total, cls) => total + cls.level, 0
-      );
-    }
+    // Проверяем, что уровень в допустимом диапазоне (1-20)
+    const validLevel = Math.max(1, Math.min(20, level));
+    setCharacter(prev => ({ ...prev, level: validLevel }));
+  };
+
+  // Расчет модификатора характеристики
+  const getModifier = (abilityScore: number | undefined) => {
+    if (!abilityScore) return 0;
+    return Math.floor((abilityScore - 10) / 2);
+  };
+
+  // Проверка, является ли класс магическим
+  const isMagicClass = () => {
+    const magicClasses = ['Бард', 'Волшебник', 'Жрец', 'Колдун', 'Паладин', 'Следопыт', 'Чародей', 'Друид'];
+    return magicClasses.includes(character.class);
+  };
+
+  // Расчет количества очков характеристик на основе уровня
+  const getAbilityScorePointsByLevel = (basePoints: number) => {
+    // При достижении 4, 8, 12, 16 и 19 уровней персонаж получает +2 очка характеристик
+    const levelBonuses = [4, 8, 12, 16, 19];
     
-    if (level + additionalLevels > 20) {
+    // Считаем, сколько уровней из бонусных уже достигнуто
+    const bonusesApplied = levelBonuses.filter(lvl => character.level >= lvl).length;
+    
+    // Каждый бонус дает +2 очка к базовому значению
+    return basePoints + (bonusesApplied * 2);
+  };
+  
+  // Получение расовых особенностей
+  const getRacialTraits = (): RacialTraits | undefined => {
+    return racialTraits.find(r => r.race === character.race);
+  };
+  
+  // Получение особенностей класса
+  const getClassFeatures = (): ClassFeatures | undefined => {
+    return classFeatures.find(c => c.name === character.class);
+  };
+  
+  // Получение деталей предыстории
+  const getBackgroundDetails = (): Background | undefined => {
+    return backgrounds.find(b => b.name === character.background);
+  };
+
+  // Проверка готовности персонажа
+  const isCharacterValid = useMemo(() => {
+    const requiredFields = [
+      character.name,
+      character.race,
+      character.class,
+      character.background,
+      character.gender,
+      character.alignment
+    ];
+    
+    return requiredFields.every(field => field && field.trim() !== '');
+  }, [character]);
+  
+  // Функция для сохранения персонажа
+  const saveCharacter = async () => {
+    if (!isCharacterValid) {
       toast({
-        title: "Превышен максимальный уровень",
-        description: `Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`,
+        title: "Ошибка",
+        description: "Пожалуйста, заполните все обязательные поля персонажа",
         variant: "destructive"
       });
       return;
     }
     
-    if (level >= 1 && level <= 20) {
-      // Обновляем уровень в состоянии персонажа
-      updateCharacter({ level });
-      
-      // Опционально: здесь можно добавить логику изменения доступных
-      // заклинаний, особенностей класса и подкласса в зависимости от уровня
-      
-      console.log(`Уровень персонажа изменен на ${level}`);
-    } else {
-      toast({
-        title: "Некорректный уровень",
-        description: "Уровень должен быть от 1 до 20",
-        variant: "destructive"
-      });
-    }
+    // TODO: Сохранение персонажа в базу данных или локальное хранилище
+    
+    toast({
+      title: "Успех",
+      description: "Персонаж успешно создан",
+    });
+    
+    // Перенаправление на экран листа персонажа
+    navigate(`/character-sheet/${character.id || 'new'}`);
   };
   
-  // Получаем все классы персонажа (основной + мультикласс)
-  const getAllClasses = (): string[] => {
-    const allClasses = [character.class];
-    
-    if (character.additionalClasses && character.additionalClasses.length > 0) {
-      character.additionalClasses.forEach(cls => {
-        allClasses.push(cls.class);
-      });
-    }
-    
-    return allClasses.filter(Boolean) as string[];
-  };
-
-  return { 
-    character, 
-    updateCharacter, 
-    isMagicClass: checkMagicClass, 
-    getProficiencyBonus,
+  // Возвращаем все нужные данные и функции
+  return {
+    character,
+    updateCharacter,
     getModifier,
-    getAvailableSubclassFeatures,
-    getClassFeatures,
-    getRequiredXP,
+    isMagicClass,
     handleLevelChange,
-    getTotalLevel,
-    getAllClasses,
     getAbilityScorePointsByLevel,
-    convertToCharacter
+    getRacialTraits,
+    getClassFeatures,
+    getBackgroundDetails,
+    isCharacterValid,
+    saveCharacter
   };
 };

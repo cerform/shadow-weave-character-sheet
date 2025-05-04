@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -36,7 +37,24 @@ export const useSpellbook = (): UseSpellbookReturn => {
   useEffect(() => {
     // Преобразуем CharacterSpell[] в SpellData[]
     if (allSpells && allSpells.length > 0) {
-      const convertedSpells: SpellData[] = allSpells.map(convertToSpellData);
+      const convertedSpells: SpellData[] = allSpells.map(spell => ({
+        id: spell.id,
+        name: spell.name,
+        level: spell.level,
+        school: spell.school || 'Unknown',
+        castingTime: spell.castingTime || '',
+        range: spell.range || '',
+        components: spell.components || '',
+        duration: spell.duration || '',
+        description: spell.description || '',
+        classes: spell.classes || [],
+        isRitual: spell.ritual || false,
+        isConcentration: spell.concentration || false,
+        verbal: spell.verbal || false,
+        somatic: spell.somatic || false,
+        material: spell.material || false,
+        higherLevel: spell.higherLevels || '',
+      }));
       setFilteredSpells(convertedSpells);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
@@ -60,7 +78,24 @@ export const useSpellbook = (): UseSpellbookReturn => {
     result = filterSpellsByClass(result, activeClass);
 
     // Преобразуем CharacterSpell[] в SpellData[]
-    const convertedSpells: SpellData[] = result.map(convertToSpellData);
+    const convertedSpells: SpellData[] = result.map(spell => ({
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school || 'Unknown',
+      castingTime: spell.castingTime || '',
+      range: spell.range || '',
+      components: spell.components || '',
+      duration: spell.duration || '',
+      description: spell.description || '',
+      classes: spell.classes || [],
+      isRitual: spell.ritual || false,
+      isConcentration: spell.concentration || false,
+      verbal: spell.verbal || false,
+      somatic: spell.somatic || false,
+      material: spell.material || false,
+      higherLevel: spell.higherLevels || '',
+    }));
     
     setFilteredSpells(convertedSpells);
   }, [searchTerm, activeLevel, activeSchool, activeClass]);
@@ -143,3 +178,5 @@ export const useSpellbook = (): UseSpellbookReturn => {
     importSpellsFromText: importSpellsFromTextUtil
   };
 };
+
+export default useSpellbook;

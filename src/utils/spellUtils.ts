@@ -16,6 +16,7 @@ export function normalizeSpells(spells: unknown): CharacterSpell[] {
     if (typeof spell === 'string') {
       // Convert string to basic CharacterSpell object
       return {
+        id: spell,
         name: spell,
         level: 0,
         school: 'Unknown',
@@ -32,6 +33,7 @@ export function normalizeSpells(spells: unknown): CharacterSpell[] {
     } else {
       // Fall back to a default spell object
       return {
+        id: 'unknown',
         name: 'Unknown Spell',
         level: 0,
         school: 'Unknown',
@@ -107,4 +109,11 @@ export const extractSpellNames = (spells: (CharacterSpell | string)[]): string[]
     if (typeof spell === 'string') return spell;
     return spell.name;
   });
+};
+
+/**
+ * Converts a CharacterSpell to a string representation for storage
+ */
+export const characterSpellToString = (spell: CharacterSpell): string => {
+  return spell.name;
 };

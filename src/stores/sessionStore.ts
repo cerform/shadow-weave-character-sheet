@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -284,7 +285,11 @@ export const useSessionStore = create<SessionStore>()(
         try {
           set({ loading: true });
           // Используем новое имя функции для получения персонажей
-          const characters = await characterService.getCharactersByUserId();
+          const charactersData = await characterService.getCharactersByUserId();
+          
+          // Приводим полученные данные к типу Character
+          const characters = charactersData.map(char => char as Character);
+          
           set({ characters, loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
@@ -294,14 +299,15 @@ export const useSessionStore = create<SessionStore>()(
       
       saveCharacter: async (character: Character) => {
         try {
-          const success = await characterService.saveCharacter(character);
+          const result = await characterService.saveCharacter(character);
           
-          if (success) {
+          if (result) {
             // Обновляем список персонажей
-            get().fetchCharacters();
+            await get().fetchCharacters();
+            return true;
           }
           
-          return success;
+          return Boolean(result);
         } catch (error) {
           console.error("Ошибка при сохранении персонажа:", error);
           return false;
@@ -310,9 +316,9 @@ export const useSessionStore = create<SessionStore>()(
       
       deleteCharacter: async (characterId: string) => {
         try {
-          const deleted = await characterService.deleteCharacter(characterId);
+          const result = await characterService.deleteCharacter(characterId);
           
-          if (deleted) {
+          if (result) {
             // Обновляем список персонажей
             await get().fetchCharacters();
             toast.success("Персонаж успешно удален");
@@ -320,7 +326,7 @@ export const useSessionStore = create<SessionStore>()(
             toast.error("Не удалось удалить персонажа");
           }
           
-          return deleted;
+          return Boolean(result);
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
           toast.error("Не удалось удалить персонажа");

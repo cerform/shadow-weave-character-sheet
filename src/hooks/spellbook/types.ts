@@ -1,32 +1,27 @@
 
-import { CharacterSpell } from '@/types/character';
-
-// Интерфейс для данных о заклинании
 export interface SpellData {
-  id?: string | number;
+  id?: string;
   name: string;
-  name_en?: string;
   level: number;
-  school: string;
+  school: string; // Убрал необязательность
   castingTime: string;
   range: string;
   components: string;
   duration: string;
-  description: string | string[];
-  classes?: string[] | string;
-  source?: string;
-  isRitual?: boolean;
-  isConcentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
+  description: string;
+  classes: string[] | string;
+  isRitual: boolean;
+  isConcentration: boolean;
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  higherLevel?: string;
   ritual?: boolean;
   concentration?: boolean;
-  higherLevel?: string;
+  materialComponents?: string;
   higherLevels?: string;
 }
 
-// Интерфейс для возвращаемого значения хука useSpellbook
 export interface UseSpellbookReturn {
   filteredSpells: SpellData[];
   searchTerm: string;
@@ -46,8 +41,8 @@ export interface UseSpellbookReturn {
   toggleSchool: (school: string) => void;
   toggleClass: (className: string) => void;
   clearFilters: () => void;
-  getBadgeColor: (level: number) => string;
+  getBadgeColor: (type: string) => string;
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  importSpellsFromText: (text: string) => any[];
 }

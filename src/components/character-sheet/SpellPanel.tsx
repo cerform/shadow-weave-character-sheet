@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +82,12 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
       return spell;
     });
     
-    onUpdate({ ...character, spells: updatedSpells });
+    // Конвертируем обратно в строки, если необходимо
+    if (Array.isArray(character.spells) && character.spells.length > 0 && typeof character.spells[0] === 'string') {
+      onUpdate({ ...character, spells: updatedSpells.map(spell => spell.name) });
+    } else {
+      onUpdate({ ...character, spells: updatedSpells });
+    }
   };
 
   // Получение класса для границы карточки заклинания
@@ -95,16 +99,16 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   };
 
   // Получение варианта для бейджа школы магии
-  const getSchoolVariant = (school: string) => {
+  const getSchoolVariant = (school: string): "destructive" | "outline" | "secondary" | "default" => {
     switch (school?.toLowerCase()) {
       case 'воплощение': return 'destructive';
       case 'некромантия': return 'outline';
       case 'очарование': return 'secondary';
       case 'преобразование': return 'default';
-      case 'прорицание': return 'default'; // Changed from 'accent'
-      case 'вызов': return 'secondary'; // Changed from 'warning'
-      case 'ограждение': return 'default'; // Changed from 'info'
-      case 'иллюзия': return 'outline'; // Changed from 'subtle'
+      case 'прорицание': return 'default';
+      case 'вызов': return 'secondary';
+      case 'ограждение': return 'default';
+      case 'иллюзия': return 'outline';
       default: return 'default';
     }
   };
@@ -190,8 +194,96 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
     );
   };
 
+  // Получение количества подготовленных заклинаний
+  function getPreparedSpellsCount() {
+    if (!character?.spells) return 0;
+    
+    const normalizedSpells = normalizeSpells(character.spells);
+    return normalizedSpells.filter(spell => spell.prepared && spell.level > 0).length;
+  }
+
+  // Получение максимального количества подготовленных заклинаний
+  function getMaxPreparedSpells() {
+    if (!character) return 0;
+    
+    const spellcastingAbility = character.className === 'Волшебник' ? 'intelligence' : 
+                               character.className === 'Жрец' || character.className === 'Друид' ? 'wisdom' : 
+                               'charisma';
+    
+    const abilityModifier = Math.floor((character.abilities?.[spellcastingAbility] - 10) / 2);
+    const classLevel = character.level || 1;
+    
+    return Math.max(1, abilityModifier + classLevel);
+  }
+
+  // Получение информации о ячейках заклинаний
+  function getSpellSlotInfo() {
+    if (!character?.spellSlots) return null;
+    
+    return Object.entries(character.spellSlots)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([level, slots]) => ({
+        level: Number(level),
+        used: slots.used || 0,
+        max: slots.max || 0
+      }))
+      .filter(slot => slot.max > 0);
+  }
+
+  // Обработчик изменения использованных ячеек заклинаний
+  function handleSpellSlotChange(level: number, used: number) {
+    if (!character?.spellSlots) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = { 
+      ...updatedSpellSlots[level],
+      used: Math.max(0, Math.min(used, updatedSpellSlots[level].max))
+    };
+    
+    onUpdate({ ...character, spellSlots: updatedSpellSlots });
+  }
+
+  // Рендер информации о ячейках заклинаний
+  function renderSpellSlots() {
+    const spellSlots = getSpellSlotInfo();
+    if (!spellSlots || spellSlots.length === 0) return null;
+    
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-4">
+        {spellSlots.map(slot => (
+          <div key={slot.level} className="flex flex-col items-center p-2 border rounded-md">
+            <div className="text-xs text-muted-foreground mb-1">{slot.level} уровень</div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => handleSpellSlotChange(slot.level, slot.used - 1)}
+                disabled={slot.used <= 0}
+              >
+                <span>-</span>
+              </Button>
+              <span className="text-sm font-medium">
+                {slot.used}/{slot.max}
+              </span>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => handleSpellSlotChange(slot.level, slot.used + 1)}
+                disabled={slot.used >= slot.max}
+              >
+                <span>+</span>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   // Рендер списка заклинаний по уровням
-  const renderSpellsByLevel = () => {
+  function renderSpellsByLevel() {
     if (!character?.spells || character.spells.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">
@@ -246,95 +338,7 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
         ))}
       </div>
     );
-  };
-
-  // Получение количества подготовленных заклинаний
-  const getPreparedSpellsCount = () => {
-    if (!character?.spells) return 0;
-    
-    const normalizedSpells = normalizeSpells(character.spells);
-    return normalizedSpells.filter(spell => spell.prepared && spell.level > 0).length;
-  };
-
-  // Получение максимального количества подготовленных заклинаний
-  const getMaxPreparedSpells = () => {
-    if (!character) return 0;
-    
-    const spellcastingAbility = character.className === 'Волшебник' ? 'intelligence' : 
-                               character.className === 'Жрец' || character.className === 'Друид' ? 'wisdom' : 
-                               'charisma';
-    
-    const abilityModifier = Math.floor((character.abilities?.[spellcastingAbility] - 10) / 2);
-    const classLevel = character.level || 1;
-    
-    return Math.max(1, abilityModifier + classLevel);
-  };
-
-  // Получение информации о ячейках заклинаний
-  const getSpellSlotInfo = () => {
-    if (!character?.spellSlots) return null;
-    
-    return Object.entries(character.spellSlots)
-      .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([level, slots]) => ({
-        level: Number(level),
-        used: slots.used || 0,
-        max: slots.max || 0
-      }))
-      .filter(slot => slot.max > 0);
-  };
-
-  // Обработчик изменения использованных ячеек заклинаний
-  const handleSpellSlotChange = (level: number, used: number) => {
-    if (!character?.spellSlots) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = { 
-      ...updatedSpellSlots[level],
-      used: Math.max(0, Math.min(used, updatedSpellSlots[level].max))
-    };
-    
-    onUpdate({ ...character, spellSlots: updatedSpellSlots });
-  };
-
-  // Рендер информации о ячейках заклинаний
-  const renderSpellSlots = () => {
-    const spellSlots = getSpellSlotInfo();
-    if (!spellSlots || spellSlots.length === 0) return null;
-    
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-4">
-        {spellSlots.map(slot => (
-          <div key={slot.level} className="flex flex-col items-center p-2 border rounded-md">
-            <div className="text-xs text-muted-foreground mb-1">{slot.level} уровень</div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-6 w-6"
-                onClick={() => handleSpellSlotChange(slot.level, slot.used - 1)}
-                disabled={slot.used <= 0}
-              >
-                <span>-</span>
-              </Button>
-              <span className="text-sm font-medium">
-                {slot.used}/{slot.max}
-              </span>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-6 w-6"
-                onClick={() => handleSpellSlotChange(slot.level, slot.used + 1)}
-                disabled={slot.used >= slot.max}
-              >
-                <span>+</span>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  }
 
   return (
     <div>

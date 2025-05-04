@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { db, auth } from './firebase';
 import { 
@@ -35,7 +36,6 @@ const sessionService = {
       description: description || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdBy: user.uid,
       users: [],
       isEnded: false
     };
@@ -147,6 +147,39 @@ const sessionService = {
       console.error("Ошибка при завершении сессии:", error);
       return false;
     }
+  },
+  
+  // Обновление кода сессии
+  updateSessionCode: async (sessionId: string): Promise<string | false> => {
+    try {
+      const newCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const sessionRef = doc(db, "sessions", sessionId);
+      
+      await updateDoc(sessionRef, {
+        code: newCode
+      });
+      
+      return newCode;
+    } catch (error) {
+      console.error("Ошибка при обновлении кода сессии:", error);
+      return false;
+    }
+  },
+  
+  // Сохранение заметок сессии
+  saveSessionNotes: async (sessionId: string, notes: string): Promise<boolean> => {
+    try {
+      const sessionRef = doc(db, "sessions", sessionId);
+      
+      await updateDoc(sessionRef, {
+        notes: notes
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Ошибка при сохранении заметок:", error);
+      return false;
+    }
   }
 };
 
@@ -201,10 +234,10 @@ const characterService = {
   },
   
   // Удаление персонажа
-  deleteCharacter: async (characterId: string): Promise<void | false> => {
+  deleteCharacter: async (characterId: string): Promise<boolean | void> => {
     try {
       await deleteDoc(doc(db, "characters", characterId));
-      return;
+      return true;
     } catch (error) {
       console.error("Ошибка при удалении персонажа:", error);
       return false;
