@@ -1,4 +1,3 @@
-
 export interface CharacterSpell {
   id?: number;
   name: string;
@@ -235,4 +234,12 @@ export interface Character {
   skillProficiencies?: {[skillName: string]: boolean};
   savingThrowProficiencies?: {[ability: string]: boolean};
   image?: string;
+}
+
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'tempHP';
+  amount: number;
+  source: string;
+  timestamp: Date;
 }

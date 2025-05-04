@@ -113,6 +113,14 @@ export const getCharactersByUserId = async (): Promise<CharacterSheet[]> => {
 };
 
 /**
+ * Получает всех персонажей (алиас для getCharactersByUserId)
+ * @returns Массив персонажей
+ */
+export const getCharacters = async (): Promise<CharacterSheet[]> => {
+  return getCharactersByUserId();
+};
+
+/**
  * Удаляет персонажа по его ID
  * @param id ID персонажа
  */
@@ -131,5 +139,6 @@ export default {
   saveCharacter,
   getCharacterById,
   getCharactersByUserId,
+  getCharacters,
   deleteCharacter
 };

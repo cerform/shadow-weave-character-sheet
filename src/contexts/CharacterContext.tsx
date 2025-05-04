@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints } from '@/types/character';
+import { SorceryPoints, CharacterSheet } from '@/types/character';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -40,6 +40,7 @@ export interface Character {
   gender: string;
   alignment: string;
   background: string;
+  backstory?: string; // Добавляем поле, которое требуется в CharacterSheet
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
@@ -103,14 +104,20 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     if (!character) return;
     
     try {
-      const updatedCharacter = { ...character, updatedAt: new Date().toISOString() };
+      const updatedCharacter = { 
+        ...character, 
+        updatedAt: new Date().toISOString(),
+        // Гарантируем наличие обязательных полей для CharacterSheet
+        backstory: character.backstory || ''
+      };
+      
       if (!updatedCharacter.createdAt) {
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter);
+      const savedChar = await characterService.saveCharacter(updatedCharacter as CharacterSheet);
       if (savedChar) {
-        setCharacter(updatedCharacter);
+        setCharacter({...updatedCharacter, id: savedChar.id});
       }
       
       // Обновляем список персонажей, если сохранение прошло успешно
@@ -124,8 +131,13 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   const getUserCharacters = async () => {
     try {
       const fetchedCharacters = await characterService.getCharactersByUserId();
-      setCharacters(fetchedCharacters);
-      return fetchedCharacters;
+      // Приводим CharacterSheet к типу Character
+      const characterArray: Character[] = fetchedCharacters.map((char: CharacterSheet) => ({
+        ...(char as unknown as Character)
+      }));
+      
+      setCharacters(characterArray);
+      return characterArray;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       return [];

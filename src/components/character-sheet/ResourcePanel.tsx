@@ -489,7 +489,7 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                   initialDice={getHitDieByClass(character?.className)}
                   hideControls={false}
                   modifier={getNumericModifier(constitution)}
-                  onRollComplete={handleHitDiceRollComplete}
+                  onRollComplete={handleHitDieRollComplete}
                   themeColor={currentTheme.accent}
                 />
               </div>
@@ -636,3 +636,4 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
     </Card>
   );
 };
+
