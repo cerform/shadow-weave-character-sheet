@@ -7,7 +7,7 @@ import StandardArrayPanel from './StandardArrayPanel';
 import PointBuyPanel from './PointBuyPanel';
 import { getMaxAbilityScore } from './ManualInputPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ABILITY_SCORE_CAPS } from '@/types/character';
+import { ABILITY_SCORE_CAPS } from '../../../types/character';
 
 const CharacterAbilityScores: React.FC = () => {
   const { abilities, setAbilities, level } = useCharacterCreation();
