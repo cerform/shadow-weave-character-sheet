@@ -1,3 +1,4 @@
+
 export interface SpellData {
   id?: string | number;
   name: string;

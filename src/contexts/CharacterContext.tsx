@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import characterService from '@/services/characterService';
 import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
 import { extractSpellNames } from '@/utils/spellUtils';

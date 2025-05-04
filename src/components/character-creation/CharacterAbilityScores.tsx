@@ -32,7 +32,6 @@ const CharacterAbilityScores: React.FC = () => {
         INT: ABILITY_SCORE_CAPS.DEFAULT,
         WIS: ABILITY_SCORE_CAPS.DEFAULT,
         CHA: ABILITY_SCORE_CAPS.DEFAULT
-        // Removing the problematic index signature here
       } as AbilityScores;
       
       updateCharacter({
@@ -48,7 +47,6 @@ const CharacterAbilityScores: React.FC = () => {
       ...character.abilities,
       [ability]: value,
       [ability.toLowerCase()]: value
-      // Removing the problematic index signature here
     } as AbilityScores;
 
     updateCharacter({
@@ -77,7 +75,7 @@ const CharacterAbilityScores: React.FC = () => {
           <div className="mt-4">
             <TabsContent value="roll">
               <AbilityRollingPanel
-                stats={character?.abilities || {} as Record<string, number>}
+                stats={character?.abilities || {}}
                 onAssignDiceToStat={handleAbilityChange}
                 diceResults={[]}
                 assignedDice={{}}
@@ -87,13 +85,13 @@ const CharacterAbilityScores: React.FC = () => {
             </TabsContent>
             <TabsContent value="standard">
               <StandardArrayPanel
-                stats={character?.abilities || {} as Record<string, number>}
+                stats={character?.abilities || {}}
                 getModifier={getModifierString}
               />
             </TabsContent>
             <TabsContent value="point">
               <PointBuyPanel
-                stats={character?.abilities || {} as Record<string, number>}
+                stats={character?.abilities || {}}
                 pointsLeft={27}
                 incrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) + 1)}
                 decrementStat={(stat) => handleAbilityChange(stat, (character?.abilities?.[stat] || 8) - 1)}
