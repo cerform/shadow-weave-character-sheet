@@ -43,11 +43,11 @@ const CharacterAbilityScores: React.FC = () => {
   const handleAbilityChange = (ability: string, value: number) => {
     if (!character?.abilities) return;
 
-    const updatedAbilities: AbilityScores = {
-      ...character.abilities as AbilityScores,
+    const updatedAbilities = {
+      ...character.abilities,
       [ability]: value,
       [ability.toLowerCase()]: value
-    };
+    } as AbilityScores;
 
     updateCharacter({
       abilities: updatedAbilities

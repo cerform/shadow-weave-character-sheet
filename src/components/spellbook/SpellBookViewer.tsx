@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';

@@ -1,19 +1,20 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { CharacterHeader } from './CharacterHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InfoPanel } from './InfoPanel';
-import { AbilitiesPanel } from './AbilitiesPanel';
-import { SkillsPanel } from './SkillsPanel';
-import { ProficienciesPanel } from './ProficienciesPanel';
-import { EquipmentPanel } from './EquipmentPanel';
-import { SpellPanel } from './SpellPanel';
-import { HitPointsPanel } from './HitPointsPanel';
-import { FeaturesPanel } from './FeaturesPanel';
+import InfoPanel from './InfoPanel';
+import AbilitiesPanel from './AbilitiesPanel';
+import SkillsPanel from './SkillsPanel';
+import ProficienciesPanel from './ProficienciesPanel';
+import EquipmentPanel from './EquipmentPanel';
+import SpellPanel from './SpellPanel';
+import HitPointsPanel from './HitPointsPanel';
+import FeaturesPanel from './FeaturesPanel';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Character } from '@/contexts/CharacterContext';
-import { EditCharacterButton } from './EditCharacterButton';
+import EditCharacterButton from './EditCharacterButton';
 import RestPanel from "./RestPanel";
 import { SpellsTab } from './tabs/SpellsTab';
 
@@ -75,7 +76,13 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM }) => {
               </TabsContent>
               {isDM && (
                 <TabsContent value="rest">
-                  <RestPanel character={character} />
+                  <RestPanel 
+                    character={character} 
+                    onHitPointsChange={() => {}} 
+                    onHitDiceChange={() => {}} 
+                    onSpellSlotsChange={() => {}} 
+                    onSorceryPointsChange={() => {}} 
+                  />
                 </TabsContent>
               )}
             </div>

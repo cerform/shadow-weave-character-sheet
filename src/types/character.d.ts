@@ -146,7 +146,7 @@ export interface RacialTraits {
   languages: string[];
   features?: { name: string; description: string }[];
   traits?: { name: string; description: string }[];
-  extraAbilityPoints?: number;
+  extraAbilityPoints?: number; // Добавляем это свойство в интерфейс
 }
 
 // Типы для особенностей классов
