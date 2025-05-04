@@ -36,10 +36,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     if (e && e.stopPropagation) e.stopPropagation();
     
     if (!isFirstStep) {
-      // Небольшая задержка для завершения всех асинхронных операций
-      setTimeout(() => {
-        prevStep();
-      }, 10);
+      prevStep();
     }
   }, [isFirstStep, prevStep]);
   
@@ -49,10 +46,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
     if (e && e.stopPropagation) e.stopPropagation();
     
     if (!isNextDisabled) {
-      // Небольшая задержка для завершения всех асинхронных операций
-      setTimeout(() => {
-        nextStep();
-      }, 10);
+      nextStep();
     }
   }, [isNextDisabled, nextStep]);
   

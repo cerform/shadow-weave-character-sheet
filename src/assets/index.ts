@@ -96,7 +96,78 @@ export const icons = {
 
 // Пути к фонам и заставкам
 export const backgrounds = {
+  // Основные фоны
   login: "/assets/backgrounds/login-bg.jpg",
   character: "/assets/backgrounds/character-bg.jpg",
   battle: "/assets/backgrounds/battle-bg.jpg",
+  
+  // Фоны для предысторий
+  backgrounds: {
+    acolyte: "/assets/backgrounds/backgrounds/acolyte-bg.jpg",
+    criminal: "/assets/backgrounds/backgrounds/criminal-bg.jpg",
+    folk_hero: "/assets/backgrounds/backgrounds/folk-hero-bg.jpg",
+    noble: "/assets/backgrounds/backgrounds/noble-bg.jpg",
+    sage: "/assets/backgrounds/backgrounds/sage-bg.jpg",
+    soldier: "/assets/backgrounds/backgrounds/soldier-bg.jpg",
+    charlatan: "/assets/backgrounds/backgrounds/charlatan-bg.jpg",
+    entertainer: "/assets/backgrounds/backgrounds/entertainer-bg.jpg",
+    guild_artisan: "/assets/backgrounds/backgrounds/guild-artisan-bg.jpg",
+    hermit: "/assets/backgrounds/backgrounds/hermit-bg.jpg",
+    outlander: "/assets/backgrounds/backgrounds/outlander-bg.jpg",
+    sailor: "/assets/backgrounds/backgrounds/sailor-bg.jpg",
+    urchin: "/assets/backgrounds/backgrounds/urchin-bg.jpg",
+  },
+  
+  // Фоны для рас
+  races: {
+    human: "/assets/backgrounds/races/human-bg.jpg",
+    elf: "/assets/backgrounds/races/elf-bg.jpg",
+    dwarf: "/assets/backgrounds/races/dwarf-bg.jpg",
+    halfling: "/assets/backgrounds/races/halfling-bg.jpg",
+    dragonborn: "/assets/backgrounds/races/dragonborn-bg.jpg",
+    gnome: "/assets/backgrounds/races/gnome-bg.jpg",
+    half_elf: "/assets/backgrounds/races/half-elf-bg.jpg",
+    half_orc: "/assets/backgrounds/races/half-orc-bg.jpg",
+    tiefling: "/assets/backgrounds/races/tiefling-bg.jpg",
+  },
+  
+  // Фоны для классов
+  classes: {
+    barbarian: "/assets/backgrounds/classes/barbarian-bg.jpg",
+    bard: "/assets/backgrounds/classes/bard-bg.jpg", 
+    cleric: "/assets/backgrounds/classes/cleric-bg.jpg",
+    druid: "/assets/backgrounds/classes/druid-bg.jpg",
+    fighter: "/assets/backgrounds/classes/fighter-bg.jpg",
+    monk: "/assets/backgrounds/classes/monk-bg.jpg",
+    paladin: "/assets/backgrounds/classes/paladin-bg.jpg",
+    ranger: "/assets/backgrounds/classes/ranger-bg.jpg",
+    rogue: "/assets/backgrounds/classes/rogue-bg.jpg",
+    sorcerer: "/assets/backgrounds/classes/sorcerer-bg.jpg",
+    warlock: "/assets/backgrounds/classes/warlock-bg.jpg",
+    wizard: "/assets/backgrounds/classes/wizard-bg.jpg",
+  },
+  
+  // Дополнительные фоны окружения
+  environments: {
+    tavern: "/assets/backgrounds/environments/tavern-bg.jpg",
+    castle: "/assets/backgrounds/environments/castle-bg.jpg",
+    dungeon: "/assets/backgrounds/environments/dungeon-bg.jpg",
+    forest: "/assets/backgrounds/environments/forest-bg.jpg",
+    mountains: "/assets/backgrounds/environments/mountains-bg.jpg", 
+    city: "/assets/backgrounds/environments/city-bg.jpg",
+    village: "/assets/backgrounds/environments/village-bg.jpg",
+    coast: "/assets/backgrounds/environments/coast-bg.jpg",
+    desert: "/assets/backgrounds/environments/desert-bg.jpg",
+  },
+  
+  // Фоны для разных этапов создания персонажа
+  creation: {
+    step1: "/assets/backgrounds/creation/race-selection-bg.jpg", 
+    step2: "/assets/backgrounds/creation/class-selection-bg.jpg",
+    step3: "/assets/backgrounds/creation/abilities-bg.jpg",
+    step4: "/assets/backgrounds/creation/background-bg.jpg", 
+    step5: "/assets/backgrounds/creation/equipment-bg.jpg",
+    step6: "/assets/backgrounds/creation/spells-bg.jpg",
+    step7: "/assets/backgrounds/creation/review-bg.jpg",
+  }
 };

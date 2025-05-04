@@ -20,8 +20,14 @@
 - `/public/assets/icons/items/` - Иконки предметов
 - `/public/assets/icons/ui/` - Иконки интерфейса
 
+## Фоны
+- `/public/assets/backgrounds/` - Основные фоновые изображения
+- `/public/assets/backgrounds/backgrounds/` - Фоны для предысторий персонажей
+- `/public/assets/backgrounds/races/` - Фоны для рас персонажей
+- `/public/assets/backgrounds/classes/` - Фоны для классов персонажей
+- `/public/assets/backgrounds/environments/` - Фоны окружения (таверны, города и т.д.)
+- `/public/assets/backgrounds/creation/` - Фоны для различных шагов создания персонажа
+
 ## Загрузки пользователей
 - `/public/assets/user-uploads/` - Пользовательские загрузки
 
-## Фоны
-- `/public/assets/backgrounds/` - Фоновые изображения
