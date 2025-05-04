@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
 import { safeJoin, normalizeSpells } from '@/utils/spellUtils';
@@ -81,15 +82,15 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   };
 
   const getSchoolVariant = (school: string) => {
-    switch (school.toLowerCase()) {
+    switch (school?.toLowerCase()) {
       case 'воплощение': return 'destructive';
       case 'некромантия': return 'outline';
       case 'очарование': return 'secondary';
       case 'преобразование': return 'default';
-      case 'прорицание': return 'accent';
-      case 'вызов': return 'warning';
-      case 'ограждение': return 'info';
-      case 'иллюзия': return 'subtle';
+      case 'прорицание': return 'default'; // Changed from 'accent'
+      case 'вызов': return 'secondary'; // Changed from 'warning'
+      case 'ограждение': return 'default'; // Changed from 'info'
+      case 'иллюзия': return 'outline'; // Changed from 'subtle'
       default: return 'default';
     }
   };
@@ -121,9 +122,9 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const renderSpellCard = (spell: CharacterSpell) => {
     return (
       <Card key={spell.id || spell.name} className={`spell-card transition-all ${getSpellBorderClass(spell)}`}>
-        <Card.Header className="p-3 pb-1">
+        <CardHeader className="p-3 pb-1">
           <div className="flex justify-between items-start">
-            <Card.Title className="text-base mr-2">{spell.name}</Card.Title>
+            <CardTitle className="text-base mr-2">{spell.name}</CardTitle>
             <div className="flex items-center space-x-1">
               {spell.level > 0 && (
                 <Button
@@ -153,13 +154,13 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-            <Badge variant={getSchoolVariant(spell.school)}>{spell.school}</Badge>
+            <Badge variant={getSchoolVariant(spell.school || '')}>{spell.school}</Badge>
             <span>{getSpellLevelText(spell.level)}</span>
           </div>
-        </Card.Header>
+        </CardHeader>
         
-        <Card.Content className="p-3 pt-1">
-          <p className="text-sm">
+        <CardContent className="p-3 pt-1">
+          <div className="text-sm">
             {expandedSpells.includes(spell.id?.toString() || spell.name) ? (
               <>
                 <p className="whitespace-pre-wrap">{spell.description}</p>
@@ -173,12 +174,12 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
             ) : (
               <p className="whitespace-pre-wrap">{spell.description?.substring(0, 100)}{spell.description?.length > 100 ? '...' : ''}</p>
             )}
-          </p>
+          </div>
           
           {expandedSpells.includes(spell.id?.toString() || spell.name) && (
             renderSpellProperties(spell)
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
     );
   };
@@ -221,6 +222,15 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
       );
     }
 
+    // Use typeguard to ensure spellsByLevel isn't unknown
+    if (typeof spellsByLevel !== 'object' || spellsByLevel === null) {
+      return (
+        <div className="text-center py-4 text-muted-foreground">
+          <p>Ошибка загрузки заклинаний</p>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
         {Object.entries(spellsByLevel).sort(([a], [b]) => Number(a) - Number(b)).map(([level, spells]) => (
@@ -229,7 +239,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
               {Number(level) === 0 ? 'Заговоры' : `${level} уровень`}
             </h3>
             <div className="space-y-3">
-              {spells.map(spell => renderSpellCard(spell))}
+              {Array.isArray(spells) && spells.map(spell => renderSpellCard(spell))}
             </div>
           </div>
         ))}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -5,30 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { getNumericModifier } from "@/utils/abilityScoreUtils";
-import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
 import { getHitDieByClass } from '@/utils/classUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { HitPointEvent, Character } from '@/types/character';
 import DamageLog from './DamageLog';
+// We don't need DiceRoller3D for now since it has issues
+// import { DiceRoller3D } from './dice/DiceRoller3D';
 
-interface ResourcePanelProps {
-  character: Character | null;
-  onUpdate: (character: Partial<Character>) => void;
+export interface ResourcePanelProps {
+  character?: any;
+  onUpdate?: (updates: any) => void;
   isDM?: boolean;
 }
 
-export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
+const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
   const [currentHp, setCurrentHp] = useState(character?.currentHp || 0);
   const [maxHp, setMaxHp] = useState(character?.maxHp || 0);
   const [tempHp, setTempHp] = useState(character?.temporaryHp || 0);
-  const [damageEvents, setDamageEvents] = useState<HitPointEvent[]>([]);
+  const [damageEvents, setDamageEvents] = useState<any[]>([]);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
+
   // Получаем модификатор телосложения
   const constitution = character?.abilities?.constitution || character?.abilities?.CON || 10;
-  
+
   useEffect(() => {
     if (character) {
       setCurrentHp(character.currentHp || 0);
@@ -36,7 +37,7 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
       setTempHp(character.temporaryHp || 0);
     }
   }, [character]);
-  
+
   // Функция для применения урона или лечения
   const applyHpChange = (amount: number, type: 'damage' | 'healing' | 'tempHP') => {
     if (!character) return;
@@ -76,7 +77,7 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
     }
     
     // Обновляем состояние персонажа
-    onUpdate({
+    onUpdate?.({
       ...character,
       currentHp: newHp,
       temporaryHp: newTempHp
@@ -87,7 +88,7 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
     setTempHp(newTempHp);
     
     // Добавляем событие в лог
-    const newEvent: HitPointEvent = {
+    const newEvent = {
       id: Math.random().toString(36).substring(2, 11),
       type: type,
       amount: amount,
@@ -100,16 +101,16 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
     // Показываем сообщение пользователю
     toast({
       title: type === 'damage' ? "Урон" : type === 'healing' ? "Лечение" : "Временные хиты",
-      description: `Вы ${type === 'damage' ? "получили" : type === 'healing' ? "восстановили" : "получили временные"} ${amount} хитов.`,
+      description: `Вы ${type === 'damage' ? "получили" : type === 'healing' ? "восстановили" : "получили временные"} ${amount} хитов.`
     });
   };
 
   // Функция для обработки результата броска кубов хитов
-  const handleHitDieRollComplete = (result: number) => {
+  const handleHitDieRollComplete = (result: { total: number }) => {
     if (!character) return;
     
     // Обрабатываем результат броска кубиков хитов
-    const healingAmount = result;
+    const healingAmount = result.total;
     
     // Восстанавливаем хиты, но не больше максимального значения
     let newHp = (character.currentHp || 0) + healingAmount;
@@ -120,7 +121,7 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
     }
     
     // Обновляем состояние персонажа
-    onUpdate({
+    onUpdate?.({
       ...character,
       currentHp: newHp,
       hitDice: {
@@ -130,7 +131,7 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
     });
     
     // Добавляем событие в лог
-    const newEvent: HitPointEvent = {
+    const newEvent = {
       id: Math.random().toString(36).substring(2, 11),
       type: 'healing',
       amount: healingAmount,
@@ -146,26 +147,35 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
       description: `Вы восстановили ${healingAmount} хитов, используя кубик хитов.`
     });
   };
-  
+
   // Функция для использования кубика хитов
   const useHitDie = () => {
     if (!character) return;
     
     if ((character.hitDice?.used || 0) < (character.hitDice?.total || 0)) {
-      // Запускаем бросок кубика хитов
-      const roller = document.querySelector('.dice-roller-container');
-      if (roller) {
-        (roller as any).click();
-      }
+      // Temporary implementation without actual 3D dice
+      const dieType = getHitDieByClass(character.className);
+      const dieValue = dieType?.replace('d', '') || '8';
+      const dieMax = parseInt(dieValue);
+      const roll = Math.floor(Math.random() * dieMax) + 1;
+      const conMod = getNumericModifier(constitution);
+      const total = roll + conMod;
+      
+      handleHitDieRollComplete({ total });
+      
+      toast({
+        title: "Бросок кубика хитов",
+        description: `Результат: ${roll} + ${conMod} = ${total}`
+      });
     } else {
       toast({
         title: "Кубики хитов закончились",
         description: "У вас не осталось доступных кубиков хитов для использования.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-  
+
   return (
     <div className="space-y-4">
       <Card className="border-t-4 border-t-primary/50">
@@ -176,15 +186,18 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="currentHp">Текущие хиты</Label>
-              <Input
-                type="number"
-                id="currentHp"
-                value={currentHp}
+              <Input 
+                type="number" 
+                id="currentHp" 
+                value={currentHp} 
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
                   setCurrentHp(value);
                   if (character) {
-                    onUpdate({ ...character, currentHp: value });
+                    onUpdate?.({
+                      ...character,
+                      currentHp: value
+                    });
                   }
                 }}
                 disabled={!isDM}
@@ -192,15 +205,18 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
             </div>
             <div>
               <Label htmlFor="maxHp">Максимальные хиты</Label>
-              <Input
-                type="number"
-                id="maxHp"
-                value={maxHp}
+              <Input 
+                type="number" 
+                id="maxHp" 
+                value={maxHp} 
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
                   setMaxHp(value);
                   if (character) {
-                    onUpdate({ ...character, maxHp: value });
+                    onUpdate?.({
+                      ...character,
+                      maxHp: value
+                    });
                   }
                 }}
                 disabled={!isDM}
@@ -208,15 +224,18 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
             </div>
             <div>
               <Label htmlFor="tempHp">Временные хиты</Label>
-              <Input
-                type="number"
-                id="tempHp"
-                value={tempHp}
+              <Input 
+                type="number" 
+                id="tempHp" 
+                value={tempHp} 
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
                   setTempHp(value);
                   if (character) {
-                    onUpdate({ ...character, temporaryHp: value });
+                    onUpdate?.({
+                      ...character,
+                      temporaryHp: value
+                    });
                   }
                 }}
                 disabled={!isDM}
@@ -225,13 +244,22 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
           </div>
           
           <div className="flex justify-between gap-4">
-            <Button onClick={() => applyHpChange(1, 'damage')} disabled={!isDM}>
+            <Button 
+              onClick={() => applyHpChange(1, 'damage')}
+              disabled={!isDM}
+            >
               Получить урон
             </Button>
-            <Button onClick={() => applyHpChange(1, 'healing')} disabled={!isDM}>
+            <Button 
+              onClick={() => applyHpChange(1, 'healing')}
+              disabled={!isDM}
+            >
               Исцелиться
             </Button>
-            <Button onClick={() => applyHpChange(1, 'tempHP')} disabled={!isDM}>
+            <Button 
+              onClick={() => applyHpChange(1, 'tempHP')}
+              disabled={!isDM}
+            >
               Временные хиты
             </Button>
           </div>
@@ -246,47 +274,36 @@ export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePan
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="totalHitDice">Всего кубиков</Label>
-              <Input
-                type="text"
-                id="totalHitDice"
-                value={character?.hitDice?.total || 0}
+              <Input 
+                type="text" 
+                id="totalHitDice" 
+                value={character?.hitDice?.total || 0} 
                 disabled
               />
             </div>
             <div>
               <Label htmlFor="usedHitDice">Использовано кубиков</Label>
-              <Input
-                type="text"
-                id="usedHitDice"
-                value={character?.hitDice?.used || 0}
+              <Input 
+                type="text" 
+                id="usedHitDice" 
+                value={character?.hitDice?.used || 0} 
                 disabled
               />
             </div>
           </div>
+          
           <Button onClick={useHitDie}>
             Использовать кубик хитов
           </Button>
         </CardContent>
       </Card>
       
-      <div className="dice-roller-container hidden">
-        <DiceRoller3D
-          initialDice={getHitDieByClass(character?.className)}
-          hideControls={false}
-          modifier={getNumericModifier(constitution)}
-          onRollComplete={handleHitDieRollComplete}
-          themeColor={currentTheme.accent}
-        />
-      </div>
-      
-      {/* Преобразуем события для совместимости с DamageLog */}
       <DamageLog 
         events={damageEvents.map(event => ({
           ...event,
           // Убедимся, что тип соответствует HitPointEvent из character.d.ts
-          type: event.type === 'heal' ? 'healing' : 
-                event.type === 'temp' ? 'tempHP' : event.type
-        }))} 
+          type: event.type === 'heal' ? 'healing' : event.type === 'temp' ? 'tempHP' : event.type
+        }))}
       />
     </div>
   );

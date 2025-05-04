@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Character, CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
@@ -239,9 +238,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           {/* Левая панель с ресурсами вверху */}
           <div className="md:col-span-3 space-y-4">
             <ResourcePanel 
-              currentHp={character?.currentHp || 0}
-              maxHp={character?.maxHp || 0}
-              onHpChange={handleHpChange}
+              character={character} 
+              onUpdate={updateCharacter}
+              isDM={isDM}
             />
             
             <StatsPanel character={character} />

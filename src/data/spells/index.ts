@@ -4,7 +4,6 @@ import { level1 } from "./level1";
 import { level2 } from "./level2";
 import { level3 } from "./level3";
 import { level4 } from "./level4";
-// Fix the import names to match the actual exports
 import { level4Part2 } from "./level4_part2";
 import { level4Part3 } from "./level4_part3";
 import { level5 } from "./level5";
@@ -13,6 +12,7 @@ import { level7 } from "./level7";
 import { level8 } from "./level8";
 import { level9 } from "./level9";
 import { CharacterSpell } from "@/types/character";
+import { safeSome, safeFilter } from '@/utils/spellUtils';
 
 // Combine all spell levels into a single array
 export const spells: CharacterSpell[] = [
@@ -21,7 +21,6 @@ export const spells: CharacterSpell[] = [
   ...level2,
   ...level3,
   ...level4,
-  // Fixed variable names to match imports
   ...level4Part2,
   ...level4Part3,
   ...level5,
@@ -51,12 +50,8 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter((spell) => {
     if (!spell.classes) return false;
     
-    // Safely handle potentially undefined classes array
-    return spell.classes.some(
-      (spellClass) => 
-        spellClass && 
-        typeof spellClass === 'string' && 
-        spellClass.toLowerCase() === normalizedClassName
+    return safeSome(spell.classes, (spellClass) => 
+      spellClass && spellClass.toLowerCase() === normalizedClassName
     );
   });
 };

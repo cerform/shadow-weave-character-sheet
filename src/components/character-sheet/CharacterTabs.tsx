@@ -30,31 +30,31 @@ export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: 
       </TabsList>
       
       <TabsContent value="abilities" className="focus-visible:outline-none">
-        <AbilitiesTab character={character} onUpdate={onUpdate} />
+        <AbilitiesTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="combat" className="focus-visible:outline-none">
-        <CombatTab character={character} onUpdate={onUpdate} />
+        <CombatTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="spells" className="focus-visible:outline-none">
-        <SpellsTab character={character} onUpdate={onUpdate} />
+        <SpellsTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="equipment" className="focus-visible:outline-none">
-        <EquipmentTab character={character} onUpdate={onUpdate} />
+        <EquipmentTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="features" className="focus-visible:outline-none">
-        <FeaturesTab character={character} onUpdate={onUpdate} />
+        <FeaturesTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="background" className="focus-visible:outline-none">
-        <BackgroundTab character={character} onUpdate={onUpdate} />
+        <BackgroundTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
       
       <TabsContent value="notes" className="focus-visible:outline-none">
-        <NotesTab character={character} onUpdate={onUpdate} />
+        <NotesTab character={character} onUpdate={onUpdate || (() => {})} />
       </TabsContent>
     </Tabs>
   );
