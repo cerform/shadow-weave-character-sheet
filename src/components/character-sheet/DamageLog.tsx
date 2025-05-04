@@ -1,24 +1,23 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DamageEvent } from '@/hooks/useDamageLog';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Heart, Plus, Minus, Undo } from 'lucide-react';
+import { Shield, Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DamageEvent } from '@/hooks/useDamageLog';
 
 interface DamageLogProps {
   events: DamageEvent[];
-  undoLastEvent?: () => void;
+  undoLastEvent: () => void;
   maxEvents?: number;
   className?: string;
 }
 
-export const DamageLog: React.FC<DamageLogProps> = ({
-  events,
-  undoLastEvent,
+export const DamageLog: React.FC<DamageLogProps> = ({ 
+  events, 
+  undoLastEvent, 
   maxEvents = 5,
   className = ''
 }) => {
@@ -28,44 +27,48 @@ export const DamageLog: React.FC<DamageLogProps> = ({
   
   const displayEvents = expanded ? events : events.slice(0, maxEvents);
   
-  // Простая функция форматирования времени
-  const formatTime = (date: Date) => {
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
-  
   if (events.length === 0) {
     return null;
   }
   
+  // Функция для форматирования времени
+  const formatTimeAgo = (timestamp: Date): string => {
+    const now = new Date();
+    const diff = now.getTime() - new Date(timestamp).getTime();
+    
+    // Преобразуем разницу в минуты
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'сейчас';
+    if (minutes < 60) return `${minutes} мин. назад`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} ч. назад`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days} д. назад`;
+  };
+  
   return (
     <div className={`rounded-lg overflow-hidden ${className}`}>
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium" style={{ color: currentTheme.textColor }}>
+        <h3 
+          className="text-sm font-medium"
+          style={{ color: currentTheme.textColor }}
+        >
           Журнал событий
         </h3>
+        
         {undoLastEvent && events.length > 0 && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={undoLastEvent} 
-                  className="h-7 px-2 text-xs flex items-center gap-1"
-                  style={{ color: currentTheme.accent }}
-                >
-                  <Undo className="h-3.5 w-3.5" />
-                  Отменить
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Отменить последнее изменение HP</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={undoLastEvent}
+            className="h-7 px-2 text-xs"
+            style={{ color: currentTheme.accent }}
+          >
+            Отменить последнее
+          </Button>
         )}
       </div>
       
@@ -81,40 +84,32 @@ export const DamageLog: React.FC<DamageLogProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div 
-                  className={`flex items-center justify-center h-5 w-5 rounded-full mr-2 ${
-                    event.type === 'damage' 
-                      ? 'bg-red-500/20' 
-                      : event.type === 'heal'
-                        ? 'bg-green-500/20'
-                        : 'bg-emerald-400/20'
-                  }`}
-                >
-                  {event.type === 'damage' ? (
-                    <Minus className="h-3 w-3 text-red-500" />
-                  ) : event.type === 'heal' ? (
-                    <Plus className="h-3 w-3 text-green-500" />
-                  ) : (
-                    <Shield className="h-3 w-3 text-emerald-400" />
-                  )}
-                </div>
+                {event.type === 'damage' ? (
+                  <Minus className="h-4 w-4 mr-2 text-red-500" />
+                ) : event.type === 'heal' ? (
+                  <Plus className="h-4 w-4 mr-2 text-green-500" />
+                ) : (
+                  <Shield className="h-4 w-4 mr-2 text-emerald-400" />
+                )}
                 
-                <div className="flex-1 text-xs" style={{ color: currentTheme.textColor }}>
+                <div 
+                  className="flex-1 text-xs"
+                  style={{ color: currentTheme.textColor }}
+                >
                   <span>
-                    {event.type === 'damage' 
-                      ? `Урон ${event.amount}` 
-                      : event.type === 'heal' 
-                        ? `Лечение ${event.amount}`
-                        : `Временные HP ${event.amount}`
-                    }
+                    {event.type === 'damage' ? `Урон ${event.amount}` : 
+                     event.type === 'heal' ? `Лечение ${event.amount}` : 
+                     `Временные HP ${event.amount}`}
                   </span>
                   {event.source && (
-                    <span className="text-gray-400 ml-1">от {event.source}</span>
+                    <span className="text-gray-400 ml-1">
+                      от {event.source}
+                    </span>
                   )}
                 </div>
                 
                 <span className="text-xs text-gray-500">
-                  {formatTime(event.timestamp)}
+                  {formatTimeAgo(event.timestamp)}
                 </span>
               </motion.div>
             ))}
@@ -123,9 +118,9 @@ export const DamageLog: React.FC<DamageLogProps> = ({
       </div>
       
       {events.length > maxEvents && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setExpanded(!expanded)}
           className="w-full mt-1 h-6 text-xs"
           style={{ color: currentTheme.mutedTextColor }}
