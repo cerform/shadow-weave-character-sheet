@@ -1,6 +1,6 @@
 import { CharacterSheet } from '@/types/character';
-import { Character } from '@/contexts/CharacterContext';
-import { extractSpellNames } from './spellUtils';
+import type { Character } from '@/contexts/CharacterContext';
+import { extractSpellNames } from '@/utils/spellUtils';
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения

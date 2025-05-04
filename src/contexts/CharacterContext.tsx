@@ -18,6 +18,9 @@ export const CharacterContext = createContext<CharacterContextType>({
   updateCharacter: () => {},
 });
 
+// Экспортируем тип Character для использования в других модулях
+export type { Character };
+
 // Hook для использования контекста персонажа
 export const useCharacter = () => useContext(CharacterContext);
 

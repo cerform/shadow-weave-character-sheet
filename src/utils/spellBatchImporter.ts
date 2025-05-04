@@ -1,4 +1,3 @@
-
 import { CharacterSpell } from '@/types/character';
 
 // Функция для импорта заклинаний из текстового формата
@@ -177,3 +176,25 @@ export function processSpellBatch(rawText: string): any[] {
     return [];
   }
 }
+
+// Создадим функцию для конвертации заклинания в правильный формат с полем prepared
+export const convertToCharacterSpell = (spell: any): CharacterSpell => {
+  return {
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    higherLevels: spell.higherLevels,
+    concentration: spell.concentration,
+    ritual: spell.ritual,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    classes: spell.classes,
+    prepared: false // Добавляем обязательное поле prepared
+  };
+};

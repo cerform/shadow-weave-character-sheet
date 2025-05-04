@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,7 +6,7 @@ import sessionService from '../services/sessionService';
 import characterService from '../services/characterService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
-import { Character } from '@/contexts/CharacterContext';
+import type { Character } from '@/types/character';
 
 interface SessionStore {
   // Состояние
@@ -307,7 +306,7 @@ export const useSessionStore = create<SessionStore>()(
           }
           return false;
         } catch (error) {
-          console.error("Ошибка при сохранении персонажа:", error);
+          console.error("Ошибка при сохранени�� персонажа:", error);
           return false;
         }
       },
