@@ -1,4 +1,3 @@
-
 export interface SpellData {
   id?: string | number;
   name: string;
@@ -19,4 +18,5 @@ export interface SpellData {
   concentration?: boolean;
   ritual?: boolean;
   duration?: string;
+  [key: string]: any; // Индексная сигнатура для совместимости
 }

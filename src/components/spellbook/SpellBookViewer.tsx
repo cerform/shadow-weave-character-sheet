@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook';
 import { SpellData } from '@/hooks/spellbook/types';
@@ -11,7 +12,7 @@ const SpellBookViewer = () => {
     searchTerm, 
     setSearchTerm,
     getSchoolBadgeColor,
-    getBadgeColor,
+    getBadgeColor, // Теперь эта функция доступна
     formatClasses
   } = useSpellbook();
   

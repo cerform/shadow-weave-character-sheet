@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,7 +61,7 @@ const SpellList: React.FC<SpellListProps> = ({
                   >
                     {spell.school}
                   </Badge>
-                  {(spell.isRitual || spell.ritual) && (
+                  {(spell.ritual) && (
                     <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',
@@ -69,7 +70,7 @@ const SpellList: React.FC<SpellListProps> = ({
                       Ритуал
                     </Badge>
                   )}
-                  {(spell.isConcentration || spell.concentration) && (
+                  {(spell.concentration) && (
                     <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',

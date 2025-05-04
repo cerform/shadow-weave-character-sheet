@@ -1,9 +1,28 @@
+
 import { useState, useEffect } from 'react';
 import { filterBySearchTerm, filterByLevel, filterBySchool, filterByClass, extractClasses } from './filterUtils';
 import { SpellData } from './types';
 import usePreloadSpells from './usePreloadSpells';
 import { getSpellSchoolBadgeVariant } from './schemeUtils';
 import { getSchoolBadgeColor } from './themeUtils';
+
+// Функция для получения цвета бейджа в зависимости от уровня заклинания
+export const getBadgeColor = (level: number): string => {
+  const colors = {
+    0: '#4b5563', // gray for cantrips
+    1: '#3b82f6', // blue for level 1
+    2: '#10b981', // green for level 2
+    3: '#f59e0b', // amber for level 3
+    4: '#8b5cf6', // purple for level 4
+    5: '#ec4899', // pink for level 5
+    6: '#f43f5e', // rose for level 6
+    7: '#0ea5e9', // sky for level 7
+    8: '#9333ea', // violet for level 8
+    9: '#dc2626', // red for level 9
+  };
+  
+  return colors[level as keyof typeof colors] || '#6b7280'; // default to gray
+};
 
 // Main hook for spellbook management
 export function useSpellbook() {
@@ -69,6 +88,7 @@ export function useSpellbook() {
     extractClasses: () => extractClasses(spells),
     getSpellSchoolBadgeVariant,
     getSchoolBadgeColor,
+    getBadgeColor, // Добавляем новую функцию для использования в компонентах
     formatClasses: (classes: string[] | string | undefined) => {
       if (!classes) return '';
       if (Array.isArray(classes)) {

@@ -12,7 +12,7 @@ export interface AbilityScores {
   intelligence: number;
   wisdom: number;
   charisma: number;
-  // Добавляем индексную сигнатуру для совместимости с компонентами
+  // Добавляем индексную сигнатуру для обработки динамических ключей
   [key: string]: number;
 }
 
@@ -119,7 +119,7 @@ export interface CharacterSheet {
   ideals?: string; // Добавлено для информации о предыстории
   bonds?: string; // Добавлено для информации о предыстории
   flaws?: string; // Добавлено для информации о предыстории
-  abilityPointsUsed?: number; // Добавлено для создания персонажа
+  abilityPointsUsed?: number; // Добавлено для созд��ния персонажа
 }
 
 export interface ClassRequirement {
@@ -146,7 +146,7 @@ export interface RacialTraits {
   languages: string[];
   features?: { name: string; description: string }[];
   traits?: { name: string; description: string }[];
-  extraAbilityPoints?: number; // Добавляем это свойство в интерфейс
+  extraAbilityPoints?: number; // Добавляем поддержку для extraAbilityPoints
 }
 
 // Типы для особенностей классов

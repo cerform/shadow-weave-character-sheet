@@ -1,3 +1,4 @@
+
 import { RacialTraits } from '@/types/character';
 
 export const racialTraits: RacialTraits[] = [

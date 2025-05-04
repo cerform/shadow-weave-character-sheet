@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet } from '@/types/character';
-import { normalizeSpells, extractSpellNames } from '@/utils/spellUtils';
+import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
+import { extractSpellNames } from '@/utils/spellUtils';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -35,7 +35,7 @@ export interface Character {
   abilities: AbilityScores;
   proficiencies: string[];
   equipment: string[];
-  spells: string[];
+  spells: CharacterSpell[];
   languages: string[];
   gender: string;
   alignment: string;

@@ -1,38 +1,42 @@
 
-import { CharacterSpell } from "@/types/character";
+import { CharacterSpell, SpellData } from '@/types/character';
 
-// Функция для безопасного объединения строк или массивов строк
-export const safeJoin = (input: string[] | string | undefined, separator: string = ", "): string => {
-  if (!input) return "";
-  if (Array.isArray(input)) return input.join(separator);
-  return input;
+/**
+ * Извлекает имена заклинаний из массива заклинаний
+ * @param spells Массив заклинаний
+ * @returns Массив имен заклинаний
+ */
+export const extractSpellNames = (spells: CharacterSpell[] | string[]): string[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return spell;
+    }
+    return spell.name;
+  });
 };
 
-// Функция для конвертации строк заклинаний в объекты CharacterSpell
-export const normalizeSpells = (spells: string[] | CharacterSpell[]): CharacterSpell[] => {
-  if (!spells || spells.length === 0) return [];
-  
-  // Проверяем, является ли первый элемент строкой
-  if (typeof spells[0] === 'string') {
-    // Конвертируем строки в заготовки объектов CharacterSpell
-    return (spells as string[]).map(spellName => ({
-      name: spellName,
-      level: 0, // По умолчанию
-      school: "Неизвестно", // По умолчанию
-      description: "Нет описания",
-      verbal: false,
-      somatic: false,
-      material: false,
-      prepared: false,
-    }));
+/**
+ * Безопасная версия метода Array.some
+ * @param array Массив
+ * @param predicate Функция-предикат
+ * @returns Результат выполнения метода some
+ */
+export const safeSome = <T>(array: T[] | undefined, predicate: (item: T) => boolean): boolean => {
+  if (!array || !Array.isArray(array)) {
+    return false;
   }
-  
-  // Уже в формате CharacterSpell
-  return spells as CharacterSpell[];
+  return array.some(predicate);
 };
 
-// Функция для получения строки с уровнем заклинания
-export const getSpellLevelText = (level: number): string => {
-  if (level === 0) return "Заговор";
-  return `${level} уровень`;
+/**
+ * Безопасная версия метода Array.filter
+ * @param array Массив
+ * @param predicate Функция-предикат
+ * @returns Отфильтрованный массив
+ */
+export const safeFilter = <T>(array: T[] | undefined, predicate: (item: T) => boolean): T[] => {
+  if (!array || !Array.isArray(array)) {
+    return [];
+  }
+  return array.filter(predicate);
 };

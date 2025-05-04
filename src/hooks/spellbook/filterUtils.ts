@@ -1,60 +1,86 @@
 
-import { SpellData } from "./types";
+import { SpellData } from './types';
+import { safeSome, safeFilter } from '@/utils/spellUtils';
 
+/**
+ * Фильтрует заклинания по поисковому запросу
+ * @param spells Массив заклинаний
+ * @param searchTerm Поисковый запрос
+ * @returns Отфильтрованный массив заклинаний
+ */
 export const filterBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
   if (!searchTerm) return spells;
   
-  const term = searchTerm.toLowerCase();
-  return spells.filter(
-    spell => 
-      spell.name.toLowerCase().includes(term) || 
-      spell.description?.toLowerCase().includes(term) ||
-      spell.school?.toLowerCase().includes(term)
-  );
-};
-
-export const filterByLevel = (spells: SpellData[], levelFilters: number[]): SpellData[] => {
-  if (!levelFilters.length) return spells;
-  return spells.filter(spell => levelFilters.includes(spell.level));
-};
-
-export const filterBySchool = (spells: SpellData[], schoolFilters: string[]): SpellData[] => {
-  if (!schoolFilters.length) return spells;
-  return spells.filter(spell => spell.school && schoolFilters.includes(spell.school));
-};
-
-export const filterByClass = (spells: SpellData[], classFilters: string[]): SpellData[] => {
-  if (!classFilters.length) return spells;
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();
   
-  return spells.filter(spell => {
+  return spells.filter((spell) => {
+    return spell.name.toLowerCase().includes(lowerCaseSearchTerm)
+      || (spell.description && spell.description.toLowerCase().includes(lowerCaseSearchTerm))
+      || (spell.school && spell.school.toLowerCase().includes(lowerCaseSearchTerm));
+  });
+};
+
+/**
+ * Фильтрует заклинания по уровню
+ * @param spells Массив заклинаний
+ * @param levels Массив уровней для фильтрации
+ * @returns Отфильтрованный массив заклинаний
+ */
+export const filterByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
+  if (!levels.length) return spells;
+  
+  return spells.filter((spell) => levels.includes(spell.level));
+};
+
+/**
+ * Фильтрует заклинания по школе магии
+ * @param spells Массив заклинаний
+ * @param schools Массив школ магии для фильтрации
+ * @returns Отфильтрованный массив заклинаний
+ */
+export const filterBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
+  if (!schools.length) return spells;
+  
+  return spells.filter((spell) => spell.school && schools.includes(spell.school));
+};
+
+/**
+ * Фильтрует заклинания по классу персонажа
+ * @param spells Массив заклинаний
+ * @param classes Массив классов для фильтрации
+ * @returns Отфильтрованный массив заклинаний
+ */
+export const filterByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
+  if (!classes.length) return spells;
+  
+  return spells.filter((spell) => {
     if (!spell.classes) return false;
     
-    // Handle both string and string[] types for classes
-    const spellClasses = Array.isArray(spell.classes) 
-      ? spell.classes 
-      : spell.classes.split(',').map(cls => cls.trim());
-    
-    return classFilters.some(cls => 
-      spellClasses.some(spellClass => 
-        spellClass.toLowerCase().includes(cls.toLowerCase())
-      )
-    );
+    if (Array.isArray(spell.classes)) {
+      return safeSome(spell.classes, (cls) => classes.includes(cls));
+    } else {
+      return classes.includes(spell.classes);
+    }
   });
 };
 
+/**
+ * Извлекает уникальные классы из массива заклинаний
+ * @param spells Массив заклинаний
+ * @returns Массив уникальных классов
+ */
 export const extractClasses = (spells: SpellData[]): string[] => {
-  const classesSet = new Set<string>();
+  const classSet = new Set<string>();
   
-  spells.forEach(spell => {
+  spells.forEach((spell) => {
     if (!spell.classes) return;
     
-    // Handle both string and string[] types for classes
-    const spellClasses = Array.isArray(spell.classes) 
-      ? spell.classes 
-      : spell.classes.split(',').map(cls => cls.trim());
-    
-    spellClasses.forEach(cls => classesSet.add(cls));
+    if (Array.isArray(spell.classes)) {
+      spell.classes.forEach((cls) => classSet.add(cls));
+    } else {
+      classSet.add(spell.classes);
+    }
   });
   
-  return Array.from(classesSet).sort();
+  return Array.from(classSet);
 };
