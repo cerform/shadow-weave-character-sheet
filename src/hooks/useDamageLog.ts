@@ -27,16 +27,13 @@ export const useDamageLog = (
 
   // Применяем событие получения урона
   const applyDamage = useCallback((amount: number, source?: string) => {
-    if (amount === 0) return;
-    
-    // Проверяем, что это действительно урон (отрицательное число)
-    if (amount >= 0) {
-      console.error("applyDamage должен вызываться с отрицательным значением для нанесения урона");
+    if (amount <= 0) {
+      console.error("applyDamage должен вызываться с положительным значением для нанесения урона");
       return;
     }
 
     const eventId = crypto.randomUUID();
-    const damageAmount = Math.abs(amount); // Преобразуем к положительному числу для удобства
+    const damageAmount = amount; // Уже положительное число
     let remainingDamage = damageAmount;
     
     // Если есть временные HP, сначала снимаем их
@@ -96,9 +93,6 @@ export const useDamageLog = (
 
   // Применяем событие получения лечения
   const applyHealing = useCallback((amount: number, source?: string) => {
-    if (amount === 0) return;
-    
-    // Проверяем, что это действительно лечение (положительное число)
     if (amount <= 0) {
       console.error("applyHealing должен вызываться с положительным значением для лечения");
       return;

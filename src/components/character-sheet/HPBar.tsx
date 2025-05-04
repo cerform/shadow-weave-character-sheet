@@ -55,6 +55,11 @@ export const HPBar: React.FC<HPBarProps> = ({
     if (healthPercentage > 30) return 'bg-yellow-500';
     return 'bg-red-500';
   };
+
+  // Получаем цвет анимации изменения HP
+  const getAnimationColor = () => {
+    return safeCurrentHp < prevCurrentHp ? 'bg-red-500/30' : 'bg-green-500/30';
+  };
   
   // ARIA атрибуты для доступности
   const ariaLabel = `Здоровье: ${safeCurrentHp} из ${safeMaxHp}${safeTempHp > 0 ? `, временных: ${safeTempHp}` : ''}`;
@@ -102,7 +107,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         <AnimatePresence>
           {isAnimating && (
             <motion.div 
-              className={`absolute top-0 left-0 h-full ${safeCurrentHp < prevCurrentHp ? 'bg-red-500/30' : 'bg-green-500/30'}`}
+              className={`absolute top-0 left-0 h-full ${getAnimationColor()}`}
               style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / safeMaxHp) * 100)}%` }}
               initial={{ opacity: 0.7 }}
               animate={{ opacity: 0 }}

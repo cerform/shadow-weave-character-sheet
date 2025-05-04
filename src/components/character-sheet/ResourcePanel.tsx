@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Heart, Shield, Dices, RefreshCw, Plus, Minus } from 'lucide-react';
+import { useContext } from 'react';
 import { CharacterContext } from '@/contexts/CharacterContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -40,6 +41,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     tempHp, 
     events, 
     applyDamage, 
+    applyHealing, 
     addTempHp, 
     undoLastEvent,
     setHp,
@@ -67,7 +69,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
   
   // Обработчики событий для бросков кубиков
   const handleHealingRollComplete = (result: number) => {
-    applyDamage(result, "Лечебный бросок");
+    applyHealing(result, "Лечебный бросок");
     setShowHealingRoller(false);
   };
   
@@ -75,7 +77,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
     const conMod = character?.abilities ? Math.floor((character.abilities.CON - 10) / 2) : 0;
     const healingAmount = result + conMod;
     
-    applyDamage(healingAmount, "Hit Die");
+    applyHealing(healingAmount, "Hit Die");
     setShowHitDiceRoller(false);
   };
   
@@ -163,7 +165,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                           variant="outline" 
                           size="sm"
                           className="h-6 px-2 text-xs bg-red-900/20 hover:bg-red-900/30"
-                          onClick={() => applyDamage(-value, `Быстрый урон ${value}`)}
+                          onClick={() => applyDamage(value, `Быстрый урон ${value}`)}
                         >
                           {value}
                         </Button>
@@ -185,7 +187,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                           variant="outline" 
                           size="sm"
                           className="h-6 px-2 text-xs bg-green-900/20 hover:bg-green-900/30"
-                          onClick={() => applyDamage(value, `Быстрое лечение ${value}`)}
+                          onClick={() => applyHealing(value, `Быстрое лечение ${value}`)}
                         >
                           {value}
                         </Button>
@@ -215,7 +217,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    onClick={() => applyDamage(-hpAdjustValue, "Ввод урона")}
+                    onClick={() => applyDamage(hpAdjustValue, "Ввод урона")}
                     className="bg-red-900/20 hover:bg-red-900/30 h-8"
                   >
                     <Minus className="h-4 w-4 text-red-500" />
@@ -225,7 +227,7 @@ export const ResourcePanel = ({ currentHp, maxHp, onHpChange }: ResourcePanelPro
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    onClick={() => applyDamage(hpAdjustValue, "Ввод лечения")}
+                    onClick={() => applyHealing(hpAdjustValue, "Ввод лечения")}
                     className="bg-green-900/20 hover:bg-green-900/30 h-8"
                   >
                     <Plus className="h-4 w-4 text-green-500" />
