@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -72,7 +73,7 @@ const formatFirebaseError = (error: any): string => {
   };
   
   // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
-  return errorMessages[errorCode] || error.message || 'Прои��ошла неизвестная ошибка при аутентификации.';
+  return errorMessages[errorCode] || error.message || 'Произошла неизвестная ошибка при аутентификации.';
 };
 
 // Функции для аутентификации
@@ -136,4 +137,7 @@ const auth = {
   }
 };
 
+// Export both db (for backward compatibility) and firestore (new name)
 export { app, firestore, storage, auth, firebaseAuth, analyticsPromise };
+// Also export firestore as db for code that still uses the old naming
+export { firestore as db };

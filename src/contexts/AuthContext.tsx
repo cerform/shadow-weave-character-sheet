@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '@/services/firebase';
+import { auth, db, firestore } from '@/services/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/services/firebase';
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      const userRef = doc(db, 'users', uid);
+      const userRef = doc(firestore, 'users', uid);
       const userDoc = await getDoc(userRef);
 
       const timestamp = new Date().toISOString();
@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      const userRef = doc(db, 'users', uid);
+      const userRef = doc(firestore, 'users', uid);
       const userDoc = await getDoc(userRef);
       
       if (userDoc.exists()) {
