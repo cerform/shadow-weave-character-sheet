@@ -30,6 +30,7 @@ interface CharacterCreationContentProps {
   rollsHistory: { ability: string; rolls: number[]; total: number }[];
   onLevelChange: (level: number) => void;
   maxAbilityScore?: number;
+  setCurrentStep: (step: number) => void;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
@@ -48,7 +49,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   isMagicClass,
   rollsHistory,
   onLevelChange,
-  maxAbilityScore
+  maxAbilityScore,
+  setCurrentStep
 }) => {
   // Функция для рендеринга текущего шага создания персонажа
   const renderCreationStep = () => {
@@ -157,6 +159,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             character={character}
             prevStep={prevStep}
             updateCharacter={updateCharacter}
+            setCurrentStep={setCurrentStep}
           />
         );
       default:

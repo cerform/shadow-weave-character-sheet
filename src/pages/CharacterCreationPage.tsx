@@ -181,6 +181,7 @@ const CharacterCreationPage = () => {
             rollsHistory={rollsHistory}
             onLevelChange={handleLevelChange}
             maxAbilityScore={maxAbilityScore}
+            setCurrentStep={setCurrentStep}
           />
         </div>
       </div>

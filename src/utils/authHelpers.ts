@@ -1,42 +1,18 @@
+import { auth } from "@/services/firebase";
 
-import { firebaseAuth } from '@/services/firebase';
-
-/**
- * Проверяет, аутентифицирован ли текущий пользователь
- * @returns true, если пользователь аутентифицирован
- */
-export const isAuthenticated = (): boolean => {
-  return !!firebaseAuth.currentUser;
+// Функция для получения ID текущего авторизованного пользователя
+export const getCurrentUid = (): string | undefined => {
+  const user = auth.currentUser;
+  return user ? user.uid : undefined;
 };
 
-/**
- * Получает объект текущего аутентифицированного пользователя
- * @returns объект пользователя или null
- */
-export const getCurrentUser = () => {
-  return firebaseAuth.currentUser;
-};
-
-/**
- * Получает UID текущего аутентифицированного пользователя
- * @returns UID пользователя или null
- */
-export const getCurrentUid = (): string | null => {
-  return firebaseAuth.currentUser?.uid || null;
-};
-
-/**
- * Проверяет, находится ли приложение в автономном режиме
- * @returns true, если включен автономный режим
- */
+// Функция для проверки, работает ли приложение в оффлайн-режиме
 export const isOfflineMode = (): boolean => {
-  return localStorage.getItem('offline-mode') === 'true';
+  const offlineModeEnabled = localStorage.getItem('offline-mode') === 'true';
+  return offlineModeEnabled;
 };
 
-/**
- * Включает или отключает автономный режим
- * @param value значение для установки
- */
-export const setOfflineMode = (value: boolean): void => {
-  localStorage.setItem('offline-mode', value ? 'true' : 'false');
+// Функция для установки оффлайн-режима
+export const setOfflineMode = (enabled: boolean): void => {
+  localStorage.setItem('offline-mode', enabled.toString());
 };
