@@ -29,7 +29,7 @@ export const useHealthSystem = ({
   // Основные состояния здоровья
   const [currentHp, setCurrentHp] = useState<number>(initialCurrentHp);
   const [maxHp, setMaxHp] = useState<number>(initialMaxHp);
-  const [tempHp, setTempHpState] = useState<number>(initialTempHp); // Переименовано во избежание конфликта
+  const [tempHp, setTempHpState] = useState<number>(initialTempHp); // Renamed to avoid conflict
 
   // Журнал событий здоровья
   const [events, setEvents] = useState<HealthEvent[]>([]);
@@ -59,7 +59,7 @@ export const useHealthSystem = ({
 
   // Установка значений временного HP с возможностью "тихого" режима
   const setTempHp = useCallback((value: number, silent: boolean = false) => {
-    setTempHpState(Math.max(0, value)); // Используем переименованный сеттер
+    setTempHpState(Math.max(0, value)); // Using renamed state setter
     if (!silent && onHealthChange) {
       onHealthChange(currentHp, maxHp, value);
     }
@@ -84,11 +84,11 @@ export const useHealthSystem = ({
     if (tempHp > 0) {
       if (tempHp >= amount) {
         // Достаточно временных хитов, чтобы поглотить весь урон
-        setTempHpState(tempHp - amount);
+        setTempHpState(tempHp - amount); // Using renamed state setter
       } else {
         // Временных хитов не хватает, остаток идет в основные хиты
         const remainingDamage = amount - tempHp;
-        setTempHpState(0);
+        setTempHpState(0); // Using renamed state setter
         setCurrentHp(Math.max(0, currentHp - remainingDamage));
       }
     } else {
@@ -134,7 +134,7 @@ export const useHealthSystem = ({
     }
 
     // Временные хиты не суммируются, берется наибольшее значение
-    setTempHpState(Math.max(tempHp, amount));
+    setTempHpState(Math.max(tempHp, amount)); // Using renamed state setter
   }, [tempHp]);
 
   // Отмена последнего события здоровья
@@ -159,7 +159,7 @@ export const useHealthSystem = ({
         break;
       case 'temp_hp':
         // Отмена добавления временных хитов
-        setTempHpState(Math.max(0, tempHp - lastEvent.amount));
+        setTempHpState(Math.max(0, tempHp - lastEvent.amount)); // Using renamed state setter
         break;
     }
   }, [events, currentHp, maxHp, tempHp]);

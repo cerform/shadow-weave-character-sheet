@@ -1,3 +1,4 @@
+
 /**
  * Converts an ability score to its modifier
  */
@@ -128,21 +129,6 @@ export const getHitDieForClass = (characterClass: string): number => {
   };
 
   return hitDiceByClass[characterClass] || 8; // Default to d8 if class not found
-};
-
-/**
- * Gets the numeric modifier from an ability score
- */
-export const getNumericModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-/**
- * Gets the modifier from an ability score as a string with sign
- */
-export const getModifierFromAbilityScore = (score: number): string => {
-  const modifier = Math.floor((score - 10) / 2);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };
 
 /**
