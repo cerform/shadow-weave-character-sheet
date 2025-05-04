@@ -13,6 +13,7 @@ import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
 import CharacterLanguagesSelection from './CharacterLanguagesSelection';
 import CharacterSubclassSelection from './CharacterSubclassSelection';
+import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { CharacterSheet } from '@/types/character.d';
 import { steps } from '@/config/characterCreationSteps';
 
@@ -121,7 +122,16 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 5: // Мультиклассирование
+      case 5: // Здоровье (HP) - новый шаг
+        return (
+          <CharacterHitPointsCalculator
+            character={character}
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 6: // Мультиклассирование
         return (
           <CharacterMulticlassing 
             character={character} 
@@ -131,7 +141,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             getModifier={getModifier}
           />
         );
-      case 6: // Выбор заклинаний
+      case 7: // Выбор заклинаний
         // Проверяем, является ли класс магическим
         if (!isMagicClass) {
           // Автоматически переходим к следующему шагу с задержкой
@@ -147,7 +157,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Выбор снаряжения
+      case 8: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -156,7 +166,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Выбор языков
+      case 9: // Выбор языков
         return (
           <CharacterLanguagesSelection 
             character={character}
@@ -165,7 +175,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 9: // Выбор личностных черт
+      case 10: // Выбор личностных черт
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -174,7 +184,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 10: // Предыстория
+      case 11: // Предыстория
         return (
           <CharacterBackground 
             character={character} 
@@ -183,7 +193,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 11: // Просмотр и завершение
+      case 12: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}

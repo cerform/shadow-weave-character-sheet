@@ -28,38 +28,43 @@ export const steps = [
   },
   {
     id: 5,
+    name: "Здоровье",
+    description: "Расчет очков здоровья персонажа"
+  },
+  {
+    id: 6,
     name: "Мультиклассирование",
     description: "Дополнительные классы (опционально)"
   },
   {
-    id: 6,
+    id: 7,
     name: "Заклинания",
     description: "Выбор заклинаний для заклинателей",
     optional: true,
     onlyFor: "magic"
   },
   {
-    id: 7,
+    id: 8,
     name: "Снаряжение",
     description: "Выбор оружия и экипировки"
   },
   {
-    id: 8,
+    id: 9,
     name: "Языки",
     description: "Выбор языков персонажа"
   },
   {
-    id: 9,
+    id: 10,
     name: "Черты",
     description: "Определение черт личности"
   },
   {
-    id: 10,
+    id: 11,
     name: "Предыстория",
     description: "История персонажа и связи"
   },
   {
-    id: 11,
+    id: 12,
     name: "Завершение",
     description: "Обзор и финальные штрихи"
   }
@@ -69,7 +74,7 @@ export const steps = [
 export const getCharacterSteps = (config?: { isMagicClass?: boolean; hasSubclasses?: boolean }) => {
   return steps.filter(step => {
     // Фильтруем шаги заклинаний для немагических классов
-    if (step.id === 6 && step.onlyFor === "magic" && config?.isMagicClass === false) {
+    if (step.id === 7 && step.onlyFor === "magic" && config?.isMagicClass === false) {
       return false;
     }
     // Фильтруем шаг архетипа для классов без подклассов

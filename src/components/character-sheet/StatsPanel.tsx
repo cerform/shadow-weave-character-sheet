@@ -36,12 +36,12 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
 
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20 p-4">
-      {/* Информация о бонусе мастерства - перенесена в компактный формат */}
+      {/* Информация о бонусе мастерства - компактный формат */}
       <div className="mb-4 rounded-lg bg-primary/10 p-3 flex justify-between items-center">
         <div>
           <h3 className="text-sm font-medium text-primary mb-1">Бонус мастерства</h3>
           <p className="text-xs text-muted-foreground">
-            1 + (уровень / 4) = {calculateProficiencyBonus()}
+            Уровень: {character?.level || 1}
           </p>
         </div>
         <div className="text-xl font-bold text-primary bg-primary/20 h-10 w-10 rounded-full flex items-center justify-center">

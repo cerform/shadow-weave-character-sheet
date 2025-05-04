@@ -34,8 +34,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Характеристики"
           >
-            <Shield className="h-4 w-4" />
-            <span className="sr-only">ХАРА...</span>
+            <Shield className="h-5 w-5" />
           </TabsTrigger>
           
           <TabsTrigger 
@@ -47,8 +46,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Атаки"
           >
-            <Sword className="h-4 w-4" />
-            <span className="sr-only">АТАКИ</span>
+            <Sword className="h-5 w-5" />
           </TabsTrigger>
           
           <TabsTrigger 
@@ -60,8 +58,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Заклинания"
           >
-            <Sparkles className="h-4 w-4" />
-            <span className="sr-only">ЗАКЛ...</span>
+            <Sparkles className="h-5 w-5" />
           </TabsTrigger>
           
           <TabsTrigger 
@@ -73,8 +70,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Особенности"
           >
-            <Activity className="h-4 w-4" />
-            <span className="sr-only">ОСОБ...</span>
+            <Activity className="h-5 w-5" />
           </TabsTrigger>
           
           <TabsTrigger 
@@ -86,8 +82,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Предыстория"
           >
-            <ScrollText className="h-4 w-4" />
-            <span className="sr-only">ПРЕД...</span>
+            <ScrollText className="h-5 w-5" />
           </TabsTrigger>
           
           <TabsTrigger 
@@ -99,8 +94,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab }: CharacterTabsProps) =
             }}
             title="Справочник"
           >
-            <BookOpen className="h-4 w-4" />
-            <span className="sr-only">СПРА...</span>
+            <BookOpen className="h-5 w-5" />
           </TabsTrigger>
         </TabsList>
 

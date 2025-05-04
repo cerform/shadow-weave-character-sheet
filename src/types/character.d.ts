@@ -72,6 +72,8 @@ export interface CharacterSheet {
   inspiration?: boolean;
   maxHp?: number;  // Добавляем максимальные хиты
   currentHp?: number;  // Добавляем текущие хиты
+  temporaryHp?: number; // Добавляем временные хиты
+  hitDice?: string; // Добавляем кубики хитов (например, "4d6")
   abilityPointsUsed?: number; // Добавляем отслеживание использованных очков характеристик
   abilityBonuses?: { // Добавляем бонусы к характеристикам
     strength: number;
