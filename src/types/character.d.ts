@@ -236,7 +236,70 @@ export interface Character {
   image?: string;
 }
 
-// Обновляем интерфейс для событий изменения хит-поинтов
+// Добавляем недостающие типы для useCharacterCreation
+export interface RacialTraitDetails {
+  name: string;
+  description: string;
+}
+
+export interface RacialTraits {
+  race: string;
+  abilityBonuses: {
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
+  };
+  traits: RacialTraitDetails[];
+  languages: string[];
+  speed: number;
+  extraAbilityPoints?: number;
+}
+
+export interface FeatureDetails {
+  name: string;
+  level: number;
+  description: string;
+}
+
+export interface ClassFeatures {
+  name: string;
+  hitDice: string;
+  primaryAbility: string;
+  savingThrows: string[];
+  armorProficiencies: string[];
+  weaponProficiencies: string[];
+  toolProficiencies: string[];
+  features: FeatureDetails[];
+}
+
+export interface BackgroundFeature {
+  name: string;
+  description: string;
+}
+
+export interface Background {
+  name: string;
+  skillProficiencies: string[];
+  toolProficiencies: string[];
+  languages: string[];
+  equipment: string[];
+  personalityTraits: string[];
+  ideals: string[];
+  bonds: string[];
+  flaws: string[];
+  feature: BackgroundFeature;
+}
+
+// Обновляем интерфейс ClassRequirement
+export interface ClassRequirement {
+  abilities: { [key: string]: number };
+  description: string;
+}
+
+// Обновляем интерфейс HitPointEvent
 export interface HitPointEvent {
   id: string;
   // Обновляем типы для совместимости с компонентом DamageLog

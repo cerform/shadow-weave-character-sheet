@@ -39,7 +39,8 @@ export const useCharacterCreation = () => {
     languages: [],
     gender: '',
     alignment: '',
-    background: ''
+    background: '',
+    backstory: ''
   });
 
   // Обновление характеристик персонажа
@@ -101,7 +102,8 @@ export const useCharacterCreation = () => {
       character.class,
       character.background,
       character.gender,
-      character.alignment
+      character.alignment,
+      character.backstory
     ];
     
     return requiredFields.every(field => field && field.trim() !== '');
