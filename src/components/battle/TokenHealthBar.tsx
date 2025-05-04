@@ -23,39 +23,32 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
   const safeTempHP = isNaN(temporaryHP) ? 0 : Math.max(0, temporaryHP);
   
   // Для анимированного обновления используем локальное состояние с useEffect
-  const [healthPercentage, setHealthPercentage] = useState(0);
-  const [tempHealthPercentage, setTempHealthPercentage] = useState(0);
-  const [prevHealthPercentage, setPrevHealthPercentage] = useState(0);
+  const [prevHP, setPrevHP] = useState(safeCurrentHP);
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  // Расчет процентов для HP баров
+  const healthPercentage = safeMaxHP > 0 
+    ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) 
+    : 0;
+  
+  const tempHealthPercentage = safeMaxHP > 0 
+    ? Math.max(0, Math.min(100, (safeTempHP / safeMaxHP) * 100)) 
+    : 0;
   
   // Обновляем локальное состояние при изменении props
   useEffect(() => {
-    // Расчет процента здоровья
-    const calculatedHealthPercentage = safeMaxHP > 0 
-      ? Math.max(0, Math.min(100, (safeCurrentHP / safeMaxHP) * 100)) 
-      : 0;
-    
-    // Расчет процента временного здоровья
-    const calculatedTempPercentage = safeMaxHP > 0 
-      ? Math.max(0, Math.min(100, (safeTempHP / safeMaxHP) * 100)) 
-      : 0;
-    
-    // Если значение здоровья изменилось, запускаем анимацию
-    if (healthPercentage !== calculatedHealthPercentage) {
-      setPrevHealthPercentage(healthPercentage);
+    if (safeCurrentHP !== prevHP) {
       setIsAnimating(true);
       
       // Останавливаем анимацию через короткий промежуток времени
       const timer = setTimeout(() => {
         setIsAnimating(false);
+        setPrevHP(safeCurrentHP);
       }, 600);
       
       return () => clearTimeout(timer);
     }
-    
-    setHealthPercentage(calculatedHealthPercentage);
-    setTempHealthPercentage(calculatedTempPercentage);
-  }, [safeCurrentHP, safeMaxHP, safeTempHP, healthPercentage]);
+  }, [safeCurrentHP, prevHP]);
   
   // Определяем цвет полоски здоровья в зависимости от процента
   const getHealthColor = (percent: number) => {
@@ -74,22 +67,23 @@ const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
       >
         {/* Основная полоса здоровья */}
         <motion.div 
-          className="h-full transition-all duration-300 rounded-full absolute top-0 left-0"
+          className="h-full rounded-full absolute top-0 left-0"
           style={{ 
             width: `${healthPercentage}%`, 
             backgroundColor: barColor,
             boxShadow: `0 0 5px ${barColor}`
           }}
-          initial={{ width: `${prevHealthPercentage}%` }}
+          initial={{ width: `${prevHP / safeMaxHP * 100}%` }}
           animate={{ width: `${healthPercentage}%` }}
+          transition={{ duration: 0.3 }}
         />
         
         {/* Индикатор изменения здоровья */}
         <AnimatePresence>
           {isAnimating && (
             <motion.div 
-              className={`absolute top-0 left-0 h-full ${safeCurrentHP < prevHealthPercentage ? 'bg-red-500/30' : 'bg-green-500/30'}`}
-              style={{ width: `${Math.max(healthPercentage, prevHealthPercentage)}%` }}
+              className={`absolute top-0 left-0 h-full ${safeCurrentHP < prevHP ? 'bg-red-500/30' : 'bg-green-500/30'}`}
+              style={{ width: `${Math.max(healthPercentage, (prevHP / safeMaxHP) * 100)}%` }}
               initial={{ opacity: 0.7 }}
               animate={{ opacity: 0 }}
               exit={{ opacity: 0 }}

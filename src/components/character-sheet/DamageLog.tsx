@@ -5,8 +5,7 @@ import { DamageEvent } from '@/hooks/useDamageLog';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Heart, Plus, Minus, Undo } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { format } from 'date-fns';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -108,10 +107,7 @@ export const DamageLog: React.FC<DamageLogProps> = ({
                 </div>
                 
                 <span className="text-xs text-gray-500">
-                  {formatDistanceToNow(new Date(event.timestamp), { 
-                    addSuffix: true,
-                    locale: ru
-                  })}
+                  {format(new Date(event.timestamp), 'HH:mm:ss')}
                 </span>
               </motion.div>
             ))}

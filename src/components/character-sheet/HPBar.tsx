@@ -47,7 +47,7 @@ export const HPBar: React.FC<HPBarProps> = ({
   // Определяем цвет обычного HP на основе процента здоровья
   const getHealthColor = () => {
     if (healthPercentage > 60) return 'bg-green-500';
-    if (healthPercentage > 30) return 'bg-orange-500';
+    if (healthPercentage > 30) return 'bg-yellow-500';
     return 'bg-red-500';
   };
   
@@ -70,11 +70,17 @@ export const HPBar: React.FC<HPBarProps> = ({
         </div>
       )}
       
-      <div className={`relative w-full overflow-hidden rounded-full bg-gray-800/50`} style={{ height }}>
+      <div 
+        className={`relative w-full overflow-hidden rounded-full bg-gray-800/50`} 
+        style={{ height }}
+      >
         {/* Основная полоса здоровья */}
-        <div 
-          className={`absolute top-0 left-0 h-full transition-all duration-300 ${getHealthColor()}`} 
+        <motion.div 
+          className={`absolute top-0 left-0 h-full transition-all ${getHealthColor()}`} 
           style={{ width: `${healthPercentage}%` }}
+          initial={{ width: `${prevCurrentHp / maxHp * 100}%` }}
+          animate={{ width: `${healthPercentage}%` }}
+          transition={{ duration: 0.3 }}
         />
         
         {/* Индикатор изменения HP */}

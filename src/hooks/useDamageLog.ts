@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export interface DamageEvent {
@@ -26,7 +26,7 @@ export const useDamageLog = (
   }, [currentHp, tempHp, onHpChange]);
 
   // Применяем событие получения урона/лечения
-  const applyDamage = (amount: number, source?: string) => {
+  const applyDamage = useCallback((amount: number, source?: string) => {
     if (amount === 0) return;
 
     const eventId = crypto.randomUUID();
@@ -39,7 +39,7 @@ export const useDamageLog = (
       // Если есть временные HP, сначала снимаем их
       if (tempHp > 0) {
         const absorbedByTemp = Math.min(tempHp, damage);
-        setTempHp((prev) => prev - absorbedByTemp);
+        setTempHp((prev) => Math.max(0, prev - absorbedByTemp));
         remainingDamage -= absorbedByTemp;
         
         if (absorbedByTemp > 0) {
@@ -116,10 +116,10 @@ export const useDamageLog = (
         });
       }
     }
-  };
+  }, [currentHp, tempHp, maxHp, toast]);
 
   // Добавляем временные хиты
-  const addTempHp = (amount: number, source?: string) => {
+  const addTempHp = useCallback((amount: number, source?: string) => {
     // Временные хиты не складываются, берется наибольшее значение
     if (amount > tempHp) {
       setTempHp(amount);
@@ -149,10 +149,10 @@ export const useDamageLog = (
         description: `У вас уже ${tempHp} временных HP (больше чем ${amount})`,
       });
     }
-  };
+  }, [tempHp, toast]);
 
   // Отменяем последнее изменение HP
-  const undoLastEvent = () => {
+  const undoLastEvent = useCallback(() => {
     if (events.length === 0) return;
     
     const lastEvent = events[0];
@@ -177,10 +177,10 @@ export const useDamageLog = (
       title: "Отменено последнее событие",
       description: `${lastEvent.type === 'damage' ? 'Урон' : lastEvent.type === 'heal' ? 'Лечение' : 'Временные HP'} ${lastEvent.amount}`,
     });
-  };
+  }, [events, maxHp, toast]);
 
   // Прямое обновление HP (например, при загрузке персонажа или отдыхе)
-  const setHp = (hp: number) => {
+  const setHp = useCallback((hp: number) => {
     const oldHp = currentHp;
     const newHp = Math.max(0, Math.min(maxHp, hp));
     
@@ -201,10 +201,10 @@ export const useDamageLog = (
         ...prev
       ]);
     }
-  };
+  }, [currentHp, maxHp]);
   
   // Прямое обновление временного HP
-  const setTempHpValue = (hp: number) => {
+  const setTempHpValue = useCallback((hp: number) => {
     const oldTempHp = tempHp;
     const newTempHp = Math.max(0, hp);
     
@@ -223,7 +223,7 @@ export const useDamageLog = (
         ...prev
       ]);
     }
-  };
+  }, [tempHp]);
 
   return {
     currentHp,
@@ -232,7 +232,6 @@ export const useDamageLog = (
     applyDamage,
     addTempHp,
     undoLastEvent,
-    // Устанавливаем HP напрямую (для инициализации)
     setHp,
     setTempHp: setTempHpValue
   };
