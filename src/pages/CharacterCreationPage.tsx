@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -65,53 +64,11 @@ const CharacterCreationPage = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Навигация на главную - используем новую систему предотвращения багов
-  const goToHomePage = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Показываем предупреждение, если процесс создания не завершен
-    if (currentStep < steps.length - 1) {
-      const confirmed = window.confirm('Вы уверены, что хотите покинуть страницу создания персонажа? Все несохраненные изменения будут потеряны.');
-      if (!confirmed) return;
-    }
-    
-    // Используем replace вместо push для оптимизации истории браузера
-    navigate('/', { replace: true });
-  };
-
-  // Навигация в руководство игрока с оптимизацией
-  const goToHandbook = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate('/handbook', { replace: true });
+  // Упрощенная навигация в руководство игрока
+  const goToHandbook = () => {
+    navigate('/handbook');
   };
   
-  // Переход к последнему шагу (обзор персонажа)
-  const goToFinalReview = () => {
-    setCurrentStep(steps.length - 1);
-  };
-
-  // Обертка для setAbilitiesMethod для соответствия типам
-  const handleSetAbilitiesMethod = (method: "pointbuy" | "standard" | "roll" | "manual") => {
-    setAbilitiesMethod(method);
-  };
-
-  // Функция-обертка для обеспечения правильной сигнатуры в rollSingleAbility
-  const handleRollSingleAbility = (index: number): { rolls: number[], total: number } => {
-    rollSingleAbility(index);
-    return { 
-      rolls: diceResults[index] || [0, 0, 0, 0], 
-      total: diceResults[index]?.reduce((a, b) => a + b, 0) || 0 
-    };
-  };
-
-  // Обертка для getModifier для возвращения string
-  const getModifierString = (score: number): string => {
-    const mod = getModifier(score);
-    return typeof mod === 'string' ? mod : (mod >= 0 ? `+${mod}` : `${mod}`);
-  };
-
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="min-h-screen w-full p-6">
@@ -172,7 +129,7 @@ const CharacterCreationPage = () => {
             nextStep={nextStep}
             prevStep={prevStep}
             abilitiesMethod={abilitiesMethod}
-            setAbilitiesMethod={handleSetAbilitiesMethod}
+            setAbilitiesMethod={setAbilitiesMethod}
             diceResults={diceResults}
             getModifier={getModifierString}
             rollAllAbilities={rollAllAbilities}
