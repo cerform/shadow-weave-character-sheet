@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Equipment } from '@/types/character';
+import type { Equipment } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash } from 'lucide-react';
 import { Input } from '@/components/ui/input';

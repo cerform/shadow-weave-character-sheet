@@ -8,7 +8,7 @@ import PointBuyPanel from './PointBuyPanel';
 import ManualInputPanel, { getMaxAbilityScore } from './ManualInputPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ABILITY_SCORE_CAPS } from '@/types/character';
-import { AbilityScores } from '@/types/character';
+import type { AbilityScores } from '@/types/character';
 
 const CharacterAbilityScores: React.FC = () => {
   const { character, updateCharacter } = useCharacterCreation();

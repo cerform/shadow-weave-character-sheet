@@ -25,7 +25,7 @@ export interface CharacterSheet {
   };
   proficiencies?: Proficiencies;
   equipment?: Equipment[];
-  features?: Feature[] | string[];
+  features?: (Feature | string)[];
   spells?: (string | CharacterSpell)[];
   personalityTraits?: string[];
   ideals?: string[];
@@ -86,6 +86,9 @@ export interface CharacterSheet {
   classes?: { class: string, level: number }[];
   // Очки колдовства для чародеев
   sorceryPoints?: SorceryPoints;
+  // Дополнительные поля, которые могут пригодиться
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AbilityScores {
@@ -306,19 +309,6 @@ export interface HitPointEvent {
   timestamp: number;
 }
 
-export const ABILITY_SCORE_CAPS = {
-  DEFAULT: 10,
-  BASE_CAP: 20,
-  RACIAL_CAP: 17,
-  ASI_CAP: 20,
-  MAGIC_CAP: 30,
-  MIN: 1,
-  MAX: 20,
-  ABSOLUTE_MAX: 30,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24,
-};
-
 export interface RacialTraits {
   race: string;
   abilityBonuses: {
@@ -342,3 +332,16 @@ export interface RacialTraits {
   }[];
   [key: string]: any;
 }
+
+export const ABILITY_SCORE_CAPS = {
+  DEFAULT: 10,
+  BASE_CAP: 20,
+  RACIAL_CAP: 17,
+  ASI_CAP: 20,
+  MAGIC_CAP: 30,
+  MIN: 1,
+  MAX: 20,
+  ABSOLUTE_MAX: 30,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24,
+};

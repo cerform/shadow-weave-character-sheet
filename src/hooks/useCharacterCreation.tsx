@@ -1,6 +1,6 @@
+
 import { useState, useMemo } from 'react';
-import { Character } from '@/types/character';
-import { RacialTraits, ClassFeatures, Background, ABILITY_SCORE_CAPS } from '@/types/character';
+import type { Character, AbilityScores, Proficiencies } from '@/types/character';
 import { useToast } from '@/components/ui/use-toast';
 import { racialTraits } from '@/data/racialTraits';
 import { classFeatures } from '@/data/classFeatures';
@@ -31,14 +31,17 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    proficiencies: [],
+    proficiencies: {
+      weapons: [],
+      armor: [],
+      tools: [],
+      languages: [],
+      skills: [],
+      savingThrows: []
+    } as Proficiencies,
     equipment: [],
+    features: [],
     spells: [],
-    languages: [],
-    gender: '',
-    alignment: '',
-    background: '',
-    backstory: ''
   });
 
   // Обновление характеристик персонажа
@@ -62,7 +65,7 @@ export const useCharacterCreation = () => {
   // Проверка, является ли класс магическим
   const isMagicClass = () => {
     const magicClasses = ['Бард', 'Волшебник', 'Жрец', 'Колдун', 'Паладин', 'Следопыт', 'Чародей', 'Друид'];
-    return magicClasses.includes(character.class);
+    return magicClasses.includes(character.class || '');
   };
 
   // Расчет количества очков характеристик на основе уровня
@@ -78,18 +81,18 @@ export const useCharacterCreation = () => {
   };
   
   // Получение расовых особенностей
-  const getRacialTraits = (): RacialTraits | undefined => {
-    return racialTraits.find(r => r.race === character.race);
+  const getRacialTraits = () => {
+    return racialTraits.find(r => r.race === character.race) || null;
   };
   
   // Получение особенностей класса
-  const getClassFeatures = (): ClassFeatures | undefined => {
-    return classFeatures.find(c => c.name === character.class);
+  const getClassFeatures = () => {
+    return classFeatures.find(c => c.name === character.class) || null;
   };
   
   // Получение деталей предыстории
-  const getBackgroundDetails = (): Background | undefined => {
-    return backgrounds.find(b => b.name === character.background);
+  const getBackgroundDetails = () => {
+    return backgrounds.find(b => b.name === character.background) || null;
   };
 
   // Проверка готовности персонажа
@@ -98,10 +101,7 @@ export const useCharacterCreation = () => {
       character.name,
       character.race,
       character.class,
-      character.background,
-      character.gender,
-      character.alignment,
-      character.backstory
+      character.background
     ];
     
     return requiredFields.every(field => field && field.trim() !== '');

@@ -1,6 +1,6 @@
 
 // Import types directly from character.d.ts
-import {
+import type {
   CharacterSheet,
   AbilityScores,
   HitPoints,
@@ -24,7 +24,7 @@ import {
 } from './character.d';
 
 // Re-export all types
-export {
+export type {
   CharacterSheet,
   AbilityScores,
   HitPoints,
@@ -43,9 +43,11 @@ export {
   HitPointEvent,
   ClassFeatures,
   Background,
-  RacialTraits,
-  ABILITY_SCORE_CAPS
+  RacialTraits
 };
+
+// Export the ABILITY_SCORE_CAPS constant
+export { ABILITY_SCORE_CAPS };
 
 // Defining constants for ability score caps (kept for backwards compatibility)
 export const ABILITY_SCORE_CAPS_CONSTANTS = {

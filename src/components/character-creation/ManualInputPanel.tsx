@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ABILITY_SCORE_CAPS } from '@/types/character';
 import { useState, useEffect } from 'react';

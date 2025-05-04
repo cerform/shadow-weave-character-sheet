@@ -1,3 +1,4 @@
+
 import React from 'react';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
@@ -10,7 +11,7 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import { CharacterSheet } from '@/types/character';
+import type { CharacterSheet, Character, Equipment } from '@/types/character';
 
 interface CharacterCreationContentProps {
   currentStep: number;
@@ -30,6 +31,23 @@ interface CharacterCreationContentProps {
   onLevelChange: (level: number) => void;
   maxAbilityScore?: number;
   setCurrentStep: (step: number) => void;
+}
+
+// Определяем интерфейсы для всех используемых компонентов
+interface CharacterEquipmentSelectionComponentProps {
+  initialEquipment?: Equipment[];
+  onChange: (equipment: Equipment[]) => void;
+  character?: Character;
+  updateCharacter?: (updates: Partial<Character>) => void;
+  nextStep?: () => void;
+  prevStep?: () => void;
+}
+
+interface CharacterReviewProps {
+  character: Character;
+  updateCharacter: (updates: Partial<Character>) => void;
+  setCurrentStep: (step: number) => void;
+  prevStep?: () => void;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
@@ -107,10 +125,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 6: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
+            initialEquipment={character.equipment}
+            onChange={(equipment) => updateCharacter({ equipment })}
           />
         );
       case 7: // Детали персонажа
@@ -141,10 +157,10 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 9: // Просмотр и завершение
         return (
           <CharacterReview 
-            character={character}
-            prevStep={prevStep}
-            updateCharacter={updateCharacter}
+            character={character as Character}
+            updateCharacter={updateCharacter as (updates: Partial<Character>) => void}
             setCurrentStep={setCurrentStep}
+            prevStep={prevStep}
           />
         );
       default:
