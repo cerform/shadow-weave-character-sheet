@@ -86,12 +86,6 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     // Иначе достаточно только выбрать расу
     return !!selectedRace;
   };
-
-  const handleNext = () => {
-    if (canProceed()) {
-      nextStep();
-    }
-  };
   
   return (
     <TooltipProvider>
@@ -175,7 +169,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
         
         <NavigationButtons
           allowNext={canProceed()}
-          nextStep={handleNext}
+          nextStep={nextStep}
           prevStep={prevStep}
           isFirstStep={true}
         />

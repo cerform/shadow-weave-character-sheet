@@ -19,20 +19,13 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
   
-  // Простые функции навигации без setTimeout и дополнительной логики
-  const goToHandbook = () => navigate('/handbook');
-  const goToSpellbook = () => navigate('/spellbook');
-  const goToBattle = () => navigate('/dm/battle');
-  const goToCharacterCreation = () => navigate('/character-creation');
-  const goToDMDashboard = () => navigate('/dm-dashboard');
-  
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       <HomeButton />
       
       <Button 
         variant="outline" 
-        onClick={goToHandbook}
+        onClick={() => navigate('/handbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -42,7 +35,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={goToSpellbook}
+        onClick={() => navigate('/spellbook')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -54,7 +47,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={goToBattle}
+          onClick={() => navigate('/dm/battle')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
         >
@@ -65,7 +58,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       
       <Button 
         variant="outline" 
-        onClick={goToCharacterCreation}
+        onClick={() => navigate('/character-creation')}
         className="flex items-center gap-2"
         size={isMobile ? "sm" : "default"}
       >
@@ -76,7 +69,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
       {isDM && (
         <Button 
           variant="outline" 
-          onClick={goToDMDashboard}
+          onClick={() => navigate('/dm-dashboard')}
           className="flex items-center gap-2"
           size={isMobile ? "sm" : "default"}
         >

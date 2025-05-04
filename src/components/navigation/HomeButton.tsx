@@ -17,15 +17,10 @@ const HomeButton: React.FC<HomeButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  // Максимально простая функция для навигации без дополнительной логики
-  const handleHomeNavigation = () => {
-    navigate('/');
-  };
-  
   return (
     <Button 
       variant={variant}
-      onClick={handleHomeNavigation}
+      onClick={() => navigate('/')}
       className={`flex items-center gap-2 ${className}`}
     >
       <Home className="size-4" />

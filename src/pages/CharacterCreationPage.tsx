@@ -64,21 +64,16 @@ const CharacterCreationPage = () => {
   // Тема для отображения
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-
-  // Упрощенная навигация в руководство игрока
-  const goToHandbook = () => {
-    navigate('/handbook');
-  };
   
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="min-h-screen w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <HomeButton />
+          <HomeButton variant="default" />
 
           <div className="flex items-center gap-2">
             <Button 
-              onClick={goToHandbook} 
+              onClick={() => navigate('/handbook')} 
               variant="outline" 
               className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
             >
