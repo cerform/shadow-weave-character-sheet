@@ -62,7 +62,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       toast({
         title: "Персонаж не сохранен",
         description: "Сначала сохраните персонажа, чтобы просмотреть его лист.",
-        variant: "warning"
+        variant: "destructive"  // Changed from "warning" to "destructive"
       });
     }
   };
