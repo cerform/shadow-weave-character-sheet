@@ -29,11 +29,22 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const deviceType = useDeviceType();
   const isMobile = deviceType === "mobile";
   
+  // Используем обработчик событий с preventDefault для кнопок
+  const handlePrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    prevStep();
+  };
+  
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    nextStep();
+  };
+  
   return (
     <div className="flex justify-between pt-8 mt-2">
       <Button 
         variant="outline" 
-        onClick={prevStep}
+        onClick={handlePrev}
         disabled={isFirstStep}
         className={`
           flex items-center gap-2 px-4 py-2 
@@ -49,7 +60,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {!hideNextButton && (
         <Button 
           variant="default" 
-          onClick={nextStep}
+          onClick={handleNext}
           disabled={isNextDisabled}
           className={`
             flex items-center gap-2 px-4 py-2
