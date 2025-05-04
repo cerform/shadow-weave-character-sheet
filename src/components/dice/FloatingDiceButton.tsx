@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { DicePanel } from '@/components/character-sheet/DicePanel';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { PlayerDicePanel } from '@/components/character-sheet/PlayerDicePanel';
 
 export const FloatingDiceButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +38,7 @@ export const FloatingDiceButton = () => {
             </SheetDescription>
           </SheetHeader>
           <div className="py-2 h-[calc(100vh-120px)] overflow-y-auto px-4">
-            <DicePanel compactMode={true} fixedPosition={true} />
+            <PlayerDicePanel />
           </div>
         </SheetContent>
       </Sheet>

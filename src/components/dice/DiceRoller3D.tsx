@@ -1,66 +1,22 @@
-import React, { useRef, useEffect, useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Mesh, Vector3, BoxGeometry, ConeGeometry, DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Color } from 'three';
-import { OrbitControls, Text } from '@react-three/drei';
+import { useGLTF, OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-// Кастомная геометрия для d10 (Pentagonal trapezohedron)
-const createD10Geometry = () => {
-  // Создаем геометрию для пятиугольной трапецоэдры (Pentagonal trapezohedron)
-  const vertices = [];
-  const indices = [];
-  
-  // Верхняя вершина
-  vertices.push(0, 1, 0);
-  
-  // Верхний пентагон
-  for (let i = 0; i < 5; i++) {
-    const angle = (Math.PI * 2 / 5) * i;
-    vertices.push(
-      0.6 * Math.cos(angle),
-      0.2,
-      0.6 * Math.sin(angle)
-    );
-  }
-  
-  // Нижний пентагон (повернутый на 36 градусов)
-  for (let i = 0; i < 5; i++) {
-    const angle = (Math.PI * 2 / 5) * (i + 0.5);
-    vertices.push(
-      0.6 * Math.cos(angle),
-      -0.2,
-      0.6 * Math.sin(angle)
-    );
-  }
-  
-  // Нижняя вершина
-  vertices.push(0, -1, 0);
-  
-  // Грани (верхняя половина)
-  for (let i = 0; i < 5; i++) {
-    const next = (i + 1) % 5;
-    indices.push(0, i + 1, next + 1);
-    indices.push(i + 1, i + 6, next + 1);
-    indices.push(next + 1, i + 6, next + 6);
-  }
-  
-  // Грани (нижняя половина)
-  for (let i = 0; i < 5; i++) {
-    const next = (i + 1) % 5;
-    indices.push(11, i + 6, next + 6);
-  }
-  
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  
-  return geometry;
-};
-
-const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = false, forceReroll = false, themeColor = '#ffffff', fixedPosition = false }: { 
+// Компонент кубика
+const Dice = ({ 
+  type, 
+  onRoll, 
+  modifier = 0, 
+  autoRoll = false, 
+  hideControls = false, 
+  forceReroll = false, 
+  themeColor = '#ffffff',
+  fixedPosition = false 
+}: { 
   type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   onRoll?: (result: number) => void,
   modifier?: number,
@@ -70,10 +26,10 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   themeColor?: string,
   fixedPosition?: boolean
 }) => {
-  const meshRef = useRef<Mesh>(null!);
-  const initialPositionRef = useRef<Vector3>(new Vector3(0, 3, 0));
-  const targetPositionRef = useRef<Vector3>(new Vector3(0, 0, 0));
-  const throwForceRef = useRef<Vector3>(new Vector3(
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const initialPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3, 0));
+  const targetPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  const throwForceRef = useRef<THREE.Vector3>(new THREE.Vector3(
     (Math.random() - 0.5) * 10,
     0,
     (Math.random() - 0.5) * 10
@@ -85,28 +41,33 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   const [rollPhase, setRollPhase] = useState(0); // 0: initial, 1: rolling, 2: settled
   
   // Преобразование HEX цвета в объект Color из Three.js
-  const diceColor = new Color(themeColor);
+  const diceColor = new THREE.Color(themeColor);
   
   // Определение геометрии и числа граней для кубика
   const getDiceGeometry = (type: string) => {
     switch (type) {
       case 'd4':
-        return new TetrahedronGeometry(1, 0);
+        return new THREE.TetrahedronGeometry(1, 0);
       case 'd6':
-        return new BoxGeometry(1, 1, 1);
+        return new THREE.BoxGeometry(1, 1, 1);
       case 'd8':
-        return new OctahedronGeometry(1, 0);
-      case 'd10':
-        return createD10Geometry();
+        return new THREE.OctahedronGeometry(1, 0);
+      case 'd10': {
+        // Создаем упрощенную геометрию для d10
+        const geometry = new THREE.ConeGeometry(0.8, 1.8, 10);
+        return geometry;
+      }
       case 'd12':
-        return new DodecahedronGeometry(1, 0);
+        return new THREE.DodecahedronGeometry(1, 0);
       case 'd20':
-        return new IcosahedronGeometry(1, 0);
-      case 'd100':
-        // Для d100 используем также геометрию d10, но с ��ругой логикой результата
-        return createD10Geometry();
+        return new THREE.IcosahedronGeometry(1, 0);
+      case 'd100': {
+        // Для d100 используем также геометрию d10
+        const geometry = new THREE.ConeGeometry(0.8, 1.8, 10);
+        return geometry;
+      }
       default:
-        return new BoxGeometry(1, 1, 1);
+        return new THREE.BoxGeometry(1, 1, 1);
     }
   };
   
@@ -139,7 +100,7 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
     // Сброс позиции и генерация новой силы броска
     if (meshRef.current) {
       meshRef.current.position.copy(initialPositionRef.current);
-      throwForceRef.current = new Vector3(
+      throwForceRef.current = new THREE.Vector3(
         (Math.random() - 0.5) * 10,
         0,
         (Math.random() - 0.5) * 10
@@ -203,11 +164,11 @@ const Dice = ({ type, onRoll, modifier = 0, autoRoll = false, hideControls = fal
   }, [camera]);
   
   // Создаем материал с цветом темы и улучшенными настройками
-  const diceMaterial = new MeshStandardMaterial({
+  const diceMaterial = new THREE.MeshStandardMaterial({
     color: diceColor,
     metalness: 0.7,
     roughness: 0.3,
-    emissive: new Color(diceColor).multiplyScalar(0.2),
+    emissive: new THREE.Color(diceColor).multiplyScalar(0.2),
   });
   
   // В случае фиксированной позиции, не отображаем результат на сцене
@@ -251,7 +212,8 @@ export const DiceRoller3D = ({
   themeColor = '#ffffff',
   fixedPosition = false,
   playerName,
-  diceCount = 1
+  diceCount = 1,
+  forceReroll = false
 }: {
   initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   hideControls?: boolean,
@@ -260,23 +222,36 @@ export const DiceRoller3D = ({
   themeColor?: string,
   fixedPosition?: boolean,
   playerName?: string,
-  diceCount?: number
+  diceCount?: number,
+  forceReroll?: boolean
 }) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
-  const [forceReroll, setForceReroll] = useState(false);
+  const [internalForceReroll, setInternalForceReroll] = useState(false);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const actualThemeColor = themeColor || currentTheme.accent;
   
+  // Обновляем состояние при изменении initialDice извне
+  useEffect(() => {
+    setDiceType(initialDice);
+  }, [initialDice]);
+  
+  // Реакция на внешний forceReroll
+  useEffect(() => {
+    if (forceReroll) {
+      setInternalForceReroll(prev => !prev);
+    }
+  }, [forceReroll]);
+  
   const handleDiceChange = (type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100') => {
     setDiceType(type);
-    setForceReroll(prev => !prev); // Reset the dice when changing type
+    setInternalForceReroll(prev => !prev); // Reset the dice when changing type
   };
   
   const handleRoll = () => {
     setRoll(true);
-    setForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
+    setInternalForceReroll(prev => !prev); // Переключаем, чтобы вызвать эффект перебрасывания
   };
   
   const handleRollComplete = (result: number) => {
@@ -291,9 +266,6 @@ export const DiceRoller3D = ({
     }
   };
   
-  // Убираем кнопки управления dice из внутреннего компонента 3D кубика,
-  // теперь они будут отображаться в отдельном блоке снаружи
-  
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas shadows className={fixedPosition ? "dice-fixed-position" : ""}>
@@ -305,7 +277,7 @@ export const DiceRoller3D = ({
           modifier={modifier}
           autoRoll={roll}
           hideControls={true} // Всегда скрываем внутренние контролы
-          forceReroll={forceReroll}
+          forceReroll={internalForceReroll}
           themeColor={actualThemeColor}
           fixedPosition={fixedPosition}
         />
@@ -314,3 +286,5 @@ export const DiceRoller3D = ({
     </div>
   );
 };
+
+export default DiceRoller3D;
