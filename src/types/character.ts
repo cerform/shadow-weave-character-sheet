@@ -1,4 +1,3 @@
-
 import { CharacterSheet, SpellSlots, Proficiencies, AbilityScores } from './character.types';
 
 export type { CharacterSheet, SpellSlots, Proficiencies, AbilityScores };
@@ -42,7 +41,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  spells?: string[];
+  spells?: (string | CharacterSpell)[];
   spellSlots?: SpellSlots;
   hitPoints?: {
     current: number;
@@ -62,7 +61,7 @@ export interface Character {
   equipment?: Equipment[];
   languages?: string[];
   proficiencies?: Proficiencies;
-  features?: Feature[];
+  features?: (Feature | string)[];
   maxHp?: number;
   currentHp?: number;
   age?: number;

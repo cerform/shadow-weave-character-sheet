@@ -62,7 +62,10 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
               <h3 className="text-lg font-semibold mb-2">Снаряжение</h3>
               <ul className="list-disc list-inside">
                 {character.equipment.map((item, index) => (
-                  <li key={index}>{typeof item === 'string' ? item : item.name} {typeof item !== 'string' && `(x${item.quantity})`}</li>
+                  <li key={index}>
+                    {typeof item === 'string' ? item : item.name} 
+                    {typeof item !== 'string' && item.quantity > 1 && ` (x${item.quantity})`}
+                  </li>
                 ))}
               </ul>
             </div>

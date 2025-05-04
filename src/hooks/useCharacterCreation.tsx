@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import type { Character, AbilityScores, Proficiencies } from '@/types/character';
 import { useToast } from '@/components/ui/use-toast';
@@ -6,6 +5,7 @@ import { racialTraits } from '@/data/racialTraits';
 import { classFeatures } from '@/data/classFeatures';
 import { backgrounds } from '@/data/backgrounds';
 import { useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -13,9 +13,11 @@ export const useCharacterCreation = () => {
   
   // Базовое состояние персонажа
   const [character, setCharacter] = useState<Character>({
+    id: uuidv4(),  // Generate a unique ID
     name: '',
     race: '',
     class: '',
+    className: '', // Add className to match Character interface
     level: 1,
     abilities: {
       STR: 10,
@@ -46,7 +48,16 @@ export const useCharacterCreation = () => {
 
   // Обновление характеристик персонажа
   const updateCharacter = (updates: Partial<Character>) => {
-    setCharacter(prev => ({ ...prev, ...updates }));
+    setCharacter(prev => {
+      // Ensure class and className are synchronized
+      if (updates.class && !updates.className) {
+        updates.className = updates.class;
+      } else if (updates.className && !updates.class) {
+        updates.class = updates.className;
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   // Обработчик смены уровня персонажа
@@ -145,3 +156,5 @@ export const useCharacterCreation = () => {
     level: character.level
   };
 };
+
+export default useCharacterCreation;

@@ -1,7 +1,14 @@
 
 import { CharacterSheet, SpellSlots, Proficiencies } from '@/types/character';
 import type { Character } from '@/contexts/CharacterContext';
-import { extractSpellNames } from '@/utils/spellUtils';
+
+// Simple utility function to extract spell names
+export const extractSpellNames = (spells: any[]): string[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') return spell;
+    return spell.name || '';
+  }).filter(Boolean);
+};
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения
@@ -104,6 +111,9 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     skills: []
   };
   
+  // Convert features array to match what Character expects
+  const features = sheet.features ? [...sheet.features] : [];
+  
   return {
     id: sheet.id || "",
     userId: sheet.userId,
@@ -136,7 +146,7 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     equipment: sheet.equipment || [],
     languages: languages,
     proficiencies: proficiencies,
-    features: sheet.features || [],
+    features: features,
     maxHp: maxHp,
     currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
     createdAt: new Date().toISOString(),

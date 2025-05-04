@@ -101,7 +101,7 @@ export const useSessionStore = create<SessionStore>()(
               isDM: true
             },
             loading: false
-          }));
+          } as Partial<SessionStore>)); // Cast to Partial<SessionStore>
           
           toast.success("Сессия успешно создана");
           return newSession;
@@ -171,7 +171,7 @@ export const useSessionStore = create<SessionStore>()(
           const joinResult = await sessionService.joinSession(session.id, user);
           
           // Если joinResult имеет значение null или undefined, также считаем операцию неудачной
-          if (joinResult === false) {
+          if (joinResult === null || joinResult === undefined || joinResult === false) {
             throw new Error("Не удалось присоединиться к сессии");
           }
           
