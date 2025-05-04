@@ -51,21 +51,18 @@ const LevelUpPanel = () => {
     // Также увеличиваем текущее HP на величину прироста
     const newCurrentHp = Math.min(newMaxHp, (character.currentHp || 0) + hitPointIncrease);
     
-    // Увеличиваем количество доступных Hit Dice
-    const currentHitDice = character.hitDice !== undefined ? character.hitDice : currentLevel;
-    const newHitDice = currentHitDice + 1;
-    
     // Обновляем персонажа с новым уровнем и здоровьем
-    updateCharacter({
+    const updates: any = {
       level: newLevel,
       maxHp: newMaxHp,
-      currentHp: newCurrentHp,
-      hitDice: newHitDice
-    });
+      currentHp: newCurrentHp
+    };
+    
+    updateCharacter(updates);
     
     toast({
       title: `Уровень повышен до ${newLevel}!`,
-      description: `Максимальное HP увеличено до ${newMaxHp}. Текущее HP: ${newCurrentHp}. Hit Dice: ${newHitDice}`,
+      description: `Максимальное HP увеличено до ${newMaxHp}. Текущее HP: ${newCurrentHp}.`,
     });
   };
   
@@ -102,21 +99,18 @@ const LevelUpPanel = () => {
     const newMaxHp = Math.max(1, (character.maxHp || 0) - Math.max(1, hitPointDecrease));
     const newCurrentHp = Math.min(character.currentHp || 0, newMaxHp); // Текущее HP не должно превышать новый максимум
     
-    // Уменьшаем количество доступных Hit Dice
-    const currentHitDice = character.hitDice !== undefined ? character.hitDice : currentLevel;
-    const newHitDice = Math.max(0, currentHitDice - 1);
-    
     // Обновляем персонажа с новым уровнем и здоровьем
-    updateCharacter({
+    const updates: any = {
       level: newLevel,
       maxHp: newMaxHp,
-      currentHp: newCurrentHp,
-      hitDice: newHitDice
-    });
+      currentHp: newCurrentHp
+    };
+    
+    updateCharacter(updates);
     
     toast({
       title: `Уровень понижен до ${newLevel}`,
-      description: `Максимальное HP уменьшено до ${newMaxHp}. Текущее HP: ${newCurrentHp}. Hit Dice: ${newHitDice}`,
+      description: `Максимальное HP уменьшено до ${newMaxHp}. Текущее HP: ${newCurrentHp}.`,
     });
   };
   
@@ -151,13 +145,6 @@ const LevelUpPanel = () => {
         >
           Уровень персонажа: {character?.level || 1}
         </h3>
-      </div>
-      
-      <div className="flex flex-col text-sm mb-3">
-        <div className="flex justify-between items-center">
-          <span style={{ color: currentTheme.mutedTextColor }}>Доступные Hit Dice:</span>
-          <span style={{ color: currentTheme.textColor }}>{character?.hitDice || 0}/{character?.level || 1}</span>
-        </div>
       </div>
       
       <div className="grid grid-cols-2 gap-2">
