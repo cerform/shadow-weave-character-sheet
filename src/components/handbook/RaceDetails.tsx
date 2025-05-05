@@ -155,9 +155,13 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                         <div className="mt-3">
                           <h4 className="font-semibold mb-1 text-purple-300">Дополнительные черты:</h4>
                           <ul className="list-disc pl-5 text-gray-300">
-                            {subraceObj.traits.map((trait: string, idx: number) => (
-                              <li key={idx}>{trait}</li>
-                            ))}
+                            {Array.isArray(subraceObj.traits) ? (
+                              subraceObj.traits.map((trait: string, idx: number) => (
+                                <li key={idx}>{trait}</li>
+                              ))
+                            ) : (
+                              <li>Информация о чертах недоступна</li>
+                            )}
                           </ul>
                         </div>
                       )}
