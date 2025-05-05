@@ -135,7 +135,7 @@ const Index = () => {
     <div 
       className="min-h-screen bg-gradient-to-b from-background to-background/80"
       style={{ 
-        backgroundImage: `url(/lovable-uploads/d90bff13-0557-4a8e-b175-08ef1d5bffa8.png)`, 
+        backgroundImage: `url(/assets/backgrounds/login-bg.jpg)`, 
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundBlendMode: 'overlay'

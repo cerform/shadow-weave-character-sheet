@@ -7,6 +7,7 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
+import { UserThemeProvider } from './contexts/UserThemeContext';
 import './App.css';
 
 // Импорт тем
@@ -37,6 +38,9 @@ import AppDiceButton from './AppDiceButton';
 const App = () => {
   // При монтировании компонента устанавливаем дефолтную тему
   useEffect(() => {
+    // Инициализация основных процессов
+    console.log('Инициализация приложения...');
+    
     // Задаем дефолтную тему
     const savedTheme = localStorage.getItem('theme') || 'default';
     document.body.className = '';
@@ -57,6 +61,11 @@ const App = () => {
     document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText || '#FFFFFF');
     document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground || 'rgba(139, 90, 43, 0.8)');
     
+    console.log('Монтирование React приложения в DOM...');
+    
+    // Когда все загрузилось успешно
+    console.log('React приложение смонтировано успешно');
+    
     console.log('Тема инициализирована:', savedTheme, themeStyles);
   }, []);
 
@@ -66,31 +75,33 @@ const App = () => {
         <AuthProvider>
           <CharacterProvider>
             <SessionProvider>
-              <SocketProvider>
-                <div className="app-container min-h-screen w-full">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/sheet" element={<CharacterSheetPage />} />
-                    <Route path="/character-creation" element={<CharacterCreationPage />} />
-                    <Route path="/character/:id" element={<CharacterViewPage />} />
-                    <Route path="/join" element={<JoinSessionPage />} />
-                    <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
-                    <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-                    <Route path="/dm-session/:id" element={<DMSessionPage />} />
-                    <Route path="/play" element={<PlayerSessionPage />} />
-                    <Route path="/spellbook" element={<SpellbookPage />} />
-                    <Route path="/handbook" element={<HandbookPage />} />
-                    <Route path="/characters" element={<CharactersListPage />} />
-                    <Route path="/battle" element={<PlayBattlePage />} />
-                    <Route path="/dm/battle" element={<PlayBattlePage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <AppDiceButton />
-                  <Toaster />
-                </div>
-              </SocketProvider>
+              <UserThemeProvider>
+                <SocketProvider>
+                  <div className="app-container min-h-screen w-full">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/sheet" element={<CharacterSheetPage />} />
+                      <Route path="/character-creation" element={<CharacterCreationPage />} />
+                      <Route path="/character/:id" element={<CharacterViewPage />} />
+                      <Route path="/join" element={<JoinSessionPage />} />
+                      <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
+                      <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                      <Route path="/dm-session/:id" element={<DMSessionPage />} />
+                      <Route path="/play" element={<PlayerSessionPage />} />
+                      <Route path="/spellbook" element={<SpellbookPage />} />
+                      <Route path="/handbook" element={<HandbookPage />} />
+                      <Route path="/characters" element={<CharactersListPage />} />
+                      <Route path="/battle" element={<PlayBattlePage />} />
+                      <Route path="/dm/battle" element={<PlayBattlePage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <AppDiceButton />
+                    <Toaster />
+                  </div>
+                </SocketProvider>
+              </UserThemeProvider>
             </SessionProvider>
           </CharacterProvider>
         </AuthProvider>
