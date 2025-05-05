@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData, UseSpellbookReturn } from './types';
@@ -34,9 +35,12 @@ export const useSpellbook = (): UseSpellbookReturn => {
   const allClasses = extractClasses(allSpells);
 
   useEffect(() => {
-    // Преобразуем CharacterSpell[] в SpellData[]
+    // Преобразуем в SpellData[] для совместимости
     if (allSpells && allSpells.length > 0) {
-      const convertedSpells: SpellData[] = allSpells.map(convertToSpellData);
+      const convertedSpells: SpellData[] = allSpells.map(spell => ({
+        ...convertToSpellData(spell),
+        prepared: spell.prepared || false // Убедимся, что prepared существует
+      }));
       setFilteredSpells(convertedSpells);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
@@ -48,19 +52,30 @@ export const useSpellbook = (): UseSpellbookReturn => {
     let result = [...allSpells];
 
     // Фильтрация по поисковому запросу
-    result = filterSpellsBySearchTerm(result, searchTerm);
+    if (searchTerm) {
+      result = filterSpellsBySearchTerm(result, searchTerm);
+    }
 
     // Фильтрация по уровням
-    result = filterSpellsByLevel(result, activeLevel);
+    if (activeLevel.length > 0) {
+      result = filterSpellsByLevel(result, activeLevel);
+    }
 
     // Фильтрация по школам
-    result = filterSpellsBySchool(result, activeSchool);
+    if (activeSchool.length > 0) {
+      result = filterSpellsBySchool(result, activeSchool);
+    }
 
     // Фильтрация по классам
-    result = filterSpellsByClass(result, activeClass);
+    if (activeClass.length > 0) {
+      result = filterSpellsByClass(result, activeClass);
+    }
 
-    // Преобразуем CharacterSpell[] в SpellData[]
-    const convertedSpells: SpellData[] = result.map(convertToSpellData);
+    // Преобразуем в SpellData[] для совместимости
+    const convertedSpells: SpellData[] = result.map(spell => ({
+      ...convertToSpellData(spell),
+      prepared: spell.prepared || false // Убедимся, что prepared существует
+    }));
     
     setFilteredSpells(convertedSpells);
   }, [searchTerm, activeLevel, activeSchool, activeClass]);
@@ -111,12 +126,14 @@ export const useSpellbook = (): UseSpellbookReturn => {
     setSearchTerm('');
   };
 
-  const importSpells = (textData: string) => {
-    // Этот метод будет обновлять данные в data/spells
-  };
-
-  const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
-  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
+  // Получаем уникальные значения из заклинаний
+  const allLevels: number[] = Array.from(
+    new Set(allSpells.map(spell => spell.level || 0))
+  ).sort((a, b) => a - b);
+  
+  const allSchools: string[] = Array.from(
+    new Set(allSpells.map(spell => spell.school || ''))
+  ).filter(Boolean).sort();
 
   return {
     filteredSpells,

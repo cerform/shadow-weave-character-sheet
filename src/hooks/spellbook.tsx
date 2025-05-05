@@ -68,15 +68,15 @@ export const useSpellbook = () => {
       const levelMatch = activeLevel.length === 0 || activeLevel.includes(spell.level);
 
       // Фильтр по школе
-      const schoolMatch = activeSchool.length === 0 || activeSchool.includes(spell.school);
+      const schoolMatch = activeSchool.length === 0 || activeSchool.includes(spell.school || '');
 
       // Фильтр по классам
       const classMatch = activeClass.length === 0 || 
         (Array.isArray(spell.classes) && spell.classes.some(cls => activeClass.includes(cls))) ||
-        (typeof spell.classes === 'string' && activeClass.some(cls => spell.classes.includes(cls)));
+        (typeof spell.classes === 'string' && activeClass.some(cls => spell.classes?.includes(cls)));
 
       return nameMatch && levelMatch && schoolMatch && classMatch;
-    }).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+    }).sort((a, b) => (a.level || 0) - (b.level || 0) || a.name.localeCompare(b.name));
   }, [allSpells, searchTerm, activeLevel, activeSchool, activeClass]);
 
   // Обработчики для переключения фильтров

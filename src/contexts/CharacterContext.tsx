@@ -1,157 +1,218 @@
-
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { Character } from '@/types/character';
+import { v4 as uuidv4 } from 'uuid';
+import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet } from '@/types/character';
+import { isOfflineMode } from '@/utils/authHelpers';
+import { CharacterSpell } from '@/types/character';
 
-// Интерфейс для характеристик
-export interface AbilityScores {
-  STR: number;
-  DEX: number;
-  CON: number;
-  INT: number;
-  WIS: number;
-  CHA: number;
-  
-  // Для совместимости с CharacterSheet
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-}
-
-// Интерфейс персонажа для хранения в CharacterContext
-export interface Character {
-  id?: string;
-  userId?: string;
-  name: string;
-  race: string;
-  subrace?: string;
-  class: string;
-  className?: string;
-  subclass?: string;
-  level: number;
-  abilities: AbilityScores;
-  proficiencies: string[];
-  equipment: string[];
-  spells: string[];
-  languages: string[];
-  gender: string;
-  alignment: string;
-  background: string;
-  backstory?: string; // Добавляем поле, которое требуется в CharacterSheet
-  maxHp?: number;
-  currentHp?: number;
-  temporaryHp?: number;
-  hitDice?: {
-    total: number;
-    used: number;
-    value: string;
-  };
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
-  spellSlots?: {
-    [level: string]: {
-      max: number;
-      used: number;
-    };
-  };
-  sorceryPoints?: SorceryPoints;
-  createdAt?: string;
-  updatedAt?: string;
-  skillProficiencies?: {[skillName: string]: boolean};
-  savingThrowProficiencies?: {[ability: string]: boolean};
-  image?: string;
-}
-
-export interface CharacterContextType {
+interface CharacterContextProps {
   character: Character | null;
   setCharacter: (character: Character | null) => void;
+  loading: boolean;
   updateCharacter: (updates: Partial<Character>) => void;
-  saveCurrentCharacter: () => Promise<void>;
-  characters: Character[];
-  getUserCharacters: () => Promise<Character[]>;
-  deleteCharacter: (id: string) => Promise<void>;
 }
 
-export const CharacterContext = createContext<CharacterContextType>({
+// Создаем контекст персонажа с значениями по умолчанию
+const defaultCharacterContext: CharacterContextProps = {
   character: null,
   setCharacter: () => {},
+  loading: false,
   updateCharacter: () => {},
-  saveCurrentCharacter: async () => {},
-  characters: [],
-  getUserCharacters: async () => [],
-  deleteCharacter: async () => {},
-});
+};
 
-export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+export const CharacterContext = createContext<CharacterContextProps>(defaultCharacterContext);
+
+// Создаем провайдер контекста персонажа
+export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Функция для обновления частичных данных персонажа
-  const updateCharacter = (updates: Partial<Character>) => {
-    setCharacter(prev => {
-      if (!prev) return prev;
-      return { ...prev, ...updates };
-    });
-  };
-  
-  // Функция для сохранения персонажа
-  const saveCurrentCharacter = async () => {
-    if (!character) return;
-    
-    try {
-      const updatedCharacter = { 
-        ...character, 
-        updatedAt: new Date().toISOString(),
-        // Гарантируем наличие обязательных полей для CharacterSheet
-        backstory: character.backstory || ''
+  // Нормализация заклинаний из строк в объекты CharacterSpell
+  const normalizeCharacterSpells = (characterData: any): Character => {
+    if (characterData && Array.isArray(characterData.spells)) {
+      // Преобразуем строки в объекты CharacterSpell если нужно
+      const normalizedSpells = characterData.spells.map((spell: string | CharacterSpell) => {
+        if (typeof spell === 'string') {
+          return {
+            name: spell,
+            level: 0,  // Значение по умолчанию, будет заменено позже
+            school: 'Неизвестная',
+            prepared: false
+          } as CharacterSpell;
+        }
+        return spell;
+      });
+      
+      return {
+        ...characterData,
+        spells: normalizedSpells
       };
+    }
+    
+    return characterData;
+  };
+
+  // Функция для сохранения персонажа в localStorage
+  const saveCharacterToLocalStorage = (character: Character) => {
+    try {
+      // Получаем существующих персонажей из localStorage
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
       
-      if (!updatedCharacter.createdAt) {
-        updatedCharacter.createdAt = new Date().toISOString();
+      // Проверяем, существует ли уже персонаж с таким ID
+      const existingIndex = characters.findIndex((c: Character) => c.id === character.id);
+      
+      if (existingIndex !== -1) {
+        // Если персонаж существует, заменяем его
+        characters[existingIndex] = character;
+      } else {
+        // Если персонаж не существует, добавляем его в массив
+        characters.push(character);
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter as CharacterSheet);
-      if (savedChar) {
-        setCharacter({...updatedCharacter, id: savedChar.id});
-      }
-      
-      // Обновляем список персонажей, если сохранение прошло успешно
-      await getUserCharacters();
+      // Сохраняем обновленный массив персонажей в localStorage
+      localStorage.setItem('dnd-characters', JSON.stringify(characters));
+      localStorage.setItem('last-selected-character', character.id);
     } catch (error) {
-      console.error('Ошибка при сохранении персонажа:', error);
+      console.error('Ошибка при сохранении персонажа в localStorage:', error);
+    }
+  };
+
+  // Функция для загрузки персонажа из localStorage
+  const loadCharacterFromLocalStorage = useCallback((characterId: string) => {
+    try {
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      if (savedCharacters) {
+        const characters = JSON.parse(savedCharacters);
+        const foundCharacter = characters.find((c: Character) => c.id === characterId);
+        return foundCharacter || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Ошибка при загрузке персонажа из localStorage:', error);
+      return null;
+    }
+  }, []);
+
+  // Загрузка персонажа при инициализации
+  useEffect(() => {
+    const loadCharacter = async () => {
+      try {
+        setLoading(true);
+        
+        // Проверяем авторизацию
+        const currentUser = auth.currentUser;
+        
+        // Пробуем загрузить персонажа через сервис
+        let foundCharacter = null;
+        
+        // Получаем ID последнего просмотренного персонажа
+        const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
+        
+        if (lastSelectedCharacterId) {
+          try {
+            foundCharacter = await characterService.getCharacterById(lastSelectedCharacterId);
+          } catch (error) {
+            console.error("Ошибка при загрузке персонажа из Firestore:", error);
+          }
+          
+          // Если персонаж не найден через сервис или в оффлайн-режиме, проверяем localStorage
+          if (!foundCharacter || isOfflineMode()) {
+            const localCharacter = loadCharacterFromLocalStorage(lastSelectedCharacterId);
+            if (localCharacter) {
+              foundCharacter = localCharacter;
+              
+              // Если пользователь авторизован и не в оффлайн-режиме, синхронизируем с Firestore
+              if (currentUser && !isOfflineMode()) {
+                try {
+                  foundCharacter.userId = currentUser.uid;
+                  await characterService.saveCharacter(foundCharacter);
+                } catch (syncError) {
+                  console.error("Ошибка синхронизации с Firestore:", syncError);
+                }
+              }
+            }
+          }
+        }
+        
+        if (foundCharacter) {
+          // Нормализуем и устанавливаем персонажа
+          const normalizedCharacter = normalizeCharacterSpells(foundCharacter);
+          setCharacter(normalizedCharacter);
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке персонажа:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCharacter();
+  }, [loadCharacterFromLocalStorage]);
+  
+  // Обновленный метод setCharacter
+  const updateCharacter = (newCharacter: Character | null) => {
+    if (newCharacter) {
+      // Нормализуем заклинания перед установкой
+      const normalizedCharacter = normalizeCharacterSpells(newCharacter);
+      setCharacter(normalizedCharacter);
+    } else {
+      setCharacter(null);
     }
   };
   
-  // Получаем список персонажей пользователя
-  const getUserCharacters = async () => {
-    try {
-      const fetchedCharacters = await characterService.getCharactersByUserId();
-      // Приводим CharacterSheet к типу Character
-      const characterArray: Character[] = fetchedCharacters.map((char: CharacterSheet) => ({
-        ...(char as unknown as Character)
-      }));
-      
-      setCharacters(characterArray);
-      return characterArray;
-    } catch (error) {
-      console.error('Ошибка при получении персонажей:', error);
-      return [];
+  // Функция для создания нового персонажа
+  const createNewCharacter = async (initialData: Omit<Character, 'id'>): Promise<Character> => {
+    const newCharacter: Character = {
+      id: uuidv4(),
+      ...initialData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Нормализуем заклинания при создании
+    const normalizedCharacter = normalizeCharacterSpells(newCharacter);
+    
+    // Сохраняем персонажа в localStorage
+    saveCharacterToLocalStorage(normalizedCharacter);
+    
+    // Если пользователь авторизован, также сохраняем в Firestore
+    if (!isOfflineMode() && normalizedCharacter.userId) {
+      try {
+        await characterService.saveCharacter(normalizedCharacter);
+      } catch (error) {
+        console.error('Ошибка при сохранении персонажа в Firestore:', error);
+      }
     }
+    
+    return normalizedCharacter;
   };
   
-  // Удаление персонажа
-  const handleDeleteCharacter = async (id: string) => {
+  // Функция для удаления персонажа
+  const deleteCharacter = async (characterId: string) => {
     try {
-      await characterService.deleteCharacter(id);
-      setCharacters(prev => prev.filter(char => char.id !== id));
+      // Удаляем персонажа из localStorage
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      if (savedCharacters) {
+        let characters = JSON.parse(savedCharacters);
+        characters = characters.filter((c: Character) => c.id !== characterId);
+        localStorage.setItem('dnd-characters', JSON.stringify(characters));
+      }
       
-      // Если удаляем текущего персонажа, сбрасываем его
-      if (character && character.id === id) {
+      // Удаляем ID последнего просмотренного персонажа, если он совпадает с удаленным
+      const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
+      if (lastSelectedCharacterId === characterId) {
+        localStorage.removeItem('last-selected-character');
+      }
+      
+      // Если онлайн и есть userId, также удаляем из Firestore
+      if (!isOfflineMode()) {
+        await characterService.deleteCharacter(characterId);
+      }
+      
+      // Очищаем контекст, если удален текущий персонаж
+      if (character && character.id === characterId) {
         setCharacter(null);
       }
     } catch (error) {
@@ -159,29 +220,62 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     }
   };
   
-  // При инициализации получаем список персонажей
-  useEffect(() => {
-    const loadCharacters = async () => {
-      await getUserCharacters();
-    };
-    loadCharacters();
-  }, []);
-  
+  // Значения для контекста
+  const contextValue = {
+    character,
+    setCharacter: updateCharacter, // Используем нормализованную версию
+    loading,
+    updateCharacter: (updates: Partial<Character>) => {
+      if (!character) return;
+      
+      // Нормализуем заклинания в обновлениях, если они есть
+      let normalizedUpdates = updates;
+      if (updates.spells) {
+        normalizedUpdates = {
+          ...updates,
+          spells: updates.spells.map((spell: string | CharacterSpell) => {
+            if (typeof spell === 'string') {
+              return {
+                name: spell,
+                level: 0,
+                school: 'Неизвестная',
+                prepared: false
+              } as CharacterSpell;
+            }
+            return spell;
+          })
+        };
+      }
+      
+      // Обновляем и нормализуем весь объект
+      const updatedCharacter = normalizeCharacterSpells({
+        ...character,
+        ...normalizedUpdates,
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Устанавливаем обновленный объект
+      setCharacter(updatedCharacter);
+      
+      // Сохраняем в localStorage
+      saveCharacterToLocalStorage(updatedCharacter);
+      
+      // Если онлайн и есть userId, также сохраняем в Firestore
+      if (!isOfflineMode() && updatedCharacter.userId) {
+        characterService.saveCharacter(updatedCharacter)
+          .catch(error => {
+            console.error('Ошибка при сохранении персонажа в Firestore:', error);
+          });
+      }
+    },
+    createNewCharacter,
+    deleteCharacter,
+  };
+
+  // Предоставляем контекст всем дочерним элементам
   return (
-    <CharacterContext.Provider 
-      value={{ 
-        character, 
-        setCharacter,
-        updateCharacter, 
-        saveCurrentCharacter,
-        characters,
-        getUserCharacters,
-        deleteCharacter: handleDeleteCharacter
-      }}
-    >
+    <CharacterContext.Provider value={contextValue}>
       {children}
     </CharacterContext.Provider>
   );
 };
-
-export const useCharacter = () => useContext(CharacterContext);

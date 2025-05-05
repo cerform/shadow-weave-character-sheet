@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import {
   SheetClose 
 } from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CharacterSpell } from '@/types/character';
 
 const SpellBookViewer: React.FC = () => {
   const navigate = useNavigate();
@@ -151,36 +153,6 @@ const SpellBookViewer: React.FC = () => {
       </SheetContent>
     </Sheet>
   );
-
-  // Функция для конвертации CharacterSpell в SpellData
-  const convertToSpellData = (spell: CharacterSpell): SpellData => {
-    return {
-      id: spell.id?.toString() || Math.random().toString(),
-      name: spell.name,
-      level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime || "1 действие", // Значение по умолчанию
-      range: spell.range || "Касание",
-      components: spell.components || "В, С",
-      duration: spell.duration || "Мгновенная",
-      description: spell.description,
-      higherLevels: spell.higherLevels || "",
-      verbal: spell.verbal || false,
-      somatic: spell.somatic || false,
-      material: spell.material || false,
-      ritual: spell.ritual || false,
-      concentration: spell.concentration || false,
-      classes: Array.isArray(spell.classes) ? spell.classes : 
-               (spell.classes ? [spell.classes] : [])
-    };
-  };
-
-  // Обновляем метод, который использует CharacterSpell[]
-  const handleImportSpells = (spells: CharacterSpell[]) => {
-    // Конвертируем CharacterSpell[] в SpellData[]
-    const convertedSpells = spells.map(convertToSpellData);
-    setSpellsData(convertedSpells);
-  };
 
   return (
     <div className="container mx-auto px-4 py-6">

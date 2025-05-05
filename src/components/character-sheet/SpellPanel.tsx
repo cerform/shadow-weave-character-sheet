@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,13 +32,19 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
     
     return spells.map(spell => {
       if (typeof spell === 'string') {
+        // Преобразуем строки в CharacterSpell объекты
         return {
           name: spell,
           level: 0,
+          school: 'Неизвестная',
           prepared: false
         };
       }
-      return spell as CharacterSpell;
+      // Если это уже объект, убеждаемся что prepared существует
+      return {
+        ...spell,
+        prepared: spell.prepared ?? false
+      } as CharacterSpell;
     });
   };
   
