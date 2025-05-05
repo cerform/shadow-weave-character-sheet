@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -73,8 +72,8 @@ export default {
         },
       },
       fontFamily: {
-        roboto: ['Roboto', 'sans-serif'],
-        merriweather: ['Merriweather', 'serif']
+        philosopher: ['Philosopher', 'sans-serif'],
+        cormorant: ['Cormorant', 'serif']
       },
       borderRadius: {
         lg: "var(--radius)",
