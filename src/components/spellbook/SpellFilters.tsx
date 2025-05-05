@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface SpellFiltersProps {
   activeLevel: number[];
@@ -34,11 +36,15 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
   toggleClass,
   clearFilters,
 }) => {
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+
   return (
     <ScrollArea className="h-[calc(100vh-4rem)]">
       <div className="p-4 space-y-6">
         <div className="flex justify-between items-center">
-          <CardTitle>Фильтры</CardTitle>
+          <CardTitle style={{ color: currentTheme.textColor }}>Фильтры</CardTitle>
           {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
             <Button 
               variant="ghost" 
@@ -51,11 +57,11 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
           )}
         </div>
 
-        <Separator />
+        <Separator style={{ backgroundColor: `${currentTheme.accent}30` }} />
         
-        <Card>
+        <Card style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', borderColor: `${currentTheme.accent}40` }}>
           <CardHeader>
-            <CardTitle className="text-lg">Уровень</CardTitle>
+            <CardTitle className="text-lg" style={{ color: currentTheme.textColor }}>Уровень</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
             {allLevels.map((level) => (
@@ -64,6 +70,7 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
                 variant={activeLevel.includes(level) ? "default" : "outline"}
                 size="sm"
                 onClick={() => toggleLevel(level)}
+                style={activeLevel.includes(level) ? { backgroundColor: currentTheme.accent, color: currentTheme.buttonText } : {}}
               >
                 {level === 0 ? "Заговоры" : `${level} уровень`}
               </Button>
@@ -71,9 +78,9 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
           </CardContent>
         </Card>
         
-        <Card>
+        <Card style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', borderColor: `${currentTheme.accent}40` }}>
           <CardHeader>
-            <CardTitle className="text-lg">Школа магии</CardTitle>
+            <CardTitle className="text-lg" style={{ color: currentTheme.textColor }}>Школа магии</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {allSchools.map((school) => (
@@ -83,6 +90,7 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
                 size="sm"
                 className="w-full justify-start"
                 onClick={() => toggleSchool(school)}
+                style={activeSchool.includes(school) ? { backgroundColor: currentTheme.accent, color: currentTheme.buttonText } : {}}
               >
                 {school}
               </Button>
@@ -90,9 +98,9 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
           </CardContent>
         </Card>
         
-        <Card>
+        <Card style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', borderColor: `${currentTheme.accent}40` }}>
           <CardHeader>
-            <CardTitle className="text-lg">Класс</CardTitle>
+            <CardTitle className="text-lg" style={{ color: currentTheme.textColor }}>Класс</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {allClasses.map((cls) => (
@@ -102,6 +110,7 @@ const SpellFilters: React.FC<SpellFiltersProps> = ({
                 size="sm"
                 className="w-full justify-start"
                 onClick={() => toggleClass(cls)}
+                style={activeClass.includes(cls) ? { backgroundColor: currentTheme.accent, color: currentTheme.buttonText } : {}}
               >
                 {cls}
               </Button>

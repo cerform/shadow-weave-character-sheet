@@ -8,13 +8,13 @@ import { FeaturesTab } from './tabs/FeaturesTab';
 import { BackgroundTab } from './tabs/BackgroundTab';
 import { EquipmentTab } from './tabs/EquipmentTab';
 import { NotesTab } from './tabs/NotesTab';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 
 interface CharacterTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  character?: Character | null; // Типизируем правильно
-  onUpdate?: (updates: Partial<Character>) => void;  // Типизируем правильно
+  character?: Character | null; 
+  onUpdate?: (updates: Partial<Character>) => void;
 }
 
 export const CharacterTabs: React.FC<CharacterTabsProps> = ({ activeTab, setActiveTab, character, onUpdate }) => {

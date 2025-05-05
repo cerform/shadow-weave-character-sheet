@@ -1,6 +1,7 @@
 
 import React, { useState, useContext } from 'react';
-import { Character, CharacterContext } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
+import { CharacterContext } from '@/contexts/CharacterContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";

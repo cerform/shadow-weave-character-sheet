@@ -62,7 +62,7 @@ const ThemeSelector = () => {
         style={{ 
           backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
           borderColor: currentTheme.accent,
-          boxShadow: currentTheme.glow,
+          boxShadow: currentTheme.glow || '0 0 5px rgba(0, 0, 0, 0.5)',
           color: currentTheme.textColor
         }}
       >

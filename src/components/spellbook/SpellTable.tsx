@@ -66,17 +66,6 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick }) => {
       : { cursor: 'pointer' };
   };
 
-  // Сокращение длинного описания для таблицы
-  const truncateDescription = (description: string | string[]) => {
-    const text = typeof description === 'string' 
-      ? description 
-      : Array.isArray(description) 
-        ? description.join(' ') 
-        : '';
-    
-    return text.length > 80 ? text.slice(0, 80) + '...' : text;
-  };
-
   return (
     <div className="rounded-md border" style={{ borderColor: currentTheme.accent }}>
       <Table>

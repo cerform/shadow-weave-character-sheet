@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Plus, Minus, Heart, Shield, Skull, RefreshCw } from "lucide-react";
-import { Character } from '@/contexts/CharacterContext';
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-// Обновляем интерфейс ResourcePanelProps, добавляя недостающие свойства
-export interface ResourcePanelProps {
-  character?: Character | null;
-  onUpdate?: (character: Partial<Character>) => void;
-  isDM?: boolean;
-  // Добавляем свойства, которые используются в CharacterSheet
+interface ResourcePanelProps {
+  character: Character | null;
+  onUpdate: (updates: Partial<Character>) => void;
   currentHp?: number;
   maxHp?: number;
   onHpChange?: (newHp: number) => void;
@@ -22,7 +18,6 @@ export interface ResourcePanelProps {
 const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
   character, 
   onUpdate, 
-  isDM = false,
   currentHp, 
   maxHp, 
   onHpChange 

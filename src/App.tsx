@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
@@ -39,9 +38,9 @@ const App = () => {
     // Применяем стили для текущей темы
     const themeStyles = themes[savedTheme as keyof typeof themes] || themes.default;
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
-    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
+    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow || '0 0 10px rgba(255, 255, 255, 0.1)');
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
-    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor || '#9ca3af');
   }, []);
 
   return (
@@ -86,5 +85,5 @@ const App = () => {
 
 export default App;
 
-// Импорт тем
+// Import themes
 import { themes } from '@/lib/themes';

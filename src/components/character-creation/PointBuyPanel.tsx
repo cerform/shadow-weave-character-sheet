@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
@@ -83,7 +82,7 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
                   disabled={value <= 8}
                   size="sm"
                   style={{
-                    backgroundColor: currentTheme.buttonBackground,
+                    backgroundColor: currentTheme.primary,
                     color: currentTheme.buttonText,
                   }}
                 >
@@ -94,7 +93,7 @@ export const PointBuyPanel: React.FC<PointBuyPanelProps> = ({
                   disabled={value >= Math.min(15, maxAbilityScore) || pointsLeft < getPointCost(value + 1)}
                   size="sm"
                   style={{
-                    backgroundColor: currentTheme.buttonBackground,
+                    backgroundColor: currentTheme.primary,
                     color: currentTheme.buttonText,
                   }}
                 >

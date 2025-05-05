@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 
 interface AbilitiesTabProps {
   character: Character;

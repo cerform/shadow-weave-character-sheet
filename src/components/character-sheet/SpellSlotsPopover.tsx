@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -53,7 +52,7 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
         style={{
           backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
           borderColor: currentTheme.accent,
-          boxShadow: `0 0 10px ${currentTheme.glow}`
+          boxShadow: `0 0 10px ${currentTheme.glow || 'none'}`
         }}
       >
         <div className="p-4 border-b border-border"
@@ -61,7 +60,7 @@ export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({
           <h4 className="text-lg font-semibold" style={{ color: currentTheme.textColor }}>
             Слоты заклинаний
           </h4>
-          <p className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
+          <p className="text-sm" style={{ color: currentTheme.mutedTextColor || '#9ca3af' }}>
             Используйте слоты для сотворения заклинаний
           </p>
         </div>

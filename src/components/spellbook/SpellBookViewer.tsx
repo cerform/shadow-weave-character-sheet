@@ -1,19 +1,16 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Book, BookOpen, Filter, Search, X, ArrowLeft, Home } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Book, BookOpen, Filter, Search, X, ArrowLeft } from 'lucide-react';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 import SpellFilters from './SpellFilters';
 import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
-import { SpellData } from '@/types/spells';
-import SpellDetailModal from '@/components/spell-detail/SpellDetailModal';
+import SpellDetailModal from '../spell-detail/SpellDetailModal';
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -31,27 +28,27 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
   
   // Извлекаем свойства и методы из spellbook
   const { 
-    filteredSpells,
-    searchTerm,
-    setSearchTerm,
-    activeLevel,
-    activeSchool,
-    activeClass,
-    currentTheme,
-    allLevels,
-    allSchools,
-    allClasses,
-    toggleLevel,
-    toggleSchool,
-    toggleClass,
-    clearFilters,
-    selectedSpell,
-    isModalOpen,
-    handleOpenSpell,
-    handleClose
-  } = spellbook as any; // Используем тип any для обхода проблем с типами
-  
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+    filteredSpells, 
+    searchTerm, 
+    setSearchTerm, 
+    activeLevel, 
+    activeSchool, 
+    activeClass, 
+    currentTheme, 
+    allLevels, 
+    allSchools, 
+    allClasses, 
+    toggleLevel, 
+    toggleSchool, 
+    toggleClass, 
+    clearFilters, 
+    selectedSpell, 
+    isModalOpen, 
+    handleOpenSpell, 
+    handleClose 
+  } = spellbook;
+
+  const [viewMode, setViewMode] = useState('cards');
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -209,17 +206,17 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         />
       )}
       
-      {selectedSpell && isModalOpen && (
-        <SpellDetailModal 
+      {selectedSpell && (
+        <SpellDetailModal
           spell={selectedSpell}
-          open={isModalOpen} 
+          isOpen={isModalOpen}
           onClose={handleClose}
         />
       )}
       
       {standalone && (
         <div className="mt-8">
-          <NavigationButtons />
+          <NavigationButtons homeButton backButton />
         </div>
       )}
     </div>

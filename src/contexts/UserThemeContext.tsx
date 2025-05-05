@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
 import { Theme, useTheme } from '@/contexts/ThemeContext';
@@ -64,9 +63,9 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Применяем CSS переменные к корневому элементу для более гибкой стилизации
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
-    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
+    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow || '0 0 10px rgba(255, 255, 255, 0.1)');
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
-    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor || '#94a3b8');
     
     // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
     document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
