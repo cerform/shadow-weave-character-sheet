@@ -13,6 +13,7 @@ interface SpellListProps {
   currentTheme: any;
   handleOpenSpell: (spell: SpellData) => void;
   formatClasses: (classes: string[] | string | undefined) => string;
+  totalShown: string;
 }
 
 const SpellList: React.FC<SpellListProps> = ({
@@ -22,18 +23,28 @@ const SpellList: React.FC<SpellListProps> = ({
   currentTheme,
   handleOpenSpell,
   formatClasses,
+  totalShown
 }) => {
   return (
-    <ScrollArea className="h-[70vh]">
-      <div className="p-4 space-y-4">
+    <div className="h-full">
+      <Card className="bg-black/60 backdrop-blur-sm border-accent/30 mb-4">
+        <CardContent className="p-3">
+          <div className="text-sm flex justify-between items-center">
+            <span>Показано: <strong>{totalShown}</strong></span>
+          </div>
+        </CardContent>
+      </Card>
+    
+      <div className="space-y-4">
         {spells.length > 0 ? (
           spells.map((spell, index) => (
             <Card 
               key={spell.id !== undefined ? String(spell.id) : `spell-${index}`} 
-              className="spell-card border border-accent hover:border-primary cursor-pointer transition-all"
+              className="spell-card border border-accent/40 hover:border-primary transition-all"
               onClick={() => handleOpenSpell(spell)}
               style={{
-                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
+                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
+                transition: 'all 0.3s ease'
               }}
             >
               <CardContent className="p-4">
@@ -42,9 +53,9 @@ const SpellList: React.FC<SpellListProps> = ({
                   <Badge
                     variant="outline"
                     style={{
-                      backgroundColor: currentTheme.accent,
+                      backgroundColor: `${getBadgeColor(spell.level)}70`,
                       color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
+                      borderColor: getBadgeColor(spell.level)
                     }}
                   >
                     {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
@@ -56,7 +67,7 @@ const SpellList: React.FC<SpellListProps> = ({
                     style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
+                      borderColor: getSchoolBadgeColor(spell.school || '')
                     }}
                   >
                     {spell.school}
@@ -109,7 +120,7 @@ const SpellList: React.FC<SpellListProps> = ({
           </div>
         )}
       </div>
-    </ScrollArea>
+    </div>
   );
 };
 

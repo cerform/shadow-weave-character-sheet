@@ -78,6 +78,7 @@ export function useSpellbook() {
 
   return {
     spells,
+    allSpells: spells, // Отдаем все заклинания для подсчета
     filteredSpells,
     searchTerm,
     setSearchTerm,
@@ -88,7 +89,7 @@ export function useSpellbook() {
     extractClasses: () => extractClasses(spells),
     getSpellSchoolBadgeVariant,
     getSchoolBadgeColor,
-    getBadgeColor, // Добавляем новую функцию для использования в компонентах
+    getBadgeColor,
     formatClasses: (classes: string[] | string | undefined) => {
       if (!classes) return '';
       if (Array.isArray(classes)) {

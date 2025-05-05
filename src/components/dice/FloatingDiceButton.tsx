@@ -37,12 +37,12 @@ export const FloatingDiceButton = () => {
       <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
         <Button 
           size="lg" 
-          className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 
+          className="rounded-full h-16 w-16 p-0 shadow-lg border-2 transition-all duration-300" 
           style={{ 
             backgroundColor: `${currentTheme.accent}`,
             color: '#FFFFFF',
             borderColor: 'rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
+            boxShadow: `0 0 15px ${currentTheme.accent}80`
           }}
           onClick={handleButtonClick}
         >
