@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { Input } from '@/components/ui/input';
@@ -193,17 +192,17 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
       
       {viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpells.map((spell) => (
+          {filteredSpells.map((spell, index) => (
             <SpellCard
-              key={spell.name}
-              spell={spell as SpellData}
-              onClick={() => handleOpenSpell(spell as SpellData)}
+              key={spell.id?.toString() || `spell-${index}`}
+              spell={spell}
+              onClick={() => handleOpenSpell(spell)}
             />
           ))}
         </div>
       ) : (
         <SpellTable 
-          spells={filteredSpells as SpellData[]}
+          spells={filteredSpells}
           onSpellClick={handleOpenSpell}
         />
       )}

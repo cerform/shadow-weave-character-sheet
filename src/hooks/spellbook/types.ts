@@ -27,3 +27,5 @@ export interface UseSpellbookReturn {
   formatClasses: (classes: string[] | string | undefined) => string;
   importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }
+
+export { SpellData } from '@/types/spells';

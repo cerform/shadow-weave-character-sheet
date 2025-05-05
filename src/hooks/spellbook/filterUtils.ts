@@ -1,5 +1,5 @@
 
-import { SpellData } from './types';
+import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 
 // Фильтрация заклинаний по поисковому запросу
