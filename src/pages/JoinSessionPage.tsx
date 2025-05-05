@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { useTheme } from '@/hooks/use-theme';
 import { useSessionStore } from '@/stores/sessionStore';
 import { ArrowLeft, Shield } from 'lucide-react';
-import { firebaseAuth } from '@/services/firebase';
+import { auth } from '@/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Character as SessionCharacter } from '@/types/session';
 import { Character } from '@/types/character';
@@ -26,7 +27,7 @@ const JoinSessionPage = () => {
   
   useEffect(() => {
     // Проверяем авторизацию
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Пользователь авторизован
         setPlayerName(user.displayName || '');
