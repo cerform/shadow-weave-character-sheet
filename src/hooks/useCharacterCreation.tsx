@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { convertToCharacter } from "@/utils/characterConverter";
 import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
-import { getCurrentUid } from "@/utils/authHelpers";
+import { getCurrentUserId } from "@/utils/authHelpers";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -93,7 +94,7 @@ export const useCharacterCreation = () => {
     }
     
     // Добавляем userId из текущего авторизованного пользователя, если он доступен
-    const uid = getCurrentUid();
+    const uid = getCurrentUserId();
     if (uid && !character.userId) {
       updates.userId = uid;
     }
