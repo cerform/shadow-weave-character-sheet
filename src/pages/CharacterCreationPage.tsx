@@ -116,7 +116,11 @@ const CharacterCreationPage: React.FC = () => {
       case 'abilities':
         return <CharacterAbilities character={character} onUpdate={updateCharacter} />;
       case 'background':
-        return <CharacterBackground backgrounds={backgrounds} character={character} onUpdate={updateCharacter} />;
+        return <CharacterBackground 
+          character={character} 
+          onUpdate={updateCharacter} 
+          backgrounds={backgrounds} 
+        />;
       case 'equipment':
         return <CharacterEquipment character={character} onUpdate={updateCharacter} />;
       case 'spells':

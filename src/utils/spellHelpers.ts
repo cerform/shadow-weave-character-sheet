@@ -96,3 +96,48 @@ export const getSpellComponentsText = (spell: CharacterSpell | SpellData): strin
   
   return components.join(", ");
 };
+
+/**
+ * Конвертирует массив CharacterSpell в массив SpellData
+ */
+export const convertCharacterSpellsToSpellData = (spells: Array<CharacterSpell | string>): SpellData[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return {
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: 'В, С',
+        duration: 'Мгновенная',
+        description: 'Нет описания',
+        classes: [],
+        ritual: false,
+        concentration: false
+      };
+    } else {
+      return {
+        name: spell.name,
+        level: spell.level,
+        school: spell.school || 'Универсальная',
+        castingTime: spell.castingTime || '1 действие',
+        range: spell.range || 'На себя',
+        components: spell.components || 'В, С',
+        duration: spell.duration || 'Мгновенная',
+        description: spell.description || 'Нет описания',
+        classes: spell.classes || [],
+        ritual: spell.ritual || false,
+        concentration: spell.concentration || false,
+        isRitual: spell.ritual || false,
+        isConcentration: spell.concentration || false,
+        prepared: spell.prepared || false,
+        verbal: spell.verbal,
+        somatic: spell.somatic,
+        material: spell.material,
+        materials: spell.materials,
+        id: spell.id
+      };
+    }
+  });
+};

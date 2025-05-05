@@ -179,11 +179,11 @@ const HandbookPage: React.FC = () => {
                       <CardTitle className="text-lg" style={textStyle}>{race.name}</CardTitle>
                       <div className="flex flex-wrap gap-1 mt-1">
                         <Badge variant="outline" className="text-xs">
-                          {race.abilityBonuses}
+                          {race.abilityScoreIncrease ? renderAbilityScoreIncrease(race) : "Нет бонусов"}
                         </Badge>
-                        {race.subRaces && race.subRaces.length > 0 && (
+                        {race.subraces && race.subraces.length > 0 && (
                           <Badge variant="secondary" className="text-xs">
-                            {race.subRaces.length} подрас{race.subRaces.length === 1 ? 'а' : 'ы'}
+                            {race.subraces.length} подрас{race.subraces.length === 1 ? 'а' : 'ы'}
                           </Badge>
                         )}
                       </div>
@@ -206,12 +206,12 @@ const HandbookPage: React.FC = () => {
                         </div>
                       </div>
                     
-                      {race.subRaces && race.subRaces.length > 0 && (
+                      {race.subraces && race.subraces.length > 0 && (
                         <div className="mt-3">
                           <h4 className="text-xs font-medium" style={textStyle}>Подрасы:</h4>
                           <ul className="list-disc pl-5 text-xs" style={mutedTextStyle}>
-                            {race.subRaces.map((subrace, i) => (
-                              <li key={i}>{subrace}</li>
+                            {race.subraces.map((subrace, i) => (
+                              <li key={i}>{typeof subrace === 'string' ? subrace : subrace.name}</li>
                             ))}
                           </ul>
                         </div>
@@ -220,7 +220,9 @@ const HandbookPage: React.FC = () => {
                       <h4 className="text-xs font-medium mt-3" style={textStyle}>Расовые черты:</h4>
                       <ul className="list-disc pl-5 text-xs" style={mutedTextStyle}>
                         {race.traits.map((trait, i) => (
-                          <li key={i} title={trait.description}>{trait.name}</li>
+                          <li key={i} title={typeof trait === 'string' ? '' : trait.description}>
+                            {typeof trait === 'string' ? trait : trait.name}
+                          </li>
                         ))}
                       </ul>
                     </CardContent>

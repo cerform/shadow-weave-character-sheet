@@ -4,7 +4,6 @@ export interface UserType {
   email: string;
   displayName?: string;
   photoURL?: string;
-  // Добавляем свойства, которые используются в приложении
   isDM?: boolean;
   username?: string;
 }
@@ -15,7 +14,6 @@ export interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  // Добавляем недостающие методы
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   googleLogin: () => Promise<void>;
   isAuthenticated: boolean;
