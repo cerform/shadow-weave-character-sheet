@@ -1,61 +1,86 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SpellsTab from './tabs/SpellsTab';
-import AbilitiesTab from './tabs/AbilitiesTab';
-import CombatTab from './tabs/CombatTab';
-import FeaturesTab from './tabs/FeaturesTab';
-import BackgroundTab from './tabs/BackgroundTab';
-import { EquipmentTab } from './tabs/EquipmentTab';
-import NotesTab from './tabs/NotesTab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Character } from '@/types/character';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-interface CharacterTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  character?: Character | null; 
-  onUpdate?: (updates: Partial<Character>) => void;
+export interface CharacterTabsProps {
+  active: string;
+  onChange: (value: string) => void;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const CharacterTabs: React.FC<CharacterTabsProps> = ({ activeTab, setActiveTab, character, onUpdate }) => {
+const CharacterTabs: React.FC<CharacterTabsProps> = ({ 
+  active, 
+  onChange, 
+  character,
+  onUpdate
+}) => {
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full mb-4 bg-zinc-800/40">
-        <TabsTrigger value="abilities">Характеристики</TabsTrigger>
-        <TabsTrigger value="combat">Бой</TabsTrigger>
-        <TabsTrigger value="spells">Заклинания</TabsTrigger>
-        <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-        <TabsTrigger value="features">Особенности</TabsTrigger>
-        <TabsTrigger value="background">Предыстория</TabsTrigger>
-        <TabsTrigger value="notes">Заметки</TabsTrigger>
+    <Tabs value={active} onValueChange={onChange} className="w-full">
+      <TabsList className="grid grid-cols-3">
+        <TabsTrigger value="характеристики">Характеристики</TabsTrigger>
+        <TabsTrigger value="снаряжение">Снаряжение</TabsTrigger>
+        <TabsTrigger value="заметки">Заметки</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="abilities" className="focus-visible:outline-none">
-        {character && onUpdate && <AbilitiesTab character={character} onUpdate={onUpdate} />}
+      <TabsContent value="характеристики" className="space-y-4 mt-4">
+        <div className="grid grid-cols-3 gap-2">
+          {Object.entries({
+            "СИЛ": character.strength || 10,
+            "ЛОВ": character.dexterity || 10,
+            "ТЕЛ": character.constitution || 10,
+            "ИНТ": character.intelligence || 10,
+            "МДР": character.wisdom || 10,
+            "ХАР": character.charisma || 10
+          }).map(([stat, value]) => (
+            <div key={stat} className="text-center p-2 border rounded-md bg-opacity-10 bg-black">
+              <div className="text-sm text-muted-foreground">{stat}</div>
+              <div className="text-xl font-bold" style={{ color: currentTheme.textColor }}>{value}</div>
+              <div className="text-sm" style={{ color: currentTheme.textColor }}>
+                {Math.floor((value - 10) / 2) >= 0 ? 
+                  `+${Math.floor((value - 10) / 2)}` : 
+                  Math.floor((value - 10) / 2)}
+              </div>
+            </div>
+          ))}
+        </div>
       </TabsContent>
       
-      <TabsContent value="combat" className="focus-visible:outline-none">
-        {character && onUpdate && <CombatTab character={character} onUpdate={onUpdate} />}
+      <TabsContent value="снаряжение" className="mt-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold" style={{ color: currentTheme.textColor }}>Оружие и снаряжение</h3>
+          <div className="space-y-2">
+            {(character.equipment || []).map((item, index) => (
+              <div key={`equipment-${index}`} className="flex justify-between items-center p-2 border-b">
+                <span style={{ color: currentTheme.textColor }}>{item}</span>
+              </div>
+            ))}
+            {(!character.equipment || character.equipment.length === 0) && (
+              <div className="text-center text-muted-foreground py-2">
+                Нет предметов снаряжения
+              </div>
+            )}
+          </div>
+        </div>
       </TabsContent>
       
-      <TabsContent value="spells" className="focus-visible:outline-none">
-        {character && onUpdate && <SpellsTab character={character} onUpdate={onUpdate} />}
-      </TabsContent>
-      
-      <TabsContent value="equipment" className="focus-visible:outline-none">
-        {character && onUpdate && <EquipmentTab character={character} onUpdate={onUpdate} />}
-      </TabsContent>
-      
-      <TabsContent value="features" className="focus-visible:outline-none">
-        {character && onUpdate && <FeaturesTab character={character} onUpdate={onUpdate} />}
-      </TabsContent>
-      
-      <TabsContent value="background" className="focus-visible:outline-none">
-        {character && onUpdate && <BackgroundTab character={character} onUpdate={onUpdate} />}
-      </TabsContent>
-      
-      <TabsContent value="notes" className="focus-visible:outline-none">
-        {character && onUpdate && <NotesTab character={character} onUpdate={onUpdate} />}
+      <TabsContent value="заметки" className="mt-4">
+        <div className="space-y-4">
+          <textarea
+            className="w-full h-40 p-2 rounded-md border bg-transparent"
+            placeholder="Заметки о персонаже..."
+            value={character.notes || ''}
+            onChange={(e) => onUpdate({ notes: e.target.value })}
+            style={{ color: currentTheme.textColor }}
+          />
+        </div>
       </TabsContent>
     </Tabs>
   );

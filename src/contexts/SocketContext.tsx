@@ -1,112 +1,106 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import socketService, { ChatMessage } from '@/services/socket';
-import { SessionData, Token } from '@/types/socket';
-import { useToast } from '@/components/ui/use-toast';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Character } from '@/types/character';
+
+interface SessionData {
+  name: string;
+  dm: string;
+  code: string;
+  players: any[];
+}
 
 interface SocketContextType {
   isConnected: boolean;
   sessionData: SessionData | null;
-  chatMessages: ChatMessage[];
   connect: (sessionCode: string, playerName: string, characterId?: string) => void;
   disconnect: () => void;
-  sendChatMessage: (message: string) => void;
-  sendRoll: (formula: string, reason?: string) => void;
-  updateToken: (token: Partial<Token> & { id: string }) => void;
-  socketService: typeof socketService; // Добавляем экспорт socketService для прямого доступа
+  sendUpdate: (character: Character) => void;
 }
 
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
+const SocketContext = createContext<SocketContextType>({
+  isConnected: false,
+  sessionData: null,
+  connect: () => {},
+  disconnect: () => {},
+  sendUpdate: () => {}
+});
 
-export const SocketProvider = ({ children }: { children: ReactNode }) => {
+export const SocketProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
-  const { toast } = useToast();
-
+  // Проверяем наличие сохраненной сессии при загрузке
   useEffect(() => {
-    // Setup socket event listeners
-    const connectionEstablishedUnsubscribe = socketService.on('connection_established', () => {
-      setIsConnected(true);
-      toast({
-        title: "Соединение установлено",
-        description: "Вы подключены к серверу",
-      });
-    });
+    const savedSession = localStorage.getItem('active-session');
+    if (savedSession) {
+      try {
+        const sessionInfo = JSON.parse(savedSession);
+        setSessionData({
+          name: sessionInfo.sessionName || "Сессия",
+          dm: sessionInfo.dmName || "Мастер",
+          code: sessionInfo.sessionCode || "",
+          players: sessionInfo.players || []
+        });
+        setIsConnected(true);
+      } catch (e) {
+        console.error('Ошибка при загрузке данных сессии:', e);
+      }
+    }
+  }, []);
 
-    const connectionLostUnsubscribe = socketService.on('connection_lost', () => {
-      setIsConnected(false);
-      toast({
-        title: "Соединение потеряно",
-        description: "Попытка переподключения...",
-        variant: "destructive",
-      });
-    });
-
-    const sessionUpdateUnsubscribe = socketService.on('session_update', (data: SessionData) => {
-      setSessionData(data);
-    });
-
-    const chatMessageUnsubscribe = socketService.on('chat_message', (message: ChatMessage) => {
-      setChatMessages(prev => [...prev, message]);
-    });
-
-    // Cleanup listeners on unmount
-    return () => {
-      connectionEstablishedUnsubscribe();
-      connectionLostUnsubscribe();
-      sessionUpdateUnsubscribe();
-      chatMessageUnsubscribe();
-    };
-  }, [toast]);
-
+  // Функция для подключения к сессии
   const connect = (sessionCode: string, playerName: string, characterId?: string) => {
-    socketService.connect(sessionCode, playerName, characterId);
+    // В реальном приложении здесь была бы логика соединения с сервером
+    console.log(`Подключение к сессии ${sessionCode} игрока ${playerName} с персонажем ${characterId}`);
+    
+    // Сохраняем информацию о сессии
+    const sessionInfo = {
+      sessionCode,
+      playerName,
+      characterId,
+      sessionName: `Сессия ${sessionCode}`,
+      dmName: "Мастер",
+      players: [{ name: playerName, id: Date.now(), connected: true }]
+    };
+    
+    localStorage.setItem('active-session', JSON.stringify(sessionInfo));
+    
+    // Обновляем состояние
+    setSessionData({
+      name: sessionInfo.sessionName,
+      dm: sessionInfo.dmName,
+      code: sessionCode,
+      players: sessionInfo.players
+    });
+    setIsConnected(true);
   };
 
+  // Функция для отключения от сессии
   const disconnect = () => {
-    socketService.disconnect();
+    localStorage.removeItem('active-session');
     setIsConnected(false);
     setSessionData(null);
-    setChatMessages([]);
   };
-
-  const sendChatMessage = (message: string) => {
-    socketService.sendChatMessage(message);
-  };
-
-  const sendRoll = (formula: string, reason?: string) => {
-    socketService.sendRoll(formula, reason);
-  };
-
-  const updateToken = (token: Partial<Token> & { id: string }) => {
-    socketService.updateToken(token);
+  
+  // Функция для отправки обновлений о персонаже
+  const sendUpdate = (character: Character) => {
+    if (!isConnected || !sessionData) return;
+    
+    console.log('Отправка обновления персонажа:', character.name);
+    // В реальном приложении здесь была бы логика отправки данных на сервер
   };
 
   return (
-    <SocketContext.Provider
-      value={{
-        isConnected,
-        sessionData,
-        chatMessages,
-        connect,
-        disconnect,
-        sendChatMessage,
-        sendRoll,
-        updateToken,
-        socketService, // Предоставляем доступ к сервису сокетов
-      }}
-    >
+    <SocketContext.Provider value={{ 
+      isConnected, 
+      sessionData, 
+      connect, 
+      disconnect,
+      sendUpdate 
+    }}>
       {children}
     </SocketContext.Provider>
   );
 };
 
-export const useSocket = () => {
-  const context = useContext(SocketContext);
-  if (context === undefined) {
-    throw new Error('useSocket must be used within a SocketProvider');
-  }
-  return context;
-};
+export const useSocket = () => useContext(SocketContext);

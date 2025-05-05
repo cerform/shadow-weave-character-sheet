@@ -1,5 +1,6 @@
 
 import { CharacterSheet } from '@/types/character.d';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Получение строкового представления модификатора характеристики
@@ -161,4 +162,32 @@ export const calculateArmorClass = (
  */
 export const calculateCarryingCapacity = (strengthScore: number): string => {
   return `${strengthScore * 15} фунтов`;
-}
+};
+
+/**
+ * Создает персонажа с базовыми значениями
+ * @returns Базовый шаблон персонажа
+ */
+export const createDefaultCharacter = (): any => {
+  return {
+    id: uuidv4(),
+    name: 'Новый персонаж',
+    level: 1,
+    class: '',
+    race: '',
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+    maxHP: 10,
+    currentHP: 10,
+    armorClass: 10,
+    initiative: '+0',
+    speed: '30 фт',
+    spells: [],
+    equipment: [],
+    skills: []
+  };
+};

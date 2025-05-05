@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { steps, getCharacterSteps, getNextStepID, getPrevStepID } from '@/config/characterCreationSteps';
 
 interface UseCreationStepConfig {
-  isMagicClass?: boolean;
   hasSubraces?: boolean;
   characterClass?: string;
   character?: any;
@@ -14,7 +13,6 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
   
   // Получаем отфильтрованные шаги на основе текущей конфигурации
   const visibleSteps = getCharacterSteps({
-    isMagicClass: config?.isMagicClass,
     hasSubraces: config?.hasSubraces
   });
 
@@ -65,7 +63,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
-  }, [config?.hasSubraces, config?.isMagicClass]);
+  }, [config?.hasSubraces]);
 
   // Вычисляем процент завершения создания персонажа
   const calculateProgress = (): number => {
