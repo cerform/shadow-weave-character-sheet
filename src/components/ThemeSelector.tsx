@@ -5,7 +5,7 @@ import { useUserTheme } from "@/hooks/use-user-theme";
 import { themes, ThemeName } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
 import { useDeviceType } from "@/hooks/use-mobile";
-import { Check, PaintBucket, Palette, Sparkles, Wand, Leaf, Sword, Music, Book, Castle, Dragon, Moon, Sun } from "lucide-react";
+import { Check, PaintBucket, Palette, Sparkles, Wand2, Scroll, Sword, Music, BookOpen, Castle, Flame, Moon, Sun } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,13 +31,13 @@ const ThemeSelector = () => {
   const themesList = [
     { id: 'default', name: 'Стандартная', icon: <PaintBucket size={16} />, group: 'base' },
     { id: 'warlock', name: 'Чернокнижник', icon: <Sparkles size={16} />, group: 'class' },
-    { id: 'wizard', name: 'Волшебник', icon: <Wand size={16} />, group: 'class' },
-    { id: 'druid', name: 'Друид', icon: <Leaf size={16} />, group: 'class' },
+    { id: 'wizard', name: 'Волшебник', icon: <Wand2 size={16} />, group: 'class' },
+    { id: 'druid', name: 'Друид', icon: <Scroll size={16} />, group: 'class' },
     { id: 'warrior', name: 'Воин', icon: <Sword size={16} />, group: 'class' },
     { id: 'bard', name: 'Бард', icon: <Music size={16} />, group: 'class' },
-    { id: 'parchment', name: 'Пергамент', icon: <Book size={16} />, group: 'world' },
+    { id: 'parchment', name: 'Пергамент', icon: <BookOpen size={16} />, group: 'world' },
     { id: 'dungeon', name: 'Подземелье', icon: <Castle size={16} />, group: 'world' },
-    { id: 'infernal', name: 'Инфернальная', icon: <Dragon size={16} />, group: 'world' },
+    { id: 'infernal', name: 'Инфернальная', icon: <Flame size={16} />, group: 'world' },
     { id: 'celestial', name: 'Небесная', icon: <Sun size={16} />, group: 'world' },
     { id: 'dark', name: 'Тёмная', icon: <Moon size={16} />, group: 'base' }
   ];

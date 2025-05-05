@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUserTheme } from '@/hooks/use-user-theme';
 import { themes } from '@/lib/themes';
@@ -31,7 +31,7 @@ const HomeButton: React.FC<HomeButtonProps> = ({
       } as React.CSSProperties}
     >
       <Link to="/">
-        <Home className="size-4" />
+        <Shield className="size-4" />
         {showText && <span>На главную</span>}
       </Link>
     </Button>

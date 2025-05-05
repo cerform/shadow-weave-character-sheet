@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { 
-  Users, FileText, BookOpen, Dice2, PlusCircle, 
+  Wand2, BookMarked, BookOpen, Dice, PlusCircle, 
   Map, Scroll, Sparkles, Sword 
 } from 'lucide-react';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
@@ -29,7 +29,7 @@ const Index = () => {
     {
       title: 'Персонажи',
       description: 'Управление персонажами',
-      icon: <Users size={32} />,
+      icon: <Wand2 size={32} />,
       link: '/characters',
       color: '#3B82F6',
       delay: 0,
@@ -45,7 +45,7 @@ const Index = () => {
     {
       title: 'Лист персонажа',
       description: 'Просмотр и редактирование',
-      icon: <FileText size={32} />,
+      icon: <Scroll size={32} />,
       link: '/sheet',
       color: '#F59E0B',
       delay: 0.2,
@@ -61,7 +61,7 @@ const Index = () => {
     {
       title: 'Игра',
       description: 'Присоединиться к сессии',
-      icon: <Dice2 size={32} />,
+      icon: <Dice size={32} />,
       link: '/join',
       color: '#EF4444',
       delay: 0.4,
@@ -69,7 +69,7 @@ const Index = () => {
     {
       title: 'Справочник',
       description: 'Расы, классы, предыстории',
-      icon: <Scroll size={32} />,
+      icon: <BookMarked size={32} />,
       link: '/handbook',
       color: '#EC4899',
       delay: 0.5,

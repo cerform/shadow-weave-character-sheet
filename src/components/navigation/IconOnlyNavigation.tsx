@@ -2,12 +2,12 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
-  Home, 
-  BookOpen, 
   Scroll, 
-  Users, 
+  Shield, 
+  BookOpen, 
+  Wand2, 
   LogIn, 
-  Book, 
+  BookMarked, 
   Map
 } from "lucide-react";
 import { Link } from 'react-router-dom';
@@ -49,7 +49,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         style={buttonStyle}
       >
         <Link to="/">
-          <Home className="size-4" />
+          <Shield className="size-4" />
           <span className="sr-only">Главная</span>
         </Link>
       </Button>
@@ -61,7 +61,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         style={buttonStyle}
       >
         <Link to="/handbook">
-          <BookOpen className="size-4" />
+          <BookMarked className="size-4" />
           <span className="sr-only">Руководство игрока</span>
         </Link>
       </Button>
@@ -85,7 +85,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         style={buttonStyle}
       >
         <Link to="/character-creation">
-          <Users className="size-4" />
+          <Wand2 className="size-4" />
           <span className="sr-only">Создание персонажа</span>
         </Link>
       </Button>
@@ -110,7 +110,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
           style={buttonStyle}
         >
           <Link to="/dm">
-            <Book className="size-4" />
+            <BookOpen className="size-4" />
             <span className="sr-only">Панель Мастера</span>
           </Link>
         </Button>

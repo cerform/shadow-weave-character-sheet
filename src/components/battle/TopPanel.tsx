@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pause, Play, SkipForward, Image, Home, ArrowLeft, Grid, Eye, EyeOff, ZoomIn, ZoomOut, X, Map } from "lucide-react";
+import { Pause, Play, ArrowRightCircle, BookOpen, Shield, ArrowLeft, Grid, Eye, EyeOff, ZoomIn, ZoomOut, X, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 
@@ -55,7 +55,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           className="flex items-center gap-1"
           onClick={() => navigate("/")}
         >
-          <Home size={16} />
+          <Shield size={16} />
           Главная
         </Button>
         <Button 
@@ -101,7 +101,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
                   disabled={!battleState.isActive}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <SkipForward size={16} className="mr-1" />
+                  <ArrowRightCircle size={16} className="mr-1" />
                   Следующий ход
                 </Button>
               </>

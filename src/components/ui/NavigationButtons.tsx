@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { BookOpen, Scroll, Map, Users, Book, Home, LogIn } from "lucide-react";
+import { BookMarked, Scroll, Map, Wand2, BookOpen, Shield, LogIn } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeviceType } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
@@ -46,7 +46,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/">
-          <Home className="size-4" />
+          <Shield className="size-4" />
           <span className="sr-only">Главная</span>
         </Link>
       </Button>
@@ -59,7 +59,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/handbook">
-          <BookOpen className="size-4" />
+          <BookMarked className="size-4" />
           <span className="sr-only">Руководство игрока</span>
         </Link>
       </Button>
@@ -85,7 +85,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/character-creation">
-          <Users className="size-4" />
+          <Wand2 className="size-4" />
           <span className="sr-only">Создание персонажа</span>
         </Link>
       </Button>
@@ -112,7 +112,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           className="hover:shadow-lg transition-all hover:scale-105"
         >
           <Link to="/dm">
-            <Book className="size-4" />
+            <BookOpen className="size-4" />
             <span className="sr-only">Панель Мастера</span>
           </Link>
         </Button>
