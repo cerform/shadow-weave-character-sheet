@@ -1,4 +1,3 @@
-
 import { SpellData } from './spells';
 
 // Consolidate character interfaces to avoid duplicate type errors
@@ -125,6 +124,7 @@ export interface Character {
   updatedAt?: string;
   image?: string;
   sorceryPoints?: SorceryPoints;
+  playerName?: string;
 }
 
 // Forward the types for backward compatibility
@@ -148,20 +148,13 @@ export interface CharacterSpell {
   name: string;
   level: number;
   description?: string;
-  school?: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
-  higherLevels?: string;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  materialComponents?: string;
-  ritual?: boolean;
-  concentration?: boolean;
-  classes?: string[] | string;
-  prepared?: boolean;
+  school?: string;
+  classes?: string[];
+  subclasses?: string[];
 }
 
 export interface AbilityScores {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import type { CharacterSheet } from "@/utils/characterImports";
 import NavigationButtons from './NavigationButtons';
 import { Check, Plus } from 'lucide-react';

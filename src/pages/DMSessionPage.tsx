@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { socketService } from '@/services/socket';
 import DiceRoller from '@/components/session/DiceRoller';
 import SessionChat from '@/components/session/SessionChat';
@@ -10,6 +10,33 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import useSessionStore from '@/stores/sessionStore';
 import { Session } from '@/types/session';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  ArrowLeft,
+  Send,
+  Clock,
+  UserPlus
+} from "lucide-react";
 
 // Define the Player type since it doesn't exist in session.ts
 interface Player {
@@ -56,22 +83,31 @@ const DMSessionPage = () => {
       } else {
         // Session not found, navigate back
         navigate('/dm');
-        toast.error('Сессия не найдена');
+        toast({
+          title: "Сессия не найдена",
+          variant: "destructive"
+        });
       }
     }
-  }, [sessions, sessionId, navigate]);
+  }, [sessions, sessionId, navigate, toast]);
 
   const handleEndSession = () => {
     if (sessionId && endSession) {
       endSession(sessionId);
       navigate('/dm');
-      toast.success('Сессия успешно завершена');
+      toast({
+        title: "Сессия успешно завершена",
+      });
     }
   };
 
   const handleAddPlayer = () => {
     if (!newPlayerName.trim()) {
-      toast.error('Введите имя игрока');
+      toast({
+        title: "Ошибка",
+        description: "Введите имя игрока",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -79,7 +115,10 @@ const DMSessionPage = () => {
     
     setNewPlayerName('');
     setIsAddingPlayer(false);
-    toast.success(`Игрок ${newPlayerName} добавлен в сессию`);
+    toast({
+      title: "Успех",
+      description: `Игрок ${newPlayerName} добавлен в сессию`
+    });
   };
 
   const handleSendMessage = () => {
@@ -87,7 +126,7 @@ const DMSessionPage = () => {
     
     const newMessage = {
       id: Date.now().toString(),
-      sender: currentUser?.username || 'DM',
+      sender: currentUser?.name || 'DM',
       content: message,
       timestamp: new Date().toISOString(),
       isDM: true

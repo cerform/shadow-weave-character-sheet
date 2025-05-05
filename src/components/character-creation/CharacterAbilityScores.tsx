@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 import type { CharacterSheet } from "@/utils/characterImports";
 import AbilityScoreMethodSelector from './AbilityScoreMethodSelector';
@@ -13,6 +14,7 @@ import AbilityRollingPanel from './AbilityRollingPanel';
 import ManualInputPanel from './ManualInputPanel';
 import NavigationButtons from './NavigationButtons';
 import SectionHeader from "@/components/ui/section-header";
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 
 interface CharacterAbilityScoresProps {
   character: CharacterSheet;
@@ -200,7 +202,7 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   };
 
   // Функция для броска одиночной характеристики
-  const handleRollAbility = (stat: keyof typeof stats) => {
+  const handleRollAbility = (stat: string) => {
     if (rollSingleAbility) {
       // Определяем индекс характеристики
       const abilityKeys = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];

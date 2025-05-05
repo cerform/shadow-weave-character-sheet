@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
-import type { CharacterSheet } from "@/utils/characterImports";
+import { useToast } from '@/hooks/use-toast';
+import type { CharacterSheet, CharacterSpell } from "@/utils/characterImports";
 import { setCharacter } from '@/services/database';
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from 'react-router-dom';
@@ -226,7 +226,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
               <CardContent className="space-y-1 p-4">
                 <h4 className="font-semibold">Имя игрока</h4>
                 <p className="text-sm text-muted-foreground">
-                  {character.playerName}
+                  {character.playerName || 'Не указано'}
                 </p>
               </CardContent>
             </Card>
@@ -243,7 +243,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
                 <CardContent className="space-y-1 p-4">
                   {character.spells.map((spell, index) => (
                     <Badge key={index} variant="secondary">
-                      {spell.name}
+                      {typeof spell === 'string' ? spell : spell.name}
                     </Badge>
                   ))}
                 </CardContent>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CharacterSheet } from "@/utils/characterImports";
 import { ABILITY_SCORE_CAPS } from '@/types/character';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
 import { useDeviceType } from '@/hooks/use-mobile';
+import NavigationButtons from './NavigationButtons';
 
 interface CharacterLevelSelectionProps {
   character: CharacterSheet;
@@ -85,7 +86,7 @@ const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
       <Card className="border border-primary/20 shadow-lg bg-black/85">
         <CardHeader className="bg-primary/10 border-b border-primary/20">
           <CardTitle className="flex items-center gap-2">
-            {!isMobile ? "Уровень персонажа" : "Уровень"}
+            {!isMobile ? "У��овень персонажа" : "Уровень"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
