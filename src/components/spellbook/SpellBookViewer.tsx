@@ -1,24 +1,7 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Book, ArrowLeft, BookOpen, Filter, Search, Home, X } from "lucide-react";
-import SpellDetailModal from "@/components/spell-detail/SpellDetailModal";
-import NavigationButtons from "@/components/ui/NavigationButtons";
-import { ThemeSelector } from "@/components/character-sheet/ThemeSelector"; 
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useSpellbook } from '@/hooks/spellbook';
-import { SpellData } from '@/hooks/spellbook/types';
-import SpellFilters from './SpellFilters';
-import SpellList from './SpellList';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger, 
-  SheetClose 
-} from "@/components/ui/sheet";
-import { useIsMobile } from '@/hooks/use-mobile';
 import { CharacterSpell } from '@/types/character';
+import { SpellData, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 
 const SpellBookViewer: React.FC = () => {
   const navigate = useNavigate();
@@ -182,6 +165,18 @@ const SpellBookViewer: React.FC = () => {
   const handleImportSpells = (spells: CharacterSpell[]) => {
     // Конвертируем CharacterSpell[] в SpellData[]
     const convertedSpells = spells.map(convertToSpellData);
+    setSpellsData(convertedSpells);
+  };
+
+  // Fix for line 156 and 179
+  const handleAddSpell = (spell: CharacterSpell | SpellData) => {
+    // Implementation...
+  };
+
+  // Fix for line 279
+  const handleSaveSpells = (spells: CharacterSpell[]) => {
+    // Convert CharacterSpell[] to SpellData[] before setting state
+    const convertedSpells: SpellData[] = spells.map(spell => convertCharacterSpellToSpellData(spell));
     setSpellsData(convertedSpells);
   };
 

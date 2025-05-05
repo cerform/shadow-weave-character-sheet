@@ -1,5 +1,7 @@
+
 import { auth, db, storage } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/contexts/CharacterContext';

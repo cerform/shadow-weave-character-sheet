@@ -6,6 +6,7 @@ import { sessionService, characterService } from '../services/sessionService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
 import { Character } from '@/contexts/CharacterContext';
+import { CharacterSheet } from '@/types/character';
 
 interface SessionStore {
   // Состояние
@@ -283,8 +284,32 @@ export const useSessionStore = create<SessionStore>()(
       fetchCharacters: async () => {
         try {
           set({ loading: true });
-          // Используем новое имя функции для получения персонажей
-          const characters = await characterService.getCharactersByUserId();
+          // Convert CharacterSheet[] to Character[]
+          const fetchedCharacters = await characterService.getCharactersByUserId();
+          const characters: Character[] = fetchedCharacters.map((char: any) => {
+            return {
+              ...(char as Character),
+              race: char.race || '', // Ensure required properties exist
+              class: char.class || char.className || '',
+              gender: char.gender || '',
+              alignment: char.alignment || '',
+              background: char.background || '',
+              backstory: char.backstory || '',
+              languages: char.languages || [],
+              proficiencies: char.proficiencies || [],
+              equipment: char.equipment || [],
+              abilities: {
+                STR: char.abilities?.STR || 10,
+                DEX: char.abilities?.DEX || 10,
+                CON: char.abilities?.CON || 10,
+                INT: char.abilities?.INT || 10,
+                WIS: char.abilities?.WIS || 10,
+                CHA: char.abilities?.CHA || 10,
+                ...(char.abilities || {})
+              }
+            };
+          });
+          
           set({ characters, loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
@@ -294,14 +319,25 @@ export const useSessionStore = create<SessionStore>()(
       
       saveCharacter: async (character: Character) => {
         try {
-          const success = await characterService.saveCharacter(character);
+          // Convert Character to CharacterSheet
+          const characterToSave: any = {
+            ...character,
+            // Ensure character has all required fields for CharacterSheet
+            userId: character.userId || auth.currentUser?.uid,
+            race: character.race || '',
+            background: character.background || '',
+            backstory: character.backstory || ''
+          };
           
-          if (success) {
-            // Обновляем список персонажей
-            get().fetchCharacters();
+          const result = await characterService.saveCharacter(characterToSave);
+          
+          if (result) {
+            // Refresh the character list
+            await get().fetchCharacters();
+            return true;
           }
           
-          return success;
+          return false;
         } catch (error) {
           console.error("Ошибка при сохранении персонажа:", error);
           return false;
@@ -313,14 +349,14 @@ export const useSessionStore = create<SessionStore>()(
           const deleted = await characterService.deleteCharacter(characterId);
           
           if (deleted) {
-            // Обновляем список персонажей
+            // Refresh the character list
             await get().fetchCharacters();
             toast.success("Персонаж успешно удален");
+            return true;
           } else {
             toast.error("Не удалось удалить персонажа");
+            return false;
           }
-          
-          return deleted;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
           toast.error("Не удалось удалить персонажа");

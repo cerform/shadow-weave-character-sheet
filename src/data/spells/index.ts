@@ -4,7 +4,6 @@ import { level1 } from "./level1";
 import { level2 } from "./level2";
 import { level3 } from "./level3";
 import { level4 } from "./level4";
-// Fix the import names to match the actual exports
 import { level4Part2 } from "./level4_part2";
 import { level4Part3 } from "./level4_part3";
 import { level5 } from "./level5";
@@ -21,7 +20,6 @@ export const spells: CharacterSpell[] = [
   ...level2,
   ...level3,
   ...level4,
-  // Fixed variable names to match imports
   ...level4Part2,
   ...level4Part3,
   ...level5,
@@ -42,7 +40,7 @@ export const spellLevelToText = (level: number): string => {
   return `${level}-й уровень`;
 };
 
-// Get spells by class
+// Get spells by class - fixed to handle both string and string[] cases
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
   if (!className) return [];
   
@@ -51,7 +49,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter((spell) => {
     if (!spell.classes) return false;
     
-    // Проверка типа classes и безопасное обращение
+    // Check type of classes and safely access
     if (Array.isArray(spell.classes)) {
       return spell.classes.some(
         (spellClass) => 

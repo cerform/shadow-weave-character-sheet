@@ -1,4 +1,3 @@
-
 import { CharacterSheet } from '@/types/character';
 import { Character } from '@/contexts/CharacterContext';
 
@@ -78,6 +77,37 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
   }
   
+  // Правильно обрабатываем proficiencies
+  const proficiencies: string[] = [];
+  
+  // Извлекаем языки из структуры proficiencies, если они там есть
+  let languages: string[] = sheet.languages || [];
+  
+  // Если у нас есть структура proficiencies в формате объекта
+  if (sheet.proficiencies) {
+    if (Array.isArray(sheet.proficiencies)) {
+      // Если proficiencies уже массив строк, используем его как есть
+      proficiencies.push(...sheet.proficiencies);
+    } else {
+      // Если proficiencies - объект, извлекаем массивы из его свойств
+      if (Array.isArray(sheet.proficiencies.armor)) {
+        proficiencies.push(...sheet.proficiencies.armor.map(item => `Доспехи: ${item}`));
+      }
+      
+      if (Array.isArray(sheet.proficiencies.weapons)) {
+        proficiencies.push(...sheet.proficiencies.weapons.map(item => `Оружие: ${item}`));
+      }
+      
+      if (Array.isArray(sheet.proficiencies.tools)) {
+        proficiencies.push(...sheet.proficiencies.tools.map(item => `Инструменты: ${item}`));
+      }
+      
+      if (Array.isArray(sheet.proficiencies.languages)) {
+        languages = [...languages, ...sheet.proficiencies.languages];
+      }
+    }
+  }
+
   return {
     id: sheet.id || "",
     userId: sheet.userId,
@@ -89,12 +119,18 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: sheet.level || 1,
     abilities: {
-      STR: sheet.abilities.strength || 10,
-      DEX: sheet.abilities.dexterity || 10,
-      CON: sheet.abilities.constitution || 10,
-      INT: sheet.abilities.intelligence || 10,
-      WIS: sheet.abilities.wisdom || 10,
-      CHA: sheet.abilities.charisma || 10
+      STR: sheet.abilities?.STR || 10,
+      DEX: sheet.abilities?.DEX || 10,
+      CON: sheet.abilities?.CON || 10,
+      INT: sheet.abilities?.INT || 10,
+      WIS: sheet.abilities?.WIS || 10,
+      CHA: sheet.abilities?.CHA || 10,
+      strength: sheet.abilities?.strength || 10,
+      dexterity: sheet.abilities?.dexterity || 10,
+      constitution: sheet.abilities?.constitution || 10,
+      intelligence: sheet.abilities?.intelligence || 10,
+      wisdom: sheet.abilities?.wisdom || 10,
+      charisma: sheet.abilities?.charisma || 10
     },
     spells: spellsArray,
     spellSlots: spellSlots,
@@ -102,8 +138,8 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     alignment: sheet.alignment || "",
     background: sheet.background || "",
     equipment: sheet.equipment || [],
-    languages: sheet.languages || [],
-    proficiencies: sheet.proficiencies || [],
+    languages: languages,
+    proficiencies: proficiencies,
     maxHp: maxHp,
     currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
     createdAt: new Date().toISOString(),

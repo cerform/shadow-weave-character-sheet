@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
@@ -66,11 +65,36 @@ export const useCharacterCreation = () => {
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
     if (updates.abilities) {
-      updates.stats = updates.abilities;
+      // Make sure we include both old and new properties when updating abilities
+      const { strength, dexterity, constitution, intelligence, wisdom, charisma } = updates.abilities;
+      
+      updates.stats = {
+        strength: strength || updates.abilities.STR || character.abilities.strength || 10,
+        dexterity: dexterity || updates.abilities.DEX || character.abilities.dexterity || 10,
+        constitution: constitution || updates.abilities.CON || character.abilities.constitution || 10,
+        intelligence: intelligence || updates.abilities.INT || character.abilities.intelligence || 10,
+        wisdom: wisdom || updates.abilities.WIS || character.abilities.wisdom || 10,
+        charisma: charisma || updates.abilities.CHA || character.abilities.charisma || 10
+      };
     }
     // Если обновляются stats, также обновляем и abilities для совместимости
     else if (updates.stats) {
-      updates.abilities = updates.stats;
+      updates.abilities = {
+        // Keep existing STR, DEX, etc. properties
+        STR: character.abilities.STR,
+        DEX: character.abilities.DEX,
+        CON: character.abilities.CON,
+        INT: character.abilities.INT,
+        WIS: character.abilities.WIS,
+        CHA: character.abilities.CHA,
+        // Update with new values
+        strength: updates.stats.strength,
+        dexterity: updates.stats.dexterity,
+        constitution: updates.stats.constitution,
+        intelligence: updates.stats.intelligence,
+        wisdom: updates.stats.wisdom,
+        charisma: updates.stats.charisma
+      };
     }
     
     // Добавляем userId из текущего авторизованного пользователя, если он доступен
