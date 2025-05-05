@@ -26,15 +26,16 @@ export const useSpellbook = () => {
   // Все школы магии
   const allSchools = [...new Set(allSpells.map(spell => spell.school))].filter(Boolean).sort();
   
-  // Все классы
+  // Все классы (с безопасной проверкой типов)
   const allClasses = [...new Set(
-    allSpells.flatMap(spell => 
-      typeof spell.classes === 'string' 
-        ? [spell.classes] 
-        : Array.isArray(spell.classes) 
-          ? spell.classes 
-          : []
-    )
+    allSpells.flatMap(spell => {
+      if (typeof spell.classes === 'string') {
+        return [spell.classes];
+      } else if (Array.isArray(spell.classes)) {
+        return spell.classes;
+      }
+      return [];
+    })
   )].filter(Boolean).sort();
   
   // Фильтруем заклинания
@@ -58,7 +59,7 @@ export const useSpellbook = () => {
     // Фильтр по школе
     const matchesSchool = activeSchool.length === 0 || activeSchool.includes(spell.school);
     
-    // Фильтр по классу
+    // Фильтр по классу (с безопасной проверкой типов)
     const matchesClass = activeClass.length === 0 || 
       (typeof spell.classes === 'string' 
         ? activeClass.includes(spell.classes)
@@ -118,23 +119,11 @@ export const useSpellbook = () => {
       9: "#7c3aed"  // 9 уровень
     };
 
-    // Если есть настройки в теме, используем их
-    if (currentTheme.badge) {
-      switch(level) {
-        case 0: return currentTheme.badge.cantrip || defaultColors[0];
-        case 1: return currentTheme.badge.level1 || defaultColors[1];
-        case 2: return currentTheme.badge.level2 || defaultColors[2];
-        case 3: return currentTheme.badge.level3 || defaultColors[3];
-        case 4: return currentTheme.badge.level4 || defaultColors[4];
-        case 5: return currentTheme.badge.level5 || defaultColors[5];
-        case 6: return currentTheme.badge.level6 || defaultColors[6];
-        case 7: return currentTheme.badge.level7 || defaultColors[7];
-        case 8: return currentTheme.badge.level8 || defaultColors[8];
-        case 9: return currentTheme.badge.level9 || defaultColors[9];
-        default: return defaultColors[0];
-      }
+    // Проверяем спеллы в теме и badge
+    if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
+      return currentTheme.spellLevels[level];
     }
-
+    
     // Если нет специальных настроек, используем значения по умолчанию
     return defaultColors[level as keyof typeof defaultColors] || defaultColors[0];
   };

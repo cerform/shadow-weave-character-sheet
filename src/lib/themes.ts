@@ -11,7 +11,18 @@ export interface Theme {
   cardBackground?: string;
   buttonText?: string;
   primary?: string;
-  badge?: string;
+  badge?: {
+    cantrip?: string;
+    level1?: string;
+    level2?: string;
+    level3?: string;
+    level4?: string;
+    level5?: string;
+    level6?: string;
+    level7?: string;
+    level8?: string;
+    level9?: string;
+  } | string;
   spellLevels?: {
     [key: number]: string;
     0: string; // Cantrips

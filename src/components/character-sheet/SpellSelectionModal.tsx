@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Character } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { Character, CharacterSpell } from '@/types/character';
+import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { convertCharacterSpellToSpellData, getSpellName } from '@/utils/spellHelpers';
 
 // Update props to match the expected props in SpellPanel
 export interface SpellSelectionModalProps {
@@ -62,7 +61,9 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Check if the spell is already in the character's spell list
-    const spellExists = character.spells.some(s => getSpellName(s) === spell.name);
+    const spellExists = character.spells.some(s => {
+      return typeof s === 'string' ? s === spell.name : s.name === spell.name;
+    });
     
     if (spellExists) {
       toast({
@@ -73,7 +74,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Add the spell to the character's spell list
-    const newSpell = {
+    const newSpell: CharacterSpell = {
       id: spell.id,
       name: spell.name,
       level: spell.level,
@@ -121,7 +122,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
           <div className="flex flex-col space-y-2">
             {filteredSpells.map((spell) => (
               <Button
-                key={spell.id}
+                key={spell.id || spell.name}
                 variant="secondary"
                 className="w-full justify-start"
                 onClick={() => addSpellToCharacter(spell)}

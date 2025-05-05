@@ -1,131 +1,221 @@
+
 import React, { useState } from 'react';
-// Import the necessary icons from lucide-react
-import { Heart, Shield, Minus, Plus, Skull } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import { Character } from '@/types/character';
 
-interface ResourcePanelProps {
-  character: Character;
+export interface ResourcePanelProps {
+  character: Character | null;
   onUpdate: (updates: Partial<Character>) => void;
+  onHpChange?: (newHp: number) => void;
 }
 
-const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate, onHpChange }) => {
+  const [damage, setDamage] = useState<number>(0);
+  const [healing, setHealing] = useState<number>(0);
+  const [tempHP, setTempHP] = useState<number>(0);
   
-  const handleHPChange = (newHP: number) => {
-    if (newHP >= 0 && newHP <= (character.maxHp || 1)) {
-      onUpdate({ currentHp: newHP });
+  // Рассчитываем текущие значения
+  const maxHp = character?.maxHp || 0;
+  const currentHp = character?.currentHp || 0;
+  const temporaryHp = character?.temporaryHp || 0;
+  
+  const handleDamage = () => {
+    if (!character || damage <= 0) return;
+    
+    // Сначала урон поглощается временными хитами
+    let remainingDamage = damage;
+    let newTempHp = temporaryHp;
+    
+    if (temporaryHp > 0) {
+      if (temporaryHp >= remainingDamage) {
+        newTempHp = temporaryHp - remainingDamage;
+        remainingDamage = 0;
+      } else {
+        remainingDamage -= temporaryHp;
+        newTempHp = 0;
+      }
     }
-  };
-  
-  const handleTempHPChange = (newTempHP: number) => {
-    onUpdate({ temporaryHp: newTempHP });
-  };
-  
-  const handleDeathSaveSuccess = () => {
-    const successes = character.deathSaves?.successes || 0;
-    if (successes < 3) {
-      onUpdate({ deathSaves: { ...character.deathSaves, successes: successes + 1 } });
+    
+    // Оставшийся урон уменьшает текущие хиты
+    const newCurrentHp = Math.max(0, currentHp - remainingDamage);
+    
+    // Обновляем персонажа
+    onUpdate({
+      currentHp: newCurrentHp,
+      temporaryHp: newTempHp
+    });
+    
+    // Если есть обработчик изменения HP, вызываем его
+    if (onHpChange) {
+      onHpChange(newCurrentHp);
     }
+    
+    // Сброс инпута урона
+    setDamage(0);
   };
   
-  const handleDeathSaveFailure = () => {
-    const failures = character.deathSaves?.failures || 0;
-    if (failures < 3) {
-      onUpdate({ deathSaves: { ...character.deathSaves, failures: failures + 1 } });
+  const handleHealing = () => {
+    if (!character || healing <= 0) return;
+    
+    // Лечение не может превысить максимум хитов
+    const newCurrentHp = Math.min(maxHp, currentHp + healing);
+    
+    // Обновляем персонажа
+    onUpdate({
+      currentHp: newCurrentHp
+    });
+    
+    // Если есть обработчик изменения HP, вызываем его
+    if (onHpChange) {
+      onHpChange(newCurrentHp);
     }
+    
+    // Сброс инпута лечения
+    setHealing(0);
   };
   
-  const handleResetDeathSaves = () => {
-    onUpdate({ deathSaves: { successes: 0, failures: 0 } });
+  const handleAddTempHP = () => {
+    if (!character || tempHP <= 0) return;
+    
+    // Временные хиты не складываются, берём наибольшее значение
+    const newTempHp = Math.max(temporaryHp, tempHP);
+    
+    // Обновляем персонажа
+    onUpdate({
+      temporaryHp: newTempHp
+    });
+    
+    // Сброс инпута временных хитов
+    setTempHP(0);
   };
+  
+  // Рассчитываем процент здоровья для прогресс-бара
+  const healthPercentage = maxHp > 0 ? Math.round((currentHp / maxHp) * 100) : 0;
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle style={{ color: currentTheme.textColor }}>Ресурсы</CardTitle>
+    <Card className="shadow-lg relative">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl">Ресурсы персонажа</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Hit Points */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Heart className="h-4 w-4" style={{ color: currentTheme.textColor }} />
-              <Label htmlFor="current-hp" style={{ color: currentTheme.textColor }}>Здоровье</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                id="current-hp"
-                placeholder="Текущее"
-                value={character.currentHp || 0}
-                onChange={(e) => handleHPChange(parseInt(e.target.value))}
-                className="w-24 text-center bg-black/60 text-white"
+      <CardContent className="space-y-6">
+        <div>
+          <div className="flex justify-between mb-2">
+            <span className="font-medium">Хиты</span>
+            <span>{currentHp} / {maxHp} {temporaryHp > 0 && `(+${temporaryHp})`}</span>
+          </div>
+          
+          <div className="relative">
+            <Progress value={healthPercentage} className="h-3" />
+            {temporaryHp > 0 && (
+              <div 
+                className="absolute top-0 left-0 h-3 bg-blue-400 opacity-50 rounded-full"
+                style={{ 
+                  width: `${(temporaryHp / maxHp) * 100}%`,
+                  maxWidth: '100%'
+                }}
               />
-              <span style={{ color: currentTheme.textColor }}>/</span>
-              <span style={{ color: currentTheme.textColor }}>{character.maxHp || 1}</span>
-            </div>
-            <Progress value={((character.currentHp || 0) / (character.maxHp || 1)) * 100} style={{ backgroundColor: `${currentTheme.accent}40` }} />
+            )}
           </div>
           
-          {/* Temporary Hit Points */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4" style={{ color: currentTheme.textColor }} />
-              <Label htmlFor="temporary-hp" style={{ color: currentTheme.textColor }}>Временное здоровье</Label>
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div>
+              <input
+                type="number"
+                min="0"
+                value={damage}
+                onChange={(e) => setDamage(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full mb-1 px-2 py-1 border rounded"
+                placeholder="Урон"
+              />
+              <Button onClick={handleDamage} variant="destructive" size="sm" className="w-full">
+                Урон
+              </Button>
             </div>
-            <Input
-              type="number"
-              id="temporary-hp"
-              placeholder="Временное"
-              value={character.temporaryHp || 0}
-              onChange={(e) => handleTempHPChange(parseInt(e.target.value))}
-              className="w-24 text-center bg-black/60 text-white"
-            />
-          </div>
-          
-          {/* Death Saves */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Skull className="h-4 w-4" style={{ color: currentTheme.textColor }} />
-              <Label style={{ color: currentTheme.textColor }}>Спасброски от смерти</Label>
+            
+            <div>
+              <input
+                type="number"
+                min="0"
+                value={healing}
+                onChange={(e) => setHealing(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full mb-1 px-2 py-1 border rounded"
+                placeholder="Лечение"
+              />
+              <Button onClick={handleHealing} variant="default" size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                Лечение
+              </Button>
             </div>
-            <div className="flex items-center space-x-4">
-              <div>
-                <Label style={{ color: currentTheme.textColor }}>Успехи:</Label>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="icon" onClick={handleDeathSaveSuccess}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <span style={{ color: currentTheme.textColor }}>{character.deathSaves?.successes || 0}</span>
-                </div>
-              </div>
-              <div>
-                <Label style={{ color: currentTheme.textColor }}>Провалы:</Label>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="icon" onClick={handleDeathSaveFailure}>
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span style={{ color: currentTheme.textColor }}>{character.deathSaves?.failures || 0}</span>
-                </div>
-              </div>
-              <Button variant="secondary" size="sm" onClick={handleResetDeathSaves}>
-                Сбросить
+            
+            <div>
+              <input
+                type="number"
+                min="0"
+                value={tempHP}
+                onChange={(e) => setTempHP(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full mb-1 px-2 py-1 border rounded"
+                placeholder="Врем. хиты"
+              />
+              <Button onClick={handleAddTempHP} variant="secondary" size="sm" className="w-full">
+                Врем. хиты
               </Button>
             </div>
           </div>
         </div>
+
+        {character && character.hitDice && (
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="font-medium">Кости хитов ({character.hitDice.dieType})</span>
+              <span>{character.hitDice.total && character.hitDice.used 
+                ? `${character.hitDice.total - character.hitDice.used} / ${character.hitDice.total}` 
+                : "—"}</span>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-grow"
+                onClick={() => {
+                  if (!character.hitDice || !character.hitDice.used) return;
+                  
+                  const newUsed = Math.max(0, character.hitDice.used - 1);
+                  onUpdate({
+                    hitDice: {
+                      ...character.hitDice,
+                      used: newUsed
+                    }
+                  });
+                }}
+              >
+                Восстановить
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-grow"
+                onClick={() => {
+                  if (!character.hitDice || !character.hitDice.total || !character.hitDice.used) return;
+                  
+                  const newUsed = Math.min(character.hitDice.total, (character.hitDice.used || 0) + 1);
+                  onUpdate({
+                    hitDice: {
+                      ...character.hitDice,
+                      used: newUsed
+                    }
+                  });
+                }}
+              >
+                Использовать
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
+      <CardFooter className="pt-0 flex flex-col items-start">
+        {/* Дополнительные ресурсы персонажа могут быть добавлены здесь */}
+      </CardFooter>
     </Card>
   );
 };

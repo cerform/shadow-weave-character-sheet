@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { Input } from '@/components/ui/input';
@@ -12,10 +13,6 @@ import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
 import { SpellData } from '@/types/spells';
-
-interface NavigationButtonsProps {
-  className?: string;
-}
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -206,8 +203,8 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         </div>
       ) : (
         <SpellTable 
-          spells={filteredSpells as SpellData[]}
-          onSpellClick={(spell) => handleOpenSpell(spell)}
+          spells={filteredSpells}
+          onSpellClick={handleOpenSpell}
         />
       )}
       

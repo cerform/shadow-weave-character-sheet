@@ -15,6 +15,9 @@ export interface LevelFeature {
   type: string;
   class?: string;
   subclass?: string;
+  required?: boolean;
+  className?: string;
+  options?: string[];
 }
 
 export interface CharacterSpell {
@@ -110,7 +113,7 @@ export interface Character {
     attackBonus?: number;
     preparedSpellsLimit?: number;
   };
-  spells?: (string | CharacterSpell)[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: {
     [key: number]: {
       max: number;
@@ -211,3 +214,6 @@ export interface AbilityScores {
   WIS?: number;
   CHA?: number;
 }
+
+// Экспортируем тип Character чтобы он был доступен для импорта из других файлов
+export { Character as Character };

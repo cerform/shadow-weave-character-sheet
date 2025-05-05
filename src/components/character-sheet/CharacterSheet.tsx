@@ -186,7 +186,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
         <Card className="bg-card/30 backdrop-blur-sm border-primary/20 mb-4">
           <CardHeader>
             <CardTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
-              {character ? character.name : 'Новый персонаж'}
+              {character ? character.name : 'Новый перс��наж'}
             </CardTitle>
             <CardDescription style={{ color: currentTheme.mutedTextColor }}>
               {character ? (

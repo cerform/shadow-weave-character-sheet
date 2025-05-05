@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Character, LevelFeature } from '@/types/character';
+import { Character } from '@/types/character';
 import { useToast } from "@/hooks/use-toast";
 
-// Add this to the Character.d.ts if not there already
-export interface LevelFeature {
-  level: number;
-  name: string;
-  description: string;
-  type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
-  options?: string[];
-  className?: string; // Для каких классов доступна эта особенность
-  required?: boolean;  // Является ли выбор обязательным
-}
+// Используем интерфейс из types/character.ts
+import type { LevelFeature } from '@/types/character';
 
 export const useLevelFeatures = (character: Character) => {
   const [availableFeatures, setAvailableFeatures] = useState<LevelFeature[]>([]);
@@ -52,11 +44,12 @@ export const useLevelFeatures = (character: Character) => {
     // Получаем доступные подклассы (архетипы) для класса
     if (level >= getSubclassLevel(character.class) && !character.subclass) {
       features.push({
+        id: `subclass-${character.class}-${level}`,
         level: getSubclassLevel(character.class),
         name: 'Архетип',
         description: `Выберите архетип для ${character.class}`,
         type: 'subclass',
-        className: character.class,
+        class: character.class,
         required: true
       });
     }
@@ -66,6 +59,7 @@ export const useLevelFeatures = (character: Character) => {
     for (const abiLevel of abilityScoreImprovements) {
       if (level >= abiLevel) {
         features.push({
+          id: `ability-increase-${abiLevel}`,
           level: abiLevel,
           name: 'Увеличение характеристик',
           description: 'Увеличьте одну характеристику на 2 очка или две характеристики на 1 очко каждая',
@@ -77,6 +71,7 @@ export const useLevelFeatures = (character: Character) => {
     // Дополнительная атака
     if (hasExtraAttack(character.class) && level >= 5) {
       features.push({
+        id: `extra-attack-${character.class}-5`,
         level: 5,
         name: 'Дополнительная атака',
         description: 'Вы можете атаковать дважды вместо одного раза, когда в свой ход совершаете действие Атака',
@@ -90,6 +85,7 @@ export const useLevelFeatures = (character: Character) => {
       for (const [spellLevel, charLevel] of Object.entries(spellLevels)) {
         if (level >= charLevel) {
           features.push({
+            id: `spell-level-${spellLevel}`,
             level: charLevel,
             name: `Заклинания ${spellLevel} уровня`,
             description: `Вы получаете доступ к заклинаниям ${spellLevel} уровня`,
@@ -100,7 +96,7 @@ export const useLevelFeatures = (character: Character) => {
     }
 
     // Проверяем наличие обязательных архетипов и выдаем предупреждение
-    const requiredSubclass = features.find(f => f.type === 'subclass' && f.required);
+    const requiredSubclass = features.find(f => f.type === 'subclass' && f.required === true);
     if (requiredSubclass && !character.subclass) {
       toast({
         title: "Не выбран архетип",
@@ -269,19 +265,104 @@ export const useLevelFeatures = (character: Character) => {
   return {
     availableFeatures,
     selectedFeatures,
-    selectFeature,
-    getHitDiceInfo,
-    getSubclassLevel,
+    selectFeature: (featureType: string, value: string) => {
+      setSelectedFeatures(prev => ({
+        ...prev,
+        [featureType]: value
+      }));
+  
+      toast({
+        title: "Особенность выбрана",
+        description: `Вы выбрали: ${value}`,
+      });
+    },
+    getHitDiceInfo: (className: string) => {
+      switch (className) {
+        case "Варвар": return { dieType: "d12", value: "1d12" };
+        case "Воин":
+        case "Паладин":
+        case "Следопыт": return { dieType: "d10", value: "1d10" };
+        case "Бард":
+        case "Жрец":
+        case "Друид":
+        case "Монах":
+        case "Плут":
+        case "Колдун": return { dieType: "d8", value: "1d8" };
+        case "Волшебник":
+        case "Чародей": return { dieType: "d6", value: "1d6" };
+        default: return { dieType: "d8", value: "1d8" };
+      }
+    },
+    getSubclassLevel: (className: string): number => {
+      switch (className) {
+        case "Воин": return 3;
+        case "Плут": return 3;
+        case "Следопыт": return 3;
+        case "Варвар": return 3;
+        case "Чародей": return 1;
+        case "Колдун": return 1;
+        case "Волшебник": return 2;
+        case "Жрец": return 1;
+        case "Друид": return 2;
+        case "Монах": return 3;
+        case "Паладин": return 3;
+        case "Бард": return 3;
+        case "Изобретатель": return 3;
+        case "Кровавый охотник": return 3;
+        case "Мистик": return 2;
+        default: return 3;
+      }
+    },
     // Add these to the return object:
     availableLanguages,
     availableSkills,
     availableTools,
     availableWeaponTypes,
     availableArmorTypes,
-    handleLanguageSelection,
-    handleSkillSelection,
-    handleToolSelection,
-    handleWeaponTypeSelection,
-    handleArmorTypeSelection
+    handleLanguageSelection: (language: string, selected: boolean) => {
+      // Обработка выбора языка
+      if (selected) {
+        toast({
+          title: "Язык выбран",
+          description: `Вы выбрали язык: ${language}`,
+        });
+      }
+    },
+    handleSkillSelection: (skill: string, selected: boolean) => {
+      // Обработка выбора навыка
+      if (selected) {
+        toast({
+          title: "Навык выбран",
+          description: `Вы выбрали навык: ${skill}`,
+        });
+      }
+    },
+    handleToolSelection: (tool: string, selected: boolean) => {
+      // Обработка выбора инструмента
+      if (selected) {
+        toast({
+          title: "Инструмент выбран",
+          description: `Вы выбрали инструмент: ${tool}`,
+        });
+      }
+    },
+    handleWeaponTypeSelection: (weaponType: string, selected: boolean) => {
+      // Обработка выбора типа оружия
+      if (selected) {
+        toast({
+          title: "Тип оружия выбран",
+          description: `Вы выбрали тип оружия: ${weaponType}`,
+        });
+      }
+    },
+    handleArmorTypeSelection: (armorType: string, selected: boolean) => {
+      // Обработка выбора типа брони
+      if (selected) {
+        toast({
+          title: "Тип брони выбран",
+          description: `Вы выбрали тип брони: ${armorType}`,
+        });
+      }
+    }
   };
 };

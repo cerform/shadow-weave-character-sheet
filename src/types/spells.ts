@@ -28,7 +28,20 @@ export interface SpellData {
 }
 
 // Конвертация CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell): SpellData => {
+export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell | string): SpellData => {
+  if (typeof characterSpell === 'string') {
+    return {
+      name: characterSpell,
+      level: 0,
+      school: "Неизвестная",
+      castingTime: "1 действие",
+      range: "Неизвестная",
+      components: "",
+      duration: "Мгновенная",
+      description: ""
+    };
+  }
+  
   return {
     ...characterSpell,
     school: characterSpell.school || "Неизвестная",
