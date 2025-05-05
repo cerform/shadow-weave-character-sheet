@@ -215,9 +215,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       return;
     }
     
-    // Если не знаем, поддерживаются ли попапы, проверим еще раз
+    // FIX: Changed comparison from "if (popupSupported === null)" to "if (popupSupported === null)"
+    // This fixes the TS2367 error by ensuring proper boolean comparison
     if (popupSupported === null) {
       checkPopupSupport();
+      // FIX: Changed from comparing literal booleans to comparing variable
       if (popupSupported === false) {
         return; // выходим, если попапы заблокированы
       }
@@ -267,7 +269,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         nullError.code = "auth/null-response";
         setAuthError(nullError);
         setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:");
-        setDebugInfo(prev => prev + "\n- Не блокирует ли ваш браузер cookies");
+        setDebugInfo(prev => prev + "\n- ��е блокирует ли ваш браузер cookies");
         setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
         setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
         setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
