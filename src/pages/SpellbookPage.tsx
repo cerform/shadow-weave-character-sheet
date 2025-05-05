@@ -12,7 +12,21 @@ const SpellbookPage: React.FC = () => {
 
   return (
     <BackgroundWrapper>
-      <SpellBookViewer />
+      <div className="min-h-screen py-4">
+        <div className="container mx-auto px-4">
+          <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <h1 className="text-3xl font-bold mb-4 sm:mb-0" style={{ color: themeStyles?.textColor }}>
+              Книга заклинаний D&D 5e
+            </h1>
+            <div className="flex items-center space-x-4">
+              <ThemeSelector />
+              <NavigationButtons />
+            </div>
+          </header>
+          
+          <SpellBookViewer />
+        </div>
+      </div>
       <FloatingDiceButton />
     </BackgroundWrapper>
   );
