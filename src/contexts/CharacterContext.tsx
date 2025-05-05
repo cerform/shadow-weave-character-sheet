@@ -1,72 +1,8 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
+import { Character, CharacterSheet, CharacterSpell } from '@/types/character';
 import { normalizeSpells } from '@/utils/spellUtils';
-
-// Интерфейс для характеристик
-export interface AbilityScores {
-  STR: number;
-  DEX: number;
-  CON: number;
-  INT: number;
-  WIS: number;
-  CHA: number;
-  
-  // Для совместимости с CharacterSheet
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-}
-
-// Интерфейс персонажа для хранения в CharacterContext
-export interface Character {
-  id?: string;
-  userId?: string;
-  name: string;
-  race: string;
-  subrace?: string;
-  class: string;
-  className?: string;
-  subclass?: string;
-  level: number;
-  abilities: AbilityScores;
-  proficiencies: string[];
-  equipment: string[];
-  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
-  languages: string[];
-  gender: string;
-  alignment: string;
-  background: string;
-  backstory?: string; // Добавляем поле, которое требуется в CharacterSheet
-  maxHp?: number;
-  currentHp?: number;
-  temporaryHp?: number;
-  hitDice?: {
-    total: number;
-    used: number;
-    value: string;
-  };
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
-  spellSlots?: {
-    [level: string]: {
-      max: number;
-      used: number;
-    };
-  };
-  sorceryPoints?: SorceryPoints;
-  createdAt?: string;
-  updatedAt?: string;
-  skillProficiencies?: {[skillName: string]: boolean};
-  savingThrowProficiencies?: {[ability: string]: boolean};
-  image?: string;
-}
 
 export interface CharacterContextType {
   character: Character | null;

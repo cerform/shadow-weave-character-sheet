@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +18,8 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   useEffect(() => {
     // Сортируем события по времени (самые новые сверху)
     const sortedEvents = [...events].sort((a, b) => {
-      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
-      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+      const timeA = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp as Date).getTime();
+      const timeB = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp as Date).getTime();
       return timeB - timeA;
     });
     
@@ -84,9 +83,9 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   };
   
   // Форматирование временных меток (например, "5 минут назад")
-  const formatTimestamp = (timestamp: Date): string => {
+  const formatTimestamp = (timestamp: number | Date): string => {
     try {
-      const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+      const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
       return formatDistance(date, new Date(), { 
         addSuffix: true,
         locale: ru 

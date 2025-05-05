@@ -44,12 +44,7 @@ export const useCharacterCreation = () => {
     // Initialize with empty objects instead of arrays
     skills: {},
     savingThrows: {},
-    proficiencies: {
-      armor: [],
-      weapons: [],
-      tools: [],
-      languages: []
-    },
+    proficiencies: [],
     languages: [],
     equipment: [],
     spells: [],
@@ -108,13 +103,13 @@ export const useCharacterCreation = () => {
   };
 
   // Проверяем, является ли класс магическим
-  const checkMagicClass = () => {
-    if (!character.class) return false;
-    return checkIsMagicClass(character.class);
+  const checkMagicClass = (characterClass = '') => {
+    const magicClasses = ["Бард", "Волшебник", "Жрец", "Колдун", "Следопыт", "Чародей", "Паладин", "Друид"];
+    return magicClasses.includes(characterClass);
   };
 
   // Получаем общий уровень персонажа (основной + мультикласс)
-  const getTotalLevel = (): number => {
+  const getTotalLevel = (character: CharacterSheet): number => {
     let totalLevel = character.level;
     
     if (character.additionalClasses && character.additionalClasses.length > 0) {
@@ -127,8 +122,7 @@ export const useCharacterCreation = () => {
   };
 
   // Получаем бонус мастерства на основе общего уровня
-  const getProficiencyBonus = (): number => {
-    const level = getTotalLevel();
+  const getProficiencyBonus = (level: number): number => {
     if (level < 5) return 2;
     if (level < 9) return 3;
     if (level < 13) return 4;
@@ -142,40 +136,37 @@ export const useCharacterCreation = () => {
   };
   
   // Получаем особенности подкласса, доступные для текущего уровня
-  const getAvailableSubclassFeatures = (): string[] => {
-    if (!character.subclass) return [];
+  const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?: string, level?: number): string[] => {
+    if (!characterSubclass) return [];
     
     // Здесь будет логика получения особенностей на основе подкласса и уровня
-    // Пример возвращаемых данных:
     return [
-      `${character.subclass} (подкласс ${character.class})`
+      `${characterSubclass} (подкласс ${characterClass})`
     ];
   };
   
   // Получаем доступные классовые особенности на основе уровня
-  const getClassFeatures = (): string[] => {
+  const getClassFeatures = (characterClass: string, level: number): string[] => {
     // Здесь будет логика получения особенностей на основе класса и уровня
     return [];
   };
   
   // Рассчитываем опыт необходимый для текущего уровня
-  const getRequiredXP = (): number => {
+  const getRequiredXP = (level: number): number => {
     const xpByLevel = [
       0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
       85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
     ];
     
-    const level = Math.min(20, Math.max(1, getTotalLevel()));
-    return xpByLevel[level - 1];
+    const adjustedLevel = Math.min(20, Math.max(1, level));
+    return xpByLevel[adjustedLevel - 1];
   };
   
   // Расчет количества очков для распределения характеристик в зависимости от уровня
-  const getAbilityScorePointsByLevel = (basePoints: number = 27): number => {
+  const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): number => {
     let totalPoints = basePoints;
     
     // Добавляем бонусы за уровни
-    const level = getTotalLevel();
-    
     if (level >= 5) totalPoints += 3;
     if (level >= 10) totalPoints += 2; // Всего +5 на 10 уровне
     if (level >= 15) totalPoints += 2; // Всего +7 на 15 уровне
@@ -220,7 +211,7 @@ export const useCharacterCreation = () => {
   };
   
   // Получаем все классы персонажа (основной + мультикласс)
-  const getAllClasses = (): string[] => {
+  const getAllClasses = (character: CharacterSheet): string[] => {
     const allClasses = [character.class];
     
     if (character.additionalClasses && character.additionalClasses.length > 0) {

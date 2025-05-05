@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character.d'; 
+import { CharacterSheet } from '@/types/character'; 
 import NavigationButtons from './NavigationButtons';
 import { Check, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,9 +30,15 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
   nextStep,
   prevStep
 }) => {
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
-    character.equipment || []
-  );
+  // Преобразуем equipment в массив строк, если это объект
+  const initialEquipment = Array.isArray(character.equipment) 
+    ? character.equipment 
+    : character.equipment?.weapons?.concat(
+        character.equipment?.armor ? [character.equipment.armor] : [],
+        character.equipment?.items || []
+      ) || [];
+  
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(initialEquipment);
   const [customItem, setCustomItem] = useState('');
   const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
   

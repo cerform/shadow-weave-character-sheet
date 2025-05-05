@@ -54,7 +54,7 @@ export const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdat
               <Textarea
                 id="personalityTraits"
                 value={character.personalityTraits || ''}
-                onChange={handleChange('personalityTraits')}
+                onChange={handleChange('personalityTraits' as keyof Character)}
                 placeholder="Какие особенности отличают вашего персонажа?"
                 className="h-[100px]"
               />
@@ -64,7 +64,7 @@ export const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdat
               <Textarea
                 id="ideals"
                 value={character.ideals || ''}
-                onChange={handleChange('ideals')}
+                onChange={handleChange('ideals' as keyof Character)}
                 placeholder="За что борется ваш персонаж? Каковы его принципы?"
                 className="h-[100px]"
               />
@@ -74,7 +74,7 @@ export const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdat
               <Textarea
                 id="bonds"
                 value={character.bonds || ''}
-                onChange={handleChange('bonds')}
+                onChange={handleChange('bonds' as keyof Character)}
                 placeholder="К кому или чему привязан ваш персонаж?"
                 className="h-[100px]"
               />
@@ -84,7 +84,7 @@ export const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdat
               <Textarea
                 id="flaws"
                 value={character.flaws || ''}
-                onChange={handleChange('flaws')}
+                onChange={handleChange('flaws' as keyof Character)}
                 placeholder="Какие у вашего персонажа недостатки?"
                 className="h-[100px]"
               />
@@ -103,7 +103,7 @@ export const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdat
           <Textarea
             id="appearance"
             value={character.appearance || ''}
-            onChange={handleChange('appearance')}
+            onChange={handleChange('appearance' as keyof Character)}
             placeholder="Опишите внешний вид вашего персонажа..."
             className="min-h-[150px]"
           />

@@ -1,4 +1,3 @@
-
 import { db } from './firebase';
 import { collection, addDoc, doc, updateDoc, getDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
 import { CharacterSheet } from '@/types/character';
@@ -22,8 +21,13 @@ export const saveCharacter = async (character: CharacterSheet): Promise<{id: str
     
     // Проверяем наличие id (для обновления существующего персонажа)
     if (character.id) {
+      // Конвертируем id в строку, если это число
+      const characterId = typeof character.id === 'number' 
+        ? character.id.toString() 
+        : character.id;
+        
       // Обновляем существующего персонажа
-      const characterRef = doc(db, 'characters', character.id);
+      const characterRef = doc(db, 'characters', characterId);
       
       // Добавляем timestamp обновления и userId
       const updatedCharacter = { 
@@ -32,10 +36,13 @@ export const saveCharacter = async (character: CharacterSheet): Promise<{id: str
         userId
       };
       
-      await updateDoc(characterRef, updatedCharacter);
-      console.log("Персонаж успешно обновлен:", character.id);
+      // Удаляем id из объекта, т.к. оно уже в пути документа
+      delete updatedCharacter.id;
       
-      return { id: character.id };
+      await updateDoc(characterRef, updatedCharacter);
+      console.log("Персонаж успешно обновлен:", characterId);
+      
+      return { id: characterId };
     } else {
       // Создаем нового персонажа
       const characterData = { 
@@ -44,6 +51,11 @@ export const saveCharacter = async (character: CharacterSheet): Promise<{id: str
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      
+      // Если есть id в объекте, удаляем его перед созданием документа
+      if (characterData.id) {
+        delete characterData.id;
+      }
       
       const docRef = await addDoc(collection(db, 'characters'), characterData);
       console.log("Персонаж успешно создан с ID:", docRef.id);

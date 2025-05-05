@@ -1,49 +1,54 @@
 
 import { CharacterSpell } from './character';
 
+// Интерфейс для данных о заклинании
 export interface SpellData {
   id?: string | number;
   name: string;
+  name_en?: string;
   level: number;
   school: string;
   castingTime: string;
   range: string;
   components: string;
   duration: string;
-  description: string;
-  higherLevels?: string;
+  description: string | string[];
   classes?: string[] | string;
-  ritual?: boolean;
-  concentration?: boolean;
+  source?: string;
+  isRitual?: boolean;
+  isConcentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
   prepared?: boolean;
 }
 
-// Функция для преобразования объекта CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+// Конвертация CharacterSpell в SpellData
+export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell): SpellData => {
   return {
-    ...spell,
-    id: spell.id?.toString() || Math.random().toString(),
-    school: spell.school || 'Универсальная', // Значение по умолчанию
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'Касание',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
+    ...characterSpell,
+    school: characterSpell.school || "Неизвестная",
+    castingTime: characterSpell.castingTime || "1 действие",
+    range: characterSpell.range || "Неизвестная",
+    components: characterSpell.components || "",
+    duration: characterSpell.duration || "Мгновенная",
+    description: characterSpell.description || "",
+    isRitual: characterSpell.ritual,
+    isConcentration: characterSpell.concentration,
+    higherLevel: characterSpell.higherLevels
   };
 };
 
-// Функция для преобразования объекта SpellData в CharacterSpell
-export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+// Конвертация SpellData в CharacterSpell
+export const convertSpellDataToCharacterSpell = (spellData: SpellData): CharacterSpell => {
   return {
-    ...spell,
-    name: spell.name,
-    level: spell.level
+    ...spellData,
+    ritual: spellData.isRitual || spellData.ritual,
+    concentration: spellData.isConcentration || spellData.concentration,
+    higherLevels: spellData.higherLevel || spellData.higherLevels
   };
-};
-
-// Функция для массового преобразования массива заклинаний
-export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };
