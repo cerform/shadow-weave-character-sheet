@@ -113,7 +113,7 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
         material: parsed.material,
         ritual: parsed.ritual,
         concentration: parsed.concentration,
-        prepared: false // Добавляем обязательное поле prepared
+        prepared: false // Обязательное поле prepared
       };
       
       updatedSpells.push(newSpell);
@@ -203,7 +203,7 @@ export function importSpellsFromDetailedText(text: string): SpellData[] {
       concentration: !!concentrationMatch,
       ritual: false, // По умолчанию не ритуал
       classes,
-      prepared: false,
+      prepared: false, // Устанавливаем prepared значение по умолчанию
     };
     
     spells.push(spell);

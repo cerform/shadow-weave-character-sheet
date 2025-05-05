@@ -66,14 +66,19 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
     try {
       setIsProcessing(true);
       
-      const newSpells = importSpellsFromDetailedText(inputText);
+      // Import spells and ensure 'prepared' property is set
+      const newSpells = importSpellsFromDetailedText(inputText).map(spell => ({
+        ...spell,
+        prepared: spell.prepared ?? false // Ensure prepared is set, default to false if missing
+      }));
+      
       setImportedCount(newSpells.length);
       
       if (onImport && newSpells.length > 0) {
-        // Объединяем существующие и новые заклинания
+        // Combine existing and new spells
         const combinedSpells = [...allSpells];
         
-        // Добавляем только те заклинания, которых еще нет
+        // Add only spells that don't exist yet
         newSpells.forEach(newSpell => {
           const exists = combinedSpells.some(
             existing => existing.name === newSpell.name && existing.level === newSpell.level
@@ -84,7 +89,8 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
           }
         });
         
-        onImport(combinedSpells);
+        // Since we've ensured all spells have the 'prepared' property, this is now type-safe
+        onImport(combinedSpells as CharacterSpell[]);
       }
       
       toast({
