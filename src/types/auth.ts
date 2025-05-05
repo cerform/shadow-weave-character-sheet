@@ -16,7 +16,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
-  googleLogin: () => Promise<void>;
+  googleLogin: () => Promise<UserType | null>; // Изменили тип возвращаемого значения на UserType | null
   isAuthenticated: boolean;
   currentUser: UserType | null;
   updateProfile?: (data: Partial<UserType>) => Promise<void>;

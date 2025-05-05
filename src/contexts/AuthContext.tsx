@@ -15,7 +15,7 @@ const defaultAuthContext: AuthContextType = {
   signup: async () => {},
   register: async () => {},
   logout: async () => {},
-  googleLogin: async () => {},
+  googleLogin: async () => null, // Изменено на null в соответствии с типом
   isAuthenticated: false,
   updateProfile: async () => {}
 };
@@ -218,8 +218,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Функция для входа через Google
-  const googleLogin = async () => {
+  // Функция для входа через Google - обновлена с правильным типом возвращаемого значения
+  const googleLogin = async (): Promise<UserType | null> => {
     try {
       setLoading(true);
       console.log("Attempting Google login");

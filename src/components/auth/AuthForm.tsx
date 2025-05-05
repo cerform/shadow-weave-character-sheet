@@ -94,7 +94,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       const result = await googleLogin();
       console.log("Результат входа через Google:", result);
       
-      if (result) {
+      // Проверяем результат как объект, а не булево значение
+      if (result !== null) {
         toast({
           title: "Вход выполнен",
           description: "Вы успешно вошли через Google"
