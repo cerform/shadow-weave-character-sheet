@@ -118,19 +118,19 @@ export const useSpellbook = () => {
 
   // Получение цвета бейджа для уровня заклинания
   const getBadgeColor = (level: number): string => {
-    if (level === 0) return currentTheme.cantrip || '#9ca3af';
+    if (level === 0) return currentTheme.accent || '#9ca3af';
     
     const levelColors = [
       '',
-      currentTheme.level1 || '#3b82f6',
-      currentTheme.level2 || '#10b981',
-      currentTheme.level3 || '#f59e0b',
-      currentTheme.level4 || '#ef4444',
-      currentTheme.level5 || '#8b5cf6',
-      currentTheme.level6 || '#ec4899',
-      currentTheme.level7 || '#6366f1',
-      currentTheme.level8 || '#0ea5e9',
-      currentTheme.level9 || '#14b8a6'
+      currentTheme.accent || '#3b82f6',
+      currentTheme.accent || '#10b981',
+      currentTheme.accent || '#f59e0b',
+      currentTheme.accent || '#ef4444',
+      currentTheme.accent || '#8b5cf6',
+      currentTheme.accent || '#ec4899',
+      currentTheme.accent || '#6366f1',
+      currentTheme.accent || '#0ea5e9',
+      currentTheme.accent || '#14b8a6'
     ];
     
     return level >= 1 && level <= 9 ? levelColors[level] : '#9ca3af';
@@ -139,14 +139,14 @@ export const useSpellbook = () => {
   // Получение цвета бейджа для школы магии
   const getSchoolBadgeColor = (school: string): string => {
     const schoolColors: Record<string, string> = {
-      'Воплощение': currentTheme.evocation || '#ef4444',
-      'Некромантия': currentTheme.necromancy || '#64748b',
-      'Очарование': currentTheme.enchantment || '#ec4899',
-      'Преобразование': currentTheme.transmutation || '#10b981',
-      'Прорицание': currentTheme.divination || '#8b5cf6',
-      'Вызов': currentTheme.conjuration || '#f59e0b',
-      'Ограждение': currentTheme.abjuration || '#3b82f6',
-      'Иллюзия': currentTheme.illusion || '#6366f1'
+      'Воплощение': currentTheme.accent || '#ef4444',
+      'Некромантия': currentTheme.accent || '#64748b',
+      'Очарование': currentTheme.accent || '#ec4899',
+      'Преобразование': currentTheme.accent || '#10b981',
+      'Прорицание': currentTheme.accent || '#8b5cf6',
+      'Вызов': currentTheme.accent || '#f59e0b',
+      'Ограждение': currentTheme.accent || '#3b82f6',
+      'Иллюзия': currentTheme.accent || '#6366f1'
     };
     
     return schoolColors[school] || '#9ca3af';
@@ -180,6 +180,16 @@ export const useSpellbook = () => {
     clearFilters,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    
+    // Adding these empty properties to match the type expected by SpellBookViewer
+    loading: false,
+    availableSpells: [],
+    selectedSpells: [],
+    spellsByLevel: {},
+    updateSelectedSpells: (spells: any) => {},
+    addSpell: (spell: any) => {},
+    removeSpell: (name: string) => {},
+    togglePrepared: (spell: any) => {}
   };
 };

@@ -1,24 +1,46 @@
 
-import { useContext } from 'react';
-import { UserThemeContext } from '@/contexts/UserThemeContext';
+import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { themes } from '@/lib/themes';
 
-export const useUserTheme = () => {
-  const context = useContext(UserThemeContext);
+interface UserThemeContextProps {
+  activeTheme: string | null;
+  setUserTheme: (theme: string) => void;
+}
+
+const UserThemeContext = createContext<UserThemeContextProps>({
+  activeTheme: null,
+  setUserTheme: () => {}
+});
+
+export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [activeTheme, setActiveTheme] = useState<string | null>(null);
   
-  if (!context) {
-    console.warn('useUserTheme must be used within a UserThemeProvider');
-    // Возвращаем заглушку при отсутствии контекста
-    return {
-      activeTheme: 'default',
-      setUserTheme: (theme: string) => {
-        console.warn(`Unable to set theme to ${theme}: UserThemeProvider not found`);
-      },
-      currentThemeStyles: themes.default
-    };
-  }
+  useEffect(() => {
+    try {
+      const savedUserTheme = localStorage.getItem('userTheme');
+      if (savedUserTheme && themes[savedUserTheme as keyof typeof themes]) {
+        setActiveTheme(savedUserTheme);
+      }
+    } catch (e) {
+      console.error('Error loading user theme:', e);
+    }
+  }, []);
   
-  return context;
+  const setUserTheme = (theme: string) => {
+    if (theme === 'default') {
+      localStorage.removeItem('userTheme');
+      setActiveTheme(null);
+    } else {
+      localStorage.setItem('userTheme', theme);
+      setActiveTheme(theme);
+    }
+  };
+  
+  return (
+    <UserThemeContext.Provider value={{ activeTheme, setUserTheme }}>
+      {children}
+    </UserThemeContext.Provider>
+  );
 };
 
-export default useUserTheme;
+export const useUserTheme = () => useContext(UserThemeContext);
