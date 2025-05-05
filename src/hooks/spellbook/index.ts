@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { spells as allSpells, getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 import { SpellData, convertCharacterSpellToSpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
+import { useSpellbook as useSpellbookMain } from './useSpellbook';
 
 export const useSpellbook = (characterClass = '', characterLevel = 1) => {
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,12 @@ export const useSpellbook = (characterClass = '', characterLevel = 1) => {
     );
   };
 
+  // Get the main spellbook functionality
+  const mainSpellbook = useSpellbookMain();
+
+  // Combine both functionality sets
   return {
+    ...mainSpellbook,
     loading,
     availableSpells,
     selectedSpells,

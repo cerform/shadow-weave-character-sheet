@@ -6,7 +6,7 @@ import { SpellData, convertCharacterSpellToSpellData, convertSpellDataToCharacte
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Book, BookOpen, Filter, Search, X, ArrowLeft } from 'lucide-react';
+import { Book, BookOpen, Filter, Search, X, ArrowLeft, Home } from 'lucide-react';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 import SpellFilters from './SpellFilters';

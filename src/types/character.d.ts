@@ -1,4 +1,5 @@
 
+// Basic types
 export interface CharacterSpell {
   id?: number | string;
   name: string;
@@ -77,6 +78,22 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  stats?: AbilityScores;
+  userId?: string;
+  abilityPointsUsed?: number;
+  gender?: string;
+  additionalClasses?: ClassLevel[];
+  hitPoints?: {
+    current: number;
+    max: number;
+    temporary: number;
+  };
+}
+
+export interface ClassLevel {
+  class: string;
+  subclass?: string;
+  level: number;
 }
 
 export interface AbilityScores {
@@ -94,4 +111,28 @@ export interface AbilityScores {
   INT?: number;
   WIS?: number;
   CHA?: number;
+}
+
+// Added to support CharacterSheet and for use across creation components
+export interface CharacterSheet extends Character {
+  // Character sheet specific properties can be added here
+  // This is needed to maintain compatibility with existing components
+}
+
+// Added constants for ability score caps
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};
+
+// HitPointEvent for DamageLog
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp';
+  amount: number;
+  source?: string;
+  timestamp: number;
+  previousHP?: number;
+  newHP?: number;
 }
