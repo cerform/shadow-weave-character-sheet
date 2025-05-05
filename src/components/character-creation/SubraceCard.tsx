@@ -49,6 +49,7 @@ const SubraceCard: React.FC<SubraceProps> = ({
         background: selected
           ? `${currentTheme.cardBackground}`
           : 'rgba(0, 0, 0, 0.6)',
+        // Исправляем конфликт стилей, используя только borderColor вместо border
         borderColor: selected
           ? currentTheme.accent
           : 'rgba(255, 255, 255, 0.1)',
@@ -92,7 +93,9 @@ const SubraceCard: React.FC<SubraceProps> = ({
                   style={{ 
                     background: 'rgba(0, 0, 0, 0.3)', 
                     borderColor: `${currentTheme.accent}30`,
-                    border: '1px solid'
+                    // Используем borderWidth и borderStyle отдельно, а не единый border
+                    borderWidth: '1px',
+                    borderStyle: 'solid'
                   }}
                 >
                   <span>

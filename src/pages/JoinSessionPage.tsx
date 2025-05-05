@@ -15,12 +15,22 @@ const JoinSessionPage: React.FC = () => {
   const navigate = useNavigate();
   const [sessionCode, setSessionCode] = useState('');
   const [playerName, setPlayerName] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
   const { setCharacter } = useCharacter();
   const { toast } = useToast();
   const { connect, isConnected, sessionData } = useSocket();
   
   useEffect(() => {
+    // Загружаем имя игрока из localStorage, если оно есть
+    const savedPlayerName = localStorage.getItem('player-name');
+    if (savedPlayerName) {
+      setPlayerName(savedPlayerName);
+    }
+  }, []);
+  
+  useEffect(() => {
     if (isConnected && sessionData) {
+      setIsConnecting(false);
       toast({
         title: "Успешно!",
         description: `Вы подключились к сессии ${sessionData.name}`,
@@ -39,17 +49,32 @@ const JoinSessionPage: React.FC = () => {
       return;
     }
     
+    setIsConnecting(true);
+    
+    // Сохраняем имя игрока в localStorage
+    localStorage.setItem('player-name', playerName);
+    
     // Retrieve character ID from localStorage
     const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
     
-    connect(sessionCode, playerName, lastSelectedCharacterId);
-    
-    // Store session info in localStorage
-    localStorage.setItem('active-session', JSON.stringify({
-      sessionCode,
-      playerName,
-      characterId: lastSelectedCharacterId
-    }));
+    try {
+      connect(sessionCode, playerName, lastSelectedCharacterId);
+      
+      // Store session info in localStorage
+      localStorage.setItem('active-session', JSON.stringify({
+        sessionCode,
+        playerName,
+        characterId: lastSelectedCharacterId
+      }));
+    } catch (error) {
+      console.error("Ошибка при подключении:", error);
+      setIsConnecting(false);
+      toast({
+        title: "Ошибка подключения",
+        description: "Не удалось подключиться к сессии. Проверьте код сессии и попробуйте снова.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleGoBack = () => {
@@ -90,7 +115,12 @@ const JoinSessionPage: React.FC = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Button>
-          <Button onClick={handleJoinSession}>Присоединиться</Button>
+          <Button 
+            onClick={handleJoinSession} 
+            disabled={isConnecting}
+          >
+            {isConnecting ? "Подключение..." : "Присоединиться"}
+          </Button>
         </CardFooter>
       </Card>
     </div>

@@ -24,38 +24,57 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
 // Создание экземпляра Socket.io с автоподключением: false
 export const socket: Socket = io(SERVER_URL, {
-  autoConnect: false,
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionAttempts: 5,
+  autoConnect: false, // Важно: отключаем автоподключение
+  reconnection: false, // Отключаем автоматические попытки переподключения
+  timeout: 5000, // Уменьшаем таймаут для быстрого определения неудачных подключений
 });
 
 // Сервис для работы с сокетами
 export const socketService = {
   connect: (sessionCode: string, playerName: string, characterId?: string) => {
-    socket.connect();
-    socket.emit('joinRoom', { roomCode: sessionCode, nickname: playerName, characterId });
+    // Проверяем, что сокет не подключен, прежде чем пытаться подключиться
+    if (!socket.connected) {
+      try {
+        socket.connect();
+        socket.emit('joinRoom', { roomCode: sessionCode, nickname: playerName, characterId });
+        return true;
+      } catch (error) {
+        console.error("Ошибка подключения сокета:", error);
+        return false;
+      }
+    }
+    return false;
   },
 
   disconnect: () => {
-    socket.disconnect();
+    // Проверяем, что сокет подключен, прежде чем пытаться отключиться
+    if (socket.connected) {
+      socket.disconnect();
+    }
   },
 
   sendChatMessage: (message: string) => {
-    socket.emit('chatMessage', {
-      message,
-    });
+    if (socket.connected) {
+      socket.emit('chatMessage', { message });
+    } else {
+      console.warn("Нельзя отправить сообщение: сокет не подключен");
+    }
   },
 
   sendRoll: (formula: string, reason?: string) => {
-    socket.emit('rollDice', {
-      formula,
-      reason,
-    });
+    if (socket.connected) {
+      socket.emit('rollDice', { formula, reason });
+    } else {
+      console.warn("Нельзя отправить бросок: сокет не подключен");
+    }
   },
 
   updateToken: (token: any) => {
-    socket.emit('updateToken', token);
+    if (socket.connected) {
+      socket.emit('updateToken', token);
+    } else {
+      console.warn("Нельзя обновить токен: сокет не подключен");
+    }
   },
   
   on: (event: string, callback: (...args: any[]) => void) => {
