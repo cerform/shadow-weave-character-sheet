@@ -38,19 +38,18 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     onSubraceSelect: (subrace) => updateCharacter({ subrace })
   });
 
-  // Важное изменение: не делаем автоматическую редирект без проверки наличия расы
+  // Auto-redirect if no subraces are available
   useEffect(() => {
     if (character.race && !hasSubraces && !autoRedirectAttempted) {
       console.log("No subraces for race", character.race, "redirecting to next step");
       setAutoRedirectAttempted(true);
-      // Добавляем задержку, чтобы UI успел обновиться
       setTimeout(() => {
         nextStep();
       }, 100);
     }
   }, [hasSubraces, character.race, autoRedirectAttempted, nextStep, setAutoRedirectAttempted]);
 
-  // Если ещё нет выбранной расы, показываем сообщение
+  // If no race is selected, show message
   if (!character.race) {
     return (
       <div className="space-y-6 animate-fade-in">
@@ -75,7 +74,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     );
   }
 
-  // Если нет подрас для выбранной расы, показываем соответствующее сообщение
+  // If race has no subraces, show message
   if (!hasSubraces) {
     return (
       <div className="space-y-6 animate-fade-in">
@@ -101,8 +100,8 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
             <SubraceCard
               key={subrace.name}
               name={subrace.name}
-              description={subrace.description}
-              traits={subrace.traits}
+              description={typeof subrace.description === 'string' ? subrace.description : 'Нет описания'}
+              traits={Array.isArray(subrace.traits) ? subrace.traits : []}
               abilityScoreIncrease={subrace.abilityScoreIncrease}
               selected={selectedSubrace === subrace.name}
               onClick={() => handleSubraceSelect(subrace.name)}
