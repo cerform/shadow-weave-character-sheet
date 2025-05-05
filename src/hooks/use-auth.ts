@@ -21,10 +21,12 @@ export const useAuth = () => {
       logout: () => Promise.reject('AuthProvider не найден'),
       register: () => Promise.reject('AuthProvider не найден'),
       resetPassword: () => Promise.reject('AuthProvider не найден'),
-      updateProfile: () => Promise.reject('AuthProvider не найден'),
+      updateUserProfile: () => Promise.reject('AuthProvider не найден'),
       googleLogin: () => Promise.reject('AuthProvider не найден')
     };
   }
   
   return authContext;
 };
+
+export default useAuth;

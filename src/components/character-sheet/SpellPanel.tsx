@@ -32,15 +32,20 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
     
     return spells.map(spell => {
       if (typeof spell === 'string') {
-        // Преобразуем строки в CharacterSpell объекты
+        // Ensure all required properties are provided when converting a string to CharacterSpell
         return {
           name: spell,
           level: 0,
           school: 'Неизвестная',
+          castingTime: '1 действие',
+          range: 'На себя',
+          components: '-',
+          duration: 'Мгновенная',
+          description: 'Нет описания',
           prepared: false
         };
       }
-      // Если это уже объект, убеждаемся что prepared существует
+      // If it's already an object, ensure prepared property exists
       return {
         ...spell,
         prepared: spell.prepared ?? false

@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { processSpellBatch } from '@/utils/spellBatchImporter';
 import { useToast } from '@/components/ui/use-toast';
 import { CharacterSpell } from '@/types/character';
-import { spells } from '@/data/spells'; // Import directly from spells
+import { getAllSpells } from '@/data/spells'; // Import directly from getAllSpells
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 
 const SpellDatabaseManager: React.FC = () => {
   const [rawData, setRawData] = useState('');
@@ -17,7 +17,7 @@ const SpellDatabaseManager: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setAllSpells(spells); // Use the imported spells array directly
+    setAllSpells(getAllSpells()); // Use the imported getAllSpells function
   }, []);
   
   const handleImport = () => {

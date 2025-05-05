@@ -47,6 +47,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   );
 };
 
+// Add the missing getSpellsByLevel function
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   return ensureSpellsHavePreparedField(
     getAllSpells().filter(spell => spell.level === level)
