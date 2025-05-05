@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -199,14 +200,17 @@ const HandbookPage: React.FC = () => {
                       <CardTitle>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Fixed rendering with proper type annotations */}
-                      {typeof subraceObj.description === 'object' ? (
-                        <span>Подробное описание</span>
-                      ) : typeof subraceObj.description === 'string' ? (
-                        <span>{subraceObj.description}</span>
-                      ) : (
-                        <span>Нет описания</span>
-                      )}
+                      {/* Properly handle different types with explicit rendering */}
+                      {(() => {
+                        // Use an IIFE to ensure we return a ReactNode
+                        if (typeof subraceObj.description === 'object') {
+                          return <span>Подробное описание</span>;
+                        } else if (typeof subraceObj.description === 'string') {
+                          return <span>{subraceObj.description}</span>;
+                        } else {
+                          return <span>Нет описания</span>;
+                        }
+                      })()}
                     </CardContent>
                   </Card>
                 );
