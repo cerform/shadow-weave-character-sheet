@@ -1,100 +1,91 @@
 
-import { safeSome, safeFilter } from '@/utils/spellUtils';
-import { CharacterSpell, SpellData } from '@/types/character';
+import { SpellData } from './types';
 
-// Функция для поиска по имени заклинания
-export const filterSpellsByName = (spells: SpellData[], searchTerm: string): SpellData[] => {
-  if (!searchTerm.trim()) return spells;
-  return safeFilter(spells, (spell) => safeSome(spell.name, searchTerm));
-};
-
-// Переименуем функцию для обратной совместимости
-export const filterBySearchTerm = filterSpellsByName;
-
-// Функция для фильтрации по школе магии
-export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
-  if (!schools.length) return spells;
-  return safeFilter(spells, (spell) => {
-    if (!spell.school) return false;
-    return schools.some(school => safeSome(spell.school, school));
+/**
+ * Фильтрует заклинания по поисковому запросу
+ */
+export const filterBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+  if (!searchTerm) return spells;
+  
+  const term = searchTerm.toLowerCase();
+  return spells.filter(spell => {
+    return (
+      (spell.name && spell.name.toLowerCase().includes(term)) ||
+      (spell.description && spell.description.toLowerCase().includes(term)) ||
+      (spell.school && spell.school.toLowerCase().includes(term))
+    );
   });
 };
 
-// Переименуем функцию для обратной совместимости
-export const filterBySchool = filterSpellsBySchool;
-
-// Функция для фильтрации по уровню заклинания
-export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
-  if (!levels.length) return spells;
-  return safeFilter(spells, (spell) => levels.includes(spell.level));
+/**
+ * Фильтрует заклинания по уровню
+ */
+export const filterByLevel = (spells: SpellData[], levelFilters: number[]): SpellData[] => {
+  if (!levelFilters.length) return spells;
+  
+  return spells.filter(spell => levelFilters.includes(spell.level));
 };
 
-// Переименуем функцию для обратной совместимости
-export const filterByLevel = filterSpellsByLevel;
-
-// Функция для фильтрации по компонентам заклинания
-export const filterSpellsByComponents = (
-  spells: SpellData[], 
-  components: { verbal?: boolean; somatic?: boolean; material?: boolean }
-): SpellData[] => {
-  const { verbal, somatic, material } = components;
-  if (!verbal && !somatic && !material) return spells;
+/**
+ * Фильтрует заклинания по школе магии
+ */
+export const filterBySchool = (spells: SpellData[], schoolFilters: string[]): SpellData[] => {
+  if (!schoolFilters.length) return spells;
   
-  return safeFilter(spells, (spell) => {
-    if (verbal && !spell.verbal) return false;
-    if (somatic && !spell.somatic) return false;
-    if (material && !spell.material) return false;
-    return true;
-  });
+  return spells.filter(spell => 
+    spell.school && schoolFilters.includes(spell.school)
+  );
 };
 
-// Функция для фильтрации по классу персонажа
-export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
-  if (!classes.length) return spells;
+/**
+ * Фильтрует заклинания по классу
+ */
+export const filterByClass = (spells: SpellData[], classFilters: string[]): SpellData[] => {
+  if (!classFilters.length) return spells;
   
-  return safeFilter(spells, (spell) => {
+  return spells.filter(spell => {
     if (!spell.classes) return false;
     
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(spellClass => 
-        classes.some(className => safeSome(spellClass, className))
-      );
+      return spell.classes.some(cls => classFilters.includes(cls));
     }
     
+    // Если classes - это строка, разделим её запятыми
     if (typeof spell.classes === 'string') {
-      return classes.some(className => safeSome(spell.classes as string, className));
+      const classList = spell.classes.split(',').map(c => c.trim());
+      return classList.some(cls => classFilters.includes(cls));
     }
     
     return false;
   });
 };
 
-// Переименуем функцию для обратной совместимости
-export const filterByClass = filterSpellsByClass;
-
-// Функция для фильтрации по подготовленным заклинаниям
-export const filterSpellsByPrepared = (spells: SpellData[], showPrepared: boolean): SpellData[] => {
-  if (!showPrepared) return spells;
-  return safeFilter(spells, (spell) => spell.prepared === true);
-};
-
-// Функция для извлечения доступных классов из списка заклинаний
+/**
+ * Извлекает все уникальные классы из списка заклинаний
+ */
 export const extractClasses = (spells: SpellData[]): string[] => {
-  const classesSet = new Set<string>();
+  const uniqueClasses = new Set<string>();
   
   spells.forEach(spell => {
     if (!spell.classes) return;
     
     if (Array.isArray(spell.classes)) {
-      spell.classes.forEach(spellClass => {
-        if (typeof spellClass === 'string') {
-          classesSet.add(spellClass);
-        }
-      });
+      spell.classes.forEach(cls => uniqueClasses.add(cls));
     } else if (typeof spell.classes === 'string') {
-      classesSet.add(spell.classes);
+      spell.classes.split(',').map(c => c.trim()).forEach(cls => uniqueClasses.add(cls));
     }
   });
   
-  return Array.from(classesSet).sort();
+  return Array.from(uniqueClasses).sort();
+};
+
+/**
+ * Форматирует классы в строку
+ */
+export const formatClassList = (classes: string[] | string | undefined): string => {
+  if (!classes) return '';
+  if (Array.isArray(classes)) {
+    return classes.join(', ');
+  }
+  return classes;
 };
