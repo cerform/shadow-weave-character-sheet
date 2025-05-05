@@ -6,6 +6,11 @@ import { level4 } from './level4';
 import { level3Spells } from './level3';
 import { level4Part2 } from './level4_part2';
 import { level4Part3 } from './level4_part3';
+import { level5 } from './level5';
+import { level6 } from './level6';
+import { level7 } from './level7';
+import { level8 } from './level8';
+import { level9 } from './level9';
 import { ensureSpellFields } from './ensureSpellFields';
 
 // Empty arrays for class-specific spells until they're implemented
@@ -24,6 +29,11 @@ export const allSpells = [
   ...level3Spells,
   ...level4Part2,
   ...level4Part3,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9,
   ...clericSpells,
   ...druidSpells,
   ...paladinSpells,
@@ -74,6 +84,11 @@ export {
   level3Spells,
   level4Part2,
   level4Part3,
+  level5,
+  level6,
+  level7,
+  level8,
+  level9,
   clericSpells,
   druidSpells,
   paladinSpells,
