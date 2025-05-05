@@ -1,18 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { useConsoleLogger } from '@/hooks/use-console-logger';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AuthFormProps {
   redirectTo?: string;
@@ -24,25 +26,36 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [displayName, setDisplayName] = useState('');
   const [isDM, setIsDM] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const logger = useConsoleLogger({ maxPerCategory: 10, allowDuplicates: true });
+
+  // Очистка сообщения об ошибке при смене вкладки или успешной аутентификации
+  useEffect(() => {
+    setAuthError(null);
+  }, [theme]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setAuthError(null);
 
     try {
+      logger.logInfo("Начинаем вход по email", "auth-form");
       await login(email, password);
+      logger.logInfo("Вход по email выполнен успешно", "auth-form");
       toast({
         title: "Вход выполнен",
         description: "Вы успешно вошли в систему"
       });
       navigate(redirectTo);
     } catch (error: any) {
-      console.error("Ошибка при входе:", error);
+      logger.logError("Ошибка при входе по email", "auth-form", error);
+      setAuthError(error.message || "Не удалось войти в систему");
       toast({
         title: "Ошибка входа",
         description: error.message || "Не удалось войти в систему",
@@ -66,16 +79,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     }
     
     setIsLoading(true);
+    setAuthError(null);
 
     try {
+      logger.logInfo("Начинаем регистрацию", "auth-form");
       await register(email, password, displayName, isDM);
+      logger.logInfo("Регистрация выполнена успешно", "auth-form");
       toast({
         title: "Регистрация выполнена",
         description: "Вы успешно зарегистрировались"
       });
       navigate(redirectTo);
     } catch (error: any) {
-      console.error("Ошибка при регистрации:", error);
+      logger.logError("Ошибка при регистрации", "auth-form", error);
+      setAuthError(error.message || "Не удалось зарегистрироваться");
       toast({
         title: "Ошибка регистрации",
         description: error.message || "Не удалось зарегистрироваться",
@@ -88,19 +105,27 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setAuthError(null);
 
     try {
-      console.log("Начинаем вход через Google");
+      logger.logInfo("Начинаем вход через Google из AuthForm", "auth-form");
+      logger.logInfo(`Текущее окружение: ${window.location.origin}`, "auth-env");
+      logger.logInfo(`User Agent: ${navigator.userAgent}`, "auth-env");
+      
       const result = await googleLogin();
-      console.log("Результат входа через Google:", result);
+      logger.logInfo("Результат входа через Google:", "auth-form");
+      logger.logInfo(JSON.stringify(result), "auth-form");
       
       if (result) {
+        logger.logInfo("Google вход успешен, перенаправляем", "auth-form");
         toast({
           title: "Вход выполнен",
           description: "Вы успешно вошли через Google"
         });
         navigate(redirectTo);
       } else {
+        logger.logWarning("Вход через Google вернул null результат", "auth-form");
+        setAuthError("Вход через Google не был завершен");
         toast({
           title: "Вход не завершен",
           description: "Вход через Google не был завершен",
@@ -108,10 +133,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         });
       }
     } catch (error: any) {
-      console.error("Ошибка при входе через Google:", error);
+      logger.logError("Ошибка при входе через Google", "auth-form", error);
+      const errorMsg = error.message || "Не удалось войти через Google";
+      setAuthError(errorMsg);
       toast({
         title: "Ошибка входа",
-        description: error.message || "Не удалось войти через Google",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -133,6 +160,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
           <TabsTrigger value="login">Вход</TabsTrigger>
           <TabsTrigger value="register">Регистрация</TabsTrigger>
         </TabsList>
+        
+        {/* Отображение ошибки аутентификации, если есть */}
+        {authError && (
+          <div className="p-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          </div>
+        )}
         
         {/* Вкладка входа */}
         <TabsContent value="login" className="space-y-4">
@@ -229,7 +266,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                   d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
                 />
               </svg>
-              Войти с Google
+              {isLoading ? "Авторизация..." : "Войти с Google"}
             </Button>
           </CardContent>
         </TabsContent>
@@ -351,7 +388,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                   d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
                 />
               </svg>
-              Регистрация с Google
+              {isLoading ? "Авторизация..." : "Регистрация с Google"}
             </Button>
           </CardContent>
         </TabsContent>

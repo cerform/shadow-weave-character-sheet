@@ -69,11 +69,41 @@ const formatFirebaseError = (error: any): string => {
     'auth/unauthorized-domain': `Домен "${currentDomain}" не авторизован для аутентификации Firebase. Добавьте этот домен в список разрешенных в консоли Firebase (Authentication > Settings > Authorized domains).`,
     'auth/popup-closed-by-user': 'Окно авторизации было закрыто до завершения процесса.',
     'auth/cancelled-popup-request': 'Операция отменена из-за нового запроса входа.',
-    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером. Разрешите всплывающие окна для этого сайта и повторите попытку.'
+    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером. Разрешите всплывающие окна для этого сайта и повторите попытку.',
+    'auth/internal-error': 'Внутренняя ошибка Firebase. Попробуйте позже или используйте другой метод входа.',
+    'auth/network-request-failed': 'Ошибка сети. Проверьте подключение к интернету.',
+    'auth/too-many-requests': 'Слишком много запросов. Попробуйте позже.',
+    'auth/web-storage-unsupported': 'Веб-хранилище не поддерживается или отключено. Включите cookies в браузере.',
+    'auth/popup-redirect-error': 'Ошибка при перенаправлении. Возможно, блокировка всплывающих окон.',
+    'auth/redirect-cancelled-by-user': 'Перенаправление отменено пользователем.',
+    'auth/redirect-operation-pending': 'Перенаправление уже выполняется.',
+    'auth/timeout': 'Превышено время ожидания запроса. Проверьте подключение к интернету.',
   };
   
   // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
   return errorMessages[errorCode] || error.message || 'Произошла неизвестная ошибка при аутентификации.';
+};
+
+// Расширенное логирование ошибок
+const logAuthError = (action: string, error: any) => {
+  console.error(`[AUTH ERROR] ${action}:`, error);
+  console.error(`Error Code: ${error.code}`);
+  console.error(`Error Message: ${error.message}`);
+  console.error(`Formatted Message: ${formatFirebaseError(error)}`);
+  
+  // Дополнительные детали для отладки Google авторизации
+  if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+    console.warn('Popup проблемы: Проверьте настройки блокировки всплывающих окон в браузере');
+  }
+  
+  if (error.code === 'auth/unauthorized-domain') {
+    console.warn(`Домен не авторизован: ${window.location.origin} должен быть добавлен в список авторизованных доменов в консоли Firebase`);
+  }
+  
+  // Логируем полный объект ошибки для более глубокого анализа
+  console.error('Полный объект ошибки:', error);
+  
+  return error;
 };
 
 // Функции для аутентификации
@@ -87,8 +117,8 @@ const auth = {
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       return userCredential.user;
     } catch (error: any) {
+      logAuthError('Регистрация по email', error);
       const formattedError = { ...error, message: formatFirebaseError(error) };
-      console.error('Ошибка при регистрации:', formattedError.message);
       throw formattedError;
     }
   },
@@ -99,8 +129,8 @@ const auth = {
       const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
       return userCredential.user;
     } catch (error: any) {
+      logAuthError('Вход по email', error);
       const formattedError = { ...error, message: formatFirebaseError(error) };
-      console.error('Ошибка при входе:', formattedError.message);
       throw formattedError;
     }
   },
@@ -108,6 +138,11 @@ const auth = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
+      console.log("[AUTH] Начинаем вход через Google");
+      
+      // Проверяем доступность домена для Firebase Auth
+      console.log("[AUTH] Текущий домен:", window.location.origin);
+      
       // Создаем новый экземпляр провайдера при каждом вызове
       const provider = new GoogleAuthProvider();
       // Настраиваем параметры для гарантированного показа окна выбора аккаунта
@@ -116,20 +151,38 @@ const auth = {
         access_type: 'offline'
       });
       
-      console.log("Запускаем вход через Google с обновленными параметрами");
+      console.log("[AUTH] Google провайдер создан с параметрами:", {
+        prompt: 'select_account',
+        access_type: 'offline'
+      });
       
       // Очищаем кэш состояния авторизации перед новым вызовом
       // Это может помочь с проблемой отображения окна выбора аккаунта
+      console.log("[AUTH] Выполняем выход для очистки кэша...");
       await firebaseAuth.signOut();
+      console.log("[AUTH] Выход выполнен успешно");
       
       // Используем signInWithPopup с новым провайдером
+      console.log("[AUTH] Вызываем signInWithPopup...");
       const result = await signInWithPopup(firebaseAuth, provider);
-      console.log("Google login successful", result.user);
+      console.log("[AUTH] Google login успешен:", result.user);
       return result.user;
     } catch (error: any) {
-      console.error('Оригинальная ошибка при входе через Google:', error);
+      logAuthError('Вход через Google', error);
+      console.error('[AUTH] Ошибка при входе через Google. Полная информация:', {
+        errorCode: error.code,
+        errorMessage: error.message,
+        email: error.email,
+        credential: error.credential
+      });
+      
+      // Специфичная обработка для ошибок popup
+      if (error.code === 'auth/popup-blocked') {
+        console.warn('[AUTH] Блокировка popup! Проверьте настройки браузера.');
+        error.message = 'Всплывающее окно заблокировано. Пожалуйста, разрешите всплывающие окна для этого сайта и попробуйте снова.';
+      }
+      
       const formattedError = { ...error, message: formatFirebaseError(error) };
-      console.error('Форматированная ошибка при входе через Google:', formattedError.message);
       throw formattedError;
     }
   },
@@ -139,8 +192,8 @@ const auth = {
     try {
       await signOut(firebaseAuth);
     } catch (error: any) {
+      logAuthError('Выход из системы', error);
       const formattedError = { ...error, message: formatFirebaseError(error) };
-      console.error('Ошибка при выходе:', formattedError.message);
       throw formattedError;
     }
   },
