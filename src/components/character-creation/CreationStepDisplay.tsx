@@ -38,6 +38,21 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
+  // Фильтруем шаги, чтобы показывать только те, которые применимы к текущему персонажу
+  const filteredSteps = steps.filter(step => {
+    // Шаг подрасы виден только если есть подрасы
+    if (step.id === 1 && step.onlyFor === 'hasSubraces' && !hasSubraces) {
+      return false;
+    }
+    
+    // Шаг заклинаний виден только для магических классов
+    if (step.id === 9 && step.onlyFor === 'magic' && !isMagicClass) {
+      return false;
+    }
+    
+    return true;
+  });
+
   return (
     <div className="relative w-full mb-8">
       {/* Прогресс-бар */}
@@ -45,7 +60,7 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
       
       {/* Шаги */}
       <div className="flex justify-between relative z-10">
-        {steps.map((step, index) => {
+        {filteredSteps.map((step, index) => {
           // Вычисляем, является ли шаг активным или завершенным
           const isActive = step.id === currentStep;
           const isCompleted = step.id < currentStep;

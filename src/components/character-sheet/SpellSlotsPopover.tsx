@@ -52,6 +52,36 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
     onUpdate({ spellSlots: updatedSpellSlots });
   };
 
+  const handleRestoreAllSlots = () => {
+    if (!character.spellSlots) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (!slotInfo) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: 0
+    };
+    
+    onUpdate({ spellSlots: updatedSpellSlots });
+  };
+
+  const handleUseAllSlots = () => {
+    if (!character.spellSlots) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (!slotInfo) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.max
+    };
+    
+    onUpdate({ spellSlots: updatedSpellSlots });
+  };
+
   if (!character.spellSlots || !character.spellSlots[level]) {
     return null;
   }
@@ -103,6 +133,35 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
               }}
             >
               <Plus className="h-4 w-4 mr-1" /> Восстановить
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleUseAllSlots}
+              disabled={slotInfo.used >= slotInfo.max}
+              className="w-full"
+              style={{ 
+                borderColor: currentTheme.accent,
+                color: slotInfo.used >= slotInfo.max ? currentTheme.mutedTextColor : currentTheme.textColor
+              }}
+            >
+              Использовать все
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleRestoreAllSlots}
+              disabled={slotInfo.used <= 0}
+              className="w-full"
+              style={{ 
+                borderColor: currentTheme.accent,
+                color: slotInfo.used <= 0 ? currentTheme.mutedTextColor : currentTheme.textColor
+              }}
+            >
+              Восстановить все
             </Button>
           </div>
           

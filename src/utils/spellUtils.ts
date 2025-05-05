@@ -30,18 +30,31 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[] | undefined)
         castingTime: '1 действие',
         range: 'Касание',
         components: '',
-        duration: 'Мгновенная'
+        duration: 'Мгновенная',
+        prepared: false,
+        ritual: false,
+        concentration: false,
+        verbal: false,
+        somatic: false,
+        material: false,
       };
     }
     
     // Обеспечиваем наличие всех обязательных полей
     return {
       ...spell,
+      id: spell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       school: spell.school || 'Универсальная',
       castingTime: spell.castingTime || '1 действие',
       range: spell.range || 'Касание',
       components: spell.components || '',
-      duration: spell.duration || 'Мгновенная'
+      duration: spell.duration || 'Мгновенная',
+      prepared: typeof spell.prepared === 'boolean' ? spell.prepared : false,
+      ritual: typeof spell.ritual === 'boolean' ? spell.ritual : false,
+      concentration: typeof spell.concentration === 'boolean' ? spell.concentration : false,
+      verbal: typeof spell.verbal === 'boolean' ? spell.verbal : false,
+      somatic: typeof spell.somatic === 'boolean' ? spell.somatic : false,
+      material: typeof spell.material === 'boolean' ? spell.material : false
     };
   });
 };
@@ -104,7 +117,13 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
         range: 'Касание',
         components: '',
         duration: 'Мгновенная',
-        description: ''
+        description: '',
+        prepared: false,
+        ritual: false,
+        concentration: false,
+        verbal: false,
+        somatic: false,
+        material: false,
       } 
     : spell;
 
@@ -112,7 +131,7 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
   return {
     id: charSpell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: charSpell.name,
-    level: charSpell.level,
+    level: charSpell.level || 0,
     school: charSpell.school || 'Универсальная',
     castingTime: charSpell.castingTime || '1 действие',
     range: charSpell.range || 'Касание',
@@ -133,6 +152,131 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
  */
-export const convertToSpellDataArray = (spells: (CharacterSpell | string)[]): SpellData[] => {
+export const convertToSpellDataArray = (spells: (CharacterSpell | string)[] | undefined): SpellData[] => {
+  if (!spells) return [];
   return spells.map(convertToSpellData);
+};
+
+/**
+ * Группирует заклинания по уровням
+ */
+export const groupSpellsByLevel = (spells: CharacterSpell[] | SpellData[]): Record<number, CharacterSpell[] | SpellData[]> => {
+  return spells.reduce((acc: Record<number, any[]>, spell) => {
+    const level = spell.level || 0;
+    if (!acc[level]) acc[level] = [];
+    acc[level].push(spell);
+    return acc;
+  }, {});
+};
+
+/**
+ * Создает объект слотов заклинаний для персонажа на основе класса и уровня
+ */
+export const generateSpellSlotsForCharacter = (characterClass: string, level: number): Record<number, {max: number, used: number}> => {
+  const spellSlots: Record<number, {max: number, used: number}> = {};
+  
+  // Таблица слотов заклинаний для полных заклинателей (волшебник, жрец, друид, бард)
+  const fullCasterSlots = [
+    // [1-й уровень, 2-й уровень, 3-й уровень, 4-й уровень, 5-й уровень, 6-й уровень, 7-й уровень, 8-й уровень, 9-й уровень]
+    [2, 0, 0, 0, 0, 0, 0, 0, 0], // 1-й уровень персонажа
+    [3, 0, 0, 0, 0, 0, 0, 0, 0], // 2-й
+    [4, 2, 0, 0, 0, 0, 0, 0, 0], // 3-й
+    [4, 3, 0, 0, 0, 0, 0, 0, 0], // 4-й
+    [4, 3, 2, 0, 0, 0, 0, 0, 0], // 5-й
+    [4, 3, 3, 0, 0, 0, 0, 0, 0], // 6-й
+    [4, 3, 3, 1, 0, 0, 0, 0, 0], // 7-й
+    [4, 3, 3, 2, 0, 0, 0, 0, 0], // 8-й
+    [4, 3, 3, 3, 1, 0, 0, 0, 0], // 9-й
+    [4, 3, 3, 3, 2, 0, 0, 0, 0], // 10-й
+    [4, 3, 3, 3, 2, 1, 0, 0, 0], // 11-й
+    [4, 3, 3, 3, 2, 1, 0, 0, 0], // 12-й
+    [4, 3, 3, 3, 2, 1, 1, 0, 0], // 13-й
+    [4, 3, 3, 3, 2, 1, 1, 0, 0], // 14-й
+    [4, 3, 3, 3, 2, 1, 1, 1, 0], // 15-й
+    [4, 3, 3, 3, 2, 1, 1, 1, 0], // 16-й
+    [4, 3, 3, 3, 2, 1, 1, 1, 1], // 17-й
+    [4, 3, 3, 3, 3, 1, 1, 1, 1], // 18-й
+    [4, 3, 3, 3, 3, 2, 1, 1, 1], // 19-й
+    [4, 3, 3, 3, 3, 2, 2, 1, 1]  // 20-й
+  ];
+  
+  // Таблица слотов для частичных заклинателей (следопыт, паладин)
+  const halfCasterSlots = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0], // 1-й уровень персонажа
+    [2, 0, 0, 0, 0, 0, 0, 0, 0], // 2-й
+    [3, 0, 0, 0, 0, 0, 0, 0, 0], // 3-й
+    [3, 0, 0, 0, 0, 0, 0, 0, 0], // 4-й
+    [4, 2, 0, 0, 0, 0, 0, 0, 0], // 5-й
+    [4, 2, 0, 0, 0, 0, 0, 0, 0], // 6-й
+    [4, 3, 0, 0, 0, 0, 0, 0, 0], // 7-й
+    [4, 3, 0, 0, 0, 0, 0, 0, 0], // 8-й
+    [4, 3, 2, 0, 0, 0, 0, 0, 0], // 9-й
+    [4, 3, 2, 0, 0, 0, 0, 0, 0], // 10-й
+    [4, 3, 3, 0, 0, 0, 0, 0, 0], // 11-й
+    [4, 3, 3, 0, 0, 0, 0, 0, 0], // 12-й
+    [4, 3, 3, 1, 0, 0, 0, 0, 0], // 13-й
+    [4, 3, 3, 1, 0, 0, 0, 0, 0], // 14-й
+    [4, 3, 3, 2, 0, 0, 0, 0, 0], // 15-й
+    [4, 3, 3, 2, 0, 0, 0, 0, 0], // 16-й
+    [4, 3, 3, 3, 1, 0, 0, 0, 0], // 17-й
+    [4, 3, 3, 3, 1, 0, 0, 0, 0], // 18-й
+    [4, 3, 3, 3, 2, 0, 0, 0, 0], // 19-й
+    [4, 3, 3, 3, 2, 0, 0, 0, 0]  // 20-й
+  ];
+  
+  // Особая таблица для чародея и колдуна
+  const warlockSlots = [
+    [1, 0, 0, 0, 0], // 1-й уровень персонажа
+    [2, 0, 0, 0, 0], // 2-й
+    [2, 0, 0, 0, 0], // 3-й
+    [2, 0, 0, 0, 0], // 4-й
+    [2, 0, 0, 0, 0], // 5-й
+    [2, 0, 0, 0, 0], // 6-й
+    [2, 0, 0, 0, 0], // 7-й
+    [2, 0, 0, 0, 0], // 8-й
+    [2, 0, 0, 0, 0], // 9-й
+    [2, 0, 0, 0, 0], // 10-й
+    [3, 0, 0, 0, 0], // 11-й
+    [3, 0, 0, 0, 0], // 12-й
+    [3, 0, 0, 0, 0], // 13-й
+    [3, 0, 0, 0, 0], // 14-й
+    [3, 0, 0, 0, 0], // 15-й
+    [3, 0, 0, 0, 0], // 16-й
+    [4, 0, 0, 0, 0], // 17-й
+    [4, 0, 0, 0, 0], // 18-й
+    [4, 0, 0, 0, 0], // 19-й
+    [4, 0, 0, 0, 0]  // 20-й
+  ];
+
+  // Определяем, какую таблицу использовать в зависимости от класса
+  let slots: number[][] = [];
+  let maxSlotLevel = 9; // По умолчанию для полных заклинателей
+
+  if (['Волшебник', 'Жрец', 'Друид', 'Бард', 'Чародей'].includes(characterClass)) {
+    slots = fullCasterSlots;
+  } else if (['Паладин', 'Следопыт'].includes(characterClass)) {
+    slots = halfCasterSlots;
+  } else if (characterClass === 'Колдун') {
+    slots = warlockSlots;
+    maxSlotLevel = 5; // Колдуны имеют только 5 уровней слотов
+  } else {
+    // Возвращаем пустой объект для немагических классов
+    return {};
+  }
+
+  // Индекс в массиве на 1 меньше, чем уровень персонажа
+  const levelIndex = Math.min(level - 1, slots.length - 1);
+  
+  if (levelIndex >= 0 && slots[levelIndex]) {
+    for (let i = 0; i < maxSlotLevel && i < slots[levelIndex].length; i++) {
+      const slotLevel = i + 1; // Уровень слота (начиная с 1)
+      const maxSlots = slots[levelIndex][i];
+      
+      if (maxSlots > 0) {
+        spellSlots[slotLevel] = { max: maxSlots, used: 0 };
+      }
+    }
+  }
+
+  return spellSlots;
 };
