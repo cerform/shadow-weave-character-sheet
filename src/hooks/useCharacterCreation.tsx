@@ -10,15 +10,23 @@ export const useCharacterCreation = () => {
   const { toast } = useToast();
   const [character, setCharacter] = useState<CharacterSheet>({
     name: "",
-    gender: "", // Поле для пола персонажа
+    gender: "",
     race: "",
     class: "",
     subclass: "",
-    additionalClasses: [], // Добавляем поле для мультиклассирования
+    additionalClasses: [],
     level: 1,
     background: "",
     alignment: "",
     abilities: {
+      // Add legacy ability score properties
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      // Add new ability score properties
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -26,7 +34,7 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    stats: {  // Добавляем поле stats для совместимости
+    stats: {
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -34,11 +42,18 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    skills: [],
+    // Initialize with empty objects instead of arrays
+    skills: {},
+    savingThrows: {},
+    proficiencies: {
+      armor: [],
+      weapons: [],
+      tools: [],
+      languages: []
+    },
     languages: [],
     equipment: [],
     spells: [],
-    proficiencies: [],
     features: [],
     personalityTraits: "",
     ideals: "",

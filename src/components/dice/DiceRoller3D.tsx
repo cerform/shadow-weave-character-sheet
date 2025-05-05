@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Button } from "@/components/ui/button";
 
 // Компонент кубика
 const Dice = ({ 
@@ -204,6 +204,18 @@ const Dice = ({
   );
 };
 
+interface DiceRoller3DProps {
+  initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
+  hideControls?: boolean;
+  modifier?: number;
+  onRollComplete?: (result: number) => void;
+  themeColor?: string;
+  fixedPosition?: boolean;
+  playerName?: string;
+  diceCount?: number;
+  forceReroll?: boolean;
+}
+
 export const DiceRoller3D = ({ 
   initialDice = 'd20', 
   hideControls = false, 
@@ -214,17 +226,7 @@ export const DiceRoller3D = ({
   playerName,
   diceCount = 1,
   forceReroll = false
-}: {
-  initialDice?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
-  hideControls?: boolean,
-  modifier?: number,
-  onRollComplete?: (result: number) => void,
-  themeColor?: string,
-  fixedPosition?: boolean,
-  playerName?: string,
-  diceCount?: number,
-  forceReroll?: boolean
-}) => {
+}: DiceRoller3DProps) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
   const [internalForceReroll, setInternalForceReroll] = useState(false);
@@ -276,13 +278,21 @@ export const DiceRoller3D = ({
           onRoll={handleRollComplete}
           modifier={modifier}
           autoRoll={roll}
-          hideControls={true} // Всегда скрываем внутренние контролы
+          hideControls={hideControls}
           forceReroll={internalForceReroll}
           themeColor={actualThemeColor}
           fixedPosition={fixedPosition}
         />
         {!fixedPosition && <OrbitControls enablePan={false} enableZoom={false} />}
       </Canvas>
+      
+      {!hideControls && (
+        <div className="flex justify-center gap-2 mt-2">
+          <Button size="sm" onClick={handleRoll} className="px-4 py-2 rounded-md shadow-md">
+            Бросить {diceType}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

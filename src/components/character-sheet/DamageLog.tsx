@@ -1,153 +1,132 @@
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Plus, Minus } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HitPointEvent } from '@/types/character';
-import { motion, AnimatePresence } from "framer-motion";
+import { formatDistance } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { Heart, Shield, Skull } from 'lucide-react';
 
 interface DamageLogProps {
   events: HitPointEvent[];
-  undoLastEvent: () => void;
   maxEvents?: number;
-  className?: string;
 }
 
-export const DamageLog: React.FC<DamageLogProps> = ({
-  events,
-  undoLastEvent,
-  maxEvents = 10,
-  className = ""
-}) => {
+const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   const [displayEvents, setDisplayEvents] = useState<HitPointEvent[]>([]);
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-
-  // Обновляем отображаемые события при изменении пропса events
+  
+  // Обновляем отображаемые события при изменении списка
   useEffect(() => {
+    // Сортируем события по времени (самые новые сверху)
+    const sortedEvents = [...events].sort((a, b) => {
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+      return timeB - timeA;
+    });
+    
     // Ограничиваем количество отображаемых событий
-    setDisplayEvents(events.slice(0, maxEvents));
+    const limited = sortedEvents.slice(0, maxEvents);
+    setDisplayEvents(limited);
   }, [events, maxEvents]);
-
-  // Если событий нет, не отображаем компонент
+  
+  // Если нет событий, не отображаем блок
   if (displayEvents.length === 0) {
     return null;
   }
-
-  // Обработчик отмены последнего действия
-  const handleUndo = () => {
-    if (displayEvents.length > 0) {
-      undoLastEvent();
-    }
-  };
-
-  // Функция для получения иконки события
-  const getEventIcon = (type: 'damage' | 'heal' | 'temp' | 'death-save') => {
-    switch (type) {
-      case 'damage':
-        return <Minus className="h-4 w-4 mr-2 text-red-500" />;
-      case 'heal':
-        return <Plus className="h-4 w-4 mr-2 text-green-500" />;
-      case 'temp':
-        return <Shield className="h-4 w-4 mr-2 text-emerald-400" />;
-      case 'death-save':
-        return <Shield className="h-4 w-4 mr-2 text-purple-400" />;
-    }
-  };
-
-  // Функция для получения описания события
-  const getEventDescription = (event: HitPointEvent): string => {
-    switch (event.type) {
-      case 'damage':
-        return `Урон ${event.amount}`;
-      case 'heal':
-        return `Лечение ${event.amount}`;
-      case 'temp':
-        return `Временные HP ${event.amount}`;
-      case 'death-save':
-        if (event.source?.includes('Критический успех')) {
-          return 'Критический успех при спасброске';
-        } else if (event.source?.includes('Критическая неудача')) {
-          return `${event.amount} провала при спасброске`;
-        } else if (event.source?.includes('Успешный')) {
-          return 'Успешный спасбросок';
-        } else {
-          return 'Проваленный спасбросок';
-        }
+  
+  // Форматирование числа с плюсом или минусом
+  const formatAmount = (type: HitPointEvent['type'], amount: number): string => {
+    if (type === 'damage') {
+      return `-${amount}`;
+    } else if (type === 'healing' || type === 'heal') {
+      return `+${amount}`;
+    } else if (type === 'tempHP' || type === 'temp') {
+      return `+${amount} (врем)`;
+    } else {
+      return `${amount}`;
     }
   };
   
-  // Цвета для событий
-  const getEventColor = (type: 'damage' | 'heal' | 'temp' | 'death-save'): string => {
+  // Получение класса для типа события
+  const getEventClass = (type: HitPointEvent['type']): string => {
     switch (type) {
       case 'damage':
-        return 'bg-red-900/30';
+        return 'text-red-500';
+      case 'healing':
       case 'heal':
-        return 'bg-green-900/30';
+        return 'text-emerald-500';
+      case 'tempHP':
       case 'temp':
-        return 'bg-emerald-900/30';
+        return 'text-blue-400';
       case 'death-save':
-        return 'bg-purple-900/30';
+        return 'text-purple-500';
+      default:
+        return 'text-gray-400';
     }
   };
-
-  // Функция для форматирования времени события
-  const formatEventTime = (timestamp: Date): string => {
-    const hours = timestamp.getHours().toString().padStart(2, '0');
-    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
-    const seconds = timestamp.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
+  
+  // Получение иконки для типа события
+  const getEventIcon = (type: HitPointEvent['type']) => {
+    switch (type) {
+      case 'damage':
+        return <Skull className="h-4 w-4 text-red-500" />;
+      case 'healing':
+      case 'heal':
+        return <Heart className="h-4 w-4 text-emerald-500" />;
+      case 'tempHP':
+      case 'temp':
+        return <Shield className="h-4 w-4 text-blue-400" />;
+      case 'death-save':
+        return <Skull className="h-4 w-4 text-purple-500" />;
+      default:
+        return null;
+    }
   };
-
+  
+  // Форматирование временных меток (например, "5 минут назад")
+  const formatTimestamp = (timestamp: Date): string => {
+    try {
+      const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+      return formatDistance(date, new Date(), { 
+        addSuffix: true,
+        locale: ru 
+      });
+    } catch (error) {
+      return 'неизвестно когда';
+    }
+  };
+  
   return (
-    <div className={`mt-4 ${className}`}>
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-semibold">Журнал событий:</h3>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleUndo} 
-          disabled={displayEvents.length === 0}
-          className="h-7 text-xs"
-        >
-          Отменить
-        </Button>
-      </div>
-
-      <div
-        className="bg-black/70 rounded-md p-2 border border-primary/20"
-        style={{ maxHeight: "200px" }}
-      >
-        <ScrollArea className="h-[150px]">
-          <AnimatePresence initial={false}>
+    <Card className="border-t-4 border-t-primary/50 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">История урона и исцеления</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[200px] pr-4">
+          <div className="px-4 pb-4 space-y-3">
             {displayEvents.map((event, index) => (
-              <motion.div
-                key={event.id}
-                className={`flex items-center py-1 px-2 rounded-md mb-1 ${getEventColor(event.type)}`}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center flex-grow">
+              <div key={event.id || index} className="flex items-start gap-3 py-2">
+                <div className="mt-1">
                   {getEventIcon(event.type)}
-                  <span className="text-xs">{getEventDescription(event)}</span>
                 </div>
-                <div className="text-xs text-gray-400">
-                  {event.source && (
-                    <span className="text-gray-500 mr-2 text-xs">
-                      {event.source}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{event.source}</span>
+                    <span className={`font-semibold ${getEventClass(event.type)}`}>
+                      {formatAmount(event.type, event.amount)}
                     </span>
-                  )}
-                  {formatEventTime(event.timestamp)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatTimestamp(event.timestamp)}
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
+          </div>
         </ScrollArea>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default DamageLog;
