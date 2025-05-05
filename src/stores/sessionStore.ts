@@ -5,7 +5,7 @@ import { Session, User, Character as SessionCharacter } from '../types/session';
 import { sessionService, characterService } from '../services/sessionService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
-import { Character as CharacterType } from '@/types/character';
+import { Character } from '@/types/character.d';
 
 interface SessionStore {
   // Состояние
@@ -14,7 +14,7 @@ interface SessionStore {
   currentUser: User | null;
   loading: boolean;
   error: string | null;
-  characters: CharacterType[];
+  characters: Character[];
   
   // Методы для управления сессиями
   createSession: (name: string, description?: string) => Promise<Session | null>;
@@ -35,7 +35,7 @@ interface SessionStore {
   
   // Методы для работы с персонажами
   fetchCharacters: () => Promise<void>;
-  saveCharacter: (character: CharacterType) => Promise<boolean>;
+  saveCharacter: (character: Character) => Promise<boolean>;
   deleteCharacter: (characterId: string) => Promise<boolean>;
   clearAllCharacters: () => Promise<boolean>;
 }
@@ -286,16 +286,16 @@ export const useSessionStore = create<SessionStore>()(
           // Используем новое имя функции для получения персонажей
           const characters = await characterService.getCharactersByUserId();
           // Fix type conversion - cast to Character[]
-          set({ characters: characters as unknown as CharacterType[], loading: false });
+          set({ characters: characters as unknown as Character[], loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
           set({ loading: false });
         }
       },
       
-      saveCharacter: async (character: CharacterType) => {
+      saveCharacter: async (character: Character) => {
         try {
-          const result = await characterService.saveCharacter(character as unknown as CharacterSheet);
+          const result = await characterService.saveCharacter(character);
           
           if (result) {
             // Обновляем список персонажей

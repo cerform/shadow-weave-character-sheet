@@ -99,6 +99,10 @@ export interface Character {
   
   // Добавляем поле languages для устранения ошибки в useCharacterCreation
   languages?: string[];
+  
+  // Adding username and isDM for User compatibility
+  username?: string;
+  isDM?: boolean;
 }
 
 // Константы для ограничения значений характеристик

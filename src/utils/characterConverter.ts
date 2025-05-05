@@ -1,3 +1,4 @@
+
 import { CharacterSheet, Character } from '@/types/character';
 
 /**
@@ -59,7 +60,7 @@ export const convertToCharacter = (data: any): Character => {
     
     Object.entries(slots).forEach(([level, data]) => {
       result[level] = {
-        total: data.max,
+        total: data.max, // Use max value for total
         used: data.used,
         max: data.max
       };
@@ -79,25 +80,25 @@ export const convertToCharacter = (data: any): Character => {
     // Упрощённая логика слотов заклинаний
     const level = data.level;
     
-    if (level >= 1) spellSlots[1] = { max: Math.min(4, level), used: 0 };
-    if (level >= 3) spellSlots[2] = { max: Math.min(3, level - 2), used: 0 };
-    if (level >= 5) spellSlots[3] = { max: Math.min(3, level - 4), used: 0 };
-    if (level >= 7) spellSlots[4] = { max: Math.min(3, level - 6), used: 0 };
-    if (level >= 9) spellSlots[5] = { max: Math.min(2, level - 8), used: 0 };
-    if (level >= 11) spellSlots[6] = { max: Math.min(1, level - 10), used: 0 };
-    if (level >= 13) spellSlots[7] = { max: Math.min(1, level - 12), used: 0 };
-    if (level >= 15) spellSlots[8] = { max: Math.min(1, level - 14), used: 0 };
-    if (level >= 17) spellSlots[9] = { max: Math.min(1, level - 16), used: 0 };
+    if (level >= 1) spellSlots[1] = { total: Math.min(4, level), used: 0, max: Math.min(4, level) };
+    if (level >= 3) spellSlots[2] = { total: Math.min(3, level - 2), used: 0, max: Math.min(3, level - 2) };
+    if (level >= 5) spellSlots[3] = { total: Math.min(3, level - 4), used: 0, max: Math.min(3, level - 4) };
+    if (level >= 7) spellSlots[4] = { total: Math.min(3, level - 6), used: 0, max: Math.min(3, level - 6) };
+    if (level >= 9) spellSlots[5] = { total: Math.min(2, level - 8), used: 0, max: Math.min(2, level - 8) };
+    if (level >= 11) spellSlots[6] = { total: Math.min(1, level - 10), used: 0, max: Math.min(1, level - 10) };
+    if (level >= 13) spellSlots[7] = { total: Math.min(1, level - 12), used: 0, max: Math.min(1, level - 12) };
+    if (level >= 15) spellSlots[8] = { total: Math.min(1, level - 14), used: 0, max: Math.min(1, level - 14) };
+    if (level >= 17) spellSlots[9] = { total: Math.min(1, level - 16), used: 0, max: Math.min(1, level - 16) };
   } 
   // Для полузаклинателей (паладины, следопыты)
   else if (["Паладин", "Следопыт"].includes(characterClass)) {
     const level = data.level;
     
-    if (level >= 2) spellSlots[1] = { max: Math.min(3, level - 1), used: 0 };
-    if (level >= 5) spellSlots[2] = { max: Math.min(2, level - 4), used: 0 };
-    if (level >= 9) spellSlots[3] = { max: Math.min(2, level - 8), used: 0 };
-    if (level >= 13) spellSlots[4] = { max: Math.min(1, level - 12), used: 0 };
-    if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
+    if (level >= 2) spellSlots[1] = { total: Math.min(3, level - 1), used: 0, max: Math.min(3, level - 1) };
+    if (level >= 5) spellSlots[2] = { total: Math.min(2, level - 4), used: 0, max: Math.min(2, level - 4) };
+    if (level >= 9) spellSlots[3] = { total: Math.min(2, level - 8), used: 0, max: Math.min(2, level - 8) };
+    if (level >= 13) spellSlots[4] = { total: Math.min(1, level - 12), used: 0, max: Math.min(1, level - 12) };
+    if (level >= 17) spellSlots[5] = { total: 1, used: 0, max: 1 };
   }
 
   // Обеспечиваем наличие всех необходимых полей

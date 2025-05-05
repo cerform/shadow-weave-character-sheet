@@ -1,10 +1,9 @@
-
 // Импортируем необходимые типы из firebase
 import { Firestore, DocumentData, DocumentReference, CollectionReference } from "firebase/firestore";
 import { Auth } from "firebase/auth";
 
 // Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth: Partial<Auth> = {
+const mockAuth: Auth = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки
@@ -39,11 +38,9 @@ const mockAuth: Partial<Auth> = {
   settings: {} as any,
   updateCurrentUser: async () => Promise.resolve(),
   onIdTokenChanged: () => () => {},
-  // Исправляем тип возвращаемого значения
   beforeAuthStateChanged: () => () => {},
   useEmulator: () => {},
   emulatorConfig: null,
-  // Добавляем недостающее свойство authStateReady
   authStateReady: () => Promise.resolve()
 };
 

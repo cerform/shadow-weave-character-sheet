@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/services/firebase';
 import {
@@ -42,6 +43,7 @@ export const useAuth = () => {
       register: () => Promise.reject('AuthProvider не найден'),
       resetPassword: () => Promise.reject('AuthProvider не найден'),
       updateUserProfile: () => Promise.reject('AuthProvider не найден'),
+      updateProfile: () => Promise.reject('AuthProvider не найден'),
       googleLogin: () => Promise.reject('AuthProvider не найден')
     };
   }
@@ -54,7 +56,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth as any, (user) => {
       setCurrentUser(user);
       setIsLoading(false);
     });
@@ -64,7 +66,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth as any, email, password);
     } catch (error) {
       console.error('Ошибка при входе:', error);
       throw error;
@@ -73,7 +75,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const register = async (email: string, password: string): Promise<void> => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth as any, email, password);
     } catch (error) {
       console.error('Ошибка при регистрации:', error);
       throw error;
@@ -82,7 +84,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const logout = async (): Promise<void> => {
     try {
-      await signOut(auth);
+      await signOut(auth as any);
     } catch (error) {
       console.error('Ошибка при выходе:', error);
       throw error;
@@ -91,7 +93,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const resetPassword = async (email: string): Promise<void> => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth as any, email);
     } catch (error) {
       console.error('Ошибка при сбросе пароля:', error);
       throw error;

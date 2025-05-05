@@ -1,80 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, User, Sparkles, Book, Dice1 } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { useSessionStore } from '@/stores/sessionStore';
-import { Character } from '@/types/character';
-import { User } from '@/types/session';
-import { isOfflineMode } from '@/utils/authHelpers';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-// Character card component
-interface CharacterCardProps {
-  character: Character;
-  isSelected: boolean;
-  onSelect: () => void;
-  onView: () => void;
-}
-
-const CharacterCard = ({ character, isSelected, onSelect, onView }: CharacterCardProps) => {
-  return (
-    <Card 
-      className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
-      onClick={onSelect}
-    >
-      <CardHeader className="pb-2">
-        <CardTitle>{character.name}</CardTitle>
-        <CardDescription>
-          {character.race} {character.class || character.className}, {character.level} уровень
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="pb-2">
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span>Класс брони:</span>
-            <span>{character.armorClass || "—"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>HP:</span>
-            <span>{character.currentHp || 0}/{character.maxHp || 0}</span>
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter>
-        <Button onClick={(e) => { e.stopPropagation(); onView(); }} className="w-full">
-          Открыть
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-};
+import { User as AuthUser } from 'firebase/auth'; // Use qualified import to avoid duplicate
+import { User as SessionUser } from '@/types/session'; // Use qualified import to avoid duplicate
 
 const Home = () => {
-  const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const { character, setCharacter } = useCharacter();
   
   // Session state
   const [sessionCode, setSessionCode] = useState('');

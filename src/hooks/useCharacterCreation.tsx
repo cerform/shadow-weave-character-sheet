@@ -5,10 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { convertToCharacter } from "@/utils/characterConverter";
 import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
 import { getCurrentUserId } from "@/utils/authHelpers";
+import { v4 as uuidv4 } from "uuid"; // Import UUID for generating character IDs
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
   const [character, setCharacter] = useState<CharacterSheet>({
+    id: uuidv4(), // Generate a unique ID for new characters
     name: "",
     gender: "",
     race: "",
