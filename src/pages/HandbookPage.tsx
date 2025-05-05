@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
+import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 
 const HandbookPage: React.FC = () => {
   // Состояния для данных
@@ -144,6 +145,8 @@ const HandbookPage: React.FC = () => {
           {renderContent()}
         </div>
       </div>
+      
+      <FloatingDiceButton />
     </div>
   );
 };

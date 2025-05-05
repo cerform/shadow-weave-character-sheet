@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,8 +22,13 @@ import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { createCharacter } from '@/lib/supabase';
 import { getCurrentUid } from '@/utils/authHelpers';
+import NavigationButtons from '@/components/ui/NavigationButtons';
+import ThemeSelector from '@/components/ThemeSelector';
+import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-// Assuming we need to add this step configuration
+// Определение шагов процесса создания персонажа
 const characterCreationSteps: Step[] = [
   {
     id: 'basics',
@@ -82,8 +88,13 @@ const CharacterCreationPage: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState(getAllBackgrounds());
   const [subracesForRace, setSubracesForRace] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Получаем текущую тему
+  const { theme, themeStyles } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themeStyles || themes[themeKey] || themes.default;
 
-  // Function to fetch subraces based on selected race
+  // Функция для получения подрас на основе выбранной расы
   const fetchSubraces = useCallback(async (race: string) => {
     const subraces = getSubracesForRace(race);
     setSubracesForRace(subraces);
@@ -146,7 +157,7 @@ const CharacterCreationPage: React.FC = () => {
         return;
       }
 
-      // Ensure all required fields are present
+      // Проверяем, что все обязательные поля заполнены
       if (!character.name || !character.race || !character.class) {
         toast({
           title: "Ошибка",
@@ -156,10 +167,10 @@ const CharacterCreationPage: React.FC = () => {
         return;
       }
 
-      // Convert the character object to ensure all required properties are present
+      // Подготавливаем персонажа к сохранению
       const characterToSave = convertToCharacter(character);
 
-      // Save the character to the database
+      // Сохраняем персонажа в базу данных
       const newCharacter = await createCharacter(characterToSave);
 
       if (newCharacter) {
@@ -188,30 +199,81 @@ const CharacterCreationPage: React.FC = () => {
   };
 
   return (
-    <div className="container p-4 mx-auto max-w-3xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Создание персонажа</h1>
+    <div 
+      className="min-h-screen p-4"
+      style={{ 
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        color: currentTheme.textColor 
+      }}
+    >
+      <div className="container mx-auto max-w-3xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold" style={{ color: currentTheme.accent }}>
+            Создание персонажа
+          </h1>
+          
+          <div className="flex space-x-2">
+            <NavigationButtons />
+            <ThemeSelector />
+          </div>
+        </div>
 
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>{visibleSteps[currentStep]?.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderStepContent()}
-        </CardContent>
-      </Card>
+        <Card 
+          className="mb-4"
+          style={{ 
+            background: currentTheme.cardBackground, 
+            borderColor: `${currentTheme.accent}30`,
+            color: currentTheme.textColor 
+          }}
+        >
+          <CardHeader>
+            <CardTitle style={{ color: currentTheme.accent }}>{visibleSteps[currentStep]?.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {renderStepContent()}
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
-          Назад
-        </Button>
-        {currentStep < visibleSteps.length - 1 ? (
-          <Button onClick={nextStep}>Далее</Button>
-        ) : (
-          <Button onClick={handleSaveCharacter} disabled={isLoading}>
-            {isLoading ? "Сохранение..." : "Сохранить персонажа"}
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={prevStep} 
+            disabled={currentStep === 0}
+            style={{ 
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor,
+              boxShadow: `0 0 5px ${currentTheme.accent}30`
+            }}
+          >
+            Назад
           </Button>
-        )}
+          
+          {currentStep < visibleSteps.length - 1 ? (
+            <Button 
+              onClick={nextStep}
+              style={{ 
+                backgroundColor: currentTheme.accent,
+                color: '#FFFFFF'
+              }}
+            >
+              Далее
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSaveCharacter} 
+              disabled={isLoading}
+              style={{ 
+                backgroundColor: currentTheme.accent,
+                color: '#FFFFFF'
+              }}
+            >
+              {isLoading ? "Сохранение..." : "Сохранить персонажа"}
+            </Button>
+          )}
+        </div>
       </div>
+      
+      <FloatingDiceButton />
     </div>
   );
 };

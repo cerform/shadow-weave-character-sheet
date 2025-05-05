@@ -10,6 +10,8 @@ import { Link } from 'react-router-dom';
 import ThemeSelector from '@/components/ThemeSelector';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import NavigationButtons from '@/components/ui/NavigationButtons';
+import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 
 interface RaceDetailsProps {
   race: any;
@@ -59,41 +61,9 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
         >
           <ArrowLeft size={16} />
         </Button>
-        <h2 className="text-2xl font-bold ml-4" style={{ color: currentTheme.textColor }}>{race.name}</h2>
+        <h2 className="text-2xl font-bold ml-4" style={{ color: currentTheme.textColor }}>{renderContent(race.name)}</h2>
         <div className="ml-auto flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="icon"
-            className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
-            style={{ borderColor: `${currentTheme.accent}50` }}
-            asChild
-          >
-            <Link to="/">
-              <Home size={16} />
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon"
-            className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
-            style={{ borderColor: `${currentTheme.accent}50` }}
-            asChild
-          >
-            <Link to="/spellbook">
-              <Book size={16} />
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon"
-            className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
-            style={{ borderColor: `${currentTheme.accent}50` }}
-            asChild
-          >
-            <Link to="/auth">
-              <User size={16} />
-            </Link>
-          </Button>
+          <NavigationButtons />
           <ThemeSelector />
         </div>
       </div>
@@ -312,7 +282,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       className="font-semibold text-purple-300"
                       style={{ color: currentTheme.accent }}
                     >
-                      +{value}
+                      +{renderContent(value)}
                     </span>
                   </div>
                 )) : (
@@ -399,7 +369,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                                   className="font-semibold text-purple-300"
                                   style={{ color: currentTheme.accent }}
                                 >
-                                  +{value}
+                                  +{renderContent(value)}
                                 </span>
                               </div>
                             ))}
@@ -499,6 +469,8 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
           <ChevronRight size={16} />
         </Button>
       </div>
+      
+      <FloatingDiceButton />
     </div>
   );
 };

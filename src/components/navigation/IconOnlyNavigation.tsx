@@ -1,27 +1,40 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { BookOpen, Scroll, Map, Users, Book, Home, LogIn } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import { useDeviceType } from '@/hooks/use-mobile';
+import { 
+  Home, 
+  BookOpen, 
+  Scroll, 
+  Users, 
+  LogIn, 
+  Book, 
+  Map, 
+  Settings 
+} from "lucide-react";
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { useAuth } from '@/contexts/AuthContext';
+import ThemeSelector from '@/components/ThemeSelector';
 
-interface NavigationButtonsProps {
+interface IconOnlyNavigationProps {
   className?: string;
+  includeThemeSelector?: boolean;
 }
 
-export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
+const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ 
+  className = "",
+  includeThemeSelector = true
+}) => {
   const { currentUser } = useAuth();
   const isDM = currentUser?.isDM;
   
   const { theme, themeStyles } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themeStyles || themes[themeKey] || themes.default;
-
+  
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
+    <div className={`flex items-center gap-2 ${className}`}>
       <Button 
         variant="outline" 
         size="icon"
@@ -144,8 +157,10 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           </Link>
         </Button>
       )}
+      
+      {includeThemeSelector && <ThemeSelector />}
     </div>
   );
 };
 
-export default NavigationButtons;
+export default IconOnlyNavigation;
