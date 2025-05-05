@@ -16,10 +16,10 @@ import {
   getBadgeColorByLevel,
   getSchoolBadgeColor,
   formatClassesString,
-  filterSpellsBySearchTerm,
-  filterSpellsByLevel,
-  filterSpellsBySchool,
-  filterSpellsByClass
+  filterSpellsBySearchTerm as filterBySearchTerm,
+  filterSpellsByLevel as filterByLevel,
+  filterSpellsBySchool as filterBySchool,
+  filterSpellsByClass as filterByClass
 } from './filterUtils';
 import { importSpellsFromText } from './importUtils';
 import { convertToSpellData, convertToCharacterSpell } from './types';
@@ -32,10 +32,10 @@ export {
   getBadgeColorByLevel,
   getSchoolBadgeColor,
   formatClassesString,
-  filterSpellsBySearchTerm,
-  filterSpellsByLevel,
-  filterSpellsBySchool,
-  filterSpellsByClass,
+  filterBySearchTerm as filterSpellsBySearchTerm,
+  filterByLevel as filterSpellsByLevel,
+  filterBySchool as filterSpellsBySchool,
+  filterByClass as filterSpellsByClass,
   importSpellsFromText,
   convertToSpellData,
   convertToCharacterSpell

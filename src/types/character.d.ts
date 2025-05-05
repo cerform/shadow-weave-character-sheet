@@ -1,4 +1,5 @@
 
+
 export interface CharacterAbilities {
   strength: number;
   dexterity: number;
@@ -57,6 +58,27 @@ export interface SpellSlots {
   };
 }
 
+// Add interface for ClassLevel to support multiclassing
+export interface ClassLevel {
+  class: string;
+  level: number;
+  subclass?: string;
+}
+
+export interface HitPointEvent {
+  amount: number;
+  type: 'damage' | 'healing' | 'temporary';
+  source?: string;
+  timestamp: number;
+}
+
+// Constants for ability score caps at different levels
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,        // Default max for most levels
+  EPIC_CAP: 22,        // Max for levels 10-15
+  LEGENDARY_CAP: 24    // Max for levels 16+
+};
+
 export interface Character {
   id: string;
   userId?: string;
@@ -64,6 +86,7 @@ export interface Character {
   class: string;
   level: number;
   race: string;
+  subrace?: string;
   background?: string;
   alignment?: string;
   experience?: number;
@@ -73,6 +96,14 @@ export interface Character {
     max: number;
     current: number;
     temporary: number;
+  };
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    size: string;
   };
   armorClass?: number;
   initiative?: number;
@@ -91,9 +122,28 @@ export interface Character {
   updatedAt?: string;
   languages?: string[];
   displayName?: string;
-  inspiration?: boolean;  // Added inspiration property
+  inspiration?: boolean;
+  gender?: string;
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  appearance?: string;
+  subclass?: string;
+  className?: string;
+  additionalClasses?: ClassLevel[];
+  // For backward compatibility with existing code
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
 }
 
 export interface CharacterSheet extends Character {
   // Additional properties for character sheet if needed
 }
+

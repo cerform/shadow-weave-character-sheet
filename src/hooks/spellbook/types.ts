@@ -1,64 +1,39 @@
 
-import { CharacterSpell } from '@/types/character.d';
+import { CharacterSpell } from "@/types/character.d";
 
 export interface SpellData {
-  id?: string | number;
+  id?: number;
   name: string;
   level: number;
-  school: string; // Required field
+  school: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
   description?: string;
-  ritual?: boolean;
-  concentration?: boolean;
   higherLevels?: string;
-  classes?: string[] | string;
-  prepared: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  materialComponents?: string;
+  concentration?: boolean;
+  ritual?: boolean;
+  classes?: string[] | string;
+  prepared?: boolean;
 }
 
-export interface UseSpellbookReturn {
-  filteredSpells: SpellData[];
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  activeLevel: number[];
-  selectedSpell: SpellData | null;
-  isModalOpen: boolean;
-  activeSchool: string[];
-  activeClass: string[];
-  currentTheme: any;
-  allLevels: number[];
-  allSchools: string[];
-  allClasses: string[];
-  handleOpenSpell: (spell: SpellData) => void;
-  handleClose: () => void;
-  toggleLevel: (level: number) => void;
-  toggleSchool: (school: string) => void;
-  toggleClass: (className: string) => void;
-  clearFilters: () => void;
-  getBadgeColor: (level: number) => string;
-  getSchoolBadgeColor: (school: string) => string;
-  formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText: (text: string) => CharacterSpell[];
-  convertCharacterSpellsToSpellData: (characterSpells: CharacterSpell[]) => SpellData[];
-}
-
-// Helper function to convert between CharacterSpell and SpellData
-export const convertToSpellData = (characterSpell: CharacterSpell): SpellData => {
-  return {
-    ...characterSpell,
-    school: characterSpell.school || 'Неизвестная', // Provide a default value for required field
-    prepared: characterSpell.prepared || false
-  };
-};
-
+// Convert between SpellData and CharacterSpell
 export const convertToCharacterSpell = (spellData: SpellData): CharacterSpell => {
   return {
     ...spellData,
-    id: typeof spellData.id === 'string' ? parseInt(spellData.id) || undefined : spellData.id
+    prepared: spellData.prepared || false
+  };
+};
+
+export const convertToSpellData = (characterSpell: CharacterSpell): SpellData => {
+  return {
+    ...characterSpell,
+    // Ensure school is always defined
+    school: characterSpell.school || "Unknown"
   };
 };

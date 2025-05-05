@@ -1,131 +1,137 @@
 
-import { SpellData } from './types';
+import { SpellData } from "./types";
+import { CharacterSpell } from "@/types/character.d";
 
-// Получаем все уникальные уровни заклинаний
-export const getAllLevels = (spells: SpellData[]): number[] => {
-  const levels = Array.from(new Set(spells.map(spell => spell.level)));
-  return levels.sort((a, b) => a - b);
+// Get all unique levels from spells array
+export const getAllLevels = (spells: SpellData[] | CharacterSpell[]): number[] => {
+  const levels = new Set<number>();
+  spells.forEach(spell => {
+    if (typeof spell.level === 'number') {
+      levels.add(spell.level);
+    }
+  });
+  return Array.from(levels).sort((a, b) => a - b);
 };
 
-// Получаем все уникальные школы магии
-export const getAllSchools = (spells: SpellData[]): string[] => {
-  const schools = Array.from(new Set(spells.map(spell => spell.school)));
-  return schools.sort();
+// Get all unique schools from spells array
+export const getAllSchools = (spells: SpellData[] | CharacterSpell[]): string[] => {
+  const schools = new Set<string>();
+  spells.forEach(spell => {
+    if (spell.school) {
+      schools.add(spell.school);
+    }
+  });
+  return Array.from(schools).sort();
 };
 
-// Получаем все уникальные классы
-export const getAllClasses = (spells: SpellData[]): string[] => {
-  const classesSet = new Set<string>();
-  
+// Get all unique classes from spells array
+export const getAllClasses = (spells: SpellData[] | CharacterSpell[]): string[] => {
+  const classes = new Set<string>();
   spells.forEach(spell => {
     if (spell.classes) {
       if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(className => classesSet.add(className));
-      } else if (typeof spell.classes === 'string') {
-        classesSet.add(spell.classes);
+        spell.classes.forEach(cls => classes.add(cls));
+      } else {
+        classes.add(spell.classes);
       }
     }
   });
-  
-  return Array.from(classesSet).sort();
+  return Array.from(classes).sort();
 };
 
-// Форматирование списка классов для отображения
-export const formatClassesString = (classes: string[] | string | undefined): string => {
-  if (!classes) return '';
-  
-  if (Array.isArray(classes)) {
-    return classes.join(', ');
+// Get badge color by spell level
+export const getBadgeColorByLevel = (level: number): string => {
+  switch (level) {
+    case 0: return "bg-gray-500";
+    case 1: return "bg-blue-500";
+    case 2: return "bg-green-500";
+    case 3: return "bg-yellow-500";
+    case 4: return "bg-orange-500";
+    case 5: return "bg-red-500";
+    case 6: return "bg-purple-500";
+    case 7: return "bg-pink-500";
+    case 8: return "bg-indigo-500";
+    case 9: return "bg-black";
+    default: return "bg-gray-500";
   }
-  
+};
+
+// Get badge color by school
+export const getSchoolBadgeColor = (school: string): string => {
+  switch (school.toLowerCase()) {
+    case "abjuration": return "bg-blue-500";
+    case "conjuration": return "bg-indigo-500";
+    case "divination": return "bg-purple-500";
+    case "enchantment": return "bg-pink-500";
+    case "evocation": return "bg-red-500";
+    case "illusion": return "bg-orange-500";
+    case "necromancy": return "bg-gray-700";
+    case "transmutation": return "bg-green-500";
+    default: return "bg-gray-500";
+  }
+};
+
+// Format classes array/string for display
+export const formatClassesString = (classes: string[] | string | undefined): string => {
+  if (!classes) return "";
+  if (Array.isArray(classes)) {
+    return classes.join(", ");
+  }
   return classes;
 };
 
-// Получаем цвет для уровня заклинания
-export const getBadgeColorByLevel = (level: number): string => {
-  switch (level) {
-    case 0: return '#78716c'; // Заговор
-    case 1: return '#2563eb'; // 1 уровень
-    case 2: return '#7c3aed'; // 2 уровень
-    case 3: return '#db2777'; // 3 уровень
-    case 4: return '#b91c1c'; // 4 уровень
-    case 5: return '#ea580c'; // 5 уровень
-    case 6: return '#65a30d'; // 6 уровень
-    case 7: return '#0d9488'; // 7 уровень
-    case 8: return '#6d28d9'; // 8 уровень
-    case 9: return '#4c1d95'; // 9 уровень
-    default: return '#1e293b';
-  }
-};
-
-// Получаем цвет для школы магии
-export const getSchoolBadgeColor = (school: string): string => {
-  const normalizedSchool = typeof school === 'string' ? school.toLowerCase() : '';
-  
-  switch (normalizedSchool) {
-    case 'воплощение': return '#dc2626';
-    case 'некромантия': return '#4b5563';
-    case 'очарование': return '#ec4899';
-    case 'преобразование': return '#2563eb';
-    case 'прорицание': return '#9333ea';
-    case 'вызов': return '#ea580c';
-    case 'ограждение': return '#65a30d';
-    case 'иллюзия': return '#8b5cf6';
-    default: return '#475569';
-  }
-};
-
-// Фильтрация заклинаний по поисковому запросу
-export const filterSpellsBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+// Filter spells by search term
+export const filterSpellsBySearchTerm = (spells: SpellData[] | CharacterSpell[], searchTerm: string): (SpellData | CharacterSpell)[] => {
   if (!searchTerm) return spells;
   
-  const lowercasedTerm = searchTerm.toLowerCase();
-  
+  const lowerSearchTerm = searchTerm.toLowerCase();
   return spells.filter(spell => {
-    // Фильтрация по имени
-    const nameMatch = spell.name.toLowerCase().includes(lowercasedTerm);
+    // Search in name
+    if (spell.name.toLowerCase().includes(lowerSearchTerm)) return true;
     
-    // Фильтрация по описанию
-    const descriptionMatch = spell.description?.toLowerCase().includes(lowercasedTerm) || false;
+    // Search in description
+    if (spell.description?.toLowerCase().includes(lowerSearchTerm)) return true;
     
-    return nameMatch || descriptionMatch;
+    // Search in classes
+    if (spell.classes) {
+      if (Array.isArray(spell.classes)) {
+        if (spell.classes.some(cls => cls.toLowerCase().includes(lowerSearchTerm))) return true;
+      } else {
+        if (spell.classes.toLowerCase().includes(lowerSearchTerm)) return true;
+      }
+    }
+    
+    // Search in other fields
+    if (spell.school?.toLowerCase().includes(lowerSearchTerm)) return true;
+    if (spell.castingTime?.toLowerCase().includes(lowerSearchTerm)) return true;
+    
+    return false;
   });
 };
 
-// Фильтрация заклинаний по уровню
-export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
-  if (levels.length === 0) return spells;
-  return spells.filter(spell => levels.includes(spell.level));
+// Filter spells by level
+export const filterSpellsByLevel = (spells: SpellData[] | CharacterSpell[], level: number | null): (SpellData | CharacterSpell)[] => {
+  if (level === null) return spells;
+  return spells.filter(spell => spell.level === level);
 };
 
-// Фильтрация заклинаний по школе
-export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
-  if (schools.length === 0) return spells;
-  return spells.filter(spell => schools.includes(spell.school));
+// Filter spells by school
+export const filterSpellsBySchool = (spells: SpellData[] | CharacterSpell[], school: string | null): (SpellData | CharacterSpell)[] => {
+  if (!school) return spells;
+  return spells.filter(spell => spell.school?.toLowerCase() === school.toLowerCase());
 };
 
-// Фильтрация заклинаний по классу
-export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
-  if (classes.length === 0) return spells;
+// Filter spells by class
+export const filterSpellsByClass = (spells: SpellData[] | CharacterSpell[], spellClass: string | null): (SpellData | CharacterSpell)[] => {
+  if (!spellClass) return spells;
   
   return spells.filter(spell => {
     if (!spell.classes) return false;
     
     if (Array.isArray(spell.classes)) {
-      return classes.some(className => 
-        spell.classes.some(spellClass => 
-          typeof spellClass === 'string' && spellClass.toLowerCase().includes(className.toLowerCase())
-        )
-      );
-    } 
-    
-    if (typeof spell.classes === 'string') {
-      const spellClassLower = spell.classes.toLowerCase();
-      return classes.some(className => 
-        spellClassLower.includes(className.toLowerCase())
-      );
+      return spell.classes.some(cls => cls.toLowerCase() === spellClass.toLowerCase());
+    } else {
+      return spell.classes.toLowerCase() === spellClass.toLowerCase();
     }
-    
-    return false;
   });
 };

@@ -6,7 +6,8 @@ import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
-import { CharacterSheet, ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { CharacterSheet } from "@/types/character.d";
+import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 import { useToast } from "@/hooks/use-toast";
 
 interface CharacterAbilityScoresProps {
