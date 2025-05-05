@@ -1,3 +1,4 @@
+
 .app-container {
   min-height: 100vh;
   display: flex;
@@ -66,7 +67,7 @@ button, .btn {
 
 button:hover, .btn:hover {
   background-color: var(--theme-accent, #8B5A2B) !important;
-  box-shadow: 0 0 10px var(--theme-accent, #8B5A2B) !important;
+  box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -83,7 +84,8 @@ a[href^="/"] button,
 button.accent-button {
   background: linear-gradient(170deg, rgba(var(--theme-accent-rgb, 139, 90, 43), 0.9) 0%, rgba(var(--theme-accent-rgb, 139, 90, 43), 0.6) 100%) !important;
   border: 1px solid rgba(var(--theme-accent-rgb, 139, 90, 43), 0.7) !important;
-  box-shadow: 0 0 8px rgba(var(--theme-accent-rgb, 139, 90, 43), 0.5) !important;
+  box-shadow: 0 0 5px rgba(var(--theme-accent-rgb, 139, 90, 43), 0.3) !important;
+  transition: all 0.3s ease !important;
 }
 
 button[class*="primary"]:hover, 
@@ -92,9 +94,10 @@ a[href^="/"] button:hover,
 button.accent-button:hover {
   background: linear-gradient(170deg, rgba(var(--theme-accent-rgb, 139, 90, 43), 1) 0%, rgba(var(--theme-accent-rgb, 139, 90, 43), 0.8) 100%) !important;
   box-shadow: 0 0 15px rgba(var(--theme-accent-rgb, 139, 90, 43), 0.7) !important;
+  transform: translateY(-2px) !important;
 }
 
-/* Улучшенный эффект свечения для кнопок на главной странице */
+/* Улучшенный эффект свечения для кнопок при наведении */
 a[href^="/"] button, 
 button[class*="primary"], 
 .btn-primary, 
@@ -151,7 +154,7 @@ button.accent-button:hover::after {
   box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
 }
 
-/* Улучшенные стили ��ля карточек на главной странице */
+/* Улучшенные стили для карточек на главной странице */
 [data-radix-popper-content-wrapper], 
 div[class*="card"], 
 div[class*="Card"] {
@@ -307,25 +310,59 @@ div[class*="Card"]:hover {
   }
 }
 
-/* Добавляем анимацию подсветки для кнопок индекса */
+/* Добавляем анимацию подсветки для кнопок */
 .primary-button-glow {
-  box-shadow: 0 0 10px var(--theme-accent, #8B5A2B) !important;
-  border: 1px solid var(--theme-accent, #8B5A2B) !important;
   position: relative;
+  border: 1px solid var(--theme-accent, #8B5A2B) !important;
+  transition: all 0.3s ease !important;
+}
+
+.primary-button-glow:before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 0.5rem;
+  background: var(--theme-accent, #8B5A2B);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .primary-button-glow:hover {
-  box-shadow: 0 0 20px var(--theme-accent, #8B5A2B) !important;
   transform: translateY(-2px) !important;
 }
 
-/* Анимация для подсветки кнопок */
+.primary-button-glow:hover:before {
+  opacity: 0.3;
+  animation: pulse-border 1.5s infinite;
+}
+
+/* Новые анимации для кнопок */
+@keyframes pulse-border {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* Улучшенная анимация свечения */
 @keyframes buttonGlow {
   0% {
     box-shadow: 0 0 5px var(--theme-accent, #8B5A2B);
   }
   50% {
-    box-shadow: 0 0 15px var(--theme-accent, #8B5A2B);
+    box-shadow: 0 0 15px var(--theme-accent, #8B5A2B), 0 0 5px var(--theme-accent, #8B5A2B) inset;
   }
   100% {
     box-shadow: 0 0 5px var(--theme-accent, #8B5A2B);
@@ -334,4 +371,22 @@ div[class*="Card"]:hover {
 
 .animated-glow {
   animation: buttonGlow 3s infinite;
+}
+
+/* Улучшаем наведение для навигационных кнопок */
+a[href^="/"] button,
+.navigation-button {
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(var(--theme-accent-rgb, 139, 90, 43), 0.6) !important;
+}
+
+a[href^="/"] button:hover,
+.navigation-button:hover {
+  transform: translateY(-2px) !important;
+  background-color: rgba(var(--theme-accent-rgb, 139, 90, 43), 0.3) !important;
+  border: 1px solid rgba(var(--theme-accent-rgb, 139, 90, 43), 1) !important;
+  box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb, 139, 90, 43), 0.4),
+              0 0 0 2px rgba(var(--theme-accent-rgb, 139, 90, 43), 0.2) !important;
 }

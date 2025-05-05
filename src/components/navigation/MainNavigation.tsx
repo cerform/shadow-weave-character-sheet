@@ -28,7 +28,7 @@ const MainNavigation = () => {
     <div className="flex items-center gap-2 flex-wrap">
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] navigation-button"
         style={buttonStyle}
         asChild
       >
@@ -40,7 +40,7 @@ const MainNavigation = () => {
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] navigation-button"
         style={buttonStyle}
         asChild
       >
@@ -52,7 +52,7 @@ const MainNavigation = () => {
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] navigation-button"
         style={buttonStyle}
         asChild
       >
@@ -65,7 +65,7 @@ const MainNavigation = () => {
       {!isAuthenticated && (
         <Button 
           variant="outline" 
-          className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
+          className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] navigation-button"
           style={buttonStyle}
           asChild
         >

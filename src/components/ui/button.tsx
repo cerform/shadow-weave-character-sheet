@@ -75,16 +75,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       // Добавляем переменные для гибкой настройки эффектов в CSS
       '--theme-accent': currentTheme.accent,
       '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
-      '--theme-glow': `0 0 15px ${currentTheme.accent}80`,
-      boxShadow: className?.includes('primary') ? `0 0 10px ${currentTheme.accent}60` : 'none',
+      '--theme-glow': `0 0 10px ${currentTheme.accent}50`,
+      boxShadow: className?.includes('primary') ? `0 0 10px ${currentTheme.accent}40` : 'none',
     } as React.CSSProperties;
     
-    // Добавляем классы для CSS эффектов
+    // Улучшенные классы для CSS эффектов
     const enhancedClasses = cn(
       baseClasses,
       "transition-all duration-300",
       variant === 'default' && !className?.includes('Details') && "bg-gradient-to-r from-[var(--theme-accent)] to-[var(--theme-accent)]",
-      variant === 'outline' && "border border-[var(--theme-accent)] hover:border-[var(--theme-accent)] hover:shadow-[var(--theme-glow)]",
+      variant === 'outline' && "border border-[var(--theme-accent)] hover:border-opacity-100 hover:border-[var(--theme-accent)]",
+      // Убрано постоянное свечение, добавлено только при наведении
       variant !== 'ghost' && variant !== 'link' && "hover:shadow-[var(--theme-glow)] focus:shadow-[var(--theme-glow)]",
     );
     
