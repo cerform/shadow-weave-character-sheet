@@ -1,123 +1,104 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Character } from '@/types/character';
 
 interface FeaturesTabProps {
-  character: Character;
+  character: Character | null;
+}
+
+// Add features type definition to handle current errors
+interface Feature {
+  name: string;
+  description: string;
+  level?: number;
+  source?: string;
 }
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({ character }) => {
-  // Добавим проверку на массив перед использованием filter:
+  const [activeTab, setActiveTab] = useState('class');
   
-  // Вместо
-  // character.proficiencies.filter(prof => prof.type === 'weapon')
-
-  const weaponProficiencies = Array.isArray(character.proficiencies) 
-    ? character.proficiencies.filter(prof => prof.type === 'weapon')
-    : [];
-
-  // Аналогично для других типов профессий
-  const armorProficiencies = Array.isArray(character.proficiencies)
-    ? character.proficiencies.filter(prof => prof.type === 'armor')
-    : [];
-
-  const toolProficiencies = Array.isArray(character.proficiencies)
-    ? character.proficiencies.filter(prof => prof.type === 'tool')
-    : [];
-
+  // Safety check
+  if (!character) {
+    return <div>Нет данных персонажа</div>;
+  }
+  
+  // Normalize features data
+  const characterFeatures = character.features || [];
+  const racialFeatures = character.racialFeatures || [];
+  const backgroundFeatures = character.backgroundFeatures || [];
+  
+  // Function to render feature items
+  const renderFeatureItem = (feature: Feature, index: number) => {
+    return (
+      <Card key={`${feature.name}-${index}`} className="mb-3 bg-card/40">
+        <CardContent className="p-4">
+          <h3 className="text-lg font-semibold">{feature.name}</h3>
+          {feature.level && (
+            <div className="text-xs text-muted-foreground mb-1">Уровень: {feature.level}</div>
+          )}
+          {feature.source && (
+            <div className="text-xs text-muted-foreground mb-1">Источник: {feature.source}</div>
+          )}
+          <p className="text-sm mt-2">{feature.description}</p>
+        </CardContent>
+      </Card>
+    );
+  };
+  
   return (
-    <div>
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Особенности класса</CardTitle>
-          <CardDescription>Особенности и умения, полученные от класса</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {character.classFeatures && character.classFeatures.length > 0 ? (
-            <ul>
-              {character.classFeatures.map((feature, index) => (
-                <li key={index} className="mb-2">
-                  <strong>{feature.name}</strong>: {feature.description}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Нет особенностей класса.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Языки</CardTitle>
-          <CardDescription>Языки, которыми владеет персонаж</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {character.languages && character.languages.length > 0 ? (
-            <ul>
-              {character.languages.map((language, index) => (
-                <li key={index}>{language}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Нет известных языков.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Владение оружием</CardTitle>
-          <CardDescription>Оружие, которым владеет персонаж</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {weaponProficiencies.length > 0 ? (
-            <ul>
-              {weaponProficiencies.map((proficiency, index) => (
-                <li key={index}>{proficiency.name}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Нет владений оружием.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Владение доспехами</CardTitle>
-          <CardDescription>Доспехи, которыми владеет персонаж</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {armorProficiencies.length > 0 ? (
-            <ul>
-              {armorProficiencies.map((proficiency, index) => (
-                <li key={index}>{proficiency.name}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Нет владений доспехами.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Владение инструментами</CardTitle>
-          <CardDescription>Инструменты, которыми владеет персонаж</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {toolProficiencies.length > 0 ? (
-            <ul>
-              {toolProficiencies.map((proficiency, index) => (
-                <li key={index}>{proficiency.name}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Нет владений инструментами.</p>
-          )}
-        </CardContent>
-      </Card>
+    <div className="p-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="class">Классовые</TabsTrigger>
+          <TabsTrigger value="racial">Расовые</TabsTrigger>
+          <TabsTrigger value="background">Предыстория</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="class">
+          <ScrollArea className="h-[calc(100vh-350px)]">
+            <div className="pr-4">
+              {characterFeatures.length > 0 ? (
+                characterFeatures.map((feature, idx) => renderFeatureItem(feature, idx))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Нет доступных классовых умений
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        
+        <TabsContent value="racial">
+          <ScrollArea className="h-[calc(100vh-350px)]">
+            <div className="pr-4">
+              {racialFeatures.length > 0 ? (
+                racialFeatures.map((feature, idx) => renderFeatureItem(feature, idx))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Нет доступных расовых умений
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        
+        <TabsContent value="background">
+          <ScrollArea className="h-[calc(100vh-350px)]">
+            <div className="pr-4">
+              {backgroundFeatures.length > 0 ? (
+                backgroundFeatures.map((feature, idx) => renderFeatureItem(feature, idx))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Нет доступных умений предыстории
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,117 +1,113 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Users, Swords, Sparkles, BookOpen, Map, FileQuestion, GripVertical } from "lucide-react";
-import { AbilitiesTab } from './tabs/AbilitiesTab';
-import { HandbookTab } from './tabs/HandbookTab';
-import { SpellsTab } from './tabs/SpellsTab';
-import { InventoryTab } from './tabs/InventoryTab';
-import { FeaturesTab } from './tabs/FeaturesTab';
-import { BackstoryTab } from './tabs/BackstoryTab';
-import { NotesTab } from './tabs/NotesTab';
-import { CombatTab } from './tabs/CombatTab';
+import { 
+  BookOpen, 
+  ScrollText, 
+  FileText, 
+  Package, 
+  Heart,
+  Dices,
+  User,
+  Notebook
+} from "lucide-react";
+import FeaturesTab from "./tabs/FeaturesTab";
+import SpellsTab from "./tabs/SpellsTab";
+import NotesTab from "./tabs/NotesTab";
+import InventoryTab from "./tabs/InventoryTab";
+import CombatTab from "./tabs/CombatTab";
+import GeneralTab from "./tabs/GeneralTab";
 import { Character } from '@/types/character';
 
 interface CharacterTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   character: Character | null;
-  onUpdate: (updates: any) => void;
   isDM?: boolean;
 }
 
-export const CharacterTabs: React.FC<CharacterTabsProps> = ({
-  activeTab,
-  setActiveTab,
-  character,
-  onUpdate,
-  isDM = false
-}) => {
+const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) => {
+  const [activeTab, setActiveTab] = useState("general");
+  
   return (
-    <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-4 md:grid-cols-8 mb-4 w-full overflow-x-auto">
-        <TabsTrigger value="abilities" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          <span className="hidden sm:inline">Хар-ки</span>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-4 md:grid-cols-8 mb-6">
+        <TabsTrigger value="general" className="flex flex-col items-center gap-1">
+          <User className="h-4 w-4" />
+          <span className="text-xs">Основное</span>
         </TabsTrigger>
-        <TabsTrigger value="combat" className="flex items-center gap-2">
-          <Swords className="h-4 w-4" />
-          <span className="hidden sm:inline">Бой</span>
+        
+        <TabsTrigger value="combat" className="flex flex-col items-center gap-1">
+          <Heart className="h-4 w-4" />
+          <span className="text-xs">Бой</span>
         </TabsTrigger>
-        <TabsTrigger value="spells" className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" />
-          <span className="hidden sm:inline">Магия</span>
+        
+        <TabsTrigger value="features" className="flex flex-col items-center gap-1">
+          <ScrollText className="h-4 w-4" />
+          <span className="text-xs">Умения</span>
         </TabsTrigger>
-        <TabsTrigger value="inventory" className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4" />
-          <span className="hidden sm:inline">Инвентарь</span>
-        </TabsTrigger>
-        <TabsTrigger value="features" className="flex items-center gap-2">
-          <FileQuestion className="h-4 w-4" />
-          <span className="hidden sm:inline">Умения</span>
-        </TabsTrigger>
-        <TabsTrigger value="backstory" className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          <span className="hidden sm:inline">История</span>
-        </TabsTrigger>
-        <TabsTrigger value="notes" className="flex items-center gap-2">
-          <Map className="h-4 w-4" />
-          <span className="hidden sm:inline">Заметки</span>
-        </TabsTrigger>
-        <TabsTrigger value="handbook" className="flex items-center gap-2">
+        
+        <TabsTrigger value="spells" className="flex flex-col items-center gap-1">
           <BookOpen className="h-4 w-4" />
-          <span className="hidden sm:inline">Справочник</span>
+          <span className="text-xs">Заклинания</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="inventory" className="flex flex-col items-center gap-1">
+          <Package className="h-4 w-4" />
+          <span className="text-xs">Инвентарь</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="notes" className="flex flex-col items-center gap-1">
+          <Notebook className="h-4 w-4" />
+          <span className="text-xs">Заметки</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="dice" className="flex flex-col items-center gap-1">
+          <Dices className="h-4 w-4" />
+          <span className="text-xs">Кубики</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="details" className="flex flex-col items-center gap-1">
+          <FileText className="h-4 w-4" />
+          <span className="text-xs">Детали</span>
         </TabsTrigger>
       </TabsList>
-
-      <ScrollArea className="h-[calc(100vh-300px)] rounded-md border">
-        <div className="p-4">
-          <TabsContent value="abilities">
-            <AbilitiesTab />
-          </TabsContent>
-
-          <TabsContent value="combat">
-            <CombatTab />
-          </TabsContent>
-
-          <TabsContent value="spells">
-            <SpellsTab 
-              character={character} 
-              onUpdate={onUpdate} 
-            />
-          </TabsContent>
-
-          <TabsContent value="inventory">
-            <InventoryTab 
-              character={character} 
-              onUpdate={onUpdate} 
-            />
-          </TabsContent>
-
-          <TabsContent value="features">
-            <FeaturesTab />
-          </TabsContent>
-
-          <TabsContent value="backstory">
-            <BackstoryTab 
-              character={character} 
-              onUpdate={onUpdate} 
-            />
-          </TabsContent>
-
-          <TabsContent value="notes">
-            <NotesTab 
-              character={character} 
-              onUpdate={onUpdate} 
-            />
-          </TabsContent>
-
-          <TabsContent value="handbook">
-            <HandbookTab />
-          </TabsContent>
+      
+      <TabsContent value="general">
+        <GeneralTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="combat">
+        <CombatTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="features">
+        <FeaturesTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="spells">
+        <SpellsTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="inventory">
+        <InventoryTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="notes">
+        <NotesTab character={character} />
+      </TabsContent>
+      
+      <TabsContent value="dice">
+        <div className="p-4 bg-card/30 rounded-lg">
+          <h3 className="text-lg font-medium mb-4">Кубики</h3>
+          {/* Dice roller will be added here */}
         </div>
-      </ScrollArea>
+      </TabsContent>
+      
+      <TabsContent value="details">
+        <div className="p-4 bg-card/30 rounded-lg">
+          <h3 className="text-lg font-medium mb-4">Детали персонажа</h3>
+          {/* Character details will be added here */}
+        </div>
+      </TabsContent>
     </Tabs>
   );
 };

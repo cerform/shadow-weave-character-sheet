@@ -1,15 +1,22 @@
+
 // Добавим обязательное поле prepared во все заклинания
-import { spells } from './cantrips';
-import { clericSpells } from './cleric';
-import { druidSpells } from './druid';
-import { paladinSpells } from './paladin';
-import { rangerSpells } from './ranger';
-import { sorcererSpells } from './sorcerer';
-import { warlockSpells } from './warlock';
-import { wizardSpells } from './wizard';
+import { CharacterSpell } from '@/types/character';
+import { spells as cantripSpells } from './cantrips';
+
+// Empty arrays for class-specific spells until they're implemented
+const clericSpells: CharacterSpell[] = [];
+const druidSpells: CharacterSpell[] = [];
+const paladinSpells: CharacterSpell[] = [];
+const rangerSpells: CharacterSpell[] = [];
+const sorcererSpells: CharacterSpell[] = [];
+const warlockSpells: CharacterSpell[] = [];
+const wizardSpells: CharacterSpell[] = [];
+
+// Export the cantrips properly
+export const spells = cantripSpells;
 
 // Ensure all spells have the required 'prepared' field
-const ensureSpellsHavePreparedField = (spellList) => {
+const ensureSpellsHavePreparedField = (spellList: CharacterSpell[]): CharacterSpell[] => {
   return spellList.map(spell => ({
     ...spell,
     prepared: spell.prepared !== undefined ? spell.prepared : false
@@ -17,7 +24,7 @@ const ensureSpellsHavePreparedField = (spellList) => {
 };
 
 // Обновим функции для возврата спеллов с полем prepared
-export const getAllSpells = () => {
+export const getAllSpells = (): CharacterSpell[] => {
   return ensureSpellsHavePreparedField([
     ...spells,
     ...clericSpells,
@@ -30,7 +37,7 @@ export const getAllSpells = () => {
   ]);
 };
 
-export const getSpellsByClass = (className) => {
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return ensureSpellsHavePreparedField(
     getAllSpells().filter(spell => 
       Array.isArray(spell.classes) 
@@ -40,16 +47,24 @@ export const getSpellsByClass = (className) => {
   );
 };
 
-export const getSpellsByLevel = (level) => {
+export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   return ensureSpellsHavePreparedField(
     getAllSpells().filter(spell => spell.level === level)
   );
 };
 
-export const getSpellDetails = (spellName) => {
+export const getSpellDetails = (spellName: string): CharacterSpell | null => {
   const spell = getAllSpells().find(s => s.name === spellName);
   return spell ? { ...spell, prepared: spell.prepared || false } : null;
 };
 
-// Экспортируем все заклинания и функции
-export { spells };
+// Export all the class-specific spells
+export { 
+  clericSpells,
+  druidSpells,
+  paladinSpells,
+  rangerSpells,
+  sorcererSpells,
+  warlockSpells,
+  wizardSpells
+};

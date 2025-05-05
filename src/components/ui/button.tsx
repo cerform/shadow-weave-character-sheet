@@ -57,9 +57,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Исправляем проверку класса Details - без обращения к props.className
     const hasDetailsClass = className ? className.includes('Details') : false;
     
-    // Улучшаем подсветку для всех кнопок
-    const style: React.CSSProperties = {
-      ...props.style,
+    // Улучшаем подсветку для всех кнопок - типизируем style правильно
+    const customStyles: React.CSSProperties = {
       color: variant === 'ghost' && hasDetailsClass
         ? '#FFFFFF' 
         : variant === 'default' 
@@ -77,7 +76,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
     
     // Добавляем дополнительные классы для всех кнопок с подсветкой через классы вместо CSS переменных
-    const glowColor = `${currentTheme.accent}80`;
     const enhancedClasses = cn(
       baseClasses,
       "hover:shadow-lg focus:shadow-lg",
@@ -85,11 +83,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       "relative overflow-hidden"
     );
     
+    // Объединяем пользовательские стили с нашими
+    const mergedStyle = { ...props.style, ...customStyles };
+    
     return (
       <Comp
         className={enhancedClasses}
         ref={ref}
-        style={style}
+        style={mergedStyle}
         {...props}
       />
     )

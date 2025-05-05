@@ -1,13 +1,10 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Character, CharacterSpell, CharacterProficiencies } from '@/types/character';
+import { Character, CharacterSpell, CharacterProficiencies, CharacterSheet } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
 import { isOfflineMode } from '@/utils/authHelpers';
-
-// Define CharacterSheet type for compatibility with the service
-type CharacterSheet = Character;
 
 interface CharacterContextProps {
   character: Character | null;
@@ -39,6 +36,7 @@ export const useCharacter = () => useContext(CharacterContext);
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
+  const [characters, setCharacters] = useState<Character[]>([]);
   
   // Нормализация заклинаний из строк в объекты CharacterSpell
   const normalizeCharacterSpells = (characterData: any): Character => {
@@ -90,7 +88,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       localStorage.setItem('dnd-characters', JSON.stringify(characters));
       localStorage.setItem('last-selected-character', character.id);
     } catch (error) {
-      console.error('Ошибка при с��хранении персонажа в localStorage:', error);
+      console.error('Ошибка при сохранении персонажа в localStorage:', error);
     }
   };
 
@@ -156,6 +154,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           const normalizedCharacter = normalizeCharacterSpells(foundCharacter);
           setCharacter(normalizedCharacter);
         }
+        
+        // Также загружаем список персонажей
+        const loadedCharacters = await getUserCharacters();
+        setCharacters(loadedCharacters);
       } catch (error) {
         console.error("Ошибка при загрузке персонажа:", error);
       } finally {
@@ -167,13 +169,53 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [loadCharacterFromLocalStorage]);
   
   // Обновленный метод setCharacter
-  const updateCharacter = (newCharacter: Character | null) => {
-    if (newCharacter) {
-      // Нормализуем заклинания перед установкой
-      const normalizedCharacter = normalizeCharacterSpells(newCharacter);
-      setCharacter(normalizedCharacter);
-    } else {
-      setCharacter(null);
+  const updateCharacter = (newCharacter: Partial<Character>) => {
+    if (!character) return;
+    
+    // Нормализуем заклинания в обновлениях, если они есть
+    let normalizedUpdates = newCharacter;
+    if (newCharacter.spells) {
+      normalizedUpdates = {
+        ...newCharacter,
+        spells: newCharacter.spells.map((spell: string | CharacterSpell) => {
+          if (typeof spell === 'string') {
+            return {
+              name: spell,
+              level: 0,
+              school: 'Неизвестная',
+              prepared: false
+            } as CharacterSpell;
+          }
+          return {
+            ...spell,
+            prepared: spell.prepared ?? false
+          };
+        })
+      };
+    }
+    
+    // Обновляем и нормализуем весь объект
+    const updatedCharacter = normalizeCharacterSpells({
+      ...character,
+      ...normalizedUpdates,
+      updatedAt: new Date().toISOString()
+    });
+    
+    // Устанавливаем обновленный объект
+    setCharacter(updatedCharacter);
+    
+    // Сохраняем в localStorage
+    saveCharacterToLocalStorage(updatedCharacter);
+    
+    // Если онлайн и есть userId, также сохраняем в Firestore
+    if (!isOfflineMode() && updatedCharacter.userId) {
+      // Преобразуем для совместимости с CharacterSheet
+      const characterSheetData = updatedCharacter as CharacterSheet;
+      
+      characterService.saveCharacter(characterSheetData)
+        .catch(error => {
+          console.error('Ошибка при сохранении персонажа в Firestore:', error);
+        });
     }
   };
   
@@ -201,6 +243,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }
     
+    // Обновляем список персонажей
+    const updatedCharacters = await getUserCharacters();
+    setCharacters(updatedCharacters);
+    
     return normalizedCharacter;
   };
   
@@ -225,6 +271,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!isOfflineMode()) {
         await characterService.deleteCharacter(characterId);
       }
+      
+      // Обновляем список персонажей
+      const updatedCharacters = await getUserCharacters();
+      setCharacters(updatedCharacters);
       
       // Очищаем контекст, если удален текущий персонаж
       if (character && character.id === characterId) {
@@ -263,72 +313,17 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Нормализуем заклинания перед установкой
         const normalizedCharacter = normalizeCharacterSpells(newCharacter);
         setCharacter(normalizedCharacter);
+        saveCharacterToLocalStorage(normalizedCharacter);
       } else {
         setCharacter(null);
       }
     },
     loading,
-    updateCharacter: (updates: Partial<Character>) => {
-      if (!character) return;
-      
-      // Нормализуем заклинания в обновлениях, если они есть
-      let normalizedUpdates = updates;
-      if (updates.spells) {
-        normalizedUpdates = {
-          ...updates,
-          spells: updates.spells.map((spell: string | CharacterSpell) => {
-            if (typeof spell === 'string') {
-              return {
-                name: spell,
-                level: 0,
-                school: 'Неизвестная',
-                prepared: false
-              } as CharacterSpell;
-            }
-            return {
-              ...spell,
-              prepared: spell.prepared ?? false
-            };
-          })
-        };
-      }
-      
-      // Обновляем и нормализуем весь объект
-      const updatedCharacter = normalizeCharacterSpells({
-        ...character,
-        ...normalizedUpdates,
-        updatedAt: new Date().toISOString()
-      });
-      
-      // Устанавливаем обновленный объект
-      setCharacter(updatedCharacter);
-      
-      // Сохраняем в localStorage
-      saveCharacterToLocalStorage(updatedCharacter);
-      
-      // Если онлайн и есть userId, также сохраняем в Firestore
-      if (!isOfflineMode() && updatedCharacter.userId) {
-        // Преобразуем для совместимости с CharacterSheet
-        const characterSheetData = {
-          ...updatedCharacter,
-          proficiencies: {
-            languages: updatedCharacter.languages || [],
-            weapons: [],
-            armor: [],
-            tools: []
-          }
-        } as CharacterSheet;
-        
-        characterService.saveCharacter(characterSheetData)
-          .catch(error => {
-            console.error('Ошибка при сохранении персонажа в Firestore:', error);
-          });
-      }
-    },
+    updateCharacter,
     createNewCharacter,
     deleteCharacter,
-    characters: [], // Add placeholder array
-    getUserCharacters // Add method implementation
+    characters,
+    getUserCharacters
   };
 
   // Предоставляем контекст всем дочерним элементам

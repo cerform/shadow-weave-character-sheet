@@ -1,527 +1,454 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Wand2, Search, X, Filter, BookOpen, Download, Upload, Plus, Sparkles } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, BookOpen, Plus, Filter, ScrollText, Clock, BookMarked } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SpellImporter from './SpellImporter';
+import { CharacterSpell, SpellData } from '@/types/character';
 import { useSpellbook } from '@/hooks/spellbook';
-import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
-import SpellList from './SpellList';
-import { CharacterSpell } from '@/types/character.d';
-import { SpellData, convertToSpellData } from '@/hooks/spellbook/types';
+import { schools } from '@/data/spellSchools';
+import { cn } from '@/lib/utils';
 
-// Импортируем функцию validateSpellData
-import { validateSpellData } from '@/hooks/spellbook/themeUtils';
+interface SpellBookViewerProps {
+  characterClass?: string;
+  characterLevel?: number;
+  spells?: CharacterSpell[];
+  onSpellsChange?: (spells: CharacterSpell[]) => void;
+}
 
-const SpellBookViewer = () => {
-  const { 
-    filteredSpells, 
-    searchTerm, 
-    setSearchTerm, 
-    activeLevel, 
-    selectedSpell, 
-    isModalOpen, 
-    activeSchool,
-    activeClass,
-    currentTheme,
-    allLevels,
-    allSchools,
-    allClasses,
-    handleOpenSpell,
-    handleClose,
-    toggleLevel,
-    toggleSchool,
-    toggleClass,
-    clearFilters,
-    getBadgeColor,
-    getSchoolBadgeColor,
-    formatClasses,
-    convertCharacterSpellsToSpellData
-  } = useSpellbook();
+const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
+  characterClass,
+  characterLevel = 1,
+  spells: characterSpells = [],
+  onSpellsChange,
+}) => {
+  const { spells: allSpells, adaptToSpellData, adaptToCharacterSpell } = useSpellbook(characterClass);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterSchool, setFilterSchool] = useState<string | null>(null);
+  const [filterLevel, setFilterLevel] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('character');
+  const [spellDetails, setSpellDetails] = useState<SpellData | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   
-  const { theme } = useTheme();
-  const themeData = themes[theme as keyof typeof themes] || themes.default;
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importText, setImportText] = useState('');
-  const { toast } = useToast();
+  // Convert character spells to SpellData format for display
+  const [characterSpellData, setCharacterSpellData] = useState<SpellData[]>([]);
   
-  // State for spell data
-  const [spellsData, setSpellsData] = useState<SpellData[]>([]);
-
-  const handleExportSpells = () => {
-    if (spellsData.length === 0) {
-      toast({
-        title: "Нет данных для экспорта",
-        description: "В книге заклинаний нет заклинаний для экспорта",
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    // Convert character spells to SpellData for consistent display
+    if (characterSpells && characterSpells.length > 0) {
+      const convertedSpells = characterSpells.map(spell => adaptToSpellData(spell));
+      setCharacterSpellData(convertedSpells);
+    } else {
+      setCharacterSpellData([]);
     }
-
-    try {
-      const spellText = spellsData.map(spell => {
-        return `${spell.name}\n${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}, ${spell.school}\n${spell.description || ''}`
-      }).join('\n\n');
-
-      const blob = new Blob([spellText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'spellbook-export.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Экспорт успешен",
-        description: `Экспортировано ${spellsData.length} заклинаний.`
+  }, [characterSpells, adaptToSpellData]);
+  
+  // Filter spells based on search term and filters
+  const filteredSpells = React.useMemo(() => {
+    return allSpells.filter(spell => {
+      // Filter by search term
+      const searchMatch = !searchTerm || 
+        spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (spell.description && spell.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+      // Filter by school
+      const schoolMatch = !filterSchool || spell.school.toLowerCase() === filterSchool.toLowerCase();
+      
+      // Filter by level
+      const levelMatch = filterLevel === null || spell.level === filterLevel;
+      
+      return searchMatch && schoolMatch && levelMatch;
+    });
+  }, [allSpells, searchTerm, filterSchool, filterLevel]);
+  
+  // Group spells by level
+  const groupedSpells = React.useMemo(() => {
+    const grouped: Record<number, SpellData[]> = {};
+    
+    // Group filtered spells by level
+    filteredSpells.forEach(spell => {
+      if (!grouped[spell.level]) {
+        grouped[spell.level] = [];
+      }
+      grouped[spell.level].push(spell);
+    });
+    
+    // Group character spells by level
+    if (activeTab === 'character') {
+      const charGrouped: Record<number, SpellData[]> = {};
+      characterSpellData.forEach(spell => {
+        if (!charGrouped[spell.level]) {
+          charGrouped[spell.level] = [];
+        }
+        charGrouped[spell.level].push(spell);
       });
-    } catch (error) {
-      toast({
-        title: "Ошибка экспорта",
-        description: "Произошла ошибка при экспорте заклинаний.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleImportSpells = () => {
-    if (!importText.trim()) {
-      toast({
-        title: "Ошибка импорта",
-        description: "Текст для импорта не может быть пустым.",
-        variant: "destructive"
-      });
-      return;
+      return charGrouped;
     }
     
-    try {
-      const importedSpells = importSpellsFromText(importText);
+    return grouped;
+  }, [filteredSpells, characterSpellData, activeTab]);
+  
+  // Calculate max spell level based on character level
+  const maxSpellLevel = React.useMemo(() => {
+    if (characterLevel >= 17) return 9;
+    if (characterLevel >= 15) return 8;
+    if (characterLevel >= 13) return 7;
+    if (characterLevel >= 11) return 6;
+    if (characterLevel >= 9) return 5;
+    if (characterLevel >= 7) return 4;
+    if (characterLevel >= 5) return 3;
+    if (characterLevel >= 3) return 2;
+    if (characterLevel >= 1) return 1;
+    return 0;
+  }, [characterLevel]);
+  
+  // Handle spell selection
+  const handleSelectSpell = (spell: SpellData) => {
+    // Convert to CharacterSpell and add to character's spellbook
+    if (onSpellsChange) {
+      const isExisting = characterSpellData.some(s => s.name === spell.name);
       
-      if (importedSpells.length > 0) {
-        // Make sure all spells have required school property
-        const processedSpells: SpellData[] = importedSpells.map(spell => ({
-          ...spell,
-          school: spell.school || 'Неизвестная', // Ensure school is never undefined
-          prepared: spell.prepared || false
-        }));
-        
-        // Update the spells list
-        setSpellsData(processedSpells);
-        
-        toast({
-          title: "Импорт успешен",
-          description: `Импортировано ${importedSpells.length} заклинаний.`
-        });
-        
-        setImportDialogOpen(false);
-        setImportText('');
+      if (isExisting) {
+        // Remove spell if it already exists
+        const updatedSpells = characterSpells.filter(s => s.name !== spell.name);
+        onSpellsChange(updatedSpells);
       } else {
-        toast({
-          title: "Импорт не удался",
-          description: "Не удалось распознать заклинания в тексте."
-        });
+        // Add spell if it doesn't exist
+        const characterSpell = adaptToCharacterSpell(spell);
+        onSpellsChange([...characterSpells, characterSpell]);
       }
-    } catch (error) {
-      toast({
-        title: "Ошибка импорта",
-        description: "Произошла ошибка при обработке текста.",
-        variant: "destructive"
-      });
     }
   };
-
-  return (
-    <div 
-      className="min-h-screen"
-      style={{ 
-        background: `linear-gradient(to bottom, ${themeData.accent}20, ${themeData.cardBackground || 'rgba(0, 0, 0, 0.85)'})`
-      }}
-    >
-      <div className="container mx-auto py-8 px-4">
-        <Card 
-          className="border border-accent"
-          style={{ 
-            backgroundColor: `${themeData.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
-          }}
-        >
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <CardTitle className="text-2xl" style={{color: themeData.textColor || 'white'}}>
-                <Wand2 className="inline-block mr-2" />
-                Книга заклинаний
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setImportDialogOpen(true)}
-                  style={{
-                    borderColor: themeData.accent,
-                    color: themeData.textColor || 'white'
-                  }}
-                >
-                  <Upload className="h-4 w-4 mr-1" />
-                  Импорт
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleExportSpells}
-                  style={{
-                    borderColor: themeData.accent,
-                    color: themeData.textColor || 'white'
-                  }}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Экспорт
-                </Button>
-              </div>
+  
+  // Toggle spell preparation status
+  const togglePrepared = (spell: SpellData) => {
+    if (onSpellsChange) {
+      const updatedSpells = characterSpells.map(s => {
+        if (s.name === spell.name) {
+          return { ...s, prepared: !s.prepared };
+        }
+        return s;
+      });
+      onSpellsChange(updatedSpells);
+    }
+  };
+  
+  // Handle importing spells
+  const handleImportSpells = (importedSpells: CharacterSpell[]) => {
+    if (onSpellsChange) {
+      // Combine existing spells with imported spells, removing duplicates
+      const existingNames = new Set(characterSpells.map(spell => spell.name));
+      const newSpells = importedSpells.filter(spell => !existingNames.has(spell.name));
+      
+      onSpellsChange([...characterSpells, ...newSpells]);
+    }
+    setIsImportOpen(false);
+  };
+  
+  // Get a spell card background style based on its school
+  const getSpellCardStyle = (school: string) => {
+    const schoolKey = school.toLowerCase();
+    switch (schoolKey) {
+      case 'evocation': return 'bg-gradient-to-br from-red-500/10 to-orange-500/10 border-orange-500/20';
+      case 'abjuration': return 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-cyan-500/20';
+      case 'conjuration': return 'bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-yellow-500/20';
+      case 'divination': return 'bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 border-fuchsia-500/20';
+      case 'enchantment': return 'bg-gradient-to-br from-pink-500/10 to-rose-500/10 border-rose-500/20';
+      case 'illusion': return 'bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border-violet-500/20';
+      case 'necromancy': return 'bg-gradient-to-br from-neutral-700/10 to-stone-900/10 border-stone-500/20';
+      case 'transmutation': return 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-emerald-500/20';
+      default: return 'bg-card/30';
+    }
+  };
+  
+  // Render spell card
+  const SpellCard = ({ spell, inSpellbook = false }: { spell: SpellData, inSpellbook?: boolean }) => {
+    const cardStyle = getSpellCardStyle(spell.school);
+    
+    return (
+      <Card 
+        className={cn(
+          "mb-2 cursor-pointer hover:shadow-md transition-shadow",
+          cardStyle,
+          spell.prepared ? "ring-1 ring-primary/30" : ""
+        )}
+        onClick={() => {
+          setSpellDetails(spell);
+          setIsDetailsOpen(true);
+        }}
+      >
+        <CardContent className="p-3 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-1">
+              <h4 className="font-medium">{spell.name}</h4>
+              {spell.ritual && <Badge variant="outline" className="ml-1 text-xs">Ритуал</Badge>}
             </div>
-          </CardHeader>
+            <p className="text-xs text-muted-foreground">
+              {spell.school}, {spell.castingTime}
+            </p>
+          </div>
           
-          <CardContent>
-            <div className="mb-6 flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          {inSpellbook && spell.level > 0 && (
+            <Checkbox 
+              checked={spell.prepared} 
+              onCheckedChange={() => togglePrepared(spell)}
+              onClick={e => e.stopPropagation()}
+              className="mt-1"
+            />
+          )}
+          
+          {!inSpellbook && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="h-6 w-6 p-0 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectSpell(spell);
+              }}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Render spell level section
+  const renderSpellLevelSection = (level: number, spells: SpellData[], inSpellbook = false) => {
+    // Use explicit type safety by ensuring level is a number and spells is an array
+    if (typeof level !== "number" || !Array.isArray(spells)) {
+      return null;
+    }
+    
+    const levelName = level === 0 ? "Заговоры" : `${level} уровень`;
+    
+    return (
+      <div key={level} className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">{levelName}</h3>
+        <div className="space-y-1">
+          {spells.map((spell, index) => (
+            <SpellCard 
+              key={`${spell.name}-${index}`} 
+              spell={spell} 
+              inSpellbook={inSpellbook} 
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
+  // Main component render
+  return (
+    <>
+      <div className="h-full flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-xl font-semibold">Книга заклинаний</div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Импорт
+            </Button>
+          </div>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="character" className="flex items-center">
+              <BookMarked className="h-4 w-4 mr-2" />
+              Мои заклинания
+            </TabsTrigger>
+            <TabsTrigger value="all" className="flex items-center">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Все заклинания
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+              <div className="grow">
                 <Input
                   placeholder="Поиск заклинаний..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-8"
-                  style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    color: themeData.textColor || 'white',
-                    borderColor: themeData.accent
-                  }}
+                  className="w-full"
+                  startIcon={<Search className="h-4 w-4" />}
                 />
-                {searchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-9 w-9"
-                    onClick={() => setSearchTerm('')}
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                )}
               </div>
               
-              <Button
-                variant={isFilterOpen ? "secondary" : "outline"}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                style={{
-                  borderColor: themeData.accent,
-                  color: themeData.textColor || 'white'
-                }}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Фильтры
-                <ChevronDown className={`h-4 w-4 ml-2 transform transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-              </Button>
+              <Select value={filterSchool || ''} onValueChange={val => setFilterSchool(val || null)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Школа магии" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Все школы</SelectItem>
+                  {schools.map(school => (
+                    <SelectItem key={school.name} value={school.name}>{school.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
-              {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
-                <Button
-                  variant="ghost"
-                  onClick={clearFilters}
-                  size="sm"
-                  style={{
-                    color: themeData.textColor || 'white'
-                  }}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Сбросить
-                </Button>
-              )}
+              <Select 
+                value={filterLevel !== null ? String(filterLevel) : ''} 
+                onValueChange={val => setFilterLevel(val ? Number(val) : null)}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Уровень" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Все уровни</SelectItem>
+                  <SelectItem value="0">Заговоры</SelectItem>
+                  {Array.from({length: maxSpellLevel}, (_, i) => i + 1).map(level => (
+                    <SelectItem key={level} value={String(level)}>
+                      {level} уровень
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="mb-6">
-              <CollapsibleContent className="border-t border-accent pt-4 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium mb-3" style={{color: themeData.textColor || 'white'}}>Уровень</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allLevels.map((level) => (
-                        <Badge
-                          key={level}
-                          variant={activeLevel.includes(level) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleLevel(level)}
-                          style={{
-                            backgroundColor: activeLevel.includes(level) ? getBadgeColor(level) : 'transparent',
-                            borderColor: getBadgeColor(level),
-                            color: activeLevel.includes(level) ? 'white' : themeData.textColor || 'white'
-                          }}
-                        >
-                          {level === 0 ? "Заговор" : `${level} уровень`}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-3" style={{color: themeData.textColor || 'white'}}>Школа магии</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allSchools.map((school) => (
-                        <Badge
-                          key={school}
-                          variant={activeSchool.includes(school) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleSchool(school)}
-                          style={{
-                            backgroundColor: activeSchool.includes(school) ? getSchoolBadgeColor(school) : 'transparent',
-                            borderColor: getSchoolBadgeColor(school),
-                            color: activeSchool.includes(school) ? 'white' : themeData.textColor || 'white'
-                          }}
-                        >
-                          {school}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-3" style={{color: themeData.textColor || 'white'}}>Класс</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allClasses.map((className) => (
-                        <Badge
-                          key={className}
-                          variant={activeClass.includes(className) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleClass(className)}
-                          style={{
-                            backgroundColor: activeClass.includes(className) ? themeData.accent : 'transparent',
-                            borderColor: themeData.accent,
-                            color: activeClass.includes(className) ? 'white' : themeData.textColor || 'white'
-                          }}
-                        >
-                          {className}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+          </div>
+          
+          <TabsContent value="character" className="h-full">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {Object.keys(groupedSpells).length > 0 ? (
+                Object.entries(groupedSpells)
+                  .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
+                  .map(([level, spells]) => renderSpellLevelSection(Number(level), spells, true))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-2">У вас пока нет заклинаний</p>
+                  <Button variant="outline" onClick={() => setActiveTab('all')}>
+                    Добавить заклинания
+                  </Button>
                 </div>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            <SpellList 
-              spells={filteredSpells}
-              getBadgeColor={getBadgeColor}
-              getSchoolBadgeColor={getSchoolBadgeColor}
-              currentTheme={themeData}
-              handleOpenSpell={handleOpenSpell}
-              formatClasses={formatClasses}
-            />
-          </CardContent>
-        </Card>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="all" className="h-full">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {Object.entries(groupedSpells)
+                .sort(([levelA], [levelB]) => Number(levelA) - Number(levelB))
+                .map(([level, spells]) => renderSpellLevelSection(Number(level), spells))
+              }
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </div>
       
-      {/* Модальное окно для просмотра заклинания */}
-      <Dialog open={isModalOpen} onOpenChange={handleClose}>
-        <DialogContent
-          className="sm:max-w-[700px] border-accent"
-          style={{
-            backgroundColor: themeData.cardBackground || 'rgba(0, 0, 0, 0.9)',
-            color: themeData.textColor || 'white'
-          }}
-        >
-          {selectedSpell && (
+      {/* Spell Details Dialog */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-2xl">
+          {spellDetails && (
             <>
               <DialogHeader>
-                <div className="flex justify-between items-start">
-                  <DialogTitle className="text-xl" style={{color: themeData.textColor || 'white'}}>
-                    {selectedSpell.name}
-                  </DialogTitle>
-                  <Badge
-                    variant="outline"
-                    style={{
-                      backgroundColor: getBadgeColor(selectedSpell.level),
-                      color: 'white',
-                      borderColor: getBadgeColor(selectedSpell.level)
-                    }}
-                  >
-                    {selectedSpell.level === 0 ? "Заговор" : `${selectedSpell.level} уровень`}
-                  </Badge>
-                </div>
-                <DialogDescription>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant="outline"
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                        color: themeData.textColor || 'white',
-                        borderColor: getSchoolBadgeColor(selectedSpell.school)
-                      }}
-                    >
-                      {selectedSpell.school}
-                    </Badge>
-                    {selectedSpell.ritual && (
-                      <Badge
-                        variant="outline"
-                        style={{
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                          color: themeData.textColor || 'white',
-                          borderColor: themeData.accent
-                        }}
-                      >
-                        Ритуал
-                      </Badge>
-                    )}
-                    {selectedSpell.concentration && (
-                      <Badge
-                        variant="outline"
-                        style={{
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                          color: themeData.textColor || 'white',
-                          borderColor: themeData.accent
-                        }}
-                      >
-                        Концентрация
-                      </Badge>
-                    )}
+                <DialogTitle className="flex items-center justify-between">
+                  <div>{spellDetails.name}</div>
+                  <div className="flex gap-2">
+                    {spellDetails.ritual && <Badge variant="outline">Ритуал</Badge>}
+                    {spellDetails.concentration && <Badge variant="outline">Концентрация</Badge>}
                   </div>
-                </DialogDescription>
+                </DialogTitle>
               </DialogHeader>
               
-              <div className="grid grid-cols-2 gap-2 text-sm mt-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <span className="font-semibold">Время накладывания:</span> {selectedSpell.castingTime}
+                  <div className="text-sm font-medium mb-1">Уровень</div>
+                  <div>{spellDetails.level === 0 ? "Заговор" : `${spellDetails.level} уровень`}</div>
                 </div>
+                
                 <div>
-                  <span className="font-semibold">Дистанция:</span> {selectedSpell.range}
+                  <div className="text-sm font-medium mb-1">Школа</div>
+                  <div>{spellDetails.school}</div>
                 </div>
+                
                 <div>
-                  <span className="font-semibold">Компоненты:</span> {selectedSpell.components}
+                  <div className="text-sm font-medium mb-1">Время накладывания</div>
+                  <div>{spellDetails.castingTime}</div>
                 </div>
+                
                 <div>
-                  <span className="font-semibold">Длительность:</span> {selectedSpell.duration}
+                  <div className="text-sm font-medium mb-1">Дистанция</div>
+                  <div>{spellDetails.range}</div>
                 </div>
-                <div className="col-span-2">
-                  <span className="font-semibold">Классы:</span> {formatClasses(selectedSpell.classes)}
+                
+                <div>
+                  <div className="text-sm font-medium mb-1">Компоненты</div>
+                  <div>
+                    {spellDetails.components}
+                    {spellDetails.material && spellDetails.materialComponents && (
+                      <span className="text-sm ml-1">({spellDetails.materialComponents})</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="text-sm font-medium mb-1">Длительность</div>
+                  <div>{spellDetails.duration}</div>
                 </div>
               </div>
               
-              <ScrollArea className="max-h-[400px] mt-4">
-                <div className="text-sm whitespace-pre-line" style={{color: themeData.textColor || 'white'}}>
-                  {selectedSpell.description}
-                </div>
-                
-                {selectedSpell.higherLevels && (
-                  <div className="mt-4">
-                    <h4 className="font-semibold mb-2">На более высоких уровнях:</h4>
-                    <div className="text-sm whitespace-pre-line" style={{color: themeData.textColor || 'white'}}>
-                      {selectedSpell.higherLevels}
-                    </div>
-                  </div>
-                )}
-              </ScrollArea>
+              <div className="mb-4">
+                <div className="text-sm font-medium mb-2">Описание</div>
+                <div className="text-sm whitespace-pre-wrap">{spellDetails.description}</div>
+              </div>
               
-              <DialogFooter className="mt-6">
-                <Button
-                  variant="outline"
-                  style={{
-                    borderColor: themeData.accent,
-                    color: themeData.textColor || 'white'
+              {spellDetails.higherLevels && (
+                <div>
+                  <div className="text-sm font-medium mb-2">На больших уровнях</div>
+                  <div className="text-sm">{spellDetails.higherLevels}</div>
+                </div>
+              )}
+              
+              <div className="mt-4">
+                <div className="text-sm font-medium mb-1">Классы</div>
+                <div className="flex flex-wrap gap-1">
+                  {typeof spellDetails.classes === 'string' ? (
+                    <Badge variant="secondary">{spellDetails.classes}</Badge>
+                  ) : (
+                    Array.isArray(spellDetails.classes) && spellDetails.classes.map((cls, idx) => (
+                      <Badge key={idx} variant="secondary">{cls}</Badge>
+                    ))
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-4">
+                <Button 
+                  onClick={() => {
+                    handleSelectSpell(spellDetails);
+                    setIsDetailsOpen(false);
                   }}
-                  onClick={handleClose}
                 >
-                  Закрыть
+                  {characterSpellData.some(s => s.name === spellDetails.name) 
+                    ? "Удалить из книги заклинаний" 
+                    : "Добавить в книгу заклинаний"}
                 </Button>
-                <Button
-                  style={{
-                    backgroundColor: themeData.accent,
-                    color: 'white'
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Добавить в книгу
-                </Button>
-              </DialogFooter>
+              </div>
             </>
           )}
         </DialogContent>
       </Dialog>
       
-      {/* Модальное окно для импорта заклинаний */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent
-          className="sm:max-w-[700px] border-accent"
-          style={{
-            backgroundColor: themeData.cardBackground || 'rgba(0, 0, 0, 0.9)',
-            color: themeData.textColor || 'white'
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle style={{color: themeData.textColor || 'white'}}>
-              Импорт заклинаний
-            </DialogTitle>
-            <DialogDescription>
-              Вставьте текст с описаниями заклинаний для импорта.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="mt-4">
-            <Label htmlFor="import-text" style={{color: themeData.textColor || 'white'}}>
-              Текст для импорта
-            </Label>
-            <Textarea
-              id="import-text"
-              value={importText}
-              onChange={(e) => setImportText(e.target.value)}
-              rows={10}
-              className="mt-2"
-              placeholder="Вставьте текст заклинаний сюда..."
-              style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                color: themeData.textColor || 'white',
-                borderColor: themeData.accent
-              }}
-            />
-          </div>
-          
-          <DialogFooter className="mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setImportDialogOpen(false)}
-              style={{
-                borderColor: themeData.accent,
-                color: themeData.textColor || 'white'
-              }}
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleImportSpells}
-              style={{
-                backgroundColor: themeData.accent,
-                color: 'white'
-              }}
-            >
-              <Upload className="h-4 w-4 mr-1" />
-              Импортировать
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+      {/* Spell Importer Dialog */}
+      {isImportOpen && (
+        <SpellImporter
+          onClose={() => setIsImportOpen(false)}
+          onImport={handleImportSpells}
+        />
+      )}
+    </>
   );
 };
 
