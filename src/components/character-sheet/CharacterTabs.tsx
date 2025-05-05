@@ -1,153 +1,134 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
 import { Character } from '@/types/character';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+
+// Components for each tab
+import AbilitiesTab from './tabs/AbilitiesTab';
+import CombatTab from './tabs/CombatTab';
+import EquipmentTab from './tabs/EquipmentTab';
+import SpellsTab from './tabs/SpellsTab';
+import FeaturesTab from './tabs/FeaturesTab';
+import BackgroundTab from './tabs/BackgroundTab';
+import NotesTab from './tabs/NotesTab';
+import HandbookTab from './tabs/HandbookTab';
 
 export interface CharacterTabsProps {
-  active: string;
-  onChange: (value: string) => void;
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
 const CharacterTabs: React.FC<CharacterTabsProps> = ({ 
-  active, 
-  onChange, 
   character,
   onUpdate
 }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  // Define tab data
+  const tabs = [
+    { id: 'abilities', label: 'Характеристики' },
+    { id: 'combat', label: 'Бой' },
+    { id: 'equipment', label: 'Снаряжение' },
+    { id: 'spells', label: 'Заклинания' },
+    { id: 'features', label: 'Особенности' },
+    { id: 'background', label: 'Предыстория' },
+    { id: 'notes', label: 'Заметки' },
+    { id: 'handbook', label: 'Справочник' }
+  ];
 
-  // Функция для рендеринга снаряжения в зависимости от его формата
+  // Helper function to safely render equipment
   const renderEquipment = () => {
-    if (!character.equipment) {
-      return (
-        <div className="text-center text-muted-foreground py-2">
-          Нет предметов снаряжения
-        </div>
-      );
+    if (!character.equipment) return [];
+    
+    // Handle different equipment formats
+    if (Array.isArray(character.equipment)) {
+      return character.equipment;
     }
     
-    // Если equipment - массив строк
-    if (Array.isArray(character.equipment)) {
-      if (character.equipment.length === 0) {
-        return (
-          <div className="text-center text-muted-foreground py-2">
-            Нет предметов снаряжения
-          </div>
-        );
+    // Handle object format
+    if (typeof character.equipment === 'object') {
+      const equipment: string[] = [];
+      
+      // Add weapons if they exist
+      if (character.equipment.weapons && Array.isArray(character.equipment.weapons)) {
+        equipment.push(...character.equipment.weapons);
       }
       
-      return character.equipment.map((item, index) => (
-        <div key={`equipment-${index}`} className="flex justify-between items-center p-2 border-b">
-          <span style={{ color: currentTheme.textColor }}>{item}</span>
-        </div>
-      ));
+      // Add armor if it exists
+      if (character.equipment.armor && typeof character.equipment.armor === 'string') {
+        equipment.push(character.equipment.armor);
+      }
+      
+      // Add other items if they exist
+      if (character.equipment.items && Array.isArray(character.equipment.items)) {
+        equipment.push(...character.equipment.items);
+      }
+      
+      return equipment;
     }
     
-    // Если equipment - объект
-    const items = [];
-    
-    if (character.equipment.weapons && character.equipment.weapons.length > 0) {
-      items.push(
-        <div key="weapons-section">
-          <h4 className="text-sm font-semibold mb-2">Оружие</h4>
-          {character.equipment.weapons.map((weapon, idx) => (
-            <div key={`weapon-${idx}`} className="flex justify-between items-center p-2 border-b">
-              <span style={{ color: currentTheme.textColor }}>{weapon}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    
-    if (character.equipment.armor) {
-      items.push(
-        <div key="armor-section" className="mt-2">
-          <h4 className="text-sm font-semibold mb-2">Доспехи</h4>
-          <div className="flex justify-between items-center p-2 border-b">
-            <span style={{ color: currentTheme.textColor }}>{character.equipment.armor}</span>
-          </div>
-        </div>
-      );
-    }
-    
-    if (character.equipment.items && character.equipment.items.length > 0) {
-      items.push(
-        <div key="items-section" className="mt-2">
-          <h4 className="text-sm font-semibold mb-2">Предметы</h4>
-          {character.equipment.items.map((item, idx) => (
-            <div key={`item-${idx}`} className="flex justify-between items-center p-2 border-b">
-              <span style={{ color: currentTheme.textColor }}>{item}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    
-    return items.length > 0 ? items : (
-      <div className="text-center text-muted-foreground py-2">
-        Нет предметов снаряжения
-      </div>
-    );
+    return [];
   };
 
   return (
-    <Tabs value={active} onValueChange={onChange} className="w-full">
-      <TabsList className="grid grid-cols-3">
-        <TabsTrigger value="характеристики">Характеристики</TabsTrigger>
-        <TabsTrigger value="снаряжение">Снаряжение</TabsTrigger>
-        <TabsTrigger value="заметки">Заметки</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="характеристики" className="space-y-4 mt-4">
-        <div className="grid grid-cols-3 gap-2">
-          {Object.entries({
-            "СИЛ": character.strength || 10,
-            "ЛОВ": character.dexterity || 10,
-            "ТЕЛ": character.constitution || 10,
-            "ИНТ": character.intelligence || 10,
-            "МДР": character.wisdom || 10,
-            "ХАР": character.charisma || 10
-          }).map(([stat, value]) => (
-            <div key={stat} className="text-center p-2 border rounded-md bg-opacity-10 bg-black">
-              <div className="text-sm text-muted-foreground">{stat}</div>
-              <div className="text-xl font-bold" style={{ color: currentTheme.textColor }}>{value}</div>
-              <div className="text-sm" style={{ color: currentTheme.textColor }}>
-                {Math.floor((value - 10) / 2) >= 0 ? 
-                  `+${Math.floor((value - 10) / 2)}` : 
-                  Math.floor((value - 10) / 2)}
-              </div>
-            </div>
+    <Card>
+      <Tabs defaultValue="abilities" className="w-full">
+        <TabsList className="grid grid-cols-4 md:grid-cols-8">
+          {tabs.map(tab => (
+            <TabsTrigger 
+              key={tab.id} 
+              value={tab.id}
+              className="text-xs md:text-sm font-medium transition-all"
+            >
+              {tab.label}
+            </TabsTrigger>
           ))}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="снаряжение" className="mt-4">
-        <div className="space-y-4">
-          <h3 className="font-semibold" style={{ color: currentTheme.textColor }}>Оружие и снаряжение</h3>
-          <div className="space-y-2">
-            {renderEquipment()}
-          </div>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="заметки" className="mt-4">
-        <div className="space-y-4">
-          <textarea
-            className="w-full h-40 p-2 rounded-md border bg-transparent"
-            placeholder="Заметки о персонаже..."
-            value={character.notes || ''}
-            onChange={(e) => onUpdate({ notes: e.target.value })}
-            style={{ color: currentTheme.textColor }}
+        </TabsList>
+        
+        <TabsContent value="abilities">
+          <AbilitiesTab character={character} onUpdate={onUpdate} />
+        </TabsContent>
+        
+        <TabsContent value="combat">
+          <CombatTab character={character} onUpdate={onUpdate} />
+        </TabsContent>
+        
+        <TabsContent value="equipment">
+          <EquipmentTab 
+            character={character} 
+            equipment={renderEquipment()}
+            onUpdate={onUpdate} 
           />
-        </div>
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+        
+        <TabsContent value="spells">
+          <SpellsTab character={character} onUpdate={onUpdate} />
+        </TabsContent>
+        
+        <TabsContent value="features">
+          <FeaturesTab 
+            character={character} 
+            features={character.features || []}
+            onUpdate={onUpdate} 
+          />
+        </TabsContent>
+        
+        <TabsContent value="background">
+          <BackgroundTab character={character} onUpdate={onUpdate} />
+        </TabsContent>
+        
+        <TabsContent value="notes">
+          <NotesTab 
+            character={character} 
+            notes={character.notes || ""}
+            onUpdate={onUpdate} 
+          />
+        </TabsContent>
+        
+        <TabsContent value="handbook">
+          <HandbookTab character={character} />
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
 

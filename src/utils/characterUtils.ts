@@ -16,8 +16,8 @@ export const createDefaultCharacter = (): Character => {
     intelligence: 10,
     wisdom: 10,
     charisma: 10,
-    currentHp: 10, // Corrected from string to number
-    maxHp: 10, // Corrected from string to number
+    currentHp: 10, // Changed from string to number
+    maxHp: 10, // Changed from string to number
     temporaryHp: 0,
     armorClass: 10,
     initiative: '+0',
@@ -27,7 +27,7 @@ export const createDefaultCharacter = (): Character => {
     alignment: '',
     experience: 0,
     inspiration: false,
-    hitDice: { // Corrected from string to object
+    hitDice: { // Changed from string to object
       total: 1,
       used: 0,
       dieType: 'd8',
@@ -35,8 +35,8 @@ export const createDefaultCharacter = (): Character => {
     },
     equipment: [],
     spells: [],
-    skills: {}, // Corrected from array to object
-    savingThrows: {}, // Corrected from array to object
+    skills: {}, // Changed from array to object
+    savingThrows: {}, // Changed from array to object
     languages: [],
     proficiencies: [],
     personalityTraits: '',
@@ -104,13 +104,13 @@ export const updateCharacterStats = (character: Character): Character => {
       }
       
       const baseModifier = calculateAbilityModifier(abilityScore);
-      const isProficient = updatedCharacter.savingThrows[ability] === true;
+      const isProficient = Boolean(updatedCharacter.savingThrows[ability]);
       const proficiencyBonus = isProficient ? (character.proficiencyBonus || 2) : 0;
       
       // Обновляем модификатор
       if (typeof updatedCharacter.savingThrows[ability] === 'object') {
         updatedCharacter.savingThrows[ability] = {
-          ...updatedCharacter.savingThrows[ability],
+          ...(updatedCharacter.savingThrows[ability] as object),
           modifier: baseModifier + proficiencyBonus
         };
       }

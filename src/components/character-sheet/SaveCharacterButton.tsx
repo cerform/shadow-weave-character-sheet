@@ -1,78 +1,69 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/character';
-import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { useToast } from '@/hooks/use-toast';
+import { Character } from '@/types/character';
 
 interface SaveCharacterButtonProps {
   character: Character;
+  onSave?: () => Promise<any>;
 }
 
-export const SaveCharacterButton: React.FC<SaveCharacterButtonProps> = ({ character }) => {
+const SaveCharacterButton: React.FC<SaveCharacterButtonProps> = ({
+  character,
+  onSave
+}) => {
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!character) return;
+    
+    setIsSaving(true);
+    
     try {
-      // Получаем существующих персонажей из localStorage
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
-      
-      // Проверяем, существует ли уже персонаж с таким ID
-      const existingIndex = characters.findIndex((c: Character) => c.id === character.id);
-      
-      if (existingIndex !== -1) {
-        // Обновляем существующего персонажа
-        characters[existingIndex] = character;
+      // If onSave callback is provided, use it
+      if (onSave) {
+        await onSave();
       } else {
-        // Добавляем нового персонажа
-        characters.push(character);
+        // Default save action: store to localStorage
+        localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
+        localStorage.setItem('last-selected-character', character.id);
       }
       
-      // Сохраняем обновленный список персонажей
-      localStorage.setItem('dnd-characters', JSON.stringify(characters));
-      
-      // Сохраняем ID последнего выбранного персонажа
-      localStorage.setItem('last-selected-character', character.id || '');
-      
+      // Show success toast
       toast({
         title: "Персонаж сохранен",
-        description: `${character.name || 'Персонаж'} успешно сохранен`,
+        description: "Персонаж успешно сохранен."
       });
+      
     } catch (error) {
-      console.error('Ошибка при сохранении персонажа:', error);
+      // Show error toast
       toast({
-        title: "Ошибка при сохранении",
-        description: "Не удалось сохранить персонажа",
-        variant: "destructive",
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить персонажа. Попробуйте еще раз.",
+        variant: "destructive"
       });
+      
+      console.error('Error saving character:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSave}
-            style={{
-              borderColor: currentTheme.accent,
-              color: currentTheme.textColor
-            }}
-          >
-            <Save className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Сохранить персонажа</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Button
+      onClick={handleSave}
+      variant="default"
+      size="sm"
+      disabled={isSaving}
+      className="flex items-center gap-2"
+    >
+      <Save className="h-4 w-4" />
+      {isSaving ? "Сохранение..." : "Сохранить персонажа"}
+    </Button>
   );
 };
+
+export default SaveCharacterButton;

@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
-import DicePanel from '@/components/character-sheet/DicePanel'; // Fixed import
+import DicePanel from '@/components/character-sheet/DicePanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import { themes } from '@/lib/themes';
 import { Input } from '@/components/ui/input';
 import { Token } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
+import { createDefaultCharacter } from '@/utils/characterUtils';
 
 interface RightPanelProps {
   tokens: Token[];
@@ -119,6 +119,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
       cols: gridColsInput
     });
   };
+  
+  const dummyCharacter = createDefaultCharacter();
   
   return (
     <div className="h-full flex flex-col space-y-2 p-2">
@@ -356,11 +358,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
       
       <Card className="p-4">
         <DicePanel 
-          compactMode={true}
-          isDM={isDM}
-          tokens={tokens}
-          selectedTokenId={selectedTokenId}
-          setSelectedTokenId={onSelectToken}
+          character={dummyCharacter} 
+          onUpdate={() => {}} 
+          compactMode={true} 
+          isDM={isDM} 
+          tokens={tokens} 
+          selectedTokenId={selectedTokenId} 
+          setSelectedTokenId={setSelectedTokenId} 
         />
       </Card>
     </div>

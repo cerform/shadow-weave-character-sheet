@@ -1,6 +1,6 @@
 
 export interface Step {
-  id: string;
+  id: number; // Changed from string to number
   name: string;
   description: string;
   requiresSubraces?: boolean;
