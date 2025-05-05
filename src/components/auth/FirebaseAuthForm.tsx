@@ -4,13 +4,19 @@ import {
   getAuth,
   onAuthStateChanged,
   signOut,
-  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
 } from "firebase/auth";
-import { app } from "@/services/firebase"; // <-- путь к инициализации firebaseConfig
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { app } from "@/services/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogIn, UserPlus, LogOut } from "lucide-react";
@@ -20,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 const FirebaseAuthForm: React.FC = () => {
@@ -38,10 +45,13 @@ const FirebaseAuthForm: React.FC = () => {
 
   useEffect(() => {
     console.log("Firebase Auth Form mounted");
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       console.log("Auth state changed in FirebaseAuthForm:", currentUser?.email);
-      setUser(currentUser);
       if (currentUser) {
+        // Создаем профиль пользователя, если его нет
+        await ensureUserProfile(currentUser.uid, currentUser.email, currentUser.displayName);
+        setUser(currentUser);
+        
         // Перенаправляем на главную страницу при успешной авторизации
         console.log("User is logged in, redirecting to home");
         toast({
@@ -49,27 +59,62 @@ const FirebaseAuthForm: React.FC = () => {
           description: `Добро пожаловать, ${currentUser.email}`
         });
         navigate('/');
+      } else {
+        setUser(null);
       }
     });
     return () => unsubscribe();
   }, [navigate]);
 
+  const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
+    try {
+      const userDoc = doc(db, "users", uid);
+      const snapshot = await getDoc(userDoc);
+      
+      if (!snapshot.exists()) {
+        // Создаем новый профиль
+        await setDoc(userDoc, {
+          uid,
+          email,
+          displayName: displayName || email?.split('@')[0] || 'Пользователь',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          photoURL: null,
+          characters: [],
+          isDM: false
+        });
+        console.log("Профиль пользователя создан автоматически");
+      } else {
+        // Обновляем дату последнего входа
+        await setDoc(userDoc, {
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+    } catch (error) {
+      console.error("Ошибка при создании/обновлении профиля:", error);
+    }
+  };
+
   const handleEmailAuth = async () => {
     setError("");
     setIsLoading(true);
     try {
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-        navigate('/');
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-        toast({
-          title: "Регистрация",
-          description: "Вы успешно зарегистрировались"
-        });
-      }
+      const result = isLogin
+        ? await signInWithEmailAndPassword(auth, email, password)
+        : await createUserWithEmailAndPassword(auth, email, password);
+
+      await ensureUserProfile(result.user.uid, result.user.email, result.user.displayName);
+      
+      toast({
+        title: isLogin ? "Вход выполнен" : "Регистрация завершена",
+        description: isLogin 
+          ? `Добро пожаловать, ${result.user.email}` 
+          : "Ваш аккаунт успешно создан"
+      });
+      
+      // Перенаправляем на главную после успешной авторизации
+      navigate('/');
     } catch (err: any) {
-      console.error("Ошибка аутентификации:", err);
       setError(err.message);
       toast({
         title: "Ошибка",
@@ -85,29 +130,24 @@ const FirebaseAuthForm: React.FC = () => {
     setError("");
     setIsLoading(true);
     try {
-      console.log("Начинаем вход через Google с popup");
-      try {
-        const popupResult = await signInWithPopup(auth, provider);
-        if (!popupResult.user) {
-          throw new Error("Popup failed");
-        }
-        navigate('/');
-      } catch (popupError) {
-        console.warn("Popup заблокирован или возникла ошибка, пробуем redirect:", popupError);
-        try {
-          await signInWithRedirect(auth, provider);
-          // После редиректа код не выполнится
-        } catch (redirectError: any) {
-          setError("Ошибка входа через Google: " + redirectError.message);
-          toast({
-            title: "Ошибка",
-            description: "Ошибка входа через Google: " + redirectError.message,
-            variant: "destructive"
-          });
-        }
-      }
+      const result = await signInWithPopup(auth, provider);
+      const { user } = result;
+      await ensureUserProfile(user.uid, user.email, user.displayName);
+      
+      toast({
+        title: "Вход через Google",
+        description: `Добро пожаловать, ${user.displayName || user.email}`
+      });
+      
+      // Перенаправляем на главную после успешной авторизации
+      navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError("Google авторизация не удалась: " + err.message);
+      toast({
+        title: "Ошибка",
+        description: "Google авторизация не удалась: " + err.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +157,7 @@ const FirebaseAuthForm: React.FC = () => {
     try {
       await signOut(auth);
       toast({
-        title: "Выход",
+        title: "Выход выполнен",
         description: "Вы успешно вышли из системы"
       });
     } catch (error: any) {
