@@ -21,7 +21,13 @@ const mockAuth = {
   // Добавляем дополнительные свойства для совместимости с типом Auth
   app: {} as any,
   name: 'auth-mock',
-  config: {},
+  config: {
+    apiKey: 'mock',
+    apiHost: 'mock',
+    apiScheme: 'mock',
+    tokenApiHost: 'mock',
+    sdkClientVersion: 'mock'
+  },
   setPersistence: async () => Promise.resolve(),
   useDeviceLanguage: () => {},
   languageCode: null,
@@ -37,10 +43,62 @@ const mockAuth = {
 };
 
 // Создаем моки для Firestore и Storage
-const mockDb = {};
-const mockStorage = {};
+const mockFirestore = {
+  collection: () => ({
+    doc: () => ({
+      get: async () => ({
+        exists: false,
+        data: () => null
+      }),
+      set: async () => {},
+      update: async () => {}
+    }),
+    where: () => ({
+      get: async () => ({
+        empty: true,
+        docs: []
+      })
+    }),
+    add: async () => ({
+      id: 'mock-id'
+    })
+  })
+};
 
-// Export the mock instances
+const mockStorage = {
+  ref: () => ({
+    put: async () => ({
+      ref: {
+        getDownloadURL: async () => 'https://mock-url.com/image.jpg'
+      }
+    }),
+    delete: async () => {}
+  })
+};
+
+// Экспортируем моки в качестве сервисов Firebase
 export const auth = mockAuth;
-export const db = mockDb;
+export const db = mockFirestore;
 export const storage = mockStorage;
+
+// Если доступен реальный Firebase, можно раскомментировать и использовать его
+// import { initializeApp } from "firebase/app";
+// import { getAuth } from "firebase/auth";
+// import { getFirestore } from "firebase/firestore";
+// import { getStorage } from "firebase/storage";
+
+// const firebaseConfig = {
+//   apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
+//   authDomain: "shadow-char.firebaseapp.com",
+//   databaseURL: "https://shadow-char-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "shadow-char",
+//   storageBucket: "shadow-char.firebasestorage.app",
+//   messagingSenderId: "815261687102",
+//   appId: "1:815261687102:web:5497647ed6ff449a57e06f",
+//   measurementId: "G-KQ3M1GQJX2"
+// };
+
+// const app = initializeApp(firebaseConfig);
+// export const auth = getAuth(app);
+// export const db = getFirestore(app);
+// export const storage = getStorage(app);
