@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useTheme } from "@/hooks/use-theme";
-import { useUserTheme } from "@/hooks/use-user-theme.tsx";
+import { useUserTheme } from "@/hooks/use-user-theme"; // Убрали расширение .tsx
 import { themes } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
 import { useDeviceType } from "@/hooks/use-mobile";

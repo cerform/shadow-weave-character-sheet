@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
-import { useUserTheme } from "@/hooks/use-user-theme.tsx";
+import { useUserTheme } from "@/hooks/use-user-theme"; // Убрали расширение .tsx
 import { themes } from "@/lib/themes";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
 import { useAuth } from "@/contexts/AuthContext";
