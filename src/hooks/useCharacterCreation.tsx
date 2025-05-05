@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +60,7 @@ export const useCharacterCreation = () => {
     ideals: "",
     bonds: "",
     flaws: "",
-    appearance: "",
+    appearance: "", // Это поле добавлено в Character.d.ts
     backstory: ""
   });
 

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
@@ -96,28 +95,18 @@ const getNewSpellsCountOnLevelUp = (character: any): number => {
   const newLevel = currentLevel + 1;
   
   // Используем функцию-калькулятор из spellProcessors
-  const currentSpells = calculateAvailableSpellsByClassAndLevel(
-    characterClass, 
-    currentLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
-  );
+  const currentSpells = calculateAvailableSpellsByClassAndLevel(characterClass, currentLevel);
   
-  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
-    characterClass, 
-    newLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
-  );
+  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(characterClass, newLevel);
+  
+  // Определяем количество доступных заклинаний на основе результатов функции
+  // Проверяем, есть ли свойство known (для классов со списком известных заклинаний)
+  // или prepared (для классов, подготавливающих заклинания)
+  const currentSpellsCount = currentSpells.known || currentSpells.prepared || 0;
+  const newSpellsCount = newLevelSpells.known || newLevelSpells.prepared || 0;
   
   // Возвращаем разницу между новым и текущим количеством заклинаний
-  return Math.max(0, newLevelSpells.spells - currentSpells.spells);
+  return Math.max(0, newSpellsCount - currentSpellsCount);
 };
 
 // Определение количества новых заговоров при повышении уровня
@@ -129,25 +118,9 @@ const getNewCantripsCountOnLevelUp = (character: any): number => {
   const newLevel = currentLevel + 1;
   
   // Используем функцию-калькулятор из spellProcessors
-  const currentSpells = calculateAvailableSpellsByClassAndLevel(
-    characterClass, 
-    currentLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
-  );
+  const currentSpells = calculateAvailableSpellsByClassAndLevel(characterClass, currentLevel);
   
-  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
-    characterClass, 
-    newLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
-  );
+  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(characterClass, newLevel);
   
   // Возвращаем разницу между новым и текущим количеством заговоров
   return Math.max(0, newLevelSpells.cantrips - currentSpells.cantrips);

@@ -1,9 +1,10 @@
+
 // Импортируем необходимые типы из firebase
 import { Firestore, DocumentData, DocumentReference, CollectionReference } from "firebase/firestore";
 import { Auth } from "firebase/auth";
 
 // Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth: Auth = {
+const mockAuth: Partial<Auth> = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки
@@ -107,7 +108,7 @@ const mockStorage = {
 };
 
 // Экспортируем моки в качестве сервисов Firebase
-export const auth = mockAuth;
+export const auth = mockAuth as Auth;
 export const db = mockFirestore;
 export const storage = mockStorage;
 

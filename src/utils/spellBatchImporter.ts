@@ -50,5 +50,5 @@ export const importSpellsFromText = (
   return result;
 };
 
-// Make sure this function is explicitly exported
-export { importSpellsFromText as importSpellsFromText };
+// Удаляем повторный экспорт, который вызывал ошибку
+// export { importSpellsFromText as importSpellsFromText };

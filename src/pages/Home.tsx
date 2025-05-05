@@ -3,13 +3,39 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
-import { User as AuthUser } from 'firebase/auth'; // Use qualified import to avoid duplicate
-import { User as SessionUser } from '@/types/session'; // Use qualified import to avoid duplicate
+import { User as AuthUser } from 'firebase/auth'; // Переименовываем для избежания конфликта
+import { User } from '@/types/session'; // Используем User из session без переименования
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription
+} from '@/components/ui/card';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Plus, Dice1, User as UserIcon } from 'lucide-react'; // Переименовываем иконку User
+import { toast } from 'sonner';
+import { useUserTheme } from '@/hooks/use-user-theme';
+import { themes } from '@/lib/themes';
+import { Character } from '@/types/session'; // Используем Character из session
 
 const Home = () => {
-  const { currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
   const { theme } = useTheme();
+  const { activeTheme } = useUserTheme();
+  
+  // Используем тему из хука для получения стилей
+  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   // Session state
   const [sessionCode, setSessionCode] = useState('');
@@ -21,7 +47,29 @@ const Home = () => {
   // Get characters from localStorage
   const [characters, setCharacters] = useState<Character[]>([]);
   
-  // Session store
+  // Эти функции и переменные необходимо определить в компоненте
+  // Предположим, что они должны быть импортированы или определены
+  const isOfflineMode = () => false; // Заглушка для функции
+  
+  const setCharacter = (character: Character) => {
+    // Заглушка для функции
+    console.log("Setting character", character);
+  };
+  
+  const useSessionStore = () => {
+    // Заглушка для хука
+    return {
+      createSession: async () => ({}),
+      joinSession: async () => true,
+      currentSession: null,
+      fetchSessions: () => {},
+      sessions: [],
+      fetchCharacters: () => {},
+      loading: false
+    };
+  };
+  
+  // Session store - используем хук
   const { 
     createSession, 
     joinSession, 
@@ -187,7 +235,7 @@ const Home = () => {
               Персонажи
             </TabsTrigger>
             <TabsTrigger value="sessions">
-              <User className="mr-2 h-4 w-4" />
+              <UserIcon className="mr-2 h-4 w-4" />
               Сессии
             </TabsTrigger>
           </TabsList>
