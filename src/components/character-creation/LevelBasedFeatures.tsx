@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { CharacterSheet } from "@/types/character";
+import { Character } from "@/types/character";
 import { useLevelFeatures } from "@/hooks/useLevelFeatures";
 import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 
@@ -16,15 +17,20 @@ type ProficienciesType = string[] | {
   languages?: string[];
 };
 
-// Update the character parameter to use this custom proficiencies type
+// Update the character parameter to use Character type
 const LevelBasedFeatures = ({
   character,
   onCharacterUpdate,
 }: {
-  character: Omit<CharacterSheet, "proficiencies"> & { proficiencies?: ProficienciesType };
-  onCharacterUpdate: (updates: Partial<CharacterSheet>) => void;
+  character: Character;
+  onCharacterUpdate: (updates: Partial<Character>) => void;
 }) => {
   const {
+    availableFeatures,
+    selectedFeatures,
+    selectFeature,
+    getHitDiceInfo,
+    getSubclassLevel,
     availableLanguages,
     availableSkills,
     availableTools,
@@ -34,7 +40,7 @@ const LevelBasedFeatures = ({
     handleSkillSelection,
     handleToolSelection,
     handleWeaponTypeSelection,
-    handleArmorTypeSelection,
+    handleArmorTypeSelection
   } = useLevelFeatures(character);
 
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);

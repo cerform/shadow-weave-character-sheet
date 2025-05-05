@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
 
 interface CombatTabProps {
@@ -67,7 +65,7 @@ export const CombatTab: React.FC<CombatTabProps> = ({ character, onUpdate }) => 
               </div>
             </div>
             <div className="text-sm mt-1">
-              <span className="text-muted-foreground">Свойства:</span> Боеприпас (80/320), двуручное
+              <span className="text-muted-foreground">Свойства:</span> Боеприпас (80/320), двуручно��
             </div>
           </div>
         </div>

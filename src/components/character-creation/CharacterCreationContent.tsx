@@ -13,7 +13,7 @@ import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
 import { Character } from '@/types/character';
 
-// Use Character type instead of CharacterSheet to avoid confusion
+// Character type is now the primary type
 interface CharacterCreationContentProps {
   currentStep: number;
   character: Character;

@@ -1,268 +1,130 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Import the necessary icons from lucide-react
+import { Heart, Shield, Minus, Plus, Skull } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Character } from '@/types/character';
+import { Label } from "@/components/ui/label";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Heart, Shield, Minus, Plus, Skull, RefreshCw } from 'lucide-react';
+import { Character } from '@/types/character';
 
 interface ResourcePanelProps {
-  character: Character | null;
+  character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-  currentHp?: number;
-  maxHp?: number;
-  onHpChange?: (newHp: number) => void;
 }
 
-const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
-  character, 
-  onUpdate, 
-  currentHp, 
-  maxHp, 
-  onHpChange 
-}) => {
-  // Используем либо переданные значения, либо значения из character
-  const hp = currentHp ?? character?.currentHp ?? 0;
-  const maxHitPoints = maxHp ?? character?.maxHp ?? 0;
-  const [tempHp, setTempHp] = useState(character?.temporaryHp || 0);
-  const [damageAmount, setDamageAmount] = useState(1);
-  const [healAmount, setHealAmount] = useState(1);
-  const [tempAmount, setTempAmount] = useState(1);
+const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) => {
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
-  const handleHpChange = (amount: number) => {
-    const newHp = Math.max(0, Math.min(hp + amount, maxHitPoints));
-    
-    // Используем переданный onHpChange callback, если он есть
-    if (onHpChange) {
-      onHpChange(newHp);
-    } 
-    // В противном случае используем onUpdate
-    else if (onUpdate && character) {
-      onUpdate({
-        currentHp: newHp
-      });
+  const handleHPChange = (newHP: number) => {
+    if (newHP >= 0 && newHP <= (character.maxHp || 1)) {
+      onUpdate({ currentHp: newHP });
     }
   };
   
-  const handleTempHpChange = (amount: number) => {
-    const newTempHp = Math.max(0, tempHp + amount);
-    setTempHp(newTempHp);
-    
-    if (onUpdate && character) {
-      onUpdate({
-        temporaryHp: newTempHp
-      });
+  const handleTempHPChange = (newTempHP: number) => {
+    onUpdate({ temporaryHp: newTempHP });
+  };
+  
+  const handleDeathSaveSuccess = () => {
+    const successes = character.deathSaves?.successes || 0;
+    if (successes < 3) {
+      onUpdate({ deathSaves: { ...character.deathSaves, successes: successes + 1 } });
     }
   };
-
-  const handleDamage = () => {
-    // Сначала применяем урон к временным хитам
-    let remainingDamage = damageAmount;
-    if (tempHp > 0) {
-      if (tempHp >= remainingDamage) {
-        handleTempHpChange(-remainingDamage);
-        remainingDamage = 0;
-      } else {
-        remainingDamage -= tempHp;
-        handleTempHpChange(-tempHp);
-      }
-    }
-    
-    // Оставшийся урон применяем к обычным хитам
-    if (remainingDamage > 0) {
-      handleHpChange(-remainingDamage);
+  
+  const handleDeathSaveFailure = () => {
+    const failures = character.deathSaves?.failures || 0;
+    if (failures < 3) {
+      onUpdate({ deathSaves: { ...character.deathSaves, failures: failures + 1 } });
     }
   };
-
-  const handleHeal = () => {
-    handleHpChange(healAmount);
-  };
-
-  const handleAddTempHp = () => {
-    // Для временных хитов берем максимальное значение
-    const newTempHp = Math.max(tempHp, tempAmount);
-    setTempHp(newTempHp);
-    
-    if (onUpdate && character) {
-      onUpdate({
-        temporaryHp: newTempHp
-      });
-    }
-  };
-
-  const getHpPercentage = () => {
-    if (!maxHitPoints) return 0;
-    return (hp / maxHitPoints) * 100;
-  };
-
-  const getHpColor = () => {
-    const percent = getHpPercentage();
-    if (percent > 50) return "bg-green-500";
-    if (percent > 25) return "bg-yellow-500";
-    return "bg-red-500";
+  
+  const handleResetDeathSaves = () => {
+    onUpdate({ deathSaves: { successes: 0, failures: 0 } });
   };
 
   return (
-    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-xl flex items-center justify-between">
-          <div className="flex items-center">
-            <Heart className="mr-2 h-5 w-5 text-red-500" />
-            Здоровье
-          </div>
-          {tempHp > 0 && (
-            <div className="flex items-center text-sm font-normal text-cyan-400">
-              <Shield className="mr-1 h-4 w-4" />
-              +{tempHp} временных
-            </div>
-          )}
-        </CardTitle>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle style={{ color: currentTheme.textColor }}>Ресурсы</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="mb-2">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-muted-foreground">HP</span>
-            <span className="text-sm font-medium">
-              {hp}/{maxHitPoints}
-            </span>
-          </div>
-          <Progress 
-            value={getHpPercentage()} 
-            className={`h-2 ${getHpColor()}`}
-          />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mt-4">
+      <CardContent>
+        <div className="space-y-4">
+          {/* Hit Points */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Урон</span>
-              <div className="flex items-center">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-r-none"
-                  onClick={() => setDamageAmount(Math.max(1, damageAmount - 1))}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <div className="h-5 px-2 flex items-center justify-center border-y">
-                  {damageAmount}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-l-none"
-                  onClick={() => setDamageAmount(damageAmount + 1)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Heart className="h-4 w-4" style={{ color: currentTheme.textColor }} />
+              <Label htmlFor="current-hp" style={{ color: currentTheme.textColor }}>Здоровье</Label>
             </div>
-            <Button 
-              variant="destructive" 
-              className="w-full flex items-center justify-center gap-1"
-              onClick={handleDamage}
-              size="sm"
-            >
-              <Skull className="h-4 w-4" />
-              <span>Урон</span>
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Input
+                type="number"
+                id="current-hp"
+                placeholder="Текущее"
+                value={character.currentHp || 0}
+                onChange={(e) => handleHPChange(parseInt(e.target.value))}
+                className="w-24 text-center bg-black/60 text-white"
+              />
+              <span style={{ color: currentTheme.textColor }}>/</span>
+              <span style={{ color: currentTheme.textColor }}>{character.maxHp || 1}</span>
+            </div>
+            <Progress value={((character.currentHp || 0) / (character.maxHp || 1)) * 100} style={{ backgroundColor: `${currentTheme.accent}40` }} />
           </div>
           
+          {/* Temporary Hit Points */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Лечение</span>
-              <div className="flex items-center">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-r-none"
-                  onClick={() => setHealAmount(Math.max(1, healAmount - 1))}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <div className="h-5 px-2 flex items-center justify-center border-y">
-                  {healAmount}
+            <div className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" style={{ color: currentTheme.textColor }} />
+              <Label htmlFor="temporary-hp" style={{ color: currentTheme.textColor }}>Временное здоровье</Label>
+            </div>
+            <Input
+              type="number"
+              id="temporary-hp"
+              placeholder="Временное"
+              value={character.temporaryHp || 0}
+              onChange={(e) => handleTempHPChange(parseInt(e.target.value))}
+              className="w-24 text-center bg-black/60 text-white"
+            />
+          </div>
+          
+          {/* Death Saves */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Skull className="h-4 w-4" style={{ color: currentTheme.textColor }} />
+              <Label style={{ color: currentTheme.textColor }}>Спасброски от смерти</Label>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div>
+                <Label style={{ color: currentTheme.textColor }}>Успехи:</Label>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="icon" onClick={handleDeathSaveSuccess}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <span style={{ color: currentTheme.textColor }}>{character.deathSaves?.successes || 0}</span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-5 w-5 rounded-l-none"
-                  onClick={() => setHealAmount(healAmount + 1)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
               </div>
-            </div>
-            <Button 
-              variant="default"
-              className="w-full flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700"
-              onClick={handleHeal}
-              size="sm"
-            >
-              <Heart className="h-4 w-4" />
-              <span>Лечить</span>
-            </Button>
-          </div>
-        </div>
-        
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Временные хиты</span>
-            <div className="flex items-center">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-5 w-5 rounded-r-none"
-                onClick={() => setTempAmount(Math.max(1, tempAmount - 1))}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <div className="h-5 px-2 flex items-center justify-center border-y">
-                {tempAmount}
+              <div>
+                <Label style={{ color: currentTheme.textColor }}>Провалы:</Label>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="icon" onClick={handleDeathSaveFailure}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span style={{ color: currentTheme.textColor }}>{character.deathSaves?.failures || 0}</span>
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-5 w-5 rounded-l-none"
-                onClick={() => setTempAmount(tempAmount + 1)}
-              >
-                <Plus className="h-3 w-3" />
+              <Button variant="secondary" size="sm" onClick={handleResetDeathSaves}>
+                Сбросить
               </Button>
             </div>
           </div>
-          <Button 
-            variant="default"
-            className="w-full flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700"
-            onClick={handleAddTempHp}
-            size="sm"
-          >
-            <Shield className="h-4 w-4" />
-            <span>Добавить врем. хиты</span>
-          </Button>
         </div>
-        
-        {/* Полный отдых (восстановление всех хитов) */}
-        <Button 
-          variant="outline" 
-          className="w-full mt-4 flex items-center justify-center gap-1"
-          onClick={() => {
-            if (onHpChange) {
-              onHpChange(maxHitPoints);
-            } else if (onUpdate && character) {
-              onUpdate({ currentHp: maxHitPoints });
-            }
-            handleTempHpChange(-tempHp); // Сбрасываем временные хиты
-          }}
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span>Полный отдых</span>
-        </Button>
       </CardContent>
     </Card>
   );

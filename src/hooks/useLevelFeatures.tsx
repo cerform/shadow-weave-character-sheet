@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { CharacterSheet } from '@/types/character.d';
+import { Character, LevelFeature } from '@/types/character';
 import { useToast } from "@/hooks/use-toast";
 
-// Интерфейс для доступных функций на определенном уровне
+// Add this to the Character.d.ts if not there already
 export interface LevelFeature {
   level: number;
   name: string;
@@ -13,27 +13,31 @@ export interface LevelFeature {
   required?: boolean;  // Является ли выбор обязательным
 }
 
-export const useLevelFeatures = (character: CharacterSheet) => {
+export const useLevelFeatures = (character: Character) => {
   const [availableFeatures, setAvailableFeatures] = useState<LevelFeature[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
   
-  // Добавляем недостающие состояния
+  // Add these states to export
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([
     "Общий", "Эльфийский", "Дварфский", "Гномий", "Орочий", "Гоблинский", "Драконий", "Гигантский", "Глубинная речь"
   ]);
+  
   const [availableSkills, setAvailableSkills] = useState<string[]>([
     "Акробатика", "Атлетика", "Магия", "Обман", "История", "Проницательность", 
     "Запугивание", "Расследование", "Медицина", "Природа", "Восприятие", 
     "Выступление", "Убеждение", "Религия", "Ловкость рук", "Скрытность", "Выживание"
   ]);
+  
   const [availableTools, setAvailableTools] = useState<string[]>([
     "Инструменты ремесленника", "Инструменты кузнеца", "Инструменты пивовара", 
     "Воровские инструменты", "Набор травника", "Набор целителя", "Музыкальный инструмент"
   ]);
+  
   const [availableWeaponTypes, setAvailableWeaponTypes] = useState<string[]>([
     "Простое оружие", "Воинское оружие", "Импровизированное оружие"
   ]);
+  
   const [availableArmorTypes, setAvailableArmorTypes] = useState<string[]>([
     "Легкая броня", "Средняя броня", "Тяжелая броня", "Щиты"
   ]);
@@ -100,7 +104,7 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     if (requiredSubclass && !character.subclass) {
       toast({
         title: "Не выбран архетип",
-        description: `Для вашего класса на текущем уровне необходимо выб��ать архетип. Нажмите на кнопку "Детали" в разделе Архетип.`,
+        description: `Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.`,
         variant: "destructive"
       });
     }
@@ -175,7 +179,26 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     }
   };
 
-  // Получаем уровень на котором становится доступен подкласс для выбранного класса
+  // Helper function for hit dice
+  const getHitDiceInfo = (className: string) => {
+    switch (className) {
+      case "Варвар": return { dieType: "d12", value: "1d12" };
+      case "Воин":
+      case "Паладин":
+      case "Следопыт": return { dieType: "d10", value: "1d10" };
+      case "Бард":
+      case "Жрец":
+      case "Друид":
+      case "Монах":
+      case "Плут":
+      case "Колдун": return { dieType: "d8", value: "1d8" };
+      case "Волшебник":
+      case "Чародей": return { dieType: "d6", value: "1d6" };
+      default: return { dieType: "d8", value: "1d8" };
+    }
+  };
+
+  // Get subclass level
   const getSubclassLevel = (className: string): number => {
     switch (className) {
       case "Воин": return 3;
@@ -242,40 +265,14 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     };
   };
 
-  // Получаем информацию о броске кубика HP в зависимости от класса
-  const getHitDiceInfo = (className: string): {dice: string, average: number} => {
-    switch (className) {
-      case "Варвар":
-        return { dice: "d12", average: 7 };
-      case "Воин":
-      case "Паладин":
-      case "Следопыт":
-      case "Кровавый охотник":
-        return { dice: "d10", average: 6 };
-      case "Бард":
-      case "Жрец":
-      case "Друид":
-      case "Монах":
-      case "Плут":
-      case "Колдун":
-      case "Изобретатель":
-      case "Мистик":
-        return { dice: "d8", average: 5 };
-      case "Волшебник":
-      case "Чародей":
-        return { dice: "d6", average: 4 };
-      default:
-        return { dice: "d8", average: 5 };
-    }
-  };
-
+  // Make sure to return all the needed properties
   return {
     availableFeatures,
     selectedFeatures,
     selectFeature,
     getHitDiceInfo,
     getSubclassLevel,
-    // Return the newly added properties
+    // Add these to the return object:
     availableLanguages,
     availableSkills,
     availableTools,

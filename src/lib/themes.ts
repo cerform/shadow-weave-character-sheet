@@ -1,235 +1,179 @@
 export interface Theme {
   name: string;
-  primary: string;
+  label: string;
   accent: string;
-  background: string;
-  foreground: string;
-  cardBackground: string;
-  textColor: string;
-  mutedTextColor: string;
-  buttonText: string;
-  border?: string;
+  accentSecondary?: string;
   glow?: string;
-  badge?: string;
+  textColor: string;
+  mutedTextColor?: string;
+  background?: string;
+  cardBackground?: string;
   spellLevels?: {
     [key: number]: string;
+    0: string; // Cantrips
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+    5: string;
+    6: string;
+    7: string;
+    8: string;
+    9: string;
   };
 }
 
-export const themes: Record<string, Theme> = {
+export const themes: { [key: string]: Theme } = {
   default: {
-    name: "По умолчанию",
-    primary: "#075985",
-    accent: "#0ea5e9",
-    background: "#0f172a",
-    foreground: "#ffffff",
-    cardBackground: "rgba(15, 23, 42, 0.85)",
-    textColor: "#ffffff",
-    mutedTextColor: "#94a3b8",
-    buttonText: "#ffffff",
+    name: "default",
+    label: "Default",
+    accent: "#7dd3fc",
+    glow: '0 0 10px rgba(125, 211, 252, 0.5)',
+    textColor: "#f8fafc",
+    mutedTextColor: '#9ca3af',
+    background: '#1e293b',
+    cardBackground: '#334155',
     spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
+      0: '#a8b2ba',
+      1: '#93c5fd',
+      2: '#60a5fa',
+      3: '#3b82f6',
+      4: '#2563eb',
+      5: '#1d4ed8',
+      6: '#1e3a8a',
+      7: '#3730a3',
+      8: '#4c1d95',
+      9: '#4f46e5',
+    },
   },
   dark: {
-    name: "Темная тема",
-    primary: "#4ade80",
-    accent: "#a7f3d0",
-    background: "#1e293b",
-    foreground: "#ffffff",
-    cardBackground: "rgba(30, 41, 59, 0.85)",
-    textColor: "#ffffff",
-    mutedTextColor: "#cbd5e1",
-    buttonText: "#000000",
-    border: "#334158",
+    name: "dark",
+    label: "Dark",
+    accent: "#4f46e5",
+    glow: '0 0 10px rgba(79, 70, 229, 0.5)',
+    textColor: "#f8fafc",
+    mutedTextColor: '#9ca3af',
+    background: '#0f172a',
+    cardBackground: '#1e293b',
     spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
-  },
-  light: {
-    name: "Светлая тема",
-    primary: "#075985",
-    accent: "#0ea5e9",
-    background: "#f8fafc",
-    foreground: "#0f172a",
-    cardBackground: "rgba(248, 250, 252, 0.85)",
-    textColor: "#0f172a",
-    mutedTextColor: "#475569",
-    buttonText: "#ffffff",
-    border: "#e2e8f0",
-    spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
-  },
-  cyberpunk: {
-    name: "Киберпанк",
-    primary: "#ff00ff",
-    accent: "#00ffff",
-    background: "#121212",
-    foreground: "#ffffff",
-    cardBackground: "rgba(0, 0, 0, 0.7)",
-    textColor: "#ffffff",
-    mutedTextColor: "#cccccc",
-    buttonText: "#000000",
-    border: "#333333",
-    spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
-  },
-  dracula: {
-    name: "Дракула",
-    primary: "#bd93f9",
-    accent: "#f8f8f2",
-    background: "#282a36",
-    foreground: "#f8f8f2",
-    cardBackground: "rgba(40, 42, 54, 0.85)",
-    textColor: "#f8f8f2",
-    mutedTextColor: "#6272a4",
-    buttonText: "#000000",
-    border: "#44475a",
-    spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
+      0: '#a8b2ba',
+      1: '#8b5cf6',
+      2: '#7c3aed',
+      3: '#6d28d9',
+      4: '#5b21b6',
+      5: '#4c1d95',
+      6: '#4338ca',
+      7: '#3730a3',
+      8: '#312e81',
+      9: '#2563eb',
+    },
   },
   forest: {
-    name: "Лесная",
-    primary: "#6b8e23",
-    accent: "#8fbc8f",
-    background: "#228b22",
-    foreground: "#f0fff0",
-    cardBackground: "rgba(34, 139, 34, 0.85)",
-    textColor: "#f0fff0",
-    mutedTextColor: "#a9ba9d",
-    buttonText: "#000000",
-    border: "#556b2f",
-    spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
+    name: "forest",
+    label: "Forest",
+    accent: "#22c55e",
+    glow: '0 0 10px rgba(34, 197, 94, 0.5)',
+    textColor: "#f0fdf4",
+    mutedTextColor: '#a7f3d0',
+    background: '#15803d',
+    cardBackground: '#166534',
+     spellLevels: {
+      0: '#a8b2ba',
+      1: '#a7f3d0',
+      2: '#74c476',
+      3: '#4caf50',
+      4: '#388e3c',
+      5: '#2e7d32',
+      6: '#22c55e',
+      7: '#16a34a',
+      8: '#15803d',
+      9: '#14532d',
+    },
   },
-  ocean: {
-    name: "Океан",
-    primary: "#1e90ff",
-    accent: "#70a1ff",
-    background: "#000080",
-    foreground: "#ffffff",
-    cardBackground: "rgba(0, 0, 128, 0.85)",
-    textColor: "#ffffff",
-    mutedTextColor: "#add8e6",
-    buttonText: "#000000",
-    border: "#4682b4",
+  lofi: {
+    name: "lofi",
+    label: "Lo-Fi",
+    accent: "#a855f7",
+    glow: '0 0 10px rgba(168, 85, 247, 0.5)',
+    textColor: "#f5f3ff",
+    mutedTextColor: '#ddd6fe',
+    background: '#4c1d95',
+    cardBackground: '#5b21b6',
     spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
+      0: '#a8b2ba',
+      1: '#ddd6fe',
+      2: '#c4b5fd',
+      3: '#a78bfa',
+      4: '#8b5cf6',
+      5: '#7c3aed',
+      6: '#6d28d9',
+      7: '#5b21b6',
+      8: '#4c1d95',
+      9: '#4338ca',
+    },
   },
-  rose: {
-    name: "Роза",
-    primary: "#e91e63",
-    accent: "#ff4081",
-    background: "#c2185b",
-    foreground: "#ffffff",
-    cardBackground: "rgba(194, 24, 91, 0.85)",
-    textColor: "#ffffff",
-    mutedTextColor: "#f06292",
-    buttonText: "#000000",
-    border: "#ad1457",
+  dracula: {
+    name: "dracula",
+    label: "Dracula",
+    accent: "#ff79c6",
+    glow: '0 0 10px rgba(255, 121, 198, 0.5)',
+    textColor: "#f8f8f2",
+    mutedTextColor: '#6272a4',
+    background: '#282a36',
+    cardBackground: '#44475a',
     spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
+      0: '#a8b2ba',
+      1: '#f8f8f2',
+      2: '#ff79c6',
+      3: '#bd93f9',
+      4: '#6272a4',
+      5: '#44475a',
+      6: '#282a36',
+      7: '#8be9fd',
+      8: '#50fa7b',
+      9: '#ffb86c',
+    },
   },
-  sand: {
-    name: "Песок",
-    primary: "#f4a261",
-    accent: "#e76f51",
-    background: "#e9c46a",
-    foreground: "#264653",
-    cardBackground: "rgba(233, 196, 106, 0.85)",
-    textColor: "#264653",
-    mutedTextColor: "#818a91",
-    buttonText: "#000000",
-    border: "#d4a373",
+  nord: {
+    name: "nord",
+    label: "Nord",
+    accent: "#81a1c1",
+    textColor: "#d8dee9",
+    mutedTextColor: '#a3be8c',
+    background: '#2e3440',
+    cardBackground: '#3b4252',
     spellLevels: {
-      0: "#6b7280", // Cantrips
-      1: "#10b981",
-      2: "#3b82f6",
-      3: "#8b5cf6",
-      4: "#ec4899",
-      5: "#f59e0b",
-      6: "#ef4444",
-      7: "#6366f1",
-      8: "#0ea5e9",
-      9: "#7c3aed"
-    }
-  }
+      0: '#a8b2ba',
+      1: '#81a1c1',
+      2: '#88c0d0',
+      3: '#8fbcbb',
+      4: '#a3be8c',
+      5: '#b48ead',
+      6: '#d08770',
+      7: '#bf616a',
+      8: '#d8dee9',
+      9: '#2e3440',
+    },
+  },
+  cyberpunk: {
+    name: "cyberpunk",
+    label: "Cyberpunk",
+    accent: "#e91e63",
+    textColor: "#fff",
+    mutedTextColor: '#64ffda',
+    background: '#121212',
+    cardBackground: '#212121',
+    spellLevels: {
+      0: '#a8b2ba',
+      1: '#64ffda',
+      2: '#e91e63',
+      3: '#9c27b0',
+      4: '#3f51b5',
+      5: '#2196f3',
+      6: '#03a9f4',
+      7: '#00bcd4',
+      8: '#009688',
+      9: '#4caf50',
+    },
+  },
 };

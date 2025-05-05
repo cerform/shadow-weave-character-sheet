@@ -1,283 +1,135 @@
 import React, { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Character } from '@/types/character';
+import { SpellData } from '@/types/spells';
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Character, CharacterSpell } from '@/types/character';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Search, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { convertCharacterSpellToSpellData, getSpellName } from '@/utils/spellHelpers';
 
-interface SpellSelectionModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+// Update props to match the expected props in SpellPanel
+export interface SpellSelectionModalProps {
+  open: boolean;  // renamed from isOpen
+  onOpenChange: (open: boolean) => void;  // renamed from onClose
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-  availableSpells?: CharacterSpell[];
-  maxSpellsCount?: number;
-  maxCantripsCount?: number;
-  characterClass?: string;
-  characterLevel?: number;
 }
 
-export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
+const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   open,
   onOpenChange,
   character,
-  onUpdate,
-  availableSpells,
-  maxSpellsCount = 2,
-  maxCantripsCount = 1,
-  characterClass,
-  characterLevel = 1
+  onUpdate
 }) => {
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
+  const { toast } = useToast();
   
-  // Сбрасываем выбранные заклинания при открытии/закрытии модального окна
   useEffect(() => {
-    if (!open) {
-      setSelectedSpells([]);
-    }
-  }, [open]);
-  
-  // Используем доступные заклинания из пропов или формируем заглушку
-  const spellsToUse = availableSpells || [
-    { id: '1', name: 'Огненный снаряд', level: 0, school: 'Воплощение', castingTime: '1 действие', description: 'Бросок огненного снаряда' },
-    { id: '2', name: 'Магическая стрела', level: 1, school: 'Воплощение', castingTime: '1 действие', description: 'Выпускает три стрелы энергии' },
-    { id: '3', name: 'Щит', level: 1, school: 'Ограждение', castingTime: '1 реакция', description: 'Создает щит, блокирующий урон' }
-  ];
-  
-  // Группируем заклинания по уровням
-  const spellsByLevel = spellsToUse.reduce((acc, spell) => {
-    const level = spell.level || 0;
-    if (!acc[level]) acc[level] = [];
-    acc[level].push(spell);
-    return acc;
-  }, {} as Record<number, CharacterSpell[]>);
-  
-  // Разделяем заклинания на заговоры и обычные
-  const cantrips = spellsByLevel[0] || [];
-  const spells = spellsToUse.filter(spell => (spell.level || 0) > 0);
-  
-  // Счетчики выбранных заклинаний
-  const selectedCantripsCount = selectedSpells.filter(spell => (spell.level || 0) === 0).length;
-  const selectedSpellsCount = selectedSpells.filter(spell => (spell.level || 0) > 0).length;
-  
-  // Обработчик выбора заклинания
-  const handleSpellToggle = (spell: CharacterSpell, checked: boolean) => {
-    if (checked) {
-      // Проверяем лимиты перед добавлением
-      if ((spell.level === 0 && selectedCantripsCount >= maxCantripsCount) ||
-          (spell.level !== 0 && selectedSpellsCount >= maxSpellsCount)) {
-        return;
+    // Fetch spells from your data source here
+    // For example, you can use a local JSON file or an API endpoint
+    // Replace this with your actual data fetching logic
+    const fetchSpells = async () => {
+      try {
+        const response = await fetch('/data/spells.json');
+        const data = await response.json();
+        setAvailableSpells(data);
+      } catch (error) {
+        console.error("Failed to fetch spells:", error);
+        toast({
+          title: "Ошибка",
+          description: "Не удалось загрузить список заклинаний.",
+          variant: "destructive",
+        });
       }
-      setSelectedSpells(prev => [...prev, spell]);
-    } else {
-      setSelectedSpells(prev => prev.filter(s => s.id !== spell.id));
-    }
-  };
+    };
+    
+    fetchSpells();
+  }, [toast]);
   
-  // Обработчик подтверждения выбора заклинаний
-  const handleConfirm = () => {
-    // Добавляем выбранные заклинания к существующим заклинаниям персонажа
-    const currentSpells = character.spells || [];
-    const updatedSpells = [...currentSpells];
+  // Filter spells based on search term
+  const filteredSpells = availableSpells.filter(spell =>
+    spell.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Function to add a spell to the character's spell list
+  const addSpellToCharacter = (spell: SpellData) => {
+    if (!character.spells) {
+      character.spells = [];
+    }
     
-    // Добавляем только те заклинания, которых еще нет у персонажа
-    selectedSpells.forEach(newSpell => {
-      const exists = currentSpells.some(existingSpell => 
-        typeof existingSpell === 'string' 
-          ? existingSpell === newSpell.name
-          : existingSpell.id === newSpell.id);
-      
-      if (!exists) {
-        updatedSpells.push(newSpell);
-      }
-    });
+    // Check if the spell is already in the character's spell list
+    const spellExists = character.spells.some(s => getSpellName(s) === spell.name);
     
-    // Обновляем персонажа с новыми заклинаниями
+    if (spellExists) {
+      toast({
+        title: "Заклинание уже добавлено",
+        description: "Это заклинание уже есть в вашем списке.",
+      });
+      return;
+    }
+    
+    // Add the spell to the character's spell list
+    const newSpell = {
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      prepared: false,
+    };
+    
+    const updatedSpells = [...(character.spells || []), newSpell];
+    
     onUpdate({ spells: updatedSpells });
-    onOpenChange(false);
+    
+    toast({
+      title: "Заклинание добавлено",
+      description: `Заклинание "${spell.name}" добавлено в ваш список.`,
+    });
   };
   
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Выбор новых заклинаний</SheetTitle>
-          <SheetDescription>
-            {characterClass && characterLevel && (
-              <>
-                Персонаж класса {characterClass} уровня {characterLevel} может выбрать:
-                {maxCantripsCount > 0 && (
-                  <div className="mt-1">• {maxCantripsCount} новых заговоров</div>
-                )}
-                {maxSpellsCount > 0 && (
-                  <div className="mt-1">• {maxSpellsCount} новых заклинаний</div>
-                )}
-              </>
-            )}
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="py-4">
-          <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3">
-              <TabsTrigger value="all">Все</TabsTrigger>
-              <TabsTrigger value="cantrips">Заговоры ({selectedCantripsCount}/{maxCantripsCount})</TabsTrigger>
-              <TabsTrigger value="spells">Заклинания ({selectedSpellsCount}/{maxSpellsCount})</TabsTrigger>
-            </TabsList>
-            
-            <div className="mt-4">
-              <ScrollArea className="h-[60vh] pr-4">
-                {activeTab === "all" && (
-                  <div className="space-y-6">
-                    {cantrips.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Заговоры</h4>
-                        <div className="space-y-2">
-                          {cantrips.map(spell => (
-                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
-                              <Checkbox 
-                                id={`spell-${spell.id}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id)}
-                                onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedCantripsCount >= maxCantripsCount}
-                              />
-                              <div className="space-y-1">
-                                <Label 
-                                  htmlFor={`spell-${spell.id}`} 
-                                  className="font-medium cursor-pointer"
-                                >
-                                  {spell.name}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                  {spell.school} • {spell.castingTime}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {Object.entries(spellsByLevel).filter(([level]) => level !== "0").map(([level, levelSpells]) => (
-                      <div key={level}>
-                        <h4 className="text-sm font-medium mb-2">Уровень {level}</h4>
-                        <div className="space-y-2">
-                          {levelSpells.map(spell => (
-                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
-                              <Checkbox 
-                                id={`spell-level-${spell.id}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id)}
-                                onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedSpellsCount >= maxSpellsCount}
-                              />
-                              <div className="space-y-1">
-                                <Label 
-                                  htmlFor={`spell-level-${spell.id}`} 
-                                  className="font-medium cursor-pointer"
-                                >
-                                  {spell.name}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                  {spell.school} • {spell.castingTime}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {spell.description.substring(0, 100)}...
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {activeTab === "cantrips" && (
-                  <div className="space-y-2">
-                    {cantrips.map(spell => (
-                      <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
-                        <Checkbox 
-                          id={`spell-cantrip-${spell.id}`} 
-                          checked={selectedSpells.some(s => s.id === spell.id)}
-                          onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                          disabled={!selectedSpells.some(s => s.id === spell.id) && selectedCantripsCount >= maxCantripsCount}
-                        />
-                        <div className="space-y-1">
-                          <Label 
-                            htmlFor={`spell-cantrip-${spell.id}`} 
-                            className="font-medium cursor-pointer"
-                          >
-                            {spell.name}
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            {spell.school} • {spell.castingTime}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {spell.description.substring(0, 100)}...
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {activeTab === "spells" && (
-                  <div className="space-y-6">
-                    {Object.entries(spellsByLevel).filter(([level]) => level !== "0").map(([level, levelSpells]) => (
-                      <div key={level}>
-                        <h4 className="text-sm font-medium mb-2">Уровень {level}</h4>
-                        <div className="space-y-2">
-                          {levelSpells.map(spell => (
-                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
-                              <Checkbox 
-                                id={`spell-level-${spell.id}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id)}
-                                onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedSpellsCount >= maxSpellsCount}
-                              />
-                              <div className="space-y-1">
-                                <Label 
-                                  htmlFor={`spell-level-${spell.id}`} 
-                                  className="font-medium cursor-pointer"
-                                >
-                                  {spell.name}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                  {spell.school} • {spell.castingTime}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {spell.description.substring(0, 100)}...
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </Tabs>
-        </div>
-        
-        <Separator className="my-4" />
-        
-        <SheetFooter>
-          <Button 
-            onClick={handleConfirm}
-          >
-            Подтвердить выбор
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Выбор заклинаний</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center space-x-2 mb-4">
+          <Input
+            type="text"
+            placeholder="Поиск заклинаний..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-[200px]"
+          />
+          <Button variant="ghost" size="sm">
+            <Search className="h-4 w-4 mr-2" />
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </div>
+        <ScrollArea className="h-[calc(80vh-150px)] w-full">
+          <div className="flex flex-col space-y-2">
+            {filteredSpells.map((spell) => (
+              <Button
+                key={spell.id}
+                variant="secondary"
+                className="w-full justify-start"
+                onClick={() => addSpellToCharacter(spell)}
+              >
+                {spell.name} ({spell.level} уровень)
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-// Also export as default for backward compatibility
 export default SpellSelectionModal;

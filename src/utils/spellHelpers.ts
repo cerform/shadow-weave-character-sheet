@@ -19,6 +19,7 @@ export const convertCharacterSpellToSpellData = (spell: string | CharacterSpell)
   
   return {
     ...spell,
+    id: spell.id || spell.name,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'Касание',
