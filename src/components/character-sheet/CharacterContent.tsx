@@ -33,7 +33,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Здоровье:</span>
               <div className="flex items-center">
-                <span style={{ color: currentTheme.textColor }}>{character.currentHP || 0}/{character.maxHP || 0}</span>
+                <span style={{ color: currentTheme.textColor }}>{character.currentHp || 0}/{character.maxHp || 0}</span>
               </div>
             </div>
             

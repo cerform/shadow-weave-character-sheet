@@ -22,6 +22,80 @@ const CharacterTabs: React.FC<CharacterTabsProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Функция для рендеринга снаряжения в зависимости от его формата
+  const renderEquipment = () => {
+    if (!character.equipment) {
+      return (
+        <div className="text-center text-muted-foreground py-2">
+          Нет предметов снаряжения
+        </div>
+      );
+    }
+    
+    // Если equipment - массив строк
+    if (Array.isArray(character.equipment)) {
+      if (character.equipment.length === 0) {
+        return (
+          <div className="text-center text-muted-foreground py-2">
+            Нет предметов снаряжения
+          </div>
+        );
+      }
+      
+      return character.equipment.map((item, index) => (
+        <div key={`equipment-${index}`} className="flex justify-between items-center p-2 border-b">
+          <span style={{ color: currentTheme.textColor }}>{item}</span>
+        </div>
+      ));
+    }
+    
+    // Если equipment - объект
+    const items = [];
+    
+    if (character.equipment.weapons && character.equipment.weapons.length > 0) {
+      items.push(
+        <div key="weapons-section">
+          <h4 className="text-sm font-semibold mb-2">Оружие</h4>
+          {character.equipment.weapons.map((weapon, idx) => (
+            <div key={`weapon-${idx}`} className="flex justify-between items-center p-2 border-b">
+              <span style={{ color: currentTheme.textColor }}>{weapon}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    if (character.equipment.armor) {
+      items.push(
+        <div key="armor-section" className="mt-2">
+          <h4 className="text-sm font-semibold mb-2">Доспехи</h4>
+          <div className="flex justify-between items-center p-2 border-b">
+            <span style={{ color: currentTheme.textColor }}>{character.equipment.armor}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    if (character.equipment.items && character.equipment.items.length > 0) {
+      items.push(
+        <div key="items-section" className="mt-2">
+          <h4 className="text-sm font-semibold mb-2">Предметы</h4>
+          {character.equipment.items.map((item, idx) => (
+            <div key={`item-${idx}`} className="flex justify-between items-center p-2 border-b">
+              <span style={{ color: currentTheme.textColor }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    return items.length > 0 ? items : (
+      <div className="text-center text-muted-foreground py-2">
+        Нет предметов снаряжения
+      </div>
+    );
+  };
+
   return (
     <Tabs value={active} onValueChange={onChange} className="w-full">
       <TabsList className="grid grid-cols-3">
@@ -57,16 +131,7 @@ const CharacterTabs: React.FC<CharacterTabsProps> = ({
         <div className="space-y-4">
           <h3 className="font-semibold" style={{ color: currentTheme.textColor }}>Оружие и снаряжение</h3>
           <div className="space-y-2">
-            {(character.equipment || []).map((item, index) => (
-              <div key={`equipment-${index}`} className="flex justify-between items-center p-2 border-b">
-                <span style={{ color: currentTheme.textColor }}>{item}</span>
-              </div>
-            ))}
-            {(!character.equipment || character.equipment.length === 0) && (
-              <div className="text-center text-muted-foreground py-2">
-                Нет предметов снаряжения
-              </div>
-            )}
+            {renderEquipment()}
           </div>
         </div>
       </TabsContent>

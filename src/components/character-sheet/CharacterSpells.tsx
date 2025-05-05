@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Character, CharacterSpell } from '@/types/character';
-import { normalizeSpells } from '@/utils/spellUtils';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Book, CheckCircle, Circle } from 'lucide-react';
@@ -79,6 +79,15 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
     onUpdate({ spells: updatedSpells });
   };
 
+  // Обработчик клика по заклинанию с правильным преобразованием типов
+  const handleSpellClick = (spell: CharacterSpell) => {
+    if (onSpellClick) {
+      // Преобразуем CharacterSpell в SpellData с дефолтными значениями для обязательных полей
+      const spellData: SpellData = convertToSpellData(spell);
+      onSpellClick(spellData);
+    }
+  };
+
   // Проверка, есть ли заклинания
   if (!spells.length) {
     return (
@@ -140,7 +149,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                             <Button 
                               variant="ghost"
                               size="sm"
-                              onClick={() => onSpellClick && onSpellClick(spell)}
+                              onClick={() => handleSpellClick(spell)}
                             >
                               <Book className="h-4 w-4" />
                             </Button>
@@ -187,7 +196,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                       <Button 
                         variant="ghost"
                         size="sm"
-                        onClick={() => onSpellClick && onSpellClick(spell)}
+                        onClick={() => handleSpellClick(spell)}
                       >
                         <Book className="h-4 w-4" />
                       </Button>
@@ -218,7 +227,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                           <Button 
                             variant="ghost"
                             size="sm"
-                            onClick={() => onSpellClick && onSpellClick(spell)}
+                            onClick={() => handleSpellClick(spell)}
                           >
                             <Book className="h-4 w-4" />
                           </Button>

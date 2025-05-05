@@ -24,9 +24,8 @@ const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({
     onUpdate({ name: e.target.value });
   };
 
-  const classes = character.classes ? character.classes.map(c => 
-    `${c.name}${c.level ? ` (${c.level})` : ''}`
-  ).join(', ') : character.class;
+  // Получаем строку класса из character.class или из className
+  const classText = character.className || character.class || 'Не указан';
 
   return (
     <Card 
@@ -60,7 +59,7 @@ const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({
           <div className="flex flex-col">
             <span className="text-sm text-muted-foreground">Класс и уровень</span>
             <div className="font-medium" style={{ color: currentTheme.textColor }}>
-              {classes || 'Не указан'} {character.level ? `(${character.level})` : ''}
+              {classText} {character.level ? `(${character.level})` : ''}
             </div>
           </div>
           

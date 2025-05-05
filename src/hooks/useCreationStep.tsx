@@ -1,85 +1,69 @@
 
 import { useState, useEffect } from 'react';
-import { steps, getCharacterSteps, getNextStepID, getPrevStepID } from '@/config/characterCreationSteps';
+import { Step } from '@/types/characterCreation';
 
-interface UseCreationStepConfig {
+// Обновляем интерфейс, добавляя isMagicClass
+export interface UseCreationStepConfig {
   hasSubraces?: boolean;
-  characterClass?: string;
-  character?: any;
+  isMagicClass?: boolean;
 }
 
-export const useCreationStep = (config?: UseCreationStepConfig) => {
-  const [currentStepId, setCurrentStepId] = useState<number>(0);
-  
-  // Получаем отфильтрованные шаги на основе текущей конфигурации
-  const visibleSteps = getCharacterSteps({
-    hasSubraces: config?.hasSubraces
-  });
+export const useCreationStep = (config: UseCreationStepConfig = {}) => {
+  const { hasSubraces = false, isMagicClass = false } = config;
+  const [currentStep, setCurrentStep] = useState(0);
+  const [visibleSteps, setVisibleSteps] = useState<Step[]>([]);
 
-  // Переход к следующему шагу с учетом фильтрации
-  const nextStep = () => {
-    const nextId = getNextStepID(currentStepId, visibleSteps);
-    console.log(`Переход к следующему шагу: с ${currentStepId} на ${nextId}`);
-    setCurrentStepId(nextId);
-  };
-
-  // Переход к предыдущему шагу с учетом фильтрации
-  const prevStep = () => {
-    const prevId = getPrevStepID(currentStepId, visibleSteps);
-    console.log(`Переход к предыдущему шагу: с ${currentStepId} на ${prevId}`);
-    setCurrentStepId(prevId);
-  };
-
-  // Функция для установки шага по индексу, проверяя его доступность
-  const setCurrentStep = (stepId: number) => {
-    console.log(`Установка текущего шага на ${stepId}`);
-    // Проверяем, существует ли шаг в отфильтрованном списке
-    const stepExists = visibleSteps.some(step => step.id === stepId);
+  // Функция для получения и фильтрации шагов из конфигурации
+  const getVisibleSteps = (): Step[] => {
+    // Импортируем шаги из конфигурации
+    const { steps } = require('@/config/characterCreationSteps');
     
-    if (stepExists) {
-      setCurrentStepId(stepId);
-    } else {
-      // Если шаг недоступен, находим ближайший доступный
-      const closestStep = visibleSteps.reduce((prev, curr) => 
-        Math.abs(curr.id - stepId) < Math.abs(prev.id - stepId) ? curr : prev
-      );
-      console.log(`Шаг ${stepId} недоступен, переходим к ближайшему: ${closestStep.id}`);
-      setCurrentStepId(closestStep.id);
-    }
+    // Применяем фильтры на основе конфигурации
+    return steps.filter((step: Step) => {
+      // Если шаг требует наличия подрас, но их нет - скрываем шаг
+      if (step.requiresSubraces && !hasSubraces) {
+        return false;
+      }
+      
+      // Если шаг требует магический класс, но класс не магический - скрываем шаг
+      if (step.requiresMagicClass && !isMagicClass) {
+        return false;
+      }
+      
+      // В остальных случаях показываем шаг
+      return true;
+    });
   };
 
-  // Если конфигурация изменилась, проверяем доступность текущего шага
+  // Обновляем видимые шаги при изменении конфигурации
   useEffect(() => {
-    console.log(`Конфигурация шагов изменилась: hasSubraces=${config?.hasSubraces}`);
-    console.log(`Видимые шаги:`, visibleSteps.map(s => s.id));
-
-    const currentStepExists = visibleSteps.some(step => step.id === currentStepId);
-    
-    if (!currentStepExists && visibleSteps.length > 0) {
-      // Находим ближайший доступный шаг
-      const closestStep = visibleSteps.reduce((prev, curr) => 
-        Math.abs(curr.id - currentStepId) < Math.abs(prev.id - currentStepId) ? curr : prev
-      );
-      console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
-      setCurrentStepId(closestStep.id);
+    const filteredSteps = getVisibleSteps();
+    setVisibleSteps(filteredSteps);
+    // Убедимся, что текущий шаг по-прежнему валиден
+    if (currentStep >= filteredSteps.length) {
+      setCurrentStep(Math.max(0, filteredSteps.length - 1));
     }
-  }, [config?.hasSubraces]);
+  }, [hasSubraces, isMagicClass]);
 
-  // Вычисляем процент завершения создания персонажа
-  const calculateProgress = (): number => {
-    if (visibleSteps.length === 0) return 0;
-    const currentIndex = visibleSteps.findIndex(step => step.id === currentStepId);
-    if (currentIndex === -1) return 0;
-    return Math.round(((currentIndex + 1) / visibleSteps.length) * 100);
+  // Функция для перехода к следующему шагу
+  const nextStep = () => {
+    if (currentStep < visibleSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  // Функция для перехода к предыдущему шагу
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   return {
-    currentStep: currentStepId,
+    currentStep,
     nextStep,
     prevStep,
     setCurrentStep,
-    totalSteps: visibleSteps.length,
-    visibleSteps,
-    progress: calculateProgress()
+    visibleSteps
   };
 };

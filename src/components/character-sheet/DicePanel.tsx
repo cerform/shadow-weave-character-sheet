@@ -1,329 +1,209 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+import { Character } from '@/types/character';
+import { useSocket } from '@/contexts/SocketContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { useSocket } from '@/contexts/SocketContext';
-import ThemeSelector from '@/components/character-sheet/ThemeSelector';
-import { Dices } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DicePanelProps {
-  isDM?: boolean;
-  useDmMode?: boolean;
-  selectedTokenId?: number | null;
-  tokens?: any[];
-  setSelectedTokenId?: (id: number | null) => void;
-  compactMode?: boolean;
-  fixedPosition?: boolean;
+  character: Character;
 }
 
-const predefinedRollReasons = [
-  { value: 'attack', label: 'Атака' },
-  { value: 'skill_check', label: 'Проверка навыка' },
-  { value: 'saving_throw', label: 'Спасбросок' },
-  { value: 'initiative', label: 'Инициатива' },
-  { value: 'custom', label: 'Другое' },
-];
+interface DiceRollResult {
+  type: string;
+  result: number;
+  rolls: number[];
+  total: number;
+  timestamp: string;
+}
 
-export const DicePanel: React.FC<DicePanelProps> = ({
-  isDM = false,
-  useDmMode = false,
-  selectedTokenId = null,
-  tokens = [],
-  setSelectedTokenId = () => {},
-  compactMode = false,
-  fixedPosition = false
-}) => {
-  const [diceCount, setDiceCount] = useState(1);
-  const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'>('d20');
-  const [modifier, setModifier] = useState<number>(0);
-  const [rollMessage, setRollMessage] = useState<string>('');
-  const [rollReason, setRollReason] = useState<string>('');
-  const [showDetails, setShowDetails] = useState<boolean>(false);
-  const [useCustomReason, setUseCustomReason] = useState<boolean>(false);
-  const [rollHistory, setRollHistory] = useState<any[]>([]);
-  const [rollResult, setRollResult] = useState<number | null>(null);
+const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
+  const [rolls, setRolls] = useState<DiceRollResult[]>([]);
   const { toast } = useToast();
-  
+  const { sendUpdate } = useSocket();
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const socket = useSocket();
-  
-  const handleDiceRollComplete = (result: number) => {
-    setRollResult(result);
-  };
-  
-  useEffect(() => {
-    // Создаем обработчик бросков кубиков
-    const handleRoll = (data: any) => {
-      setRollHistory((prev) => [...prev, data]);
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+
+  // Доступные типы костей
+  const diceTypes = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+
+  // Бросок кости
+  const rollDice = (sides: number, count: number = 1) => {
+    const rolls: number[] = [];
+    let total = 0;
+
+    for (let i = 0; i < count; i++) {
+      const roll = Math.floor(Math.random() * sides) + 1;
+      rolls.push(roll);
+      total += roll;
+    }
+
+    const newRoll: DiceRollResult = {
+      type: `${count}d${sides}`,
+      result: total,
+      rolls: rolls,
+      total: total,
+      timestamp: new Date().toISOString()
     };
-    
-    // Подключаемся к событиям получения бросков через socketService
-    const socketService = socket?.socketService;
-    if (socketService && socketService.on) {
-      const unsubscribe = socketService.on('receive-roll', handleRoll);
-      
-      return () => {
-        // Используем возвращаемую функцию отписки
-        unsubscribe();
-      };
-    }
-    
-    return () => {};
-  }, [socket]);
-  
-  const handleRoll = async () => {
-    // Симулируем броски нескольких кубиков
-    const rolls = [];
-    let totalResult = 0;
-    
-    for (let i = 0; i < diceCount; i++) {
-      const diceRoll = Math.floor(Math.random() * Number(diceType.slice(1))) + 1;
-      rolls.push(diceRoll);
-      totalResult += diceRoll;
-    }
-    
-    // Добавляем модификатор к общему результату
-    totalResult += modifier;
-    
-    setRollResult(totalResult);
-    
-    const reason = useCustomReason ? rollReason : predefinedRollReasons.find(r => r.value === rollReason)?.label || 'Бросок';
-    
-    const rollData = {
-      diceCount,
-      diceType,
-      modifier,
-      rolls,
-      total: totalResult,
-      reason: reason,
-      message: rollMessage,
-      rolledBy: selectedTokenId ? tokens.find(t => t.id === selectedTokenId)?.name : 'Мастер',
-    };
-    
-    setRollHistory((prev) => [...prev, rollData]);
-    
-    if (socket && socket.socketService && socket.socketService.sendRoll) {
-      // Используем метод sendRoll из контекста для отправки броска
-      const formula = `${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`;
-      socket.socketService.sendRoll(formula, reason);
-    }
-    
+
+    // Добавляем результат в историю
+    setRolls(prev => [newRoll, ...prev].slice(0, 10));
+
+    // Отображаем уведомление
     toast({
-      title: "Бросок успешен",
-      description: `Вы бросили ${diceCount}${diceType} + ${modifier} = ${totalResult}`,
+      title: `Бросок ${count}d${sides}`,
+      description: `Результат: ${total} ${rolls.length > 1 ? `(${rolls.join(' + ')})` : ''}`,
+    });
+
+    // Отправляем результат через сокет если есть комната
+    sendUpdate({
+      ...character,
+      lastDiceRoll: newRoll
+    });
+
+    return newRoll;
+  };
+
+  // Бросок навыка
+  const rollSkill = (skillName: string, modifier: number) => {
+    const d20Roll = rollDice(20, 1);
+    const total = d20Roll.result + modifier;
+
+    const skillRoll: DiceRollResult = {
+      type: `Навык: ${skillName}`,
+      result: total,
+      rolls: d20Roll.rolls,
+      total: total,
+      timestamp: new Date().toISOString()
+    };
+
+    setRolls(prev => [skillRoll, ...prev].slice(0, 10));
+
+    toast({
+      title: `Проверка навыка: ${skillName}`,
+      description: `Результат: ${total} (d20: ${d20Roll.result} + модификатор: ${modifier})`,
+    });
+
+    // Отправляем результат через сокет
+    sendUpdate({
+      ...character,
+      lastDiceRoll: skillRoll
     });
   };
-  
-  // Вычисляем высоту для 3D кубика в зависимости от режима
-  const diceContainerHeight = compactMode ? '200px' : '220px';
-  
+
+  // Бросок атаки
+  const rollAttack = () => {
+    const d20Roll = rollDice(20, 1);
+    
+    // Простой бонус атаки на основе основной характеристики и бонуса мастерства
+    const attackBonus = 2 + (character.proficiencyBonus || 2);
+    const total = d20Roll.result + attackBonus;
+
+    const attackRoll: DiceRollResult = {
+      type: 'Атака',
+      result: total,
+      rolls: d20Roll.rolls,
+      total: total,
+      timestamp: new Date().toISOString()
+    };
+
+    setRolls(prev => [attackRoll, ...prev].slice(0, 10));
+
+    toast({
+      title: 'Бросок атаки',
+      description: `Результат: ${total} (d20: ${d20Roll.result} + бонус: ${attackBonus})`,
+    });
+
+    // Отправляем результат через сокет
+    sendUpdate({
+      ...character,
+      lastDiceRoll: attackRoll
+    });
+  };
+
+  // Форматирование времени
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
   return (
-    <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <div className="space-y-4">
-        {/* Выбор типа кубика */}
-        <div className="grid grid-cols-6 gap-1">
-          {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
-            <Button
-              key={dice}
-              size="sm"
-              variant={diceType === dice ? "default" : "outline"}
-              className="h-10 px-2 flex items-center justify-center"
-              onClick={() => setDiceType(dice as any)}
-            >
-              {dice}
-            </Button>
-          ))}
-        </div>
-        
-        {/* Секция настройки броска */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Количество кубиков */}
-            <div className="flex items-center gap-1">
-              <Label className="text-sm">Кол-во:</Label>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="px-2 h-8 w-8" 
-                onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
-              >
-                -
-              </Button>
-              <div className="flex items-center border bg-background/50 rounded px-2 min-w-[30px] justify-center">
-                <span className="text-sm">{diceCount}</span>
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="px-2 h-8 w-8" 
-                onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
-              >
-                +
-              </Button>
-            </div>
-            
-            {/* Модификатор броска */}
-            <div className="flex items-center gap-1">
-              <Label className="text-sm">Мод:</Label>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="px-2 h-8 w-8" 
-                onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
-              >
-                -
-              </Button>
-              <div className="flex items-center border bg-background/50 rounded px-2 min-w-[40px] justify-center">
-                <span className="text-sm">{modifier >= 0 ? '+' : ''}{modifier}</span>
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="px-2 h-8 w-8" 
-                onClick={() => setModifier(prev => Math.min(20, prev + 1))}
-              >
-                +
-              </Button>
-            </div>
-            
-            {/* Диалог дополнительных настроек */}
-            <div className="ml-auto">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
-                      {showDetails ? 'Скрыть' : 'Опции'}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Дополнительные опции броска</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle style={{ color: currentTheme.textColor }}>Кости</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-7 gap-2">
+            {diceTypes.map(dt => {
+              const sides = parseInt(dt.replace('d', ''));
+              return (
+                <Button 
+                  key={dt} 
+                  onClick={() => rollDice(sides)}
+                  variant="outline"
+                  className="text-center"
+                >
+                  {dt}
+                </Button>
+              );
+            })}
           </div>
           
-          {/* 3D кубик в центре */}
-          <div 
-            className="mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
-            style={{ height: diceContainerHeight, zIndex: fixedPosition ? 1 : 'auto' }}
-          >
-            <DiceRoller3D 
-              initialDice={diceType}
-              hideControls={true}
-              modifier={modifier}
-              onRollComplete={handleDiceRollComplete}
-              fixedPosition={fixedPosition}
-              themeColor={currentTheme.accent}
-              diceCount={diceCount}
-            />
-          </div>
-          
-          {/* Дополнительные настройки */}
-          {showDetails && (
-            <div className="p-2 bg-background/50 rounded border">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="custom-reason">Своя причина броска</Label>
-                  <Switch 
-                    id="custom-reason" 
-                    checked={useCustomReason} 
-                    onCheckedChange={setUseCustomReason} 
-                  />
-                </div>
-                
-                {useCustomReason ? (
-                  <Input 
-                    type="text" 
-                    placeholder="Причина броска..." 
-                    value={rollReason} 
-                    onChange={(e) => setRollReason(e.target.value)}
-                  />
-                ) : (
-                  <Select value={rollReason} onValueChange={setRollReason}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите причину броска" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {predefinedRollReasons.map((reason) => (
-                        <SelectItem key={reason.value} value={reason.value}>
-                          {reason.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                
-                <Input 
-                  type="text" 
-                  placeholder="Сообщение (опционально)" 
-                  value={rollMessage} 
-                  onChange={(e) => setRollMessage(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Кнопка броска и выбор от имени кого */}
-          <div className="flex flex-col gap-2">
-            {(useDmMode || isDM) && tokens.length > 0 && (
-              <Select 
-                value={selectedTokenId ? String(selectedTokenId) : "dm"}
-                onValueChange={(value) => {
-                  if (value === "dm") {
-                    setSelectedTokenId(null);
-                  } else {
-                    setSelectedTokenId(Number(value));
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="От имени..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dm">Мастер</SelectItem>
-                  {tokens.map((token) => (
-                    <SelectItem key={token.id} value={String(token.id)}>
-                      {token.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            
+          <div className="grid grid-cols-2 gap-2">
             <Button 
-              className="w-full bg-primary/90 hover:bg-primary"
-              onClick={handleRoll}
+              onClick={rollAttack}
+              variant="default"
+              style={{
+                backgroundColor: currentTheme.accent,
+                color: currentTheme.buttonText || 'white'
+              }}
             >
-              <Dices className="mr-2" size={16} />
-              Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
+              Атака
+            </Button>
+            <Button 
+              onClick={() => rollDice(6, 2)}
+              variant="outline"
+            >
+              Урон (2d6)
             </Button>
           </div>
+
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>История бросков:</h4>
+            <ScrollArea className="h-[150px]">
+              {rolls.length > 0 ? (
+                <div className="space-y-2">
+                  {rolls.map((roll, index) => (
+                    <div key={`roll-${index}`} className="border p-2 rounded-md flex justify-between">
+                      <div>
+                        <span className="text-sm font-medium" style={{ color: currentTheme.textColor }}>{roll.type}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {formatTime(roll.timestamp)}
+                        </span>
+                      </div>
+                      <div className="font-bold" style={{ color: currentTheme.textColor }}>
+                        {roll.total}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  История бросков пуста
+                </div>
+              )}
+            </ScrollArea>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };
+
+export default DicePanel;
