@@ -4,35 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SpellData } from '@/types/spells';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Sparkles, BookOpen } from 'lucide-react';
 
 interface SpellCardProps {
   spell: SpellData;
   onClick?: () => void;
+  currentTheme: any;
 }
 
-const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
-  const getSchoolBadgeColor = (school: string) => {
-    // Цвета для школ магии
-    const schoolColors: { [key: string]: string } = {
-      'Преобразование': 'bg-blue-900 text-white',
-      'Воплощение': 'bg-red-900 text-white',
-      'Вызов': 'bg-orange-900 text-white',
-      'Прорицание': 'bg-purple-900 text-white',
-      'Очарование': 'bg-pink-900 text-white',
-      'Иллюзия': 'bg-indigo-900 text-white',
-      'Некромантия': 'bg-green-900 text-white',
-      'Ограждение': 'bg-yellow-900 text-white',
-    };
-
-    return schoolColors[school] || "bg-gray-800 text-white";
-  };
-
+const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) => {
   // Подготовка описания для отображения
   const description = typeof spell.description === 'string' 
     ? spell.description 
@@ -49,49 +29,79 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick }) => {
 
   return (
     <Card 
-      className="spell-card border border-accent hover:shadow-lg cursor-pointer transition-all"
+      className="spell-card hover:shadow-lg cursor-pointer transition-all hover:translate-y-[-2px] overflow-hidden"
       style={{
-        backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
+        backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
         borderColor: currentTheme.accent,
+        boxShadow: `0 4px 15px ${currentTheme.accent}30`,
+        border: `1px solid ${currentTheme.accent}80`,
       }}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-semibold" style={{color: currentTheme.textColor || 'white'}}>
+      <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: currentTheme.accent }}></div>
+      <CardContent className="p-5 relative">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-lg font-semibold" style={{ color: currentTheme.textColor || 'white' }}>
             {spell.name}
           </h3>
           <Badge
+            className="shadow-sm"
             style={{
               backgroundColor: currentTheme.accent,
-              color: currentTheme.textColor || 'white',
+              color: '#fff',
             }}
           >
             {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
           </Badge>
         </div>
         
-        <div className="flex flex-wrap gap-2 mb-2">
-          <Badge variant="outline" className={getSchoolBadgeColor(spell.school)}>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge 
+            variant="outline" 
+            className="shadow-sm border flex items-center"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor
+            }}
+          >
+            <BookOpen className="h-3 w-3 mr-1" />
             {spell.school}
           </Badge>
           
           {(spell.ritual || spell.isRitual) && (
-            <Badge variant="outline" className="bg-black/30">
+            <Badge 
+              variant="outline" 
+              className="shadow-sm border flex items-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
+            >
+              <Sparkles className="h-3 w-3 mr-1" />
               Ритуал
             </Badge>
           )}
           
           {(spell.concentration || spell.isConcentration) && (
-            <Badge variant="outline" className="bg-black/30">
+            <Badge 
+              variant="outline" 
+              className="shadow-sm border flex items-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
+            >
               Концентрация
             </Badge>
           )}
         </div>
         
-        <Separator className="my-2" />
+        <Separator className="my-3" style={{ backgroundColor: `${currentTheme.accent}40` }} />
         
-        <div className="grid grid-cols-2 gap-1 text-sm" style={{color: currentTheme.textColor || 'white'}}>
+        <div className="grid grid-cols-2 gap-1 text-sm" style={{ color: currentTheme.textColor || 'white' }}>
           <div>
             <span className="font-semibold">Время:</span> {spell.castingTime}
           </div>
@@ -107,10 +117,17 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick }) => {
         </div>
 
         {classesText && (
-          <div className="mt-2 text-xs text-muted-foreground">
+          <div className="mt-3 text-xs" style={{ color: `${currentTheme.textColor}90` || 'rgba(255, 255, 255, 0.7)' }}>
             <span className="font-semibold">Классы:</span> {classesText}
           </div>
         )}
+        
+        <div 
+          className="absolute top-0 right-0 w-16 h-16 opacity-5"
+          style={{ 
+            backgroundImage: `radial-gradient(circle, ${currentTheme.accent} 0%, transparent 70%)` 
+          }}
+        ></div>
       </CardContent>
     </Card>
   );

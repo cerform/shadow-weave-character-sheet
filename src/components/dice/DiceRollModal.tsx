@@ -30,7 +30,8 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   const [diceResult, setDiceResult] = useState<number | null>(null);
   const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const themeKey = (theme as keyof typeof themes) || 'default';
+  const currentTheme = themes[themeKey] || themes.default;
 
   // При открытии модала, сбрасываем ключ для принудительной перерисовки
   useEffect(() => {
@@ -82,20 +83,45 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] bg-card/90 backdrop-blur-lg">
+      <DialogContent className="sm:max-w-[450px] bg-card/90 backdrop-blur-lg" style={{
+        backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
+        borderColor: currentTheme.accent,
+        color: currentTheme.textColor
+      }}>
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-center text-foreground">Бросок кубиков</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-center" style={{ color: currentTheme.accent }}>
+            Бросок кубиков
+          </DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="builder" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="builder" className="text-foreground data-[state=inactive]:text-foreground/70">Конструктор</TabsTrigger>
-            <TabsTrigger value="advanced" className="text-foreground data-[state=inactive]:text-foreground/70">Вручную</TabsTrigger>
+          <TabsList className="grid grid-cols-2 mb-4" style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderColor: currentTheme.accent
+          }}>
+            <TabsTrigger 
+              value="builder" 
+              className="data-[state=inactive]:text-foreground/70"
+              style={{
+                color: currentTheme.textColor
+              }}
+            >
+              Конструктор
+            </TabsTrigger>
+            <TabsTrigger 
+              value="advanced" 
+              className="data-[state=inactive]:text-foreground/70"
+              style={{
+                color: currentTheme.textColor
+              }}
+            >
+              Вручную
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="builder" className="space-y-4">
             <div>
-              <Label className="text-foreground">Тип кубика</Label>
+              <Label className="text-foreground" style={{ color: currentTheme.textColor }}>Тип кубика</Label>
               <div className="grid grid-cols-6 gap-2 mt-2">
                 {DICE_TYPES.map((dice) => (
                   <Button
@@ -105,7 +131,9 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
                     onClick={() => handleDiceSelect(dice)}
                     className="flex items-center justify-center p-0 h-10"
                     style={{
-                      backgroundColor: selectedDice === dice ? currentTheme.accent : undefined
+                      backgroundColor: selectedDice === dice ? currentTheme.accent : 'transparent',
+                      borderColor: currentTheme.accent,
+                      color: selectedDice === dice ? '#fff' : currentTheme.textColor
                     }}
                   >
                     {dice}
@@ -116,7 +144,7 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="quantity" className="text-foreground">Количество</Label>
+                <Label htmlFor="quantity" className="text-foreground" style={{ color: currentTheme.textColor }}>Количество</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -124,16 +152,26 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
                   value={quantity}
                   onChange={handleQuantityChange}
                   className="text-foreground"
+                  style={{
+                    borderColor: currentTheme.accent,
+                    color: currentTheme.textColor,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                  }}
                 />
               </div>
               <div>
-                <Label htmlFor="modifier" className="text-foreground">Модификатор</Label>
+                <Label htmlFor="modifier" className="text-foreground" style={{ color: currentTheme.textColor }}>Модификатор</Label>
                 <Input
                   id="modifier"
                   type="number"
                   value={modifier}
                   onChange={handleModifierChange}
                   className="text-foreground"
+                  style={{
+                    borderColor: currentTheme.accent,
+                    color: currentTheme.textColor,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                  }}
                 />
               </div>
             </div>
@@ -141,15 +179,20 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
           
           <TabsContent value="advanced" className="space-y-4">
             <div>
-              <Label htmlFor="formula" className="text-foreground">Формула броска</Label>
+              <Label htmlFor="formula" className="text-foreground" style={{ color: currentTheme.textColor }}>Формула броска</Label>
               <Input
                 id="formula"
                 value={formula}
                 onChange={(e) => setFormula(e.target.value)}
                 placeholder="например: 2d6+3"
                 className="text-foreground"
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor,
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                }}
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1" style={{ color: `${currentTheme.textColor}80` }}>
                 Формат: [количество]d[тип]+[модификатор]
               </p>
             </div>
@@ -157,24 +200,34 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
         </Tabs>
         
         <div>
-          <Label htmlFor="playerName" className="text-foreground">Имя игрока</Label>
+          <Label htmlFor="playerName" className="text-foreground" style={{ color: currentTheme.textColor }}>Имя игрока</Label>
           <Input
             id="playerName"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Введите имя персонажа"
             className="text-foreground"
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor,
+              backgroundColor: 'rgba(0, 0, 0, 0.3)'
+            }}
           />
         </div>
         
         <div>
-          <Label htmlFor="reason" className="text-foreground">Причина броска (необязательно)</Label>
+          <Label htmlFor="reason" className="text-foreground" style={{ color: currentTheme.textColor }}>Причина броска (необязательно)</Label>
           <Input
             id="reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Например: Атака дубиной"
             className="text-foreground"
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor,
+              backgroundColor: 'rgba(0, 0, 0, 0.3)'
+            }}
           />
         </div>
         
@@ -190,11 +243,21 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Отмена</Button>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor
+            }}
+          >
+            Отмена
+          </Button>
           <Button 
             onClick={handleRoll}
             style={{
               backgroundColor: currentTheme.accent,
+              color: '#fff'
             }}
           >
             Бросить {formula}

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useTheme } from "@/hooks/use-theme";
-import { useUserTheme } from "@/hooks/use-user-theme"; // Убрали расширение .tsx
+import { useUserTheme } from "@/hooks/use-user-theme";
 import { themes } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
 import { useDeviceType } from "@/hooks/use-mobile";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const ThemeSelector = () => {
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { activeTheme, setUserTheme } = useUserTheme();
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
@@ -33,6 +33,21 @@ const ThemeSelector = () => {
     { id: 'warrior', name: 'Воин', icon: <Sword size={16} /> },
     { id: 'bard', name: 'Бард', icon: <Music size={16} /> },
   ];
+
+  // Обработчик для изменения темы
+  const handleThemeChange = (themeId: string) => {
+    // Сначала установим тему в глобальном контексте
+    setTheme(themeId);
+    // Затем установим тему в пользовательском контексте
+    setUserTheme(themeId);
+    
+    // Сохраняем тему в localStorage для обоих контекстов
+    localStorage.setItem('theme', themeId);
+    localStorage.setItem('userTheme', themeId);
+    localStorage.setItem('dnd-theme', themeId);
+
+    console.log('Theme changed to:', themeId);
+  };
 
   return (
     <DropdownMenu>
@@ -80,7 +95,7 @@ const ThemeSelector = () => {
           return (
             <DropdownMenuItem 
               key={item.id} 
-              onClick={() => setUserTheme(item.id)} 
+              onClick={() => handleThemeChange(item.id)} 
               className="flex items-center justify-between cursor-pointer"
               style={{
                 color: currentTheme.textColor,

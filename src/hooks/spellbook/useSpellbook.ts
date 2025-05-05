@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { getSpellsByClass, getSpellsByLevel, spells } from '@/data/spells';
-import { CharacterSpell } from '@/types/character';
+import { getAllSpells } from '@/data/spells';
 import { SpellData } from '@/types/spells';
 
 export const useSpellbook = () => {
@@ -13,10 +12,17 @@ export const useSpellbook = () => {
   const [activeClass, setActiveClass] = useState<string[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [spells, setSpells] = useState<SpellData[]>([]);
   
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
+  useEffect(() => {
+    // Загружаем все заклинания при инициализации компонента
+    const allSpells = getAllSpells();
+    setSpells(allSpells as SpellData[]);
+  }, []);
   
   // Получаем все уникальные уровни из списка заклинаний
   const allLevels = Array.from(new Set(spells.map(spell => spell.level))).sort((a, b) => a - b);

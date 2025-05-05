@@ -7,7 +7,7 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
-import { UserThemeProvider } from './hooks/use-user-theme'; // Правильный импорт без расширения
+import { UserThemeProvider } from './hooks/use-user-theme';
 import './App.css';
 
 import Index from './pages/Index';
@@ -25,8 +25,6 @@ import DMDashboardPage from './pages/DMDashboardPage';
 import CharacterViewPage from './pages/CharacterViewPage';
 import NotFound from './pages/NotFound';
 
-import AppDiceButton from './AppDiceButton';
-
 // Import themes
 import { themes } from '@/lib/themes';
 
@@ -35,6 +33,13 @@ const App = () => {
   useEffect(() => {
     // Задаем дефолтную тему
     const savedTheme = localStorage.getItem('theme') || 'default';
+    
+    // Синхронизируем хранилища тем для обеспечения согласованности
+    localStorage.setItem('theme', savedTheme);
+    localStorage.setItem('userTheme', savedTheme);
+    localStorage.setItem('dnd-theme', savedTheme);
+    
+    // Применяем тему к элементам DOM
     document.body.className = '';
     document.body.classList.add(`theme-${savedTheme}`);
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -74,7 +79,6 @@ const App = () => {
                       <Route path="/dm/battle" element={<PlayBattlePage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                    <AppDiceButton />
                     <Toaster />
                   </div>
                 </SocketProvider>

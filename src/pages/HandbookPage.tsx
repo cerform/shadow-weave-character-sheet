@@ -13,7 +13,8 @@ import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import ThemeSelector from '@/components/ThemeSelector';
-import AppDiceButton from '@/AppDiceButton';
+import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const HandbookPage: React.FC = () => {
@@ -105,18 +106,7 @@ const HandbookPage: React.FC = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen flex flex-col"
-      style={{ 
-        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.6)), 
-                     url('/lovable-uploads/91719f56-2b3a-49c7-904f-35af06f9d3b3.png')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-        color: currentTheme.textColor 
-      }}
-    >
+    <BackgroundWrapper>
       {/* Навигационная панель */}
       <div className="p-4 flex items-center justify-between">
         <NavigationButtons className="flex-shrink-0" />
@@ -154,8 +144,8 @@ const HandbookPage: React.FC = () => {
         </div>
       </div>
       
-      <AppDiceButton />
-    </div>
+      <FloatingDiceButton />
+    </BackgroundWrapper>
   );
 };
 
