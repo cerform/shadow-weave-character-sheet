@@ -10,6 +10,9 @@ interface NavigationButtonsProps {
   isFirstStep: boolean;
   nextLabel?: string;
   prevLabel?: string;
+  // Ошибка показывает, что disableNext используется в CharacterEquipmentSelection,
+  // но не определен в этом интерфейсе. Добавим его как алиас для !allowNext.
+  disableNext?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -19,7 +22,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isFirstStep,
   nextLabel = 'Далее',
   prevLabel = 'Назад',
+  disableNext, // Добавляем, но не используем - это для совместимости
 }) => {
+  // Если disableNext передан, используем его, иначе !allowNext
+  const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
+  
   return (
     <div className="flex justify-between mt-6">
       {!isFirstStep ? (
@@ -30,7 +37,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       ) : (
         <div></div>
       )}
-      <Button onClick={nextStep} disabled={!allowNext}>
+      <Button onClick={nextStep} disabled={isNextDisabled}>
         {nextLabel}
         <ChevronRight className="ml-2 h-4 w-4" />
       </Button>

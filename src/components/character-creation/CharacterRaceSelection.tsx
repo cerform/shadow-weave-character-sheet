@@ -31,7 +31,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
     // Проверяем наличие подрас при изменении выбранной расы
     if (selectedRace) {
       const raceData = races.find(r => r.name === selectedRace);
-      setHasSubraces(!!(raceData?.subRaces && raceData.subRaces.length > 0));
+      setHasSubraces(!!(raceData?.subraces && raceData.subraces.length > 0));
     }
   }, [selectedRace]);
 
@@ -55,7 +55,7 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   // Проверяем, есть ли у расы подрасы
   const hasSubracesForRace = (raceName: string) => {
     const race = races.find(r => r.name === raceName);
-    return !!(race?.subRaces && race.subRaces.length > 0);
+    return !!(race?.subraces && race.subraces.length > 0);
   };
 
   return (

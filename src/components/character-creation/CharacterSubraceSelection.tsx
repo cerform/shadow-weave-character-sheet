@@ -32,10 +32,15 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     // Загрузка доступных подрас для выбранной расы
     if (character.race) {
       const raceData = races.find(r => r.name === character.race);
-      if (raceData && raceData.subRaces && raceData.subRaces.length > 0) {
+      if (raceData && raceData.subraces && raceData.subraces.length > 0) {
         // Преобразуем строки подрас в объекты с описаниями
-        const subraceObjects = raceData.subRaces.map(subraceName => {
-          const details = raceData.subRaceDetails ? raceData.subRaceDetails[subraceName] || {} : {};
+        const subraceObjects = raceData.subraces.map(subraceName => {
+          // Проверяем наличие subRaceDetails в объекте расы
+          const details = 
+            (raceData as any).subRaceDetails ? 
+            (raceData as any).subRaceDetails[subraceName] || {} : 
+            {};
+            
           return {
             name: subraceName,
             description: details.description || `Подраса ${subraceName}`
@@ -44,7 +49,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
         setAvailableSubraces(subraceObjects);
         
         // Если подраса не была выбрана или не соответствует текущей расе, сбрасываем её
-        if (!selectedSubrace || !raceData.subRaces.some(sr => sr === selectedSubrace)) {
+        if (!selectedSubrace || !raceData.subraces.some(sr => sr === selectedSubrace)) {
           setSelectedSubrace('');
           updateCharacter({ subrace: '' });
         }

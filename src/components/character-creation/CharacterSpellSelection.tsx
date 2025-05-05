@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,17 +172,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      const newSpell: CharacterSpell = {
-        name: spell.name,
-        level: spell.level,
-        description: typeof spell.description === 'string' ? spell.description : spell.description?.join('\n') || '',
-        school: spell.school,
-        castingTime: spell.castingTime,
-        range: spell.range,
-        components: spell.components,
-        duration: spell.duration,
-        prepared: character.class === 'Волшебник' || character.class === 'Жрец' || character.class === 'Друид' ? false : true
-      };
+      // Преобразуем SpellData в CharacterSpell
+      const newSpell = convertSpellDataToCharacterSpell(spell);
+      // Установим prepared для некоторых классов
+      newSpell.prepared = character.class === 'Волшебник' || character.class === 'Жрец' || character.class === 'Друид' ? false : true;
       
       setSelectedSpells([...selectedSpells, newSpell]);
     }
@@ -353,7 +345,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                             variant="ghost"
                             size="sm"
                             className="h-6 px-2 text-xs"
-                            onClick={() => toggleSpellSelection(convertToSpellData(spell))}
+                            onClick={() => toggleSpellSelection(convertCharacterSpellToSpellData(spell))}
                           >
                             Удалить
                           </Button>

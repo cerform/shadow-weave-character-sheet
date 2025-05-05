@@ -10,20 +10,26 @@ interface UserType {
 
 interface AuthContextType {
   user: UserType | null;
+  currentUser: UserType | null; // Добавляем для совместимости
   loading: boolean;
   error: Error | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (email: string, password: string, displayName: string) => Promise<void>; // Алиас для signup
   logout: () => Promise<void>;
+  googleLogin: (redirect?: boolean) => Promise<void>; // Добавляем метод для входа через Google
 }
 
 const defaultAuthContext: AuthContextType = {
   user: null,
+  currentUser: null,
   loading: true,
   error: null,
   login: async () => {},
   signup: async () => {},
-  logout: async () => {}
+  register: async () => {},
+  logout: async () => {},
+  googleLogin: async () => {}
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -93,6 +99,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Алиас для signup, чтобы соответствовать ожидаемому имени функции
+  const register = signup;
+
   const logout = async () => {
     try {
       // Здесь будет логика выхода
@@ -104,15 +113,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Добавляем функцию для входа через Google
+  const googleLogin = async (redirect: boolean = true) => {
+    try {
+      // Здесь будет логика входа через Google
+      // Пока используем моковые данные
+      const mockUser = {
+        uid: '2',
+        displayName: 'Google Пользователь',
+        email: 'google@example.com',
+        photoURL: 'https://via.placeholder.com/150'
+      };
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        currentUser: user, // Добавляем для совместимости
         loading,
         error,
         login,
         signup,
-        logout
+        register,
+        logout,
+        googleLogin
       }}
     >
       {children}

@@ -30,3 +30,25 @@ export const spells: CharacterSpell[] = [
   ...level8,
   ...level9
 ];
+
+// Функция получения всех заклинаний
+export const getAllSpells = () => {
+  return spells;
+};
+
+// Функция получения заклинаний по классу
+export const getSpellsByClass = (className: string) => {
+  return spells.filter(spell => {
+    if (typeof spell.classes === 'string') {
+      return spell.classes.toLowerCase() === className.toLowerCase();
+    } else if (Array.isArray(spell.classes)) {
+      return spell.classes.some(cls => cls.toLowerCase() === className.toLowerCase());
+    }
+    return false;
+  });
+};
+
+// Функция получения заклинаний по уровню
+export const getSpellsByLevel = (level: number) => {
+  return spells.filter(spell => spell.level === level);
+};
