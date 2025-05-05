@@ -56,8 +56,8 @@ export const useSubraceSelection = ({
         setAvailableSubraces(subraceObjects);
         setHasSubraces(true);
         
-        // If subrace was not selected or doesn't match current race, reset it
-        if (!selectedSubrace || !raceData.subraces.some(sr => {
+        // Проверяем, валидна ли текущая подраса для новой расы
+        const isValidSubrace = raceData.subraces.some(sr => {
           // Check if sr is an object with name field or a string
           if (typeof sr === 'string') {
             return sr === selectedSubrace;
@@ -65,7 +65,11 @@ export const useSubraceSelection = ({
             return sr.name === selectedSubrace;
           }
           return false;
-        })) {
+        });
+
+        // Только если подраса невалидна и не пустая, сбрасываем её
+        if (!isValidSubrace && selectedSubrace !== '') {
+          console.log("Resetting invalid subrace:", selectedSubrace);
           setSelectedSubrace('');
           onSubraceSelect('');
         }
@@ -75,9 +79,10 @@ export const useSubraceSelection = ({
         setHasSubraces(false);
       }
     }
-  }, [race, selectedSubrace, onSubraceSelect]);
+  }, [race, onSubraceSelect]); // Убрали selectedSubrace из зависимостей
 
   const handleSubraceSelect = (subraceName: string) => {
+    console.log("Selected subrace:", subraceName);
     setSelectedSubrace(subraceName);
     // Automatically save subrace selection
     onSubraceSelect(subraceName);
