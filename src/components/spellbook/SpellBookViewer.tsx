@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,15 @@ import { themes } from '@/lib/themes';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
 import SpellFilters from './SpellFilters';
 import SpellList from './SpellList';
+import { importSpellsFromDetailedText } from '@/hooks/spellbook/importUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
   const { activeTheme } = useUserTheme();
   const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const { toast } = useToast();
 
   const { 
     allSpells, 
@@ -108,6 +112,42 @@ const SpellBookViewer: React.FC = () => {
     setSearchTerm('');
   };
 
+  // Функция для обработки импорта заклинаний из детального текста
+  const handleImportFromText = (text: string) => {
+    try {
+      const newSpells = importSpellsFromDetailedText(text);
+      if (newSpells.length > 0) {
+        toast({
+          title: "Заклинания импортированы",
+          description: `Успешно импортировано ${newSpells.length} заклинаний`,
+        });
+      } else {
+        toast({
+          title: "Ничего не импортировано",
+          description: "Не удалось найти заклинания в предоставленном тексте",
+          variant: "destructive",
+        });
+      }
+      return newSpells;
+    } catch (error) {
+      toast({
+        title: "Ошибка импорта",
+        description: "Не удалось импортировать заклинания: " + (error as Error).message,
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
+
+  // Обработчик импорта заговоров
+  useEffect(() => {
+    // При первой загрузке компонента можно проверить наличие заговоров
+    const cantripCount = allSpells.filter(spell => spell.level === 0).length;
+    if (cantripCount < 10) {
+      console.log("В базе недостаточно заговоров, можно предложить пользователю импорт");
+    }
+  }, [allSpells]);
+
   return (
     <div 
       className="container mx-auto p-4"
@@ -140,8 +180,8 @@ const SpellBookViewer: React.FC = () => {
                   setSearchTerm('');
                 }}
                 allLevels={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                allSchools={extractClasses()}
-                allClasses={extractClasses()}
+                allSchools={schools}
+                allClasses={classes}
                 getBadgeColor={(level) => level === 0 ? '#9b87f550' : '#9b87f5'}
                 getSchoolBadgeColor={() => '#9b87f5'}
                 totalFound={filteredSpells.length}
