@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Импортируем страницы
 import Home from './pages/Home';
@@ -28,6 +28,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/characters" element={<CharactersListPage />} /> {/* Добавляем маршрут для страницы персонажей */}
       <Route path="/dm" element={<DMDashboardPage />} />
       <Route path="/battle" element={<BattleScenePage />} />
+      {/* Добавляем перенаправление с /sheet на страницу персонажа */}
+      <Route path="/sheet" element={<Navigate to="/character/:id" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
