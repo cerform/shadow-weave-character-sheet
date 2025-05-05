@@ -4,9 +4,10 @@ import { cantrips } from './cantrips';
 import { level0 } from './level0';
 import { level1 } from './level1';
 import { level2 } from './level2';
+import { level3 } from './level3';
 
-// Временно добавим мок данные для других уровней
-const level3: CharacterSpell[] = [];
+// Импортируем остальные уровни заклинаний
+// В будущем можно добавить больше уровней заклинаний по мере их добавления
 const level4: CharacterSpell[] = [];
 const level5: CharacterSpell[] = [];
 const level6: CharacterSpell[] = [];
