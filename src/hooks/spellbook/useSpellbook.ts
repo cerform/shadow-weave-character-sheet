@@ -29,6 +29,7 @@ export const useSpellbook = () => {
     new Set(
       spells.flatMap(spell => {
         if (!spell.classes) return [];
+        // Проверяем тип spell.classes перед использованием метода some
         return typeof spell.classes === 'string' ? [spell.classes] : spell.classes;
       })
     )

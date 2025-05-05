@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
 import { SpellData } from '@/types/spells';
-import { convertCharacterSpellToSpellData } from '@/utils/spellHelpers';
+import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -54,7 +53,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
   const [viewMode, setViewMode] = useState('cards');
 
   // Преобразуем все заклинания в формат SpellData с обязательными полями
-  const spellsData: SpellData[] = filteredSpells.map(spell => convertCharacterSpellToSpellData(spell));
+  const spellsData: SpellData[] = convertCharacterSpellsToSpellData(filteredSpells);
 
   return (
     <div className="container mx-auto px-4 py-8">

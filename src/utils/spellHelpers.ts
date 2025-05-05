@@ -1,4 +1,3 @@
-
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -58,29 +57,33 @@ export const getSpellsByLevel = (spells: (CharacterSpell | string)[], level: num
 };
 
 // Функция конвертации из CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell | string): SpellData => {
-  if (typeof characterSpell === 'string') {
-    return {
-      name: characterSpell,
-      level: 0,
-      school: "Неизвестная", // Обязательное поле в SpellData
-      castingTime: "1 действие",
-      range: "Неизвестная",
-      components: "",
-      duration: "Мгновенная",
-      description: ""
-    };
-  }
-  
+export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
   return {
-    ...characterSpell,
-    school: characterSpell.school || "Неизвестная", // Обязательное поле в SpellData
-    castingTime: characterSpell.castingTime || "1 действие",
-    range: characterSpell.range || "Неизвестная",
-    components: characterSpell.components || "",
-    duration: characterSpell.duration || "Мгновенная",
-    description: characterSpell.description || ""
+    // Обязательные поля для SpellData
+    id: spell.id || String(Date.now()),
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || "Универсальная", // Дефолтное значение для обязательного поля
+    castingTime: spell.castingTime || "1 действие", 
+    range: spell.range || "На себя",
+    components: spell.components || "В",
+    duration: spell.duration || "Мгновенная",
+    description: spell.description || "",
+    
+    // Опциональные поля
+    prepared: spell.prepared,
+    higherLevels: spell.higherLevels,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    source: spell.source,
+    material: spell.material,
+    classes: spell.classes
   };
+};
+
+// Функция конвертации из массива CharacterSpell в массив SpellData
+export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(convertCharacterSpellToSpellData);
 };
 
 // Функция конвертации из SpellData в CharacterSpell

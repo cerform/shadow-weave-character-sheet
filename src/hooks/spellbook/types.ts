@@ -28,5 +28,5 @@ export interface UseSpellbookReturn {
   importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }
 
-// Правильно экспортируем тип с использованием 'export type'
+// Используем правильный синтаксис для экспорта типа
 export type { SpellData };

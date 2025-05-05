@@ -7,7 +7,7 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
-import { UserThemeProvider } from './contexts/UserThemeContext';
+import { UserThemeProvider } from './hooks/use-user-theme.tsx'; // Исправляем импорт, добавляя расширение
 import './App.css';
 
 import Index from './pages/Index';
