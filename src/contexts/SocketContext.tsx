@@ -48,24 +48,45 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const { toast } = useToast();
   
-  // Отключаем автоматическое подключение WebSocket
+  // Предотвращаем автоматическое подключение WebSocket
   useEffect(() => {
-    // Отключаем сокет при монтировании, чтобы избежать постоянных попыток подключения
-    if (socket.connected) {
-      socket.disconnect();
+    // Проверяем, активен ли сокет и отключаем его
+    if (socket && socket.connected) {
+      try {
+        socket.disconnect();
+        console.log('[SOCKET] Отключение неиспользуемых WebSocket соединений');
+      } catch (err) {
+        console.error('[SOCKET] Ошибка при отключении:', err);
+      }
+    }
+    
+    // Регистрируем обработчик ошибок для сокета
+    if (socket) {
+      socket.on('connect_error', (err: any) => {
+        console.error('[SOCKET] Ошибка соединения:', err);
+      });
+      
+      socket.on('error', (err: any) => {
+        console.error('[SOCKET] Общая ошибка сокета:', err);
+      });
     }
     
     // Очистка при размонтировании
     return () => {
-      if (socket.connected) {
-        socket.disconnect();
+      if (socket) {
+        socket.off('connect_error');
+        socket.off('error');
+        
+        if (socket.connected) {
+          socket.disconnect();
+        }
       }
     };
   }, []);
   
   // Реализуем локальную мок-версию соединения
   const connect = (sessionCode: string, playerName: string, characterId?: string) => {
-    console.log(`Connecting to mock session ${sessionCode} as ${playerName} with character ${characterId}`);
+    console.log(`[SOCKET] Подключение к мок-сессии ${sessionCode} как ${playerName} с персонажем ${characterId}`);
     
     try {
       // Используем локальную имитацию соединения вместо реального WebSocket
@@ -82,7 +103,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         description: `Вы успешно подключились к сессии ${sessionCode}`,
       });
     } catch (error) {
-      console.error("Ошибка подключения:", error);
+      console.error("[SOCKET] Ошибка подключения:", error);
       toast({
         title: "Ошибка подключения",
         description: "Не удалось подключиться к сессии",
@@ -92,7 +113,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   };
   
   const disconnect = () => {
-    console.log('Disconnecting from mock session');
+    console.log('[SOCKET] Отключение от мок-сессии');
     setConnected(false);
     setSessionData(null);
     
@@ -103,12 +124,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   };
   
   const sendUpdate = (character: Character) => {
-    console.log('Sending character update (mock):', character);
+    console.log('[SOCKET] Отправка обновления персонажа (мок):', character);
     setLastUpdate({ character, timestamp: new Date().toISOString() });
   };
   
   const sendMessage = (message: string) => {
-    console.log('Sending message (mock):', message);
+    console.log('[SOCKET] Отправка сообщения (мок):', message);
   };
   
   return (

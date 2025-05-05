@@ -54,7 +54,7 @@ const auth = {
     }
   },
 
-  // Вход через Google - упрощенная версия для надежности
+  // Вход через Google - улучшенная версия
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
       console.log("[AUTH] Начинаем вход через Google");
@@ -74,24 +74,35 @@ const auth = {
       
       console.log("[AUTH] Google провайдер создан и настроен");
       
-      // Используем signInWithPopup напрямую
+      // Используем signInWithPopup с принудительным фокусом
       const result = await signInWithPopup(firebaseAuth, provider);
-      console.log("[AUTH] Google login успешен:", result.user.uid);
-      return result.user;
       
+      if (result && result.user) {
+        console.log("[AUTH] Google login успешен:", result.user.uid);
+        return result.user;
+      } else {
+        console.error("[AUTH] Google auth вернул пустой результат");
+        throw new Error("Получен пустой результат аутентификации");
+      }
     } catch (error: any) {
       console.error("[AUTH] Ошибка при входе через Google:", error);
+      
+      // Улучшенное определение ошибок
+      if (error.code === 'auth/popup-closed-by-user') {
+        const customError = new Error("Окно авторизации было закрыто. Пожалуйста, попробуйте снова.") as DetailedAuthError;
+        customError.code = error.code;
+        customError.fullDetails = { environment: { userAgent: navigator.userAgent } };
+        throw customError;
+      }
+      
+      if (error.code === 'auth/popup-blocked') {
+        const customError = new Error("Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.") as DetailedAuthError;
+        customError.code = error.code;
+        customError.fullDetails = { environment: { userAgent: navigator.userAgent } };
+        throw customError;
+      }
+      
       const detailedError = logAuthError('Вход через Google', error);
-      
-      // Расширенный лог для отладки
-      console.error('[AUTH] Подробности ошибки Google входа:', {
-        errorCode: error.code || 'unknown',
-        errorMessage: error.message,
-        browser: navigator.userAgent,
-        domain: window.location.origin,
-        time: new Date().toISOString()
-      });
-      
       throw detailedError;
     }
   },

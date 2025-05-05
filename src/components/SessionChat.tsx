@@ -1,11 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Определяем интерфейс сообщения
 interface Message {
@@ -33,15 +35,24 @@ const SessionChat: React.FC<SessionChatProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Автоматически прокручиваем чат вниз при новых сообщениях
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // Обработка ввода сообщения
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
-  // Обработка отправки сообщения
+  // Обработка отправки сообщения с улучшенной обработкой ошибок
   const handleSendMessage = () => {
     if (inputValue.trim() === '') return;
 
@@ -57,14 +68,20 @@ const SessionChat: React.FC<SessionChatProps> = ({
     };
 
     // Добавляем в локальный массив
-    setChatMessages([...chatMessages, newMessage]);
+    setChatMessages(prev => [...prev, newMessage]);
 
-    // Отправляем через сокет, если он есть
-    if (socket) {
-      socket.emit('message', {
-        room: roomCode || sessionCode,
-        message: newMessage
-      });
+    // Отправляем через сокет, если он есть и подключен
+    if (socket && isConnected) {
+      try {
+        socket.emit('message', {
+          room: roomCode || sessionCode,
+          message: newMessage
+        });
+      } catch (error) {
+        console.error('[CHAT] Ошибка при отправке сообщения:', error);
+      }
+    } else {
+      console.log('[CHAT] Сообщение сохранено локально (нет активного соединения)');
     }
 
     // Очищаем поле ввода
@@ -80,35 +97,56 @@ const SessionChat: React.FC<SessionChatProps> = ({
 
   // Обновляем сообщения при получении новых пропсов
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages && messages.length > 0) {
       setChatMessages(messages);
     }
   }, [messages]);
 
-  // Подписываемся на события сокета
+  // Подписываемся на события сокета с улучшенной обработкой ошибок
   useEffect(() => {
     if (!socket) return;
 
     const handleIncomingMessage = (data: { message: Message }) => {
-      setChatMessages(prev => [...prev, data.message]);
+      if (data && data.message) {
+        setChatMessages(prev => [...prev, data.message]);
+      }
     };
 
-    socket.on('message', handleIncomingMessage);
+    try {
+      socket.on('message', handleIncomingMessage);
+    } catch (error) {
+      console.error('[CHAT] Ошибка при подписке на сообщения:', error);
+    }
 
     return () => {
-      socket.off('message', handleIncomingMessage);
+      try {
+        socket.off('message', handleIncomingMessage);
+      } catch (error) {
+        console.error('[CHAT] Ошибка при отписке от сообщений:', error);
+      }
     };
   }, [socket]);
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="py-3">
-        <CardTitle className="text-lg">Чат сессии</CardTitle>
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>Чат сессии</span>
+          <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow p-0 px-4">
-        <ScrollArea className="h-[350px] pr-4">
+        <ScrollArea className="h-[350px] pr-4" ref={scrollRef}>
+          {!isConnected && (
+            <Alert variant="warning" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Соединение с сервером не установлено. Сообщения сохраняются локально.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-4 pt-2">
-            {chatMessages.map((msg) => (
+            {chatMessages.length > 0 ? chatMessages.map((msg) => (
               <div
                 key={msg.id}
                 className={`p-3 rounded-lg ${
@@ -125,7 +163,11 @@ const SessionChat: React.FC<SessionChatProps> = ({
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Нет сообщений. Будьте первым, кто напишет!
+              </div>
+            )}
           </div>
         </ScrollArea>
       </CardContent>
@@ -138,7 +180,12 @@ const SessionChat: React.FC<SessionChatProps> = ({
             onKeyPress={handleKeyPress}
             className="flex-1"
           />
-          <Button onClick={handleSendMessage}>Отправить</Button>
+          <Button 
+            onClick={handleSendMessage}
+            disabled={isConnecting}
+          >
+            {isConnecting ? 'Подключение...' : 'Отправить'}
+          </Button>
         </div>
       </CardFooter>
     </Card>

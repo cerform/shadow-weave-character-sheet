@@ -13,7 +13,18 @@ import HandbookPage from './pages/HandbookPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
-import CharactersListPage from './pages/CharactersListPage'; // Добавляем импорт страницы списка персонажей
+import CharactersListPage from './pages/CharactersListPage';
+
+// Ленивая загрузка страницы игровой сессии
+const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
+const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
+
+// Компонент Fallback для ленивой загрузки
+const LazyLoading = () => (
+  <div className="flex items-center justify-center h-screen w-full">
+    <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+  </div>
+);
 
 const AppRoutes: React.FC = () => {
   return (
@@ -25,11 +36,24 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/character/:id" element={<CharacterSheetPage />} />
-      <Route path="/characters" element={<CharactersListPage />} /> {/* Добавляем маршрут для страницы персонажей */}
+      <Route path="/characters" element={<CharactersListPage />} />
       <Route path="/dm" element={<DMDashboardPage />} />
       <Route path="/battle" element={<BattleScenePage />} />
-      {/* Добавляем перенаправление с /sheet на страницу персонажа */}
-      <Route path="/sheet" element={<Navigate to="/character/:id" replace />} />
+      
+      {/* Ленивая загрузка страниц, зависящих от WebSocket */}
+      <Route path="/game/:id" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <GameRoomPage />
+        </React.Suspense>
+      } />
+      <Route path="/join-session" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <JoinSessionPage />
+        </React.Suspense>
+      } />
+      
+      {/* Перенаправления */}
+      <Route path="/sheet" element={<Navigate to="/characters" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
