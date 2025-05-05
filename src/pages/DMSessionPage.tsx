@@ -11,7 +11,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import useSessionStore from '@/stores/sessionStore';
 import { Session } from '@/types/session';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,7 +59,9 @@ interface Player {
 const DMSessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { sessions, fetchSessions, endSession, currentUser } = useSessionStore();
+  const sessionStore = useSessionStore();
+  const { sessions, fetchSessions, endSession } = sessionStore;
+  const { currentUser } = useAuth(); // Используем currentUser из useAuth вместо sessionStore
   const { isAuthenticated } = useAuth();
   const [currentSession, setCurrentSession] = useState<any | null>(null);
   const [isAddingPlayer, setIsAddingPlayer] = useState(false);

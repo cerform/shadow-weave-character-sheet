@@ -40,7 +40,11 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
       onJoined(sessionCode);
     } else {
       // Иначе пытаемся присоединиться самостоятельно
-      const character = { name: "Игрок" };
+      const character = { 
+        name: "Игрок",
+        character: {} // Добавляем пустой объект character, чтобы соответствовать требуемому типу
+      };
+      
       const joined = sessionStore.joinSession(sessionCode, character);
       
       if (joined) {
