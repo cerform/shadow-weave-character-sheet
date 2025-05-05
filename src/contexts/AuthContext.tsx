@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
@@ -14,7 +15,7 @@ const defaultAuthContext: AuthContextType = {
   signup: async () => {},
   register: async () => {},
   logout: async () => {},
-  googleLogin: async () => null, // Изменено на null в соответствии с типом
+  googleLogin: async () => null, // Возвращает null при ошибке или редиректе
   isAuthenticated: false,
   updateProfile: async () => {}
 };
@@ -217,12 +218,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Функция для входа через Google - обновлена с правильным типом возвращаемого значения
+  // Обновленная функция для входа через Google с поддержкой redirect
   const googleLogin = async (): Promise<UserType | null> => {
     try {
       setLoading(true);
       console.log("Attempting Google login");
       const userCredential = await firebaseAuth.loginWithGoogle();
+      
+      // Если был выполнен редирект, управление не дойдет до этой точки
+      // Если попап был успешным, обрабатываем результат
       if (userCredential) {
         console.log("Google login successful", userCredential);
         // Получаем дополнительные данные из Firestore
@@ -251,6 +255,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         return transformedUser;
       }
+      
+      // Если был выполнен редирект или произошла ошибка
       return null;
     } catch (err) {
       console.error("Google login error:", err);

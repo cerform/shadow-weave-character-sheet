@@ -4,13 +4,13 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
   setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
+  browserLocalPersistence
 } from 'firebase/auth';
 import { app } from './config';
 import { logAuthError, DetailedAuthError } from './error-utils';
@@ -26,6 +26,13 @@ setPersistence(firebaseAuth, browserLocalPersistence)
   .catch((error) => {
     console.error('[AUTH] Ошибка при установке persistence:', error);
   });
+
+// Создание провайдера Google
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+  hl: 'ru'
+});
 
 // Функции для аутентификации
 const auth = {
@@ -54,54 +61,28 @@ const auth = {
     }
   },
 
-  // Вход через Google - улучшенная версия
+  // Вход через Google с поддержкой redirect при ошибке popup
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
-      console.log("[AUTH] Начинаем вход через Google");
+      console.log("[AUTH] Начинаем вход через Google с popup");
       
-      // Создаем новый экземпляр провайдера для каждого вызова
-      const provider = new GoogleAuthProvider();
-      
-      // Настраиваем параметры
-      provider.setCustomParameters({
-        prompt: 'select_account',
-        hl: 'ru'
-      });
-      
-      // Добавляем необходимые области доступа
-      provider.addScope('profile');
-      provider.addScope('email');
-      
-      console.log("[AUTH] Google провайдер создан и настроен");
-      
-      // Используем signInWithPopup с принудительным фокусом
-      const result = await signInWithPopup(firebaseAuth, provider);
-      
-      if (result && result.user) {
-        console.log("[AUTH] Google login успешен:", result.user.uid);
-        return result.user;
-      } else {
-        console.error("[AUTH] Google auth вернул пустой результат");
-        throw new Error("Получен пустой результат аутентификации");
+      try {
+        // Сначала пытаемся использовать popup
+        const popupResult = await signInWithPopup(firebaseAuth, googleProvider);
+        console.log("[AUTH] Google popup успешен:", popupResult.user?.uid);
+        return popupResult.user;
+      } catch (popupError: any) {
+        // Если popup заблокирован или возникла ошибка
+        console.warn("[AUTH] Popup заблокирован или возникла ошибка, пробуем redirect:", popupError);
+        
+        // Перенаправляем на страницу аутентификации Google
+        console.log("[AUTH] Переключаемся на метод redirect");
+        await signInWithRedirect(firebaseAuth, googleProvider);
+        // Здесь управление не вернется, так как произойдет редирект
+        return null;
       }
     } catch (error: any) {
-      console.error("[AUTH] Ошибка при входе через Google:", error);
-      
-      // Улучшенное определение ошибок
-      if (error.code === 'auth/popup-closed-by-user') {
-        const customError = new Error("Окно авторизации было закрыто. Пожалуйста, попробуйте снова.") as DetailedAuthError;
-        customError.code = error.code;
-        customError.fullDetails = { environment: { userAgent: navigator.userAgent } };
-        throw customError;
-      }
-      
-      if (error.code === 'auth/popup-blocked') {
-        const customError = new Error("Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.") as DetailedAuthError;
-        customError.code = error.code;
-        customError.fullDetails = { environment: { userAgent: navigator.userAgent } };
-        throw customError;
-      }
-      
+      console.error("[AUTH] Общая ошибка при входе через Google:", error);
       const detailedError = logAuthError('Вход через Google', error);
       throw detailedError;
     }
