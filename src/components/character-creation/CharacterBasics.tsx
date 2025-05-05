@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Character } from '@/types/character';
-import NavigationButtons from './NavigationButtons';
 
 interface CharacterBasicsProps {
   character: Character;
@@ -16,23 +15,22 @@ interface CharacterBasicsProps {
 const CharacterBasics: React.FC<CharacterBasicsProps> = ({ 
   character, 
   onUpdate,
-  nextStep = () => {},
-  prevStep = () => {}
 }) => {
   const [name, setName] = useState(character.name || '');
   const [gender, setGender] = useState(character.gender || '');
   const [alignment, setAlignment] = useState(character.alignment || '');
 
-  const handleNext = () => {
-    onUpdate({ name, gender, alignment });
-    nextStep();
+  // Обработчик для автоматического сохранения данных при изменении
+  const handleInputChange = (field: string, value: string) => {
+    if (field === 'name') setName(value);
+    if (field === 'gender') setGender(value);
+    if (field === 'alignment') setAlignment(value);
+    
+    onUpdate({ [field]: value });
   };
-
-  const canProceed = name.trim() !== '';
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Основная информация</h2>
       <Card>
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-2">
@@ -41,7 +39,7 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
               id="name"
               placeholder="Введите имя персонажа"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleInputChange('name', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -50,7 +48,7 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
               id="gender"
               className="w-full p-2 border rounded bg-background text-foreground"
               value={gender}
-              onChange={(e) => setGender(e.target.value)}
+              onChange={(e) => handleInputChange('gender', e.target.value)}
             >
               <option value="">Выберите пол</option>
               <option value="Мужской">Мужской</option>
@@ -64,7 +62,7 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
               id="alignment"
               className="w-full p-2 border rounded bg-background text-foreground"
               value={alignment}
-              onChange={(e) => setAlignment(e.target.value)}
+              onChange={(e) => handleInputChange('alignment', e.target.value)}
             >
               <option value="">Выберите мировоззрение</option>
               <option value="Законопослушный Добрый">Законопослушный Добрый</option>
@@ -80,15 +78,6 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      {(nextStep || prevStep) && (
-        <NavigationButtons
-          allowNext={canProceed}
-          nextStep={handleNext}
-          prevStep={prevStep}
-          isFirstStep={true}
-        />
-      )}
     </div>
   );
 };

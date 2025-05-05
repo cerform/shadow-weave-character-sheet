@@ -4,9 +4,7 @@ import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useLocation } from 'react-router-dom';
 
 const AppDiceButton: React.FC = () => {
-  const location = useLocation();
-  
-  // Показываем кнопку на всех страницах
+  // Убираем проверку маршрута, чтобы кнопка была доступна на всех страницах
   return <FloatingDiceButton />;
 };
 

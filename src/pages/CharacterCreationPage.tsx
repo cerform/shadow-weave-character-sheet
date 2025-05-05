@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +21,7 @@ import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { createCharacter } from '@/lib/supabase';
 import { getCurrentUid } from '@/utils/authHelpers';
-import NavigationButtons from '@/components/ui/NavigationButtons';
+import NavigationButtons from '@/components/character-creation/NavigationButtons';
 import ThemeSelector from '@/components/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
@@ -113,6 +112,24 @@ const CharacterCreationPage: React.FC = () => {
     hasSubraces: Boolean(subracesForRace?.length),
     isMagicClass: isMagicClass()
   });
+
+  // Проверка, можно ли перейти к следующему шагу
+  const canProceedToNextStep = () => {
+    switch (visibleSteps[currentStep]?.id) {
+      case 'basics':
+        return !!character.name?.trim();
+      case 'race':
+        return !!character.race;
+      case 'subrace':
+        return !hasSubraces || !!character.subrace;
+      case 'class':
+        return !!character.class;
+      default:
+        return true;
+    }
+  };
+
+  const hasSubraces = Boolean(subracesForRace?.length);
 
   const renderStepContent = () => {
     switch (visibleSteps[currentStep]?.id) {
@@ -213,7 +230,6 @@ const CharacterCreationPage: React.FC = () => {
           </h1>
           
           <div className="flex space-x-2">
-            <NavigationButtons />
             <ThemeSelector />
           </div>
         </div>
@@ -234,43 +250,14 @@ const CharacterCreationPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <div className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={prevStep} 
-            disabled={currentStep === 0}
-            style={{ 
-              borderColor: currentTheme.accent,
-              color: currentTheme.textColor,
-              boxShadow: `0 0 5px ${currentTheme.accent}30`
-            }}
-          >
-            Назад
-          </Button>
-          
-          {currentStep < visibleSteps.length - 1 ? (
-            <Button 
-              onClick={nextStep}
-              style={{ 
-                backgroundColor: currentTheme.accent,
-                color: '#FFFFFF'
-              }}
-            >
-              Далее
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleSaveCharacter} 
-              disabled={isLoading}
-              style={{ 
-                backgroundColor: currentTheme.accent,
-                color: '#FFFFFF'
-              }}
-            >
-              {isLoading ? "Сохранение..." : "Сохранить персонажа"}
-            </Button>
-          )}
-        </div>
+        <NavigationButtons
+          allowNext={canProceedToNextStep()}
+          nextStep={currentStep < visibleSteps.length - 1 ? nextStep : handleSaveCharacter}
+          prevStep={prevStep}
+          isFirstStep={currentStep === 0}
+          nextLabel={currentStep < visibleSteps.length - 1 ? "Далее" : "Сохранить персонажа"}
+          disableNext={currentStep === visibleSteps.length - 1 && isLoading}
+        />
       </div>
       
       <FloatingDiceButton />

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -31,6 +31,9 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const { theme, themeStyles } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themeStyles || themes[themeKey] || themes.default;
+
+  // Определяем иконку для кнопки "Далее"
+  const NextIcon = nextLabel.toLowerCase().includes('сохранить') ? Save : ChevronRight;
   
   return (
     <div className="flex justify-between mt-6">
@@ -58,7 +61,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         }}
       >
         {nextLabel}
-        <ChevronRight className="ml-2 h-4 w-4" />
+        <NextIcon className="ml-2 h-4 w-4" />
       </Button>
     </div>
   );
