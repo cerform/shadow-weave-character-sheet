@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,7 @@ import { themes } from '@/lib/themes';
 
 export const ThemeSelector = () => {
   const { setUserTheme, activeTheme } = useUserTheme();
-  const { theme, setTheme, themeStyles } = useTheme();
+  const { theme, setTheme } = useTheme();
   
   // Получаем список тем в формате массива объектов
   const themesList = useMemo(() => [
@@ -25,36 +26,55 @@ export const ThemeSelector = () => {
     { name: "bard", label: "Бард" },
   ], []);
 
-  // Получаем текущую тему из контекстов - мемоизируем для предотвращения мерцания
+  // Получаем текущую тему из контекстов и определяем стили
   const currentThemeId = useMemo(() => activeTheme || theme || 'default', [activeTheme, theme]);
-  const currentTheme = useMemo(() => themeStyles || themes[currentThemeId as keyof typeof themes] || themes.default, [themeStyles, currentThemeId]);
+  const currentTheme = useMemo(() => themes[currentThemeId as keyof typeof themes] || themes.default, [currentThemeId]);
   
-  // Кешируем стили для предотвращения мерцания
-  const accentColor = useMemo(() => currentTheme.accent, [currentTheme]);
-  
-  // Синхронизируем темы между контекстами при инициализации - только один раз
+  // Синхронизируем темы между контекстами при инициализации
   useEffect(() => {
     if (activeTheme && theme !== activeTheme) {
       setTheme(activeTheme);
+      // Явно применяем CSS-переменные
+      applyThemeToDom(activeTheme);
     }
-  }, []); // Запускаем только при монтировании
+  }, []);
+  
+  // Функция для применения темы к DOM
+  const applyThemeToDom = useCallback((themeName: string) => {
+    const selectedTheme = themes[themeName as keyof typeof themes] || themes.default;
+    
+    document.documentElement.setAttribute('data-theme', themeName);
+    document.body.className = '';
+    document.body.classList.add(`theme-${themeName}`);
+    
+    // Установка CSS-переменных
+    document.documentElement.style.setProperty('--background', selectedTheme.background);
+    document.documentElement.style.setProperty('--foreground', selectedTheme.foreground);
+    document.documentElement.style.setProperty('--primary', selectedTheme.primary);
+    document.documentElement.style.setProperty('--accent', selectedTheme.accent);
+    document.documentElement.style.setProperty('--text', selectedTheme.textColor);
+    document.documentElement.style.setProperty('--card-bg', selectedTheme.cardBackground);
+    
+    console.log('Тема применена к DOM:', themeName);
+  }, []);
 
-  // Обработчик переключения тем - мемоизируем для стабильности
+  // Обработчик переключения тем
   const handleThemeChange = useCallback((themeName: string) => {
-    // Чтобы избежать лишних ререндеров, проверяем, нужно ли обновлять тему
     if (themeName === currentThemeId) return;
     
-    // Обновляем темы в обоих контекстах только если они изменились
     setUserTheme(themeName);
     setTheme(themeName);
+    
+    // Применяем тему к DOM
+    applyThemeToDom(themeName);
     
     // Сохраняем в localStorage
     localStorage.setItem('theme', themeName);
     localStorage.setItem('userTheme', themeName);
     localStorage.setItem('dnd-theme', themeName);
     
-    console.log('Switching theme to:', themeName);
-  }, [currentThemeId, setUserTheme, setTheme]);
+    console.log('Тема изменена на:', themeName);
+  }, [currentThemeId, setUserTheme, setTheme, applyThemeToDom]);
 
   return (
     <DropdownMenu>
@@ -63,13 +83,16 @@ export const ThemeSelector = () => {
           variant="ghost" 
           size="icon" 
           className="relative"
-          style={{ borderColor: accentColor }}
+          style={{ 
+            borderColor: currentTheme.accent,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+          }}
         >
           <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
           <span className="sr-only">Изменить тему</span>
           <div 
             className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-            style={{ backgroundColor: accentColor }}
+            style={{ backgroundColor: currentTheme.accent }}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -77,11 +100,11 @@ export const ThemeSelector = () => {
         align="end"
         style={{ 
           backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderColor: accentColor 
+          borderColor: currentTheme.accent,
+          color: currentTheme.textColor
         }}
       >
         {themesList.map((themeItem) => {
-          // Получаем цвета для каждой темы - кешируем для избежания мерцания
           const themeColor = themes[themeItem.name as keyof typeof themes]?.accent || themes.default.accent;
           const isActive = currentThemeId === themeItem.name;
           
@@ -91,6 +114,7 @@ export const ThemeSelector = () => {
               onClick={() => handleThemeChange(themeItem.name)}
               className={isActive ? "bg-primary/20" : ""}
               style={{ 
+                color: currentTheme.textColor,
                 borderLeft: isActive ? `3px solid ${themeColor}` : '',
                 paddingLeft: isActive ? '13px' : ''
               }}

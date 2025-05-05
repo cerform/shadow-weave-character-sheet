@@ -6,7 +6,7 @@ export interface UserType {
   photoURL?: string;
   isDM?: boolean;
   username?: string;
-  uid?: string; // Adding uid property to support CharactersListPage
+  uid?: string;
 }
 
 export interface AuthContextType {

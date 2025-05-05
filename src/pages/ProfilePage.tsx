@@ -1,12 +1,13 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Save, User, Camera } from "lucide-react";
+import { ArrowLeft, Save, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ThemeSelector from "@/components/ThemeSelector";
+import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 
@@ -28,12 +29,16 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (currentUser) {
-      setUsername(currentUser.username || "");
+      setUsername(currentUser.username || currentUser.displayName || "");
       setEmail(currentUser.email || "");
+      
       // Используем аватар из URL или генерируем на основе имени пользователя
-      setAvatarUrl(
-        `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`
-      );
+      if (currentUser.photoURL) {
+        setAvatarUrl(currentUser.photoURL);
+      } else {
+        const seed = currentUser.username || currentUser.email || Math.random().toString();
+        setAvatarUrl(`https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}`);
+      }
     }
   }, [currentUser]);
 
@@ -71,9 +76,10 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = () => {
-    if (currentUser) {
+    if (currentUser && updateProfile) {
       updateProfile({
         username,
+        photoURL: avatarUrl,
       });
       
       toast({
@@ -81,6 +87,21 @@ const ProfilePage = () => {
         description: "Ваши данные успешно сохранены",
       });
     }
+  };
+
+  // Функция для генерации случайного аватара
+  const generateRandomAvatar = () => {
+    const styles = ['adventurer', 'big-ears-neutral', 'big-smile', 'bottts', 'croodles', 'lorelei'];
+    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+    const seed = Math.random().toString(36).substring(2, 8);
+    const newAvatarUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}`;
+    
+    setAvatarUrl(newAvatarUrl);
+    
+    toast({
+      title: "Новый аватар",
+      description: "Случайный аватар сгенерирован",
+    });
   };
 
   return (
@@ -105,17 +126,18 @@ const ProfilePage = () => {
             <ArrowLeft className="h-4 w-4" />
             На главную
           </Button>
-          <ThemeSelector />
+          <IconOnlyNavigation includeThemeSelector={true} />
         </div>
 
         <div 
           className="bg-card/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6 transition-all border"
           style={{
             borderColor: `${currentTheme.accent}50`,
-            boxShadow: `0 0 15px ${currentTheme.accent}30`
+            boxShadow: `0 0 15px ${currentTheme.accent}30`,
+            backgroundColor: currentTheme.cardBackground
           }}
         >
-          <h1 className="text-2xl font-bold mb-6">Профиль пользователя</h1>
+          <h1 className="text-2xl font-bold mb-6" style={{color: currentTheme.textColor}}>Профиль пользователя</h1>
           
           <div className="flex flex-col sm:flex-row items-center gap-8 mb-8">
             {/* Аватар с возможностью drag-n-drop */}
@@ -152,29 +174,44 @@ const ProfilePage = () => {
                 accept="image/*"
                 onChange={handleFileUpload}
               />
-              <p className="text-xs text-center mt-2 text-muted-foreground">
-                Нажмите или перетащите изображение
-              </p>
+              <div className="flex flex-col gap-2 mt-4">
+                <p className="text-xs text-center mt-2 text-muted-foreground">
+                  Нажмите или перетащите изображение
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={generateRandomAvatar}
+                  size="sm"
+                  style={{
+                    borderColor: currentTheme.accent,
+                    color: currentTheme.textColor
+                  }}
+                >
+                  Сгенерировать аватар
+                </Button>
+              </div>
             </div>
 
             <div className="flex-1 w-full">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Имя пользователя</label>
+                  <label className="block text-sm font-medium mb-1" style={{color: currentTheme.textColor}}>Имя пользователя</label>
                   <Input 
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full"
+                    style={{backgroundColor: 'rgba(0, 0, 0, 0.3)', color: currentTheme.textColor}}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <label className="block text-sm font-medium mb-1" style={{color: currentTheme.textColor}}>Email</label>
                   <Input 
                     type="email"
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full"
                     disabled
+                    style={{backgroundColor: 'rgba(0, 0, 0, 0.3)', color: currentTheme.textColor}}
                   />
                 </div>
               </div>
@@ -186,7 +223,8 @@ const ProfilePage = () => {
               onClick={handleSaveProfile} 
               className="flex items-center gap-2"
               style={{
-                backgroundColor: currentTheme.accent
+                backgroundColor: currentTheme.accent,
+                color: '#FFFFFF'
               }}
             >
               <Save className="h-4 w-4" />
