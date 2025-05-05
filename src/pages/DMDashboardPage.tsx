@@ -22,6 +22,7 @@ const DMDashboardPage = () => {
   const sessionStore = useSessionStore();
   const { currentUser } = useAuth();
   const [userSessions, setUserSessions] = useState<any[]>([]);
+  const [sessionsLoaded, setSessionsLoaded] = useState(false);
 
   useEffect(() => {
     if (!currentUser?.isDM) {
@@ -30,16 +31,24 @@ const DMDashboardPage = () => {
       return;
     }
 
-    // Загружаем сессии при монтировании компонента
-    const loadSessions = async () => {
-      const sessions = await sessionStore.fetchSessions();
-      // Фильтруем только сессии текущего DM
-      const filteredSessions = sessions.filter(s => s.dmId === currentUser?.id);
-      setUserSessions(filteredSessions);
-    };
+    // Загружаем сессии при монтировании компонента только если они еще не загружены
+    if (!sessionsLoaded && currentUser?.id) {
+      const loadSessions = async () => {
+        try {
+          const sessions = await sessionStore.fetchSessions();
+          // Фильтруем только сессии текущего DM
+          const filteredSessions = sessions.filter(s => s.dmId === currentUser?.id);
+          setUserSessions(filteredSessions);
+          setSessionsLoaded(true);
+        } catch (error) {
+          console.error("Ошибка загрузки сессий:", error);
+          setSessionsLoaded(true); // Помечаем как загруженные, чтобы избежать повторных запросов
+        }
+      };
 
-    loadSessions();
-  }, [currentUser, navigate, sessionStore]);
+      loadSessions();
+    }
+  }, [currentUser, navigate, sessionStore, sessionsLoaded]);
 
   const handleCreateSession = () => {
     if (!sessionName.trim()) {
@@ -53,7 +62,7 @@ const DMDashboardPage = () => {
     setSessionDescription('');
     
     // Обновляем список сессий
-    setUserSessions([...userSessions, newSession]);
+    setUserSessions(prev => [...prev, newSession]);
     
     toast.success("Сессия успешно создана!");
   };
@@ -62,7 +71,7 @@ const DMDashboardPage = () => {
     if (confirm("Вы уверены, что хотите удалить эту сессию?")) {
       sessionStore.endSession(sessionId);
       // Обновляем список сессий
-      setUserSessions(userSessions.filter(s => s.id !== sessionId));
+      setUserSessions(prev => prev.filter(s => s.id !== sessionId));
       toast.success("Сессия удалена");
     }
   };

@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 export interface Player {
   id: string;
@@ -15,6 +16,8 @@ export interface DMSession {
   players: Player[];
   createdAt: string;
   description?: string;
+  dmId?: string;
+  isActive?: boolean;
 }
 
 interface SessionContextType {
@@ -24,44 +27,71 @@ interface SessionContextType {
   joinSession: (code: string, player: { name: string, character: any }) => boolean;
   endSession: (id: string) => void;
   updateSession: (session: Partial<DMSession>) => void;
+  fetchSessions: () => Promise<DMSession[]>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
-  const [sessions, setSessions] = useState<DMSession[]>(() => {
-    const saved = localStorage.getItem('dnd-sessions');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+  const [sessions, setSessions] = useState<DMSession[]>([]);
   const [currentSession, setCurrentSession] = useState<DMSession | null>(null);
+  const [initialized, setInitialized] = useState(false);
+  const { currentUser } = useAuth();
+
+  // Загрузка сессий при инициализации
+  useEffect(() => {
+    if (!initialized) {
+      const savedSessions = localStorage.getItem('dnd-sessions');
+      if (savedSessions) {
+        setSessions(JSON.parse(savedSessions));
+      }
+      setInitialized(true);
+    }
+  }, [initialized]);
+
+  // Сохранение сессий при изменении
+  useEffect(() => {
+    if (initialized && sessions.length > 0) {
+      localStorage.setItem('dnd-sessions', JSON.stringify(sessions));
+    }
+  }, [sessions, initialized]);
 
   // Generate a random 6 character code
   const generateSessionCode = (): string => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
+  // Получение всех сессий
+  const fetchSessions = useCallback(async (): Promise<DMSession[]> => {
+    // В реальном приложении здесь был бы запрос к API
+    return Promise.resolve(sessions);
+  }, [sessions]);
+
   // Create a new DM session
-  const createSession = (name: string, description?: string): DMSession => {
+  const createSession = useCallback((name: string, description?: string): DMSession => {
+    if (!currentUser) {
+      throw new Error("Пользователь не авторизован");
+    }
+    
     const newSession: DMSession = {
       id: Date.now().toString(),
       name,
       code: generateSessionCode(),
       players: [],
       createdAt: new Date().toISOString(),
-      description
+      description,
+      dmId: currentUser.id,
+      isActive: true
     };
     
-    const updatedSessions = [...sessions, newSession];
-    setSessions(updatedSessions);
+    setSessions(prev => [...prev, newSession]);
     setCurrentSession(newSession);
-    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
     
     return newSession;
-  };
+  }, [currentUser]);
 
   // Join an existing session as a player
-  const joinSession = (code: string, player: { name: string, character: any }): boolean => {
+  const joinSession = useCallback((code: string, player: { name: string, character: any }): boolean => {
     const sessionIndex = sessions.findIndex(s => s.code === code);
     
     if (sessionIndex === -1) {
@@ -81,31 +111,29 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       players: [...session.players, newPlayer]
     };
     
-    const updatedSessions = [...sessions];
-    updatedSessions[sessionIndex] = updatedSession;
+    setSessions(prev => {
+      const updated = [...prev];
+      updated[sessionIndex] = updatedSession;
+      return updated;
+    });
     
-    setSessions(updatedSessions);
     setCurrentSession(updatedSession);
-    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
     
     return true;
-  };
+  }, [sessions]);
 
   // End a session
-  const endSession = (id: string) => {
-    const updatedSessions = sessions.filter(s => s.id !== id);
-    setSessions(updatedSessions);
+  const endSession = useCallback((id: string) => {
+    setSessions(prev => prev.filter(s => s.id !== id));
     
     if (currentSession?.id === id) {
       setCurrentSession(null);
     }
-    
-    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
-  };
+  }, [currentSession]);
 
   // Update session details
-  const updateSession = (sessionUpdate: Partial<DMSession>) => {
-    if (!currentSession || !sessionUpdate.id) return;
+  const updateSession = useCallback((sessionUpdate: Partial<DMSession>) => {
+    if (!sessionUpdate.id) return;
     
     const sessionIndex = sessions.findIndex(s => s.id === sessionUpdate.id);
     
@@ -116,13 +144,16 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       ...sessionUpdate
     };
     
-    const updatedSessions = [...sessions];
-    updatedSessions[sessionIndex] = updatedSession;
+    setSessions(prev => {
+      const updated = [...prev];
+      updated[sessionIndex] = updatedSession;
+      return updated;
+    });
     
-    setSessions(updatedSessions);
-    setCurrentSession(updatedSession);
-    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
-  };
+    if (currentSession?.id === sessionUpdate.id) {
+      setCurrentSession(updatedSession);
+    }
+  }, [sessions, currentSession]);
 
   return (
     <SessionContext.Provider
@@ -132,7 +163,8 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
         createSession,
         joinSession,
         endSession,
-        updateSession
+        updateSession,
+        fetchSessions
       }}
     >
       {children}
