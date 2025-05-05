@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { LogIn, UserPlus, AlertCircle, Info, AlertTriangle, CircleX } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
@@ -14,10 +14,21 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useConsoleLogger } from '@/hooks/use-console-logger';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AuthFormProps {
   redirectTo?: string;
+}
+
+// Интерфейс для расширенной ошибки аутентификации
+interface DetailedAuthError extends Error {
+  code?: string;
+  fullDetails?: any;
+  customData?: {
+    email?: string;
+    phoneNumber?: string;
+    tenantId?: string;
+  };
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
@@ -26,7 +37,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [displayName, setDisplayName] = useState('');
   const [isDM, setIsDM] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<DetailedAuthError | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -37,12 +49,65 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   // Очистка сообщения об ошибке при смене вкладки или успешной аутентификации
   useEffect(() => {
     setAuthError(null);
+    setDebugInfo('');
   }, [theme]);
+
+  // Функция для отображения расширенных деталей ошибки
+  const getErrorVariant = (error: DetailedAuthError | null) => {
+    if (!error) return "default";
+    
+    // Определяем вариант алерта в зависимости от кода ошибки
+    if (error.code?.includes('popup-blocked') || error.code?.includes('popup-closed')) {
+      return "warning";
+    }
+    if (error.code?.includes('unauthorized-domain') || error.code?.includes('internal-error')) {
+      return "destructive";
+    }
+    return "destructive"; // По умолчанию красный для ошибок
+  };
+
+  // Функция для получения иконки ошибки
+  const getErrorIcon = (error: DetailedAuthError | null) => {
+    if (!error) return null;
+    
+    if (error.code?.includes('popup-blocked') || error.code?.includes('popup-closed')) {
+      return <AlertTriangle className="h-4 w-4" />;
+    }
+    if (error.code?.includes('unauthorized-domain')) {
+      return <CircleX className="h-4 w-4" />;
+    }
+    return <AlertCircle className="h-4 w-4" />;
+  };
+
+  // Функция для форматирования деталей ошибки для отображения
+  const formatDebugInfo = (error: DetailedAuthError) => {
+    let info = '';
+    
+    if (error.code) {
+      info += `Код ошибки: ${error.code}\n`;
+    }
+    
+    if (error.message) {
+      info += `Сообщение: ${error.message}\n`;
+    }
+    
+    if (error.fullDetails?.environment) {
+      const env = error.fullDetails.environment;
+      info += `\nОкружение:\n`;
+      info += `Браузер: ${env.userAgent}\n`;
+      info += `Домен: ${env.domain}\n`;
+      info += `Разрешение: ${env.screenWidth}x${env.screenHeight}\n`;
+      info += `Попапы: ${env.hasPopups ? 'разрешены' : 'заблокированы'}\n`;
+    }
+    
+    return info;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
+    setDebugInfo('');
 
     try {
       logger.logInfo("Начинаем вход по email", "auth-form");
@@ -55,7 +120,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       navigate(redirectTo);
     } catch (error: any) {
       logger.logError("Ошибка при входе по email", "auth-form", error);
-      setAuthError(error.message || "Не удалось войти в систему");
+      setAuthError(error);
+      if (error.fullDetails) {
+        setDebugInfo(formatDebugInfo(error));
+      }
+      
       toast({
         title: "Ошибка входа",
         description: error.message || "Не удалось войти в систему",
@@ -80,6 +149,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     
     setIsLoading(true);
     setAuthError(null);
+    setDebugInfo('');
 
     try {
       logger.logInfo("Начинаем регистрацию", "auth-form");
@@ -92,7 +162,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       navigate(redirectTo);
     } catch (error: any) {
       logger.logError("Ошибка при регистрации", "auth-form", error);
-      setAuthError(error.message || "Не удалось зарегистрироваться");
+      setAuthError(error);
+      if (error.fullDetails) {
+        setDebugInfo(formatDebugInfo(error));
+      }
+      
       toast({
         title: "Ошибка регистрации",
         description: error.message || "Не удалось зарегистрироваться",
@@ -106,11 +180,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setAuthError(null);
+    setDebugInfo('');
 
     try {
       logger.logInfo("Начинаем вход через Google из AuthForm", "auth-form");
       logger.logInfo(`Текущее окружение: ${window.location.origin}`, "auth-env");
       logger.logInfo(`User Agent: ${navigator.userAgent}`, "auth-env");
+      
+      // Логируем дополнительную информацию о состоянии браузера
+      logger.logInfo(`Поддержка попапов: ${typeof window.open === 'function'}`, "auth-env");
+      logger.logInfo(`Размер окна: ${window.innerWidth}x${window.innerHeight}`, "auth-env");
+      logger.logInfo(`Экран: ${window.screen.width}x${window.screen.height}`, "auth-env");
+      logger.logInfo(`Браузер мобильный: ${/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)}`, "auth-env");
       
       const result = await googleLogin();
       logger.logInfo("Результат входа через Google:", "auth-form");
@@ -125,7 +206,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         navigate(redirectTo);
       } else {
         logger.logWarning("Вход через Google вернул null результат", "auth-form");
-        setAuthError("Вход через Google не был завершен");
+        const nullError = new Error("Вход через Google не был завершен") as DetailedAuthError;
+        nullError.code = "auth/login-cancelled";
+        setAuthError(nullError);
+        setDebugInfo("Google авторизация вернула null. Это может означать, что процесс авторизации был прерван или произошла ошибка в Firebase.");
+        
         toast({
           title: "Вход не завершен",
           description: "Вход через Google не был завершен",
@@ -134,8 +219,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       }
     } catch (error: any) {
       logger.logError("Ошибка при входе через Google", "auth-form", error);
+      setAuthError(error);
+      
+      // Сохраняем расширенную отладочную информацию
+      if (error.fullDetails) {
+        setDebugInfo(formatDebugInfo(error));
+      } else {
+        setDebugInfo(`Код ошибки: ${error.code || 'неизвестно'}\nСообщение: ${error.message || 'неизвестно'}`);
+      }
+      
       const errorMsg = error.message || "Не удалось войти через Google";
-      setAuthError(errorMsg);
       toast({
         title: "Ошибка входа",
         description: errorMsg,
@@ -164,9 +257,49 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         {/* Отображение ошибки аутентификации, если есть */}
         {authError && (
           <div className="p-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{authError}</AlertDescription>
+            <Alert 
+              variant={getErrorVariant(authError)}
+              icon={getErrorIcon(authError)}
+              className="mb-4 text-left"
+            >
+              <AlertTitle className="text-md">
+                {authError.code === 'auth/popup-blocked' 
+                  ? 'Всплывающее окно заблокировано' 
+                  : authError.code === 'auth/unauthorized-domain'
+                    ? 'Неавторизованный домен'
+                    : 'Ошибка авторизации'}
+              </AlertTitle>
+              <AlertDescription className="mt-2">{authError.message}</AlertDescription>
+              
+              {/* Подробности ошибки для отладки */}
+              {debugInfo && (
+                <div className="mt-4 text-xs bg-black/30 p-2 rounded-md overflow-auto max-h-40">
+                  <details>
+                    <summary className="cursor-pointer font-medium">Подробная информация об ошибке</summary>
+                    <pre className="mt-2 whitespace-pre-wrap">{debugInfo}</pre>
+                  </details>
+                </div>
+              )}
+              
+              {/* Советы по устранению ошибок */}
+              {authError.code === 'auth/popup-blocked' && (
+                <div className="mt-3 text-sm">
+                  <strong>Рекомендации:</strong>
+                  <ul className="list-disc list-inside mt-1">
+                    <li>Разрешите всплывающие окна для этого сайта</li>
+                    <li>Отключите блокировщики рекламы для этого сайта</li>
+                    <li>Попробуйте использовать режим инкогнито</li>
+                  </ul>
+                </div>
+              )}
+              
+              {authError.code === 'auth/unauthorized-domain' && (
+                <div className="mt-3 text-sm">
+                  <strong>Рекомендации:</strong>
+                  <p>Домен {window.location.origin} не авторизован в Firebase. 
+                  Администратору необходимо добавить этот домен в список авторизованных доменов в консоли Firebase.</p>
+                </div>
+              )}
             </Alert>
           </div>
         )}
@@ -390,6 +523,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               </svg>
               {isLoading ? "Авторизация..." : "Регистрация с Google"}
             </Button>
+            
+            {/* Информация о возможных причинах ошибок */}
+            <Alert variant="info" className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                Если у вас возникают проблемы с входом через Google:
+                <ul className="list-disc list-inside mt-1">
+                  <li>Убедитесь, что в вашем браузере разрешены всплывающие окна</li>
+                  <li>Отключите блокировщики рекламы</li>
+                  <li>Попробуйте использовать другой браузер</li>
+                  <li>При входе не закрывайте всплывающее окно Google</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </TabsContent>
         

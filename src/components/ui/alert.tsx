@@ -1,6 +1,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { AlertCircle, Info } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -12,6 +13,10 @@ const alertVariants = cva(
         default: "bg-background text-foreground",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        warning: 
+          "border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 [&>svg]:text-yellow-500",
+        info:
+          "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500",
       },
     },
     defaultVariants: {
@@ -20,16 +25,26 @@ const alertVariants = cva(
   }
 )
 
+interface AlertProps extends React.HTMLAttributes<HTMLDivElement>,
+  VariantProps<typeof alertVariants> {
+  icon?: React.ReactNode;
+}
+
 const Alert = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
->(({ className, variant, ...props }, ref) => (
+  AlertProps
+>(({ className, variant, children, icon, ...props }, ref) => (
   <div
     ref={ref}
     role="alert"
     className={cn(alertVariants({ variant }), className)}
     {...props}
-  />
+  >
+    {icon && icon}
+    {!icon && variant === "destructive" && <AlertCircle className="h-4 w-4" />}
+    {!icon && variant === "info" && <Info className="h-4 w-4" />}
+    {children}
+  </div>
 ))
 Alert.displayName = "Alert"
 
