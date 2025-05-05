@@ -146,4 +146,3 @@ export interface Character {
 export interface CharacterSheet extends Character {
   // Additional properties for character sheet if needed
 }
-

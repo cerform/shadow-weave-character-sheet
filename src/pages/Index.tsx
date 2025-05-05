@@ -33,7 +33,7 @@ const Index = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { character } = useCharacter();
   
-  // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
+  // Загружаем персонажей пользов��теля только при монтировании компонента или изменении авторизации
   useEffect(() => {
     const fetchCharacters = async () => {
       console.log("Index: Загружаем список персонажей");
@@ -134,23 +134,41 @@ const Index = () => {
   const cardStyle = {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderColor: currentTheme.accent,
-    boxShadow: currentTheme.glow,
+    borderWidth: '2px',
+    boxShadow: `0 0 20px ${currentTheme.accent}80`,
     transition: 'all 0.3s ease'
+  };
+
+  // Стили для кнопок действий
+  const primaryButtonStyle = {
+    background: `linear-gradient(45deg, ${currentTheme.accent} 0%, ${currentTheme.accent}80 100%)`,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+    boxShadow: `0 4px 15px ${currentTheme.accent}50`,
+    border: 'none',
+    transition: 'all 0.3s ease'
+  };
+
+  // Стили для кнопок действий при наведении
+  const hoverEffect = {
+    transform: 'translateY(-3px)',
+    boxShadow: `0 7px 20px ${currentTheme.accent}70`
   };
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
         <header className="text-center mb-6">
-          <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
-          <h2 className="text-2xl text-muted-foreground mb-4">Создай своего героя</h2>
+          <h1 className="text-4xl font-bold mb-2 text-shadow-lg animate-fade-in">Dungeons & Dragons 5e</h1>
+          <h2 className="text-2xl text-muted-foreground mb-4 animate-fade-in" style={{animationDelay: '0.2s'}}>Создай своего героя</h2>
           <div className="flex justify-center">
             <ThemeSelector />
           </div>
         </header>
         
         {/* Секция авторизации */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 animate-fade-in" style={{animationDelay: '0.3s'}}>
           {isAuthenticated ? (
             <div className="flex flex-col items-center">
               <Avatar className="h-16 w-16 mb-2">
@@ -181,7 +199,7 @@ const Index = () => {
 
         <main className="max-w-6xl mx-auto">
           {/* Заголовки разделов в одну строку с отступами */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mb-6 animate-fade-in" style={{animationDelay: '0.4s'}}>
             <h3 className="text-2xl font-bold">Игрок</h3>
             <h3 className="text-2xl font-bold mt-6 md:mt-0">Мастер Подземелий</h3>
           </div>
@@ -191,10 +209,19 @@ const Index = () => {
             {/* Колонка игрока */}
             <div className="grid grid-cols-1 gap-4">
               <Card 
-                className="backdrop-blur-sm transition-shadow" 
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow hover:shadow-2xl relative overflow-hidden animate-fade-in" 
+                style={{...cardStyle, animationDelay: '0.5s'}}
               >
-                <CardHeader>
+                {/* Добавляем декоративный элемент в углу карточки */}
+                <div 
+                  className="absolute -top-10 -right-10 w-20 h-20 rounded-full bg-gradient-to-br" 
+                  style={{
+                    background: `radial-gradient(circle, ${currentTheme.accent}30 0%, transparent 70%)`,
+                    zIndex: 0
+                  }}
+                ></div>
+                
+                <CardHeader className="relative z-10">
                   <CardTitle className="flex items-center gap-2">
                     <User className="size-5" />
                     Персонаж
@@ -203,15 +230,34 @@ const Index = () => {
                     Создайте или управляйте персонажами
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button asChild className="w-full gap-2">
+                <CardContent className="space-y-4 relative z-10">
+                  <Button 
+                    asChild 
+                    className="w-full gap-2 transition-all hover:translate-y-[-3px]"
+                    style={primaryButtonStyle}
+                    onMouseOver={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = hoverEffect.transform;
+                      target.style.boxShadow = hoverEffect.boxShadow;
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = primaryButtonStyle.boxShadow;
+                    }}
+                  >
                     <Link to="/character-creation">
                       <Plus className="size-4" />
                       Создать персонажа
                     </Link>
                   </Button>
                   
-                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById("character-file")?.click()} 
+                    className="w-full gap-2 border-2 hover:bg-black/50 transition-all hover:translate-y-[-2px]"
+                    style={{borderColor: currentTheme.accent}}
+                  >
                     <FileUp className="size-4" />
                     Загрузить персонажа (JSON)
                   </Button>
@@ -226,7 +272,8 @@ const Index = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setPdfImportDialogOpen(true)}
-                    className="w-full gap-2"
+                    className="w-full gap-2 border-2 hover:bg-black/50 transition-all hover:translate-y-[-2px]"
+                    style={{borderColor: currentTheme.accent}}
                   >
                     <FileUp className="size-4" />
                     Импорт из PDF
@@ -235,10 +282,19 @@ const Index = () => {
               </Card>
               
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow hover:shadow-2xl relative overflow-hidden animate-fade-in" 
+                style={{...cardStyle, animationDelay: '0.6s'}}
               >
-                <CardHeader>
+                {/* Добавляем декоративную полосу внизу карточки */}
+                <div 
+                  className="absolute bottom-0 left-0 h-1 w-full" 
+                  style={{
+                    background: `linear-gradient(90deg, transparent 0%, ${currentTheme.accent} 50%, transparent 100%)`,
+                    opacity: 0.7
+                  }}
+                ></div>
+                
+                <CardHeader className="relative z-10">
                   <CardTitle className="flex items-center gap-2">
                     <Swords className="size-5" />
                     Играть
@@ -248,7 +304,21 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full transition-all hover:translate-y-[-3px]"
+                    style={primaryButtonStyle}
+                    onMouseOver={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = hoverEffect.transform;
+                      target.style.boxShadow = hoverEffect.boxShadow;
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = primaryButtonStyle.boxShadow;
+                    }}
+                  >
                     <Link to="/join">
                       Присоединиться к сессии
                     </Link>
@@ -260,10 +330,15 @@ const Index = () => {
             {/* Колонка мастера */}
             <div className="grid grid-cols-1 gap-4">
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow hover:shadow-2xl relative overflow-hidden animate-fade-in" 
+                style={{...cardStyle, animationDelay: '0.7s'}}
               >
-                <CardHeader>
+                {/* Добавляем световой эффект в верхнем левом углу */}
+                <div 
+                  className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#ffffff10] to-transparent rounded-full transform translate-x-[-50%] translate-y-[-50%] opacity-30"
+                ></div>
+                
+                <CardHeader className="relative z-10">
                   <CardTitle className="flex items-center gap-2">
                     <Users className="size-5" />
                     Управление сессиями
@@ -273,7 +348,21 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full transition-all hover:translate-y-[-3px]"
+                    style={primaryButtonStyle}
+                    onMouseOver={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = hoverEffect.transform;
+                      target.style.boxShadow = hoverEffect.boxShadow;
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = primaryButtonStyle.boxShadow;
+                    }}
+                  >
                     <Link to="/dm">
                       Панель мастера
                     </Link>
@@ -283,10 +372,13 @@ const Index = () => {
 
               {/* Две отдельные карточки для Руководства и Книги заклинаний */}
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow hover:shadow-2xl relative overflow-hidden animate-fade-in" 
+                style={{...cardStyle, animationDelay: '0.8s'}}
               >
-                <CardHeader>
+                {/* Декоративный элемент для карточки руководства */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#ffffff05] to-transparent opacity-50"></div>
+                
+                <CardHeader className="relative z-10">
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="size-5" />
                     Руководство игрока
@@ -296,7 +388,21 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full transition-all hover:translate-y-[-3px]"
+                    style={primaryButtonStyle}
+                    onMouseOver={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = hoverEffect.transform;
+                      target.style.boxShadow = hoverEffect.boxShadow;
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = primaryButtonStyle.boxShadow;
+                    }}
+                  >
                     <Link to="/handbook">
                       Открыть руководство
                     </Link>
@@ -305,10 +411,21 @@ const Index = () => {
               </Card>
               
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow hover:shadow-2xl relative overflow-hidden animate-fade-in" 
+                style={{...cardStyle, animationDelay: '0.9s'}}
               >
-                <CardHeader>
+                {/* Добавляем магическую анимацию для книги заклинаний */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div 
+                    className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br opacity-20"
+                    style={{ 
+                      background: `radial-gradient(circle at 50% 50%, ${currentTheme.accent}30, transparent 70%)`,
+                      animation: 'pulse 3s infinite ease-in-out'
+                    }}
+                  ></div>
+                </div>
+                
+                <CardHeader className="relative z-10">
                   <CardTitle className="flex items-center gap-2">
                     <Book className="size-5" />
                     Книга заклинаний
@@ -318,7 +435,21 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full transition-all hover:translate-y-[-3px]"
+                    style={primaryButtonStyle}
+                    onMouseOver={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = hoverEffect.transform;
+                      target.style.boxShadow = hoverEffect.boxShadow;
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.currentTarget;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = primaryButtonStyle.boxShadow;
+                    }}
+                  >
                     <Link to="/spellbook">
                       Открыть книгу заклинаний
                     </Link>
@@ -329,8 +460,8 @@ const Index = () => {
           </div>
 
           {/* Раздел "Недавние персонажи" */}
-          <div>
-            <h3 className="text-xl font-semibold mb-4">
+          <div className="animate-fade-in" style={{animationDelay: '1s'}}>
+            <h3 className="text-xl font-bold mb-4">
               {isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}
             </h3>
             

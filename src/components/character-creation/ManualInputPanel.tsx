@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
+// Удалим импорт ABILITY_SCORE_CAPS из типов
 interface ManualInputPanelProps {
   abilityScores: {
     strength: number;
