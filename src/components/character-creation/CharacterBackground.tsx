@@ -29,6 +29,19 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
     updateFunction({ background: backgroundName });
   };
 
+  // Функция для корректной обработки различных форматов данных
+  const formatArrayOrString = (value: unknown): string => {
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    } else if (typeof value === 'string') {
+      return value;
+    } else if (value === null || value === undefined) {
+      return 'Нет';
+    } else {
+      return String(value);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Выберите предысторию персонажа</h2>
@@ -50,13 +63,13 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
               
               <div className="mt-4 text-sm">
                 <div className="font-medium">Навыки:</div>
-                <p>{background.proficiencies?.skills?.join(', ')}</p>
+                <p>{formatArrayOrString(background.proficiencies?.skills)}</p>
                 
                 <div className="font-medium mt-2">Инструменты:</div>
-                <p>{background.proficiencies?.tools?.join(', ') || 'Нет'}</p>
+                <p>{formatArrayOrString(background.proficiencies?.tools)}</p>
                 
                 <div className="font-medium mt-2">Языки:</div>
-                <p>{background.proficiencies?.languages?.join(', ') || 'Нет'}</p>
+                <p>{formatArrayOrString(background.proficiencies?.languages)}</p>
               </div>
             </CardContent>
           </Card>
