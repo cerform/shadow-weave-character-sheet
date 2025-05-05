@@ -34,7 +34,10 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
 
   const handleRaceChange = (raceName: string) => {
     setSelectedRace(raceName);
-    updateCharacter({ race: raceName, subrace: '' }); // Сбрасываем подрасу при смене расы
+    // Удаляем "Вариант человека" из списка рас, так как он теперь является подрасой
+    if (raceName !== "Вариант человека") {
+      updateCharacter({ race: raceName, subrace: '' }); // Сбрасываем подрасу при смене расы
+    }
   };
 
   // Получаем описание расы

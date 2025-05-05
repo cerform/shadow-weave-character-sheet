@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import NavigationButtons from './NavigationButtons';
 import SectionHeader from '@/components/ui/section-header';
 import { SelectionCard, SelectionCardGrid } from '@/components/ui/selection-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/hooks/use-toast';
 
 // Интерфейс для предыстории
 interface Background {
@@ -46,6 +47,17 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
   const [selectedBackground, setSelectedBackground] = useState<string>(character.background || '');
   const [activeTab, setActiveTab] = useState<string>('description');
 
+  // Проверяем, есть ли предыстории
+  useEffect(() => {
+    if (!backgrounds || backgrounds.length === 0) {
+      toast({
+        title: "Ошибка загрузки предысторий",
+        description: "Не удалось загрузить список предысторий. Пожалуйста, попробуйте позже.",
+        variant: "destructive"
+      });
+    }
+  }, [backgrounds]);
+
   // Найдем выбранную предысторию
   const currentBackground = backgrounds.find(bg => bg.name === selectedBackground);
 
@@ -62,6 +74,20 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
       const updates: Partial<Character> = {
         background: selectedBackground,
       };
+
+      // Добавим владение навыками из предыстории
+      if (currentBackground && currentBackground.proficiencies.skills.length > 0) {
+        const proficiencyUpdates = [...(character.proficiencies || [])];
+        
+        // Добавляем навыки из предыстории, если их ещё нет
+        currentBackground.proficiencies.skills.forEach(skill => {
+          if (!proficiencyUpdates.includes(skill)) {
+            proficiencyUpdates.push(skill);
+          }
+        });
+        
+        updates.proficiencies = proficiencyUpdates;
+      }
 
       // Обновляем данные персонажа
       onUpdate(updates);

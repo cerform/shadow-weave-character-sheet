@@ -1,66 +1,129 @@
 
-import React, { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dices } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { PlayerDicePanel } from '@/components/character-sheet/PlayerDicePanel';
-import { useUserTheme } from '@/hooks/use-user-theme';
+import { DiceRollModal } from './DiceRollModal';
 
-export const FloatingDiceButton = () => {
+interface Position {
+  x: number;
+  y: number;
+}
+
+const FloatingDiceButton: React.FC = () => {
+  const { themeStyles } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const { theme } = useTheme();
-  const { activeTheme } = useUserTheme();
-  
-  // Используем активную тему с запасным вариантом
-  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
-  const handleButtonClick = useCallback((e: React.MouseEvent) => {
-    // Предотвращаем стандартное поведение браузера
-    if (e && e.preventDefault) e.preventDefault();
-    if (e && e.stopPropagation) e.stopPropagation();
+  const [position, setPosition] = useState<Position>({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
+  const buttonRef = useRef<HTMLDivElement>(null);
+
+  // Сохраняем позицию в localStorage
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('diceButtonPosition');
+    if (savedPosition) {
+      try {
+        setPosition(JSON.parse(savedPosition));
+      } catch (e) {
+        console.error('Failed to parse saved dice button position', e);
+      }
+    }
+  }, []);
+
+  // Обновляем localStorage при изменении позиции
+  useEffect(() => {
+    if (!isDragging) {
+      localStorage.setItem('diceButtonPosition', JSON.stringify(position));
+    }
+  }, [position, isDragging]);
+
+  // Проверка и коррекция позиции, чтобы кнопка не вышла за экран
+  useEffect(() => {
+    if (buttonRef.current) {
+      const buttonWidth = buttonRef.current.offsetWidth;
+      const buttonHeight = buttonRef.current.offsetHeight;
+      
+      const maxX = window.innerWidth - buttonWidth;
+      const maxY = window.innerHeight - buttonHeight;
+      
+      if (position.x < 0 || position.x > maxX || position.y < 0 || position.y > maxY) {
+        setPosition({
+          x: Math.max(0, Math.min(position.x, maxX)),
+          y: Math.max(0, Math.min(position.y, maxY))
+        });
+      }
+    }
+  }, [position]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Добавляем обработчики событий
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
     
-    // Небольшая задержка перед открытием панели
-    setTimeout(() => {
-      setIsOpen(true);
-    }, 10);
-  }, []);
-  
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    setIsOpen(open);
-  }, []);
-  
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
-        <Button 
-          size="lg" 
-          className="rounded-full h-16 w-16 p-0 shadow-lg border-2" 
-          style={{ 
-            backgroundColor: `${currentTheme.accent}`,
-            color: '#FFFFFF',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
-          }}
-          onClick={handleButtonClick}
-        >
-          <Dices className="h-8 w-8" />
-        </Button>
-        <SheetContent side="right" className="sm:max-w-md md:max-w-lg w-[95%] bg-black/95 border-white/30 p-0 pt-4">
-          <SheetHeader className="px-6">
-            <SheetTitle className="text-white text-2xl">Кубики</SheetTitle>
-            <SheetDescription className="text-white/90 text-base">
-              Используйте виртуальные кубики для бросков
-            </SheetDescription>
-          </SheetHeader>
-          <div className="py-2 h-[calc(100vh-120px)] overflow-y-auto px-4">
-            <PlayerDicePanel />
-          </div>
-        </SheetContent>
-      </Sheet>
-    </div>
+    <>
+      <div
+        ref={buttonRef}
+        className={`fixed z-50 flex items-center justify-center p-3 rounded-full shadow-lg cursor-pointer transition-all 
+                   ${isDragging ? 'scale-110' : 'hover:scale-110'}`}
+        style={{
+          backgroundColor: themeStyles?.accent || '#8B5A2B',
+          color: '#FFFFFF',
+          boxShadow: `0 4px 12px ${themeStyles?.accent}40`,
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          touchAction: 'none',
+          cursor: isDragging ? 'grabbing' : 'grab'
+        }}
+        onClick={() => !isDragging && setIsOpen(true)}
+        onMouseDown={handleMouseDown}
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          handleMouseDown({
+            clientX: touch.clientX,
+            clientY: touch.clientY
+          } as React.MouseEvent);
+        }}
+      >
+        <Dices size={24} />
+      </div>
+
+      <DiceRollModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </>
   );
 };
 
