@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CharacterSpell } from '@/types/character';
-import { safeJoin, normalizeSpells } from '@/utils/spellUtils';
 
 interface SpellsTabProps {
   character: any;
@@ -21,21 +20,44 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const [activeTab, setActiveTab] = useState('all');
   const [expandedSpells, setExpandedSpells] = useState<string[]>([]);
 
-  // Ensure spells are in the correct format
-  const normalizedSpells = normalizeSpells(character?.spells || []);
+  // Преобразуем строки или объекты заклинаний в объекты CharacterSpell
+  const normalizeSpells = (spells: any[]): CharacterSpell[] => {
+    if (!spells || !Array.isArray(spells)) return [];
+    
+    return spells.map(spell => {
+      if (typeof spell === 'string') {
+        return {
+          name: spell,
+          level: 0,
+          prepared: false
+        };
+      }
+      return spell as CharacterSpell;
+    });
+  };
   
-  // Group spells by level
+  // Bezopasno poluchit spisok zaklinaniy iz personazha
+  const getCharacterSpells = (): CharacterSpell[] => {
+    if (!character || !character.spells) return [];
+    return normalizeSpells(character.spells);
+  };
+  
+  // Группировка заклинаний по уровню
   const spellsByLevel = React.useMemo(() => {
+    const normalizedSpells = getCharacterSpells();
+    
     return normalizedSpells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
       const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
       return acc;
     }, {});
-  }, [normalizedSpells]);
+  }, [character?.spells]);
   
-  // Filter spells based on search term and active tab
+  // Фильтрация заклинаний на основе поискового запроса и активной вкладки
   const filteredSpells = React.useMemo(() => {
+    const normalizedSpells = getCharacterSpells();
+    
     return normalizedSpells.filter(spell => {
       const matchesSearch = searchTerm === '' || 
         spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,9 +70,16 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
       
       return matchesSearch && matchesTab;
     });
-  }, [normalizedSpells, searchTerm, activeTab]);
+  }, [character?.spells, searchTerm, activeTab]);
   
-  // Toggle spell expanded state
+  // Вспомогательная функция для безопасного соединения массива или строки
+  const safeJoin = (value: string | string[] | undefined, separator: string = ', '): string => {
+    if (!value) return '';
+    if (Array.isArray(value)) return value.join(separator);
+    return value;
+  };
+  
+  // Переключение развернутого состояния заклинания
   const toggleSpellExpanded = (spellId: string) => {
     setExpandedSpells(prev => 
       prev.includes(spellId) 
@@ -59,12 +88,14 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
     );
   };
   
-  // Toggle spell prepared state
+  // Переключение подготовленного состояния заклинания
   const toggleSpellPrepared = (spellId: string | number | undefined) => {
     if (!character || !spellId) return;
     
+    const normalizedSpells = getCharacterSpells();
     const updatedSpells = normalizedSpells.map(spell => {
-      if ((spell.id?.toString() || '') === spellId.toString()) {
+      if ((spell.id?.toString() || '') === spellId.toString() || 
+          (spell.name === spellId.toString())) {
         return { ...spell, prepared: !spell.prepared };
       }
       return spell;
@@ -131,7 +162,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => toggleSpellPrepared(spell.id)}
+                  onClick={() => toggleSpellPrepared(spell.id || spell.name)}
                   title={spell.prepared ? "Убрать из подготовленных" : "Подготовить заклинание"}
                 >
                   {spell.prepared ? 
@@ -154,7 +185,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-            <Badge variant="default">{spell.school}</Badge>
+            <Badge variant="default">{spell.school || "Неизвестная школа"}</Badge>
             <span>{getSpellLevelText(spell.level)}</span>
           </div>
         </CardHeader>
@@ -172,7 +203,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
                 )}
               </>
             ) : (
-              <p className="whitespace-pre-wrap">{spell.description?.substring(0, 100)}{spell.description?.length > 100 ? '...' : ''}</p>
+              <p className="whitespace-pre-wrap">{spell.description?.substring(0, 100) || "Нет описания"}{(spell.description?.length || 0) > 100 ? '...' : ''}</p>
             )}
           </p>
           
@@ -185,6 +216,8 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   };
 
   const renderSpellsByLevel = () => {
+    const normalizedSpells = getCharacterSpells();
+    
     if (!normalizedSpells || normalizedSpells.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">

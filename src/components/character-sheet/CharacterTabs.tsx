@@ -20,7 +20,7 @@ interface CharacterTabsProps {
 export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: CharacterTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full mb-4 bg-zinc-800/40">
+      <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full mb-4 bg-zinc-800/40">
         <TabsTrigger value="abilities">Характеристики</TabsTrigger>
         <TabsTrigger value="combat">Бой</TabsTrigger>
         <TabsTrigger value="spells">Заклинания</TabsTrigger>
@@ -28,6 +28,7 @@ export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: 
         <TabsTrigger value="features">Особенности</TabsTrigger>
         <TabsTrigger value="background">Предыстория</TabsTrigger>
         <TabsTrigger value="notes">Заметки</TabsTrigger>
+        <TabsTrigger value="handbook">Справочник</TabsTrigger>
       </TabsList>
       
       <TabsContent value="abilities" className="focus-visible:outline-none">
@@ -56,6 +57,10 @@ export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: 
       
       <TabsContent value="notes" className="focus-visible:outline-none">
         <NotesTab character={character} onUpdate={onUpdate} />
+      </TabsContent>
+      
+      <TabsContent value="handbook" className="focus-visible:outline-none">
+        <HandbookTab />
       </TabsContent>
     </Tabs>
   );

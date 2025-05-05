@@ -1,22 +1,11 @@
+
 import { useState, useMemo } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
 import { spells } from '@/data/spells';
 import { SpellData } from './spellbook/types';
-
-// Update the Spell interface to match SpellData for compatibility
-interface Spell extends SpellData {
-  id: string | number;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  classes: string[];
-  description: string[] | string;
-}
+import { CharacterSpell } from '@/types/character';
+import { convertToSpellData } from './spellbook/filterUtils';
 
 export const useSpellbook = () => {
   // Состояния для фильтрации
@@ -24,7 +13,7 @@ export const useSpellbook = () => {
   const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
   const [activeClass, setActiveClass] = useState<string[]>([]);
-  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Получение текущей темы
@@ -32,8 +21,13 @@ export const useSpellbook = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Список всех заклинаний из базы данных
-  const allSpells = useMemo(() => spells, []);
+  // Преобразуем все заклинания, убедившись, что prepared есть в каждом
+  const allSpells = useMemo(() => {
+    return spells.map(spell => ({
+      ...spell,
+      prepared: spell.prepared || false // Добавляем prepared, если его нет
+    }));
+  }, []);
 
   // Извлечение уникальных значений для фильтров
   const allLevels = useMemo(() => {
@@ -47,8 +41,20 @@ export const useSpellbook = () => {
   }, [allSpells]);
 
   const allClasses = useMemo(() => {
-    const classes = Array.from(new Set(allSpells.flatMap(spell => spell.classes))).sort();
-    return classes;
+    const classesSet = new Set<string>();
+    
+    allSpells.forEach(spell => {
+      if (!spell.classes) return;
+      
+      if (Array.isArray(spell.classes)) {
+        spell.classes.forEach(c => classesSet.add(c));
+      } else if (typeof spell.classes === 'string') {
+        // Разделяем строку с классами по запятым и добавляем в Set
+        spell.classes.split(',').map(c => c.trim()).forEach(c => classesSet.add(c));
+      }
+    });
+    
+    return Array.from(classesSet).sort();
   }, [allSpells]);
 
   // Фильтрация заклинаний
@@ -66,7 +72,8 @@ export const useSpellbook = () => {
 
       // Фильтр по классам
       const classMatch = activeClass.length === 0 || 
-        spell.classes.some(cls => activeClass.includes(cls));
+        (Array.isArray(spell.classes) && spell.classes.some(cls => activeClass.includes(cls))) ||
+        (typeof spell.classes === 'string' && activeClass.some(cls => spell.classes.includes(cls)));
 
       return nameMatch && levelMatch && schoolMatch && classMatch;
     }).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
@@ -107,7 +114,7 @@ export const useSpellbook = () => {
 
   // Обработчики для модального окна с деталями заклинания
   const handleOpenSpell = (spell: SpellData) => {
-    setSelectedSpell(spell as unknown as Spell);
+    setSelectedSpell(spell);
     setIsModalOpen(true);
   };
 
@@ -147,10 +154,19 @@ export const useSpellbook = () => {
   };
 
   // Функция для форматирования списка классов
-  const formatClasses = (classes: string[]) => {
-    if (!classes || classes.length === 0) return '';
+  const formatClasses = (classes: string[] | string | undefined) => {
+    if (!classes) return '';
     
-    return classes.join(', ');
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    }
+    
+    return classes;
+  };
+
+  // Функция для конвертации CharacterSpell в SpellData (совместимость)
+  const convertCharacterSpellsToSpellData = (characterSpells: CharacterSpell[]): SpellData[] => {
+    return characterSpells.map(spell => convertToSpellData(spell));
   };
 
   return {
@@ -175,5 +191,6 @@ export const useSpellbook = () => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
+    convertCharacterSpellsToSpellData
   };
 };

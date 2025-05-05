@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 
 // Интерфейс для данных о заклинании
@@ -23,7 +24,7 @@ export interface SpellData {
   concentration?: boolean;
   higherLevel?: string;
   higherLevels?: string;
-  prepared?: boolean;
+  prepared: boolean; // Делаем обязательным полем, чтобы совпадало с CharacterSpell
 }
 
 // Интерфейс для возвращаемого значения хука useSpellbook

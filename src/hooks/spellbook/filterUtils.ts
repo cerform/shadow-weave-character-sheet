@@ -33,7 +33,7 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     ritual: spell.ritual,
     concentration: spell.concentration,
     higherLevels: spell.higherLevels,
-    prepared: spell.prepared
+    prepared: spell.prepared || false // Устанавливаем значение по умолчанию если нет
   };
 };
 
@@ -104,4 +104,19 @@ export const isString = (value: any): value is string => {
 // Проверка, является ли значение массивом строк
 export const isStringArray = (value: any): value is string[] => {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
+};
+
+// Функция безопасной проверки классов
+export const safeCheckClass = (classes: string[] | string | undefined, targetClass: string): boolean => {
+  if (!classes) return false;
+  
+  if (Array.isArray(classes)) {
+    return classes.some(c => c === targetClass || c.includes(targetClass));
+  }
+  
+  if (typeof classes === 'string') {
+    return classes.includes(targetClass);
+  }
+  
+  return false;
 };
