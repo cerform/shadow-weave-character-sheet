@@ -73,8 +73,8 @@ export default {
         },
       },
       fontFamily: {
-        philosopher: ['Philosopher', 'serif'],
-        cormorant: ['Cormorant', 'serif']
+        roboto: ['Roboto', 'sans-serif'],
+        merriweather: ['Merriweather', 'serif']
       },
       borderRadius: {
         lg: "var(--radius)",
