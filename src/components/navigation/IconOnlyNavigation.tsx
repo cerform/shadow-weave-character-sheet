@@ -8,12 +8,13 @@ import {
   Wand2, 
   LogIn, 
   BookMarked, 
-  Map
+  Map,
+  User
 } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import ThemeSelector from '@/components/ThemeSelector';
 
 interface IconOnlyNavigationProps {
@@ -47,6 +48,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         size="icon"
         asChild
         style={buttonStyle}
+        className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/">
           <Shield className="size-4" />
@@ -59,6 +61,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         size="icon"
         asChild
         style={buttonStyle}
+        className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/handbook">
           <BookMarked className="size-4" />
@@ -71,6 +74,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         size="icon"
         asChild
         style={buttonStyle}
+        className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/spellbook">
           <Scroll className="size-4" />
@@ -83,6 +87,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         size="icon"
         asChild
         style={buttonStyle}
+        className="hover:shadow-lg transition-all hover:scale-105"
       >
         <Link to="/character-creation">
           <Wand2 className="size-4" />
@@ -90,17 +95,33 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
         </Link>
       </Button>
       
-      <Button 
-        variant="outline" 
-        size="icon"
-        asChild
-        style={buttonStyle}
-      >
-        <Link to="/auth">
-          <LogIn className="size-4" />
-          <span className="sr-only">Вход/Регистрация</span>
-        </Link>
-      </Button>
+      {!currentUser ? (
+        <Button 
+          variant="outline" 
+          size="icon"
+          asChild
+          style={buttonStyle}
+          className="hover:shadow-lg transition-all hover:scale-105"
+        >
+          <Link to="/auth">
+            <LogIn className="size-4" />
+            <span className="sr-only">Вход/Регистрация</span>
+          </Link>
+        </Button>
+      ) : (
+        <Button 
+          variant="outline" 
+          size="icon"
+          asChild
+          style={buttonStyle}
+          className="hover:shadow-lg transition-all hover:scale-105"
+        >
+          <Link to="/profile">
+            <User className="size-4" />
+            <span className="sr-only">Профиль</span>
+          </Link>
+        </Button>
+      )}
       
       {isDM && (
         <Button 
@@ -108,6 +129,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
           size="icon"
           asChild
           style={buttonStyle}
+          className="hover:shadow-lg transition-all hover:scale-105"
         >
           <Link to="/dm">
             <BookOpen className="size-4" />
@@ -122,6 +144,7 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({
           size="icon"
           asChild
           style={buttonStyle}
+          className="hover:shadow-lg transition-all hover:scale-105"
         >
           <Link to="/battle">
             <Map className="size-4" />

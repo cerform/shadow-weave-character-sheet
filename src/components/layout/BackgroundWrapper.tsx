@@ -48,6 +48,11 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
     };
   }, []);
 
+  // ДЛЯ ИЗМЕНЕНИЯ ФОНА:
+  // 1. Загрузите ваше изображение в папку public/lovable-uploads
+  // 2. Замените путь в backgroundImage ниже на путь к вашему изображению
+  // 3. Вы можете использовать любое изображение формата jpg, png, svg и т.д.
+  
   return (
     <div 
       className="min-h-screen relative overflow-hidden"

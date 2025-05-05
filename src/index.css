@@ -1,91 +1,136 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Cormorant:wght@400;600&display=swap');
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Базовые стили для всех тем */
 :root {
-  --font-heading: 'Philosopher', serif;
-  --font-body: 'Cormorant', serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Глобальные стили */
-html, body {
-  font-family: var(--font-body);
-  font-size: 16px;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
-/* Улучшенные стили для книги заклинаний */
-.spellbook-heading {
-  text-shadow: 0 0 10px var(--theme-accent, rgba(0, 0, 0, 0.5));
-  font-size: 2.25rem;
-  margin-bottom: 1rem;
-  animation: glow 3s infinite alternate;
+/* Стили шрифтов */
+.font-philosopher {
+  font-family: "Philosopher", serif;
 }
 
-.spell-card {
+.font-cormorant {
+  font-family: "Cormorant", serif;
+}
+
+/* Стили для карт на главной странице */
+.btn-magic {
+  position: relative;
   transition: all 0.3s ease;
-  border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.spell-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+.btn-magic:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
 }
 
-.spell-filter-badge {
-  border-radius: 999px;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.spell-filter-badge:hover {
-  transform: scale(1.05);
-}
-
-.scroll-area-container {
-  border-radius: 0.5rem;
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 0.5rem;
+.btn-magic:hover:before {
+  left: 100%;
 }
 
 /* Анимации */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(var(--theme-accent-rgb, 157, 92, 255), 0.5); }
-  50% { box-shadow: 0 0 15px rgba(var(--theme-accent-rgb, 157, 92, 255), 0.8); }
-}
-
-.animate-glow {
-  animation: glow 2s infinite;
-}
-
-/* Новые улучшенные анимации */
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.animate-breathe {
-  animation: breathe 8s ease-in-out infinite;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -93,188 +138,28 @@ h1, h2, h3, h4, h5, h6 {
   50% { transform: translateY(-10px); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes pulse-accent {
-  0%, 100% { box-shadow: 0 0 8px var(--theme-accent, #9D5CFF); }
-  50% { box-shadow: 0 0 15px var(--theme-accent, #9D5CFF); }
-}
-
-.animate-pulse-accent {
-  animation: pulse-accent 3s infinite;
-}
-
-@keyframes magic-border {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.magic-border {
-  background: linear-gradient(90deg, var(--theme-accent, #9D5CFF), var(--theme-primary, #7E22CE), var(--theme-accent, #9D5CFF));
-  background-size: 200% 100%;
-  animation: magic-border 3s linear infinite;
-}
-
-/* Эффекты наведения для кнопок */
-.btn-magic {
+/* Стили для страницы профиля */
+.profile-header {
   position: relative;
   overflow: hidden;
-  background-color: transparent;
-  color: var(--theme-text-color, #FFFFFF);
-  border: 1px solid var(--theme-accent, #9D5CFF);
-  transition: all 0.3s ease;
 }
 
-.btn-magic:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--theme-accent, #9D5CFF)30, transparent);
-  transition: all 0.6s ease;
-}
-
-.btn-magic:hover:before {
-  left: 100%;
-}
-
-.btn-magic:hover {
-  box-shadow: 0 0 10px var(--theme-accent, #9D5CFF);
-  transform: translateY(-2px);
-}
-
-/* Стили для панели фильтров */
-.filter-panel {
-  border-radius: 0.5rem;
-  overflow: hidden;
-  backdrop-filter: blur(8px);
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Улучшенный скроллбар */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--theme-accent, #9D5CFF);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-accent-hover, #7E22CE);
-}
-
-/* Стилизация по умолчанию для элементов ввода */
-input, select, textarea {
-  font-family: var(--font-body);
-  transition: all 0.2s ease;
-}
-
-/* Фокус для интерактивных элементов */
-button:focus-visible, 
-input:focus-visible, 
-select:focus-visible, 
-textarea:focus-visible {
-  outline: 2px solid var(--theme-accent, #9D5CFF);
-  outline-offset: 2px;
-}
-
-/* Улучшенные стили для модальных окон */
-.spell-modal {
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--theme-accent, #9D5CFF);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.spell-modal-header {
-  border-bottom: 1px solid var(--theme-accent, #9D5CFF);
-  padding-bottom: 1rem;
-}
-
-.spell-modal-content {
-  padding: 1.5rem;
-}
-
-.spell-modal-footer {
-  border-top: 1px solid var(--theme-accent, #9D5CFF);
-  padding-top: 1rem;
-}
-
-/* Улучшения для Badge */
-.badge {
-  font-family: var(--font-heading);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Эффект для карточек на главной странице */
-.main-card {
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--theme-accent, #9D5CFF);
-}
-
-.main-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 15px var(--theme-accent, #9D5CFF);
-}
-
-/* Новые эффекты для главной страницы */
-.dnd-title {
-  font-family: var(--font-heading);
-  font-size: 3rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-shadow: 0 0 10px var(--theme-accent, #9D5CFF);
-  background: linear-gradient(120deg, var(--theme-text-color, #FFFFFF), var(--theme-accent, #9D5CFF));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: glow 3s infinite alternate;
-}
-
-.parchment-card {
-  background-color: rgba(247, 241, 220, 0.8);
-  border: 1px solid #BFA76F;
-  color: #3B3B3B;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
-  position: relative;
-}
-
-.parchment-card:after {
+.profile-header:before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/paper-texture.png');
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: -1;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8));
+  z-index: 0;
 }
 
-/* Декоративный градиент для разделителей */
-.gradient-separator {
-  height: 1px;
-  background: linear-gradient(to right,
-    transparent,
-    var(--theme-accent, #9D5CFF),
-    transparent
-  );
-  margin: 1rem 0;
+.avatar-upload-area {
+  transition: all 0.3s ease;
+}
+
+.avatar-upload-area:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }

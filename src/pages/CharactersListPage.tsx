@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { CharacterSheet } from '@/utils/characterImports';
 import { getAllCharacters, deleteCharacter } from '@/services/database';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
@@ -14,7 +14,7 @@ import { themes } from '@/lib/themes';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import ThemeSelector from '@/components/ThemeSelector';
+import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 
 const CharactersListPage = () => {
   const navigate = useNavigate();
@@ -127,7 +127,7 @@ const CharactersListPage = () => {
             />
           </h1>
           <div className="flex items-center gap-2">
-            <ThemeSelector />
+            <IconOnlyNavigation includeThemeSelector={true} />
             <Button 
               className="btn-magic shadow-lg"
               onClick={() => navigate('/character-creation')}
