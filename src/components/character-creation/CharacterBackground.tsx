@@ -83,6 +83,18 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
     }
   };
 
+  // Вспомогательная функция для безопасного рендеринга массивов или строк
+  const renderSafelyAsArray = (value: any): string => {
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    } else if (typeof value === 'string') {
+      return value;
+    } else if (!value) {
+      return '';
+    }
+    return String(value);
+  };
+
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -163,24 +175,26 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
                       <div className="space-y-4">
                         <div>
                           <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Навыки:</h3>
-                          <p>{currentBackground.proficiencies.skills.join(', ')}</p>
+                          <p>{renderSafelyAsArray(currentBackground.proficiencies.skills)}</p>
                         </div>
-                        {currentBackground.proficiencies.tools.length > 0 && (
+                        {currentBackground.proficiencies.tools && (
                           <div>
                             <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Инструменты:</h3>
-                            <p>{currentBackground.proficiencies.tools.join(', ')}</p>
+                            <p>{renderSafelyAsArray(currentBackground.proficiencies.tools)}</p>
                           </div>
                         )}
-                        {currentBackground.proficiencies.languages.length > 0 && (
+                        {currentBackground.proficiencies.languages && currentBackground.proficiencies.languages.length > 0 && (
                           <div>
                             <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Языки:</h3>
-                            <p>{currentBackground.proficiencies.languages.join(', ')}</p>
+                            <p>{renderSafelyAsArray(currentBackground.proficiencies.languages)}</p>
                           </div>
                         )}
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Снаряжение:</h3>
-                          <p>{currentBackground.proficiencies.equipment}</p>
-                        </div>
+                        {currentBackground.proficiencies.equipment && (
+                          <div>
+                            <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Снаряжение:</h3>
+                            <p>{currentBackground.proficiencies.equipment}</p>
+                          </div>
+                        )}
                       </div>
                     </TabsContent>
 
