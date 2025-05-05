@@ -75,7 +75,7 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick, currentTh
       <Table>
         <TableHeader>
           <TableRow style={{ 
-            backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.9)}` 
+            backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.9)'}`
           }}>
             <TableHead 
               onClick={() => handleSort('name')}
@@ -130,10 +130,15 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick, currentTh
                   backgroundColor: index % 2 === 0 
                     ? `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
                     : `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-                  transition: 'background-color 0.2s ease',
-                  ':hover': {
-                    backgroundColor: `${currentTheme.accent}20`
-                  }
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = `${currentTheme.accent}20`;
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = index % 2 === 0 
+                    ? `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
+                    : `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`;
                 }}
               >
                 <TableCell className="font-medium px-4 py-3">{spell.name}</TableCell>
