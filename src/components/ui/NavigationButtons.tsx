@@ -53,7 +53,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           size={isMobile ? "sm" : "default"}
           asChild
         >
-          <Link to="/dm/battle">
+          <Link to="/battle">
             <Map className={isMobile ? "size-4" : "size-4"} />
             {!isMobile && "Боевая карта"}
           </Link>
@@ -79,7 +79,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           size={isMobile ? "sm" : "default"}
           asChild
         >
-          <Link to="/dm-dashboard">
+          <Link to="/dm">
             <Book className={isMobile ? "size-4" : "size-4"} />
             {!isMobile && "Панель Мастера"}
           </Link>

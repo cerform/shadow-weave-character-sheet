@@ -63,7 +63,7 @@ const App = () => {
                       <Route path="/character-creation" element={<CharacterCreationPage />} />
                       <Route path="/character/:id" element={<CharacterViewPage />} />
                       <Route path="/join" element={<JoinSessionPage />} />
-                      <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
+                      <Route path="/dm" element={<DMDashboardPage />} />
                       <Route path="/dm-dashboard" element={<DMDashboardPage />} />
                       <Route path="/dm-session/:id" element={<DMSessionPage />} />
                       <Route path="/play" element={<PlayerSessionPage />} />
