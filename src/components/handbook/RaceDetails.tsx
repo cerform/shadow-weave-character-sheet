@@ -177,7 +177,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               type="multiple" 
               className="w-full"
             >
-              {race.traits.map((trait: string, index: number) => (
+              {race.traits && Array.isArray(race.traits) ? race.traits.map((trait: string, index: number) => (
                 <AccordionItem 
                   key={index} 
                   value={`trait-${index}`} 
@@ -190,14 +190,18 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       color: currentTheme.textColor
                     }}
                   >
-                    {trait.split(':')[0] || trait}
+                    {typeof trait === 'string' && trait.split(':')[0] || String(trait)}
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-300" style={{ color: currentTheme.textColor }}>
-                    {trait.includes(':') ? trait.split(':')[1].trim() : 
+                    {typeof trait === 'string' && trait.includes(':') ? trait.split(':')[1].trim() : 
                     "Подробное описание этой особенности вы можете найти в Книге игрока."}
                   </AccordionContent>
                 </AccordionItem>
-              ))}
+              )) : (
+                <div className="text-gray-300" style={{ color: currentTheme.textColor }}>
+                  Нет доступных данных о расовых чертах
+                </div>
+              )}
             </Accordion>
           </div>
           
@@ -231,7 +235,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               >
                 Скорость
               </h3>
-              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.speed} фт.</p>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{renderContent(race.speed)} фт.</p>
             </div>
             
             <div 
@@ -247,7 +251,9 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               >
                 Языки
               </h3>
-              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.languages.join(', ')}</p>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>
+                {race.languages && Array.isArray(race.languages) ? race.languages.join(', ') : renderContent(race.languages)}
+              </p>
             </div>
             
             <div 
@@ -263,7 +269,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               >
                 Зрение
               </h3>
-              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.vision || "Обычное"}</p>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{renderContent(race.vision) || "Обычное"}</p>
             </div>
           </div>
         </TabsContent>
@@ -283,38 +289,44 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               Прирост характеристик
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {race.abilityScoreIncrease && Object.entries(race.abilityScoreIncrease).map(([key, value]) => (
-                <div 
-                  key={key} 
-                  className="flex items-center justify-between p-2 border rounded border-purple-700/30 bg-gray-800"
-                  style={{ 
-                    background: 'rgba(0, 0, 0, 0.3)', 
-                    borderColor: `${currentTheme.accent}30` 
-                  }}
-                >
-                  <span className="text-gray-300" style={{ color: currentTheme.textColor }}>
-                    {key === 'strength' && 'Сила'}
-                    {key === 'dexterity' && 'Ловкость'}
-                    {key === 'constitution' && 'Телосложение'}
-                    {key === 'intelligence' && 'Интеллект'}
-                    {key === 'wisdom' && 'Мудрость'}
-                    {key === 'charisma' && 'Харизма'}
-                    {key === 'all' && 'Все характеристики'}
-                  </span>
-                  <span 
-                    className="font-semibold text-purple-300"
-                    style={{ color: currentTheme.accent }}
+              {race.abilityScoreIncrease && typeof race.abilityScoreIncrease === 'object' ? 
+                Object.entries(race.abilityScoreIncrease).map(([key, value]) => (
+                  <div 
+                    key={key} 
+                    className="flex items-center justify-between p-2 border rounded border-purple-700/30 bg-gray-800"
+                    style={{ 
+                      background: 'rgba(0, 0, 0, 0.3)', 
+                      borderColor: `${currentTheme.accent}30` 
+                    }}
                   >
-                    +{value}
-                  </span>
-                </div>
-              ))}
+                    <span className="text-gray-300" style={{ color: currentTheme.textColor }}>
+                      {key === 'strength' && 'Сила'}
+                      {key === 'dexterity' && 'Ловкость'}
+                      {key === 'constitution' && 'Телосложение'}
+                      {key === 'intelligence' && 'Интеллект'}
+                      {key === 'wisdom' && 'Мудрость'}
+                      {key === 'charisma' && 'Харизма'}
+                      {key === 'all' && 'Все характеристики'}
+                    </span>
+                    <span 
+                      className="font-semibold text-purple-300"
+                      style={{ color: currentTheme.accent }}
+                    >
+                      +{value}
+                    </span>
+                  </div>
+                )) : (
+                  <div className="col-span-full text-center text-gray-300" style={{ color: currentTheme.textColor }}>
+                    Нет данных о приросте характеристик
+                  </div>
+                )
+              }
             </div>
           </div>
         </TabsContent>
         
         <TabsContent value="subraces">
-          {race.subraces && race.subraces.length > 0 ? (
+          {race.subraces && Array.isArray(race.subraces) && race.subraces.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {race.subraces.map((subrace: string | SubraceObj, index: number) => {
                 // Проверяем, является ли subrace объектом или строкой
@@ -333,7 +345,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                     }}
                   >
                     <CardHeader className="pb-2">
-                      <CardTitle style={{ color: currentTheme.textColor }}>{subraceObj.name}</CardTitle>
+                      <CardTitle style={{ color: currentTheme.textColor }}>{renderContent(subraceObj.name)}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {/* Безопасно отображаем описание подрасы */}
@@ -351,7 +363,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                           </h4>
                           <ul className="list-disc pl-5 text-gray-300" style={{ color: currentTheme.textColor }}>
                             {subraceObj.traits.map((trait: string, idx: number) => (
-                              <li key={idx}>{trait}</li>
+                              <li key={idx}>{renderContent(trait)}</li>
                             ))}
                           </ul>
                         </div>
@@ -443,7 +455,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       className="text-lg"
                       style={{ color: currentTheme.textColor }}
                     >
-                      {build.class}
+                      {renderContent(build.class)}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -451,7 +463,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       className="text-sm text-gray-300"
                       style={{ color: currentTheme.textColor }}
                     >
-                      {build.description}
+                      {renderContent(build.description)}
                     </p>
                   </CardContent>
                 </Card>
