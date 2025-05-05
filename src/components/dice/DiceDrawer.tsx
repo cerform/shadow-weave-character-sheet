@@ -82,6 +82,7 @@ const DiceDrawer: React.FC = () => {
                 Бросайте кубики и отслеживайте результаты
               </DrawerDescription>
             </DrawerHeader>
+            {/* Оставляем только одну кнопку закрытия */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -128,6 +129,7 @@ const DiceDrawer: React.FC = () => {
               Бросайте кубики и отслеживайте результаты
             </SheetDescription>
           </SheetHeader>
+          {/* Используем собственную кнопку закрытия, убираем стандартную */}
           <Button 
             variant="ghost" 
             size="icon" 
