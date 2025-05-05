@@ -1,8 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { Character } from '@/utils/characterImports';
+import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useToast } from '@/hooks/use-toast';

@@ -1,5 +1,9 @@
 
 /**
+ * Безопасные утилиты для работы с объектами и массивами Character
+ */
+
+/**
  * Safely gets the length of an array or returns 0
  */
 export const safeArrayLength = <T>(arr: T[] | unknown): number => {
@@ -122,4 +126,30 @@ export const getProficienciesLength = (proficiencies: string[] | { armor?: strin
   }
   
   return count;
+};
+
+// Создаем безопасные методы для работы с объектом заклинаний и умений
+export const safeToString = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  try {
+    return String(value);
+  } catch {
+    return "";
+  }
+};
+
+// Безопасно получить тип spell как строку
+export const getSpellName = (spell: unknown): string => {
+  if (typeof spell === "string") {
+    return spell;
+  }
+  if (typeof spell === "object" && spell !== null && "name" in spell) {
+    return String((spell as any).name || "");
+  }
+  return "";
 };

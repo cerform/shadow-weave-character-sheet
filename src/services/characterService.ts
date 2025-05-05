@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -89,3 +90,14 @@ export const getAllCharacters = (): Character[] => {
     return [];
   }
 };
+
+// Экспортируем функции как дефолтный экспорт для совместимости
+const characterService = {
+  saveCharacter,
+  getCharacter,
+  deleteCharacter,
+  getAllCharacters,
+  getCharactersByUserId: () => getAllCharacters() // Для совместимости со старым API
+};
+
+export default characterService;

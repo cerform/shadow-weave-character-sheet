@@ -74,8 +74,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     
     // Add the spell to the character's spell list
     const newSpell: CharacterSpell = convertSpellDataToCharacterSpell(spell);
-    
-    const updatedSpells = [...(character.spells || []), newSpell];
+    const updatedSpells = [...character.spells, newSpell];
     
     onUpdate({ spells: updatedSpells });
     

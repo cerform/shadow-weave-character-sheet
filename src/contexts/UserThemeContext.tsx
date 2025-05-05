@@ -1,107 +1,48 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useSessionStore } from '../stores/sessionStore';
-import { Theme, useTheme } from '@/contexts/ThemeContext';
-import { themes } from '@/lib/themes';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Theme, themes } from '../lib/themes';
+import useSessionStore from "../stores/sessionStore";
 
-interface UserThemeContextType {
-  setUserTheme: (theme: string) => void;
-  activeTheme: string;
-  currentThemeStyles: any;
+interface ThemeContextType {
+  theme: string;
+  setTheme: (theme: string) => void;
+  currentTheme: Theme;
 }
 
-export const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType>({
+  theme: 'default',
+  setTheme: () => {},
+  currentTheme: themes.default
+});
 
-export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, updateUserTheme } = useSessionStore();
-  const { setTheme } = useTheme();
-  const [activeTheme, setActiveTheme] = useState<string>(() => {
-    // При монтировании проверяем сохраненную тему в localStorage
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'default';
+export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const [theme, setTheme] = useState<string>(() => {
+    // Загружаем тему из localStorage или используем тему по умолчанию
+    const savedTheme = localStorage.getItem('dnd-theme') || 'default';
+    return savedTheme;
   });
   
-  // Получаем актуальные стили для текущей темы
-  const themeKey = activeTheme as keyof typeof themes;
-  const currentThemeStyles = themes[themeKey] || themes.default;
+  // Получаем объект темы
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  // Применяем тему при монтировании и при изменении текущего пользователя
+  // Сохраняем выбранную тему в localStorage при изменении
   useEffect(() => {
-    // Применяем базовую тему из localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      applyThemeToDocument(savedTheme);
-      setActiveTheme(savedTheme);
-      setTheme(savedTheme as Theme);
-    }
+    localStorage.setItem('dnd-theme', theme);
     
-    // Если есть пользовательская тема, применяем ее
-    if (currentUser?.themePreference) {
-      applyThemeToDocument(currentUser.themePreference);
-      setActiveTheme(currentUser.themePreference);
-      setTheme(currentUser.themePreference as Theme);
-    }
-  }, [currentUser?.id, currentUser?.themePreference, setTheme]);
-  
-  // Функция для применения темы к документу
-  const applyThemeToDocument = (theme: string) => {
-    console.log('Применяем тему:', theme);
-    
-    // Удаляем все классы тем
-    document.body.classList.forEach(className => {
-      if (className.startsWith('theme-')) {
-        document.body.classList.remove(className);
-      }
-    });
-    
-    // Применяем новую тему
-    document.body.classList.add(`theme-${theme}`);
-    document.documentElement.setAttribute('data-theme', theme);
-    
-    // Получаем стили для выбранной темы
-    const themeKey = theme as keyof typeof themes;
-    const themeStyles = themes[themeKey] || themes.default;
-    
-    // Применяем CSS переменные к корневому элементу для более гибкой стилизации
-    document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
-    document.documentElement.style.setProperty('--theme-glow', themeStyles.glow || '0 0 10px rgba(255, 255, 255, 0.1)');
-    document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
-    document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor || '#94a3b8');
-    
-    // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
-    document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
-    document.documentElement.style.setProperty('--muted-text-color', themeStyles.mutedTextColor || '#DDDDDD');
-  };
-  
-  // Функция для изменения темы пользователя
-  const setUserTheme = (theme: string) => {
-    console.log('Переключаем на тему:', theme);
-    
-    // Применяем тему
-    applyThemeToDocument(theme);
-    
-    // Сохраняем новую тему
-    setActiveTheme(theme);
-    localStorage.setItem('theme', theme);
-    setTheme(theme as Theme);
-    
-    // Если пользователь авторизован, сохраняем также в его профиле
-    if (currentUser) {
-      updateUserTheme(currentUser.id, theme);
-    }
-  };
+    // Устанавливаем CSS-переменные для темы
+    document.documentElement.style.setProperty('--background', currentTheme.background);
+    document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
+    document.documentElement.style.setProperty('--primary', currentTheme.primary);
+    document.documentElement.style.setProperty('--accent', currentTheme.accent);
+    document.documentElement.style.setProperty('--text', currentTheme.textColor);
+    document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
+  }, [theme, currentTheme]);
   
   return (
-    <UserThemeContext.Provider value={{ setUserTheme, activeTheme, currentThemeStyles }}>
+    <ThemeContext.Provider value={{ theme, setTheme, currentTheme }}>
       {children}
-    </UserThemeContext.Provider>
+    </ThemeContext.Provider>
   );
 };
 
-export const useUserTheme = (): UserThemeContextType => {
-  const context = useContext(UserThemeContext);
-  if (context === undefined) {
-    throw new Error('useUserTheme must be used within a UserThemeProvider');
-  }
-  return context;
-};
+export const useTheme = () => useContext(ThemeContext);

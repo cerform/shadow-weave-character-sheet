@@ -69,3 +69,13 @@ export const convertSpellDataToCharacterSpell = (spellData: SpellData): Characte
                 spellData.description.join('\n') : ''
   };
 };
+
+// Вспомогательные функции для работы с заклинаниями
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell === 'object';
+};
+
+export const getSpellName = (spell: CharacterSpell | string): string => {
+  if (typeof spell === 'string') return spell;
+  return spell.name;
+};

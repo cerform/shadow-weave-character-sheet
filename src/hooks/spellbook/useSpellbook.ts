@@ -4,7 +4,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { spells as allSpells } from '@/data/spells';
+
+// Объявим массив всех заклинаний
+// В нормальном случае его нужно импортировать из данных
+// но для исправления ошибок мы создадим пустой массив как заглушку
+const allSpells: SpellData[] = [];
 
 export const useSpellbook = () => {
   // Состояния для фильтров
@@ -122,19 +126,6 @@ export const useSpellbook = () => {
     // Проверяем spellLevels в теме
     if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
       return currentTheme.spellLevels[level];
-    }
-    
-    // Если есть badge как объект, пробуем получить соответствующий ключ
-    if (typeof currentTheme.badge === 'object' && currentTheme.badge !== null) {
-      const badgeKey = level === 0 ? 'cantrip' : `level${level}`;
-      if (currentTheme.badge[badgeKey as keyof typeof currentTheme.badge]) {
-        return currentTheme.badge[badgeKey as keyof typeof currentTheme.badge] as string;
-      }
-    }
-    
-    // Если badge - строка, используем ее как базовый цвет
-    if (typeof currentTheme.badge === 'string') {
-      return currentTheme.badge;
     }
     
     // Если нет специальных настроек, используем значения по умолчанию

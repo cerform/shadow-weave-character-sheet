@@ -1,64 +1,50 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
 
-// Проверка, является ли объект заклинания типом CharacterSpell
-export const isCharacterSpellObject = (spell: string | CharacterSpell): spell is CharacterSpell => {
-  return typeof spell !== 'string';
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell === 'object';
 };
 
-// Получение имени заклинания независимо от типа
-export const getSpellName = (spell: string | CharacterSpell): string => {
-  return typeof spell === 'string' ? spell : spell.name;
+export const getSpellName = (spell: CharacterSpell | string): string => {
+  if (typeof spell === 'string') return spell;
+  return spell.name;
 };
 
-// Получение уровня заклинания независимо от типа
-export const getSpellLevel = (spell: string | CharacterSpell): number => {
-  return typeof spell === 'string' ? 0 : spell.level || 0;
+export const getSpellLevel = (spell: CharacterSpell | string): number => {
+  if (typeof spell === 'string') return 0; // По умолчанию заговор
+  return spell.level;
 };
 
-// Проверка, подготовлено ли заклинание
-export const isSpellPrepared = (spell: string | CharacterSpell): boolean => {
-  return typeof spell !== 'string' && !!spell.prepared;
+export const getSpellSchool = (spell: CharacterSpell | string): string => {
+  if (typeof spell === 'string') return "Неизвестная";
+  return spell.school || "Неизвестная";
 };
 
-// Конвертация CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (spell: string | CharacterSpell): SpellData => {
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (typeof spell === 'string') return false;
+  return spell.prepared || false;
+};
+
+export const toggleSpellPrepared = (spell: CharacterSpell | string): CharacterSpell => {
   if (typeof spell === 'string') {
     return {
       name: spell,
       level: 0,
-      school: "Неизвестная",
-      castingTime: "1 действие",
-      range: "Неизвестная",
-      components: "",
-      duration: "Мгновенная",
-      description: ""
+      prepared: true
     };
   }
   
   return {
-    id: spell.id,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || "Неизвестная",
-    castingTime: spell.castingTime || "1 действие",
-    range: spell.range || "Неизвестная",
-    components: spell.components || "",
-    duration: spell.duration || "Мгновенная",
-    description: spell.description || "",
-    classes: spell.classes,
-    ritual: spell.ritual,
-    concentration: spell.concentration,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    higherLevels: spell.higherLevels,
-    prepared: spell.prepared
+    ...spell,
+    prepared: !spell.prepared
   };
 };
 
-// Конвертация массива заклинаний в формат SpellData
-export const convertSpellArray = (spells: (string | CharacterSpell)[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+export const getSpellsByLevel = (spells: (CharacterSpell | string)[], level: number): (CharacterSpell | string)[] => {
+  return spells.filter(spell => {
+    if (typeof spell === 'string') {
+      return level === 0; // Строковые заклинания считаются заговорами
+    }
+    return spell.level === level;
+  });
 };

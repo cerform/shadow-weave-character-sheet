@@ -1,9 +1,9 @@
-import { Character } from '@/utils/characterImports';
+import { Character } from '@/types/character';
 
 /**
- * Преобразует объект CharacterSheet в объект Character для сохранения
+ * Преобразует объект Character в другой объект Character с дополнительными вычисляемыми полями
  */
-export const convertToCharacter = (sheet: CharacterSheet): Character => {
+export const convertToCharacter = (sheet: Character): Character => {
   // Расчет максимального HP на основе класса и уровня
   const calculateMaxHp = (): number => {
     // Базовое значение в зависимости от класса
@@ -25,7 +25,10 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     // Убедимся, что у нас есть класс перед вычислением HP
     const characterClass = sheet.class || "Воин"; // По умолчанию "Воин", если класс не указан
     const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
-    const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
+    
+    // Получаем значение телосложения
+    const constitution = sheet.abilities?.constitution || sheet.abilities?.CON || 10;
+    const constitutionMod = Math.floor((constitution - 10) / 2);
     
     // HP первого уровня = максимум хитов кости + модификатор телосложения
     let maxHp = baseHp + constitutionMod;
@@ -140,8 +143,8 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     languages: languages,
     proficiencies: proficiencies,
     maxHp: maxHp,
-    currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
-    createdAt: new Date().toISOString(),
+    currentHp: sheet.currentHp || maxHp, // Устанавливаем текущие хиты равными максимальным, если не указано
+    createdAt: sheet.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 };

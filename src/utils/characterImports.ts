@@ -1,4 +1,6 @@
 
 import { Character } from '@/types/character';
 
-export { Character };
+// Используем export type для переэкспорта типов с включенным isolatedModules
+export type { Character };
+

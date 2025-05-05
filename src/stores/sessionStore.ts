@@ -1,9 +1,25 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/utils/characterImports';
-import { saveSession, getSession } from '@/services/sessionService';
+import { Character } from '@/types/character';
+// Локальные функции для работы с сессиями
+const saveSession = (session: any): void => {
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  const index = sessions.findIndex((s: any) => s.id === session.id);
+  
+  if (index !== -1) {
+    sessions[index] = session;
+  } else {
+    sessions.push(session);
+  }
+  
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+};
+
+const getSession = (sessionId: string): any | null => {
+  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+  return sessions.find((s: any) => s.id === sessionId) || null;
+};
 
 interface SessionPlayer {
   id: string;
@@ -77,7 +93,7 @@ interface SessionState {
   sortInitiative: () => void;
   
   // Session management
-  createSession: (name: string, dmId: string) => void;
+  createSession: (name: string, dmId?: string) => any;
   saveSessionToStorage: () => void;
   loadSessionFromStorage: (sessionId: string) => boolean;
   setSessionStatus: (isActive: boolean) => void;
@@ -240,11 +256,11 @@ const useSessionStore = create<SessionState>()(
       createSession: (name, dmId) => {
         const sessionCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
         
-        set({
+        const newSession = {
           id: uuidv4(),
           name,
           code: sessionCode,
-          dmId,
+          dmId: dmId || null,
           players: [],
           diceRolls: [],
           chatMessages: [],
@@ -253,12 +269,16 @@ const useSessionStore = create<SessionState>()(
           createdAt: new Date(),
           updatedAt: new Date(),
           isLoaded: true
-        });
+        };
+        
+        set(newSession);
         
         // Save the session after creation
         setTimeout(() => {
           get().saveSessionToStorage();
         }, 0);
+        
+        return newSession;
       },
       
       saveSessionToStorage: () => {
@@ -304,8 +324,9 @@ const useSessionStore = create<SessionState>()(
         });
         
         // Save the session status to storage
-        const state = get();
-        state.saveSessionToStorage();
+        setTimeout(() => {
+          get().saveSessionToStorage();
+        }, 0);
       }
     }),
     {

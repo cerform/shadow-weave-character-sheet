@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { Character } from '@/utils/characterImports';
+import { Character } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import { ArrowLeft } from 'lucide-react';

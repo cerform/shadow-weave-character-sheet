@@ -1,8 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import characterService from '@/services/characterService';
-import { Character, CharacterSheet, CharacterSpell } from '@/types/character';
-import { normalizeSpells } from '@/utils/spellUtils';
+import { saveCharacter, getAllCharacters, deleteCharacter } from '@/services/characterService';
+import { Character, CharacterSpell } from '@/types/character';
 
 export interface CharacterContextType {
   character: Character | null;
@@ -12,6 +11,8 @@ export interface CharacterContextType {
   characters: Character[];
   getUserCharacters: () => Promise<Character[]>;
   deleteCharacter: (id: string) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
@@ -22,11 +23,15 @@ export const CharacterContext = createContext<CharacterContextType>({
   characters: [],
   getUserCharacters: async () => [],
   deleteCharacter: async () => {},
+  loading: false,
+  error: null
 });
 
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Функция для обновления частичных данных персонажа
   const updateCharacter = (updates: Partial<Character>) => {
@@ -41,10 +46,12 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     if (!character) return;
     
     try {
+      setLoading(true);
+      setError(null);
+      
       const updatedCharacter = { 
         ...character, 
         updatedAt: new Date().toISOString(),
-        // Гарантируем наличие обязательных полей для CharacterSheet
         backstory: character.backstory || ''
       };
       
@@ -52,50 +59,46 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      // Преобразуем к требуемому типу перед сохранением
-      const characterToSave = {
-        ...updatedCharacter,
-        // Убеждаемся, что spells - это массив строк для CharacterSheet
-        spells: Array.isArray(updatedCharacter.spells) 
-          ? updatedCharacter.spells.map(spell => 
-              typeof spell === 'string' ? spell : spell.name
-            )
-          : updatedCharacter.spells
-      } as unknown as CharacterSheet;
-      
-      const savedChar = await characterService.saveCharacter(characterToSave);
+      const savedChar = saveCharacter(updatedCharacter);
       if (savedChar) {
         setCharacter({...updatedCharacter, id: savedChar.id});
       }
       
-      // Обновляем список персонажей, если сохранение прошло успешно
+      // Обновляем список персонажей
       await getUserCharacters();
     } catch (error) {
       console.error('Ошибка при сохранении персонажа:', error);
+      setError('Не удалось сохранить персонажа');
+    } finally {
+      setLoading(false);
     }
   };
   
-  // Получаем список персонажей пользователя
+  // Получаем список персонажей
   const getUserCharacters = async () => {
     try {
-      const fetchedCharacters = await characterService.getCharactersByUserId();
-      // Приводим CharacterSheet к типу Character
-      const characterArray: Character[] = fetchedCharacters.map((char: CharacterSheet) => ({
-        ...(char as unknown as Character)
-      }));
+      setLoading(true);
+      setError(null);
       
-      setCharacters(characterArray);
-      return characterArray;
+      const fetchedCharacters = getAllCharacters();
+      setCharacters(fetchedCharacters);
+      return fetchedCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
+      setError('Не удалось загрузить персонажей');
       return [];
+    } finally {
+      setLoading(false);
     }
   };
   
   // Удаление персонажа
   const handleDeleteCharacter = async (id: string) => {
     try {
-      await characterService.deleteCharacter(id);
+      setLoading(true);
+      setError(null);
+      
+      deleteCharacter(id);
       setCharacters(prev => prev.filter(char => char.id !== id));
       
       // Если удаляем текущего персонажа, сбрасываем его
@@ -104,6 +107,9 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       }
     } catch (error) {
       console.error('Ошибка при удалении персонажа:', error);
+      setError('Не удалось удалить персонажа');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -124,7 +130,9 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         saveCurrentCharacter,
         characters,
         getUserCharacters,
-        deleteCharacter: handleDeleteCharacter
+        deleteCharacter: handleDeleteCharacter,
+        loading,
+        error
       }}
     >
       {children}

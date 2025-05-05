@@ -203,7 +203,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         </div>
       ) : (
         <SpellTable 
-          spells={filteredSpells}
+          spells={filteredSpells as SpellData[]}
           onSpellClick={handleOpenSpell}
         />
       )}

@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { useSessionStore } from "@/stores/sessionStore";
+import useSessionStore from "@/stores/sessionStore";
 import { socketService } from "@/services/socket";
 
 interface CreateSessionProps {
@@ -42,7 +41,7 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
     try {
       setIsCreating(true);
       // Создаем сессию через SessionStore (асинхронно)
-      const newSession = await createSession(sessionName);
+      const newSession = createSession(sessionName);
       
       if (newSession && newSession.code) {
         // Подключаемся к сокетам, если используются

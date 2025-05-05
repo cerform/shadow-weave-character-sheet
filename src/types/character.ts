@@ -184,9 +184,6 @@ export interface Character {
   sorceryPoints?: SorceryPoints;
 }
 
-// For backward compatibility, CharacterSheet is now an alias for Character
-export type CharacterSheet = Character;
-
 export interface ClassLevel {
   class: string;
   subclass?: string;
@@ -214,5 +211,3 @@ export interface AbilityScores {
   WIS?: number;
   CHA?: number;
 }
-
-// Removing duplicate export to avoid conflicts
