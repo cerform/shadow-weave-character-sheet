@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
@@ -10,7 +11,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useUserTheme } from "@/hooks/use-user-theme";
 import { themes } from "@/lib/themes";
 import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { useCharacter } from "@/contexts/CharacterContext";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,7 +34,7 @@ const Index = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { character } = useCharacter();
   
-  // Загружаем персонажей пользов��теля только при монтировании компонента или изменении авторизации
+  // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
   useEffect(() => {
     const fetchCharacters = async () => {
       console.log("Index: Загружаем список персонажей");
@@ -156,6 +157,14 @@ const Index = () => {
     boxShadow: `0 7px 20px ${currentTheme.accent}70`
   };
 
+  // Получаем инициалы пользователя безопасным способом
+  const getUserInitials = () => {
+    if (currentUser && currentUser.username) {
+      return currentUser.username.substring(0, 2).toUpperCase();
+    }
+    return "ГП"; // "Герой Подземелий" - подставляем значение по умолчанию
+  };
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
@@ -172,18 +181,18 @@ const Index = () => {
           {isAuthenticated ? (
             <div className="flex flex-col items-center">
               <Avatar className="h-16 w-16 mb-2">
-                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`} />
-                <AvatarFallback>{currentUser?.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username || 'guest'}`} />
+                <AvatarFallback>{getUserInitials()}</AvatarFallback>
               </Avatar>
               <p className="font-medium text-lg mb-1">
-                {currentUser?.username}
+                {currentUser?.username || 'Гость'}
                 {currentUser?.isDM && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
                     Мастер
                   </span>
                 )}
               </p>
-              <p className="text-sm text-muted-foreground mb-3">{currentUser?.email}</p>
+              <p className="text-sm text-muted-foreground mb-3">{currentUser?.email || ''}</p>
               <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
                 <LogOut className="h-3.5 w-3.5" />
                 Выйти
@@ -483,13 +492,13 @@ const Index = () => {
                     <CardContent className="p-4 relative">
                       <div className="flex items-center gap-3 cursor-pointer" onClick={() => loadCharacter(char)}>
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name}`} />
-                          <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name || 'character'}`} />
+                          <AvatarFallback>{(char.name && char.name.substring(0, 2).toUpperCase()) || 'ГП'}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h4 className="font-medium">{char.name}</h4>
+                          <h4 className="font-medium">{char.name || 'Безымянный'}</h4>
                           <p className="text-xs text-muted-foreground">
-                            {char.race}, {char.className} {char.level} уровня
+                            {char.race || 'Неизвестная раса'}, {char.className || char.class || 'Неизвестный класс'} {char.level || 1} уровня
                           </p>
                         </div>
                       </div>
@@ -510,7 +519,7 @@ const Index = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Удалить персонажа?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Вы уверены, что хотите удалить персонажа {char.name}? Это действие нельзя отменить.
+                              Вы уверены, что хотите удалить персонажа {char.name || 'Безымянный'}? Это действие нельзя отменить.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
