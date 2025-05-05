@@ -1,3 +1,4 @@
+
 // Вспомогательные функции для работы с заклинаниями
 import { CharacterSpell } from '@/types/character';
 import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';

@@ -1,6 +1,7 @@
 
+// Вспомогательные функции для работы с заклинаниями
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 
 // Получить максимальный уровень заклинаний для заданного уровня персонажа
 export const getMaxSpellLevel = (level: number): number => {
@@ -41,7 +42,15 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
     };
   }
   
-  return convertCharacterSpellToSpellData(spell);
+  return {
+    ...spell,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || 'В, С',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || 'Нет описания',
+  };
 };
 
 // Преобразование массива заклинаний в массив SpellData
@@ -59,14 +68,14 @@ export const getSpellsByLevel = (spells: (CharacterSpell | string)[]): Record<nu
     if (!spellsByLevel[level]) {
       spellsByLevel[level] = [];
     }
-    spellsByLevel[level].push(convertCharacterSpellToSpellData(spell));
+    spellsByLevel[level].push(convertToSpellData(spell));
   });
 
   return spellsByLevel;
 };
 
 // Расчёт известных заклинаний на основе класса, уровня и модификатора способности
-export const calculateKnownSpells = (characterClass: string, level: number, abilityScores: any): { cantrips: number; spells: number } => {
+export const calculateKnownSpells = (characterClass: string, level: number, abilityModifier: number): { cantrips: number; spells: number } => {
   // Определяем основную характеристику заклинателя в зависимости от класса
   let spellAbility = 'intelligence';
   
@@ -89,31 +98,6 @@ export const calculateKnownSpells = (characterClass: string, level: number, abil
       break;
   }
   
-  // Получаем значение соответствующей характеристики
-  let abilityScore = 10;
-  if (abilityScores) {
-    if (typeof abilityScores === 'number') {
-      // If abilityScores is directly a number, use it
-      return {
-        cantrips: 0,
-        spells: 0
-      };
-    }
-    
-    if (abilityScores[spellAbility]) {
-      abilityScore = abilityScores[spellAbility];
-    } else if (spellAbility === 'intelligence' && abilityScores.INT) {
-      abilityScore = abilityScores.INT;
-    } else if (spellAbility === 'wisdom' && abilityScores.WIS) {
-      abilityScore = abilityScores.WIS;
-    } else if (spellAbility === 'charisma' && abilityScores.CHA) {
-      abilityScore = abilityScores.CHA;
-    }
-  }
-  
-  // Расчет модификатора
-  const mod = Math.floor((abilityScore - 10) / 2);
-  
   // Возвращаем результат
   let cantrips = 0;
   let spells = 0;
@@ -123,32 +107,32 @@ export const calculateKnownSpells = (characterClass: string, level: number, abil
     case 'бард':
     case 'bard':
       cantrips = level >= 10 ? 4 : (level >= 4 ? 3 : 2);
-      spells = Math.min(level + mod, 22); // Max 22 spells at level 20
+      spells = Math.min(level + abilityModifier, 22); // Max 22 spells at level 20
       break;
     case 'жрец':
     case 'cleric':
       cantrips = level >= 10 ? 5 : (level >= 4 ? 4 : 3);
-      spells = level + mod;
+      spells = level + abilityModifier;
       break;
     case 'друид':
     case 'druid':
       cantrips = level >= 4 ? 3 : 2;
-      spells = level + mod;
+      spells = level + abilityModifier;
       break;
     case 'паладин':
     case 'paladin':
       cantrips = 0;
-      spells = Math.floor(level / 2) + mod;
+      spells = Math.floor(level / 2) + abilityModifier;
       break;
     case 'следопыт':
     case 'ranger':
       cantrips = 0;
-      spells = Math.floor(level / 2) + mod;
+      spells = Math.floor(level / 2) + abilityModifier;
       break;
     case 'волшебник':
     case 'wizard':
       cantrips = level >= 10 ? 5 : (level >= 4 ? 4 : 3);
-      spells = level + mod; // Base spells, without spellbook extras
+      spells = level + abilityModifier; // Base spells, without spellbook extras
       break;
     case 'чародей':
     case 'sorcerer':

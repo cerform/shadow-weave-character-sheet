@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Character } from '@/types/character';
+import { socket } from '@/services/socket';
 
 interface SessionData {
   name: string;
@@ -18,6 +19,7 @@ interface SocketContextType {
   sendMessage: (message: string) => void;
   isConnected: boolean;
   sessionData: SessionData | null;
+  socket: any; // Добавляем свойство socket
 }
 
 const defaultContext: SocketContextType = {
@@ -27,7 +29,8 @@ const defaultContext: SocketContextType = {
   sendUpdate: () => {},
   sendMessage: () => {},
   isConnected: false,
-  sessionData: null
+  sessionData: null,
+  socket: null // Инициализируем свойство
 };
 
 const SocketContext = createContext<SocketContextType>(defaultContext);
@@ -81,7 +84,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       sendUpdate,
       sendMessage,
       isConnected: connected,
-      sessionData
+      sessionData,
+      socket // Добавляем socket в контекст
     }}>
       {children}
     </SocketContext.Provider>

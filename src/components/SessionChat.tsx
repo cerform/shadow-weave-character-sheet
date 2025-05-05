@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,37 +14,43 @@ import { ru } from 'date-fns/locale';
 
 interface SessionChatProps {
   roomCode: string;
+  sessionCode?: string; // Добавляем для совместимости
+  playerName?: string; // Добавляем для совместимости
+  messages?: any[]; // Добавляем для совместимости
+  onSendMessage?: (text: string) => void; // Добавляем для совместимости
 }
 
-const SessionChat: React.FC<SessionChatProps> = ({ roomCode }) => {
+const SessionChat: React.FC<SessionChatProps> = ({ roomCode, sessionCode, playerName, messages: initialMessages, onSendMessage: externalSendMessage }) => {
   const [message, setMessage] = React.useState('');
-  const [messages, setMessages] = React.useState<any[]>([]);
+  const [messages, setMessages] = React.useState<any[]>(initialMessages || []);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const { toast } = useToast();
 
   React.useEffect(() => {
-    if (!socket) return;
+    if (!socket && !externalSendMessage) return;
 
-    // Listen for incoming messages
-    socket.on('chat-message', (msg: any) => {
-      setMessages(prev => [...prev, msg]);
-    });
+    if (socket) {
+      // Listen for incoming messages
+      socket.on('chat-message', (msg: any) => {
+        setMessages(prev => [...prev, msg]);
+      });
 
-    // Listen for chat history
-    socket.on('chat-history', (history: any[]) => {
-      setMessages(history);
-    });
+      // Listen for chat history
+      socket.on('chat-history', (history: any[]) => {
+        setMessages(history);
+      });
 
-    // Request chat history when component mounts
-    socket.emit('get-chat-history', roomCode);
+      // Request chat history when component mounts
+      socket.emit('get-chat-history', roomCode);
 
-    return () => {
-      socket.off('chat-message');
-      socket.off('chat-history');
-    };
-  }, [socket, roomCode]);
+      return () => {
+        socket.off('chat-message');
+        socket.off('chat-history');
+      };
+    }
+  }, [socket, roomCode, externalSendMessage]);
 
   // Scroll to bottom when messages change
   React.useEffect(() => {
@@ -51,7 +58,23 @@ const SessionChat: React.FC<SessionChatProps> = ({ roomCode }) => {
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (!message.trim() || !socket || !user) return;
+    if (!message.trim()) return;
+
+    if (externalSendMessage) {
+      // Используем внешний обработчик, если он предоставлен
+      externalSendMessage(message);
+      setMessage('');
+      return;
+    }
+
+    if (!socket || !user) {
+      toast({
+        title: "Ошибка отправки",
+        description: "Не удалось отправить сообщение. Проверьте соединение.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const newMessage = {
       id: Date.now().toString(),
@@ -83,63 +106,77 @@ const SessionChat: React.FC<SessionChatProps> = ({ roomCode }) => {
     });
   };
 
+  // Адаптируем компонент для работы с обоими форматами сообщений
+  const renderMessages = () => {
+    if (messages.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          Нет сообщений. Начните общение!
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {messages.map((msg, index) => {
+          // Определяем тип сообщения и адаптируем вывод
+          const isSimpleFormat = !msg.sender || typeof msg.sender !== 'object';
+          const senderId = isSimpleFormat ? msg.sender : msg.sender.id;
+          const senderName = isSimpleFormat ? msg.sender : msg.sender.name;
+          const senderAvatar = isSimpleFormat ? '' : msg.sender.avatar;
+          const isCurrentUser = user ? (isSimpleFormat ? senderId === playerName : senderId === user.uid) : false;
+          
+          return (
+            <div
+              key={msg.id || index}
+              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`flex gap-2 max-w-[80%] ${isCurrentUser ? 'flex-row-reverse' : ''}`}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={senderAvatar} />
+                  <AvatarFallback>
+                    {senderName?.substring(0, 2).toUpperCase() || 'AN'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div
+                    className={`rounded-lg px-3 py-2 ${
+                      isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                    }`}
+                  >
+                    <p className="text-sm">{msg.text}</p>
+                  </div>
+                  <div className="flex items-center mt-1 text-xs text-muted-foreground">
+                    <span className="font-medium mr-2">{senderName}</span>
+                    <span>
+                      {msg.timestamp && formatDistanceToNow(new Date(msg.timestamp), {
+                        addSuffix: true,
+                        locale: ru,
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+    );
+  };
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-3 border-b">
-        <CardTitle className="text-lg">Чат комнаты {roomCode}</CardTitle>
+        <CardTitle className="text-lg">
+          {sessionCode ? `Чат сессии ${sessionCode}` : `Чат комнаты ${roomCode}`}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-0 flex flex-col">
         <ScrollArea className="flex-1 p-4">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Нет сообщений. Начните общение!
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.sender.id === user?.uid ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`flex gap-2 max-w-[80%] ${
-                      msg.sender.id === user?.uid ? 'flex-row-reverse' : ''
-                    }`}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={msg.sender.avatar} />
-                      <AvatarFallback>
-                        {msg.sender.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div
-                        className={`rounded-lg px-3 py-2 ${
-                          msg.sender.id === user?.uid
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <p className="text-sm">{msg.text}</p>
-                      </div>
-                      <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                        <span className="font-medium mr-2">{msg.sender.name}</span>
-                        <span>
-                          {formatDistanceToNow(new Date(msg.timestamp), {
-                            addSuffix: true,
-                            locale: ru,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
+          {renderMessages()}
         </ScrollArea>
         <div className="p-3 border-t">
           <div className="flex items-center gap-2">

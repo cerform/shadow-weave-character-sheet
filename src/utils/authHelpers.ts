@@ -1,18 +1,26 @@
-import { auth } from "@/services/firebase";
 
-// Функция для получения ID текущего авторизованного пользователя
-export const getCurrentUid = (): string | undefined => {
-  const user = auth.currentUser;
-  return user ? user.uid : undefined;
-};
+// Этот файл - заглушка для хелперов аутентификации
+// В реальном приложении здесь будет настоящий код для работы с аутентификацией
 
-// Функция для проверки, работает ли приложение в оффлайн-режиме
-export const isOfflineMode = (): boolean => {
-  const offlineModeEnabled = localStorage.getItem('offline-mode') === 'true';
-  return offlineModeEnabled;
-};
+// Получение текущего id пользователя
+export function getCurrentUid(): string | null {
+  // Пытаемся получить данные пользователя из localStorage (для простоты)
+  const userString = localStorage.getItem('user');
+  if (userString) {
+    try {
+      const user = JSON.parse(userString);
+      return user.uid || null;
+    } catch (error) {
+      console.error('Ошибка при разборе данных пользователя:', error);
+      return null;
+    }
+  }
+  
+  // Возвращаем фиктивный id пользователя для тестирования
+  return 'test-user-id';
+}
 
-// Функция для установки оффлайн-режима
-export const setOfflineMode = (enabled: boolean): void => {
-  localStorage.setItem('offline-mode', enabled.toString());
-};
+// Проверка, авторизован ли пользователь
+export function isAuthenticated(): boolean {
+  return !!getCurrentUid();
+}

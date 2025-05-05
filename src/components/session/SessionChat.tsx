@@ -11,13 +11,15 @@ export interface SessionChatProps {
   onSendMessage: (text: string) => void;
   sessionCode: string;
   playerName: string;
+  roomCode?: string; // Добавляем roomCode как необязательный параметр для совместимости
 }
 
 const SessionChat: React.FC<SessionChatProps> = ({
   messages,
   onSendMessage,
   sessionCode,
-  playerName
+  playerName,
+  roomCode
 }) => {
   const [message, setMessage] = useState('');
 
@@ -38,7 +40,11 @@ const SessionChat: React.FC<SessionChatProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex justify-between items-center">
           <span>Чат сессии</span>
-          {sessionCode && <span className="text-xs text-muted-foreground">Код: {sessionCode}</span>}
+          {(sessionCode || roomCode) && (
+            <span className="text-xs text-muted-foreground">
+              Код: {sessionCode || roomCode}
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       
