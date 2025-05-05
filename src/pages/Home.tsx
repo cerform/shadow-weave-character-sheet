@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users } from "lucide-re
 import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import ProfilePreview from '@/components/home/ProfilePreview';
 
 const Home = () => {
   const { currentUser, isAuthenticated } = useAuth();
@@ -30,58 +30,12 @@ const Home = () => {
                 Погрузитесь в мир приключений и фэнтези
               </p>
             </div>
-            <IconOnlyNavigation />
+            <IconOnlyNavigation includeThemeSelector />
           </header>
 
           <main>
             {/* Профиль пользователя (если авторизован) */}
-            {isAuthenticated && (
-              <div className="mb-12 bg-black/40 backdrop-blur-sm p-6 rounded-lg border border-purple-500/30 shadow-lg">
-                <div className="flex flex-col md:flex-row gap-6 items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden">
-                      {currentUser?.photoURL ? (
-                        <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-12 h-12" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-grow text-center md:text-left">
-                    <h2 className="text-2xl font-bold mb-1">{currentUser?.displayName || 'Искатель приключений'}</h2>
-                    <p className="text-gray-400 mb-3">{isDM ? 'Мастер Подземелий' : 'Игрок'}</p>
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="border-purple-500/50 hover:bg-purple-500/20" 
-                        onClick={() => navigate('/profile')}
-                      >
-                        <User className="w-4 h-4 mr-2" /> Профиль
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="border-purple-500/50 hover:bg-purple-500/20" 
-                        onClick={() => navigate('/characters')}
-                      >
-                        <Users className="w-4 h-4 mr-2" /> Персонажи
-                      </Button>
-                      {isDM && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="border-purple-500/50 hover:bg-purple-500/20" 
-                          onClick={() => navigate('/dm')}
-                        >
-                          <Shield className="w-4 h-4 mr-2" /> Панель Мастера
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {isAuthenticated && <ProfilePreview />}
 
             {/* Основные карточки */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -39,7 +39,7 @@ const ProfilePreview = () => {
   if (!isAuthenticated || !currentUser) {
     return (
       <div 
-        className="bg-black/50 backdrop-blur-sm rounded-xl p-6 border flex flex-col justify-center items-center" 
+        className="bg-black/50 backdrop-blur-sm rounded-xl p-6 border flex flex-col justify-center items-center mb-8" 
         style={{ 
           borderColor: `${currentTheme.accent}50`,
           minHeight: '12rem',
@@ -83,7 +83,7 @@ const ProfilePreview = () => {
   
   return (
     <div 
-      className="bg-black/50 backdrop-blur-sm rounded-xl p-6 border"
+      className="bg-black/50 backdrop-blur-sm rounded-xl p-6 border mb-8"
       style={{ 
         borderColor: `${currentTheme.accent}50`,
         boxShadow: `0 4px 20px ${currentTheme.accent}20`

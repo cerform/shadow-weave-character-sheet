@@ -62,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: user.email,
           updatedAt: new Date().toISOString(),
           isDM: user.isDM || false,
+          photoURL: user.photoURL || '',
           // Сохраняем другие поля, но не перезаписываем их
         }, { merge: true });
       } else {
@@ -72,6 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDM: user.isDM || false,
+          photoURL: user.photoURL || '',
           characters: [],
         });
       }
@@ -160,6 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Создаем объект пользователя с дополнительными данными
         const transformedUser = transformUser(userCredential, { isDM, displayName });
         transformedUser.displayName = displayName;
+        transformedUser.username = displayName;
         transformedUser.isDM = isDM;
         
         // Сохраняем пользователя в Firestore
@@ -199,7 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Добавляем функцию для входа через Google
+  // Функция для входа через Google
   const googleLogin = async () => {
     try {
       setLoading(true);
@@ -210,6 +213,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Получаем дополнительные данные из Firestore
         const userData = await getUserFromFirestore(userCredential.uid);
         const transformedUser = transformUser(userCredential, userData);
+        
+        // Если это первый вход пользователя, сохраняем его фото профиля
+        transformedUser.photoURL = userCredential.photoURL || userData.photoURL;
         
         // Сохраняем пользователя в Firestore для обновления или создания
         await saveUserToFirestore(transformedUser);
@@ -230,7 +236,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Добавляем функцию обновления профиля
+  // Функция обновления профиля
   const updateProfile = async (data: Partial<UserType>) => {
     try {
       if (!user) throw new Error('Пользователь не авторизован');
