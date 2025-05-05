@@ -12,10 +12,10 @@ import {
   Notebook
 } from "lucide-react";
 import FeaturesTab from "./tabs/FeaturesTab";
-import SpellsTab from "./tabs/SpellsTab";
-import NotesTab from "./tabs/NotesTab";
+import { SpellsTab } from "./tabs/SpellsTab";
+import { NotesTab } from "./tabs/NotesTab";
 import InventoryTab from "./tabs/InventoryTab";
-import CombatTab from "./tabs/CombatTab";
+import { CombatTab } from "./tabs/CombatTab";
 import GeneralTab from "./tabs/GeneralTab";
 import { Character } from '@/types/character';
 

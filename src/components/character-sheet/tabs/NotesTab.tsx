@@ -1,38 +1,39 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState } from 'react';
+import { Character } from '@/types/character';
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotesTabProps {
-  character?: any;
-  onUpdate?: (updates: any) => void;
+  character: Character | null;
 }
 
-export const NotesTab: React.FC<NotesTabProps> = ({ character, onUpdate }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (onUpdate && character) {
-      onUpdate({
-        ...character,
-        notes: e.target.value
-      });
-    }
+export const NotesTab: React.FC<NotesTabProps> = ({ character }) => {
+  const { toast } = useToast();
+  const [notes, setNotes] = useState(character?.notes || "");
+  
+  const handleSaveNotes = () => {
+    // Здесь будет логика сохранения заметок
+    toast({
+      title: "Заметки сохранены",
+      description: "Ваши заметки были успешно сохранены",
+    });
   };
-
+  
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Заметки</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea 
-            value={character?.notes || ''}
-            onChange={handleChange}
-            placeholder="Здесь вы можете записывать важные события, встречи с NPC, найденные предметы и другую информацию..."
-            className="min-h-[400px]"
-          />
-        </CardContent>
-      </Card>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Заметки персонажа</h2>
+        <Button onClick={handleSaveNotes}>Сохранить</Button>
+      </div>
+      
+      <Textarea 
+        placeholder="Добавьте здесь заметки о вашем персонаже, важные события, напоминания и т.д."
+        className="min-h-[400px]"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+      />
     </div>
   );
 };
