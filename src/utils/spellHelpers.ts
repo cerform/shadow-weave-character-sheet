@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -75,15 +76,49 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     higherLevels: spell.higherLevels,
     ritual: spell.ritual,
     concentration: spell.concentration,
-    source: spell.source,
+    // Убираем свойство source, которого нет в типе CharacterSpell
     material: spell.material,
     classes: spell.classes
   };
 };
 
+// Функция для обработки смешанного типа (строка или объект) при конвертации в SpellData
+export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
+  if (typeof spell === 'string') {
+    return {
+      id: String(Date.now()),
+      name: spell,
+      level: 0,
+      school: "Неизвестная",
+      castingTime: "1 действие",
+      range: "На себя",
+      components: "В",
+      duration: "Мгновенная",
+      description: ""
+    };
+  }
+  return convertCharacterSpellToSpellData(spell);
+};
+
 // Функция конвертации из массива CharacterSpell в массив SpellData
-export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(convertCharacterSpellToSpellData);
+export const convertCharacterSpellsToSpellData = (spells: (CharacterSpell | string)[]): SpellData[] => {
+  return spells.map(spell => {
+    if (isCharacterSpellObject(spell)) {
+      return convertCharacterSpellToSpellData(spell);
+    }
+    // Если заклинание - строка, создаем базовый объект SpellData
+    return {
+      id: String(Date.now()),
+      name: spell,
+      level: 0,
+      school: "Неизвестная",
+      castingTime: "1 действие",
+      range: "На себя",
+      components: "В",
+      duration: "Мгновенная",
+      description: ""
+    };
+  });
 };
 
 // Функция конвертации из SpellData в CharacterSpell

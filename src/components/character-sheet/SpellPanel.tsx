@@ -13,7 +13,7 @@ import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { convertCharacterSpellToSpellData, isCharacterSpellObject, getSpellName } from '@/utils/spellHelpers';
+import { convertToSpellData, isCharacterSpellObject, getSpellName } from '@/utils/spellHelpers';
 
 interface SpellPanelProps {
   character: Character;
@@ -92,7 +92,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
                 key={getSpellName(spell)}
                 variant="secondary"
                 className="w-full justify-start"
-                onClick={() => onSpellClick && onSpellClick(convertCharacterSpellToSpellData(spell))}
+                onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
                 style={{ color: currentTheme.textColor }}
               >
                 {getSpellName(spell)}
