@@ -364,7 +364,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           isDM={isDM} 
           tokens={tokens} 
           selectedTokenId={selectedTokenId} 
-          setSelectedTokenId={setSelectedTokenId} 
+          onSelectToken={onSelectToken} 
         />
       </Card>
     </div>

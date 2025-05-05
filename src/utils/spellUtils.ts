@@ -2,159 +2,76 @@
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
-// Normalize spells to ensure consistent data format
+// Преобразование заклинаний в единый формат
 export const normalizeSpells = (spells: any[]): CharacterSpell[] => {
-  if (!spells || !Array.isArray(spells)) {
-    return [];
-  }
+  if (!spells || !Array.isArray(spells)) return [];
   
   return spells.map(spell => {
-    // If spell is already a CharacterSpell object
-    if (typeof spell === 'object' && spell !== null) {
-      return {
-        name: spell.name || '',
-        level: spell.level || 0,
-        school: spell.school || 'Transmutation',
-        castingTime: spell.castingTime || '1 действие',
-        range: spell.range || 'На себя',
-        components: spell.components || 'В, С',
-        duration: spell.duration || 'Мгновенная',
-        description: spell.description || '',
-        classes: spell.classes || [],
-        source: spell.source || 'PHB'
-      };
+    if (typeof spell === 'string') {
+      return { name: spell, level: 0 };
     }
-    // If spell is just a string (name reference)
-    else if (typeof spell === 'string') {
-      return {
-        name: spell,
-        level: 0,
-        school: 'Transmutation',
-        castingTime: '1 действие',
-        range: 'На себя',
-        components: 'В, С',
-        duration: 'Мгновенная',
-        description: '',
-        classes: [],
-        source: 'PHB'
-      };
-    }
-    
-    return {
-      name: 'Неизвестное заклинание',
-      level: 0,
-      school: 'Transmutation',
-      castingTime: '1 действие',
-      range: 'На себя',
-      components: 'В, С',
-      duration: 'Мгновенная',
-      description: '',
-      classes: [],
-      source: 'PHB'
-    };
+    return spell;
   });
 };
 
-// Convert CharacterSpell to SpellData
-export const convertToSpellData = (spell: CharacterSpell): SpellData => {
-  return {
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || 'Transmutation',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || 'В, С',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
-    classes: spell.classes || [],
-    source: spell.source || 'PHB'
-  };
-};
-
-// Convert an array of CharacterSpell to SpellData
-export const convertToSpellDataArray = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(convertToSpellData);
-};
-
-// Calculate maximum spell level based on character level and class
-export const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
-  // Default values for most spellcasting classes
-  if (["Волшебник", "Жрец", "Друид", "Бард", "Чародей"].includes(characterClass)) {
-    if (characterLevel >= 17) return 9;
-    if (characterLevel >= 15) return 8;
-    if (characterLevel >= 13) return 7;
-    if (characterLevel >= 11) return 6;
-    if (characterLevel >= 9) return 5;
-    if (characterLevel >= 7) return 4;
-    if (characterLevel >= 5) return 3;
-    if (characterLevel >= 3) return 2;
-    if (characterLevel >= 1) return 1;
-  }
+// Расчет модификатора заклинаний на основе класса и характеристик
+export const calculateSpellModifier = (
+  characterClass: string,
+  intelligence: number,
+  wisdom: number,
+  charisma: number
+): number => {
+  if (!characterClass) return 0;
   
-  // Half-casters
-  if (["Паладин", "Следопыт"].includes(characterClass)) {
-    if (characterLevel >= 17) return 5;
-    if (characterLevel >= 13) return 4;
-    if (characterLevel >= 9) return 3;
-    if (characterLevel >= 5) return 2;
-    if (characterLevel >= 2) return 1;
-    return 0;
-  }
+  const getModifier = (score: number) => Math.floor((score - 10) / 2);
   
-  // Third-casters and special cases
-  if (["Воин", "Плут"].includes(characterClass)) {
-    if (characterLevel >= 19) return 4;
-    if (characterLevel >= 13) return 3;
-    if (characterLevel >= 7) return 2;
-    if (characterLevel >= 3) return 1;
-    return 0;
+  const classLower = characterClass.toLowerCase();
+  
+  if (classLower === 'wizard' || classLower === 'волшебник') {
+    return getModifier(intelligence);
+  } else if (classLower === 'cleric' || classLower === 'жрец' || 
+             classLower === 'druid' || classLower === 'друид' || 
+             classLower === 'ranger' || classLower === 'следопыт') {
+    return getModifier(wisdom);
+  } else if (classLower === 'bard' || classLower === 'бард' || 
+             classLower === 'sorcerer' || classLower === 'чародей' || 
+             classLower === 'warlock' || classLower === 'колдун' || 
+             classLower === 'paladin' || classLower === 'паладин') {
+    return getModifier(charisma);
   }
   
   return 0;
 };
 
-// Calculate number of known spells for a class and level
-export const calculateKnownSpells = (characterClass: string, characterLevel: number, abilityModifier = 0): { cantrips: number; spells: number } => {
-  let cantrips = 0;
-  let spells = 0;
-  
-  switch (characterClass) {
-    case "Бард":
-      cantrips = characterLevel >= 10 ? 4 : characterLevel >= 4 ? 3 : 2;
-      spells = characterLevel + 3; // Bards know level + 3 spells
-      break;
-    case "Волшебник":
-      cantrips = characterLevel >= 10 ? 5 : characterLevel >= 4 ? 4 : 3;
-      spells = 6 + (characterLevel * 2); // Wizards can learn 2 spells per level, starting with 6
-      break;
-    case "Жрец":
-    case "Друид":
-      cantrips = characterLevel >= 10 ? 5 : characterLevel >= 4 ? 4 : 3;
-      spells = characterLevel + abilityModifier; // Clerics/Druids prepare level + modifier
-      break;
-    case "Чародей":
-      cantrips = characterLevel >= 10 ? 6 : characterLevel >= 4 ? 5 : 4;
-      spells = characterLevel + 1; // Sorcerers know level + 1 spells
-      break;
-    case "Колдун":
-      cantrips = characterLevel >= 10 ? 4 : characterLevel >= 4 ? 3 : 2;
-      spells = characterLevel + 1; // Warlocks know level + 1 spells
-      break;
-    case "Паладин":
-    case "Следопыт":
-      cantrips = 0; // These classes don't get cantrips by default
-      spells = Math.floor(characterLevel / 2) + abilityModifier; // Half-casters prepare half level + modifier
-      break;
-    default:
-      cantrips = 0;
-      spells = 0;
-  }
-  
-  return { cantrips, spells };
+// Получение текущего уровня заклинаний на основе уровня персонажа
+export const getSpellLevel = (characterLevel: number): number => {
+  if (characterLevel < 1) return 0;
+  if (characterLevel <= 2) return 1;
+  if (characterLevel <= 4) return 2;
+  if (characterLevel <= 6) return 3;
+  if (characterLevel <= 8) return 4;
+  if (characterLevel <= 10) return 5;
+  if (characterLevel <= 12) return 6;
+  if (characterLevel <= 14) return 7;
+  if (characterLevel <= 16) return 8;
+  return 9;
 };
 
-// Get spell level as a string (for display)
-export const getSpellLevel = (level: number): string => {
-  if (level === 0) return "Заговор";
-  return `${level}-й уровень`;
+// Конвертация CharacterSpell в SpellData
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Воплощение', // Предоставляем значение по умолчанию
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || 'В',
+    duration: spell.duration || 'Мгновенно',
+    description: spell.description || 'Описание отсутствует',
+    prepared: spell.prepared || false
+  };
 };
+
+// Экспортируем alias для совместимости
+export const getMaxSpellLevel = getSpellLevel;
+export const convertToSpellDataArray = normalizeSpells;

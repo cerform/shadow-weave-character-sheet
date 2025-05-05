@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,7 @@ export interface DicePanelProps {
   isDM?: boolean;
   tokens?: any[];
   selectedTokenId?: number;
-  setSelectedTokenId?: (id: number) => void;
+  onSelectToken?: (id: number | null) => void;
 }
 
 const DicePanel: React.FC<DicePanelProps> = ({ 
@@ -27,7 +26,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
   isDM = false,
   tokens = [],
   selectedTokenId,
-  setSelectedTokenId
+  onSelectToken
 }) => {
   const { toast } = useToast();
   const [diceType, setDiceType] = useState('d20');
@@ -77,7 +76,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
     
     // Send update to socket if connected
     if (connected && sendUpdate) {
-      sendUpdate({
+      const updatedCharacter = {
         ...character,
         lastDiceRoll: {
           diceType: `d${sides}`,
@@ -88,7 +87,8 @@ const DicePanel: React.FC<DicePanelProps> = ({
           label,
           timestamp: new Date().toISOString()
         }
-      });
+      };
+      sendUpdate(updatedCharacter);
     }
     
     return { rolls, total: rollTotal };

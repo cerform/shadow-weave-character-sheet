@@ -1,26 +1,38 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Character } from '@/types/character';
 
-export interface SocketContextType {
+interface SessionData {
+  name: string;
+  code: string;
+  dm: string;
+  players: string[];
+}
+
+interface SocketContextType {
   connected: boolean;
-  isConnected: boolean; // Added property
-  sessionData: any; // Added property
-  connect: (sessionCode: string, playerName: string, characterId?: string | null) => void; // Added method
+  lastUpdate?: any;
+  connect: (sessionCode: string, playerName: string, characterId?: string) => void;
+  disconnect: () => void;
   sendUpdate: (character: Character) => void;
-  lastUpdate: any;
+  sendMessage: (message: string) => void;
+  isConnected: boolean;
+  sessionData: SessionData | null;
 }
 
 const defaultContext: SocketContextType = {
   connected: false,
-  isConnected: false, // Added property
-  sessionData: null, // Added property
-  connect: () => {}, // Added method
+  connect: () => {},
+  disconnect: () => {},
   sendUpdate: () => {},
-  lastUpdate: null
+  sendMessage: () => {},
+  isConnected: false,
+  sessionData: null
 };
 
 const SocketContext = createContext<SocketContextType>(defaultContext);
+
+export const useSocket = () => useContext(SocketContext);
 
 interface SocketProviderProps {
   children: ReactNode;
@@ -29,62 +41,49 @@ interface SocketProviderProps {
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<any>(null);
-  const [sessionData, setSessionData] = useState<any>(null);
-
-  // Функция для подключения к сессии
-  const connect = (sessionCode: string, playerName: string, characterId?: string | null) => {
-    console.log(`Подключение к сессии ${sessionCode} с именем ${playerName}...`);
-    
-    // Эмулируем подключение к сессии
-    setTimeout(() => {
-      setConnected(true);
-      setSessionData({
-        code: sessionCode,
-        name: `Игровая сессия ${sessionCode}`,
-        dm: 'Мастер Подземелий',
-        players: [playerName],
-        characterId: characterId
-      });
-      
-      console.log('Подключено к сессии!');
-    }, 1000);
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  
+  // Mock socket connection for now
+  const connect = (sessionCode: string, playerName: string, characterId?: string) => {
+    console.log(`Connecting to session ${sessionCode} as ${playerName} with character ${characterId}`);
+    setConnected(true);
+    setSessionData({
+      name: `Сессия ${sessionCode}`,
+      code: sessionCode,
+      dm: 'DM',
+      players: [playerName]
+    });
   };
-
-  // Функция для отправки обновлений персонажа
+  
+  const disconnect = () => {
+    console.log('Disconnecting from session');
+    setConnected(false);
+    setSessionData(null);
+  };
+  
   const sendUpdate = (character: Character) => {
-    // В реальном приложении здесь была бы логика отправки через сокет
-    console.log('Отправка обновления персонажа:', character);
+    console.log('Sending character update:', character);
+    // В реальном приложении здесь был бы код отправки через сокет
     setLastUpdate({ character, timestamp: new Date().toISOString() });
   };
-
-  // Эффект для эмуляции подключения к сокет-серверу
-  useEffect(() => {
-    console.log('Подключение к сокет-серверу...');
-    
-    // Эмулируем задержку подключения
-    const timeout = setTimeout(() => {
-      setConnected(true);
-      console.log('Подключено к сокет-серверу!');
-    }, 1000);
-    
-    return () => {
-      clearTimeout(timeout);
-      console.log('Отключение от сокет-сервера.');
-    };
-  }, []);
-
+  
+  const sendMessage = (message: string) => {
+    console.log('Sending message:', message);
+    // В реальном приложении здесь был бы код отправки через сокет
+  };
+  
   return (
-    <SocketContext.Provider value={{ 
-      connected, 
-      isConnected: connected, // Alias for connected
-      sessionData, 
+    <SocketContext.Provider value={{
+      connected,
+      lastUpdate,
       connect,
-      sendUpdate, 
-      lastUpdate 
+      disconnect,
+      sendUpdate,
+      sendMessage,
+      isConnected: connected,
+      sessionData
     }}>
       {children}
     </SocketContext.Provider>
   );
 };
-
-export const useSocket = (): SocketContextType => useContext(SocketContext);

@@ -24,6 +24,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       const { default: autoTable } = await import('jspdf-autotable');
       
       const doc = new jsPDF();
+      let yPosition = 55; // Начальная позиция по Y
       
       // Add character name as title
       doc.setFontSize(20);
@@ -38,7 +39,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add stats table
       autoTable(doc, {
-        startY: 55,
+        startY: yPosition,
         head: [['СИЛ', 'ЛВК', 'ТЕЛ', 'ИНТ', 'МДР', 'ХАР']],
         body: [[
           character.strength || 10,
@@ -50,9 +51,12 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         ]],
       });
       
+      // Update position after table
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+      
       // Add combat stats
       autoTable(doc, {
-        startY: 75,
+        startY: yPosition,
         head: [['КД', 'Инициатива', 'Скорость', 'Текущие ХП', 'Макс. ХП']],
         body: [[
           character.armorClass || 10,
@@ -62,6 +66,9 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
           character.maxHp || 0
         ]],
       });
+      
+      // Update position after table
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
       
       // Add skills if available
       if (character.skills && typeof character.skills === 'object' && Object.keys(character.skills).length > 0) {
@@ -80,10 +87,13 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         
         if (skillRows.length > 0) {
           autoTable(doc, {
-            startY: 95,
+            startY: yPosition,
             head: [['Навык', 'Модификатор']],
             body: skillRows,
           });
+          
+          // Update position after table
+          yPosition = (doc as any).lastAutoTable.finalY + 10;
         }
       }
       
@@ -102,36 +112,45 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       if (equipmentList.length > 0) {
         autoTable(doc, {
-          startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 130,
+          startY: yPosition,
           head: [['Снаряжение']],
           body: equipmentList.map(item => [item]),
         });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
       }
       
       // Add features
       if (character.features && character.features.length > 0) {
         autoTable(doc, {
-          startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 150,
+          startY: yPosition,
           head: [['Особенности и черты']],
           body: character.features.map(feature => [feature]),
         });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
       }
       
       // Add spells
       if (character.spells && character.spells.length > 0) {
         autoTable(doc, {
-          startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 170,
+          startY: yPosition,
           head: [['Заклинания']],
           body: character.spells.map(spell => [
             typeof spell === 'string' ? spell : spell.name
           ]),
         });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
       }
       
       // Add notes if available
       if (character.notes) {
         autoTable(doc, {
-          startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 190,
+          startY: yPosition,
           head: [['Заметки']],
           body: [[character.notes]],
         });

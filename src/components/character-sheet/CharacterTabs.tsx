@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -7,14 +6,25 @@ import { Character } from '@/types/character';
 // Components for each tab
 import AbilitiesTab from './tabs/AbilitiesTab';
 import CombatTab from './tabs/CombatTab';
-import EquipmentTab from './tabs/EquipmentTab';
+import { EquipmentTab } from './tabs/EquipmentTab';
 import SpellsTab from './tabs/SpellsTab';
 import FeaturesTab from './tabs/FeaturesTab';
 import BackgroundTab from './tabs/BackgroundTab';
 import NotesTab from './tabs/NotesTab';
-import HandbookTab from './tabs/HandbookTab';
+import { HandbookTab } from './tabs/HandbookTab';
 
 export interface CharacterTabsProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+// Создадим типы для табов, чтобы исправить ошибки
+export interface FeaturesTabProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface NotesTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
@@ -107,7 +117,6 @@ const CharacterTabs: React.FC<CharacterTabsProps> = ({
         <TabsContent value="features">
           <FeaturesTab 
             character={character} 
-            features={character.features || []}
             onUpdate={onUpdate} 
           />
         </TabsContent>
@@ -119,7 +128,6 @@ const CharacterTabs: React.FC<CharacterTabsProps> = ({
         <TabsContent value="notes">
           <NotesTab 
             character={character} 
-            notes={character.notes || ""}
             onUpdate={onUpdate} 
           />
         </TabsContent>

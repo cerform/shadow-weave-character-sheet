@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -15,12 +14,12 @@ import CharacterTabs from './CharacterTabs';
 import CharacterInfoHeader from './CharacterInfoHeader';
 import SaveCharacterButton from './SaveCharacterButton';
 import CharacterExportPDF from './CharacterExportPDF';
-import CharacterHeader from './CharacterHeader';
+import { CharacterHeader } from './CharacterHeader';
 import LevelUpPanel from './LevelUpPanel';
-import HPBar from './HPBar';
+import { HPBar } from './HPBar';
 import DicePanel from './DicePanel';
 import ResourcePanel from './ResourcePanel';
-import RestPanel from './RestPanel';
+import { RestPanel } from './RestPanel';
 
 interface CharacterSheetProps {
   character?: Character;

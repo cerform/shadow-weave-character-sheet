@@ -1,91 +1,162 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Book, BookOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Character } from '@/types/character';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search } from 'lucide-react';
 
-export const HandbookTab = () => {
-  const [activeSection, setActiveSection] = useState("equipment");
-  const navigate = useNavigate();
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+interface HandbookTabProps {
+  character: Character;
+}
+
+export const HandbookTab: React.FC<HandbookTabProps> = ({ character }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('rules');
+  
+  const rulesContent = `
+# Правила D&D 5e
+
+## Основы
+- **Проверки характеристик**: бросок d20 + модификатор характеристики
+- **Спасброски**: бросок d20 + модификатор характеристики + бонус мастерства (если есть)
+- **Атаки**: бросок d20 + модификатор характеристики + бонус мастерства
+- **Сложность проверки (DC)**: число, которое нужно превысить при броске
+
+## Бой
+- **Инициатива**: бросок d20 + модификатор Ловкости
+- **Действия в бою**: Действие, бонусное действие, движение, реакция
+- **Укрытие**: +2 к AC (половинное), +5 к AC (три четверти), полное укрытие
+
+## Заклинания
+- **Уровни заклинаний**: от 0 (заговоры) до 9
+- **Компоненты**: вербальный (V), соматический (S), материальный (M)
+- **Время накладывания**: от 1 действия до нескольких часов
+- **Дистанция**: от прикосновения до сотен километров
+- **Длительность**: мгновенная, концентрация, минуты, часы, дни
+
+## Отдых
+- **Короткий отдых**: 1 час, восстанавливает Кость Хит-Поинтов
+- **Продолжительный отдых**: 8 часов, восстанавливает HP, половину Костей Хит-Поинтов, заклинания
+`;
+
+  const classesContent = `
+# Классы в D&D 5e
+
+## Воин (Fighter)
+Специалист в военном деле и владении оружием. Обладает высокой выживаемостью и наносит стабильный урон.
+
+## Варвар (Barbarian)
+Свирепый воин, полагающийся на ярость для усиления в бою. Имеет высокое здоровье и способность переносить урон.
+
+## Плут (Rogue)
+Мастер скрытности и манипуляций. Наносит высокий урон по одиночной цели благодаря скрытой атаке.
+
+## Монах (Monk)
+Мастер боевых искусств, использующий ки для выполнения невероятных физических подвигов.
+
+## Паладин (Paladin)
+Святой воин, сочетающий боевые навыки и божественную магию. Обладает способностью исцелять и защищать.
+
+## Следопыт (Ranger)
+Охотник и разведчик, использующий знания природы для выслеживания врагов.
+
+## Чародей (Sorcerer)
+Врожденный заклинатель, магические силы которого идут изнутри.
+
+## Волшебник (Wizard)
+Ученый маг, изучающий тайны магии и записывающий заклинания в книгу.
+
+## Колдун (Warlock)
+Заклинатель, получивший силы от могущественного покровителя.
+
+## Бард (Bard)
+Вдохновляющий исполнитель, сочетающий музыку с магией.
+
+## Жрец (Cleric)
+Проводник божественной воли, носитель веры и силы своего божества.
+
+## Друид (Druid)
+Хранитель природы, способный принимать формы животных.
+`;
+
+  const racesContent = `
+# Расы в D&D 5e
+
+## Человек (Human)
+Универсальная раса с бонусом ко всем характеристикам.
+
+## Эльф (Elf)
+Долгоживущая раса с бонусом к Ловкости, обладающая острым зрением и устойчивостью к очарованию.
+
+## Дварф (Dwarf)
+Крепкие и выносливые, с бонусом к Телосложению и устойчивостью к яду.
+
+## Полурослик (Halfling)
+Маленькая раса с бонусом к Ловкости и возможностью перебросить результат 1 на d20.
+
+## Гном (Gnome)
+Маленькая и изобретательная раса с бонусом к Интеллекту.
+
+## Полуэльф (Half-Elf)
+Сочетает черты людей и эльфов, получает бонус к Харизме и двум другим характеристикам.
+
+## Полуорк (Half-Orc)
+Физически сильная раса с бонусом к Силе и Телосложению, обладает стойкостью и усиленными критическими атаками.
+
+## Тифлинг (Tiefling)
+Потомки демонов с бонусом к Интеллекту и Харизме, обладают врожденной магией и сопротивлением к огню.
+
+## Драконорожденный (Dragonborn)
+Раса с драконьими чертами, имеющая бонус к Силе и Харизме, обладает дыхательной атакой.
+`;
+
+  const filteredContent = () => {
+    const content = {
+      rules: rulesContent,
+      classes: classesContent,
+      races: racesContent,
+    }[activeTab as 'rules' | 'classes' | 'races'] || '';
+    
+    if (!searchTerm) return content;
+    
+    // Простая фильтрация по поисковому запросу
+    return content
+      .split('\n')
+      .filter(line => line.toLowerCase().includes(searchTerm.toLowerCase()))
+      .join('\n');
+  };
   
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold flex items-center">
-          <Book className="mr-2 h-5 w-5" />
-          Руководство игрока
-        </h2>
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/handbook')}
-          style={{
-            borderColor: currentTheme.accent
-          }}
-        >
-          <BookOpen className="mr-2 h-4 w-4" />
-          Открыть полную версию
-        </Button>
-      </div>
-
-      <Tabs defaultValue={activeSection} onValueChange={setActiveSection}>
-        <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-          <TabsTrigger value="spells">Заклинания</TabsTrigger>
-        </TabsList>
-
-        <ScrollArea className="h-[calc(100vh-360px)] mt-4">
-          <TabsContent value="equipment" className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-2">Снаряжение и оружие</h3>
-                <p className="mb-2">
-                  В мире D&D доступно множество различных видов оружия, брони и снаряжения.
-                </p>
-                <h4 className="font-medium mt-4 mb-2">Оружие</h4>
-                <p className="mb-2">
-                  Оружие делится на простое и воинское. Простое оружие доступно большинству классов, 
-                  а воинское требует специального навыка.
-                </p>
-                <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Рукопашное оружие:</strong> Мечи, топоры, булавы, копья и т.д.</li>
-                  <li><strong>Дальнобойное оружие:</strong> Луки, арбалеты, пращи и т.д.</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="spells" className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-2">Заклинания</h3>
-                <p className="mb-2">
-                  Заклинания в D&D делятся на уровни от 0 (заговоры) до 9. Каждый класс заклинателя 
-                  имеет свой список доступных заклинаний.
-                </p>
-                <h4 className="font-medium mt-4 mb-2">Школы магии:</h4>
-                <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Воплощение:</strong> Заклинания, создающие энергию или материю</li>
-                  <li><strong>Ограждение:</strong> Защитные заклинания</li>
-                  <li><strong>Преобразование:</strong> Заклинания, изменяющие форму или свойства</li>
-                  <li><strong>Прорицание:</strong> Заклинания для получения информации</li>
-                  <li><strong>Вызов:</strong> Заклинания для призыва существ или объектов</li>
-                  <li><strong>Некромантия:</strong> Заклинания связанные со смертью и нежитью</li>
-                  <li><strong>Иллюзия:</strong> Заклинания создающие иллюзии</li>
-                  <li><strong>Очарование:</strong> Заклинания, контролирующие разум</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </ScrollArea>
-      </Tabs>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Справочник D&D 5e</CardTitle>
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по справочнику..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="rules" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="rules">Правила</TabsTrigger>
+            <TabsTrigger value="classes">Классы</TabsTrigger>
+            <TabsTrigger value="races">Расы</TabsTrigger>
+          </TabsList>
+          
+          <ScrollArea className="h-[400px] whitespace-pre-wrap">
+            <div className="handbook-content prose prose-sm max-w-none dark:prose-invert">
+              {filteredContent()}
+            </div>
+          </ScrollArea>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
