@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { DiceBox, type DiceBoxOptions } from "@3d-dice/dice-box";
@@ -11,6 +10,7 @@ interface DiceBox3DProps {
   onRollComplete?: (result: number) => void;
   themeColor?: string;
   fixedPosition?: boolean;
+  hideControls?: boolean; // Added the missing prop
 }
 
 // Настройки кубика по умолчанию
@@ -44,6 +44,7 @@ const DiceScene = ({
   onRollComplete,
   themeColor,
   fixedPosition = false,
+  hideControls = false, // Added default value
 }) => {
   const { camera, gl } = useThree();
   const prevDiceType = useRef(diceType);
@@ -149,10 +150,12 @@ const DiceScene = ({
       <div id="dice-canvas" className={`w-full h-full ${fixedPosition ? 'absolute inset-0' : ''}`} />
       
       {/* Информация о текущем броске */}
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 
-                    bg-black/70 px-3 py-1 rounded-full text-xs text-white/90">
-        Бросок: {diceCount}{diceType}{modifier > 0 ? `+${modifier}` : modifier < 0 ? modifier : ''}
-      </div>
+      {!hideControls && (
+        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 
+                      bg-black/70 px-3 py-1 rounded-full text-xs text-white/90">
+          Бросок: {diceCount}{diceType}{modifier > 0 ? `+${modifier}` : modifier < 0 ? modifier : ''}
+        </div>
+      )}
     </div>
   );
 };
@@ -164,6 +167,7 @@ export const DiceBox3D: React.FC<DiceBox3DProps> = ({
   onRollComplete,
   themeColor,
   fixedPosition,
+  hideControls = false, // Added the missing prop with default value
 }) => {
   const diceManager = useRef<any>(null);
 
@@ -179,6 +183,7 @@ export const DiceBox3D: React.FC<DiceBox3DProps> = ({
         onRollComplete={onRollComplete}
         themeColor={themeColor}
         fixedPosition={fixedPosition}
+        hideControls={hideControls} // Pass the hideControls prop
       />
     </Canvas>
   );
