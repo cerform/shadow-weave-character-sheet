@@ -24,7 +24,7 @@ export interface CharacterSpell {
   id?: string | number;
   name: string;
   level: number;
-  school?: string;
+  school?: string;  // Опциональное для CharacterSpell
   castingTime?: string;
   range?: string;
   components?: string;

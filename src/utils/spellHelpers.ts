@@ -31,13 +31,20 @@ export const toggleSpellPrepared = (spell: CharacterSpell | string): CharacterSp
     return {
       name: spell,
       level: 0,
-      prepared: true
+      prepared: true,
+      school: 'Неизвестная', // Добавляем обязательное поле school
+      castingTime: '1 действие',
+      range: 'Неизвестная',
+      components: '',
+      duration: 'Мгновенная',
+      description: ''
     };
   }
   
   return {
     ...spell,
-    prepared: !spell.prepared
+    prepared: !spell.prepared,
+    school: spell.school || 'Неизвестная' // Убедимся, что school всегда определена
   };
 };
 
@@ -50,13 +57,13 @@ export const getSpellsByLevel = (spells: (CharacterSpell | string)[], level: num
   });
 };
 
-// Добавляем функцию конвертации из CharacterSpell в SpellData
+// Функция конвертации из CharacterSpell в SpellData
 export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell | string): SpellData => {
   if (typeof characterSpell === 'string') {
     return {
       name: characterSpell,
       level: 0,
-      school: "Неизвестная",
+      school: "Неизвестная", // Обязательное поле в SpellData
       castingTime: "1 действие",
       range: "Неизвестная",
       components: "",

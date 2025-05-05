@@ -67,7 +67,7 @@ export const useSpellbook = () => {
       if (typeof spell.classes === 'string') {
         matchesClass = activeClass.includes(spell.classes);
       } else if (Array.isArray(spell.classes)) {
-        matchesClass = spell.classes.some(c => activeClass.includes(c));
+        matchesClass = spell.classes.some(cls => activeClass.includes(cls));
       }
     }
     

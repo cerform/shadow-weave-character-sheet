@@ -12,6 +12,7 @@ import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
 import { SpellData } from '@/types/spells';
+import { convertCharacterSpellToSpellData } from '@/utils/spellHelpers';
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -50,6 +51,13 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
   } = spellbook;
 
   const [viewMode, setViewMode] = useState('cards');
+
+  // Гарантируем, что все заклинания соответствуют интерфейсу SpellData
+  const spellsData: SpellData[] = filteredSpells.map(spell => ({
+    ...spell,
+    // Убедимся, что обязательные поля имеют значения
+    school: spell.school || 'Неизвестная'
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -185,14 +193,14 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
             </div>
           </CardContent>
           <CardFooter className="px-4 py-2 text-sm text-muted-foreground">
-            Найдено заклинаний: {filteredSpells.length}
+            Найдено заклинаний: {spellsData.length}
           </CardFooter>
         </Card>
       </div>
       
       {viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpells.map((spell, index) => (
+          {spellsData.map((spell, index) => (
             <SpellCard
               key={spell.id?.toString() || `spell-${index}`}
               spell={spell}
@@ -202,7 +210,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         </div>
       ) : (
         <SpellTable 
-          spells={filteredSpells}
+          spells={spellsData}
           onSpellClick={handleOpenSpell}
         />
       )}

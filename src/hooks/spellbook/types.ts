@@ -28,4 +28,5 @@ export interface UseSpellbookReturn {
   importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }
 
-export { SpellData } from '@/types/spells';
+// Правильно экспортируем тип с использованием 'export type'
+export type { SpellData };
