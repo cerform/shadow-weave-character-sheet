@@ -35,3 +35,26 @@ export const formatSpellClasses = (classes: string[] | string): string => {
   
   return classes;
 };
+
+/**
+ * Проверяет, является ли заклинание объектом типа CharacterSpell
+ */
+export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
+  return typeof spell === 'object' && 'name' in spell && 'level' in spell;
+};
+
+/**
+ * Проверяет, подготовлено ли заклинание
+ */
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (typeof spell === 'string') return false;
+  return !!spell.prepared;
+};
+
+/**
+ * Получает уровень заклинания
+ */
+export const getSpellLevel = (spell: CharacterSpell | string): number => {
+  if (typeof spell === 'string') return 0; // По умолчанию заговор
+  return spell.level;
+};
