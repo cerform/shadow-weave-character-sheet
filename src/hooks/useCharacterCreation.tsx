@@ -6,7 +6,8 @@ import { getCurrentUid } from "@/utils/authHelpers";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
-  const [character, setCharacter] = useState<Character>({
+  const defaultCharacter: Character = {
+    id: "",
     name: "",
     gender: "",
     race: "",
@@ -16,6 +17,15 @@ export const useCharacterCreation = () => {
     level: 1,
     background: "",
     alignment: "",
+    experience: 0,
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+    maxHp: 10,
+    currentHp: 10,
     abilities: {
       // Add legacy ability score properties
       STR: 10,
@@ -54,7 +64,9 @@ export const useCharacterCreation = () => {
     flaws: "",
     appearance: "",
     backstory: ""
-  });
+  };
+
+  const [character, setCharacter] = useState<Character>(defaultCharacter);
 
   const updateCharacter = (updates: Partial<Character>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
@@ -195,7 +207,7 @@ export const useCharacterCreation = () => {
     if (level + additionalLevels > 20) {
       toast({
         title: "Превышен максимальный уровень",
-        description: `Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`,
+        description: `Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнител��ных классах.`,
         variant: "destructive"
       });
       return;

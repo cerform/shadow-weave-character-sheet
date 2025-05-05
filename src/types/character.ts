@@ -29,7 +29,12 @@ export interface Character {
   features?: string[];
   spells?: any[];
   notes?: string;
-  proficiencies?: string[];
+  proficiencies?: string[] | {
+    armor?: string[];
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   languages?: string[];
   gold?: number;
   backstory?: string;
@@ -45,7 +50,7 @@ export interface Character {
     label: string;
     timestamp: string;
   };
-  // Additional properties to support backward compatibility
+  // Additional properties
   gender?: string;
   className?: string;
   subclass?: string;
@@ -90,8 +95,6 @@ export interface Character {
   flaws?: string;
   abilityPointsUsed?: number;
   additionalClasses?: ClassLevel[];
-  
-  // Added or corrected fields
   appearance?: string;
   sorceryPoints?: {
     max: number;
@@ -102,6 +105,7 @@ export interface Character {
   };
   createdAt?: string;
   updatedAt?: string;
+  image?: string;
 }
 
 export interface CharacterSpell {
@@ -141,7 +145,7 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24
 };
 
-// Добавляем недостающий HitPointEvent для DamageLog
+// Add HitPointEvent for DamageLog
 export interface HitPointEvent {
   id: string;
   type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
@@ -150,4 +154,15 @@ export interface HitPointEvent {
   timestamp: number | Date;
   previousHP?: number;
   newHP?: number;
+}
+
+// Add LevelFeature interface for useLevelFeatures hook
+export interface LevelFeature {
+  id: string;
+  level: number;
+  name: string;
+  description: string;
+  type: string;
+  class?: string;
+  required?: boolean;
 }

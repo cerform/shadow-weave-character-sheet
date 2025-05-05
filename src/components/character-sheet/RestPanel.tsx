@@ -35,7 +35,7 @@ export const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => 
       Object.keys(updatedResources).forEach(key => {
         const resource = updatedResources[key];
         // Проверяем наличие свойства recoveryType и его значение
-        if (resource && (resource as any).recoveryType === 'shortRest') {
+        if (resource && resource.recoveryType === 'shortRest') {
           updatedResources[key] = {
             ...resource,
             used: 0

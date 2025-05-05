@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Step, UseCreationStepConfig } from '@/types/characterCreation';
 
-export const useCreationStep = (config: UseCreationStepConfig = {}) => {
+export const useCreationStep = (config: UseCreationStepConfig) => {
   const { steps = [], initialStep = 0, onStepChange, isMagicClass = false } = config;
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [visibleSteps, setVisibleSteps] = useState<Step[]>([]);

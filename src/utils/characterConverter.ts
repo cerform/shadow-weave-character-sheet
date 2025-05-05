@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 /**
@@ -92,29 +93,41 @@ export const convertToCharacter = (sheet: Character): Character => {
       proficiencies.push(...sheet.proficiencies);
     } else {
       // Если proficiencies - объект, извлекаем массивы из его свойств
-      if (Array.isArray(sheet.proficiencies.armor)) {
-        proficiencies.push(...sheet.proficiencies.armor.map(item => `Доспехи: ${item}`));
+      const profObj = sheet.proficiencies as { armor?: string[], weapons?: string[], tools?: string[], languages?: string[] };
+      
+      if (profObj.armor && Array.isArray(profObj.armor)) {
+        proficiencies.push(...profObj.armor.map(item => `Доспехи: ${item}`));
       }
       
-      if (Array.isArray(sheet.proficiencies.weapons)) {
-        proficiencies.push(...sheet.proficiencies.weapons.map(item => `Оружие: ${item}`));
+      if (profObj.weapons && Array.isArray(profObj.weapons)) {
+        proficiencies.push(...profObj.weapons.map(item => `Оружие: ${item}`));
       }
       
-      if (Array.isArray(sheet.proficiencies.tools)) {
-        proficiencies.push(...sheet.proficiencies.tools.map(item => `Инструменты: ${item}`));
+      if (profObj.tools && Array.isArray(profObj.tools)) {
+        proficiencies.push(...profObj.tools.map(item => `Инструменты: ${item}`));
       }
       
-      if (Array.isArray(sheet.proficiencies.languages)) {
-        languages = [...languages, ...sheet.proficiencies.languages];
+      if (profObj.languages && Array.isArray(profObj.languages)) {
+        languages = [...languages, ...profObj.languages];
       }
     }
   }
 
+  // Create a complete character object with all required fields
   return {
     id: sheet.id || "",
     userId: sheet.userId,
     name: sheet.name || "Безымянный",
     race: sheet.race || "",
+    experience: sheet.experience || 0,
+    strength: sheet.strength || 10,
+    dexterity: sheet.dexterity || 10,
+    constitution: sheet.constitution || 10,
+    intelligence: sheet.intelligence || 10,
+    wisdom: sheet.wisdom || 10,
+    charisma: sheet.charisma || 10,
+    maxHp: sheet.maxHp || 10,
+    currentHp: sheet.currentHp || 10,
     // Используем свойство subrace как отдельное поле только если оно есть в Character
     ...(sheet.subrace && { subrace: sheet.subrace }),
     className: sheet.class || "",
@@ -134,16 +147,14 @@ export const convertToCharacter = (sheet: Character): Character => {
       wisdom: sheet.abilities?.wisdom || 10,
       charisma: sheet.abilities?.charisma || 10
     },
-    spells: spellsArray,
-    spellSlots: spellSlots,
+    spells: sheet.spells || [],
+    spellSlots: sheet.spellSlots || {},
     gender: sheet.gender || "",
     alignment: sheet.alignment || "",
     background: sheet.background || "",
     equipment: sheet.equipment || [],
     languages: languages,
     proficiencies: proficiencies,
-    maxHp: maxHp,
-    currentHp: sheet.currentHp || maxHp, // Устанавливаем текущие хиты равными максимальным, если не указано
     createdAt: sheet.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

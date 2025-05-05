@@ -41,6 +41,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     verbal: spell.verbal || false,
     somatic: spell.somatic || false,
     material: spell.material || false,
+    description: spell.description || '',  // Ensure description is always provided
   };
 };
 
@@ -55,7 +56,8 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     ritual: spell.ritual || spell.isRitual || false,
     concentration: spell.concentration || spell.isConcentration || false,
     higherLevels: spell.higherLevels || spell.higherLevel || "",
-    id: spell.id
+    id: spell.id,
+    description: Array.isArray(spell.description) ? spell.description.join("\n") : spell.description,
   };
 };
 

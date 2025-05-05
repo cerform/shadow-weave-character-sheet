@@ -49,6 +49,22 @@ export const convertToSpellDataArray = (spells: (CharacterSpell | string)[]): Sp
   return spells.map(spell => convertToSpellData(spell));
 };
 
+// Get spells grouped by level
+export const getSpellsByLevel = (spells: (CharacterSpell | string)[]): Record<number, SpellData[]> => {
+  const normalized = normalizeSpells(spells);
+  const spellsByLevel: Record<number, SpellData[]> = {};
+
+  normalized.forEach(spell => {
+    const level = spell.level || 0;
+    if (!spellsByLevel[level]) {
+      spellsByLevel[level] = [];
+    }
+    spellsByLevel[level].push(convertCharacterSpellToSpellData(spell));
+  });
+
+  return spellsByLevel;
+};
+
 // Расчёт известных заклинаний на основе класса, уровня и модификатора способности
 export const calculateKnownSpells = (characterClass: string, level: number, abilityScores: any): { cantrips: number; spells: number } => {
   // Определяем основную характеристику заклинателя в зависимости от класса
@@ -76,6 +92,14 @@ export const calculateKnownSpells = (characterClass: string, level: number, abil
   // Получаем значение соответствующей характеристики
   let abilityScore = 10;
   if (abilityScores) {
+    if (typeof abilityScores === 'number') {
+      // If abilityScores is directly a number, use it
+      return {
+        cantrips: 0,
+        spells: 0
+      };
+    }
+    
     if (abilityScores[spellAbility]) {
       abilityScore = abilityScores[spellAbility];
     } else if (spellAbility === 'intelligence' && abilityScores.INT) {
