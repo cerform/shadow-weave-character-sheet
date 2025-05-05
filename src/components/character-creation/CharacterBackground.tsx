@@ -10,20 +10,23 @@ export interface CharacterBackgroundProps {
   backgrounds?: any[];
   nextStep?: () => void;
   prevStep?: () => void;
+  updateCharacter?: (updates: Partial<Character>) => void; // Добавляем для совместимости
 }
 
 const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   character,
   onUpdate,
+  updateCharacter, // Добавляем для поддержки двух вариантов названия
   backgrounds = [],
   nextStep = () => {},
   prevStep = () => {}
 }) => {
+  const updateFunction = updateCharacter || onUpdate; // Используем правильную функцию
   const [selectedBackground, setSelectedBackground] = useState(character.background || '');
 
   const handleSelectBackground = (backgroundName: string) => {
     setSelectedBackground(backgroundName);
-    onUpdate({ background: backgroundName });
+    updateFunction({ background: backgroundName });
   };
 
   return (

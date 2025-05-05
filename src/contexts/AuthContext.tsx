@@ -1,24 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface UserType {
-  uid: string;
-  displayName: string | null;
-  email: string | null;
-  photoURL: string | null;
-}
-
-interface AuthContextType {
-  user: UserType | null;
-  currentUser: UserType | null; // Добавляем для совместимости
-  loading: boolean;
-  error: Error | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, displayName: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>; // Алиас для signup
-  logout: () => Promise<void>;
-  googleLogin: (redirect?: boolean) => Promise<void>; // Добавляем метод для входа через Google
-}
+import { UserType, AuthContextType } from '@/types/auth';
 
 const defaultAuthContext: AuthContextType = {
   user: null,
@@ -29,10 +11,12 @@ const defaultAuthContext: AuthContextType = {
   signup: async () => {},
   register: async () => {},
   logout: async () => {},
-  googleLogin: async () => {}
+  googleLogin: async () => {},
+  isAuthenticated: false,
+  updateProfile: async () => {}
 };
 
-const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -70,9 +54,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Здесь будет логика входа
       const mockUser = {
         uid: '1',
+        id: '1',
         displayName: 'Тестовый пользователь',
         email: email,
-        photoURL: null
+        photoURL: null,
+        username: 'user1',
+        isDM: false
       };
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
@@ -87,9 +74,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Здесь будет логика регистрации
       const mockUser = {
         uid: '1',
+        id: '1',
         displayName: displayName,
         email: email,
-        photoURL: null
+        photoURL: null,
+        username: 'user' + Math.floor(Math.random() * 1000),
+        isDM: false
       };
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
@@ -120,12 +110,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Пока используем моковые данные
       const mockUser = {
         uid: '2',
+        id: '2',
         displayName: 'Google Пользователь',
         email: 'google@example.com',
-        photoURL: 'https://via.placeholder.com/150'
+        photoURL: 'https://via.placeholder.com/150',
+        username: 'googleuser',
+        isDM: true
       };
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
+  // Добавляем функцию обновления профиля
+  const updateProfile = async (data: Partial<UserType>) => {
+    try {
+      if (!user) throw new Error('Пользователь не авторизован');
+      
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (err) {
       setError(err as Error);
       throw err;
@@ -136,14 +143,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        currentUser: user, // Добавляем для совместимости
+        currentUser: user,
         loading,
-        error,
+        error: error ? error.message : null,
         login,
         signup,
         register,
         logout,
-        googleLogin
+        googleLogin,
+        isAuthenticated: !!user,
+        updateProfile
       }}
     >
       {children}

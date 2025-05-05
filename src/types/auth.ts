@@ -18,4 +18,5 @@ export interface AuthContextType {
   googleLogin: () => Promise<void>;
   isAuthenticated: boolean;
   currentUser: UserType | null;
+  updateProfile?: (data: Partial<UserType>) => Promise<void>;
 }

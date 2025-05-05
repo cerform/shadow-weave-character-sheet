@@ -8,6 +8,25 @@ interface InventoryTabProps {
 }
 
 const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
+  // Проверяем тип equipment и делаем правильное обращение
+  const getWeapons = () => {
+    if (!character.equipment) return [];
+    if (Array.isArray(character.equipment)) return character.equipment;
+    return character.equipment.weapons || [];
+  };
+
+  const getArmor = () => {
+    if (!character.equipment) return '';
+    if (Array.isArray(character.equipment)) return '';
+    return character.equipment.armor || '';
+  };
+
+  const getItems = () => {
+    if (!character.equipment) return [];
+    if (Array.isArray(character.equipment)) return character.equipment;
+    return character.equipment.items || [];
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Инвентарь</h2>
@@ -16,7 +35,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Оружие</h3>
           <ul className="list-disc pl-5">
-            {character.equipment?.weapons?.map((weapon, index) => (
+            {getWeapons().map((weapon, index) => (
               <li key={index}>{weapon}</li>
             ))}
           </ul>
@@ -24,14 +43,14 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
         
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Доспехи</h3>
-          <p>{character.equipment?.armor || 'Нет'}</p>
+          <p>{getArmor() || 'Нет'}</p>
         </div>
       </div>
       
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Предметы</h3>
         <ul className="list-disc pl-5">
-          {character.equipment?.items?.map((item, index) => (
+          {getItems().map((item, index) => (
             <li key={index}>{item}</li>
           ))}
         </ul>

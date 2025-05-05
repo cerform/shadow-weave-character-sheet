@@ -1,4 +1,3 @@
-
 export interface Character {
   id: string;
   name: string;
@@ -25,7 +24,7 @@ export interface Character {
   proficiencyBonus?: number;
   skills?: { [key: string]: number | boolean | { proficient: boolean; expertise: boolean; bonus?: number } };
   savingThrows?: { [key: string]: boolean };
-  equipment?: string[] | { weapons?: string[]; armor?: string; items?: string[] };
+  equipment?: string[] | { weapons?: string[]; armor?: string; items?: string[]; };
   features?: string[];
   spells?: any[];
   notes?: string;
@@ -106,6 +105,22 @@ export interface Character {
   createdAt?: string;
   updatedAt?: string;
   image?: string;
+  // Добавляем недостающие свойства из ошибок
+  feats?: {
+    name: string;
+    description: string;
+  }[];
+  classFeatures?: {
+    name: string;
+    description: string;
+  }[];
+  currency?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
 }
 
 export interface CharacterSpell {
