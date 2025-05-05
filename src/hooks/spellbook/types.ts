@@ -1,11 +1,11 @@
 
-import { CharacterSpell } from '@/types/character';
+import { CharacterSpell } from '@/types/character.d';
 
 export interface SpellData {
   id?: string | number;
   name: string;
   level: number;
-  school: string;
+  school: string; // Required field
   castingTime?: string;
   range?: string;
   components?: string;
@@ -45,3 +45,19 @@ export interface UseSpellbookReturn {
   formatClasses: (classes: string[] | string | undefined) => string;
   importSpellsFromText: (text: string) => CharacterSpell[];
 }
+
+// Helper function to convert between CharacterSpell and SpellData
+export const convertToSpellData = (characterSpell: CharacterSpell): SpellData => {
+  return {
+    ...characterSpell,
+    school: characterSpell.school || 'Неизвестная', // Provide a default value for required field
+    prepared: characterSpell.prepared || false
+  };
+};
+
+export const convertToCharacterSpell = (spellData: SpellData): CharacterSpell => {
+  return {
+    ...spellData,
+    id: typeof spellData.id === 'string' ? parseInt(spellData.id) || undefined : spellData.id
+  };
+};

@@ -1,6 +1,7 @@
+
 import React, { useState, useContext } from 'react';
 import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
-import { Character } from '@/types/character';
+import { Character } from '@/types/character.d';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -18,7 +19,7 @@ import NavigationButtons from "@/components/ui/NavigationButtons";
 import { StatsPanel } from './StatsPanel';
 import { CharacterTabs } from './CharacterTabs';
 import ResourcePanel from './ResourcePanel';
-import { RestPanel } from './RestPanel';
+import RestPanel from './RestPanel';
 import { ThemeSelector } from './ThemeSelector';
 import LevelUpPanel from './LevelUpPanel';
 import { SkillsPanel } from './SkillsPanel';

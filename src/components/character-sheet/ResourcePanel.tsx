@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Heart, Shield, ThumbsUp, Hash, ZapOff } from "lucide-react";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Character } from '@/types/character';
+import { Character } from '@/types/character.d';
 
 interface ResourcePanelProps {
   character?: Character | null;
@@ -89,8 +89,7 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps
             <div className="relative">
               <Progress 
                 value={(character?.currentHp || 0) / (character?.maxHp || 1) * 100} 
-                className="h-3" 
-                indicatorClassName="bg-gradient-to-r from-red-500 to-red-600" 
+                className="h-3"
               />
             </div>
             <div className="flex justify-between gap-1 mt-2">
@@ -130,42 +129,16 @@ const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps
                 </span>
                 <span>{character.hitDice.total - character.hitDice.used}/{character.hitDice.total}</span>
               </div>
+              <div className="flex justify-between gap-1">
+                <Button variant="outline" size="sm" onClick={handleShortRest}>
+                  Короткий отдых
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLongRest}>
+                  Длинный отдых
+                </Button>
+              </div>
             </div>
           )}
-          
-          {/* Inspiration */}
-          <div className="flex justify-between items-center text-sm">
-            <span className="flex items-center">
-              <ThumbsUp className="h-4 w-4 mr-1 text-purple-400" />
-              Вдохновение
-            </span>
-            <Button 
-              variant={character?.inspiration ? "default" : "outline"}
-              size="sm"
-              onClick={() => onUpdate?.({ inspiration: !character?.inspiration })}
-            >
-              {character?.inspiration ? "Активно" : "Нет"}
-            </Button>
-          </div>
-          
-          {/* Rest Buttons */}
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            <Button 
-              variant="outline"
-              onClick={handleShortRest}
-              className="h-auto"
-            >
-              Короткий отдых
-            </Button>
-            <Button 
-              variant="default"
-              onClick={handleLongRest}
-              className="h-auto"
-              style={{ backgroundColor: currentTheme.accent }}
-            >
-              Длинный отдых
-            </Button>
-          </div>
         </div>
       </CardContent>
     </Card>

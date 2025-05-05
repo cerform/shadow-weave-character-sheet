@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import { Character, CharacterSpell, CharacterSheet } from '@/types/character';
+import { Character, CharacterSpell, CharacterSheet } from '@/types/character.d';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
@@ -309,5 +309,6 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-// Для обратной совместимости экспортируем Character и CharacterSpell из types/character.d.ts
-export { Character, CharacterSpell };
+// For type exports, we need to use export type due to isolatedModules
+export { useContext as useCharacter };
+export type { Character, CharacterSpell };
