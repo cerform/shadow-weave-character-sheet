@@ -28,7 +28,7 @@ export const convertToCharacter = (sheet: Character): Character => {
     const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
     
     // Получаем значение телосложения
-    const constitution = sheet.abilities?.constitution || sheet.abilities?.CON || 10;
+    const constitution = sheet.abilities?.constitution || sheet.abilities?.CON || sheet.constitution || 10;
     const constitutionMod = Math.floor((constitution - 10) / 2);
     
     // HP первого уровня = максимум хитов кости + модификатор телосложения
@@ -39,7 +39,7 @@ export const convertToCharacter = (sheet: Character): Character => {
       maxHp += ((baseHp / 2 + 1) + constitutionMod) * (sheet.level - 1);
     }
     
-    return Math.round(maxHp);
+    return Math.max(1, Math.round(maxHp)); // Минимум 1 HP
   };
   
   // Вычисляем максимальные хиты
@@ -49,13 +49,13 @@ export const convertToCharacter = (sheet: Character): Character => {
   const spellsArray = sheet.spells || [];
   
   // Определяем слоты заклинаний в зависимости от класса и уровня
-  const spellSlots: Record<number, { max: number; used: number }> = {};
+  const spellSlots: Record<number, { max: number; used: number }> = sheet.spellSlots || {};
   
   // Определяем класс персонажа, обеспечивая непустое значение
   const characterClass = sheet.class || "";
   
-  // Заполняем слоты заклинаний для заклинателей
-  if (["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(characterClass)) {
+  // Заполняем слоты заклинаний для заклинателей, если они не определены
+  if (Object.keys(spellSlots).length === 0 && ["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(characterClass)) {
     // Упрощённая логика слотов заклинаний
     const level = sheet.level;
     
@@ -70,7 +70,7 @@ export const convertToCharacter = (sheet: Character): Character => {
     if (level >= 17) spellSlots[9] = { max: Math.min(1, level - 16), used: 0 };
   } 
   // Для полузаклинателей (паладины, следопыты)
-  else if (["Паладин", "Следопыт"].includes(characterClass)) {
+  else if (Object.keys(spellSlots).length === 0 && ["Паладин", "Следопыт"].includes(characterClass)) {
     const level = sheet.level;
     
     if (level >= 2) spellSlots[1] = { max: Math.min(3, level - 1), used: 0 };
@@ -78,6 +78,15 @@ export const convertToCharacter = (sheet: Character): Character => {
     if (level >= 9) spellSlots[3] = { max: Math.min(2, level - 8), used: 0 };
     if (level >= 13) spellSlots[4] = { max: Math.min(1, level - 12), used: 0 };
     if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
+  }
+  
+  // Очки колдовства для чародеев
+  let sorceryPoints = sheet.sorceryPoints;
+  if (!sorceryPoints && characterClass === "Чародей" && sheet.level > 1) {
+    sorceryPoints = {
+      max: sheet.level,
+      current: sheet.level
+    };
   }
   
   // Правильно обрабатываем proficiencies
@@ -112,49 +121,104 @@ export const convertToCharacter = (sheet: Character): Character => {
       }
     }
   }
+  
+  // Заполняем заклинательную способность, если она не определена
+  let spellcasting = sheet.spellcasting || {};
+  if (Object.keys(spellcasting).length === 0 && isMagicClass(characterClass)) {
+    const abilityByClass: { [key: string]: string } = {
+      "Бард": "CHA",
+      "Волшебник": "INT",
+      "Жрец": "WIS",
+      "Друид": "WIS",
+      "Чародей": "CHA",
+      "Колдун": "CHA",
+      "Паладин": "CHA",
+      "Следопыт": "WIS",
+    };
+    
+    const ability = abilityByClass[characterClass] || "";
+    const abilityScore = getAbilityScore(sheet, ability);
+    const profBonus = getProficiencyBonus(sheet.level || 1);
+    
+    spellcasting = {
+      ability,
+      saveDC: abilityScore ? 8 + profBonus + Math.floor((abilityScore - 10) / 2) : 0,
+      attackBonus: abilityScore ? profBonus + Math.floor((abilityScore - 10) / 2) : 0
+    };
+  }
 
-  // Create a complete character object with all required fields
+  // Создаем объект с характеристиками, гарантируя, что у нас есть все необходимые поля
+  const abilities = {
+    STR: sheet.abilities?.STR || sheet.strength || 10,
+    DEX: sheet.abilities?.DEX || sheet.dexterity || 10,
+    CON: sheet.abilities?.CON || sheet.constitution || 10,
+    INT: sheet.abilities?.INT || sheet.intelligence || 10,
+    WIS: sheet.abilities?.WIS || sheet.wisdom || 10,
+    CHA: sheet.abilities?.CHA || sheet.charisma || 10,
+    strength: sheet.abilities?.strength || sheet.strength || 10,
+    dexterity: sheet.abilities?.dexterity || sheet.dexterity || 10,
+    constitution: sheet.abilities?.constitution || sheet.constitution || 10,
+    intelligence: sheet.abilities?.intelligence || sheet.intelligence || 10,
+    wisdom: sheet.abilities?.wisdom || sheet.wisdom || 10,
+    charisma: sheet.abilities?.charisma || sheet.charisma || 10
+  };
+
+  // Вычисляем бонус мастерства
+  const proficiencyBonus = sheet.proficiencyBonus || getProficiencyBonus(sheet.level || 1);
+  
+  // Создаем объект персонажа с уточненными полями
   return {
     id: sheet.id || "",
     userId: sheet.userId,
     name: sheet.name || "Безымянный",
     race: sheet.race || "",
-    experience: sheet.experience || 0,
-    strength: sheet.strength || 10,
-    dexterity: sheet.dexterity || 10,
-    constitution: sheet.constitution || 10,
-    intelligence: sheet.intelligence || 10,
-    wisdom: sheet.wisdom || 10,
-    charisma: sheet.charisma || 10,
-    maxHp: sheet.maxHp || 10,
-    currentHp: sheet.currentHp || 10,
-    // Используем свойство subrace как отдельное поле только если оно есть в Character
-    ...(sheet.subrace && { subrace: sheet.subrace }),
-    className: sheet.class || "",
-    class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
+    subrace: sheet.subrace,
+    class: sheet.class || "",
     level: sheet.level || 1,
-    abilities: {
-      STR: sheet.abilities?.STR || 10,
-      DEX: sheet.abilities?.DEX || 10,
-      CON: sheet.abilities?.CON || 10,
-      INT: sheet.abilities?.INT || 10,
-      WIS: sheet.abilities?.WIS || 10,
-      CHA: sheet.abilities?.CHA || 10,
-      strength: sheet.abilities?.strength || 10,
-      dexterity: sheet.abilities?.dexterity || 10,
-      constitution: sheet.abilities?.constitution || 10,
-      intelligence: sheet.abilities?.intelligence || 10,
-      wisdom: sheet.abilities?.wisdom || 10,
-      charisma: sheet.abilities?.charisma || 10
-    },
-    spells: sheet.spells || [],
-    spellSlots: sheet.spellSlots || {},
-    gender: sheet.gender || "",
-    alignment: sheet.alignment || "",
     background: sheet.background || "",
+    alignment: sheet.alignment || "",
+    experience: sheet.experience || 0,
+    strength: abilities.STR,
+    dexterity: abilities.DEX,
+    constitution: abilities.CON,
+    intelligence: abilities.INT,
+    wisdom: abilities.WIS,
+    charisma: abilities.CHA,
+    maxHp,
+    currentHp: sheet.currentHp !== undefined ? sheet.currentHp : maxHp,
+    temporaryHp: sheet.temporaryHp || 0,
+    armorClass: sheet.armorClass || 10 + Math.floor((abilities.DEX - 10) / 2),
+    initiative: sheet.initiative || Math.floor((abilities.DEX - 10) / 2),
+    speed: sheet.speed || 30,
+    proficiencyBonus,
+    abilities,
+    spells: spellsArray,
+    spellSlots,
+    spellcasting,
+    sorceryPoints,
+    gender: sheet.gender || "",
     equipment: sheet.equipment || [],
     languages: languages,
     proficiencies: proficiencies,
+    savingThrows: sheet.savingThrows || {},
+    skills: sheet.skills || {},
+    gold: sheet.gold || 0,
+    hitDice: sheet.hitDice || { 
+      total: sheet.level || 1, 
+      used: 0, 
+      dieType: getHitDiceByClass(characterClass), 
+      value: `${sheet.level || 1}${getHitDiceByClass(characterClass)}` 
+    },
+    backstory: sheet.backstory || "",
+    deathSaves: sheet.deathSaves || { successes: 0, failures: 0 },
+    personalityTraits: sheet.personalityTraits || "",
+    ideals: sheet.ideals || "",
+    bonds: sheet.bonds || "",
+    flaws: sheet.flaws || "",
+    appearance: sheet.appearance || "",
+    notes: sheet.notes || "",
+    features: sheet.features || [],
+    resources: sheet.resources || {},
     createdAt: sheet.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -167,3 +231,59 @@ export const getModifierFromAbilityScore = (score: number): string => {
   const mod = Math.floor((score - 10) / 2);
   return mod >= 0 ? `+${mod}` : `${mod}`;
 };
+
+/**
+ * Вспомогательная функция для проверки, является ли класс магическим
+ */
+function isMagicClass(className: string): boolean {
+  const magicClasses = [
+    "Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун",
+    "Паладин", "Следопыт"
+  ];
+  return magicClasses.includes(className);
+}
+
+/**
+ * Функция для получения значения характеристики
+ */
+function getAbilityScore(character: Character, abilityShortName: string): number {
+  if (!character.abilities) return 10;
+  
+  switch (abilityShortName) {
+    case "STR": return character.abilities.STR || character.abilities.strength || 10;
+    case "DEX": return character.abilities.DEX || character.abilities.dexterity || 10;
+    case "CON": return character.abilities.CON || character.abilities.constitution || 10;
+    case "INT": return character.abilities.INT || character.abilities.intelligence || 10;
+    case "WIS": return character.abilities.WIS || character.abilities.wisdom || 10;
+    case "CHA": return character.abilities.CHA || character.abilities.charisma || 10;
+    default: return 10;
+  }
+}
+
+/**
+ * Функция для расчета бонуса мастерства
+ */
+function getProficiencyBonus(level: number): number {
+  return 2 + Math.floor((level - 1) / 4);
+}
+
+/**
+ * Функция для получения типа кости хитов по классу
+ */
+function getHitDiceByClass(className: string): string {
+  switch (className) {
+    case "Варвар": return "d12";
+    case "Воин":
+    case "Паладин":
+    case "Следопыт": return "d10";
+    case "Бард":
+    case "Жрец":
+    case "Друид":
+    case "Монах":
+    case "Плут":
+    case "Колдун": return "d8";
+    case "Волшебник":
+    case "Чародей": return "d6";
+    default: return "d8"; // По умолчанию d8
+  }
+}

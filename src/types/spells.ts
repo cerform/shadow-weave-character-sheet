@@ -1,82 +1,94 @@
 
 import { CharacterSpell } from './character';
 
-// SpellData interface used for the UI components
 export interface SpellData {
+  id: string | number;
   name: string;
   level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  duration?: string;
   description: string | string[];
-  classes: string[] | string; // This is required
-  isRitual?: boolean;
-  isConcentration?: boolean;
+  classes: string[] | string;
+  source?: string;
+  
+  // Дополнительные данные для отображения
+  prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
+  materials?: string;
+  
+  // Компоненты заклинания
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  prepared?: boolean;
-  materials?: string;
+  
+  // Дополнительные эффекты на высоких уровнях
   higherLevel?: string;
   higherLevels?: string;
-  id?: string | number;
-  source?: string;
 }
 
-// Convert CharacterSpell to SpellData
+// Преобразование CharacterSpell в SpellData
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
   return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
     level: spell.level,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'На себя',
-    components: spell.components || 'В, С',
+    components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: spell.description || 'Нет описания',
+    description: spell.description || ['Нет описания'],
     classes: spell.classes || [],
-    isRitual: spell.ritual || false,
-    isConcentration: spell.concentration || false,
+    source: spell.source || 'Книга игрока',
+    prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
+    materials: spell.materials || '',
     verbal: spell.verbal || false,
     somatic: spell.somatic || false,
     material: spell.material || false,
-    prepared: spell.prepared || false,
-    materials: spell.materials,
-    higherLevel: spell.higherLevel,
-    higherLevels: spell.higherLevels,
-    id: spell.id,
-    source: spell.source
+    higherLevel: spell.higherLevel || spell.higherLevels || '',
+    higherLevels: spell.higherLevels || spell.higherLevel || '',
   };
 };
 
-// Convert SpellData to CharacterSpell
-export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
-  return {
-    name: spell.name,
-    level: spell.level,
-    school: spell.school,
-    castingTime: spell.castingTime,
-    range: spell.range,
-    components: spell.components,
-    duration: spell.duration,
-    description: spell.description,
-    classes: spell.classes,
-    ritual: spell.ritual || spell.isRitual || false,
-    concentration: spell.concentration || spell.isConcentration || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    prepared: spell.prepared || false,
-    materials: spell.materials,
-    higherLevel: spell.higherLevel,
-    higherLevels: spell.higherLevels,
-    id: spell.id,
-    source: spell.source
+// Преобразование строковых компонентов в объект
+export const parseComponents = (componentsStr: string): { verbal: boolean; somatic: boolean; material: boolean; materials?: string } => {
+  const result = {
+    verbal: componentsStr.includes('В'),
+    somatic: componentsStr.includes('С'),
+    material: componentsStr.includes('М'),
+    materials: ''
   };
+  
+  // Извлекаем материальные компоненты из скобок, если они есть
+  const materialMatch = componentsStr.match(/М\s*\((.*?)\)/);
+  if (materialMatch) {
+    result.materials = materialMatch[1];
+  }
+  
+  return result;
+};
+
+// Создание строки компонентов из флагов
+export const componentsToString = (
+  { verbal, somatic, material, ritual, concentration, materials }: 
+  { verbal?: boolean; somatic?: boolean; material?: boolean; ritual?: boolean; concentration?: boolean; materials?: string }
+): string => {
+  const parts: string[] = [];
+  
+  if (verbal) parts.push('В');
+  if (somatic) parts.push('С');
+  if (material) parts.push('М' + (materials ? ` (${materials})` : ''));
+  
+  let result = parts.join(', ');
+  
+  if (ritual) result += ' (ритуал)';
+  if (concentration) result += ' (концентрация)';
+  
+  return result;
 };

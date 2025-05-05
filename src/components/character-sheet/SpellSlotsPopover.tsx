@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MoreHorizontal, Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
 import { Character } from '@/types/character';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { useToast } from '@/hooks/use-toast';
 
 interface SpellSlotsPopoverProps {
   level: number;
@@ -13,161 +12,240 @@ interface SpellSlotsPopoverProps {
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({ 
-  level, 
-  character, 
-  onUpdate 
+export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
+  level,
+  character,
+  onUpdate
 }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
-  const handleUseSlot = () => {
-    if (!character.spellSlots) return;
+  const { toast } = useToast();
+  
+  const slotInfo = character.spellSlots?.[level] || { max: 0, used: 0 };
+  const availableSlots = slotInfo.max - slotInfo.used;
+  
+  // Функция для использования слота заклинания
+  const useSpellSlot = () => {
+    if (!character.spellSlots || !character.spellSlots[level]) {
+      toast({
+        title: "Ошибка",
+        description: "Слоты заклинаний не определены",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo || slotInfo.used >= slotInfo.max) return;
+    if (slotInfo.used >= slotInfo.max) {
+      toast({
+        title: "Невозможно использовать слот",
+        description: "Все слоты этого уровня уже использованы",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: slotInfo.used + 1
+    const newSpellSlots = { ...character.spellSlots };
+    newSpellSlots[level] = { ...slotInfo, used: slotInfo.used + 1 };
+    
+    onUpdate({ spellSlots: newSpellSlots });
+    
+    toast({
+      title: "Слот использован",
+      description: `Использован слот заклинания ${level}-го уровня`
+    });
+  };
+  
+  // Функция для восстановления слота заклинания
+  const restoreSpellSlot = () => {
+    if (!character.spellSlots || !character.spellSlots[level]) {
+      toast({
+        title: "Ошибка",
+        description: "Слоты заклинаний не определены",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (slotInfo.used <= 0) {
+      toast({
+        title: "Невозможно восстановить слот",
+        description: "Все слоты этого уровня уже восстановлены",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newSpellSlots = { ...character.spellSlots };
+    newSpellSlots[level] = { ...slotInfo, used: slotInfo.used - 1 };
+    
+    onUpdate({ spellSlots: newSpellSlots });
+    
+    toast({
+      title: "Слот восстановлен",
+      description: `Восстановлен слот заклинания ${level}-го уровня`
+    });
+  };
+  
+  // Обмен очков колдовства на слоты (только для чародеев)
+  const createSpellSlotFromSorceryPoints = () => {
+    if (character.class !== "Чародей" || !character.sorceryPoints) {
+      toast({
+        title: "Невозможно",
+        description: "Только чародеи могут создавать слоты из очков колдовства",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Стоимость создания слота в очках колдовства
+    const pointCost = level;
+    
+    if (character.sorceryPoints.current < pointCost) {
+      toast({
+        title: "Недостаточно очков колдовства",
+        description: `Требуется ${pointCost} очков, доступно ${character.sorceryPoints.current}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Создаем слот
+    const newSpellSlots = { ...character.spellSlots };
+    const newSorceryPoints = { 
+      ...character.sorceryPoints, 
+      current: character.sorceryPoints.current - pointCost 
     };
     
-    onUpdate({ spellSlots: updatedSpellSlots });
-  };
-
-  const handleRestoreSlot = () => {
-    if (!character.spellSlots) return;
-    
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo || slotInfo.used <= 0) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: slotInfo.used - 1
+    // Увеличиваем максимальное количество слотов на 1
+    newSpellSlots[level] = { 
+      max: slotInfo.max + 1, 
+      used: slotInfo.used 
     };
     
-    onUpdate({ spellSlots: updatedSpellSlots });
+    onUpdate({ 
+      spellSlots: newSpellSlots,
+      sorceryPoints: newSorceryPoints
+    });
+    
+    toast({
+      title: "Слот создан",
+      description: `Создан дополнительный слот ${level}-го уровня. Потрачено ${pointCost} очков колдовства`
+    });
   };
-
-  const handleRestoreAllSlots = () => {
-    if (!character.spellSlots) return;
+  
+  // Преобразование слота в очки колдовства
+  const convertSlotToSorceryPoints = () => {
+    if (character.class !== "Чародей" || !character.sorceryPoints) {
+      toast({
+        title: "Невозможно",
+        description: "Только чародеи могут преобразовывать слоты в очки колдовства",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo) return;
+    if (availableSlots <= 0) {
+      toast({
+        title: "Нет доступных слотов",
+        description: "Все слоты этого уровня уже использованы",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: 0
+    // Количество очков, получаемых за слот
+    const pointsGained = level;
+    
+    // Преобразуем слот
+    const newSpellSlots = { ...character.spellSlots };
+    const newSorceryPoints = { 
+      ...character.sorceryPoints, 
+      current: Math.min(
+        character.sorceryPoints.max,
+        character.sorceryPoints.current + pointsGained
+      )
     };
     
-    onUpdate({ spellSlots: updatedSpellSlots });
-  };
-
-  const handleUseAllSlots = () => {
-    if (!character.spellSlots) return;
-    
-    const slotInfo = character.spellSlots[level];
-    if (!slotInfo) return;
-    
-    const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = {
-      ...slotInfo,
-      used: slotInfo.max
+    // Помечаем слот как использованный
+    newSpellSlots[level] = { 
+      ...slotInfo, 
+      used: slotInfo.used + 1 
     };
     
-    onUpdate({ spellSlots: updatedSpellSlots });
+    onUpdate({ 
+      spellSlots: newSpellSlots,
+      sorceryPoints: newSorceryPoints
+    });
+    
+    toast({
+      title: "Слот преобразован",
+      description: `Слот ${level}-го уровня преобразован в ${pointsGained} очков колдовства`
+    });
   };
-
-  if (!character.spellSlots || !character.spellSlots[level]) {
-    return null;
-  }
-
-  const slotInfo = character.spellSlots[level];
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-6 w-6">
-          <MoreHorizontal className="h-4 w-4" />
+          <Settings className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-48 p-3" 
-        style={{
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-          borderColor: currentTheme.accent
-        }}
-      >
+      <PopoverContent className="w-[200px] p-3" side="right">
         <div className="space-y-3">
-          <h4 className="font-medium text-sm" style={{ color: currentTheme.textColor }}>
-            Слоты {level}-го уровня
-          </h4>
+          <h4 className="font-medium text-center">Слоты {level}-го уровня</h4>
           
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleUseSlot}
-              disabled={slotInfo.used >= slotInfo.max}
-              className="w-full"
-              style={{ 
-                borderColor: currentTheme.accent,
-                color: slotInfo.used >= slotInfo.max ? currentTheme.mutedTextColor : currentTheme.textColor
-              }}
-            >
-              <Minus className="h-4 w-4 mr-1" /> Использовать
-            </Button>
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleRestoreSlot}
-              disabled={slotInfo.used <= 0}
-              className="w-full"
-              style={{ 
-                borderColor: currentTheme.accent,
-                color: slotInfo.used <= 0 ? currentTheme.mutedTextColor : currentTheme.textColor
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Восстановить
-            </Button>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Доступно: {availableSlots}/{slotInfo.max}</span>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
             <Button 
-              variant="outline"
+              variant="outline" 
               size="sm"
-              onClick={handleUseAllSlots}
-              disabled={slotInfo.used >= slotInfo.max}
-              className="w-full"
-              style={{ 
-                borderColor: currentTheme.accent,
-                color: slotInfo.used >= slotInfo.max ? currentTheme.mutedTextColor : currentTheme.textColor
-              }}
+              onClick={useSpellSlot}
+              disabled={availableSlots <= 0}
             >
-              Использовать все
+              Использовать
             </Button>
+            
             <Button 
-              variant="outline"
+              variant="outline" 
               size="sm"
-              onClick={handleRestoreAllSlots}
+              onClick={restoreSpellSlot}
               disabled={slotInfo.used <= 0}
-              className="w-full"
-              style={{ 
-                borderColor: currentTheme.accent,
-                color: slotInfo.used <= 0 ? currentTheme.mutedTextColor : currentTheme.textColor
-              }}
             >
-              Восстановить все
+              Восстановить
             </Button>
           </div>
           
-          <div className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
-            Использовано {slotInfo.used} из {slotInfo.max} слотов
-          </div>
+          {/* Опции только для чародеев */}
+          {character.class === "Чародей" && character.sorceryPoints && (
+            <>
+              <div className="pt-2 border-t">
+                <h5 className="text-sm font-medium text-center mb-2">Метамагия</h5>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={createSpellSlotFromSorceryPoints}
+                    disabled={character.sorceryPoints.current < level}
+                  >
+                    Создать слот ({level} ОК)
+                  </Button>
+                  
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={convertSlotToSorceryPoints}
+                    disabled={availableSlots <= 0}
+                  >
+                    Слот → {level} ОК
+                  </Button>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground text-center">
+                Очки колдовства: {character.sorceryPoints.current}/{character.sorceryPoints.max}
+              </div>
+            </>
+          )}
         </div>
       </PopoverContent>
     </Popover>
