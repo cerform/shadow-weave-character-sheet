@@ -33,14 +33,6 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
   
-  // Подготавливаем заклинания, добавляя уникальные id если их нет
-  const processedSpells = availableSpells.map((spell, index) => {
-    if (spell.id === undefined) {
-      return { ...spell, id: `spell-${index}-${spell.name.replace(/\s+/g, '-').toLowerCase()}` };
-    }
-    return spell;
-  });
-  
   // Сбрасываем выбранные заклинания при открытии/закрытии модального окна
   useEffect(() => {
     if (!open) {
@@ -49,7 +41,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   }, [open]);
   
   // Группируем заклинания по уровням
-  const spellsByLevel = processedSpells.reduce((acc, spell) => {
+  const spellsByLevel = availableSpells.reduce((acc, spell) => {
     const level = spell.level || 0;
     if (!acc[level]) acc[level] = [];
     acc[level].push(spell);
@@ -58,7 +50,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Разделяем заклинания на заговоры и обычные
   const cantrips = spellsByLevel[0] || [];
-  const spells = processedSpells.filter(spell => (spell.level || 0) > 0);
+  const spells = availableSpells.filter(spell => (spell.level || 0) > 0);
   
   // Счетчики выбранных заклинаний
   const selectedCantripsCount = selectedSpells.filter(spell => (spell.level || 0) === 0).length;
@@ -81,11 +73,6 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   // Обработчик подтверждения выбора заклинаний
   const handleConfirm = () => {
     onConfirm(selectedSpells);
-  };
-  
-  // Получаем имя или id заклинания для использования в качестве ключа
-  const getSpellKey = (spell: CharacterSpell) => {
-    return spell.id || spell.name;
   };
   
   return (
@@ -125,16 +112,16 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                         <h4 className="text-sm font-medium mb-2">Заговоры</h4>
                         <div className="space-y-2">
                           {cantrips.map(spell => (
-                            <div key={getSpellKey(spell)} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
+                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
                               <Checkbox 
-                                id={`spell-${getSpellKey(spell)}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id || s.name === spell.name)}
+                                id={`spell-${spell.id}`} 
+                                checked={selectedSpells.some(s => s.id === spell.id)}
                                 onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id || s.name === spell.name) && selectedCantripsCount >= maxCantripsCount}
+                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedCantripsCount >= maxCantripsCount}
                               />
                               <div className="space-y-1">
                                 <Label 
-                                  htmlFor={`spell-${getSpellKey(spell)}`} 
+                                  htmlFor={`spell-${spell.id}`} 
                                   className="font-medium cursor-pointer"
                                 >
                                   {spell.name}
@@ -154,16 +141,16 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                         <h4 className="text-sm font-medium mb-2">Уровень {level}</h4>
                         <div className="space-y-2">
                           {levelSpells.map(spell => (
-                            <div key={getSpellKey(spell)} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
+                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
                               <Checkbox 
-                                id={`spell-${getSpellKey(spell)}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id || s.name === spell.name)}
+                                id={`spell-${spell.id}`} 
+                                checked={selectedSpells.some(s => s.id === spell.id)}
                                 onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id || s.name === spell.name) && selectedSpellsCount >= maxSpellsCount}
+                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedSpellsCount >= maxSpellsCount}
                               />
                               <div className="space-y-1">
                                 <Label 
-                                  htmlFor={`spell-${getSpellKey(spell)}`} 
+                                  htmlFor={`spell-${spell.id}`} 
                                   className="font-medium cursor-pointer"
                                 >
                                   {spell.name}
@@ -183,16 +170,16 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                 {activeTab === "cantrips" && (
                   <div className="space-y-2">
                     {cantrips.map(spell => (
-                      <div key={getSpellKey(spell)} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
+                      <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
                         <Checkbox 
-                          id={`spell-cantrip-${getSpellKey(spell)}`} 
-                          checked={selectedSpells.some(s => s.id === spell.id || s.name === spell.name)}
+                          id={`spell-cantrip-${spell.id}`} 
+                          checked={selectedSpells.some(s => s.id === spell.id)}
                           onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                          disabled={!selectedSpells.some(s => s.id === spell.id || s.name === spell.name) && selectedCantripsCount >= maxCantripsCount}
+                          disabled={!selectedSpells.some(s => s.id === spell.id) && selectedCantripsCount >= maxCantripsCount}
                         />
                         <div className="space-y-1">
                           <Label 
-                            htmlFor={`spell-cantrip-${getSpellKey(spell)}`} 
+                            htmlFor={`spell-cantrip-${spell.id}`} 
                             className="font-medium cursor-pointer"
                           >
                             {spell.name}
@@ -201,7 +188,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                             {spell.school} • {spell.castingTime}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {(spell.description || "").substring(0, 100)}...
+                            {spell.description.substring(0, 100)}...
                           </p>
                         </div>
                       </div>
@@ -216,16 +203,16 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                         <h4 className="text-sm font-medium mb-2">Уровень {level}</h4>
                         <div className="space-y-2">
                           {levelSpells.map(spell => (
-                            <div key={getSpellKey(spell)} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
+                            <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
                               <Checkbox 
-                                id={`spell-level-${getSpellKey(spell)}`} 
-                                checked={selectedSpells.some(s => s.id === spell.id || s.name === spell.name)}
+                                id={`spell-level-${spell.id}`} 
+                                checked={selectedSpells.some(s => s.id === spell.id)}
                                 onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
-                                disabled={!selectedSpells.some(s => s.id === spell.id || s.name === spell.name) && selectedSpellsCount >= maxSpellsCount}
+                                disabled={!selectedSpells.some(s => s.id === spell.id) && selectedSpellsCount >= maxSpellsCount}
                               />
                               <div className="space-y-1">
                                 <Label 
-                                  htmlFor={`spell-level-${getSpellKey(spell)}`} 
+                                  htmlFor={`spell-level-${spell.id}`} 
                                   className="font-medium cursor-pointer"
                                 >
                                   {spell.name}
@@ -234,7 +221,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                                   {spell.school} • {spell.castingTime}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {(spell.description || "").substring(0, 100)}...
+                                  {spell.description.substring(0, 100)}...
                                 </p>
                               </div>
                             </div>

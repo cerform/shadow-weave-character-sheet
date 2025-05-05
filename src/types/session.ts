@@ -11,7 +11,6 @@ export interface Session {
   startTime: string;
   endTime?: string;
   isActive: boolean;
-  isEnded?: boolean; // Добавляем поле isEnded для совместимости
   notes: {
     id: string;
     content: string;

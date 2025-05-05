@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Dices } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export interface AbilityRollingPanelProps {
-  stats: { [key: string]: number };
+interface AbilityRollingPanelProps {
   diceResults: number[][];
   assignedDice: { [key: string]: number | null };
   onRollAllAbilities: () => void;
-  onAssignDiceToStat: (stat: string, value: number) => void;
-  onRollSingleAbility?: (ability: string) => { rolls: number[]; total: number };
+  onAssignDiceToStat: (stat: string, diceIndex: number) => void;
+  onRollSingleAbility?: (ability: string) => void;
+  stats: { [key: string]: number };
   getModifier: (score: number) => string;
 }
 
@@ -25,12 +25,12 @@ const abilityNames: { [key: string]: string } = {
 };
 
 const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
-  stats,
   diceResults,
   assignedDice,
   onRollAllAbilities,
   onAssignDiceToStat,
   onRollSingleAbility,
+  stats,
   getModifier
 }) => {
   const [isRollingInProgress, setIsRollingInProgress] = useState(false);
@@ -90,10 +90,7 @@ const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(stats).filter(([key]) => 
-          key === 'strength' || key === 'dexterity' || key === 'constitution' ||
-          key === 'intelligence' || key === 'wisdom' || key === 'charisma'
-        ).map(([stat, value], statIndex) => (
+        {Object.entries(stats).map(([stat, value], statIndex) => (
           <div key={stat} className="border rounded-md p-4 bg-black/50 border-primary/20">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-medium text-lg">{abilityNames[stat] || stat}</h3>
@@ -124,7 +121,7 @@ const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
                   return (
                     <div
                       key={diceIndex}
-                      onClick={() => !isAssigned && onAssignDiceToStat(stat, getDiceTotal(dice))}
+                      onClick={() => !isAssigned && onAssignDiceToStat(stat, diceIndex)}
                       className={`
                         flex justify-between items-center p-2 rounded cursor-pointer
                         ${isAssignedToThisStat ? 'bg-primary/30 border border-primary' : isAssigned ? 'bg-gray-800/50 text-gray-500' : 'bg-gray-800 hover:bg-gray-700'}

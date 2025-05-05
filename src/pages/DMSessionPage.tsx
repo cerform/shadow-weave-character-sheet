@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useTheme } from '@/hooks/use-theme';
 import { useSessionStore } from '@/stores/sessionStore';
 import { Copy, Users, ArrowLeft, Plus, RefreshCw, Trash, Link } from 'lucide-react';
-import sessionService from '@/services/sessionService';
+import { sessionService } from '@/services/sessionService';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const DMSessionPage = () => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -51,7 +50,6 @@ export const DiceRoller3DFixed: React.FC<DiceRoller3DFixedProps> = ({
       onRollComplete={handleRollComplete}
       hideControls={hideControls}
       themeColor={themeColor || currentTheme.accent}
-      fixedPosition={fixedPosition}
     />
   );
 };

@@ -4,38 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromText } from '@/utils/spellBatchImporter';
-import { importSpellsFromDetailedText } from '@/hooks/spellbook/importUtils';
-import { allSpells } from '@/data/allSpells';
-import { SpellData } from '@/hooks/spellbook/types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
+import { spells as allSpells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
 interface SpellImporterProps {
   onClose: () => void;
-  onImport?: (updatedSpells: CharacterSpell[] | SpellData[]) => void;
+  onImport?: (updatedSpells: CharacterSpell[]) => void;
 }
 
 const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const [inputText, setInputText] = useState('');
   const [importedCount, setImportedCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("simple");
   const { toast } = useToast();
 
-  const handleSimpleImport = () => {
+  const handleImport = () => {
     try {
       setIsProcessing(true);
-      // Ensure all spells have the required prepared field
-      const spellsWithPreparedField = allSpells.map(spell => {
-        if (spell.prepared === undefined) {
-          return {...spell, prepared: false};
-        }
-        return spell;
-      });
-      
-      const updatedSpells = importSpellsFromText(inputText, spellsWithPreparedField);
-      const newCount = updatedSpells.length - spellsWithPreparedField.length;
+      const updatedSpells = importSpellsFromText(inputText, allSpells);
+      const newCount = updatedSpells.length - allSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
       if (onImport) {
@@ -62,142 +50,40 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
     }
   };
 
-  const handleDetailedImport = () => {
-    try {
-      setIsProcessing(true);
-      
-      // Import spells and ensure 'prepared' property is set
-      const newSpells = importSpellsFromDetailedText(inputText).map(spell => ({
-        ...spell,
-        prepared: spell.prepared ?? false // Ensure prepared is set, default to false if missing
-      }));
-      
-      setImportedCount(newSpells.length);
-      
-      if (onImport && newSpells.length > 0) {
-        // Combine existing and new spells
-        const combinedSpells = [...allSpells];
-        
-        // Add only spells that don't exist yet
-        newSpells.forEach(newSpell => {
-          const exists = combinedSpells.some(
-            existing => existing.name === newSpell.name && existing.level === newSpell.level
-          );
-          
-          if (!exists) {
-            combinedSpells.push(newSpell);
-          }
-        });
-        
-        // Since we've ensured all spells have the 'prepared' property, this is now type-safe
-        onImport(combinedSpells as CharacterSpell[]);
-      }
-      
-      toast({
-        title: "Заклинания импортированы",
-        description: `Импортировано ${newSpells.length} заклинаний из текстового формата`,
-        variant: "default",
-      });
-      
-      // Очистим поле ввода после успешного импорта
-      setInputText('');
-    } catch (error) {
-      console.error("Ошибка при импорте заклинаний:", error);
-      toast({
-        title: "Ошибка импорта",
-        description: "Не удалось импортировать заклинания. Проверьте формат ввода.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   return (
-    <Card className="border-accent bg-card/70 w-full max-w-2xl">
+    <Card className="border-accent bg-card/70">
       <CardHeader>
         <CardTitle>Импорт заклинаний</CardTitle>
         <CardDescription>
-          Вы можете импортировать заклинания из разных форматов
+          Вставьте заклинания в формате: [уровень] название компоненты
+        </CardDescription>
+        <CardDescription>
+          Например: [3] Огненный шар ВСМ
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs 
-          defaultValue="simple" 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="mb-4 w-full">
-            <TabsTrigger value="simple" className="flex-1">Простой формат</TabsTrigger>
-            <TabsTrigger value="detailed" className="flex-1">Подробный формат</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="simple">
-            <CardDescription className="mb-2">
-              Вставьте заклинания в формате: [уровень] название компоненты
-            </CardDescription>
-            <CardDescription className="mb-4">
-              Например: [3] Огненный шар ВСМ
-            </CardDescription>
-            
-            <Textarea
-              placeholder="Вставьте заклинания по одному на строке..."
-              className="h-[200px] mb-4"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
-            
-            <Button 
-              onClick={handleSimpleImport} 
-              disabled={isProcessing || !inputText.trim()}
-              className="w-full"
-            >
-              {isProcessing ? "Импортирую..." : "Импортировать"}
-            </Button>
-          </TabsContent>
-          
-          <TabsContent value="detailed">
-            <CardDescription className="mb-2">
-              Вставьте заклинания в подробном формате из учебника:
-            </CardDescription>
-            <CardDescription className="mb-4 text-xs">
-              Название
-              <br/>Заговор или N-й уровень
-              <br/>Школа
-              <br/>Время накладывания: 1 действие
-              <br/>Дистанция: X футов
-              <br/>Компоненты: ВСМ
-              <br/>Длительность: Мгновенная
-              <br/>Классы: Волшебник, Чародей
-            </CardDescription>
-            
-            <Textarea
-              placeholder="Вставьте текст заклинаний из учебника..."
-              className="h-[200px] mb-4"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
-            
-            <Button 
-              onClick={handleDetailedImport} 
-              disabled={isProcessing || !inputText.trim()}
-              className="w-full"
-            >
-              {isProcessing ? "Импортирую..." : "Импортировать в книгу заклинаний"}
-            </Button>
-          </TabsContent>
-        </Tabs>
+        <Textarea
+          placeholder="Вставьте заклинания по одному на строке..."
+          className="h-[200px] mb-4"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+        />
         
         {importedCount > 0 && (
-          <div className="bg-green-500/10 text-green-500 p-2 rounded-md mt-4">
-            Успешно импортировано: {importedCount} заклинаний
+          <div className="bg-green-500/10 text-green-500 p-2 rounded-md mb-4">
+            Успешно добавлено или обновлено: {importedCount} заклинаний
           </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
-          Закрыть
+          Отмена
+        </Button>
+        <Button 
+          onClick={handleImport} 
+          disabled={isProcessing || !inputText.trim()}
+        >
+          {isProcessing ? "Импортирую..." : "Импортировать"}
         </Button>
       </CardFooter>
     </Card>

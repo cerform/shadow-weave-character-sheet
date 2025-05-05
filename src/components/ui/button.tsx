@@ -54,10 +54,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Получаем базовые классы кнопки
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
-    // Определяем, имеет ли класс Details
+    // Исправляем проверку класса Details - без обращения к props.className
     const hasDetailsClass = className ? className.includes('Details') : false;
     
-    // Создаем стили для градиента и свечения
+    // Улучшаем подсветку для всех кнопок
     const style = {
       ...props.style,
       color: variant === 'ghost' && hasDetailsClass
@@ -66,26 +66,23 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ? currentTheme.buttonText || '#FFFFFF' 
           : props.style?.color || currentTheme.buttonText || '#FFFFFF',
       borderColor: variant === 'outline' 
-        ? `${currentTheme.accent}80` 
-        : props.style?.borderColor || `${currentTheme.accent}80`,
+        ? props.style?.borderColor || currentTheme.accent 
+        : props.style?.borderColor,
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
         ? currentTheme.accent 
         : props.style?.backgroundColor,
-      textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
-      // Добавляем переменные для гибкой настройки эффектов в CSS
-      '--theme-accent': currentTheme.accent,
-      '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
-      '--theme-glow': `0 0 10px ${currentTheme.accent}50`,
-    } as React.CSSProperties;
+      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
+      // Добавим эффекты при наведении через CSS переменные
+      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
+      '--hover-border-color': currentTheme.accent,
+      '--hover-bg-color': `${currentTheme.accent}30`,
+    };
     
-    // Улучшенные классы для CSS эффектов без постоянного свечения
+    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
     const enhancedClasses = cn(
       baseClasses,
-      "transition-all duration-300",
-      variant === 'default' && !className?.includes('Details') && "bg-gradient-to-r from-[var(--theme-accent)] to-[var(--theme-accent)]",
-      variant === 'outline' && "border border-[var(--theme-accent)] hover:border-opacity-100 hover:border-[var(--theme-accent)]",
-      // Убрано постоянное свечение, добавлено только при наведении
-      variant !== 'ghost' && variant !== 'link' && "hover:shadow-[var(--theme-glow)]"
+      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
     );
     
     return (

@@ -46,7 +46,7 @@ const analyticsPromise = initializeAnalytics();
 
 // Initialize other Firebase services immediately
 const firebaseAuth = getAuth(app);
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 const storage = getStorage(app);
 
 // Провайдеры аутентификации
@@ -137,7 +137,4 @@ const auth = {
   }
 };
 
-// Export both db (for backward compatibility) and firestore (new name)
-export { app, firestore, storage, auth, firebaseAuth, analyticsPromise };
-// Also export firestore as db for code that still uses the old naming
-export { firestore as db };
+export { app, db, storage, auth, firebaseAuth, analyticsPromise };

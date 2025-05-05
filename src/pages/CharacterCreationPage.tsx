@@ -16,11 +16,11 @@ import { useCreationStep } from "@/hooks/useCreationStep";
 import CreationStepDisplay from "@/components/character-creation/CreationStepDisplay";
 import CharacterCreationContent from "@/components/character-creation/CharacterCreationContent";
 import ThemeSelector from "@/components/ThemeSelector";
-import MainNavigation from "@/components/navigation/MainNavigation";
+import HomeButton from "@/components/navigation/HomeButton";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
-import { ABILITY_SCORE_CAPS } from "@/types/character";
+import { ABILITY_SCORE_CAPS } from "@/types/character.d";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
@@ -61,12 +61,6 @@ const CharacterCreationPage = () => {
     }
   }, [character.level]);
 
-  // Функция для преобразования модификатора в строку
-  const getModifierString = (abilityScore: number): string => {
-    const mod = Math.floor((abilityScore - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
-  };
-
   // Тема для отображения
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -75,9 +69,18 @@ const CharacterCreationPage = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="min-h-screen w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <MainNavigation />
+          <HomeButton variant="default" />
 
           <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => navigate('/handbook')} 
+              variant="outline" 
+              className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
+            >
+              <BookOpen className="h-4 w-4" />
+              Руководство игрока
+            </Button>
+            
             {/* Only show theme selector in small screens here */}
             <div className="block sm:hidden">
               <ThemeSelector />
@@ -124,7 +127,7 @@ const CharacterCreationPage = () => {
             abilitiesMethod={abilitiesMethod}
             setAbilitiesMethod={setAbilitiesMethod}
             diceResults={diceResults}
-            getModifier={getModifierString}
+            getModifier={getModifier}
             rollAllAbilities={rollAllAbilities}
             rollSingleAbility={rollSingleAbility}
             abilityScorePoints={adjustedAbilityScorePoints}

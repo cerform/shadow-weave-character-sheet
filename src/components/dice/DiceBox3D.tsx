@@ -1,216 +1,140 @@
 
-import React, { useEffect, useState, useRef } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import * as DiceBoxModule from "@3d-dice/dice-box";
-import { Spinner } from "../ui/spinner";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import GradientDice from "./GradientDice";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 
 interface DiceBox3DProps {
-  diceType?: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+  diceType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
   diceCount?: number;
   modifier?: number;
   onRollComplete?: (result: number) => void;
-  themeColor?: string;
-  fixedPosition?: boolean;
   hideControls?: boolean;
+  themeColor?: string;
 }
 
-// Создаем тип для опций DiceBox из библиотеки
-type DiceBoxOptions = {
-  theme: string;
-  throwForce: number;
-  gravity: number;
-  linearAngularFactor: number;
-  spinForce: number;
-  mass: number;
-  inertia: number;
-  timeInterval: number;
-  hiddenDice: boolean;
-  onRollFinished: () => void;
-  onReroll: () => void;
-  onRolled: () => void;
-  enableShadows: boolean;
-  shadowTransparency: number;
-  friction: number;
-  collisionIterations: number;
-  spinPeriod: number;
-  lightIntensity: number;
-  scale: number;
-  themeColor?: string;
-};
-
-// Настройки кубика по умолчанию
-const diceOptions: DiceBoxOptions = {
-  theme: "default",
-  throwForce: 10,
-  gravity: 4,
-  linearAngularFactor: 0.35,
-  spinForce: 6,
-  mass: 1,
-  inertia: 13,
-  timeInterval: 0.2,
-  hiddenDice: false,
-  onRollFinished: () => {},
-  onReroll: () => {},
-  onRolled: () => {},
-  enableShadows: true,
-  shadowTransparency: 0.7,
-  friction: 2,
-  collisionIterations: 5,
-  spinPeriod: 1500,
-  lightIntensity: 1,
-  scale: 45,
-};
-
-const DiceScene = ({
-  diceManager,
+const DiceBox3D: React.FC<DiceBox3DProps> = ({
   diceType = 'd20',
   diceCount = 1,
   modifier = 0,
   onRollComplete,
-  themeColor,
-  fixedPosition = false,
   hideControls = false,
+  themeColor
 }) => {
-  const { camera, gl } = useThree();
-  const prevDiceType = useRef(diceType);
-  const prevDiceCount = useRef(diceCount);
-  const [isRolling, setIsRolling] = useState(false);
-  const [displayValue, setDisplayValue] = useState<number | null>(null);
-
-  // Инициализация системы кубиков
-  useEffect(() => {
-    (async () => {
-      if (!diceManager.current) {
-        // Создаем экземпляр DiceBox
-        diceManager.current = new DiceBoxModule.default("#dice-canvas", {
-          ...diceOptions,
-          themeColor: themeColor || '#8B5A2B',
-        });
-
-        // Инициализация
-        await diceManager.current.init();
-
-        // Устанавливаем обработчик окончания броска
-        diceManager.current.onRollComplete = (results) => {
-          if (results && results.length > 0) {
-            // Суммируем результаты всех кубиков и добавляем модификатор
-            const rollTotal = results.reduce((sum, die) => sum + die.value, 0) + (modifier || 0);
-            setDisplayValue(rollTotal);
-            setIsRolling(false);
-            if (onRollComplete) onRollComplete(rollTotal);
-          }
-        };
-      }
-    })();
-
-    return () => {
-      // При размонтировании компонента удаляем все кубики
-      if (diceManager.current) {
-        diceManager.current.clear();
-      }
+  const [rolling, setRolling] = useState<boolean>(false);
+  const [results, setResults] = useState<number[]>([]);
+  const [totalResult, setTotalResult] = useState<number | null>(null);
+  
+  const { toast } = useToast();
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  
+  // Преобразовать HEX цвет в градиентные цвета
+  const getGradientColors = (baseColor: string) => {
+    // Создаем два оттенка для градиента на основе базового цвета
+    const color1 = baseColor;
+    
+    // Функция для осветления цвета (для второго цвета градиента)
+    const lightenColor = (color: string, amount: number) => {
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      
+      const brightenR = Math.min(255, r + amount);
+      const brightenG = Math.min(255, g + amount);
+      const brightenB = Math.min(255, b + amount);
+      
+      return `#${brightenR.toString(16).padStart(2, '0')}${brightenG.toString(16).padStart(2, '0')}${brightenB.toString(16).padStart(2, '0')}`;
     };
-  }, [themeColor]);
-
-  // Обновляем параметры кубика при изменении размера или типа
-  useEffect(() => {
-    if (
-      diceManager.current &&
-      (prevDiceType.current !== diceType || prevDiceCount.current !== diceCount)
-    ) {
-      // Удаляем старые кубики и создаем новые
-      diceManager.current.clear();
-      prevDiceType.current = diceType;
-      prevDiceCount.current = diceCount;
-      
-      // Запускаем новый бросок с новыми параметрами
-      handleRoll();
-    }
-  }, [diceType, diceCount]);
-
-  // Функция для броска кубиков
-  const handleRoll = async () => {
-    if (diceManager.current) {
-      setIsRolling(true);
-      setDisplayValue(null);
-      
-      // Формируем нотацию для броска (например, "2d20+3")
-      const notation = `${diceCount}${diceType}${modifier > 0 ? '+' + modifier : modifier < 0 ? modifier : ''}`;
-      
-      try {
-        // Выполняем бросок с заданной нотацией
-        await diceManager.current.roll(notation);
-      } catch (error) {
-        console.error("Ошибка при броске кубиков:", error);
-        setIsRolling(false);
-      }
-    }
+    
+    const color2 = lightenColor(baseColor, 40);
+    
+    return { color1, color2 };
   };
-
-  // Создаем контейнер для кубиков с заданными размерами
+  
+  const accentColor = themeColor || currentTheme.accent;
+  const { color1, color2 } = getGradientColors(accentColor);
+  
+  const handleRollDice = () => {
+    if (rolling) return;
+    
+    setRolling(true);
+    setResults([]);
+    setTotalResult(null);
+    
+    // Определяем максимальное значение для типа кубика
+    const maxValue = parseInt(diceType.substring(1));
+    
+    setTimeout(() => {
+      // Генерируем результаты для каждого кубика
+      const newResults: number[] = [];
+      let total = 0;
+      
+      for (let i = 0; i < diceCount; i++) {
+        const roll = Math.floor(Math.random() * maxValue) + 1;
+        newResults.push(roll);
+        total += roll;
+      }
+      
+      // Добавляем модификатор к общему результату
+      const finalResult = total + modifier;
+      
+      setResults(newResults);
+      setTotalResult(finalResult);
+      setRolling(false);
+      
+      if (onRollComplete) {
+        onRollComplete(finalResult);
+      }
+      
+      // Показываем уведомление с результатом броска
+      toast({
+        title: `Результат броска ${diceCount}${diceType}${modifier >= 0 ? '+' + modifier : modifier}`,
+        description: `${newResults.join(' + ')}${modifier !== 0 ? (modifier > 0 ? ' + ' + modifier : ' - ' + Math.abs(modifier)) : ''} = ${finalResult}`
+      });
+      
+    }, 800); // Время анимации броска
+  };
+  
   return (
-    <div 
-      onClick={handleRoll} 
-      className="w-full h-full cursor-pointer flex flex-col items-center justify-center relative"
-    >
-      {/* Отображаем результат броска */}
-      {displayValue !== null && !isRolling && (
-        <div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                     text-4xl font-bold z-10 bg-black/50 p-3 rounded-full h-20 w-20
-                     flex items-center justify-center"
-          style={{ color: themeColor || '#8B5A2B', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-        >
-          {displayValue}
-        </div>
-      )}
+    <div className="dice-box-container relative w-full h-full min-h-[200px] flex items-center justify-center">
+      {/* Показываем только один кубик для упрощения UI */}
+      <div className="w-full h-full flex items-center justify-center">
+        <GradientDice
+          diceType={diceType}
+          size={150}
+          rolling={rolling}
+          result={totalResult}
+          showNumber={true}
+          color1={color1}
+          color2={color2}
+        />
+        
+        {/* Отображение модификатора */}
+        {modifier !== 0 && (
+          <div className="absolute bottom-2 right-2 text-white bg-black/50 px-2 py-1 rounded text-sm">
+            {modifier > 0 ? '+' : ''}{modifier}
+          </div>
+        )}
+      </div>
       
-      {/* Отображаем спиннер во время броска */}
-      {isRolling && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <Spinner size="lg" />
-        </div>
-      )}
-      
-      {/* Canvas для отображения 3D кубиков */}
-      <div id="dice-canvas" className={`w-full h-full ${fixedPosition ? 'absolute inset-0' : ''}`} />
-      
-      {/* Информация о текущем броске */}
+      {/* Кнопка броска */}
       {!hideControls && (
-        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 
-                      bg-black/70 px-3 py-1 rounded-full text-xs text-white/90">
-          Бросок: {diceCount}{diceType}{modifier > 0 ? `+${modifier}` : modifier < 0 ? modifier : ''}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+          <Button
+            onClick={handleRollDice}
+            disabled={rolling}
+            style={{ backgroundColor: accentColor }}
+            className="px-6 text-white"
+          >
+            {rolling ? 'Бросаю...' : `Бросить ${diceCount}${diceType}`}
+          </Button>
         </div>
       )}
     </div>
-  );
-};
-
-export const DiceBox3D: React.FC<DiceBox3DProps> = ({
-  diceType = 'd20',
-  diceCount = 1,
-  modifier = 0,
-  onRollComplete,
-  themeColor,
-  fixedPosition,
-  hideControls = false,
-}) => {
-  const diceManager = useRef<any>(null);
-
-  return (
-    <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <DiceScene
-        diceManager={diceManager}
-        diceType={diceType}
-        diceCount={diceCount}
-        modifier={modifier}
-        onRollComplete={onRollComplete}
-        themeColor={themeColor}
-        fixedPosition={fixedPosition}
-        hideControls={hideControls}
-      />
-    </Canvas>
   );
 };
 

@@ -2,11 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Session, User, Character as SessionCharacter } from '../types/session';
-import sessionService from '../services/sessionService';
-import characterService from '../services/characterService';
+import { sessionService, characterService } from '../services/sessionService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
-import type { Character } from '@/types/character';
+import { Character } from '@/contexts/CharacterContext';
 
 interface SessionStore {
   // Состояние
@@ -62,43 +61,15 @@ export const useSessionStore = create<SessionStore>()(
             throw new Error("Пользователь не авторизован");
           }
           
-          // Создаем данные для новой сессии
-          const sessionData: Omit<Session, "id" | "createdAt" | "lastActivity"> = {
-            title: name,
-            description: description || '',
-            dmId: currentUser.uid,
-            players: [],
-            startTime: new Date().toISOString(),
-            isActive: true,
-            notes: [],
-            code: uuidv4().substring(0, 6).toUpperCase(),
-            name: name,
-            users: [{
-              id: currentUser.uid,
-              name: currentUser.displayName || 'Мастер',
-              themePreference: 'dark',
-              isOnline: true,
-              isDM: true
-            }]
-          };
-          
-          // Вызываем сервис для создания сессии
-          const result = await sessionService.createSession(sessionData, currentUser.uid);
-          if (!result) {
+          const session = await sessionService.createSession(name, description);
+          if (!session) {
             throw new Error("Ошибка при создании сессии");
           }
           
-          // Создаем полный объект Session из полученных данных
-          const newSession: Session = {
-            id: result.id,
-            ...sessionData,
-            createdAt: new Date().toISOString()
-          };
-          
           // Обновляем состояние
           set(state => ({
-            sessions: [...state.sessions, newSession],
-            currentSession: newSession,
+            sessions: [...state.sessions, session],
+            currentSession: session,
             currentUser: {
               id: currentUser.uid,
               name: currentUser.displayName || 'Мастер',
@@ -110,7 +81,7 @@ export const useSessionStore = create<SessionStore>()(
           }));
           
           toast.success("Сессия успешно создана");
-          return newSession;
+          return session;
         } catch (error: any) {
           set({ loading: false, error: error.message });
           toast.error(error.message);
@@ -160,7 +131,7 @@ export const useSessionStore = create<SessionStore>()(
               race: character.race || '',
               class: (character as Character).class || (character as Character).className || '',
               level: character.level || 1,
-              avatarUrl: (character as Character).avatarUrl
+              avatarUrl: (character as Character).image
             };
           }
           
@@ -174,10 +145,8 @@ export const useSessionStore = create<SessionStore>()(
           };
           
           // Присоединяемся к сессии
-          const joinResult = await sessionService.joinSession(session.id, user);
-          
-          // Если joinResult имеет значение null или undefined, также считаем операцию неудачной
-          if (joinResult === null || joinResult === undefined || joinResult === false) {
+          const joined = await sessionService.joinSession(session.id, user);
+          if (!joined) {
             throw new Error("Не удалось присоединиться к сессии");
           }
           
@@ -218,6 +187,9 @@ export const useSessionStore = create<SessionStore>()(
         
         try {
           const deleted = await sessionService.deleteSession(sessionId);
+          if (!deleted) {
+            throw new Error("Не удалось удалить сессию");
+          }
           
           set(state => ({
             sessions: state.sessions.filter(s => s.id !== sessionId),
@@ -293,10 +265,9 @@ export const useSessionStore = create<SessionStore>()(
             if (get().currentSession?.id === sessionId) {
               set({ currentSession: updatedSession });
             }
-            return true;
           }
           
-          return false;
+          return joined;
         } catch (error) {
           console.error("Ошибка при добавлении пользователя:", error);
           return false;
@@ -313,11 +284,7 @@ export const useSessionStore = create<SessionStore>()(
         try {
           set({ loading: true });
           // Используем новое имя функции для получения персонажей
-          const charactersData = await characterService.getCharactersByUserId();
-          
-          // Приводим полученные данные к типу Character
-          const characters = charactersData.map(char => char as Character);
-          
+          const characters = await characterService.getCharactersByUserId();
           set({ characters, loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
@@ -325,32 +292,38 @@ export const useSessionStore = create<SessionStore>()(
         }
       },
       
-      saveCharacter: async (character: Character): Promise<boolean> => {
+      saveCharacter: async (character: Character) => {
         try {
-          const result = await characterService.saveCharacter(character);
+          const success = await characterService.saveCharacter(character);
           
-          if (result && result.id) {
-            return true;
+          if (success) {
+            // Обновляем список персонажей
+            get().fetchCharacters();
           }
-          return false;
+          
+          return success;
         } catch (error) {
-          console.error("Ошибка при сохранени персонажа:", error);
+          console.error("Ошибка при сохранении персонажа:", error);
           return false;
         }
       },
       
-      deleteCharacter: async (characterId: string): Promise<boolean> => {
+      deleteCharacter: async (characterId: string) => {
         try {
-          await characterService.deleteCharacter(characterId);
+          const deleted = await characterService.deleteCharacter(characterId);
           
-          // Обновляем список персонажей после удаления
-          set(state => ({
-            characters: state.characters.filter(c => c.id !== characterId)
-          }));
+          if (deleted) {
+            // Обновляем список персонажей
+            await get().fetchCharacters();
+            toast.success("Персонаж успешно удален");
+          } else {
+            toast.error("Не удалось удалить персонажа");
+          }
           
-          return true;
+          return deleted;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
+          toast.error("Не удалось удалить персонажа");
           return false;
         }
       },
@@ -378,15 +351,3 @@ export const useSessionStore = create<SessionStore>()(
     }
   )
 );
-
-export const fixSessionStore = () => {
-  console.log("SessionStore character.image references need to be updated to character.avatarUrl");
-  
-  // Code for sessionStore goes here - this is a temporary function
-  // In a complete implementation, we would fix all instances of character.image to character.avatarUrl
-};
-
-export const avatarUrlChecker = (character) => {
-  // Helper function to transition from image to avatarUrl
-  return character?.avatarUrl || null;
-};

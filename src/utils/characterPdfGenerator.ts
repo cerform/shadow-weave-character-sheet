@@ -1,300 +1,482 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
 import { CharacterSheet } from '@/types/character';
+import html2pdf from 'html2pdf.js';
 
-const FONT = 'Roboto-Regular';
-const FONT_BOLD = 'Roboto-Bold';
-
-const addHeader = (doc, text) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text(text, 14, doc.y + 10);
-  doc.y += 12;
-};
-
-const addSubHeader = (doc, text) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.text(text, 14, doc.y + 8);
-  doc.y += 10;
-};
-
-const addParagraph = (doc, text) => {
-  doc.setFont(FONT, 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  const lines = doc.splitTextToSize(text, 180);
-  lines.forEach(line => {
-    doc.text(line, 14, doc.y + 6);
-    doc.y += 5;
-  });
-  doc.y += 5;
-};
-
-const addKeyValuePair = (doc, key, value) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`${key}:`, 14, doc.y + 6);
-
-  doc.setFont(FONT, 'normal');
-  doc.setFontSize(10);
-  doc.text(value, 40, doc.y + 6);
-  doc.y += 6;
-};
-
-const addSectionTitle = (doc, title) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.setFillColor(220, 220, 220);
-  doc.rect(14, doc.y + 4, 186, 8, 'F');
-  doc.text(title, 16, doc.y + 10);
-  doc.y += 12;
-};
-
-const getSkillBonus = (character, skillName) => {
-  if (!character.skills || !character.skills[skillName]) return 0;
-  const skill = character.skills[skillName];
-  if (typeof skill === 'object' && skill.bonus !== undefined) {
-    return skill.bonus;
-  }
-  return 0;
-};
-
-const isProficientInSkill = (character, skillName) => {
-  if (!character.skills || !character.skills[skillName]) return false;
-  const skill = character.skills[skillName];
-  if (typeof skill === 'object' && skill.proficient !== undefined) {
-    return skill.proficient;
-  }
-  return false;
-};
-
-const countProficienciesOfType = (character, type) => {
-  if (!character.proficiencies) return 0;
-  const proficiencies = character.proficiencies;
-  
-  if (Array.isArray(proficiencies)) {
-    return proficiencies.length;
-  }
-  
-  if (typeof proficiencies === 'object' && proficiencies[type] && Array.isArray(proficiencies[type])) {
-    return proficiencies[type].length;
-  }
-  
-  return 0;
-};
-
-const getProficienciesOfType = (character, type) => {
-  if (!character.proficiencies) return [];
-  const proficiencies = character.proficiencies;
-  
-  if (Array.isArray(proficiencies)) {
-    return proficiencies;
-  }
-  
-  if (typeof proficiencies === 'object' && proficiencies[type] && Array.isArray(proficiencies[type])) {
-    return proficiencies[type];
-  }
-  
-  return [];
-};
-
-const drawAbilities = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Характеристики');
-
-  const abilities = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-  abilities.forEach(ability => {
-    const value = character.abilities[ability];
-    const modifier = Math.floor((value - 10) / 2);
-    addKeyValuePair(doc, ability, `${value} (${modifier > 0 ? '+' : ''}${modifier})`);
-  });
-};
-
-const drawSkills = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Навыки');
-
-  const skills = {
-    'Акробатика': 'DEX',
-    'Анализ': 'INT',
-    'Атлетика': 'STR',
-    'Внимательность': 'WIS',
-    'Выживание': 'WIS',
-    'Выступление': 'CHA',
-    'Запугивание': 'CHA',
-    'История': 'INT',
-    'Ловкость рук': 'DEX',
-    'Медицина': 'WIS',
-    'Магия': 'INT',
-    'Обман': 'CHA',
-    'Природа': 'INT',
-    'Проницательность': 'WIS',
-    'Религия': 'INT',
-    'Скрытность': 'DEX',
-    'Убеждение': 'CHA',
-    'Уход за животными': 'WIS'
-  };
-
-  Object.keys(skills).forEach(skillName => {
-    const ability = skills[skillName];
-    let value = character.abilities[ability] ? Math.floor((character.abilities[ability] - 10) / 2) : 0;
-    
-    if (isProficientInSkill(character, skillName)) {
-      value += 2;
-    }
-    
-    if (getSkillBonus(character, skillName) > value) {
-      value = getSkillBonus(character, skillName);
-    }
-
-    doc.setFont(FONT_BOLD, 'normal');
-    doc.setFontSize(10);
-    doc.text(`${skillName} (${ability}):`, 14, doc.y + 6);
-
-    doc.setFont(FONT, 'normal');
-    doc.setFontSize(10);
-    doc.text(`${value > 0 ? '+' : ''}${value}`, 60, doc.y + 6);
-    doc.y += 6;
-  });
-};
-
-const drawProficiencies = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Владения');
-
-  addSubHeader(doc, 'Доспехи');
-  let armorText = '';
-  if (countProficienciesOfType(character, 'armor') > 0) {
-    armorText = getProficienciesOfType(character, 'armor').join(', ');
-  } else {
-    armorText = 'Нет';
-  }
-  addParagraph(doc, armorText);
-
-  addSubHeader(doc, 'Оружие');
-  let weaponText = '';
-  if (countProficienciesOfType(character, 'weapons') > 0) {
-    weaponText = getProficienciesOfType(character, 'weapons').join(', ');
-  } else {
-    weaponText = 'Нет';
-  }
-  addParagraph(doc, weaponText);
-
-  addSubHeader(doc, 'Инструменты');
-  let toolText = '';
-  if (countProficienciesOfType(character, 'tools') > 0) {
-    toolText = getProficienciesOfType(character, 'tools').join(', ');
-  } else {
-    toolText = 'Нет';
-  }
-  addParagraph(doc, toolText);
-
-  addSubHeader(doc, 'Языки');
-  let languageText = '';
-  if (getProficienciesOfType(character, 'languages').length > 0) {
-    languageText = getProficienciesOfType(character, 'languages').map(lang => lang).join(', ');
-  } else {
-    languageText = 'Нет';
-  }
-  addParagraph(doc, languageText);
-};
-
-const drawEquipment = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Снаряжение');
-
-  if (character.equipment && character.equipment.length > 0) {
-    character.equipment.forEach(item => {
-      addParagraph(doc, item);
-    });
-  } else {
-    addParagraph(doc, 'Нет снаряжения');
-  }
-};
-
-const drawFeatures = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Умения и особенности');
-
-  if (character.features && character.features.length > 0) {
-    character.features.forEach(feature => {
-      addParagraph(doc, feature);
-    });
-  } else {
-    addParagraph(doc, 'Нет умений и особенностей');
-  }
-};
-
-const drawSpells = (doc, character, startX, startY) => {
-  doc.y = startY;
-  doc.x = startX;
-  addSectionTitle(doc, 'Заклинания');
-
-  if (character.spells && character.spells.length > 0) {
-    character.spells.forEach(spell => {
-      addParagraph(doc, spell);
-    });
-  } else {
-    addParagraph(doc, 'Нет заклинаний');
-  }
-};
-
-const generateCharacterPdf = (character: CharacterSheet) => {
+// Функция для создания PDF с использованием jsPDF (как было раньше)
+export const downloadCharacterPDF = (character: CharacterSheet) => {
   const doc = new jsPDF();
-  doc.addFont(FONT, 'Roboto-Regular', 'normal');
-  doc.addFont(FONT_BOLD, 'Roboto-Bold', 'normal');
-
-  doc.setFillColor(240, 240, 240);
-  doc.rect(0, 0, 210, 297, 'F');
-
-  doc.y = 14;
-
-  addHeader(doc, character.name);
-  addKeyValuePair(doc, 'Класс', character.class || 'Не указано');
-  addKeyValuePair(doc, 'Уровень', character.level ? character.level.toString() : '1');
-  addKeyValuePair(doc, 'Раса', character.race || 'Не указана');
-  addKeyValuePair(doc, 'Предыстория', character.background || 'Не указана');
-  addKeyValuePair(doc, 'Мировоззрение', character.alignment || 'Не указано');
-
-  let startAbilitiesY = doc.y;
-  drawAbilities(doc, character, 14, startAbilitiesY);
-
-  let startSkillsY = startAbilitiesY;
-  drawSkills(doc, character, 105, startSkillsY);
-
-  doc.addPage();
-  doc.setFillColor(240, 240, 240);
-  doc.rect(0, 0, 210, 297, 'F');
-  doc.y = 14;
-
-  let startProficienciesY = doc.y;
-  drawProficiencies(doc, character, 14, startProficienciesY);
-
-  let startEquipmentY = startProficienciesY;
-  drawEquipment(doc, character, 105, startEquipmentY);
-
-  doc.addPage();
-  doc.setFillColor(240, 240, 240);
-  doc.rect(0, 0, 210, 297, 'F');
-  doc.y = 14;
-
-  let startFeaturesY = doc.y;
-  drawFeatures(doc, character, 14, startFeaturesY);
-
-  let startSpellsY = startFeaturesY;
-  drawSpells(doc, character, 105, startSpellsY);
-
-  return doc.output('datauristring');
+  
+  try {
+    // Устанавливаем стандартный шрифт для поддержки кириллицы
+    doc.setFont('helvetica');
+    
+    // Стили
+    const titleSize = 18;
+    const headerSize = 14;
+    const textSize = 12;
+    const smallTextSize = 10;
+    
+    // Основная информация
+    doc.setFontSize(titleSize);
+    doc.text('Лист персонажа D&D 5 редакции', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(headerSize);
+    doc.text(character.name || 'Безымянный', 105, 25, { align: 'center' });
+    
+    doc.setFontSize(textSize);
+    const classLevel = `${character.race}, ${character.class} ${character.subclass ? `(${character.subclass})` : ''}, Уровень ${character.level.toString()}`;
+    doc.text(classLevel, 105, 32, { align: 'center' });
+    
+    // Прямоугольник для основной информации
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.rect(10, 38, 190, 35);
+    
+    // Основная информация внутри прямоугольника
+    doc.setFontSize(smallTextSize);
+    doc.text(`Предыстория: ${character.background || '-'}`, 15, 45);
+    doc.text(`Мировоззрение: ${character.alignment || '-'}`, 15, 52);
+    doc.text(`Черты характера: ${character.personalityTraits || '-'}`, 15, 59);
+    doc.text(`Идеалы: ${character.ideals || '-'}`, 15, 66);
+    
+    doc.text(`Привязанности: ${character.bonds || '-'}`, 110, 45);
+    doc.text(`Слабости: ${character.flaws || '-'}`, 110, 52);
+    doc.text(`Внешность: ${character.appearance || '-'}`, 110, 59);
+    
+    // Характеристики
+    doc.setFontSize(headerSize);
+    doc.text('Характеристики', 105, 85, { align: 'center' });
+    
+    // Прямоугольник для характеристик
+    doc.rect(10, 90, 190, 50);
+    
+    // Заголовки характеристик
+    doc.setFontSize(smallTextSize);
+    const abilityHeaders = ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
+    const abilityKeys = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    const abilityX = [30, 60, 90, 120, 150, 180];
+    
+    for (let i = 0; i < 6; i++) {
+      doc.text(abilityHeaders[i], abilityX[i], 98, { align: 'center' });
+    }
+    
+    // Значения характеристик
+    doc.setFontSize(textSize);
+    for (let i = 0; i < 6; i++) {
+      const score = character.abilities[abilityKeys[i] as keyof typeof character.abilities];
+      doc.text(score.toString(), abilityX[i], 108, { align: 'center' });
+      
+      // Модификаторы
+      const modifier = Math.floor((score - 10) / 2);
+      const modText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+      doc.text(modText, abilityX[i], 118, { align: 'center' });
+    }
+    
+    // Навыки
+    doc.setFontSize(headerSize);
+    doc.text('Навыки', 55, 155, { align: 'center' });
+    
+    // Список навыков
+    doc.setFontSize(smallTextSize);
+    if (character.skills && character.skills.length > 0) {
+      let skillY = 165;
+      for (let i = 0; i < character.skills.length; i++) {
+        if (i > 15) { // Ограничиваем количество отображаемых навыков
+          doc.text('...и другие', 55, skillY, { align: 'center' });
+          break;
+        }
+        doc.text(`• ${character.skills[i]}`, 20, skillY);
+        skillY += 6;
+        if (skillY > 270) break; // Предотвращаем выход за пределы страницы
+      }
+    } else {
+      doc.text('Нет выбранных навыков', 55, 165, { align: 'center' });
+    }
+    
+    // Владения и языки
+    doc.setFontSize(headerSize);
+    doc.text('Владения и языки', 150, 155, { align: 'center' });
+    
+    // Список владений
+    doc.setFontSize(smallTextSize);
+    let profY = 165;
+    
+    // Языки
+    doc.text('Языки:', 115, profY);
+    profY += 6;
+    if (character.languages && character.languages.length > 0) {
+      for (let i = 0; i < character.languages.length; i++) {
+        if (profY > 270) break;
+        doc.text(`• ${character.languages[i]}`, 120, profY);
+        profY += 6;
+      }
+    } else {
+      doc.text('Общий', 120, profY);
+      profY += 6;
+    }
+    
+    profY += 4;
+    doc.text('Прочие владения:', 115, profY);
+    profY += 6;
+    if (character.proficiencies && character.proficiencies.length > 0) {
+      for (let i = 0; i < character.proficiencies.length; i++) {
+        if (profY > 270) break;
+        doc.text(`• ${character.proficiencies[i]}`, 120, profY);
+        profY += 6;
+      }
+    } else {
+      doc.text('Нет', 120, profY);
+    }
+    
+    // Снаряжение
+    doc.setFontSize(headerSize);
+    doc.text('Снаряжение', 55, 220, { align: 'center' });
+    
+    // Список снаряжения
+    doc.setFontSize(smallTextSize);
+    if (character.equipment && character.equipment.length > 0) {
+      let equipY = 230;
+      for (let i = 0; i < character.equipment.length; i++) {
+        if (i > 10) {
+          doc.text('...и другие предметы', 55, equipY, { align: 'center' });
+          break;
+        }
+        doc.text(`• ${character.equipment[i]}`, 20, equipY);
+        equipY += 6;
+        if (equipY > 270) break;
+      }
+    } else {
+      doc.text('Нет снаряжения', 55, 230, { align: 'center' });
+    }
+    
+    // Заклинания
+    if (character.spells && character.spells.length > 0) {
+      doc.setFontSize(headerSize);
+      doc.text('Заклинания', 150, 220, { align: 'center' });
+      
+      doc.setFontSize(smallTextSize);
+      let spellY = 230;
+      for (let i = 0; i < character.spells.length; i++) {
+        if (i > 10) {
+          doc.text('...и другие заклинания', 150, spellY, { align: 'center' });
+          break;
+        }
+        doc.text(`• ${character.spells[i]}`, 115, spellY);
+        spellY += 6;
+        if (spellY > 270) break;
+      }
+    }
+    
+    // Особенности
+    doc.setFontSize(headerSize);
+    doc.text('Особенности и черты', 105, 275, { align: 'center' });
+    
+    doc.setFontSize(smallTextSize);
+    if (character.features && character.features.length > 0) {
+      let featY = 285;
+      for (let i = 0; i < character.features.length; i++) {
+        if (i > 5) {
+          doc.text('...и другие особенности', 105, featY, { align: 'center' });
+          break;
+        }
+        doc.text(`• ${character.features[i]}`, 20, featY);
+        featY += 6;
+      }
+    } else {
+      doc.text('Нет особенностей', 105, 285, { align: 'center' });
+    }
+    
+    // Сохранение PDF
+    doc.save(`${character.name.replace(/\s+/g, '_')}_character_sheet.pdf`);
+    
+  } catch (error) {
+    console.error('Ошибка при создании PDF:', error);
+    alert('Произошла ошибка при создании PDF. Попробуйте еще раз.');
+  }
 };
 
-export default generateCharacterPdf;
+// Новая функция для создания PDF с использованием HTML шаблона
+export const downloadCharacterHTMLPDF = (character: CharacterSheet) => {
+  // Создаем HTML элемент
+  const element = document.createElement('div');
+  element.innerHTML = generateCharacterSheetHTML(character);
+  
+  // Устанавливаем стили для PDF
+  element.style.width = '210mm';
+  element.style.fontSize = '10pt';
+  element.style.fontFamily = 'Arial, Helvetica, sans-serif';
+  
+  // Добавляем элемент в DOM временно
+  document.body.appendChild(element);
+  
+  // Настройки для html2pdf
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `${character.name.replace(/\s+/g, '_')}_character_sheet.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  
+  // Создаем PDF
+  html2pdf().from(element).set(opt).save().then(() => {
+    // Удаляем элемент из DOM после создания PDF
+    document.body.removeChild(element);
+  });
+};
+
+// Функция для генерации HTML шаблона листа персонажа
+function generateCharacterSheetHTML(character: CharacterSheet): string {
+  // Вспомогательная функция для расчета модификатора
+  const getModifier = (score: number): string => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
+  
+  // CSS для листа персонажа
+  const css = `
+    <style>
+      /* Сброс стилей */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        color: black;
+        line-height: 1.4;
+      }
+      
+      .character-sheet {
+        width: 100%;
+        max-width: 210mm;
+        padding: 10mm;
+        margin: 0 auto;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      
+      .header h1 {
+        font-size: 18pt;
+        margin-bottom: 5px;
+      }
+      
+      .header h2 {
+        font-size: 14pt;
+        margin-bottom: 10px;
+      }
+      
+      .section {
+        margin-bottom: 15px;
+        border: 1px solid #000;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      
+      .section-title {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+      }
+      
+      .abilities {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+      }
+      
+      .ability {
+        width: 15%;
+        text-align: center;
+        border: 1px solid #000;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      
+      .ability-name {
+        font-weight: bold;
+      }
+      
+      .ability-score {
+        font-size: 16pt;
+        font-weight: bold;
+        margin: 5px 0;
+      }
+      
+      .ability-modifier {
+        border: 1px solid #000;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        margin: 0 auto;
+        font-weight: bold;
+      }
+      
+      .two-columns {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      
+      .column {
+        width: 48%;
+      }
+      
+      .skills {
+        margin-bottom: 15px;
+      }
+      
+      .skill {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+      
+      .list {
+        list-style-position: inside;
+        margin-left: 10px;
+      }
+      
+      .list li {
+        margin-bottom: 3px;
+      }
+    </style>
+  `;
+  
+  // Безопасно используем свойство subrace
+  const subraceText = character.subrace ? `(${character.subrace})` : '';
+  
+  // HTML для листа персонажа
+  return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Character Sheet - ${character.name}</title>
+  ${css}
+</head>
+<body>
+  <div class="character-sheet">
+    <div class="header">
+      <h1>Лист персонажа D&D 5 редакции</h1>
+      <h2>${character.name}</h2>
+      <p>${character.race} ${subraceText}, ${character.class} ${character.subclass ? `(${character.subclass})` : ''}, Уровень ${character.level}</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Основная информация</div>
+      <div class="two-columns">
+        <div class="column">
+          <p><strong>Предыстория:</strong> ${character.background || '-'}</p>
+          <p><strong>Мировоззрение:</strong> ${character.alignment || '-'}</p>
+          <p><strong>Черты характера:</strong> ${character.personalityTraits || '-'}</p>
+        </div>
+        <div class="column">
+          <p><strong>Привязанности:</strong> ${character.bonds || '-'}</p>
+          <p><strong>Слабости:</strong> ${character.flaws || '-'}</p>
+          <p><strong>Внешность:</strong> ${character.appearance || '-'}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Характеристики</div>
+      <div class="abilities">
+        ${['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(key => {
+          const abilityNames: Record<string, string> = {
+            'strength': 'СИЛА',
+            'dexterity': 'ЛОВКОСТЬ',
+            'constitution': 'ТЕЛОСЛОЖЕНИЕ',
+            'intelligence': 'ИНТЕЛЛЕКТ',
+            'wisdom': 'МУДРОСТЬ',
+            'charisma': 'ХАРИЗМА'
+          };
+          const score = character.abilities[key as keyof typeof character.abilities];
+          const modifier = getModifier(score);
+          
+          return `
+            <div class="ability">
+              <div class="ability-name">${abilityNames[key]}</div>
+              <div class="ability-score">${score}</div>
+              <div class="ability-modifier">${modifier}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="two-columns">
+      <div class="column">
+        <div class="section">
+          <div class="section-title">Навыки</div>
+          <div class="skills">
+            ${character.skills && character.skills.length > 0 ? 
+              `<ul class="list">
+                ${character.skills.map(skill => `<li>${skill}</li>`).join('')}
+              </ul>` : 
+              '<p>Нет выбранных навыков</p>'
+            }
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Снаряжение</div>
+          ${character.equipment && character.equipment.length > 0 ? 
+            `<ul class="list">
+              ${character.equipment.map(item => `<li>${item}</li>`).join('')}
+            </ul>` : 
+            '<p>Нет снаряжения</p>'
+          }
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="section">
+          <div class="section-title">Владения и языки</div>
+          <p><strong>Языки:</strong></p>
+          ${character.languages && character.languages.length > 0 ? 
+            `<ul class="list">
+              ${character.languages.map(lang => `<li>${lang}</li>`).join('')}
+            </ul>` : 
+            '<p>Общий</p>'
+          }
+          
+          <p><strong>Прочие владения:</strong></p>
+          ${character.proficiencies && character.proficiencies.length > 0 ? 
+            `<ul class="list">
+              ${character.proficiencies.map(prof => `<li>${prof}</li>`).join('')}
+            </ul>` : 
+            '<p>Нет</p>'
+          }
+        </div>
+        
+        ${character.spells && character.spells.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Заклинания</div>
+          <ul class="list">
+            ${character.spells.map(spell => `<li>${spell}</li>`).join('')}
+          </ul>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Особенности и черты</div>
+      ${character.features && character.features.length > 0 ? 
+        `<ul class="list">
+          ${character.features.map(feature => `<li>${feature}</li>`).join('')}
+        </ul>` : 
+        '<p>Нет особенностей</p>'
+      }
+    </div>
+  </div>
+</body>
+</html>`;
+}

@@ -1,90 +1,93 @@
 
+import { cantrips } from "./cantrips";
+import { level1 } from "./level1";
+import { level2 } from "./level2";
+import { level3 } from "./level3";
+import { level4 } from "./level4";
+// Fix the import names to match the actual exports
+import { level4Part2 } from "./level4_part2";
+import { level4Part3 } from "./level4_part3";
+import { level5 } from "./level5";
+import { level6 } from "./level6";
+import { level7 } from "./level7";
+import { level8 } from "./level8";
+import { level9 } from "./level9";
 import { CharacterSpell } from "@/types/character";
-import level0 from "./level0";
-import level1 from "./level1";
-import level2 from "./level2";
-import level3 from "./level3";
-import level4 from "./level4";
-import level5 from "./level5";
-import level6 from "./level6";
-import level7 from "./level7";
-import level8 from "./level8";
-import level9 from "./level9";
-import cantrips from "./cantrips";
 
-// Компилируем все заклинания в единый массив для удобства
+// Combine all spell levels into a single array
 export const spells: CharacterSpell[] = [
-  ...(Array.isArray(cantrips) ? cantrips : []),
-  ...(Array.isArray(level1) ? level1 : []),
-  ...(Array.isArray(level2) ? level2 : []),
-  ...(Array.isArray(level3) ? level3 : []),
-  ...(Array.isArray(level4) ? level4 : []),
-  ...(Array.isArray(level5) ? level5 : []),
-  ...(Array.isArray(level6) ? level6 : []),
-  ...(Array.isArray(level7) ? level7 : []),
-  ...(Array.isArray(level8) ? level8 : []),
-  ...(Array.isArray(level9) ? level9 : []),
-].map(spell => ({
-  ...spell,
-  // Гарантируем обязательное поле prepared
-  prepared: spell.prepared !== undefined ? spell.prepared : false
-})) as CharacterSpell[];
+  ...cantrips,
+  ...level1,
+  ...level2,
+  ...level3,
+  ...level4,
+  // Fixed variable names to match imports
+  ...level4Part2,
+  ...level4Part3,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9
+];
 
-export const spellsByLevel = {
-  0: level0,
-  1: level1,
-  2: level2,
-  3: level3,
-  4: level4,
-  5: level5,
-  6: level6,
-  7: level7,
-  8: level8,
-  9: level9,
-};
-
-export const getSpellsByClass = (className: string): CharacterSpell[] => {
-  const allClassSpells: CharacterSpell[] = [];
-
-  for (let level = 0; level <= 9; level++) {
-    const levelSpells = spellsByLevel[level as keyof typeof spellsByLevel] || [];
-    
-    for (const spell of (Array.isArray(levelSpells) ? levelSpells : [])) {
-      // Проверяем, что spell существует и имеет свойство classes
-      if (!spell || !spell.classes) {
-        continue;
-      }
-      
-      const classList = Array.isArray(spell.classes)
-        ? spell.classes
-        : spell.classes.split(",").map((c: string) => c.trim());
-        
-      if (classList.includes(className)) {
-        allClassSpells.push(spell as CharacterSpell);
-      }
-    }
-  }
-
-  return allClassSpells;
-};
-
+// Get spells by level
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  if (level < 0 || level > 9) return [];
-  
-  const levelKey = level as keyof typeof spellsByLevel;
-  const levelSpells = spellsByLevel[levelKey];
-  return Array.isArray(levelSpells) ? levelSpells : [];
+  return spells.filter(spell => spell.level === level);
 };
 
-export const getSpellByName = (name: string): CharacterSpell | undefined => {
-  for (let level = 0; level <= 9; level++) {
-    const levelSpells = spellsByLevel[level as keyof typeof spellsByLevel] || [];
-    if (!Array.isArray(levelSpells)) continue;
+// Convert spell level to text
+export const spellLevelToText = (level: number): string => {
+  if (level === 0) return "Заговор";
+  return `${level}-й уровень`;
+};
+
+// Get spells by class
+export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  if (!className) return [];
+  
+  const normalizedClassName = className ? className.toLowerCase() : '';
+  
+  return spells.filter((spell) => {
+    if (!spell.classes) return false;
     
-    const spell = levelSpells.find((s) => s.name === name);
-    if (spell) {
-      return spell;
+    // Safely handle potentially undefined classes array
+    return spell.classes.some(
+      (spellClass) => 
+        spellClass && 
+        typeof spellClass === 'string' && 
+        spellClass.toLowerCase() === normalizedClassName
+    );
+  });
+};
+
+// Get spell details by name
+export const getSpellDetails = (spellName: string): CharacterSpell | undefined => {
+  if (!spellName) return undefined;
+  
+  return spells.find(
+    (spell) => spell && spell.name && spell.name.toLowerCase() === (spellName?.toLowerCase() || '')
+  );
+};
+
+// Get spells by school
+export const getSpellsBySchool = (school: string): CharacterSpell[] => {
+  if (!school) return [];
+  
+  return spells.filter(
+    (spell) => spell && spell.school && spell.school.toLowerCase() === school.toLowerCase()
+  );
+};
+
+// Get available spell schools
+export const getSpellSchools = (): string[] => {
+  const schools = new Set<string>();
+  
+  spells.forEach(spell => {
+    if (spell.school) {
+      schools.add(spell.school);
     }
-  }
-  return undefined;
+  });
+  
+  return Array.from(schools);
 };

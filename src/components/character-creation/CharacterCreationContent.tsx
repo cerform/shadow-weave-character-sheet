@@ -11,8 +11,7 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import type { CharacterSheet, Character } from '@/types/character';
-import type { Equipment } from '@/types/character';
+import { CharacterSheet } from '@/types/character.d';
 
 interface CharacterCreationContentProps {
   currentStep: number;
@@ -32,23 +31,6 @@ interface CharacterCreationContentProps {
   onLevelChange: (level: number) => void;
   maxAbilityScore?: number;
   setCurrentStep: (step: number) => void;
-}
-
-// Определяем интерфейсы для всех используемых компонентов
-interface CharacterEquipmentSelectionComponentProps {
-  initialEquipment?: Equipment[];
-  onChange: (equipment: Equipment[]) => void;
-  character?: Character;
-  updateCharacter?: (updates: Partial<Character>) => void;
-  nextStep?: () => void;
-  prevStep?: () => void;
-}
-
-interface CharacterReviewProps {
-  character: Character;
-  updateCharacter: (updates: Partial<Character>) => void;
-  setCurrentStep: (step: number) => void;
-  prevStep?: () => void;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
@@ -76,8 +58,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 0: // Выбор расы
         return (
           <CharacterRaceSelection 
-            character={character as Character} 
-            updateCharacter={updateCharacter as any}
+            character={character} 
+            updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />
@@ -103,7 +85,21 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         );
       case 3: // Характеристики
         return (
-          <CharacterAbilityScores />
+          <CharacterAbilityScores 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+            abilitiesMethod={abilitiesMethod}
+            setAbilitiesMethod={setAbilitiesMethod}
+            diceResults={diceResults}
+            getModifier={getModifier}
+            rollAllAbilities={rollAllAbilities}
+            rollSingleAbility={rollSingleAbility}
+            abilityScorePoints={abilityScorePoints}
+            rollsHistory={rollsHistory}
+            maxAbilityScore={maxAbilityScore}
+          />
         );
       case 4: // Предыстория
         return (
@@ -126,8 +122,10 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 6: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
-            initialEquipment={character.equipment as Equipment[]}
-            onChange={(equipment) => updateCharacter({ equipment })}
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
           />
         );
       case 7: // Детали персонажа
@@ -158,10 +156,10 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       case 9: // Просмотр и завершение
         return (
           <CharacterReview 
-            character={character as Character}
-            updateCharacter={updateCharacter as (updates: Partial<Character>) => void}
-            setCurrentStep={setCurrentStep}
+            character={character}
             prevStep={prevStep}
+            updateCharacter={updateCharacter}
+            setCurrentStep={setCurrentStep}
           />
         );
       default:

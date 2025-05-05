@@ -1,23 +1,53 @@
 
+import { CharacterSpell } from '@/types/character';
+
+// Интерфейс для данных о заклинании
 export interface SpellData {
   id?: string | number;
   name: string;
+  name_en?: string;
   level: number;
-  school?: string;
-  castingTime?: string;
-  range?: string;
-  components?: string;
+  school: string;
+  castingTime: string;
+  range: string;
+  components: string;
+  duration: string;
+  description: string | string[];
+  classes?: string[] | string;
+  source?: string;
+  isRitual?: boolean;
+  isConcentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  materialComponents?: string;
-  description?: string;
-  higherLevels?: string;
-  higherLevel?: string; // Альтернативное имя в некоторых структурах данных
-  classes?: string[] | string;
-  prepared: boolean; // Changed from optional to required
-  concentration?: boolean;
   ritual?: boolean;
-  duration?: string;
-  [key: string]: any; // Индексная сигнатура для совместимости
+  concentration?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
+}
+
+// Интерфейс для возвращаемого значения хука useSpellbook
+export interface UseSpellbookReturn {
+  filteredSpells: SpellData[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  activeLevel: number[];
+  selectedSpell: SpellData | null;
+  isModalOpen: boolean;
+  activeSchool: string[];
+  activeClass: string[];
+  currentTheme: any;
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  handleOpenSpell: (spell: SpellData) => void;
+  handleClose: () => void;
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+  getBadgeColor: (level: number) => string;
+  getSchoolBadgeColor: (school: string) => string;
+  formatClasses: (classes: string[] | string | undefined) => string;
+  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
 }

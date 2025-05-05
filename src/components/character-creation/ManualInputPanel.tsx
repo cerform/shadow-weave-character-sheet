@@ -1,87 +1,95 @@
 
 import React from 'react';
-import { ABILITY_SCORE_CAPS } from '@/types/character';
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-
-// Update the getMaxAbilityScore function:
-export const getMaxAbilityScore = (level?: number, maxAbilityScoreOverride?: number): number => {
-  if (maxAbilityScoreOverride) return maxAbilityScoreOverride;
-  
-  if (level && level >= 16) return ABILITY_SCORE_CAPS.LEGENDARY_CAP;
-  if (level && level >= 10) return ABILITY_SCORE_CAPS.EPIC_CAP; 
-  return ABILITY_SCORE_CAPS.BASE_CAP;
-};
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ABILITY_SCORE_CAPS } from '@/types/character.d';
 
 interface ManualInputPanelProps {
-  stats: { [key: string]: number };
-  onAbilityChange: (ability: string, value: number) => void;
+  abilityScores: { [key: string]: number };
+  setAbilityScores: (abilityScores: { [key: string]: number } | ((prev: { [key: string]: number }) => { [key: string]: number })) => void;
   maxAbilityScore?: number;
+  level?: number;
 }
 
+const abilityNames: { [key: string]: string } = {
+  strength: 'Сила',
+  dexterity: 'Ловкость',
+  constitution: 'Телосложение',
+  intelligence: 'Интеллект',
+  wisdom: 'Мудрость',
+  charisma: 'Харизма'
+};
+
 const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
-  stats,
-  onAbilityChange,
-  maxAbilityScore = ABILITY_SCORE_CAPS.BASE_CAP
+  abilityScores,
+  setAbilityScores,
+  maxAbilityScore,
+  level = 1
 }) => {
-  // Функция для обработки изменения значения характеристики
-  const handleChange = (ability: string, value: string) => {
-    // Преобразуем строковое значение в число
-    const numValue = parseInt(value, 10) || ABILITY_SCORE_CAPS.DEFAULT;
+  // Определяем максимальное значение на основе уровня или переданного параметра
+  const getMaxAbilityScore = (): number => {
+    if (maxAbilityScore) return maxAbilityScore;
     
-    // Ограничиваем значение в пределах допустимого диапазона
-    const clampedValue = Math.min(Math.max(numValue, ABILITY_SCORE_CAPS.MIN), maxAbilityScore);
-    
-    // Обновляем значение характеристики
-    onAbilityChange(ability, clampedValue);
+    if (level >= 16) return ABILITY_SCORE_CAPS.LEGENDARY_CAP;
+    if (level >= 10) return ABILITY_SCORE_CAPS.EPIC_CAP;
+    return ABILITY_SCORE_CAPS.BASE_CAP;
   };
   
+  const maxScore = getMaxAbilityScore();
+  
+  const handleInputChange = (ability: string, value: string) => {
+    const numValue = parseInt(value);
+    
+    if (!isNaN(numValue) && numValue >= 1 && numValue <= maxScore) {
+      setAbilityScores({ ...abilityScores, [ability]: numValue });
+    }
+  };
+  
+  // Вычисление модификатора характеристики
+  const getModifier = (score: number): string => {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-muted-foreground mb-4">
-        Введите значения характеристик вручную. Минимальное значение: {ABILITY_SCORE_CAPS.MIN}, 
-        максимальное значение: {maxAbilityScore}.
-      </div>
+    <div className="space-y-6">
+      <Alert className="bg-black/60 border-primary/20">
+        <AlertDescription>
+          Введите значения характеристик в диапазоне от 1 до {maxScore}.
+          {level >= 10 && ' На вашем уровне максимальное значение повышено.'}
+        </AlertDescription>
+      </Alert>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Object.entries(stats).filter(([key]) => 
-          key === 'strength' || key === 'dexterity' || key === 'constitution' ||
-          key === 'intelligence' || key === 'wisdom' || key === 'charisma'
-        ).map(([ability, value]) => {
-          return (
-            <div key={ability} className="space-y-2">
-              <label htmlFor={ability} className="block font-medium text-sm">
-                {getAbilityDisplayName(ability)}
-              </label>
-              <input
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(abilityScores).map(([ability, score]) => (
+          <div key={ability} className="space-y-2">
+            <Label htmlFor={ability} className="flex justify-between">
+              <span>{abilityNames[ability] || ability}</span>
+              <span className="text-sm text-muted-foreground">
+                Модификатор: {getModifier(score)}
+              </span>
+            </Label>
+            <div className="relative">
+              <Input
                 id={ability}
+                name={`ability-${ability}`}
                 type="number"
-                min={ABILITY_SCORE_CAPS.MIN}
-                max={maxAbilityScore}
-                value={value as number}
-                onChange={(e) => handleChange(ability, e.target.value)}
-                className="w-full p-2 border rounded bg-background"
+                min="1"
+                max={maxScore.toString()}
+                value={score}
+                onChange={(e) => handleInputChange(ability, e.target.value)}
+                className="bg-black/60 text-white text-center text-lg font-bold"
               />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-sm text-gray-400">/ {maxScore}</span>
+              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
-
-// Вспомогательная функция для получения отображаемого имени характеристики
-function getAbilityDisplayName(ability: string): string {
-  const abilityNames: Record<string, string> = {
-    'strength': 'Сила (STR)',
-    'dexterity': 'Ловкость (DEX)',
-    'constitution': 'Телосложение (CON)',
-    'intelligence': 'Интеллект (INT)',
-    'wisdom': 'Мудрость (WIS)',
-    'charisma': 'Харизма (CHA)'
-  };
-  
-  return abilityNames[ability] || ability;
-}
 
 export default ManualInputPanel;

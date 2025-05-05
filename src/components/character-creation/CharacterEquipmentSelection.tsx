@@ -1,92 +1,171 @@
-
 import React, { useState, useEffect } from 'react';
-import type { Equipment } from '@/types/character';
+import { CharacterSheet } from '@/types/character.d'; 
+import NavigationButtons from './NavigationButtons';
+import { Check, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { 
+  SelectionCard,
+  SelectionCardGrid 
+} from "@/components/ui/selection-card";
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterEquipmentSelectionProps {
-  initialEquipment?: Equipment[];
-  onChange: (equipment: Equipment[]) => void;
+  character: CharacterSheet;
+  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
-export const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = ({ 
-  initialEquipment = [], 
-  onChange 
+interface EquipmentItem {
+  name: string;
+  description?: string;
+  category: 'weapon' | 'armor' | 'accessory' | 'gear' | 'tool';
+}
+
+const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = ({
+  character,
+  updateCharacter,
+  nextStep,
+  prevStep
 }) => {
-  const [equipment, setEquipment] = useState<Equipment[]>(initialEquipment);
-  const [newEquipmentName, setNewEquipmentName] = useState('');
-  
-  // Track equipment names for compatibility and display
-  const [equipmentNames, setEquipmentNames] = useState<string[]>(
-    initialEquipment.map(item => typeof item === 'string' ? item : (item.name || String(item)))
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
+    character.equipment || []
   );
-
-  // Update parent component when equipment list changes
+  const [customItem, setCustomItem] = useState('');
+  const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
+  
+  // Загружаем доступное снаряжение на основе класса и предыстории
   useEffect(() => {
-    onChange(equipment);
-  }, [equipment, onChange]);
-
-  // Add new equipment item
-  const addEquipment = () => {
-    if (!newEquipmentName.trim()) return;
-    
-    // Create new equipment object with required properties
-    const newItem: Equipment = { 
-      name: newEquipmentName.trim(),
-      quantity: 1
+    const loadEquipment = () => {
+      // Здесь будет логика загрузки снаряжения на основе класса и предыстории
+      // Пока используем тестовый набор
+      setAvailableEquipment([
+        { name: "Длинный меч", category: "weapon" },
+        { name: "Короткий меч", category: "weapon" },
+        { name: "Длинный лук", category: "weapon" },
+        { name: "Кинжал", category: "weapon" },
+        { name: "Боевой топор", category: "weapon" },
+        { name: "Кожаный доспех", category: "armor" },
+        { name: "Кольчуга", category: "armor" },
+        { name: "Щит", category: "armor" },
+        { name: "Набор авантюриста", category: "gear" },
+        { name: "Набор исследователя подземелий", category: "gear" },
+        { name: "Набор целителя", category: "gear" },
+        { name: "Инструменты вора", category: "tool" },
+        { name: "Музыкальный инструмент", category: "tool" },
+        { name: "Алхимический набор", category: "tool" },
+        { name: "Мешочек с компонентами", category: "accessory" },
+        { name: "Священный символ", category: "accessory" },
+        { name: "Амулет защиты", category: "accessory" }
+      ]);
     };
     
-    setEquipment(prev => [...prev, newItem]);
-    setEquipmentNames(prev => [...prev, newEquipmentName.trim()]);
-    setNewEquipmentName('');
+    loadEquipment();
+  }, [character.class, character.background]);
+  
+  const toggleEquipment = (item: string) => {
+    let newEquipment;
+    
+    if (selectedEquipment.includes(item)) {
+      newEquipment = selectedEquipment.filter(i => i !== item);
+    } else {
+      newEquipment = [...selectedEquipment, item];
+    }
+    
+    setSelectedEquipment(newEquipment);
+    updateCharacter({ equipment: newEquipment });
   };
-
-  // Remove equipment item
-  const removeEquipment = (index: number) => {
-    setEquipment(prev => prev.filter((_, i) => i !== index));
-    setEquipmentNames(prev => prev.filter((_, i) => i !== index));
+  
+  const addCustomItem = () => {
+    if (customItem.trim() !== '') {
+      const newEquipment = [...selectedEquipment, customItem.trim()];
+      setSelectedEquipment(newEquipment);
+      updateCharacter({ equipment: newEquipment });
+      setCustomItem('');
+    }
   };
-
+  
+  const getEquipmentByCategory = (category: string) => {
+    return availableEquipment.filter(item => item.category === category);
+  };
+  
+  const renderEquipmentCategory = (category: string, title: string) => {
+    const items = getEquipmentByCategory(category);
+    
+    return (
+      <div className="mb-6">
+        <h3 className="font-medium text-lg mb-3">{title}</h3>
+        <SelectionCardGrid>
+          {items.map(item => (
+            <SelectionCard
+              key={item.name}
+              title={item.name}
+              selected={selectedEquipment.includes(item.name)}
+              onClick={() => toggleEquipment(item.name)}
+            />
+          ))}
+        </SelectionCardGrid>
+      </div>
+    );
+  };
+  
   return (
-    <div className="space-y-4">
-      <div className="font-semibold text-lg mb-2">Снаряжение</div>
+    <div>
+      <SectionHeader
+        title="Снаряжение"
+        description="Выберите снаряжение для вашего персонажа."
+      />
       
-      <div className="space-y-2">
-        {equipment.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div className="flex-grow p-2 bg-secondary/20 rounded-md">
-              {item.name} {item.quantity > 1 && `(${item.quantity})`}
-            </div>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => removeEquipment(index)}
-              title="Удалить предмет"
-            >
-              <Trash size={16} />
+      {/* Снаряжение по категориям */}
+      {renderEquipmentCategory('weapon', 'Оружие')}
+      {renderEquipmentCategory('armor', 'Доспехи и щиты')}
+      {renderEquipmentCategory('accessory', 'Аксессуары')}
+      {renderEquipmentCategory('gear', 'Снаряжение')}
+      {renderEquipmentCategory('tool', 'Инструменты')}
+      
+      {/* Добавление собственного снаряжения */}
+      <Card className="mt-8 mb-6">
+        <CardContent className="p-6">
+          <h3 className="font-medium text-lg mb-3">Добавить своё снаряжение</h3>
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Введите название предмета..."
+              value={customItem}
+              onChange={(e) => setCustomItem(e.target.value)}
+              className="flex-1"
+            />
+            <Button onClick={addCustomItem} className="shrink-0">
+              <Plus className="h-4 w-4 mr-1" /> Добавить
             </Button>
           </div>
-        ))}
-      </div>
+        </CardContent>
+      </Card>
       
-      <div className="flex gap-2 items-end mt-4">
-        <div className="flex-grow space-y-1">
-          <Label htmlFor="newEquipment">Добавить снаряжение</Label>
-          <Input
-            id="newEquipment"
-            value={newEquipmentName}
-            onChange={(e) => setNewEquipmentName(e.target.value)}
-            placeholder="Название предмета"
-            onKeyPress={(e) => e.key === 'Enter' && addEquipment()}
-          />
-        </div>
-        <Button onClick={addEquipment} className="flex items-center gap-1">
-          <Plus size={16} />
-          <span>Добавить</span>
-        </Button>
-      </div>
+      {/* Выбранное снаряжение */}
+      {selectedEquipment.length > 0 && (
+        <Card className="mt-6 mb-8">
+          <CardContent className="p-6">
+            <h3 className="font-medium text-lg mb-3">Выбранное снаряжение:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {selectedEquipment.map((item, index) => (
+                <li key={index} className="text-primary">
+                  <span className="text-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+      
+      <NavigationButtons
+        nextStep={nextStep}
+        prevStep={prevStep}
+        allowNext={selectedEquipment.length > 0}
+        disableNext={selectedEquipment.length === 0}
+      />
     </div>
   );
 };

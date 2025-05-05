@@ -1,7 +1,7 @@
 
-// Этот файл теперь реэкспортирует из организованного модуля
-import { spells, getSpellsByClass, getSpellsByLevel, spellsByLevel, getSpellByName } from './spells/index';
-export { spells, getSpellsByClass, getSpellsByLevel, spellsByLevel, getSpellByName };
+// Этот файл теперь просто реэкспортирует из организованного модуля
+import { spells } from './spells/index';
+export * from './spells/index';
 
 // Для совместимости с существующим кодом
 export const getSpellDetails = (spellName: string) => {
