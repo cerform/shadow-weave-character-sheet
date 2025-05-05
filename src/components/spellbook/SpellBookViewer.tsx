@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,7 @@ import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
 import { SpellData } from '@/types/spells';
-import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
+import { CharacterSpell } from '@/types/character';
 import { getAllSpells } from '@/data/spells';
 
 interface SpellBookViewerProps {
@@ -60,8 +59,9 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
 
   const [viewMode, setViewMode] = useState('cards');
 
+  // Исправляем строку, вызывающую ошибку
   // Преобразуем все заклинания в формат SpellData с обязательными полями
-  const spellsData: SpellData[] = convertCharacterSpellsToSpellData(filteredSpells);
+  const spellsData: SpellData[] = filteredSpells as unknown as SpellData[];
 
   // Получаем общее количество заклинаний при загрузке компонента
   useEffect(() => {

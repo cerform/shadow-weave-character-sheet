@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Users, FileText, BookOpen, DiceD20, PlusCircle, Map, Scroll } from 'lucide-react';
+import { Users, FileText, BookOpen, Dice2, PlusCircle, Map, Scroll } from 'lucide-react';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ThemeSelector from '@/components/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
@@ -48,7 +47,7 @@ const Index = () => {
     {
       title: 'Игра',
       description: 'Присоединиться к сессии',
-      icon: <DiceD20 size={32} />,
+      icon: <Dice2 size={32} />,
       link: '/join',
       color: '#EF4444',
     },

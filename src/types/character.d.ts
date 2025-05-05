@@ -1,88 +1,46 @@
 
-import { SpellData } from './spells';
-
-// Consolidate character interfaces to avoid duplicate type errors
 export interface Character {
   id?: string;
-  userId?: string;
   name: string;
-  race: string;
+  race?: string;
   class?: string;
-  className?: string;
-  level: number;
   subclass?: string;
   background?: string;
-  alignment?: string;
+  level: number;
   experience?: number;
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  maxHp?: number;
-  currentHp?: number;
-  temporaryHp?: number;
+  alignment?: string;
+  abilities?: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+  };
+  skills?: Record<string, {
+    proficient: boolean;
+    expertise?: boolean;
+    value?: number;
+  }>;
+  hitPoints?: {
+    current: number;
+    maximum: number;
+    temporary: number;
+  };
   armorClass?: number;
-  initiative?: number;
   speed?: number;
-  hitDice?: {
-    total?: number;
-    used?: number;
-    dieType?: string;
-    value?: string;
-  };
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
   proficiencyBonus?: number;
-  savingThrows?: {
-    [key: string]: boolean;
-  };
-  savingThrowProficiencies?: {
-    [ability: string]: boolean;
-  };
-  skills?: {
-    [key: string]: boolean | number | { proficient: boolean; expertise: boolean; bonus?: number };
-  };
-  skillProficiencies?: {
-    [skillName: string]: boolean;
-  };
-  proficiencies?: string[] | {
-    armor?: string[];
-    weapons?: string[];
-    tools?: string[];
+  savingThrows?: Record<string, boolean>;
+  proficiencies?: {
     languages?: string[];
-  };
-  languages?: string[];
-  spellcasting?: {
-    ability?: string;
-    saveDC?: number;
-    attackBonus?: number;
-    preparedSpellsLimit?: number;
-  };
-  spells?: (CharacterSpell | string)[];
-  spellSlots?: {
-    [key: number]: {
-      max: number;
-      used: number;
-    };
-  };
-  equipment?: string[] | {
+    tools?: string[];
     weapons?: string[];
-    armor?: string;
-    items?: string[];
-  };
-  features?: string[];
-  traits?: string[];
-  personalityTraits?: string;
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
-  appearance?: string;
-  backstory?: string;
-  notes?: string;
+    armor?: string[];
+  } | string[];
+  equipment?: Item[];
+  features?: Feature[];
+  spells?: CharacterSpell[];
+  spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
     sp?: number;
@@ -90,105 +48,58 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  abilities?: {
-    STR?: number;
-    DEX?: number;
-    CON?: number;
-    INT?: number;
-    WIS?: number;
-    CHA?: number;
-    strength?: number;
-    dexterity?: number;
-    constitution?: number;
-    intelligence?: number;
-    wisdom?: number;
-    charisma?: number;
+  deathSaves?: {
+    successes: number;
+    failures: number;
   };
-  stats?: {
-    strength?: number;
-    dexterity?: number;
-    constitution?: number;
-    intelligence?: number;
-    wisdom?: number;
-    charisma?: number;
-  };
-  additionalClasses?: ClassLevel[];
-  gender?: string;
-  subrace?: string;
-  abilityPointsUsed?: number;
-  hitPoints?: {
-    current: number;
-    max: number;
-    temporary: number;
-  };
-  createdAt?: string;
-  updatedAt?: string;
-  image?: string;
-  sorceryPoints?: SorceryPoints;
-  playerName?: string;
-}
-
-// Forward the types for backward compatibility
-export interface CharacterSheet extends Character {
-  // Empty interface that extends Character for backward compatibility
-}
-
-export interface ClassLevel {
-  class: string;
-  subclass?: string;
-  level: number;
-}
-
-export interface SorceryPoints {
-  max: number;
-  current: number;
+  inspiration?: boolean;
+  bonds?: string;
+  flaws?: string;
+  ideals?: string;
+  personalityTraits?: string;
+  appearance?: string;
+  backstory?: string;
 }
 
 export interface CharacterSpell {
-  id?: number | string;
+  id?: string;
   name: string;
   level: number;
-  description?: string;
+  school?: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
-  school?: string;
-  classes?: string[];
-  subclasses?: string[];
+  description?: string | string[];
+  classes?: string[] | string;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  prepared?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+  higherLevel?: string;
 }
 
-export interface AbilityScores {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-  
-  // Short form aliases
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
+export interface Item {
+  name: string;
+  quantity: number;
+  weight?: number;
+  description?: string;
+  type?: string;
+  equipped?: boolean;
+  cost?: number;
+  costUnit?: string;
 }
 
-// Added constants for ability score caps
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
-};
+export interface Feature {
+  name: string;
+  source: string;
+  description: string;
+  level?: number;
+}
 
-// HitPointEvent for DamageLog
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
-  amount: number;
-  source?: string;
-  timestamp: number | Date;
-  previousHP?: number;
-  newHP?: number;
+export interface PlayerCharacter extends Character {
+  userId: string;
 }
