@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,11 +49,26 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
         updateCharacter({ id: Date.now().toString() });
       }
 
+      // Очистка полей с undefined перед сохранением
+      const cleanCharacter = { ...character };
+      
+      // Исправление проблемы с abilityPointsUsed
+      if (cleanCharacter.abilityPointsUsed === undefined) {
+        delete cleanCharacter.abilityPointsUsed;
+      }
+      
+      // Очищаем другие возможные undefined поля
+      Object.keys(cleanCharacter).forEach(key => {
+        if (cleanCharacter[key] === undefined) {
+          delete cleanCharacter[key];
+        }
+      });
+
       // Save the character to Firestore
-      await setCharacter(character);
+      await setCharacter(cleanCharacter);
 
       // Update the character context
-      setContextCharacter(character);
+      setContextCharacter(cleanCharacter);
 
       toast({
         title: "Успех",

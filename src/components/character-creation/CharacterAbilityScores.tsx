@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -243,11 +244,17 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     };
     
     // Сохраняем в оба поля abilities и stats для совместимости
-    updateCharacter({ 
+    const updates: Partial<CharacterSheet> = { 
       abilities: abilitiesFormat,
-      stats: statsFormat,
-      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
-    });
+      stats: statsFormat
+    };
+    
+    // Добавляем abilityPointsUsed только если используем метод pointbuy
+    if (abilitiesMethod === 'pointbuy') {
+      updates.abilityPointsUsed = totalPointsAvailable - pointsLeft;
+    }
+    
+    updateCharacter(updates);
     nextStep();
   };
 

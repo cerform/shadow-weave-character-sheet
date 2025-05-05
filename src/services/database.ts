@@ -3,11 +3,29 @@ import { db } from './firebase';
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import type { CharacterSheet } from '@/utils/characterImports';
 
-// Function to add or update a character in Firestore
+// Function to add or update a character in Firestore with защитой от undefined
 export const setCharacter = async (character: CharacterSheet) => {
   try {
-    const charRef = doc(db, "characters", character.id || "");
-    await setDoc(charRef, character, { merge: true });
+    // Копируем объект для обработки
+    const processedCharacter = { ...character };
+    
+    // Рекурсивно удаляем все undefined значения
+    const cleanObject = (obj: any): any => {
+      Object.keys(obj).forEach(key => {
+        if (obj[key] === undefined) {
+          delete obj[key];
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          cleanObject(obj[key]);
+        }
+      });
+      return obj;
+    };
+    
+    // Очищаем character от undefined значений
+    const cleanedCharacter = cleanObject(processedCharacter);
+    
+    const charRef = doc(db, "characters", cleanedCharacter.id || "");
+    await setDoc(charRef, cleanedCharacter, { merge: true });
     console.log("Character saved/updated successfully!");
   } catch (error) {
     console.error("Error saving/updating character:", error);

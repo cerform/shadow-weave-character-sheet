@@ -97,8 +97,16 @@ export const useCharacterCreation = () => {
       updates.userId = uid;
     }
     
-    setCharacter(prev => ({ ...prev, ...updates }));
-    console.log("Персонаж обновлен:", { ...character, ...updates });
+    // Проверяем и удаляем undefined значения
+    const cleanedUpdates = { ...updates };
+    Object.keys(cleanedUpdates).forEach(key => {
+      if (cleanedUpdates[key] === undefined) {
+        delete cleanedUpdates[key];
+      }
+    });
+    
+    setCharacter(prev => ({ ...prev, ...cleanedUpdates }));
+    console.log("Персонаж обновлен:", { ...character, ...cleanedUpdates });
   };
 
   // Проверяем, является ли класс магическим
@@ -162,13 +170,13 @@ export const useCharacterCreation = () => {
   };
   
   // Расчет количества очков для распределения характеристик в зависимости от уровня
-  const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): number => {
+  const getAbilityScorePointsByLevel = (basePoints: number = 27): number => {
     let totalPoints = basePoints;
     
     // Add level-based bonuses
-    if (level >= 5) totalPoints += 3;
-    if (level >= 10) totalPoints += 2; // Total +5 at level 10
-    if (level >= 15) totalPoints += 2; // Total +7 at level 15
+    if (character.level >= 5) totalPoints += 3;
+    if (character.level >= 10) totalPoints += 2; // Total +5 at level 10
+    if (character.level >= 15) totalPoints += 2; // Total +7 at level 15
     
     return totalPoints;
   };
