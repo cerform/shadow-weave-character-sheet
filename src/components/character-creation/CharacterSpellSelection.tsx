@@ -15,7 +15,13 @@ import { Search, Book, Plus, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
-import { normalizeSpells, convertToSpellData, convertToSpellDataArray } from '@/utils/spellUtils';
+import { 
+  normalizeSpells, 
+  convertToSpellData, 
+  convertToSpellDataArray,
+  calculateKnownSpells,
+  getMaxSpellLevel
+} from '@/utils/spellUtils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -42,41 +48,55 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpellDetails, setSelectedSpellDetails] = useState<SpellData | null>(null);
   const [isSpellDetailsOpen, setIsSpellDetailsOpen] = useState(false);
+  const [spellCounts, setSpellCounts] = useState({ cantrips: 0, spells: 0 });
   
+  // Получаем класс персонажа
+  const characterClass = character.className || character.class || '';
+  const characterLevel = character.level || 1;
+
   // Загружаем доступные заклинания для класса персонажа
   useEffect(() => {
     const allSpells = getAllSpells();
     
-    if (character.className || character.class) {
-      const className = character.className || character.class;
-      // Фильтруем заклинания по классу персонажа, учитывая максимальный уровень заклинаний
+    if (characterClass) {
+      // Получаем максимальный уровень заклинаний для этого класса и уровня
+      const maxSpellLevel = getMaxSpellLevel(characterClass, characterLevel);
+      
+      // Фильтруем заклинания по классу персонажа и максимальному уровню заклинаний
       const classSpells = allSpells.filter(spell => {
         // Проверяем, что classes существует
         if (!spell.classes) return false;
         
         const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
         
-        // Проверяем уровень заклинания в зависимости от уровня персонажа
-        const characterLevel = character.level || 1;
-        const maxSpellLevel = getMaxSpellLevel(className || '', characterLevel);
-        
+        // Проверяем соответствие классу и уровню заклинания
         return spell.level <= maxSpellLevel && spellClasses.some(spellClass => 
           spellClass && typeof spellClass === 'string' && 
-          spellClass.toLowerCase().includes(className?.toLowerCase() || '')
+          spellClass.toLowerCase().includes(characterClass.toLowerCase())
         );
       });
       
-      console.log(`Найдено ${classSpells.length} заклинаний для класса ${className}`);
+      console.log(`Найдено ${classSpells.length} заклинаний для класса ${characterClass} с уровнем персонажа ${characterLevel} (макс. уровень заклинаний: ${maxSpellLevel})`);
       
       // Преобразуем CharacterSpell в SpellData для правильной типизации
       const convertedSpells = convertToSpellDataArray(classSpells);
       setAvailableSpells(convertedSpells);
-      setFilteredSpells(convertedSpells.filter(spell => spell.level === parseInt(activeTab, 10)));
+      
+      // Устанавливаем активный таб на заговоры по умолчанию
+      const initialTab = '0';
+      setActiveTab(initialTab);
+      setFilteredSpells(convertedSpells.filter(spell => spell.level === parseInt(initialTab, 10)));
     } else {
       setAvailableSpells([]);
       setFilteredSpells([]);
     }
-  }, [character.className, character.class, character.level]);
+    
+    // Рассчитываем количество доступных заклинаний
+    const counts = calculateKnownSpells(characterClass, characterLevel, character.abilities);
+    setSpellCounts(counts);
+    console.log(`Доступно заклинаний для ${characterClass} (уровень ${characterLevel}): ${counts.cantrips} заговоров, ${counts.spells} обычных заклинаний`);
+    
+  }, [characterClass, characterLevel, character.abilities]);
   
   // Фильтруем заклинания при изменении активного таба или поискового запроса
   useEffect(() => {
@@ -94,109 +114,17 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     setFilteredSpells(filtered);
   }, [activeTab, searchQuery, availableSpells]);
   
-  // Определяем максимальный уровень заклинаний в зависимости от класса и уровня персонажа
-  const getMaxSpellLevel = (className: string, characterLevel: number): number => {
-    // Преобразуем название класса к нижнему регистру для сравнения
-    const normalizedClass = className.toLowerCase();
-    
-    // Полные заклинатели (до 9-го уровня)
-    if (['волшебник', 'жрец', 'друид', 'бард', 'чародей'].includes(normalizedClass)) {
-      if (characterLevel >= 17) return 9;
-      if (characterLevel >= 15) return 8;
-      if (characterLevel >= 13) return 7;
-      if (characterLevel >= 11) return 6;
-      if (characterLevel >= 9) return 5;
-      if (characterLevel >= 7) return 4;
-      if (characterLevel >= 5) return 3;
-      if (characterLevel >= 3) return 2;
-      return 1;
-    } 
-    // Полузаклинатели (до 5-го уровня)
-    else if (['паладин', 'следопыт', 'рейнджер'].includes(normalizedClass)) {
-      if (characterLevel >= 17) return 5;
-      if (characterLevel >= 13) return 4;
-      if (characterLevel >= 9) return 3;
-      if (characterLevel >= 5) return 2;
-      if (characterLevel >= 2) return 1;
-      return 0;
-    }
-    // Особые заклинатели (колдун)
-    else if (['колдун', 'чернокнижник'].includes(normalizedClass)) {
-      if (characterLevel >= 17) return 5; // У колдуна особая механика, но максимум 5 уровень слотов
-      if (characterLevel >= 11) return 5;
-      if (characterLevel >= 9) return 5;
-      if (characterLevel >= 7) return 4;
-      if (characterLevel >= 5) return 3;
-      if (characterLevel >= 3) return 2;
-      return 1;
-    }
-    // Для остальных классов
-    return 0;
-  };
-  
-  // Определяем количество доступных для выбора заклинаний
-  const getAvailableSpellCount = (): number => {
-    if (!character.className && !character.class || !character.level) return 0;
-    
-    const className = character.className || character.class;
-    if (!className) return 0;
-    
-    // Логика расчета количества заклинаний в зависимости от класса и уровня
-    const normalizedClass = className.toLowerCase();
-    const characterLevel = character.level || 1;
-    
-    console.log(`Расчет количества заклинаний для ${normalizedClass} уровня ${characterLevel}`);
-    
-    switch(normalizedClass) {
-      case 'волшебник':
-        return 6 + (characterLevel > 1 ? (characterLevel - 1) * 2 : 0);
-      case 'чародей':
-        return Math.min(15, characterLevel + 1);
-      case 'жрец':
-      case 'друид':
-        return characterLevel + Math.max(0, getAbilityModifier());
-      case 'бард':
-        return Math.min(22, 4 + (characterLevel > 1 ? (characterLevel - 1) * 1 : 0));
-      case 'колдун':
-      case 'чернокнижник':
-        return Math.min(15, Math.max(1, Math.ceil(characterLevel / 2) + 1));
-      case 'паладин':
-      case 'следопыт':
-      case 'рейнджер':
-        return Math.min(11, Math.ceil(characterLevel / 2) + 1);
-      default:
-        return characterLevel > 3 ? 4 : characterLevel; // Базовое значение для остальных классов
-    }
-  };
-  
-  // Получаем модификатор основной характеристики заклинаний
-  const getAbilityModifier = (): number => {
-    if (!character.abilities) return 0;
-    
-    const className = (character.className || character.class || '').toLowerCase();
-    
-    switch(className) {
-      case 'волшебник':
-        return Math.floor((character.abilities.intelligence - 10) / 2);
-      case 'чародей':
-      case 'бард':
-      case 'колдун':
-      case 'чернокнижник':
-        return Math.floor((character.abilities.charisma - 10) / 2);
-      case 'жрец':
-      case 'друид':
-      case 'следопыт':
-      case 'рейнджер':
-        return Math.floor((character.abilities.wisdom - 10) / 2);
-      default:
-        return 0;
-    }
-  };
-  
   // Определяем, можно ли выбрать еще заклинания
-  const canSelectMoreSpells = () => {
-    const maxSpells = getAvailableSpellCount();
-    return selectedSpells.length < maxSpells;
+  const canSelectMoreSpells = (spellLevel: number) => {
+    if (spellLevel === 0) {
+      // Проверка для заговоров
+      const currentCantrips = selectedSpells.filter(spell => spell.level === 0).length;
+      return currentCantrips < spellCounts.cantrips;
+    } else {
+      // Проверка для обычных заклинаний
+      const currentSpells = selectedSpells.filter(spell => spell.level > 0).length;
+      return currentSpells < spellCounts.spells;
+    }
   };
   
   // Обработчик добавления заклинания
@@ -204,7 +132,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Проверяем, что заклинание еще не выбрано и можно добавить еще заклинания
     if (
       selectedSpells.some(s => s.name === spell.name) ||
-      !canSelectMoreSpells()
+      !canSelectMoreSpells(spell.level)
     ) {
       return;
     }
@@ -229,6 +157,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return selectedSpells.filter(spell => spell.level === level).length;
   };
   
+  // Определяем, сколько ещё можно выбрать заговоров и обычных заклинаний
+  const cantripCount = getSpellCountByLevel(0);
+  const regularSpellCount = selectedSpells.filter(spell => spell.level > 0).length;
+  
   const handleShowSpellDetails = (spell: SpellData) => {
     setSelectedSpellDetails(spell);
     setIsSpellDetailsOpen(true);
@@ -238,14 +170,17 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     <div className="space-y-6">
       <SectionHeader
         title="Выбор заклинаний"
-        description={`Выберите заклинания для вашего персонажа. Доступно ${getAvailableSpellCount()} заклинаний.`}
+        description={`Выберите заклинания для вашего персонажа. Доступно ${spellCounts.cantrips} заговоров и ${spellCounts.spells} обычных заклинаний.`}
       />
       
       {/* Выбранные заклинания */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Выбранные заклинания ({selectedSpells.length}/{getAvailableSpellCount()})</span>
+            <span>
+              Выбранные заклинания 
+              ({cantripCount}/{spellCounts.cantrips} заговоров, {regularSpellCount}/{spellCounts.spells} заклинаний)
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -303,7 +238,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               <TabsTrigger value="0" className="relative">
                 Заговоры
                 <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
-                  {getSpellCountByLevel(0)}
+                  {getSpellCountByLevel(0)}/{spellCounts.cantrips}
                 </Badge>
               </TabsTrigger>
               {[1, 2, 3, 4].map((level) => (
@@ -368,7 +303,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                                   variant={isSelected ? "destructive" : "secondary"}
                                   size="sm"
                                   onClick={() => isSelected ? handleRemoveSpell(spell.name) : handleAddSpell(spell)}
-                                  disabled={!isSelected && !canSelectMoreSpells()}
+                                  disabled={!isSelected && !canSelectMoreSpells(spell.level)}
                                   className="h-8 px-2"
                                 >
                                   {isSelected ? (
@@ -384,8 +319,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                               <TooltipContent>
                                 {isSelected ? 
                                   <p>Удалить заклинание</p> : 
-                                  !canSelectMoreSpells() ? 
-                                  <p>Достигнут лимит заклинаний</p> :
+                                  !canSelectMoreSpells(spell.level) ? 
+                                  <p>Достигнут лимит заклинаний {spell.level === 0 ? 'заговоров' : 'этого уровня'}</p> :
                                   <p>Добавить заклинание</p>
                                 }
                               </TooltipContent>
@@ -472,7 +407,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 >
                   Закрыть
                 </Button>
-                {!selectedSpells.some(s => s.name === selectedSpellDetails.name) && canSelectMoreSpells() && (
+                {!selectedSpells.some(s => s.name === selectedSpellDetails.name) && canSelectMoreSpells(selectedSpellDetails.level) && (
                   <Button 
                     onClick={() => {
                       handleAddSpell(selectedSpellDetails);
