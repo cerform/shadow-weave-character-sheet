@@ -58,8 +58,8 @@ export const filterSpellsByType = (
   options: { ritual?: boolean; concentration?: boolean; prepared?: boolean }
 ): SpellData[] => {
   return spells.filter(spell => {
-    if (options.ritual && !(spell.ritual || spell.isRitual)) return false;
-    if (options.concentration && !(spell.concentration || spell.isConcentration)) return false;
+    if (options.ritual && !spell.ritual) return false;
+    if (options.concentration && !spell.concentration) return false;
     if (options.prepared && !spell.prepared) return false;
     return true;
   });

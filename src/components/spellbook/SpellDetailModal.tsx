@@ -58,8 +58,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClos
           </div>
           <DialogDescription className="flex flex-wrap gap-2 mt-2">
             <Badge variant="outline" className="bg-black/30">{spell.school}</Badge>
-            {(spell.ritual || spell.isRitual) && <Badge variant="outline" className="bg-black/30">Ритуал</Badge>}
-            {(spell.concentration || spell.isConcentration) && <Badge variant="outline" className="bg-black/30">Концентрация</Badge>}
+            {spell.ritual && <Badge variant="outline" className="bg-black/30">Ритуал</Badge>}
+            {spell.concentration && <Badge variant="outline" className="bg-black/30">Концентрация</Badge>}
           </DialogDescription>
         </DialogHeader>
 

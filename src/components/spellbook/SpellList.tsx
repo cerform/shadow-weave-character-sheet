@@ -61,7 +61,7 @@ const SpellList: React.FC<SpellListProps> = ({
                   >
                     {spell.school}
                   </Badge>
-                  {(spell.ritual || spell.isRitual) && (
+                  {spell.ritual && (
                     <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',
@@ -70,7 +70,7 @@ const SpellList: React.FC<SpellListProps> = ({
                       Ритуал
                     </Badge>
                   )}
-                  {(spell.concentration || spell.isConcentration) && (
+                  {spell.concentration && (
                     <Badge variant="outline" style={{
                       backgroundColor: 'rgba(0, 0, 0, 0.3)',
                       color: currentTheme.textColor || 'white',

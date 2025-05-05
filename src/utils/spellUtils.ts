@@ -78,8 +78,7 @@ export const calculatePreparedSpellsLimit = (
  */
 export const calculateKnownSpells = (
   className: string, 
-  level: number, 
-  abilityModifier: number
+  level: number
 ): { cantrips: number; spells: number } => {
   // Количество заговоров и заклинаний по классу и уровню
   const spellCounts = {
@@ -125,15 +124,8 @@ export const calculateKnownSpells = (
   const classData = spellCounts[className as keyof typeof spellCounts] || { cantrips: Array(20).fill(0), spells: Array(20).fill(0) };
   const levelIndex = Math.min(Math.max(level - 1, 0), 19); // Уровни от 1 до 20, индексы от 0 до 19
   
-  let cantripCount = classData.cantrips[levelIndex];
-  let spellCount = classData.spells[levelIndex];
-  
-  // Для классов, которые подготавливают заклинания
-  if (className === "Жрец" || className === "Друид" || className === "Волшебник") {
-    spellCount = level + abilityModifier;
-  } else if (className === "Паладин") {
-    spellCount = Math.floor(level / 2) + abilityModifier;
-  }
+  const cantripCount = classData.cantrips[levelIndex];
+  const spellCount = classData.spells[levelIndex];
   
   return {
     cantrips: cantripCount,

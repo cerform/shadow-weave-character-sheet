@@ -96,28 +96,18 @@ const getNewSpellsCountOnLevelUp = (character: any): number => {
   const newLevel = currentLevel + 1;
   
   // Используем функцию-калькулятор из spellProcessors
-  const currentSpells = calculateAvailableSpellsByClassAndLevel(
+  const currentSpellsData = calculateAvailableSpellsByClassAndLevel(
     characterClass, 
-    currentLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
+    currentLevel
   );
   
-  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
+  const newLevelSpellsData = calculateAvailableSpellsByClassAndLevel(
     characterClass, 
-    newLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
+    newLevel
   );
   
   // Возвращаем разницу между новым и текущим количеством заклинаний
-  return Math.max(0, newLevelSpells.spells - currentSpells.spells);
+  return Math.max(0, newLevelSpellsData.knownSpells - currentSpellsData.knownSpells);
 };
 
 // Определение количества новых заговоров при повышении уровня
@@ -129,28 +119,18 @@ const getNewCantripsCountOnLevelUp = (character: any): number => {
   const newLevel = currentLevel + 1;
   
   // Используем функцию-калькулятор из spellProcessors
-  const currentSpells = calculateAvailableSpellsByClassAndLevel(
+  const currentSpellsData = calculateAvailableSpellsByClassAndLevel(
     characterClass, 
-    currentLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
+    currentLevel
   );
   
-  const newLevelSpells = calculateAvailableSpellsByClassAndLevel(
+  const newLevelSpellsData = calculateAvailableSpellsByClassAndLevel(
     characterClass, 
-    newLevel,
-    {
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma,
-      intelligence: character.abilities?.intelligence
-    }
+    newLevel
   );
   
   // Возвращаем разницу между новым и текущим количеством заговоров
-  return Math.max(0, newLevelSpells.cantrips - currentSpells.cantrips);
+  return Math.max(0, newLevelSpellsData.cantripsCount - currentSpellsData.cantripsCount);
 };
 
 // Основной хук для управления повышением уровня
