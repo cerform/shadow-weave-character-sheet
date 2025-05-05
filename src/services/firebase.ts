@@ -51,8 +51,10 @@ const storage = getStorage(app);
 
 // Провайдеры аутентификации
 const googleProvider = new GoogleAuthProvider();
+// Явно настраиваем параметры для обеспечения отображения окна выбора аккаунта
 googleProvider.setCustomParameters({
-  prompt: 'select_account'
+  prompt: 'select_account',
+  access_type: 'offline'
 });
 
 // Функция для форматирования сообщений ошибок Firebase
@@ -111,7 +113,15 @@ const auth = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
-      const result = await signInWithPopup(firebaseAuth, googleProvider);
+      // Принудительно обновляем провайдер перед каждым вызовом для уверенности
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        access_type: 'offline'
+      });
+      
+      console.log("Запускаем вход через Google с обновленными параметрами");
+      const result = await signInWithPopup(firebaseAuth, provider);
       console.log("Google login successful", result.user);
       return result.user;
     } catch (error: any) {

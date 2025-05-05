@@ -101,6 +101,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
           description: "Вы успешно вошли через Google"
         });
         navigate(redirectTo);
+      } else {
+        // Если результат null, но ошибки не было - показываем сообщение
+        toast({
+          title: "Вход не завершен",
+          description: "Вход через Google не был завершен",
+          variant: "destructive"
+        });
       }
     } catch (error: any) {
       console.error("Ошибка при входе через Google:", error);
