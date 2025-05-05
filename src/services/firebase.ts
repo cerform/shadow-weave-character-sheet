@@ -51,6 +51,9 @@ const storage = getStorage(app);
 
 // Провайдеры аутентификации
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // Функция для форматирования сообщений ошибок Firebase
 const formatFirebaseError = (error: any): string => {
@@ -69,7 +72,7 @@ const formatFirebaseError = (error: any): string => {
     'auth/unauthorized-domain': `Домен "${currentDomain}" не авторизован для аутентификации Firebase. Добавьте этот домен в список разрешенных в консоли Firebase (Authentication > Settings > Authorized domains).`,
     'auth/popup-closed-by-user': 'Окно авторизации было закрыто до завершения процесса.',
     'auth/cancelled-popup-request': 'Операция отменена из-за нового запроса входа.',
-    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером.'
+    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером. Разрешите всплывающие окна для этого сайта и повторите попытку.'
   };
   
   // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
@@ -108,14 +111,13 @@ const auth = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
-      googleProvider.setCustomParameters({
-        prompt: 'select_account'
-      });
       const result = await signInWithPopup(firebaseAuth, googleProvider);
+      console.log("Google login successful", result.user);
       return result.user;
     } catch (error: any) {
+      console.error('Оригинальная ошибка при входе через Google:', error);
       const formattedError = { ...error, message: formatFirebaseError(error) };
-      console.error('Ошибка при входе через Google:', formattedError);
+      console.error('Форматированная ошибка при входе через Google:', formattedError.message);
       throw formattedError;
     }
   },

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { Loader2, LogIn, Lock, Mail, User, AlertTriangle, ExternalLink, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -36,17 +36,28 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Пожалуйста, введите email и пароль');
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, введите email и пароль",
+        variant: "destructive"
+      });
       return;
     }
     
     try {
       setLoading(true);
       await login(email, password);
-      toast.success('Вход выполнен успешно');
+      toast({
+        title: "Успешно",
+        description: "Вход выполнен успешно"
+      });
       navigate(redirectTo);
     } catch (error: any) {
-      toast.error(`Ошибка входа: ${error.message}`);
+      toast({
+        title: "Ошибка входа",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -56,7 +67,11 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Пожалуйста, введите email и пароль');
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, введите email и пароль",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -64,10 +79,17 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
       setLoading(true);
       // Передаем isDM в функцию регистрации
       await register(email, password, name, isDM);
-      toast.success('Регистрация успешна');
+      toast({
+        title: "Успешно",
+        description: "Регистрация успешна"
+      });
       navigate(redirectTo);
     } catch (error: any) {
-      toast.error(`Ошибка регистрации: ${error.message}`);
+      toast({
+        title: "Ошибка регистрации",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -78,7 +100,10 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
       setLoading(true);
       setGoogleAuthError(false);
       await googleLogin();
-      toast.success('Вход с Google выполнен успешно');
+      toast({
+        title: "Успешно",
+        description: "Вход с Google выполнен успешно"
+      });
       navigate(redirectTo);
     } catch (error: any) {
       console.error("Ошибка при входе через Google:", error);
@@ -86,9 +111,17 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
       // Проверяем наличие ошибки неавторизованного домена
       if (error.code === 'auth/unauthorized-domain') {
         setGoogleAuthError(true);
-        toast.error('Ошибка: Текущий домен не авторизован в консоли Firebase');
+        toast({
+          title: "Ошибка",
+          description: "Текущий домен не авторизован в консоли Firebase",
+          variant: "destructive"
+        });
       } else {
-        toast.error(`Ошибка входа через Google: ${error.message}`);
+        toast({
+          title: "Ошибка входа через Google",
+          description: error.message,
+          variant: "destructive"
+        });
       }
     } finally {
       setLoading(false);

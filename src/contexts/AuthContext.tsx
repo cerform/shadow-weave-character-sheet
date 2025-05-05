@@ -5,6 +5,7 @@ import { auth as firebaseAuth } from '@/services/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '@/services/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { toast } from '@/components/ui/use-toast';
 
 const defaultAuthContext: AuthContextType = {
   user: null,
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           characters: [],
         });
       }
+      console.log("User saved to Firestore:", user.id);
     } catch (error) {
       console.error("Ошибка при сохранении пользователя в Firestore:", error);
     }
@@ -98,9 +100,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Настройка слушателя изменения состояния аутентификации
+    console.log("Setting up auth state listener");
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (authUser) => {
       try {
         if (authUser) {
+          console.log("Auth state changed: User logged in", authUser);
           // Пользователь авторизован
           // Получаем дополнительные данные из Firestore
           const userData = await getUserFromFirestore(authUser.uid);
@@ -109,10 +113,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Сохраняем пользователя в Firestore (создаем или обновляем)
           await saveUserToFirestore(transformedUser);
         } else {
+          console.log("Auth state changed: User logged out");
           // Пользователь не авторизован
           setUser(null);
         }
       } catch (err) {
+        console.error("Error in auth state listener", err);
         setError(err as Error);
       } finally {
         setLoading(false);
@@ -126,14 +132,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log("Attempting login with email:", email);
       const userCredential = await firebaseAuth.loginWithEmail(email, password);
       if (userCredential) {
+        console.log("Login successful", userCredential);
         // Получаем дополнительные данные из Firestore
         const userData = await getUserFromFirestore(userCredential.uid);
         const transformedUser = transformUser(userCredential, userData);
         setUser(transformedUser);
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -144,8 +153,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = async (email: string, password: string, displayName: string, isDM: boolean = false) => {
     try {
       setLoading(true);
+      console.log("Attempting signup:", email, displayName, isDM);
       const userCredential = await firebaseAuth.registerWithEmail(email, password);
       if (userCredential) {
+        console.log("Signup successful", userCredential);
         // Создаем объект пользователя с дополнительными данными
         const transformedUser = transformUser(userCredential, { isDM, displayName });
         transformedUser.displayName = displayName;
@@ -157,6 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(transformedUser);
       }
     } catch (err) {
+      console.error("Signup error:", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -170,9 +182,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
+      console.log("Attempting logout");
       await firebaseAuth.logout();
       setUser(null);
+      console.log("Logout successful");
+      toast({
+        title: "Выход",
+        description: "Вы успешно вышли из системы"
+      });
     } catch (err) {
+      console.error("Logout error:", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -181,11 +200,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Добавляем функцию для входа через Google
-  const googleLogin = async (redirect: boolean = true) => {
+  const googleLogin = async () => {
     try {
       setLoading(true);
+      console.log("Attempting Google login");
       const userCredential = await firebaseAuth.loginWithGoogle();
       if (userCredential) {
+        console.log("Google login successful", userCredential);
         // Получаем дополнительные данные из Firestore
         const userData = await getUserFromFirestore(userCredential.uid);
         const transformedUser = transformUser(userCredential, userData);
@@ -194,6 +215,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await saveUserToFirestore(transformedUser);
         
         setUser(transformedUser);
+        
+        toast({
+          title: "Вход выполнен",
+          description: "Вы успешно вошли через Google"
+        });
       }
     } catch (err) {
       console.error("Google login error:", err);
@@ -209,11 +235,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (!user) throw new Error('Пользователь не авторизован');
       
+      console.log("Updating user profile", data);
       // Обновляем профиль в Firestore
       const updatedUser = { ...user, ...data };
       await saveUserToFirestore(updatedUser);
       setUser(updatedUser);
+      
+      toast({
+        title: "Профиль обновлен",
+        description: "Ваш профиль успешно обновлен"
+      });
     } catch (err) {
+      console.error("Profile update error:", err);
       setError(err as Error);
       throw err;
     }

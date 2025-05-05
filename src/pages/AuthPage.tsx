@@ -13,8 +13,8 @@ const AuthPage = () => {
   const returnPath = location.state?.returnPath || '/';
 
   return (
-    <div className={`min-h-screen p-6 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
-      <div className="container mx-auto">
+    <div className={`min-h-screen p-6 flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
+      <div className="container max-w-md mx-auto">
         <Button 
           variant="outline" 
           onClick={() => navigate('/')} 
@@ -24,7 +24,7 @@ const AuthPage = () => {
           На главную
         </Button>
         
-        <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+        <div className="flex flex-col items-center justify-center w-full">
           <h1 className="text-3xl font-bold mb-6 text-center">
             Аутентификация
           </h1>
