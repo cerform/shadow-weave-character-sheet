@@ -16,6 +16,14 @@ interface RaceDetailsProps {
   onBack: () => void;
 }
 
+// Define more specific types for subraces
+interface SubraceObj {
+  name: string;
+  description: string | Record<string, unknown>;
+  traits?: string[];
+  abilityScoreIncrease?: Record<string, number>;
+}
+
 const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
   const [activeTab, setActiveTab] = useState("traits");
   const { theme, themeStyles } = useTheme();
@@ -293,11 +301,11 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
         <TabsContent value="subraces">
           {race.subraces && race.subraces.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {race.subraces.map((subrace: any, index: number) => {
+              {race.subraces.map((subrace: string | SubraceObj, index: number) => {
                 // Проверяем, является ли subrace объектом или строкой
-                const subraceObj = typeof subrace === 'string' 
+                const subraceObj: SubraceObj = typeof subrace === 'string' 
                   ? { name: subrace, description: `Разновидность ${subrace} расы ${race.name}` }
-                  : subrace;
+                  : subrace as SubraceObj;
                   
                 return (
                   <Card 
