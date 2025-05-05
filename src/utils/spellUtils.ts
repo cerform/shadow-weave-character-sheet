@@ -47,6 +47,23 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[] | undefined)
 };
 
 /**
+ * Функция для проверки, является ли значение объектом CharacterSpell
+ */
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell !== 'string';
+};
+
+/**
+ * Функция для получения имени заклинания из объекта или строки
+ */
+export const getSpellName = (spell: CharacterSpell | string): string => {
+  if (isCharacterSpellObject(spell)) {
+    return spell.name;
+  }
+  return spell;
+};
+
+/**
  * Обработка строк компонентов заклинания
  */
 export const parseComponents = (componentString: string): {
@@ -55,44 +72,67 @@ export const parseComponents = (componentString: string): {
   material: boolean;
   ritual: boolean;
   concentration: boolean;
+  materialComponents?: string;
 } => {
+  // Найдём все материальные компоненты в скобках, если они есть
+  const materialRegex = /М\s*\((.*?)\)/;
+  const materialMatch = componentString.match(materialRegex);
+  const materialComponents = materialMatch ? materialMatch[1] : undefined;
+
   return {
     verbal: componentString.includes('В'),
     somatic: componentString.includes('С'),
     material: componentString.includes('М'),
     ritual: componentString.includes('Р'),
-    concentration: componentString.includes('К')
+    concentration: componentString.includes('К'),
+    materialComponents
   };
 };
 
 /**
  * Конвертирует CharacterSpell в SpellData (гарантирует все обязательные поля)
  */
-export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
+  // Если передана строка, сначала преобразуем в CharacterSpell
+  const charSpell = typeof spell === 'string' 
+    ? {
+        id: `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'Касание',
+        components: '',
+        duration: 'Мгновенная',
+        description: ''
+      } 
+    : spell;
+
+  // Теперь преобразуем в SpellData
   return {
-    id: spell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || 'Универсальная', // Гарантируем обязательное поле
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'Касание',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
-    classes: spell.classes,
-    ritual: spell.ritual,
-    concentration: spell.concentration,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    prepared: spell.prepared,
-    higherLevels: spell.higherLevels
+    id: charSpell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name: charSpell.name,
+    level: charSpell.level,
+    school: charSpell.school || 'Универсальная',
+    castingTime: charSpell.castingTime || '1 действие',
+    range: charSpell.range || 'Касание',
+    components: charSpell.components || '',
+    duration: charSpell.duration || 'Мгновенная',
+    description: charSpell.description || '',
+    classes: charSpell.classes || [],
+    ritual: charSpell.ritual || false,
+    concentration: charSpell.concentration || false,
+    verbal: charSpell.verbal || false,
+    somatic: charSpell.somatic || false,
+    material: charSpell.material || false,
+    prepared: charSpell.prepared || false,
+    higherLevels: charSpell.higherLevels || ''
   };
 };
 
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
  */
-export const convertToSpellDataArray = (spells: CharacterSpell[]): SpellData[] => {
+export const convertToSpellDataArray = (spells: (CharacterSpell | string)[]): SpellData[] => {
   return spells.map(convertToSpellData);
 };

@@ -13,7 +13,7 @@ import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { convertToSpellData, isCharacterSpellObject, getSpellName } from '@/utils/spellHelpers';
+import { convertToSpellData, normalizeSpells } from '@/utils/spellUtils';
 
 interface SpellPanelProps {
   character: Character;
@@ -32,10 +32,13 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
     setIsModalOpen(!isModalOpen);
   };
 
+  // Получаем нормализованные заклинания
+  const normalizedSpells = normalizeSpells(character.spells);
+
   // Получаем отфильтрованные заклинания
-  const filteredSpells = character.spells?.filter(spell =>
-    getSpellName(spell).toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredSpells = normalizedSpells.filter(spell =>
+    spell.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Функция для отображения использования слотов заклинаний
   const renderSpellSlotUse = (character: Character, level: number) => {
@@ -89,13 +92,13 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
           <div className="flex flex-col space-y-2">
             {filteredSpells.map((spell) => (
               <Button
-                key={getSpellName(spell)}
+                key={`spell-${spell.id || spell.name}`}
                 variant="secondary"
                 className="w-full justify-start"
                 onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
                 style={{ color: currentTheme.textColor }}
               >
-                {getSpellName(spell)}
+                {spell.name}
               </Button>
             ))}
           </div>
