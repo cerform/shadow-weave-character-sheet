@@ -7,7 +7,7 @@ export interface SpellData {
   name: string;
   name_en?: string;
   level: number;
-  school: string;
+  school: string;  // Required in SpellData
   castingTime: string;
   range: string;
   components: string;
@@ -33,7 +33,7 @@ export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell 
     return {
       name: characterSpell,
       level: 0,
-      school: "Неизвестная",
+      school: "Неизвестная",  // Provide default value for required field
       castingTime: "1 действие",
       range: "Неизвестная",
       components: "",
@@ -44,7 +44,7 @@ export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell 
   
   return {
     ...characterSpell,
-    school: characterSpell.school || "Неизвестная",
+    school: characterSpell.school || "Неизвестная",  // Ensure school is always set
     castingTime: characterSpell.castingTime || "1 действие",
     range: characterSpell.range || "Неизвестная",
     components: characterSpell.components || "",

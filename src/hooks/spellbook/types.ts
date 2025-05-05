@@ -1,30 +1,6 @@
-import { CharacterSpell } from '@/types/character';
 
-// Интерфейс для данных о заклинании
-export interface SpellData {
-  id?: string | number;
-  name: string;
-  name_en?: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string | string[];
-  classes?: string[] | string;
-  source?: string;
-  isRitual?: boolean;
-  isConcentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
-  prepared?: boolean;
-}
+import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 // Интерфейс для возвращаемого значения хука useSpellbook
 export interface UseSpellbookReturn {

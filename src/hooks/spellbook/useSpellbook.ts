@@ -57,14 +57,18 @@ export const useSpellbook = () => {
     const matchesLevel = activeLevel.length === 0 || activeLevel.includes(spell.level);
     
     // Фильтр по школе
-    const matchesSchool = activeSchool.length === 0 || activeSchool.includes(spell.school);
+    const matchesSchool = activeSchool.length === 0 || (spell.school && activeSchool.includes(spell.school));
     
     // Фильтр по классу (с безопасной проверкой типов)
-    const matchesClass = activeClass.length === 0 || 
-      (typeof spell.classes === 'string' 
-        ? activeClass.includes(spell.classes)
-        : Array.isArray(spell.classes) && spell.classes.some(c => activeClass.includes(c))
-      );
+    let matchesClass = activeClass.length === 0;
+    
+    if (!matchesClass && spell.classes) {
+      if (typeof spell.classes === 'string') {
+        matchesClass = activeClass.includes(spell.classes);
+      } else if (Array.isArray(spell.classes)) {
+        matchesClass = spell.classes.some(c => activeClass.includes(c));
+      }
+    }
     
     return matchesSearch && matchesLevel && matchesSchool && matchesClass;
   });

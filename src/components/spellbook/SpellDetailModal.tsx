@@ -10,11 +10,11 @@ import { Separator } from '@/components/ui/separator';
 
 interface SpellDetailModalProps {
   spell: SpellData | null;
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
 }
 
-const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, isOpen, onClose }) => {
+const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClose }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -34,7 +34,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, isOpen, onCl
     : `${spell.level}-й уровень`;
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
         className="max-w-3xl max-h-[80vh] overflow-y-auto" 
         style={{ 
@@ -58,8 +58,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, isOpen, onCl
           </div>
           <DialogDescription className="flex flex-wrap gap-2 mt-2">
             <Badge variant="outline" className="bg-black/30">{spell.school}</Badge>
-            {spell.ritual && <Badge variant="outline" className="bg-black/30">Ритуал</Badge>}
-            {spell.concentration && <Badge variant="outline" className="bg-black/30">Концентрация</Badge>}
+            {(spell.ritual || spell.isRitual) && <Badge variant="outline" className="bg-black/30">Ритуал</Badge>}
+            {(spell.concentration || spell.isConcentration) && <Badge variant="outline" className="bg-black/30">Концентрация</Badge>}
           </DialogDescription>
         </DialogHeader>
 

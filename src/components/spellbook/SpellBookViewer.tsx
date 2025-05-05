@@ -193,11 +193,11 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
       
       {viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpells.map((spell: SpellData) => (
+          {filteredSpells.map((spell) => (
             <SpellCard
               key={spell.name}
-              spell={spell}
-              onClick={() => handleOpenSpell(spell)}
+              spell={spell as SpellData}
+              onClick={() => handleOpenSpell(spell as SpellData)}
             />
           ))}
         </div>
