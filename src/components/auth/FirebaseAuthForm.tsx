@@ -24,6 +24,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -36,6 +38,7 @@ const FirebaseAuthForm: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState<"player" | "dm">("player");
   const { theme } = useTheme();
   const navigate = useNavigate();
   
@@ -72,7 +75,8 @@ const FirebaseAuthForm: React.FC = () => {
       const snapshot = await getDoc(userDoc);
       
       if (!snapshot.exists()) {
-        // Создаем новый профиль
+        // Создаем новый профиль с выбранной ролью
+        const isDM = role === "dm";
         await setDoc(userDoc, {
           uid,
           email,
@@ -81,9 +85,10 @@ const FirebaseAuthForm: React.FC = () => {
           updatedAt: serverTimestamp(),
           photoURL: null,
           characters: [],
-          isDM: false
+          isDM: isDM,
+          role: role // Добавляем роль пользователя
         });
-        console.log("Профиль пользователя создан автоматически");
+        console.log(`Профиль пользователя создан с ролью: ${role}`);
       } else {
         // Обновляем дату последнего входа
         await setDoc(userDoc, {
@@ -109,7 +114,7 @@ const FirebaseAuthForm: React.FC = () => {
         title: isLogin ? "Вход выполнен" : "Регистрация завершена",
         description: isLogin 
           ? `Добро пожаловать, ${result.user.email}` 
-          : "Ваш аккаунт успешно создан"
+          : `Ваш аккаунт успешно создан в роли ${role === "dm" ? "Мастера" : "Игрока"}`
       });
       
       // Перенаправляем на главную после успешной авторизации
@@ -191,6 +196,26 @@ const FirebaseAuthForm: React.FC = () => {
       <h2 className="text-xl font-bold mb-6">{isLogin ? "Вход в аккаунт" : "Регистрация"}</h2>
 
       <div className="space-y-4">
+        {!isLogin && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-2">Выберите вашу роль:</h3>
+            <RadioGroup 
+              value={role} 
+              onValueChange={(value) => setRole(value as "player" | "dm")}
+              className="flex space-x-4 mb-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="player" id="player" />
+                <Label htmlFor="player" className="cursor-pointer">🎲 Игрок</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="dm" id="dm" />
+                <Label htmlFor="dm" className="cursor-pointer">🎩 Мастер</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
           <Input
@@ -275,7 +300,7 @@ const FirebaseAuthForm: React.FC = () => {
               d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
             />
           </svg>
-          Войти через Google
+          {!isLogin ? `Регистрация через Google (${role === "dm" ? "Мастер" : "Игрок"})` : "Войти через Google"}
         </Button>
 
         <Button 

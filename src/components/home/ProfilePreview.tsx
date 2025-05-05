@@ -118,7 +118,7 @@ const ProfilePreview = () => {
             className="text-sm"
             style={{ color: `${currentTheme.textColor}80` }}
           >
-            {currentUser.isDM ? "Мастер Подземелий" : "Игрок"}
+            {currentUser.isDM ? "🎩 Мастер Подземелий" : "🎲 Игрок"}
           </p>
         </div>
       </div>

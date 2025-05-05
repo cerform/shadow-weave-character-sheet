@@ -7,6 +7,7 @@ export interface UserType {
   isDM?: boolean;
   username?: string;
   uid?: string;
+  role?: "player" | "dm";
 }
 
 export interface AuthContextType {
@@ -15,10 +16,10 @@ export interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
-  googleLogin: () => Promise<UserType | null>; // Изменили тип возвращаемого значения на UserType | null
+  register: (email: string, password: string, displayName?: string, isDM?: boolean, role?: "player" | "dm") => Promise<void>;
+  googleLogin: () => Promise<UserType | null>; 
   isAuthenticated: boolean;
   currentUser: UserType | null;
   updateProfile?: (data: Partial<UserType>) => Promise<void>;
-  signup?: (email: string, password: string, displayName: string, isDM?: boolean) => Promise<void>;
+  signup?: (email: string, password: string, displayName: string, isDM?: boolean, role?: "player" | "dm") => Promise<void>;
 }
