@@ -21,18 +21,21 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   const themeKey = (activeTheme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
+  // Создаем CSS-переменную для RGB версии цвета акцента
+  const buttonStyle = {
+    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
+  } as React.CSSProperties;
+  
   return (
     <Button 
       variant={variant}
       className={`flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] ${className}`}
       asChild
-      style={{
-        '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
-      } as React.CSSProperties}
+      style={buttonStyle}
     >
       <Link to="/">
         <Home className="size-4" />
-        {showText && <span>На главную</span>}
+        {showText && <span>Домой</span>}
       </Link>
     </Button>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { useCreationStep } from "@/hooks/useCreationStep";
 import CreationStepDisplay from "@/components/character-creation/CreationStepDisplay";
 import CharacterCreationContent from "@/components/character-creation/CharacterCreationContent";
 import ThemeSelector from "@/components/ThemeSelector";
-import HomeButton from "@/components/navigation/HomeButton";
+import MainNavigation from "@/components/navigation/MainNavigation";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
@@ -74,18 +75,9 @@ const CharacterCreationPage = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="min-h-screen w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <HomeButton variant="default" />
+          <MainNavigation />
 
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => navigate('/handbook')} 
-              variant="outline" 
-              className="flex items-center gap-2 bg-black/60 border-gray-600 text-white hover:bg-black/80"
-            >
-              <BookOpen className="h-4 w-4" />
-              Руководство игрока
-            </Button>
-            
             {/* Only show theme selector in small screens here */}
             <div className="block sm:hidden">
               <ThemeSelector />

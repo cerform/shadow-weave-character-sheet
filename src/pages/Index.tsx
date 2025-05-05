@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
+import { FileUp, Plus, Users, User, Swords, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCharacter } from "@/contexts/CharacterContext";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import MainNavigation from "@/components/navigation/MainNavigation";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -140,11 +141,17 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
-        <header className="text-center mb-6">
-          <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
-          <h2 className="text-2xl text-muted-foreground mb-4">Создай своего героя</h2>
-          <div className="flex justify-center">
-            <ThemeSelector />
+        <header className="mb-6">
+          <div className="flex justify-end mb-4">
+            <MainNavigation />
+          </div>
+          
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
+            <h2 className="text-2xl text-muted-foreground mb-4">Создай своего героя</h2>
+            <div className="flex justify-center">
+              <ThemeSelector />
+            </div>
           </div>
         </header>
         

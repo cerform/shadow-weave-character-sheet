@@ -73,7 +73,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         : props.style?.backgroundColor,
       textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
       // Добавим эффекты при наведении через CSS переменные
-      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
+      '--hover-glow': `0 0 12px ${currentTheme.accent}80`,
       '--hover-border-color': currentTheme.accent,
       '--hover-bg-color': `${currentTheme.accent}30`,
     };
