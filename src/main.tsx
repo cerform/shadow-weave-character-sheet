@@ -1,23 +1,25 @@
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.tsx';
+import './index.css';
+import { Toaster } from '@/components/ui/toaster';
+import { UserThemeProvider } from './hooks/use-user-theme';
 
-// Оборачиваем рендер в try-catch для отлавливания ошибок
-console.log('Инициализация приложения...');
+// Импортируем шрифты
+import '@fontsource/philosopher/400.css'; // Обычный
+import '@fontsource/philosopher/700.css'; // Жирный
+import '@fontsource/cormorant/400.css';   // Обычный
+import '@fontsource/cormorant/600.css';   // Полужирный
 
-try {
-  const rootElement = document.getElementById("root");
-  
-  if (!rootElement) {
-    console.error("Не найден элемент с id 'root' для монтирования приложения");
-  } else {
-    console.log('Монтирование React приложения в DOM...');
-    createRoot(rootElement).render(
-      <App />
-    );
-    console.log('React приложение смонтировано успешно');
-  }
-} catch (error) {
-  console.error("Критическая ошибка при рендере приложения:", error);
-}
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <UserThemeProvider>
+        <App />
+        <Toaster />
+      </UserThemeProvider>
+    </BrowserRouter>
+  </React.StrictMode>,
+);

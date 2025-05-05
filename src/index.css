@@ -3,296 +3,158 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.5% 48%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* Добавляем стили для тем D&D */
-/* Базовые стили для различных тем */
+/* Базовые стили для всех тем */
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --primary: #1a56db;
-  --accent: #4c6ef5;
-  --card: #ffffff;
-  --card-foreground: #000000;
+  --font-heading: 'Philosopher', serif;
+  --font-body: 'Cormorant', serif;
 }
 
-.theme-dark {
-  --background: #121212;
-  --foreground: #ffffff;
-  --primary: #4c6ef5;
-  --accent: #6366f1;
-  --card: #1a1a1a;
-  --card-foreground: #ffffff;
-}
-
-.theme-fantasy {
-  --background: #2c2a35;
-  --foreground: #e6d8b5;
-  --primary: #9d7e59;
-  --accent: #b69f7e;
-  --card: #353441;
-  --card-foreground: #e6d8b5;
-}
-
-.theme-cyber {
-  --background: #0c0c14;
-  --foreground: #00ffaa;
-  --primary: #00aaff;
-  --accent: #ff00aa;
-  --card: #14141e;
-  --card-foreground: #c8f5ff;
-}
-
-.theme-nature {
-  --background: #1d332a;
-  --foreground: #e5f5eb;
-  --primary: #5a9e7a;
-  --accent: #8cc474;
-  --card: #2a4438;
-  --card-foreground: #e5f5eb;
-}
-
-/* Анимация для плавных переходов тем */
-body {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Плавные переходы для элементов UI */
-button, a, input, select, .card {
-  transition: 
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-/* Для устранения мерцания при загрузке */
+/* Глобальные стили */
 html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
 }
 
-/* Стили для карточек */
-.card, [class*="bg-card"] {
-  background-color: rgba(0, 0, 0, 0.85) !important;
-  border: 1px solid var(--theme-accent, #8B5A2B);
-  color: var(--theme-text-color, #FFFFFF) !important;
-  box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5));
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+/* Улучшенные стили для книги заклинаний */
+.spellbook-heading {
+  text-shadow: 0 0 10px var(--theme-accent, rgba(0, 0, 0, 0.5));
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
 }
 
-.card:hover {
-  box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
-}
-
-/* Анимация свечения для карточек при наведении */
-@keyframes card-glow {
-  0% { box-shadow: 0 0 5px 0px var(--theme-accent, #8B5A2B); }
-  50% { box-shadow: 0 0 10px 3px var(--theme-accent, #8B5A2B); }
-  100% { box-shadow: 0 0 5px 0px var(--theme-accent, #8B5A2B); }
-}
-
-.card:hover {
-  animation: card-glow 2s infinite;
-}
-
-/* Стили для кнопок */
-button, .btn {
-  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8);
-  border: 1px solid var(--theme-accent, #8B5A2B) !important;
-  transition: all 0.3s ease !important;
-  position: relative;
+.spell-card {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Эффект при наведении для кнопок */
-button:hover, .btn:hover {
-  border-color: var(--theme-accent, #8B5A2B) !important;
-  background-color: var(--theme-accent, #8B5A2B) !important;
-  box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
+.spell-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Эффект при активации */
-button:active, .btn:active {
-  transform: translateY(1px) !important;
+.spell-filter-badge {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
 }
 
-/* Эффект свечения для кнопок */
-button::after, .btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  transition: left 0.5s ease;
+.spell-filter-badge:hover {
+  transform: scale(1.05);
 }
 
-button:hover::after, .btn:hover::after {
-  left: 100%;
+.scroll-area-container {
+  border-radius: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
 }
 
-/* Стили для улучшения контрастности в выпадающих меню */
-.dropdown-menu-content,
-[data-radix-popper-content-wrapper] > div {
-  background-color: rgba(0, 0, 0, 0.85) !important;
-  border: 1px solid var(--theme-accent, #8B5A2B) !important;
-  color: var(--theme-text-color, #FFFFFF) !important;
-  box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Улучшение внешнего вида диалогов */
-.dialog-content,
-.alert-dialog-content,
-[role="dialog"] {
-  background-color: rgba(0, 0, 0, 0.9) !important;
-  border: 1px solid var(--theme-accent, #8B5A2B) !important;
-  box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Улучшение отображения для разных тем */
-.theme-warlock {
-  --theme-accent: #9061F9;
-  --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(var(--theme-accent-rgb, 157, 92, 255), 0.5); }
+  50% { box-shadow: 0 0 15px rgba(var(--theme-accent-rgb, 157, 92, 255), 0.8); }
 }
 
-.theme-wizard {
-  --theme-accent: #3B82F6;
-  --theme-glow: 0 0 15px rgba(59, 130, 246, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+.animate-glow {
+  animation: glow 2s infinite;
 }
 
-.theme-druid {
-  --theme-accent: #10B981;
-  --theme-glow: 0 0 15px rgba(16, 185, 129, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+/* Стили для панели фильтров */
+.filter-panel {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
-.theme-warrior {
-  --theme-accent: #F43F5E;
-  --theme-glow: 0 0 15px rgba(244, 63, 94, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+/* Улучшенный скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.theme-bard {
-  --theme-accent: #F59E0B;
-  --theme-glow: 0 0 15px rgba(245, 158, 11, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
-.theme-default {
-  --theme-accent: #8B5A2B;
-  --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
+::-webkit-scrollbar-thumb {
+  background: var(--theme-accent, #9D5CFF);
+  border-radius: 4px;
 }
 
-/* Дополнительные стили для улучшения контраста */
-.bg-background, body, .app-container {
-  background-color: #121212 !important;
-  color: #FFFFFF !important;
-  background-image: url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-accent-hover, #7E22CE);
 }
 
-.text-foreground {
-  color: #FFFFFF !important;
+/* Стилизация по умолчанию для элементов ввода */
+input, select, textarea {
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
 }
 
-.text-muted-foreground {
-  color: #DDDDDD !important;
+/* Фокус для интерактивных элементов */
+button:focus-visible, 
+input:focus-visible, 
+select:focus-visible, 
+textarea:focus-visible {
+  outline: 2px solid var(--theme-accent, #9D5CFF);
+  outline-offset: 2px;
+}
+
+/* Улучшенные стили для модальных окон */
+.spell-modal {
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--theme-accent, #9D5CFF);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.spell-modal-header {
+  border-bottom: 1px solid var(--theme-accent, #9D5CFF);
+  padding-bottom: 1rem;
+}
+
+.spell-modal-content {
+  padding: 1.5rem;
+}
+
+.spell-modal-footer {
+  border-top: 1px solid var(--theme-accent, #9D5CFF);
+  padding-top: 1rem;
+}
+
+/* Улучшения для Badge */
+.badge {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Эффект для карточек на главной странице */
+.main-card {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--theme-accent, #9D5CFF);
+}
+
+.main-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 15px var(--theme-accent, #9D5CFF);
 }

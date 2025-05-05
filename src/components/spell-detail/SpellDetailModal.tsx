@@ -1,12 +1,19 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SpellData } from '@/types/spells';
-import { Clock, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { X, Book, Clock, Target, Component, Timer, Sparkles, Zap, Users } from 'lucide-react';
+import { SpellData } from '@/types/spells';
 
 interface SpellDetailModalProps {
   spell: SpellData;
@@ -21,202 +28,207 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   onClose,
   currentTheme
 }) => {
-  // Получаем цвет для бейджа уровня заклинания
-  const getSpellLevelColor = (level: number): string => {
-    const colors = {
-      0: "#6b7280", // Заговор - серый
-      1: "#10b981", // 1 уровень - зеленый
-      2: "#3b82f6", // 2 уровень - синий
-      3: "#8b5cf6", // 3 уровень - фиолетовый
-      4: "#ec4899", // 4 уровень - розовый
-      5: "#f59e0b", // 5 уровень - оранжевый
-      6: "#ef4444", // 6 уровень - красный
-      7: "#6366f1", // 7 уровень - индиго
-      8: "#0ea5e9", // 8 уровень - голубой
-      9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
+  const getLevelName = (level: number) => {
+    return level === 0 ? 'Заговор' : `${level} уровень`;
+  };
+  
+  // Получение цвета для уровня заклинания из текущей темы
+  const getLevelColor = (level: number) => {
+    if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
+      return currentTheme.spellLevels[level];
+    }
+    // Запасные цвета, если в теме не определены
+    const fallbackColors: Record<number, string> = {
+      0: '#6b7280', // gray-500
+      1: '#3b82f6', // blue-500
+      2: '#8b5cf6', // violet-500
+      3: '#ec4899', // pink-500
+      4: '#f97316', // orange-500
+      5: '#ef4444', // red-500
+      6: '#14b8a6', // teal-500
+      7: '#6366f1', // indigo-500
+      8: '#ca8a04', // yellow-600
+      9: '#059669'  // emerald-600
     };
-    return colors[level as keyof typeof colors] || colors[0];
+    return fallbackColors[level] || '#6b7280';
+  };
+  
+  // Форматирование описания
+  const renderDescription = () => {
+    if (!spell.description) return <p>Нет описания</p>;
+    
+    if (typeof spell.description === 'string') {
+      return (
+        <p style={{ color: currentTheme.textColor }}>
+          {spell.description}
+        </p>
+      );
+    }
+    
+    if (Array.isArray(spell.description)) {
+      return spell.description.map((paragraph, index) => (
+        <p key={index} className="mb-3" style={{ color: currentTheme.textColor }}>
+          {paragraph}
+        </p>
+      ));
+    }
+    
+    return <p>Невозможно отобразить описание</p>;
+  };
+  
+  // Форматирование классов
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return "Нет информации";
+    if (typeof classes === 'string') return classes;
+    return classes.join(', ');
   };
 
-  // Форматируем описание для отображения
-  const description = typeof spell.description === 'string' 
-    ? spell.description 
-    : Array.isArray(spell.description) 
-      ? spell.description.join('\n\n') 
-      : '';
-  
-  const higherLevels = spell.higherLevels || spell.higherLevel || '';
-
-  // Форматируем классы для отображения
-  const classesText = typeof spell.classes === 'string' 
-    ? spell.classes 
-    : Array.isArray(spell.classes) 
-      ? spell.classes.join(', ') 
-      : '';
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="max-w-3xl max-h-[90vh] overflow-hidden"
+        className="max-w-2xl max-h-[90vh] p-0 overflow-hidden"
         style={{ 
-          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)', 
-          borderColor: getSpellLevelColor(spell.level),
-          boxShadow: `0 0 20px ${getSpellLevelColor(spell.level)}50`
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          borderColor: currentTheme.accent,
+          boxShadow: `0 0 20px ${currentTheme.accent}30`
         }}
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between flex-wrap gap-2">
-            <div className="text-xl font-bold" style={{ color: currentTheme.textColor }}>
-              {spell.name}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge style={{ 
-                backgroundColor: getSpellLevelColor(spell.level),
-                color: '#ffffff' 
-              }}>
-                {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
-              </Badge>
-              <Badge variant="outline" style={{ 
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor 
-              }}>
+        <div
+          className="h-2 w-full"
+          style={{ backgroundColor: getLevelColor(spell.level) }}
+        />
+        
+        <DialogHeader className="p-4 pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <DialogTitle 
+                className="text-2xl font-bold flex items-center gap-2"
+                style={{ color: currentTheme.textColor }}
+              >
+                {spell.name}
+                <Badge
+                  className="ml-2"
+                  style={{ 
+                    backgroundColor: getLevelColor(spell.level),
+                    color: '#fff',
+                    boxShadow: `0 0 5px ${getLevelColor(spell.level)}80`
+                  }}
+                >
+                  {getLevelName(spell.level)}
+                </Badge>
+              </DialogTitle>
+              
+              <DialogDescription className="text-base mt-1" style={{ color: currentTheme.accent }}>
                 {spell.school}
-              </Badge>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="space-y-1">
-            <span className="text-sm text-gray-400">Время накладывания</span>
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4 text-gray-300" />
-              <span style={{ color: currentTheme.textColor }}>{spell.castingTime}</span>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <span className="text-sm text-gray-400">Дальность</span>
-            <div className="flex items-center gap-1">
-              <ArrowRight className="h-4 w-4 text-gray-300" />
-              <span style={{ color: currentTheme.textColor }}>{spell.range}</span>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <span className="text-sm text-gray-400">Компоненты</span>
-            <div className="flex items-center gap-1">
-              <span style={{ color: currentTheme.textColor }}>{spell.components}</span>
-              <div className="flex space-x-1 ml-2">
-                {spell.verbal && (
-                  <Badge variant="outline" className="px-1.5 h-5">В</Badge>
+                {(spell.ritual || spell.concentration) && (
+                  <span className="ml-2">
+                    {spell.ritual && (
+                      <Badge variant="outline" className="mr-1" style={{ borderColor: currentTheme.accent }}>
+                        <Book className="h-3 w-3 mr-1" style={{ color: currentTheme.accent }} />
+                        <span style={{ color: currentTheme.accent }}>Ритуал</span>
+                      </Badge>
+                    )}
+                    {spell.concentration && (
+                      <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
+                        <Sparkles className="h-3 w-3 mr-1" style={{ color: currentTheme.accent }} />
+                        <span style={{ color: currentTheme.accent }}>Концентрация</span>
+                      </Badge>
+                    )}
+                  </span>
                 )}
-                {spell.somatic && (
-                  <Badge variant="outline" className="px-1.5 h-5">С</Badge>
-                )}
-                {spell.material && (
-                  <Badge variant="outline" className="px-1.5 h-5">М</Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <span className="text-sm text-gray-400">Длительность</span>
-            <div className="flex items-center flex-wrap gap-1">
-              <span style={{ color: currentTheme.textColor }}>{spell.duration}</span>
-              <div className="flex space-x-1 ml-2">
-                {(spell.concentration || spell.isConcentration) && (
-                  <Badge variant="outline" style={{ 
-                    borderColor: currentTheme.accent,
-                    color: currentTheme.textColor 
-                  }}>
-                    Концентрация
-                  </Badge>
-                )}
-                {(spell.ritual || spell.isRitual) && (
-                  <Badge variant="outline" style={{ 
-                    borderColor: currentTheme.accent,
-                    color: currentTheme.textColor 
-                  }}>
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Ритуал
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="col-span-full space-y-1">
-            <span className="text-sm text-gray-400">Классы</span>
-            <div className="flex flex-wrap gap-1">
-              {Array.isArray(spell.classes) ? (
-                spell.classes.map((cls, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${currentTheme.accent}30`,
-                      color: currentTheme.textColor
-                    }}
-                  >
-                    {cls}
-                  </Badge>
-                ))
-              ) : (
-                spell.classes && (
-                  <Badge 
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${currentTheme.accent}30`,
-                      color: currentTheme.textColor
-                    }}
-                  >
-                    {spell.classes}
-                  </Badge>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <Separator style={{ backgroundColor: `${currentTheme.accent}40` }} />
-        
-        <div className="space-y-2 pt-2">
-          <span className="text-sm text-gray-400">Описание</span>
-          <ScrollArea className="h-[200px] pr-4">
-            <div 
-              style={{ color: currentTheme.textColor }}
-              className="whitespace-pre-line text-sm"
-            >
-              {description}
+              </DialogDescription>
             </div>
             
-            {higherLevels && (
-              <>
-                <h4 className="text-sm text-gray-400 mt-4 mb-1">На более высоких уровнях</h4>
-                <div 
-                  style={{ color: currentTheme.textColor }}
-                  className="text-sm"
-                >
-                  {higherLevels}
-                </div>
-              </>
-            )}
-          </ScrollArea>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={onClose}
+              style={{ color: currentTheme.accent }}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </DialogHeader>
+        
+        <Separator style={{ backgroundColor: currentTheme.accent + '30' }} />
+        
+        <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <div className="text-xs uppercase font-semibold" style={{ color: currentTheme.accent }}>
+              Время накладывания
+            </div>
+            <div className="flex items-center" style={{ color: currentTheme.textColor }}>
+              <Clock className="h-4 w-4 mr-1" style={{ color: currentTheme.accent + '80' }} />
+              <span>{spell.castingTime || 'Не указано'}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="text-xs uppercase font-semibold" style={{ color: currentTheme.accent }}>
+              Дистанция
+            </div>
+            <div className="flex items-center" style={{ color: currentTheme.textColor }}>
+              <Target className="h-4 w-4 mr-1" style={{ color: currentTheme.accent + '80' }} />
+              <span>{spell.range || 'Не указано'}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="text-xs uppercase font-semibold" style={{ color: currentTheme.accent }}>
+              Компоненты
+            </div>
+            <div className="flex items-center" style={{ color: currentTheme.textColor }}>
+              <Component className="h-4 w-4 mr-1" style={{ color: currentTheme.accent + '80' }} />
+              <span>{spell.components || 'Не указано'}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="text-xs uppercase font-semibold" style={{ color: currentTheme.accent }}>
+              Длительность
+            </div>
+            <div className="flex items-center" style={{ color: currentTheme.textColor }}>
+              <Timer className="h-4 w-4 mr-1" style={{ color: currentTheme.accent + '80' }} />
+              <span>{spell.duration || 'Не указано'}</span>
+            </div>
+          </div>
         </div>
         
-        <div className="flex justify-end mt-4">
-          <Button 
-            onClick={onClose}
-            style={{
-              backgroundColor: currentTheme.accent,
-              color: currentTheme.buttonText || 'white'
-            }}
-          >
-            Закрыть
-          </Button>
-        </div>
+        <Separator style={{ backgroundColor: currentTheme.accent + '30' }} />
+        
+        <ScrollArea className="flex-1 p-4" style={{ maxHeight: 'calc(90vh - 280px)' }}>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.accent }}>Описание</h3>
+              <div className="space-y-2">
+                {renderDescription()}
+              </div>
+            </div>
+            
+            {(spell.higherLevels || spell.atHigherLevels) && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.accent }}>На более высоких уровнях</h3>
+                <p style={{ color: currentTheme.textColor }}>
+                  {spell.higherLevels || spell.atHigherLevels}
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+        
+        <DialogFooter className="p-4 border-t" style={{ borderColor: currentTheme.accent + '30' }}>
+          <div className="w-full flex items-center justify-between">
+            <div className="flex items-center" style={{ color: currentTheme.textColor }}>
+              <Users className="h-4 w-4 mr-2" style={{ color: currentTheme.accent }} />
+              <span>Доступно классам: </span>
+              <span className="ml-1 font-semibold">{formatClasses(spell.classes)}</span>
+            </div>
+            
+            <Button onClick={onClose} style={{ backgroundColor: currentTheme.accent, color: '#fff' }}>
+              Закрыть
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -72,6 +72,10 @@ export default {
           },
         },
       },
+      fontFamily: {
+        philosopher: ['Philosopher', 'serif'],
+        cormorant: ['Cormorant', 'serif']
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -95,8 +99,8 @@ export default {
           '50%': { opacity: '0.6' },
         },
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
       animation: {

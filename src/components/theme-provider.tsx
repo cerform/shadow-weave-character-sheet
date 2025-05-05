@@ -5,6 +5,7 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 import { themes } from '@/lib/themes'
+import { useUserTheme } from '@/hooks/use-user-theme'
 
 export interface ThemeContextType {
   theme: string;
@@ -20,28 +21,39 @@ export const ThemeProviderContext = React.createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<string>('default');
+  const { activeTheme, setUserTheme } = useUserTheme();
+  const [theme, setTheme] = React.useState<string>(activeTheme || 'default');
 
-  // Load saved theme on initialization
+  // Синхронизируем с UserTheme при изменении activeTheme
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || localStorage.getItem('userTheme') || localStorage.getItem('dnd-theme') || 'default';
-    setTheme(savedTheme);
-    
-    // Применяем тему к корневому элементу
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.body.className = '';
-    document.body.classList.add(`theme-${savedTheme}`);
-  }, []);
+    if (activeTheme && activeTheme !== theme) {
+      setTheme(activeTheme);
+    }
+  }, [activeTheme, theme]);
 
-  // Save theme when it changes
+  // Применяем тему к корневому элементу при изменении темы
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = '';
+    document.body.classList.add(`theme-${theme}`);
+    
+    // Применяем CSS-переменные из темы
+    const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+    document.documentElement.style.setProperty('--background', currentTheme.background);
+    document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
+    document.documentElement.style.setProperty('--primary', currentTheme.primary);
+    document.documentElement.style.setProperty('--accent', currentTheme.accent);
+    document.documentElement.style.setProperty('--text', currentTheme.textColor);
+    document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
+  }, [theme]);
+
+  // Обработчик для установки темы с синхронизацией между контекстами
   const handleSetTheme = (newTheme: string) => {
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    setUserTheme(newTheme);
     
-    // Apply theme class to root element
-    document.documentElement.setAttribute('data-theme', newTheme);
-    document.body.className = '';
-    document.body.classList.add(`theme-${newTheme}`);
+    // Сохраняем тему в localStorage
+    localStorage.setItem('theme', newTheme);
     
     console.log("Theme set in ThemeProvider:", newTheme);
   };
@@ -49,7 +61,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const themeContextValue = React.useMemo(() => ({
     theme,
     setTheme: handleSetTheme,
-    themeStyles: themes[theme as keyof typeof themes] || themes.default
+    themeStyles: themes[theme as keyof typeof themes] || themes.default,
+    effectiveTheme: theme
   }), [theme]);
 
   return (
