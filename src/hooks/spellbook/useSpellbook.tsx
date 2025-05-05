@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { getSpellsByClass, getSpellsByLevel, spells } from '@/data/spells';
@@ -18,42 +19,50 @@ export const useSpellbook = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   // Получаем все уникальные уровни из списка заклинаний
-  const allLevels = Array.from(new Set(spells.map(spell => spell.level))).sort((a, b) => a - b);
+  const allLevels = useMemo(() => {
+    return Array.from(new Set(spells.map(spell => spell.level))).sort((a, b) => a - b);
+  }, []);
   
   // Получаем все уникальные школы из списка заклинаний
-  const allSchools = Array.from(new Set(spells.map(spell => spell.school || ''))).filter(Boolean);
+  const allSchools = useMemo(() => {
+    return Array.from(new Set(spells.map(spell => spell.school || ''))).filter(Boolean);
+  }, []);
   
   // Получаем все уникальные классы из списка заклинаний
-  const allClasses = Array.from(
-    new Set(
-      spells.flatMap(spell => {
-        if (!spell.classes) return [];
-        return Array.isArray(spell.classes) ? spell.classes : [spell.classes];
-      })
-    )
-  ).filter(Boolean);
+  const allClasses = useMemo(() => {
+    return Array.from(
+      new Set(
+        spells.flatMap(spell => {
+          if (!spell.classes) return [];
+          return Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+        })
+      )
+    ).filter(Boolean);
+  }, []);
   
-  // Фильтрация заклинаний
-  const filteredSpells = spells.filter(spell => {
-    // Фильтр по поиску
-    const matchesSearch = searchTerm === '' || 
-      spell.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Фильтр по уровню
-    const matchesLevel = activeLevel.length === 0 || activeLevel.includes(spell.level);
-    
-    // Фильтр по школе
-    const matchesSchool = activeSchool.length === 0 || 
-      (spell.school && activeSchool.includes(spell.school));
-    
-    // Фильтр по классу
-    const matchesClass = activeClass.length === 0 || 
-      (spell.classes && Array.isArray(spell.classes) 
-        ? spell.classes.some(cls => activeClass.includes(cls))
-        : activeClass.includes(spell.classes || ''));
-    
-    return matchesSearch && matchesLevel && matchesSchool && matchesClass;
-  });
+  // Фильтрация заклинаний с мемоизацией для улучшения производительности
+  const filteredSpells = useMemo(() => {
+    return spells.filter(spell => {
+      // Фильтр по поиску
+      const matchesSearch = searchTerm === '' || 
+        spell.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Фильтр по уровню
+      const matchesLevel = activeLevel.length === 0 || activeLevel.includes(spell.level);
+      
+      // Фильтр по школе
+      const matchesSchool = activeSchool.length === 0 || 
+        (spell.school && activeSchool.includes(spell.school));
+      
+      // Фильтр по классу
+      const matchesClass = activeClass.length === 0 || 
+        (spell.classes && Array.isArray(spell.classes) 
+          ? spell.classes.some(cls => activeClass.includes(cls))
+          : activeClass.includes(spell.classes || ''));
+      
+      return matchesSearch && matchesLevel && matchesSchool && matchesClass;
+    });
+  }, [searchTerm, activeLevel, activeSchool, activeClass]);
   
   // Функции для управления фильтрами
   const toggleLevel = (level: number) => {
@@ -97,39 +106,49 @@ export const useSpellbook = () => {
     setIsModalOpen(false);
   };
   
-  // Функция для получения цвета бейджа для уровня заклинания
-  const getBadgeColor = (level: number): string => {
-    switch(level) {
-      case 0: return '#6b7280'; // gray-500
-      case 1: return '#10b981'; // emerald-500
-      case 2: return '#3b82f6'; // blue-500
-      case 3: return '#8b5cf6'; // violet-500
-      case 4: return '#ec4899'; // pink-500
-      case 5: return '#f59e0b'; // amber-500
-      case 6: return '#ef4444'; // red-500
-      case 7: return '#6366f1'; // indigo-500
-      case 8: return '#7c3aed'; // purple-600
-      case 9: return '#1e40af'; // blue-800
-      default: return '#6b7280'; // gray-500
-    }
-  };
+  // Функция для получения цвета бейджа для уровня заклинания с мемоизацией
+  const getBadgeColor = useMemo(() => {
+    return (level: number): string => {
+      // Пытаемся использовать цвета из темы, если доступны
+      if (currentTheme.spellLevels && currentTheme.spellLevels[level as keyof typeof currentTheme.spellLevels]) {
+        return currentTheme.spellLevels[level as keyof typeof currentTheme.spellLevels];
+      }
+      
+      // Запасные цвета
+      switch(level) {
+        case 0: return '#6b7280'; // gray-500
+        case 1: return '#10b981'; // emerald-500
+        case 2: return '#3b82f6'; // blue-500
+        case 3: return '#8b5cf6'; // violet-500
+        case 4: return '#ec4899'; // pink-500
+        case 5: return '#f59e0b'; // amber-500
+        case 6: return '#ef4444'; // red-500
+        case 7: return '#6366f1'; // indigo-500
+        case 8: return '#7c3aed'; // purple-600
+        case 9: return '#1e40af'; // blue-800
+        default: return '#6b7280'; // gray-500
+      }
+    };
+  }, [currentTheme]);
   
-  // Функция для получения цвета бейджа для школы магии
-  const getSchoolBadgeColor = (school?: string): string => {
-    if (!school) return '#6b7280'; // gray-500
-    
-    switch(school.toLowerCase()) {
-      case 'вызов': return '#10b981'; // emerald-500
-      case 'воплощение': return '#ef4444'; // red-500
-      case 'иллюзия': return '#8b5cf6'; // violet-500
-      case 'некромантия': return '#1e293b'; // slate-800
-      case 'ограждение': return '#3b82f6'; // blue-500
-      case 'очарование': return '#ec4899'; // pink-500
-      case 'преобразование': return '#f59e0b'; // amber-500
-      case 'прорицание': return '#6366f1'; // indigo-500
-      default: return '#6b7280'; // gray-500
-    }
-  };
+  // Функция для получения цвета бейджа для школы магии с мемоизацией
+  const getSchoolBadgeColor = useMemo(() => {
+    return (school?: string): string => {
+      if (!school) return '#6b7280'; // gray-500
+      
+      switch(school.toLowerCase()) {
+        case 'вызов': return '#10b981'; // emerald-500
+        case 'воплощение': return '#ef4444'; // red-500
+        case 'иллюзия': return '#8b5cf6'; // violet-500
+        case 'некромантия': return '#1e293b'; // slate-800
+        case 'ограждение': return '#3b82f6'; // blue-500
+        case 'очарование': return '#ec4899'; // pink-500
+        case 'преобразование': return '#f59e0b'; // amber-500
+        case 'прорицание': return '#6366f1'; // indigo-500
+        default: return '#6b7280'; // gray-500
+      }
+    };
+  }, []);
   
   // Функция для форматирования списка классов
   const formatClasses = (classes: string[] | string): string => {
