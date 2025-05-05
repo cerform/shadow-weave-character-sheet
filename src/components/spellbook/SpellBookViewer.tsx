@@ -10,7 +10,6 @@ import { SpellData } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSpellbook } from '@/hooks/spellbook';
-import { adaptToSpellData, adaptToCharacterSpell } from '@/utils/spellHelper';
 
 const SpellBookViewer: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,10 +40,15 @@ const SpellBookViewer: React.FC = () => {
     searchTerm: hookSearchTerm, 
     setSearchTerm: setHookSearchTerm,
     activeLevel: hookActiveLevel,
-    convertCharacterSpellsToSpellData
+    convertCharacterSpellsToSpellData,
+    adaptToSpellData,
+    adaptToCharacterSpell
   } = useSpellbook();
   
-  // Use the imported adapter functions instead of trying to access them from useSpellbook
+  // Синхронизируем поисковый запрос с хуком
+  useEffect(() => {
+    setHookSearchTerm(searchTerm);
+  }, [searchTerm, setHookSearchTerm]);
   
   return (
     <div className="container mx-auto p-4">

@@ -1,50 +1,15 @@
 
 import { CharacterSpell } from '@/types/character';
 
-/**
- * Преобразует объект заклинания в строку (например, для сохранения в базе данных)
- */
 export const characterSpellToString = (spell: CharacterSpell): string => {
-  return spell.name;
-};
-
-/**
- * Преобразует строку или объект в объект CharacterSpell
- */
-export const stringToCharacterSpell = (spell: string | CharacterSpell): CharacterSpell => {
-  if (typeof spell === 'string') {
-    return {
-      name: spell,
-      level: 0, // Уровень по умолчанию
-      school: 'Неизвестная',
-      castingTime: '1 действие',
-      range: 'На себя',
-      components: '',
-      duration: 'Мгновенная',
-      description: 'Нет описания',
-      prepared: false
-    };
-  }
+  if (!spell) return '';
   
-  return {
-    ...spell,
-    prepared: spell.prepared ?? false
-  };
+  return `${spell.name} (${spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}, ${spell.school})`;
 };
 
-/**
- * Проверяет, является ли заклинание заговором
- */
-export const isCantrip = (spell: CharacterSpell | { level: number }): boolean => {
-  return spell.level === 0;
-};
-
-/**
- * Обновляет статус подготовки заклинания
- */
-export const toggleSpellPrepared = (spell: CharacterSpell): CharacterSpell => {
-  return {
+export const addPreparedFieldToSpells = (spells: any[]): CharacterSpell[] => {
+  return spells.map(spell => ({
     ...spell,
-    prepared: !spell.prepared
-  };
+    prepared: spell.prepared !== undefined ? spell.prepared : false
+  }));
 };

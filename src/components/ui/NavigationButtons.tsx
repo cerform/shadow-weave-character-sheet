@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth'; // Fix the import to use our correct hook
+import { useAuth } from '@/hooks/use-auth'; // Используем правильный импорт
 
 interface Props {
   prevStep: () => void;
@@ -10,7 +10,7 @@ interface Props {
   nextLabel?: string;
   disableNext?: boolean;
   allowNext?: boolean;
-  className?: string; // Add className prop to support the className in TopPanel
+  className?: string;
 }
 
 const NavigationButtons = ({ prevStep, nextStep, nextLabel = "Далее", disableNext = false, allowNext = true, className }: Props) => {

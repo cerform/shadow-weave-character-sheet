@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, SkipForward, Image, Home, ArrowLeft, Grid, Eye, EyeOff, ZoomIn, ZoomOut, X, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import NavigationButtons from "@/components/ui/NavigationButtons";
 
 interface BattleState {
   isActive: boolean;
@@ -44,6 +45,10 @@ const TopPanel: React.FC<TopPanelProps> = ({
   fogOfWar = false,
 }) => {
   const navigate = useNavigate();
+  
+  // Функции-заглушки для NavigationButtons
+  const dummyPrevStep = () => navigate(-1);
+  const dummyNextStep = () => console.log("Next step clicked");
 
   return (
     <div className="flex justify-between items-center p-2 h-14">
@@ -187,16 +192,17 @@ const TopPanel: React.FC<TopPanelProps> = ({
           )}
         </div>
         
-        {/* Remove className prop from NavigationButtons component */}
+        {/* Добавляем правильные пропсы для NavigationButtons */}
         <div className="flex flex-row">
-          <NavigationButtons />
+          <NavigationButtons 
+            prevStep={dummyPrevStep} 
+            nextStep={dummyNextStep} 
+            className="ml-2" 
+          />
         </div>
       </div>
     </div>
   );
 };
-
-// Import NavigationButtons at the top to avoid errors
-import NavigationButtons from "@/components/ui/NavigationButtons";
 
 export default TopPanel;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
-import { spells } from '@/data/spells';
+import { getAllSpells } from '@/data/spells';
 import { SpellData } from './spellbook/types';
 import { CharacterSpell } from '@/types/character';
 import { convertToSpellData } from './spellbook/types';
@@ -22,7 +22,7 @@ export const useSpellbook = () => {
 
   // Преобразуем все заклинания, убедившись, что prepared есть в каждом
   const allSpells = useMemo(() => {
-    return spells.map(spell => ({
+    return getAllSpells().map(spell => ({
       ...spell,
       prepared: spell.prepared || false // Добавляем prepared, если его нет
     }));
@@ -121,6 +121,26 @@ export const useSpellbook = () => {
     setIsModalOpen(false);
   };
 
+  // Функции адаптеры для совместимости со SpellBookViewer
+  const adaptToSpellData = (spell: CharacterSpell): SpellData => {
+    return {
+      ...spell
+    };
+  };
+
+  const adaptToCharacterSpell = (spellData: SpellData): CharacterSpell => {
+    return {
+      ...spellData,
+      prepared: spellData.prepared ?? false,
+      // Make sure all required CharacterSpell fields are present
+      castingTime: spellData.castingTime || '1 действие',
+      range: spellData.range || 'На себя',
+      components: spellData.components || '',
+      duration: spellData.duration || 'Мгновенная',
+      description: spellData.description || 'Нет описания'
+    };
+  };
+
   // Функции для получения цветов бейджей в зависимости от темы
   const getBadgeColor = (level: number) => {
     const colors = {
@@ -181,8 +201,11 @@ export const useSpellbook = () => {
     allLevels,
     allSchools,
     allClasses,
-    handleOpenSpell,
-    handleClose,
+    handleOpenSpell: (spell: SpellData) => {
+      setSelectedSpell(spell);
+      setIsModalOpen(true);
+    },
+    handleClose: () => setIsModalOpen(false),
     toggleLevel,
     toggleSchool,
     toggleClass,
@@ -190,6 +213,8 @@ export const useSpellbook = () => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    convertCharacterSpellsToSpellData
+    convertCharacterSpellsToSpellData,
+    adaptToSpellData,
+    adaptToCharacterSpell
   };
 };

@@ -12,7 +12,7 @@ const sorcererSpells: CharacterSpell[] = [];
 const warlockSpells: CharacterSpell[] = [];
 const wizardSpells: CharacterSpell[] = [];
 
-// Export the cantrips properly
+// Export the cantrips and all spells explicitly
 export const spells = cantripSpells;
 
 // Ensure all spells have the required 'prepared' field
@@ -47,7 +47,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   );
 };
 
-// Add the missing getSpellsByLevel function
+// Добавляем явный экспорт для getSpellsByLevel
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   return ensureSpellsHavePreparedField(
     getAllSpells().filter(spell => spell.level === level)
