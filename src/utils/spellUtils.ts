@@ -43,11 +43,13 @@ export const parseComponents = (componentString: string): {
   somatic: boolean;
   material: boolean;
   ritual: boolean;
+  concentration: boolean;
 } => {
   return {
     verbal: componentString.includes('В'),
     somatic: componentString.includes('С'),
     material: componentString.includes('М'),
-    ritual: componentString.includes('Р')
+    ritual: componentString.includes('Р'),
+    concentration: componentString.includes('К')
   };
 };

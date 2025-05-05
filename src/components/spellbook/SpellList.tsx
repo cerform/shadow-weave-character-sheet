@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SpellData } from '@/hooks/spellbook/types';
+import { SpellData } from '@/types/spells';
 
 interface SpellListProps {
   spells: SpellData[];

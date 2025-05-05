@@ -4,11 +4,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-
-// Объявим массив всех заклинаний
-// В нормальном случае его нужно импортировать из данных
-// но для исправления ошибок мы создадим пустой массив как заглушку
-const allSpells: SpellData[] = [];
+import { spells } from '@/data/spells';
 
 export const useSpellbook = () => {
   // Состояния для фильтров
@@ -28,11 +24,11 @@ export const useSpellbook = () => {
   const allLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   
   // Все школы магии
-  const allSchools = [...new Set(allSpells.map(spell => spell.school))].filter(Boolean).sort();
+  const allSchools = [...new Set(spells.map(spell => spell.school))].filter(Boolean).sort();
   
   // Все классы (с безопасной проверкой типов)
   const allClasses = [...new Set(
-    allSpells.flatMap(spell => {
+    spells.flatMap(spell => {
       if (typeof spell.classes === 'string') {
         return [spell.classes];
       } else if (Array.isArray(spell.classes)) {
@@ -43,7 +39,7 @@ export const useSpellbook = () => {
   )].filter(Boolean).sort();
   
   // Фильтруем заклинания
-  const filteredSpells = allSpells.filter(spell => {
+  const filteredSpells = spells.filter(spell => {
     // Поиск по имени или описанию
     const matchesSearch = 
       searchTerm === '' || 
