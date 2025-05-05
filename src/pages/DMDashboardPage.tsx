@@ -1,258 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import useSessionStore from "@/stores/sessionStore";
-import { Plus, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { useTheme } from "@/hooks/use-theme";
-import { Map, Activity, Swords } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useNavigate } from 'react-router-dom';
+import useSessionStore from '@/stores/sessionStore';
+import { Label } from "@/components/ui/label";
+import { Users, PlusCircle, ArrowRight } from "lucide-react";
 
 const DMDashboardPage = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const { sessions, fetchSessions, createSession, loading } = useSessionStore();
-  
-  const [open, setOpen] = useState(false);
-  const [newSessionName, setNewSessionName] = useState("");
-  const [newSessionDescription, setNewSessionDescription] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [sessionName, setSessionName] = useState('');
+  const [sessionDescription, setSessionDescription] = useState('');
+  const sessionStore = useSessionStore();
 
-  useEffect(() => {
-    // Загружаем сессии при монтировании компонента
-    fetchSessions();
-  }, [fetchSessions]);
-
-  const handleCreateSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSessionName) return;
-
-    try {
-      setIsCreating(true);
-      const newSession = await createSession(newSessionName, newSessionDescription);
-      
-      // Сбрасываем форму и закрываем диалог
-      setNewSessionName("");
-      setNewSessionDescription("");
-      setOpen(false);
-      
-      // Переходим на страницу сессии
-      navigate(`/dm-session/${newSession.id}`);
-    } catch (error) {
-      console.error("Ошибка при создании сессии:", error);
-    } finally {
-      setIsCreating(false);
+  const handleCreateSession = () => {
+    if (!sessionName.trim()) {
+      alert("Введите название сессии!");
+      return;
     }
-  };
 
-  const goToSession = (sessionId: string) => {
-    navigate(`/dm-session/${sessionId}`);
-  };
-
-  const goToBattleScene = () => {
-    navigate("/dm/battle");
-  };
-  
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('ru-RU', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (error) {
-      return dateString;
-    }
+    const newSession = sessionStore.createSession(sessionName, sessionDescription);
+    navigate(`/dm-session/${newSession.id}`);
   };
 
   return (
-    <div className={`min-h-screen bg-background text-foreground py-8 theme-${theme}`}>
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Панель Мастера Подземелий</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <Card className="col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Ваши сессии
-                </CardTitle>
-                <CardDescription>
-                  Управляйте игровыми сессиями и приключениями
-                </CardDescription>
-              </div>
-              <Button onClick={() => setOpen(true)}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Создать
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="text-center p-8">
-                    <p>Заг��узка сессий...</p>
-                  </div>
-                ) : sessions.length > 0 ? (
-                  sessions.map((session) => (
-                    <div
-                      key={session.id}
-                      className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-accent"
-                      onClick={() => goToSession(session.id)}
-                    >
-                      <div>
-                        <h3 className="font-medium">{session.name || session.title}</h3>
-                        <div className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(session.createdAt)}
-                          <Users className="h-3 w-3 ml-2" />
-                          {session.users ? session.users.filter(user => !user.isDM).length : 0} игроков
-                        </div>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center p-8">
-                    <p className="text-muted-foreground py-4">
-                      У вас пока нет активных сессий
-                    </p>
-                    <Button onClick={() => setOpen(true)}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Создать сессию
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Swords className="h-5 w-5" />
-                  Боевые сцены
-                </CardTitle>
-                <CardDescription>
-                  Управляйте боем и отслеживайте инициативу
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={goToBattleScene} className="w-full">
-                  Открыть боевую сцену
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Map className="h-5 w-5" />
-                  Карты и локации
-                </CardTitle>
-                <CardDescription>
-                  Управляйте картами и создавайте новые локации
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Библиотека карт
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Персонажи
-                </CardTitle>
-                <CardDescription>
-                  Просмотр и управление созданными персонажами
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full" 
-                  variant="outline" 
-                  onClick={() => navigate('/characters')}
-                >
-                  Управление персонажами
-                </Button>
-              </CardContent>
-            </Card>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Card className="bg-white shadow-md rounded-md w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Панель Мастера Подземелий</CardTitle>
+          <CardDescription>Создайте новую игровую сессию или управляйте существующими.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="mb-4">
+            <Label htmlFor="sessionName" className="block text-gray-700 text-sm font-bold mb-2">
+              Название сессии:
+            </Label>
+            <Input
+              type="text"
+              id="sessionName"
+              placeholder="Введите название вашей сессии"
+              value={sessionName}
+              onChange={(e) => setSessionName(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
           </div>
-        </div>
-
-        <div className="bg-card p-4 rounded">
-          <h2 className="text-xl font-bold mb-4">Советы для Мастера</h2>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-            <li>Подготовьте несколько встреч заранее, чтобы игра шла плавно</li>
-            <li>Используйте боевую сцену для отслеживания инициативы и здоровья</li>
-            <li>Делайте заметки о важных моментах игры и решениях персонажей</li>
-            <li>Не бойтесь импровизировать, если игроки делают что-то неожиданное</li>
-          </ul>
-        </div>
-      </div>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Создать новую сессию</DialogTitle>
-            <DialogDescription>
-              Создайте новую игровую сессию и пригласите игроков присоединиться
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleCreateSession}>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Название сессии</Label>
-                <Input
-                  id="name"
-                  placeholder="Например: Затерянные шахты Фанделвера"
-                  value={newSessionName}
-                  onChange={(e) => setNewSessionName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Описание (необязательно)</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Краткое описание вашего приключения"
-                  value={newSessionDescription}
-                  onChange={(e) => setNewSessionDescription(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-                disabled={isCreating}
-              >
-                Отмена
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={!newSessionName || isCreating}
-              >
-                {isCreating ? "Создание..." : "Создать сессию"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          <div className="mb-6">
+            <Label htmlFor="sessionDescription" className="block text-gray-700 text-sm font-bold mb-2">
+              Описание сессии:
+            </Label>
+            <Textarea
+              id="sessionDescription"
+              placeholder="Добавьте краткое описание вашей сессии"
+              value={sessionDescription}
+              onChange={(e) => setSessionDescription(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <Button onClick={handleCreateSession} className="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            Создать сессию
+          </Button>
+        </CardContent>
+        <CardFooter className="text-center">
+          <p className="text-gray-600 text-xs italic">
+            "С великой силой приходит великая ответственность." - Дядя Бен (возможно)
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

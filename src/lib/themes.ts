@@ -7,6 +7,8 @@ export interface Theme {
   textColor: string;
   cardBackground: string;
   glow?: string;
+  buttonText?: string;     // Adding this missing property
+  mutedTextColor?: string; // Adding this missing property
   spellLevels?: {
     0: string; // Cantrips
     1: string;
@@ -30,6 +32,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#E2E8F0",
     textColor: "#475569",
     cardBackground: "#FFFFFF",
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#94a3b8", // Adding mutedTextColor property
     glow: '0 0 8px rgba(126, 34, 206, 0.5)',
     spellLevels: {
       0: '#4ade80',  // Green
@@ -52,6 +56,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#334155",
     textColor: "#CBD5E1",
     cardBackground: "#1E293B",
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#94a3b8", // Adding mutedTextColor property
     glow: '0 0 8px rgba(147, 51, 234, 0.5)',
     spellLevels: {
       0: '#4ade80',  // Green
@@ -74,6 +80,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#A3A380",
     textColor: "#5F6368",
     cardBackground: "#F0EAD6",
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#7f7f7f", // Adding mutedTextColor property
     glow: '0 0 8px rgba(98, 70, 234, 0.5)',
     spellLevels: {
       0: '#4ade80',  // Green
@@ -96,6 +104,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#333333",
     textColor: "#B2B2B2",
     cardBackground: "#2B2B2B",
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#808080", // Adding mutedTextColor property
     glow: '0 0 8px rgba(187, 134, 252, 0.5)',
     spellLevels: {
       0: '#4ade80',  // Green
@@ -118,6 +128,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#A5D6A7",
     textColor: "#43A047",
     cardBackground: "#C8E6C9",
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#689F38", // Adding mutedTextColor property
     glow: '0 0 8px rgba(56, 142, 60, 0.5)',
     spellLevels: {
       0: '#4ade80',  // Green
@@ -132,7 +144,7 @@ export const themes: { [key: string]: Theme } = {
       9: '#4fc3f7'   // Light Blue
     }
   },
-   warlock: {
+  warlock: {
     name: "warlock",
     background: "#301934", // Deep Purple
     foreground: "#FF4081", // Hot Pink
@@ -140,6 +152,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#4A235A", // Dark Amethyst
     textColor: "#E1BEE7", // Light Lavender
     cardBackground: "#4E342E", // Dark Brown
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#BA68C8", // Adding mutedTextColor property
     glow: '0 0 8px rgba(208, 180, 222, 0.5)',
     spellLevels: {
       0: '#BE9CFF',  // Light Purple
@@ -162,6 +176,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#1565C0", // Darker Blue
     textColor: "#BBDEFB", // Light Blue
     cardBackground: "#1A237E", // Dark Navy
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#64B5F6", // Adding mutedTextColor property
     glow: '0 0 8px rgba(144, 202, 249, 0.5)',
     spellLevels: {
       0: '#81D4FA',  // Sky Blue
@@ -184,6 +200,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#2E7D32", // Darker Green
     textColor: "#C8E6C9", // Light Green
     cardBackground: "#33691E", // Dark Olive
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#81C784", // Adding mutedTextColor property
     glow: '0 0 8px rgba(102, 187, 106, 0.5)',
     spellLevels: {
       0: '#81C784',  // Light Green
@@ -198,7 +216,7 @@ export const themes: { [key: string]: Theme } = {
       9: '#424242'   // Gray
     }
   },
-   warrior: {
+  warrior: {
     name: "warrior",
     background: "#B71C1C", // Dark Red
     foreground: "#FFCDD2", // Light Red
@@ -206,6 +224,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#880E4F", // Darker Red
     textColor: "#EF9A9A", // Light Red
     cardBackground: "#311B92", // Dark Purple
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#EF5350", // Adding mutedTextColor property
     glow: '0 0 8px rgba(229, 115, 115, 0.5)',
     spellLevels: {
       0: '#EF5350',  // Red
@@ -228,6 +248,8 @@ export const themes: { [key: string]: Theme } = {
     accent: "#7B1FA2", // Darker Purple
     textColor: "#D1C4E9", // Light Lavender
     cardBackground: "#4A148C", // Dark Violet
+    buttonText: "#FFFFFF",    // Adding buttonText property
+    mutedTextColor: "#BA68C8", // Adding mutedTextColor property
     glow: '0 0 8px rgba(206, 147, 216, 0.5)',
     spellLevels: {
       0: '#E040FB',  // Purple

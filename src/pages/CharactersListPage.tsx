@@ -1,127 +1,106 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useCharacter } from "@/contexts/CharacterContext";
-import useSessionStore from "@/stores/sessionStore";
-import { toast } from "sonner";
-import type { CharacterSheet } from "@/utils/characterImports";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import useSessionStore from '@/stores/sessionStore';
+import { CharacterSheet } from '@/utils/characterImports';
+import { getAllCharacters, deleteCharacter } from '@/services/database';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { PlusCircle } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const CharactersListPage = () => {
   const navigate = useNavigate();
-  const { characters, getUserCharacters, deleteCharacter, setCharacter } = useCharacter();
+  const { toast } = useToast();
   const sessionStore = useSessionStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
+  const { currentUser } = useAuth();
+  const [characters, setCharacters] = useState<CharacterSheet[]>([]);
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   useEffect(() => {
     const fetchCharacters = async () => {
-      setIsLoading(true);
-      try {
-        await getUserCharacters();
-      } catch (error) {
-        console.error("Failed to fetch characters:", error);
-        toast.error("Failed to load characters.");
-      } finally {
-        setIsLoading(false);
+      if (currentUser) {
+        try {
+          const fetchedCharacters = await getAllCharacters(currentUser.uid);
+          setCharacters(fetchedCharacters);
+        } catch (error) {
+          console.error("Failed to fetch characters:", error);
+          toast({
+            title: "Ошибка",
+            description: "Не удалось загрузить список персонажей.",
+            variant: "destructive"
+          });
+        }
       }
     };
 
     fetchCharacters();
-  }, [getUserCharacters]);
+  }, [currentUser, toast]);
 
   const handleDeleteCharacter = async (characterId: string) => {
     try {
-      setDeletingCharacterId(characterId);
       await deleteCharacter(characterId);
-      toast.success("Character deleted successfully.");
+      setCharacters(characters.filter(char => char.id !== characterId));
+      toast({
+        title: "Персонаж удален",
+        description: "Персонаж успешно удален.",
+      });
     } catch (error) {
       console.error("Failed to delete character:", error);
-      toast.error("Failed to delete character.");
-    } finally {
-      setDeletingCharacterId(null);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить персонажа.",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleLoadCharacter = (character: CharacterSheet) => {
-    setCharacter(character);
-    navigate("/sheet");
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">My Characters</h1>
-      {isLoading ? (
-        <p>Loading characters...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Race</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {characters && characters.length > 0 ? (
-                characters.map((character) => (
-                  <TableRow key={character.id}>
-                    <TableCell>{character.name}</TableCell>
-                    <TableCell>{character.race}</TableCell>
-                    <TableCell>{character.class}</TableCell>
-                    <TableCell>{character.level}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" onClick={() => handleLoadCharacter(character)}>
-                        Load
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={deletingCharacterId === character.id}>
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. Are you sure you want to delete {character.name}?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteCharacter(character.id)}
-                              disabled={deletingCharacterId === character.id}
-                            >
-                              {deletingCharacterId === character.id ? "Deleting..." : "Delete"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    No characters found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      <Button variant="outline" onClick={() => navigate("/character-creation")}>
-        Create New Character
-      </Button>
-      <Button variant="secondary" onClick={() => navigate("/dm")}>
-        Back to DM Dashboard
-      </Button>
+    <div className="container mx-auto py-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Ваши персонажи</h1>
+        <Link to="/character-creation">
+          <Button style={{ backgroundColor: currentTheme.accent, color: currentTheme.buttonText }}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Создать персонажа
+          </Button>
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {characters.map((character) => (
+          <Card key={character.id} className="bg-white shadow-md rounded-md overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">{character.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">Раса: {character.race}</p>
+              <p className="text-gray-600">Класс: {character.class}</p>
+              <p className="text-gray-600">Уровень: {character.level}</p>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/character/${character.id}`)}
+                style={{ backgroundColor: currentTheme.primary, color: currentTheme.buttonText }}
+              >
+                Просмотреть
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteCharacter(character.id || '')}
+                style={{ backgroundColor: currentTheme.accent, color: currentTheme.buttonText }}
+              >
+                Удалить
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

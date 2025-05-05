@@ -1,18 +1,23 @@
-
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import useSessionStore from "@/stores/sessionStore";
-import { Player } from "@/types/session";
-import { ArrowLeft, UserPlus, Clock, Send } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { socketService } from '@/services/socket';
+import DiceRoller from '@/components/session/DiceRoller';
+import SessionChat from '@/components/session/SessionChat';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import useSessionStore from '@/stores/sessionStore';
+import { Session } from '@/types/session';
+
+// Define the Player type since it doesn't exist in session.ts
+interface Player {
+  id: string;
+  name: string;
+  character?: any;
+  connected: boolean;
+}
 
 const DMSessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -25,6 +30,8 @@ const DMSessionPage = () => {
   const [isEndingSession, setIsEndingSession] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
+  const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -207,7 +214,7 @@ const DMSessionPage = () => {
             <CardContent className="flex flex-wrap gap-4">
               <Button onClick={() => navigate(`/battle/${sessionId}`)}>Карта боя</Button>
               <Button>Генератор событий</Button>
-              <Button>Бестиарий</Button>
+              <Button>Бestiарий</Button>
               <Button>Таблицы лута</Button>
             </CardContent>
           </Card>
