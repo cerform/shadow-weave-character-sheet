@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -192,8 +191,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     }
   };
 
+  // Исправленная функция входа через Google
   const handleGoogleLogin = async () => {
-    // Сначала проверяем поддержку попапов
+    // Исправляем сравнение с null, которое вызывало ошибку
+    if (popupSupported === null) {
+      // Сначала проверяем поддержку попапов еще раз
+      checkPopupSupport();
+      // Выходим из функции и не выполняем вход, пока не завершится проверка
+      return;
+    }
+    
+    // Теперь проверка выполняется правильно
     if (popupSupported === false) {
       const error = new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.") as DetailedAuthError;
       error.code = "auth/popup-blocked-detected";
@@ -206,16 +214,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       return;
     }
     
-    // Если popupSupported равен null, проверяем поддержку
-    if (popupSupported === null) {
-      checkPopupSupport();
-      // После выполнения checkPopupSupport будет обновлено состояние popupSupported
-      // Нам нужно проверить его значение после обновления
-      if (popupSupported === null || popupSupported === false) {
-        return; // выходим, если попапы заблокированы или статус еще не определен
-      }
-    }
-    
     setIsLoading(true);
     setAuthError(null);
     setDebugInfo('');
@@ -223,18 +221,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     try {
       logger.logInfo("Начинаем вход через Google из AuthForm", "auth-form");
       logger.logInfo(`Текущее окружение: ${window.location.origin}`, "auth-env");
-      logger.logInfo(`User Agent: ${navigator.userAgent}`, "auth-env");
       
-      // Логируем дополнительную информацию о состоянии браузера
-      logger.logInfo(`Поддержка попапов: ${typeof window.open === 'function'}`, "auth-env");
-      logger.logInfo(`Размер окна: ${window.innerWidth}x${window.innerHeight}`, "auth-env");
-      logger.logInfo(`Экран: ${window.screen.width}x${window.screen.height}`, "auth-env");
-      logger.logInfo(`Cookies включены: ${navigator.cookieEnabled}`, "auth-env");
-      logger.logInfo(`Браузер мобильный: ${/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)}`, "auth-env");
-      
-      logger.logInfo("Перед вызовом googleLogin()", "auth-form");
-      
-      // Повторная проверка поддержки попапов непосредственно перед вызовом
+      // Дополнительная проверка непосредственно перед вызовом
       const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
       if (!testPopup) {
         throw new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.");
@@ -242,10 +230,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         testPopup.close();
       }
       
+      // Вызываем функцию входа через Google из контекста авторизации
       const result = await googleLogin();
-      
-      logger.logInfo("Результат входа через Google:", "auth-form");
-      logger.logInfo(JSON.stringify(result), "auth-form");
       
       if (result) {
         logger.logInfo("Google вход успешен, перенаправляем", "auth-form");
@@ -259,12 +245,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         const nullError = new Error("Сервер вернул пустой ответ при аутентификации через Google. Возможно, это связано с проблемами сети или настройками безопасности браузера.") as DetailedAuthError;
         nullError.code = "auth/null-response";
         setAuthError(nullError);
-        setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:");
-        setDebugInfo(prev => prev + "\n- Не блокирует ли ваш браузер cookies");
-        setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
-        setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
-        setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
-        setDebugInfo(prev => prev + "\n- Включена ли авторизация через Google в Firebase");
+        setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:\n- Не блокирует ли ваш браузер cookies\n- Разрешены ли всплывающие окна\n- Не блокирует ли сеть запросы к Google\n- Авторизован ли домен в консоли Firebase\n- Включена ли авторизация через Google в Firebase");
         
         toast({
           title: "Вход не завершен",
@@ -276,7 +257,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       logger.logError("Ошибка при входе через Google", "auth-form", error);
       setAuthError(error);
       
-      // Сохраняем расширенную отладочную информацию
+      // Сохраняе�� расширенную отладочную информацию
       if (error.fullDetails) {
         setDebugInfo(formatDebugInfo(error));
       } else {
@@ -337,7 +318,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
           <AlertTitle>Рекомендации по устранению проблемы</AlertTitle>
           <AlertDescription>
             <ul className="list-disc list-inside mt-1 space-y-1">
-              <li>Включите cookies в настройках браузера</li>
+              <li>Включи��е cookies в настройках браузера</li>
               <li>Убедитесь, что ваш браузер не блокирует Google аутентификацию</li>
               <li>Отключите VPN или прокси, если они используются</li>
               <li>Используйте режим инкогнито или другой браузер</li>
