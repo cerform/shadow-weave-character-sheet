@@ -219,7 +219,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     // Если popupSupported равен null, проверяем поддержку
     if (popupSupported === null) {
       checkPopupSupport();
-      // Проверяем результат после обновления состояния
+      // После выполнения checkPopupSupport будет обновлено состояние popupSupported
+      // Нам нужно проверить его значение после обновления
       if (popupSupported === false) {
         return; // выходим, если попапы заблокированы
       }
@@ -269,7 +270,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         nullError.code = "auth/null-response";
         setAuthError(nullError);
         setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:");
-        setDebugInfo(prev => prev + "\n- ��е блокирует ли ваш браузер cookies");
+        setDebugInfo(prev => prev + "\n- Не блокирует ли ваш браузер cookies");
         setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
         setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
         setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
@@ -292,7 +293,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         setDebugInfo(`Код ошибки: ${error.code || 'неизвестно'}\nСообщение: ${error.message || 'неизвестно'}`);
       }
       
-      const errorMsg = error.message || "Не удало��ь войти через Google";
+      const errorMsg = error.message || "Не удалось войти через Google";
       toast({
         title: "Ошибка входа",
         description: errorMsg,
@@ -348,7 +349,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
             <ul className="list-disc list-inside mt-1 space-y-1">
               <li>Включите cookies в настройках браузера</li>
               <li>Убедитесь, что ваш браузер не блокирует Google аутентификацию</li>
-              <li>Отключите VPN или прокси, если они использую��ся</li>
+              <li>Отключите VPN или прокси, если они используются</li>
               <li>Используйте режим инкогнито или другой браузер</li>
               <li>Очистите кэш и cookies вашего браузера</li>
               <li>Проверьте работу интернет-соединения</li>
