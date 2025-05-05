@@ -1,286 +1,286 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import ProfilePreview from '@/components/home/ProfilePreview';
-import ThemeSelector from '@/components/ThemeSelector';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useNavigate } from 'react-router-dom';
+import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users } from "lucide-react";
+import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { 
-  UsersRound, 
-  PlusCircle, 
-  BookOpen, 
-  Scroll, 
-  Gamepad2, 
-  BookMarked 
-} from 'lucide-react';
+import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 
-const Home: React.FC = () => {
-  const { theme } = useTheme();
-  
-  // Получаем текущую тему для стилизации
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+const Home = () => {
+  const { currentUser, isAuthenticated } = useAuth();
+  const isDM = currentUser?.isDM;
+  const navigate = useNavigate();
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <BackgroundWrapper>
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 
-            className="text-4xl sm:text-5xl font-bold font-philosopher"
-            style={{
-              color: currentTheme.accent,
-              textShadow: `0 0 10px ${currentTheme.accent}70`
-            }}
-          >
-            Dungeons & Dragons 5e
-            <div 
-              className="h-1 w-3/4 mt-2 rounded"
-              style={{
-                background: `linear-gradient(90deg, ${currentTheme.accent}, transparent)`,
-                boxShadow: `0 0 8px ${currentTheme.accent}70`
-              }}
-            />
-          </h1>
-          <IconOnlyNavigation includeThemeSelector={true} />
-        </div>
+      <div className="min-h-screen p-6">
+        <div className="container mx-auto max-w-7xl">
+          <header className="flex justify-between items-center mb-12">
+            <div>
+              <h1 className="font-philosopher text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-600">
+                Dungeons & Dragons 5e
+              </h1>
+              <p className="text-lg text-gray-300 mt-2">
+                Погрузитесь в мир приключений и фэнтези
+              </p>
+            </div>
+            <IconOnlyNavigation />
+          </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <div className="md:col-span-2 lg:col-span-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Персонажи */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#47A5FF',
-                  boxShadow: `0 4px 20px rgba(71, 165, 255, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center mb-4 border-2 border-blue-400">
-                    <UsersRound className="w-6 h-6 text-blue-400" />
+          <main>
+            {/* Профиль пользователя (если авторизован) */}
+            {isAuthenticated && (
+              <div className="mb-12 bg-black/40 backdrop-blur-sm p-6 rounded-lg border border-purple-500/30 shadow-lg">
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden">
+                      {currentUser?.photoURL ? (
+                        <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12" />
+                      )}
+                    </div>
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#47A5FF' }}
-                  >
-                    Персонажи
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
-                    Управление персонажами
-                  </p>
-                  
-                  <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#47A5FF' }}
-                  >
-                    <Link to="/characters">ПЕРЕЙТИ</Link>
-                  </Button>
+                  <div className="flex-grow text-center md:text-left">
+                    <h2 className="text-2xl font-bold mb-1">{currentUser?.displayName || 'Искатель приключений'}</h2>
+                    <p className="text-gray-400 mb-3">{isDM ? 'Мастер Подземелий' : 'Игрок'}</p>
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-purple-500/50 hover:bg-purple-500/20" 
+                        onClick={() => navigate('/profile')}
+                      >
+                        <User className="w-4 h-4 mr-2" /> Профиль
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-purple-500/50 hover:bg-purple-500/20" 
+                        onClick={() => navigate('/characters')}
+                      >
+                        <Users className="w-4 h-4 mr-2" /> Персонажи
+                      </Button>
+                      {isDM && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="border-purple-500/50 hover:bg-purple-500/20" 
+                          onClick={() => navigate('/dm')}
+                        >
+                          <Shield className="w-4 h-4 mr-2" /> Панель Мастера
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {/* Основные карточки */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Персонажи */}
+              <Card className="bg-blue-900/40 backdrop-blur-sm border-blue-500/30 shadow-lg overflow-hidden group hover:shadow-blue-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-blue-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <Users className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Персонажи</CardTitle>
+                  <CardDescription className="text-gray-300">
+                    Управление персонажами
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Просматривайте список ваших персонажей, редактируйте их характеристики и историю.</p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/characters')}
+                  >
+                    ПЕРЕЙТИ
+                  </Button>
+                </CardFooter>
+              </Card>
 
               {/* Создать персонажа */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#22D3AE',
-                  boxShadow: `0 4px 20px rgba(34, 211, 174, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-teal-900/50 flex items-center justify-center mb-4 border-2 border-teal-400">
-                    <PlusCircle className="w-6 h-6 text-teal-400" />
+              <Card className="bg-emerald-900/40 backdrop-blur-sm border-emerald-500/30 shadow-lg overflow-hidden group hover:shadow-emerald-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-emerald-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <UserPlus className="h-6 w-6 text-emerald-400" />
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#22D3AE' }}
-                  >
-                    Создать персонажа
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
+                  <CardTitle className="text-xl text-white">Создать персонажа</CardTitle>
+                  <CardDescription className="text-gray-300">
                     Создание нового персонажа
-                  </p>
-                  
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Создайте нового персонажа, выберите расу, класс, предысторию и распределите характеристики.</p>
+                </CardContent>
+                <CardFooter>
                   <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#22D3AE' }}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/character-creation')}
                   >
-                    <Link to="/character-creation">ПЕРЕЙТИ</Link>
+                    ПЕРЕЙТИ
                   </Button>
-                </div>
-              </div>
+                </CardFooter>
+              </Card>
 
               {/* Лист персонажа */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#FFC024',
-                  boxShadow: `0 4px 20px rgba(255, 192, 36, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-yellow-900/50 flex items-center justify-center mb-4 border-2 border-yellow-400">
-                    <BookOpen className="w-6 h-6 text-yellow-400" />
+              <Card className="bg-amber-900/40 backdrop-blur-sm border-amber-500/30 shadow-lg overflow-hidden group hover:shadow-amber-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-amber-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <Book className="h-6 w-6 text-amber-400" />
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#FFC024' }}
-                  >
-                    Лист персонажа
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
+                  <CardTitle className="text-xl text-white">Лист персонажа</CardTitle>
+                  <CardDescription className="text-gray-300">
                     Просмотр и редактирование
-                  </p>
-                  
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Просматривайте и редактируйте листы персонажей, отслеживайте инвентарь и заклинания.</p>
+                </CardContent>
+                <CardFooter>
                   <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#FFC024' }}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/characters')}
                   >
-                    <Link to="/characters">ПЕРЕЙТИ</Link>
+                    ПЕРЕЙТИ
                   </Button>
-                </div>
-              </div>
+                </CardFooter>
+              </Card>
 
               {/* Книга заклинаний */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#B469FF',
-                  boxShadow: `0 4px 20px rgba(180, 105, 255, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center mb-4 border-2 border-purple-400">
-                    <Scroll className="w-6 h-6 text-purple-400" />
+              <Card className="bg-violet-900/40 backdrop-blur-sm border-violet-500/30 shadow-lg overflow-hidden group hover:shadow-violet-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-violet-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <Scroll className="h-6 w-6 text-violet-400" />
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#B469FF' }}
-                  >
-                    Книга заклинаний
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
+                  <CardTitle className="text-xl text-white">Книга заклинаний</CardTitle>
+                  <CardDescription className="text-gray-300">
                     Изучение и поиск заклинаний
-                  </p>
-                  
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Просматривайте список всех заклинаний, фильтруйте их по уровню, классу и школе магии.</p>
+                </CardContent>
+                <CardFooter>
                   <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#B469FF' }}
+                    className="w-full bg-violet-600 hover:bg-violet-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/spellbook')}
                   >
-                    <Link to="/spellbook">ПЕРЕЙТИ</Link>
+                    ПЕРЕЙТИ
                   </Button>
-                </div>
-              </div>
+                </CardFooter>
+              </Card>
 
               {/* Игра */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#FF4D4F',
-                  boxShadow: `0 4px 20px rgba(255, 77, 79, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-red-900/50 flex items-center justify-center mb-4 border-2 border-red-400">
-                    <Gamepad2 className="w-6 h-6 text-red-400" />
+              <Card className="bg-red-900/40 backdrop-blur-sm border-red-500/30 shadow-lg overflow-hidden group hover:shadow-red-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-red-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <Shield className="h-6 w-6 text-red-400" />
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#FF4D4F' }}
-                  >
-                    Игра
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
+                  <CardTitle className="text-xl text-white">Игра</CardTitle>
+                  <CardDescription className="text-gray-300">
                     Присоединиться к сессии
-                  </p>
-                  
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Присоединяйтесь к игровым сессиям, используя код приглашения от Мастера Подземелий.</p>
+                </CardContent>
+                <CardFooter>
                   <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#FF4D4F' }}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/join-game')}
                   >
-                    <Link to="/join-game">ПЕРЕЙТИ</Link>
+                    ПЕРЕЙТИ
                   </Button>
-                </div>
-              </div>
+                </CardFooter>
+              </Card>
 
               {/* Справочник */}
-              <div 
-                className="bg-black/60 backdrop-blur-sm border rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1"
-                style={{
-                  borderColor: '#FF85A0',
-                  boxShadow: `0 4px 20px rgba(255, 133, 160, 0.2)`
-                }}
-              >
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-full bg-pink-900/50 flex items-center justify-center mb-4 border-2 border-pink-400">
-                    <BookMarked className="w-6 h-6 text-pink-400" />
+              <Card className="bg-pink-900/40 backdrop-blur-sm border-pink-500/30 shadow-lg overflow-hidden group hover:shadow-pink-500/20 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="rounded-full bg-pink-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                    <BookOpen className="h-6 w-6 text-pink-400" />
                   </div>
-                  <h2 
-                    className="text-2xl font-bold mb-2 font-philosopher"
-                    style={{ color: '#FF85A0' }}
-                  >
-                    Справочник
-                  </h2>
-                  <p className="mb-6 text-gray-300 text-sm">
+                  <CardTitle className="text-xl text-white">Справочник</CardTitle>
+                  <CardDescription className="text-gray-300">
                     Расы, классы, предыстории
-                  </p>
-                  
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-300">
+                  <p>Изучайте информацию о расах, классах и предысториях персонажей мира D&D.</p>
+                </CardContent>
+                <CardFooter>
                   <Button 
-                    asChild
-                    className="w-full"
-                    style={{ backgroundColor: '#FF85A0' }}
+                    className="w-full bg-pink-600 hover:bg-pink-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/handbook')}
                   >
-                    <Link to="/handbook">ПЕРЕЙТИ</Link>
+                    ПЕРЕЙТИ
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Панель мастера (только для DM) */}
+              {isDM && (
+                <Card className="bg-indigo-900/40 backdrop-blur-sm border-indigo-500/30 shadow-lg overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300">
+                  <CardHeader className="pb-4">
+                    <div className="rounded-full bg-indigo-500/20 w-12 h-12 flex items-center justify-center mb-2">
+                      <Shield className="h-6 w-6 text-indigo-400" />
+                    </div>
+                    <CardTitle className="text-xl text-white">Панель Мастера</CardTitle>
+                    <CardDescription className="text-gray-300">
+                      Управление сессиями
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm text-gray-300">
+                    <p>Создавайте и управляйте игровыми сессиями как Мастер Подземелий.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white btn-magic"
+                      onClick={() => handleNavigation('/dm')}
+                    >
+                      ПЕРЕЙТИ
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+            </div>
+
+            {/* Секция для неавторизованных пользователей */}
+            {!isAuthenticated && (
+              <div className="mt-12 p-6 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 shadow-lg">
+                <h2 className="font-philosopher text-2xl text-center mb-4">Начните свое приключение</h2>
+                <p className="text-center text-gray-300 mb-6">
+                  Войдите или зарегистрируйтесь, чтобы создавать и сохранять персонажей, присоединяться к игровым сессиям и многое другое.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 text-white btn-magic"
+                    onClick={() => handleNavigation('/auth')}
+                  >
+                    <User className="h-4 w-4 mr-2" /> Войти
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-purple-500/50 hover:bg-purple-500/20 btn-magic"
+                    onClick={() => handleNavigation('/auth')}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" /> Регистрация
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          {/* Боковая панель для профиля */}
-          <div>
-            <ProfilePreview />
-            
-            <div 
-              className="bg-black/50 backdrop-blur-sm rounded-xl p-4 border mt-6"
-              style={{ 
-                borderColor: `${currentTheme.accent}50`,
-                boxShadow: `0 4px 20px ${currentTheme.accent}20`
-              }}
-            >
-              <h3 
-                className="text-lg font-bold mb-3"
-                style={{ color: currentTheme.accent }}
-              >
-                Подсказка
-              </h3>
-              <p 
-                className="text-sm"
-                style={{ color: `${currentTheme.textColor}90` }}
-              >
-                Вы можете загрузить свои фоновые изображения, добавив их в папку 
-                <code className="bg-black/60 px-1.5 mx-1.5 py-0.5 rounded text-xs">
-                  public/lovable-uploads
-                </code>
-              </p>
-              <p 
-                className="text-sm mt-2"
-                style={{ color: `${currentTheme.textColor}90` }}
-              >
-                Фон можно настроить в файле 
-                <code className="bg-black/60 px-1.5 mx-1.5 py-0.5 rounded text-xs">
-                  BackgroundWrapper.tsx
-                </code>
-              </p>
-            </div>
-          </div>
+            )}
+          </main>
         </div>
       </div>
     </BackgroundWrapper>

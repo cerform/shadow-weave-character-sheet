@@ -15,10 +15,10 @@ export interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, displayName?: string) => Promise<void>;
+  register: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
   googleLogin: () => Promise<void>;
   isAuthenticated: boolean;
   currentUser: UserType | null;
   updateProfile?: (data: Partial<UserType>) => Promise<void>;
-  signup?: (email: string, password: string, displayName: string) => Promise<void>;
+  signup?: (email: string, password: string, displayName: string, isDM?: boolean) => Promise<void>;
 }

@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from 'sonner';
-import { Loader2, LogIn, Lock, Mail, User, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Loader2, LogIn, Lock, Mail, User, AlertTriangle, ExternalLink, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   redirectTo?: string;
@@ -18,6 +20,7 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [isDM, setIsDM] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleAuthError, setGoogleAuthError] = useState(false);
   const [currentDomain, setCurrentDomain] = useState('');
@@ -59,7 +62,8 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     
     try {
       setLoading(true);
-      await register(email, password, name);
+      // Передаем isDM в функцию регистрации
+      await register(email, password, name, isDM);
       toast.success('Регистрация успешна');
       navigate(redirectTo);
     } catch (error: any) {
@@ -201,6 +205,21 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                   />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="is-dm" 
+                  checked={isDM} 
+                  onCheckedChange={(checked) => setIsDM(checked === true)}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="is-dm" className="flex items-center gap-1">
+                    <Shield className="h-4 w-4" /> Зарегистрироваться как Мастер Подземелий
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Мастера могут создавать игровые сессии и управлять ими
+                  </p>
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
