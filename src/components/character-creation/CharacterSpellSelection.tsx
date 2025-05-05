@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,7 +14,7 @@ import { Search, Book, Plus, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
-import { normalizeSpells } from '@/utils/spellUtils';
+import { normalizeSpells, convertToSpellData, convertToSpellDataArray } from '@/utils/spellUtils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -36,11 +35,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   // Преобразуем массив заклинаний в нужный формат
   const normalizedSpells = character.spells ? normalizeSpells(character.spells) : [];
   const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(normalizedSpells);
-  const [availableSpells, setAvailableSpells] = useState<SpellOption[]>([]);
-  const [filteredSpells, setFilteredSpells] = useState<SpellOption[]>([]);
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
+  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [activeTab, setActiveTab] = useState('0');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpellDetails, setSelectedSpellDetails] = useState<SpellOption | null>(null);
+  const [selectedSpellDetails, setSelectedSpellDetails] = useState<SpellData | null>(null);
   const [isSpellDetailsOpen, setIsSpellDetailsOpen] = useState(false);
   
   // Загружаем доступные заклинания для класса персонажа
@@ -50,7 +49,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (character.className) {
       // Фильтруем заклинания по классу персонажа
       const classSpells = allSpells.filter(spell => {
-        // Проверяем, что classes существует и является массивом
+        // Проверяем, что classes существует и является массивом или строкой
+        if (!spell.classes) return false;
+        
         const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes].filter(Boolean);
         return spellClasses.some(spellClass => 
           spellClass && typeof spellClass === 'string' && 
@@ -58,8 +59,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         );
       });
       
-      setAvailableSpells(classSpells);
-      setFilteredSpells(classSpells.filter(spell => spell.level === parseInt(activeTab, 10)));
+      // Преобразуем CharacterSpell в SpellData для правильной типизации
+      const convertedSpells = convertToSpellDataArray(classSpells);
+      setAvailableSpells(convertedSpells);
+      setFilteredSpells(convertedSpells.filter(spell => spell.level === parseInt(activeTab, 10)));
     } else {
       setAvailableSpells([]);
       setFilteredSpells([]);
@@ -128,7 +131,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   };
   
   // Обработчик добавления заклинания
-  const handleAddSpell = (spell: SpellOption) => {
+  const handleAddSpell = (spell: SpellData) => {
     // Проверяем, что заклинание еще не выбрано и можно добавить еще заклинания
     if (
       selectedSpells.some(s => s.name === spell.name) ||
@@ -157,7 +160,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return selectedSpells.filter(spell => spell.level === level).length;
   };
   
-  const handleShowSpellDetails = (spell: SpellOption) => {
+  const handleShowSpellDetails = (spell: SpellData) => {
     setSelectedSpellDetails(spell);
     setIsSpellDetailsOpen(true);
   };

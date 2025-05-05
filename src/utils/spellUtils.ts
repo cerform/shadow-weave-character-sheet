@@ -1,5 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 /**
  * Безопасное преобразование массива или строки в строку
@@ -32,7 +33,16 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[] | undefined)
         duration: 'Мгновенная'
       };
     }
-    return spell;
+    
+    // Обеспечиваем наличие всех обязательных полей
+    return {
+      ...spell,
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'Касание',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная'
+    };
   });
 };
 
@@ -53,4 +63,36 @@ export const parseComponents = (componentString: string): {
     ritual: componentString.includes('Р'),
     concentration: componentString.includes('К')
   };
+};
+
+/**
+ * Конвертирует CharacterSpell в SpellData (гарантирует все обязательные поля)
+ */
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || 'Универсальная', // Гарантируем обязательное поле
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'Касание',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    prepared: spell.prepared,
+    higherLevels: spell.higherLevels
+  };
+};
+
+/**
+ * Конвертирует массив CharacterSpell в массив SpellData
+ */
+export const convertToSpellDataArray = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(convertToSpellData);
 };
