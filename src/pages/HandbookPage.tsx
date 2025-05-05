@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import ThemeSelector from '@/components/ThemeSelector';
 import AppDiceButton from '@/AppDiceButton';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const HandbookPage: React.FC = () => {
   // Состояния для данных
@@ -105,40 +106,51 @@ const HandbookPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen flex"
+      className="min-h-screen flex flex-col"
       style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.6)), 
+                     url('/lovable-uploads/91719f56-2b3a-49c7-904f-35af06f9d3b3.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
         color: currentTheme.textColor 
       }}
     >
-      {/* Боковая панель */}
-      <HandbookSidebar 
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        sources={sources}
-        selectedSources={selectedSources}
-        setSelectedSources={setSelectedSources}
-      />
+      {/* Навигационная панель */}
+      <div className="p-4 flex items-center justify-between">
+        <NavigationButtons className="flex-shrink-0" />
+        <ThemeSelector />
+      </div>
       
-      {/* Основное содержимое */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 
-              className="text-3xl font-bold"
-              style={{ color: currentTheme.accent }}
-            >
-              {activeSection === 'races' && 'Расы'}
-              {activeSection === 'classes' && 'Классы'}
-              {activeSection === 'backgrounds' && 'Предыстории'}
-            </h1>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Боковая панель */}
+        <HandbookSidebar 
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          sources={sources}
+          selectedSources={selectedSources}
+          setSelectedSources={setSelectedSources}
+        />
+        
+        {/* Основное содержимое */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 
+                className="text-3xl font-bold"
+                style={{ color: currentTheme.accent, textShadow: `0 0 10px ${currentTheme.accent}80` }}
+              >
+                {activeSection === 'races' && 'Расы'}
+                {activeSection === 'classes' && 'Классы'}
+                {activeSection === 'backgrounds' && 'Предыстории'}
+              </h1>
+            </div>
             
-            <ThemeSelector />
+            {renderContent()}
           </div>
-          
-          {renderContent()}
         </div>
       </div>
       

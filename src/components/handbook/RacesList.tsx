@@ -42,18 +42,19 @@ const RacesList: React.FC<RacesListProps> = ({
       {filteredRaces.map((race) => (
         <Card 
           key={race.name} 
-          className="cursor-pointer hover:shadow-md transition-shadow border border-purple-700/20 bg-gray-900/80 text-white overflow-hidden"
+          className="cursor-pointer hover:shadow-md transition-all overflow-hidden hover:scale-105 duration-300"
           style={{
-            background: `${currentTheme.cardBackground}`,
-            borderColor: `${currentTheme.accent}20`,
+            background: `rgba(20, 20, 30, 0.8)`,
+            backdropFilter: 'blur(5px)',
+            borderColor: `${currentTheme.accent}40`,
             color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}10`,
+            boxShadow: `0 0 5px ${currentTheme.accent}40`,
           }}
         >
           <CardHeader className="pb-2 flex flex-row justify-between items-center">
             <CardTitle 
               className="text-xl font-bold"
-              style={{ color: currentTheme.textColor }}
+              style={{ color: currentTheme.accent, textShadow: `0 0 5px ${currentTheme.accent}40` }}
             >
               {race.name}
             </CardTitle>
@@ -61,9 +62,9 @@ const RacesList: React.FC<RacesListProps> = ({
               <Tooltip>
                 <TooltipTrigger>
                   <div 
-                    className="flex items-center text-xs bg-purple-900/60 px-2 py-1 rounded border border-purple-500/50"
+                    className="flex items-center text-xs px-2 py-1 rounded border"
                     style={{
-                      background: `${currentTheme.accent}40`,
+                      background: `${currentTheme.accent}20`,
                       borderColor: `${currentTheme.accent}50`
                     }}
                   >
@@ -72,7 +73,7 @@ const RacesList: React.FC<RacesListProps> = ({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent style={{
-                  background: currentTheme.cardBackground,
+                  background: 'rgba(20, 20, 30, 0.9)',
                   borderColor: `${currentTheme.accent}50`,
                   color: currentTheme.textColor
                 }}>
@@ -83,13 +84,13 @@ const RacesList: React.FC<RacesListProps> = ({
           </CardHeader>
           <CardContent>
             <p 
-              className="text-sm text-gray-300 line-clamp-3 min-h-[4.5rem]"
+              className="text-sm line-clamp-3 min-h-[4.5rem]"
               style={{ color: currentTheme.textColor }}
             >
               {race.description}
             </p>
             <Button
-              className="mt-4 w-full bg-purple-800/80 hover:bg-purple-700 text-white border border-purple-500/50 group"
+              className="mt-4 w-full group transition-all duration-300"
               onClick={() => setSelectedRace(race)}
               style={{
                 background: `${currentTheme.accent}80`,
@@ -98,7 +99,7 @@ const RacesList: React.FC<RacesListProps> = ({
               }}
             >
               ПОДРОБНЕЕ
-              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
+              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardContent>
         </Card>
@@ -106,9 +107,9 @@ const RacesList: React.FC<RacesListProps> = ({
 
       {filteredRaces.length === 0 && (
         <div 
-          className="col-span-full text-center p-8 text-gray-300 bg-gray-900/50 rounded-lg border border-purple-700/20"
+          className="col-span-full text-center p-8 rounded-lg border"
           style={{
-            background: `${currentTheme.cardBackground}40`,
+            background: `rgba(20, 20, 30, 0.6)`,
             borderColor: `${currentTheme.accent}20`,
             color: currentTheme.textColor
           }}

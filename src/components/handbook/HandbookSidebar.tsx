@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen, Search, Filter, User, X } from "lucide-react";
+import { BookOpen, Search, Filter, User, X, Book, ScrollText } from "lucide-react";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -47,17 +47,22 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
   
   return (
     <div 
-      className="w-64 shrink-0 overflow-hidden h-screen flex flex-col border-r"
+      className="w-64 shrink-0 overflow-hidden h-screen flex flex-col"
       style={{ 
-        background: currentTheme.cardBackground, 
-        borderColor: `${currentTheme.accent}30` 
+        background: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(5px)',
+        borderRight: `1px solid ${currentTheme.accent}30` 
       }}
     >
       <div className="p-4">
         <h2 
-          className="text-xl font-semibold mb-4"
-          style={{ color: currentTheme.textColor }}
+          className="text-xl font-semibold mb-4 flex items-center"
+          style={{ 
+            color: currentTheme.accent,
+            textShadow: `0 0 10px ${currentTheme.accent}60` 
+          }}
         >
+          <Book className="mr-2 h-5 w-5" />
           Справочник D&D
         </h2>
         
@@ -72,7 +77,7 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"
             style={{ 
-              background: 'rgba(0,0,0,0.2)', 
+              background: 'rgba(0,0,0,0.4)', 
               borderColor: `${currentTheme.accent}30`,
               color: currentTheme.textColor 
             }}
@@ -81,7 +86,7 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1 h-6 w-6 p-0 hover:text-white"
+              className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-transparent"
               onClick={() => setSearchQuery('')}
               style={{ 
                 color: `${currentTheme.textColor}80`,
@@ -95,13 +100,14 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
         <div className="space-y-2">
           <Button
             variant={activeSection === 'races' ? 'default' : 'outline'}
-            className="w-full justify-start"
+            className="w-full justify-start transition-all duration-300"
             onClick={() => setActiveSection('races')}
             style={activeSection === 'races' ? {
               background: currentTheme.accent,
-              color: currentTheme.buttonText || '#fff'
+              color: currentTheme.buttonText || '#fff',
+              boxShadow: `0 0 10px ${currentTheme.accent}80`
             } : {
-              background: 'transparent',
+              background: 'rgba(0,0,0,0.4)',
               borderColor: `${currentTheme.accent}50`,
               color: currentTheme.textColor
             }}
@@ -112,13 +118,14 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
           
           <Button
             variant={activeSection === 'classes' ? 'default' : 'outline'}
-            className="w-full justify-start"
+            className="w-full justify-start transition-all duration-300"
             onClick={() => setActiveSection('classes')}
             style={activeSection === 'classes' ? {
               background: currentTheme.accent,
-              color: currentTheme.buttonText || '#fff'
+              color: currentTheme.buttonText || '#fff',
+              boxShadow: `0 0 10px ${currentTheme.accent}80`
             } : {
-              background: 'transparent',
+              background: 'rgba(0,0,0,0.4)',
               borderColor: `${currentTheme.accent}50`,
               color: currentTheme.textColor
             }}
@@ -129,18 +136,19 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
           
           <Button
             variant={activeSection === 'backgrounds' ? 'default' : 'outline'}
-            className="w-full justify-start"
+            className="w-full justify-start transition-all duration-300"
             onClick={() => setActiveSection('backgrounds')}
             style={activeSection === 'backgrounds' ? {
               background: currentTheme.accent,
-              color: currentTheme.buttonText || '#fff'
+              color: currentTheme.buttonText || '#fff',
+              boxShadow: `0 0 10px ${currentTheme.accent}80`
             } : {
-              background: 'transparent',
+              background: 'rgba(0,0,0,0.4)',
               borderColor: `${currentTheme.accent}50`,
               color: currentTheme.textColor
             }}
           >
-            <BookOpen className="mr-2 h-4 w-4" />
+            <ScrollText className="mr-2 h-4 w-4" />
             Предыстории
           </Button>
         </div>
@@ -162,10 +170,10 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs hover:text-white"
+              className="h-6 px-2 text-xs hover:bg-transparent"
               onClick={clearSources}
               style={{ 
-                color: `${currentTheme.textColor}80`,
+                color: `${currentTheme.accent}`,
               }}
             >
               Очистить
@@ -195,10 +203,11 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
                   />
                   <Label 
                     htmlFor={`source-${source}`} 
-                    className="text-sm cursor-pointer"
+                    className="text-sm cursor-pointer transition-all duration-300"
                     style={{ 
-                      color: currentTheme.textColor,
-                      fontWeight: isSelected ? 'bold' : 'normal'
+                      color: isSelected ? currentTheme.accent : currentTheme.textColor,
+                      fontWeight: isSelected ? 'bold' : 'normal',
+                      textShadow: isSelected ? `0 0 5px ${currentTheme.accent}60` : 'none'
                     }}
                   >
                     {source === 'PHB' ? 'Книга игрока' : source}

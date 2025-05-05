@@ -38,22 +38,23 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredBackgrounds.map((bg) => (
         <Card 
           key={bg.name} 
-          className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+          className="cursor-pointer hover:shadow-md transition-all overflow-hidden hover:scale-105 duration-300"
           style={{
-            background: currentTheme.cardBackground,
-            borderColor: `${currentTheme.accent}20`,
+            background: `rgba(20, 20, 30, 0.8)`,
+            backdropFilter: 'blur(5px)',
+            borderColor: `${currentTheme.accent}40`,
             color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}10`,
+            boxShadow: `0 0 5px ${currentTheme.accent}40`,
           }}
         >
           <CardHeader className="pb-2 flex flex-row justify-between items-center">
             <CardTitle 
               className="text-xl font-bold"
-              style={{ color: currentTheme.textColor }}
+              style={{ color: currentTheme.accent, textShadow: `0 0 5px ${currentTheme.accent}40` }}
             >
               {bg.name}
             </CardTitle>
@@ -63,7 +64,7 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
                   <div 
                     className="flex items-center text-xs px-2 py-1 rounded border"
                     style={{
-                      background: `${currentTheme.accent}40`,
+                      background: `${currentTheme.accent}20`,
                       borderColor: `${currentTheme.accent}50`
                     }}
                   >
@@ -72,7 +73,7 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent style={{
-                  background: currentTheme.cardBackground,
+                  background: 'rgba(20, 20, 30, 0.9)',
                   borderColor: `${currentTheme.accent}50`,
                   color: currentTheme.textColor
                 }}>
@@ -92,9 +93,10 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
               {bg.proficiencies && bg.proficiencies.skills && bg.proficiencies.skills.map((skill: string, index: number) => (
                 <span 
                   key={index} 
-                  className="text-xs px-2 py-1 rounded"
+                  className="text-xs px-2 py-1 rounded border"
                   style={{ 
-                    background: `${currentTheme.accent}30`,
+                    background: `${currentTheme.accent}20`,
+                    borderColor: `${currentTheme.accent}40`,
                     color: currentTheme.textColor
                   }}
                 >
@@ -103,7 +105,7 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
               ))}
             </div>
             <Button
-              className="mt-4 w-full group"
+              className="mt-4 w-full group transition-all duration-300"
               onClick={() => setSelectedBackground(bg)}
               style={{
                 background: `${currentTheme.accent}80`,
@@ -112,7 +114,7 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
               }}
             >
               ПОДРОБНЕЕ
-              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
+              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardContent>
         </Card>
@@ -122,7 +124,7 @@ const BackgroundsList: React.FC<BackgroundsListProps> = ({
         <div 
           className="col-span-full text-center p-8 rounded-lg border"
           style={{
-            background: `${currentTheme.cardBackground}40`,
+            background: `rgba(20, 20, 30, 0.6)`,
             borderColor: `${currentTheme.accent}20`,
             color: currentTheme.textColor
           }}

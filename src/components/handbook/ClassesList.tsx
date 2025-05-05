@@ -38,22 +38,23 @@ const ClassesList: React.FC<ClassesListProps> = ({
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredClasses.map((cls) => (
         <Card 
           key={cls.name} 
-          className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+          className="cursor-pointer hover:shadow-md transition-all overflow-hidden hover:scale-105 duration-300"
           style={{
-            background: currentTheme.cardBackground,
-            borderColor: `${currentTheme.accent}20`,
+            background: `rgba(20, 20, 30, 0.8)`,
+            backdropFilter: 'blur(5px)',
+            borderColor: `${currentTheme.accent}40`,
             color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}10`,
+            boxShadow: `0 0 5px ${currentTheme.accent}40`,
           }}
         >
           <CardHeader className="pb-2 flex flex-row justify-between items-center">
             <CardTitle 
               className="text-xl font-bold"
-              style={{ color: currentTheme.textColor }}
+              style={{ color: currentTheme.accent, textShadow: `0 0 5px ${currentTheme.accent}40` }}
             >
               {cls.name}
             </CardTitle>
@@ -63,7 +64,7 @@ const ClassesList: React.FC<ClassesListProps> = ({
                   <div 
                     className="flex items-center text-xs px-2 py-1 rounded border"
                     style={{
-                      background: `${currentTheme.accent}40`,
+                      background: `${currentTheme.accent}20`,
                       borderColor: `${currentTheme.accent}50`
                     }}
                   >
@@ -72,7 +73,7 @@ const ClassesList: React.FC<ClassesListProps> = ({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent style={{
-                  background: currentTheme.cardBackground,
+                  background: 'rgba(20, 20, 30, 0.9)',
                   borderColor: `${currentTheme.accent}50`,
                   color: currentTheme.textColor
                 }}>
@@ -88,12 +89,14 @@ const ClassesList: React.FC<ClassesListProps> = ({
             >
               {cls.description}
             </p>
-            <div className="flex items-center mt-2 mb-2">
+            <div className="flex flex-wrap mt-2 mb-2 gap-2">
               <span 
-                className="text-xs px-2 py-1 rounded mr-2"
+                className="text-xs px-2 py-1 rounded"
                 style={{ 
-                  background: `${currentTheme.accent}30`,
-                  color: currentTheme.textColor
+                  background: `${currentTheme.accent}20`,
+                  color: currentTheme.textColor,
+                  borderColor: `${currentTheme.accent}30`,
+                  border: '1px solid'
                 }}
               >
                 Кость хитов: {cls.hitDie}
@@ -102,8 +105,10 @@ const ClassesList: React.FC<ClassesListProps> = ({
                 <span 
                   className="text-xs px-2 py-1 rounded"
                   style={{ 
-                    background: `${currentTheme.accent}50`,
-                    color: currentTheme.textColor
+                    background: `${currentTheme.accent}30`,
+                    color: currentTheme.textColor,
+                    borderColor: `${currentTheme.accent}40`,
+                    border: '1px solid'
                   }}
                 >
                   Магия
@@ -111,7 +116,7 @@ const ClassesList: React.FC<ClassesListProps> = ({
               )}
             </div>
             <Button
-              className="mt-4 w-full group"
+              className="mt-4 w-full group transition-all duration-300"
               onClick={() => setSelectedClass(cls)}
               style={{
                 background: `${currentTheme.accent}80`,
@@ -120,7 +125,7 @@ const ClassesList: React.FC<ClassesListProps> = ({
               }}
             >
               ПОДРОБНЕЕ
-              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
+              <ChevronRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardContent>
         </Card>
@@ -130,7 +135,7 @@ const ClassesList: React.FC<ClassesListProps> = ({
         <div 
           className="col-span-full text-center p-8 rounded-lg border"
           style={{
-            background: `${currentTheme.cardBackground}40`,
+            background: `rgba(20, 20, 30, 0.6)`,
             borderColor: `${currentTheme.accent}20`,
             color: currentTheme.textColor
           }}
