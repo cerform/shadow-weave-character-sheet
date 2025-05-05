@@ -14,12 +14,13 @@ export interface SpellData {
   description: string | string[];
   classes?: string[] | string;
   source?: string;
-  // Добавляем недостающие поля
+  // Added all necessary spell properties
   isRitual?: boolean;
   isConcentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  materials?: string;
   prepared?: boolean;
   higherLevel?: string;
   higherLevels?: string;
@@ -35,11 +36,11 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     range: spell.range || 'Касание',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    ritual: false,
-    concentration: false,
-    verbal: true,
-    somatic: true,
-    material: false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
   };
 };
 
@@ -48,6 +49,12 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     ...spell,
     name: spell.name,
     level: spell.level,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false, 
+    material: spell.material || false,
+    ritual: spell.ritual || spell.isRitual || false,
+    concentration: spell.concentration || spell.isConcentration || false,
+    higherLevels: spell.higherLevels || spell.higherLevel || "",
     id: spell.id
   };
 };
@@ -57,7 +64,7 @@ export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
 };
 
 // Функция для расчета известных заклинаний
-export const calculateKnownSpells = (characterClass: string, level: number, abilityModifier: number) => {
+export const calculateKnownSpells = (characterClass: string, level: number, abilityModifier: number): { cantrips: number; spells: number } => {
   // Default values
   let cantrips = 0;
   let spells = 0;

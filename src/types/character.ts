@@ -35,7 +35,7 @@ export interface Character {
   backstory?: string;
   hitDice?: { total: number; used: number; dieType: string; value: string };
   deathSaves?: { successes: number; failures: number };
-  resources?: { [key: string]: { total: number; used: number; name: string } };
+  resources?: { [key: string]: { total: number; used: number; name: string; recoveryType?: string } };
   lastDiceRoll?: {
     diceType: string;
     count: number;
@@ -91,7 +91,7 @@ export interface Character {
   abilityPointsUsed?: number;
   additionalClasses?: ClassLevel[];
   
-  // Добавляем недостающие поля
+  // Added or corrected fields
   appearance?: string;
   sorceryPoints?: {
     max: number;
@@ -100,6 +100,8 @@ export interface Character {
   skillProficiencies?: {
     [skillName: string]: boolean;
   };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CharacterSpell {
@@ -115,6 +117,15 @@ export interface CharacterSpell {
   classes?: string[] | string;
   source?: string;
   id?: string | number;
+  // Additional properties needed for spells
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  ritual?: boolean;
+  concentration?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
 }
 
 export interface ClassLevel {

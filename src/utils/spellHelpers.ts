@@ -1,5 +1,7 @@
 
 // Вспомогательные функции для работы с заклинаниями
+import { CharacterSpell } from '@/types/character';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
 export const isCharacterSpellObject = (spell: any): spell is any => {
   return typeof spell === 'object' && spell !== null;
@@ -86,4 +88,23 @@ export const getSpellCastingTime = (castingTime: string): string => {
   }
   
   return result;
+};
+
+// Добавляем функцию преобразования массива заклинаний персонажа в SpellData
+export const convertCharacterSpellsToSpellData = (spells: (CharacterSpell | string)[]): SpellData[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return {
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: 'В, С',
+        duration: 'Мгновенная',
+        description: 'Нет описания',
+      };
+    }
+    return convertCharacterSpellToSpellData(spell);
+  });
 };

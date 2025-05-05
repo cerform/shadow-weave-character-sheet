@@ -47,56 +47,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpellDetails, setSelectedSpellDetails] = useState<SpellData | null>(null);
   const [isSpellDetailsOpen, setIsSpellDetailsOpen] = useState(false);
-  const [spellCounts, setSpellCounts] = useState({ cantrips: 0, spells: 0 });
+  const [spellCounts, setSpellCounts] = useState<{ cantrips: number; spells: number }>({ cantrips: 0, spells: 0 });
   
   // Получаем класс персонажа
   const characterClass = character.className || character.class || '';
   const characterLevel = character.level || 1;
-
-  // Добавим новую функцию для расчета максимального уровня заклинаний
-  const getMaxSpellLevel = (level: number): number => {
-    if (level <= 0) return 0;
-    if (level <= 2) return 1;
-    if (level <= 4) return 2;
-    if (level <= 6) return 3;
-    if (level <= 8) return 4;
-    if (level <= 10) return 5;
-    if (level <= 12) return 6;
-    if (level <= 14) return 7;
-    if (level <= 16) return 8;
-    return 9;
-  };
-
-  // Добавим функцию для расчета количества известных заклинаний
-  const calculateKnownSpells = (characterClass: string, level: number, spellAbilityScore: number): number => {
-    const mod = Math.floor((spellAbilityScore - 10) / 2);
-    
-    switch (characterClass.toLowerCase()) {
-      case 'wizard':
-        return 6 + (level * 2);
-      case 'sorcerer':
-        return level + 1;
-      case 'bard':
-        return level + 2;
-      case 'warlock':
-        return level + 1;
-      case 'cleric':
-      case 'druid':
-        return level + mod;
-      default:
-        return 0;
-    }
-  };
-
-  // Функция для преобразования списка заклинаний в правильный формат
-  const convertToSpellDataArray = (spells: any[]): any[] => {
-    return spells.map(spell => {
-      if (typeof spell === 'string') {
-        return { name: spell, level: 0 };
-      }
-      return spell;
-    });
-  };
 
   // Загружаем доступные заклинания для класса персонажа
   useEffect(() => {
@@ -136,7 +91,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
     
     // Рассчитываем количество доступных заклинаний
-    const counts = calculateKnownSpells(characterClass, characterLevel, character.abilities);
+    const counts = calculateKnownSpells(characterClass, characterLevel, character.abilities || {});
     setSpellCounts(counts);
     console.log(`Доступно заклинаний для ${characterClass} (уровень ${characterLevel}): ${counts.cantrips} заговоров, ${counts.spells} обычных заклинаний`);
     

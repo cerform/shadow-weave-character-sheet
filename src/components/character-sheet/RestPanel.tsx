@@ -4,7 +4,6 @@ import { Character } from '@/types/character';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { getMaxSpellLevel } from '@/utils/spellUtils';
 
 interface RestPanelProps {
   character: Character;
@@ -26,20 +25,24 @@ export const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => 
     
     const updatedHitDice = {
       ...hitDice,
-      used: Math.max(0, hitDice.used - recoveredHitDice)
+      used: Math.max(0, hitDice.used - recoveredHitDice),
+      value: `${hitDice.total - Math.max(0, hitDice.used - recoveredHitDice)}${hitDice.dieType}`
     };
     
     // 2. Восстанавливаем ресурсы, которые восстанавливаются после короткого отдыха
     const updatedResources = { ...character.resources };
-    Object.keys(updatedResources).forEach(key => {
-      const resource = updatedResources[key];
-      if (resource.recoveryType === 'shortRest') {
-        updatedResources[key] = {
-          ...resource,
-          used: 0
-        };
-      }
-    });
+    if (updatedResources) {
+      Object.keys(updatedResources).forEach(key => {
+        const resource = updatedResources[key];
+        // Проверяем наличие свойства recoveryType и его значение
+        if (resource && (resource as any).recoveryType === 'shortRest') {
+          updatedResources[key] = {
+            ...resource,
+            used: 0
+          };
+        }
+      });
+    }
     
     // 3. Восстанавливаем слоты заклинаний колдуна
     let updatedSpellSlots = { ...character.spellSlots };
@@ -80,17 +83,19 @@ export const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => 
     const updatedHitDice = {
       ...hitDice,
       used: Math.max(0, hitDice.used - recoveredHitDice),
-      value: `${hitDice.total}${hitDice.dieType}`
+      value: `${hitDice.total - Math.max(0, hitDice.used - recoveredHitDice)}${hitDice.dieType}`
     };
     
     // 3. Восстанавливаем все ресурсы
     const updatedResources = { ...character.resources };
-    Object.keys(updatedResources).forEach(key => {
-      updatedResources[key] = {
-        ...updatedResources[key],
-        used: 0
-      };
-    });
+    if (updatedResources) {
+      Object.keys(updatedResources).forEach(key => {
+        updatedResources[key] = {
+          ...updatedResources[key],
+          used: 0
+        };
+      });
+    }
     
     // 4. Восстанавливаем все слоты заклинаний
     let updatedSpellSlots = { ...character.spellSlots };
