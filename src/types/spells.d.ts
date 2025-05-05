@@ -14,8 +14,6 @@ export interface SpellData {
   description: string | string[];
   classes?: string[] | string;
   source?: string;
-  isRitual?: boolean;
-  isConcentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
@@ -24,6 +22,7 @@ export interface SpellData {
   higherLevels?: string;
   ritual?: boolean;
   concentration?: boolean;
+  materials?: string;
 }
 
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
@@ -49,3 +48,4 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
 export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
   return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };
+

@@ -38,6 +38,13 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
 };
 
 /**
+ * Конвертирует массив заклинаний CharacterSpell в массив SpellData
+ */
+export const convertToSpellDataArray = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertToSpellData(spell));
+};
+
+/**
  * Вычисляет доступное количество подготовленных заклинаний
  * на основе класса и модификатора способности
  */
@@ -64,6 +71,74 @@ export const calculatePreparedSpellsLimit = (
     default:
       return 0;
   }
+};
+
+/**
+ * Рассчитывает количество известных заклинаний для класса
+ */
+export const calculateKnownSpells = (
+  className: string, 
+  level: number, 
+  abilityModifier: number
+): { cantrips: number; spells: number } => {
+  // Количество заговоров и заклинаний по классу и уровню
+  const spellCounts = {
+    "Бард": {
+      cantrips: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      spells: [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22]
+    },
+    "Жрец": {
+      cantrips: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+      // Жрецы могут подготовить (уровень + модификатор мудрости) заклинаний
+      spells: Array(20).fill(0)
+    },
+    "Друид": {
+      cantrips: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      // Друиды могут подготовить (уровень + модификатор мудрости) заклинаний
+      spells: Array(20).fill(0)
+    },
+    "Паладин": {
+      cantrips: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      // Паладины могут подготовить (уровень / 2 + модификатор харизмы) заклинаний
+      spells: Array(20).fill(0)
+    },
+    "Следопыт": {
+      cantrips: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      spells: [0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
+    },
+    "Чародей": {
+      cantrips: [4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+      spells: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15]
+    },
+    "Колдун": {
+      cantrips: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      spells: [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15]
+    },
+    "Волшебник": {
+      cantrips: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+      // Волшебники могут подготовить (уровень + модификатор интеллекта) заклинаний
+      spells: Array(20).fill(0)
+    }
+  };
+
+  // Получаем количество заговоров и заклинаний для указанного класса и уровня
+  const classData = spellCounts[className as keyof typeof spellCounts] || { cantrips: Array(20).fill(0), spells: Array(20).fill(0) };
+  const levelIndex = Math.min(Math.max(level - 1, 0), 19); // Уровни от 1 до 20, индексы от 0 до 19
+  
+  let cantripCount = classData.cantrips[levelIndex];
+  let spellCount = classData.spells[levelIndex];
+  
+  // Для классов, которые подготавливают заклинания
+  if (className === "Жрец" || className === "Друид" || className === "Волшебник") {
+    spellCount = level + abilityModifier;
+  } else if (className === "Паладин") {
+    spellCount = Math.floor(level / 2) + abilityModifier;
+  }
+  
+  return {
+    cantrips: cantripCount,
+    spells: Math.max(spellCount, 0) // Не может быть отрицательным
+  };
 };
 
 /**
@@ -183,3 +258,23 @@ function getSpellcastingAbilityByClass(className: string): string {
       return "";
   }
 }
+
+/**
+ * Получает максимальный уровень заклинаний для указанного уровня персонажа
+ */
+export const getMaxSpellLevel = (characterLevel: number): number => {
+  // Таблица соответствия уровня персонажа и максимального уровня заклинаний
+  const spellLevelByCharacterLevel = [
+    /* 1 */ 1, /* 2 */ 1, /* 3 */ 2, /* 4 */ 2, /* 5 */ 3,
+    /* 6 */ 3, /* 7 */ 4, /* 8 */ 4, /* 9 */ 5, /* 10 */ 5,
+    /* 11 */ 6, /* 12 */ 6, /* 13 */ 7, /* 14 */ 7, /* 15 */ 8,
+    /* 16 */ 8, /* 17 */ 9, /* 18 */ 9, /* 19 */ 9, /* 20 */ 9
+  ];
+  
+  // Проверка валидности уровня персонажа
+  if (characterLevel < 1) return 0;
+  
+  // Получение максимального уровня заклинаний
+  const index = Math.min(characterLevel - 1, spellLevelByCharacterLevel.length - 1);
+  return spellLevelByCharacterLevel[index];
+};

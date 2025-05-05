@@ -56,6 +56,32 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
   };
 };
 
+// Преобразование SpellData в CharacterSpell
+export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+  return {
+    id: typeof spell.id === 'string' ? spell.id : `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    classes: spell.classes,
+    source: spell.source,
+    prepared: spell.prepared,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials,
+    higherLevel: spell.higherLevel,
+    higherLevels: spell.higherLevels
+  };
+};
+
 // Преобразование строковых компонентов в объект
 export const parseComponents = (componentsStr: string): { verbal: boolean; somatic: boolean; material: boolean; materials?: string } => {
   const result = {
