@@ -41,8 +41,9 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
     
     try {
       setIsCreating(true);
-      // Создаем сессию через SessionStore (асинхронно)
-      const newSession = await createSession(sessionName);
+      // Создаем сессию через SessionStore с правильными параметрами 
+      // (добавляем описание в качестве второго параметра)
+      const newSession = await createSession(sessionName, "");
       
       if (newSession && newSession.code) {
         // Подключаемся к сокетам, если используются
