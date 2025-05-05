@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -211,7 +210,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       toast({
         title: "Всплывающие окна заблокированы",
         description: "Разрешите всплывающие окна для этого сайта в настройках браузера и обновите страницу.",
-        variant: "warning"
+        variant: "destructive"
       });
       return;
     }
@@ -264,7 +263,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
         setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
         setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
-        setDebugInfo(prev => prev + "\n- Включена ли авторизация через Google в Firebase");
+        setDebugInfo(prev => prev + "\n- Включена ли авторизац��я через Google в Firebase");
         
         toast({
           title: "Вход не завершен",
