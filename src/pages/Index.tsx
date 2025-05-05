@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { 
-  Wand2, BookMarked, BookOpen, Dice, PlusCircle, 
+  Wand2, BookMarked, BookOpen, Dices, PlusCircle, 
   Map, Scroll, Sparkles, Sword 
 } from 'lucide-react';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
@@ -61,7 +61,7 @@ const Index = () => {
     {
       title: 'Игра',
       description: 'Присоединиться к сессии',
-      icon: <Dice size={32} />,
+      icon: <Dices size={32} />,
       link: '/join',
       color: '#EF4444',
       delay: 0.4,
