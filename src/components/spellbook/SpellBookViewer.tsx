@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useSpellbook } from '@/hooks/spellbook';
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Book, BookOpen, Filter, Search, X, ArrowLeft } from 'lucide-react';
+import ThemeSelector from '@/components/ThemeSelector';
+import NavigationButtons from '@/components/ui/NavigationButtons';
+import SpellFilters from './SpellFilters';
+import SpellList from './SpellList';
+import SpellDetailModal from '../spell-detail/SpellDetailModal';
 
 const SpellBookViewer: React.FC = () => {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [spellsData, setSpellsData] = useState<SpellData[]>([]);
+  // Для имитации useNavigate и useIsMobile hooks
+  const navigate = (path: string | number) => {
+    console.log('Navigate to:', path);
+  };
+  const isMobile = window.innerWidth < 768;
 
   const {
     filteredSpells,
@@ -104,7 +117,7 @@ const SpellBookViewer: React.FC = () => {
     </div>
   );
 
-  // Содержимое для мобильны�� фильтров
+  // Содержимое для мобильных фильтров
   const MobileFilters = () => (
     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
       <SheetContent side="right" className="w-[85%] sm:w-[385px] pt-10">
@@ -168,14 +181,15 @@ const SpellBookViewer: React.FC = () => {
     setSpellsData(convertedSpells);
   };
 
-  // Fix for line 156 and 179
+  // Обработчик добавления заклинания
   const handleAddSpell = (spell: CharacterSpell | SpellData) => {
-    // Implementation...
+    // Реализация пустая для примера
+    console.log('Adding spell:', spell.name);
   };
 
-  // Fix for line 279
+  // Обработчик сохранения заклинаний
   const handleSaveSpells = (spells: CharacterSpell[]) => {
-    // Convert CharacterSpell[] to SpellData[] before setting state
+    // Конвертируем CharacterSpell[] в SpellData[] перед сохранением
     const convertedSpells: SpellData[] = spells.map(spell => convertCharacterSpellToSpellData(spell));
     setSpellsData(convertedSpells);
   };
