@@ -18,3 +18,5 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate 
     </div>
   );
 };
+
+export default InventoryTab;

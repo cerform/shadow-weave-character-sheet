@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useSpellbook } from '@/hooks/spellbook';
+import { useSpellbook, importSpellsFromText } from '@/hooks/spellbook';
 import SpellList from './SpellList';
 import { CharacterSpell } from '@/types/character.d';
 import { SpellData, convertToCharacterSpell } from '@/hooks/spellbook/types';
@@ -49,7 +48,7 @@ const SpellBookViewer = () => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText
+    convertCharacterSpellsToSpellData
   } = useSpellbook();
   
   const { theme } = useTheme();
@@ -77,13 +76,9 @@ const SpellBookViewer = () => {
       
       if (importedSpells.length > 0) {
         // Convert CharacterSpell to SpellData
-        const importedSpellsData = importedSpells.map(spell => ({
-          ...spell,
-          school: spell.school || 'Неизвестная', // Provide a default for required field
-          prepared: spell.prepared || false
-        }));
+        const importedSpellsData = convertCharacterSpellsToSpellData(importedSpells);
         
-        // Обновляем список заклинаний (в реальном приложении здесь будет обновление хранилища)
+        // Обновляем список заклинаний
         setSpellsData(importedSpellsData);
         
         toast({
@@ -106,40 +101,6 @@ const SpellBookViewer = () => {
         variant: "destructive"
       });
     }
-  };
-
-  const handleExportSpells = () => {
-    // Пример экспорта заклинаний в текстовом формате
-    const exportText = filteredSpells.map(spell => {
-      return `${spell.name} (${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`})\n` +
-        `Школа: ${spell.school}\n` +
-        `Время накладывания: ${spell.castingTime}\n` +
-        `Дальность: ${spell.range}\n` +
-        `Компоненты: ${spell.components}\n` +
-        `Длительность: ${spell.duration}\n` +
-        (spell.ritual ? 'Ритуал: Да\n' : '') +
-        (spell.concentration ? 'Концентрация: Да\n' : '') +
-        `Классы: ${formatClasses(spell.classes)}\n\n` +
-        `${spell.description}\n\n` +
-        (spell.higherLevels ? `На более высоких уровнях: ${spell.higherLevels}\n\n` : '') +
-        '-----------------------------------\n\n';
-    }).join('');
-
-    // Создаем временный blob и ссылку для скачивания
-    const blob = new Blob([exportText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'spellbook_export.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Экспорт успешен",
-      description: `Экспортировано ${filteredSpells.length} заклинаний.`
-    });
   };
 
   return (

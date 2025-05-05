@@ -285,7 +285,8 @@ export const useSessionStore = create<SessionStore>()(
           set({ loading: true });
           // Используем новое имя функции для получения персонажей
           const characters = await characterService.getCharactersByUserId();
-          set({ characters, loading: false });
+          // Fix type conversion - cast to Character[]
+          set({ characters: characters as unknown as Character[], loading: false });
         } catch (error) {
           console.error("Ошибка при загрузке персонажей:", error);
           set({ loading: false });
@@ -294,14 +295,15 @@ export const useSessionStore = create<SessionStore>()(
       
       saveCharacter: async (character: Character) => {
         try {
-          const success = await characterService.saveCharacter(character);
+          const result = await characterService.saveCharacter(character as unknown as CharacterSheet);
           
-          if (success) {
+          if (result) {
             // Обновляем список персонажей
             get().fetchCharacters();
+            return true; // Return boolean as expected
           }
           
-          return success;
+          return false;
         } catch (error) {
           console.error("Ошибка при сохранении персонажа:", error);
           return false;
@@ -316,11 +318,11 @@ export const useSessionStore = create<SessionStore>()(
             // Обновляем список персонажей
             await get().fetchCharacters();
             toast.success("Персонаж успешно удален");
+            return true; // Return boolean
           } else {
             toast.error("Не удалось удалить персонажа");
+            return false;
           }
-          
-          return deleted;
         } catch (error) {
           console.error("Ошибка при удалении персонажа:", error);
           toast.error("Не удалось удалить персонажа");

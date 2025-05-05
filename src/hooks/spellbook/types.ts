@@ -44,6 +44,7 @@ export interface UseSpellbookReturn {
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string | undefined) => string;
   importSpellsFromText: (text: string) => CharacterSpell[];
+  convertCharacterSpellsToSpellData: (characterSpells: CharacterSpell[]) => SpellData[];
 }
 
 // Helper function to convert between CharacterSpell and SpellData

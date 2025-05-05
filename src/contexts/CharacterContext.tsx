@@ -310,5 +310,4 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 };
 
 // For type exports, we need to use export type due to isolatedModules
-export { useContext as useCharacter };
 export type { Character, CharacterSpell };

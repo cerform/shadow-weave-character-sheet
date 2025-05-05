@@ -221,7 +221,7 @@ export interface Character {
   deathSaves?: {
     successes: number;
     failures: number;
-    };
+  };
   spellSlots?: {
     [level: string]: {
       max: number;
@@ -234,6 +234,7 @@ export interface Character {
   skillProficiencies?: {[skillName: string]: boolean};
   savingThrowProficiencies?: {[ability: string]: boolean};
   image?: string;
+  inspiration?: boolean; // Добавляем поле inspiration для совместимости с ResourcePanel.tsx
 }
 
 // Обновляем интерфейс для событий изменения хит-поинтов

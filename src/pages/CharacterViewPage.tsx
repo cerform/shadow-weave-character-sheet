@@ -8,6 +8,7 @@ import { CharacterContext } from "@/contexts/CharacterContext";
 import { auth } from "@/services/firebase";
 import characterService from "@/services/characterService";
 import { isOfflineMode } from "@/utils/authHelpers";
+import { Character } from '@/types/character.d';
 
 const CharacterViewPage = () => {
   const { id } = useParams<{ id: string }>();

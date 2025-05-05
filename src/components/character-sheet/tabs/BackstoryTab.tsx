@@ -33,3 +33,5 @@ export const BackstoryTab: React.FC<BackstoryTabProps> = ({ character, onUpdate 
     </div>
   );
 };
+
+export default BackstoryTab;

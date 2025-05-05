@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Character } from '@/types/character.d';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from "@/components/ui/progress";
 
 interface RestPanelProps {
   character: Character | null;
@@ -84,6 +84,17 @@ const RestPanel = ({ character, onUpdate }: RestPanelProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {character && (
+          <div className="mb-4">
+            <div className="text-sm font-medium">
+              {character.currentHp}/{character.maxHp} HP
+            </div>
+            <Progress 
+              value={(character.currentHp || 0) / (character.maxHp || 1) * 100} 
+              className="h-2 mt-1"
+            />
+          </div>
+        )}
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Button 

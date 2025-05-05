@@ -43,69 +43,55 @@ const SpellList: React.FC<SpellListProps> = ({
                     variant="outline"
                     style={{
                       backgroundColor: currentTheme.accent,
-                      color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
+                      color: currentTheme.textColor || 'white'
                     }}
                   >
-                    {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
+                    {spell.level === 0 ? "Заговор" : `${spell.level} уровень`}
                   </Badge>
                 </div>
-                <div className="flex items-center text-sm mb-2 flex-wrap gap-2">
-                  <Badge
+                
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Badge 
                     variant="outline"
                     style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
+                      borderColor: getSchoolBadgeColor(spell.school)
                     }}
                   >
                     {spell.school}
                   </Badge>
-                  {(spell.ritual) && (
-                    <Badge variant="outline" style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
-                    }}>
+                  
+                  {spell.ritual && (
+                    <Badge 
+                      variant="outline"
+                    >
                       Ритуал
                     </Badge>
                   )}
-                  {(spell.concentration) && (
-                    <Badge variant="outline" style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      color: currentTheme.textColor || 'white',
-                      borderColor: currentTheme.accent
-                    }}>
+                  
+                  {spell.concentration && (
+                    <Badge 
+                      variant="outline"
+                    >
                       Концентрация
                     </Badge>
                   )}
                 </div>
-                <Separator className="my-2 bg-accent/30" />
-                <div className="grid grid-cols-2 gap-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
-                  <div>
-                    <span className="font-semibold">Время накладывания:</span> {spell.castingTime}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Дистанция:</span> {spell.range}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Компоненты:</span> {spell.components}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Длительность:</span> {spell.duration}
-                  </div>
+                
+                <Separator className="my-2" />
+                
+                <div className="text-sm text-muted-foreground truncate">
+                  {spell.description?.substring(0, 100)}...
                 </div>
-                {spell.classes && (
-                  <div className="mt-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
-                    <span className="font-semibold">Классы:</span> {formatClasses(spell.classes)}
-                  </div>
-                )}
+                
+                <div className="mt-2 text-xs">
+                  <span className="font-medium">Классы:</span> {formatClasses(spell.classes)}
+                </div>
               </CardContent>
             </Card>
           ))
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Заклинания не найдены. Попробуйте изменить критерии поиска.
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Заклинания не найдены</p>
           </div>
         )}
       </div>

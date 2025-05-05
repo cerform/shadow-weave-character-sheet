@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { spells as allSpells } from '@/data/spells';
-import { SpellData, UseSpellbookReturn } from './types';
+import { SpellData, UseSpellbookReturn, convertToCharacterSpell } from './types';
 import { 
   filterSpellsBySearchTerm, 
   filterSpellsByLevel, 
@@ -10,12 +10,11 @@ import {
   extractClasses,
   formatClasses,
   convertToSpellData,
-  isString,
-  isStringArray
+  convertCharacterSpellsToSpellData
 } from './filterUtils';
 import { useSpellTheme } from './themeUtils';
-import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
 import { CharacterSpell } from '@/types/character';
+import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
 
 export * from './types';
 export { importSpellsFromTextUtil as importSpellsFromText };
@@ -37,10 +36,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
   useEffect(() => {
     // Преобразуем в SpellData[] для совместимости
     if (allSpells && allSpells.length > 0) {
-      const spellDataArray: SpellData[] = allSpells.map(spell => ({
-        ...convertToSpellData(spell),
-        prepared: spell.prepared || false // Убедимся, что prepared существует
-      }));
+      const spellDataArray = convertCharacterSpellsToSpellData(allSpells);
       setFilteredSpells(spellDataArray);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
@@ -72,12 +68,9 @@ export const useSpellbook = (): UseSpellbookReturn => {
     }
 
     // Преобразуем в SpellData[] для совместимости
-    const spellDataArray: SpellData[] = result.map(spell => ({
-      ...convertToSpellData(spell),
-      prepared: spell.prepared || false // Убедимся, что prepared существует
-    }));
-    
+    const spellDataArray = convertCharacterSpellsToSpellData(result);
     setFilteredSpells(spellDataArray);
+    
   }, [searchTerm, activeLevel, activeSchool, activeClass]);
 
   const handleOpenSpell = (spell: SpellData) => {
@@ -135,6 +128,11 @@ export const useSpellbook = (): UseSpellbookReturn => {
     new Set(allSpells.map(spell => spell.school || ''))
   ).filter(Boolean).sort();
 
+  // Updated signature to match the expected one in the UseSpellbookReturn interface
+  const importSpellsFromText = (text: string): CharacterSpell[] => {
+    return importSpellsFromTextUtil(text, []);
+  };
+
   return {
     filteredSpells,
     searchTerm,
@@ -157,6 +155,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText: importSpellsFromTextUtil
+    importSpellsFromText,
+    convertCharacterSpellsToSpellData
   };
 };
