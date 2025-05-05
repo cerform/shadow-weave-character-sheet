@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -101,6 +102,23 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }
+        },
+        breathe: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.03)' }
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' }
+        },
+        magicBorder: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -108,6 +126,10 @@ export default {
         'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'glow': 'glow 2s infinite',
         'fade-in': 'fadeIn 0.5s ease-in-out',
+        'float': 'float 6s ease-in-out infinite',
+        'breathe': 'breathe 8s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+        'magic-border': 'magicBorder 3s ease infinite'
       },
       zIndex: {
         '60': '60',

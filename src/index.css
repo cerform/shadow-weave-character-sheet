@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Cormorant:wght@400;600&display=swap');
 
 @tailwind base;
@@ -26,6 +27,7 @@ h1, h2, h3, h4, h5, h6 {
   text-shadow: 0 0 10px var(--theme-accent, rgba(0, 0, 0, 0.5));
   font-size: 2.25rem;
   margin-bottom: 1rem;
+  animation: glow 3s infinite alternate;
 }
 
 .spell-card {
@@ -74,6 +76,76 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-glow {
   animation: glow 2s infinite;
+}
+
+/* Новые улучшенные анимации */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-breathe {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulse-accent {
+  0%, 100% { box-shadow: 0 0 8px var(--theme-accent, #9D5CFF); }
+  50% { box-shadow: 0 0 15px var(--theme-accent, #9D5CFF); }
+}
+
+.animate-pulse-accent {
+  animation: pulse-accent 3s infinite;
+}
+
+@keyframes magic-border {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.magic-border {
+  background: linear-gradient(90deg, var(--theme-accent, #9D5CFF), var(--theme-primary, #7E22CE), var(--theme-accent, #9D5CFF));
+  background-size: 200% 100%;
+  animation: magic-border 3s linear infinite;
+}
+
+/* Эффекты наведения для кнопок */
+.btn-magic {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+  color: var(--theme-text-color, #FFFFFF);
+  border: 1px solid var(--theme-accent, #9D5CFF);
+  transition: all 0.3s ease;
+}
+
+.btn-magic:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--theme-accent, #9D5CFF)30, transparent);
+  transition: all 0.6s ease;
+}
+
+.btn-magic:hover:before {
+  left: 100%;
+}
+
+.btn-magic:hover {
+  box-shadow: 0 0 10px var(--theme-accent, #9D5CFF);
+  transform: translateY(-2px);
 }
 
 /* Стили для панели фильтров */
@@ -158,4 +230,51 @@ textarea:focus-visible {
 .main-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 0 15px var(--theme-accent, #9D5CFF);
+}
+
+/* Новые эффекты для главной страницы */
+.dnd-title {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px var(--theme-accent, #9D5CFF);
+  background: linear-gradient(120deg, var(--theme-text-color, #FFFFFF), var(--theme-accent, #9D5CFF));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: glow 3s infinite alternate;
+}
+
+.parchment-card {
+  background-color: rgba(247, 241, 220, 0.8);
+  border: 1px solid #BFA76F;
+  color: #3B3B3B;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  position: relative;
+}
+
+.parchment-card:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/paper-texture.png');
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Декоративный градиент для разделителей */
+.gradient-separator {
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    var(--theme-accent, #9D5CFF),
+    transparent
+  );
+  margin: 1rem 0;
 }
