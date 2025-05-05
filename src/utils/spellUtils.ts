@@ -1,87 +1,53 @@
 
+import { CharacterSpell } from '@/types/character';
+
 /**
- * Safely joins an array of strings or a single string with the provided separator
- * Handles both string and string[] types for compatibility with various APIs
- * 
- * @param value The string or array of strings to join
- * @param separator The separator to use between items (default: ', ')
- * @returns A string representation of the joined values
+ * Безопасное преобразование массива или строки в строку
  */
-export function safeJoin(value: string | string[] | undefined, separator: string = ', '): string {
+export const safeJoin = (value: string[] | string | undefined, separator: string = ', '): string => {
   if (!value) return '';
-  
-  if (Array.isArray(value)) {
-    return value.join(separator);
-  }
-  
-  return String(value);
-}
+  if (Array.isArray(value)) return value.join(separator);
+  return value.toString();
+};
 
 /**
- * Safely filters a string array or a single string
- * 
- * @param value The string or array of strings to filter
- * @param filterFn The filtering function
- * @returns A filtered array
+ * Нормализует массив заклинаний, преобразуя строки в объекты CharacterSpell
  */
-export function safeFilter(value: string | string[] | undefined, filterFn: (item: string) => boolean): string[] {
-  if (!value) return [];
-  
-  if (Array.isArray(value)) {
-    return value.filter(filterFn);
-  }
-  
-  return filterFn(value) ? [value] : [];
-}
-
-/**
- * Safely checks if a string array or a single string includes a value
- * 
- * @param value The string or array of strings to check
- * @param searchValue The value to search for
- * @returns True if the value is included, false otherwise
- */
-export function safeSome(value: string | string[] | undefined, predicate: (item: string) => boolean): boolean {
-  if (!value) return false;
-  
-  if (Array.isArray(value)) {
-    return value.some(predicate);
-  }
-  
-  return predicate(value);
-}
-
-/**
- * Converts string spells to CharacterSpell objects
- * 
- * @param spells Array of spell names or CharacterSpell objects
- * @returns Array of CharacterSpell objects
- */
-export function normalizeSpells(spells: any[] | undefined): any[] {
-  if (!spells || !Array.isArray(spells)) return [];
+export const normalizeSpells = (spells: (CharacterSpell | string)[] | undefined): CharacterSpell[] => {
+  if (!spells) return [];
   
   return spells.map(spell => {
-    // If spell is already an object with name property
-    if (typeof spell === 'object' && spell && spell.name) {
-      return spell;
-    }
-    
-    // If spell is a string (spell name)
     if (typeof spell === 'string') {
-      return { 
+      // Создаем базовый объект CharacterSpell из строки
+      return {
         name: spell,
-        level: 0,
-        description: "",
-        school: "Unknown",
+        level: 0, // По умолчанию заговор
+        description: '',
+        // Добавляем другие обязательные поля с дефолтными значениями
+        school: '',
+        castingTime: '1 действие',
+        range: 'Касание',
+        components: '',
+        duration: 'Мгновенная'
       };
     }
-    
-    // Fallback for unexpected data
-    return { 
-      name: "Unknown Spell",
-      level: 0,
-      description: "",
-      school: "Unknown",
-    };
+    return spell;
   });
-}
+};
+
+/**
+ * Обработка строк компонентов заклинания
+ */
+export const parseComponents = (componentString: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+} => {
+  return {
+    verbal: componentString.includes('В'),
+    somatic: componentString.includes('С'),
+    material: componentString.includes('М'),
+    ritual: componentString.includes('Р')
+  };
+};

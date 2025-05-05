@@ -8,16 +8,16 @@ import { FeaturesTab } from './tabs/FeaturesTab';
 import { BackgroundTab } from './tabs/BackgroundTab';
 import { EquipmentTab } from './tabs/EquipmentTab';
 import { NotesTab } from './tabs/NotesTab';
-import { HandbookTab } from './tabs/HandbookTab';
+import { Character } from '@/contexts/CharacterContext';
 
 interface CharacterTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  character?: any; // Add these props to be passed to children
-  onUpdate?: (updates: any) => void; 
+  character?: Character | null; // Типизируем правильно
+  onUpdate?: (updates: Partial<Character>) => void;  // Типизируем правильно
 }
 
-export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: CharacterTabsProps) => {
+export const CharacterTabs: React.FC<CharacterTabsProps> = ({ activeTab, setActiveTab, character, onUpdate }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full mb-4 bg-zinc-800/40">
@@ -31,31 +31,31 @@ export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: 
       </TabsList>
       
       <TabsContent value="abilities" className="focus-visible:outline-none">
-        <AbilitiesTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <AbilitiesTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="combat" className="focus-visible:outline-none">
-        <CombatTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <CombatTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="spells" className="focus-visible:outline-none">
-        <SpellsTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <SpellsTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="equipment" className="focus-visible:outline-none">
-        <EquipmentTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <EquipmentTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="features" className="focus-visible:outline-none">
-        <FeaturesTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <FeaturesTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="background" className="focus-visible:outline-none">
-        <BackgroundTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <BackgroundTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
       
       <TabsContent value="notes" className="focus-visible:outline-none">
-        <NotesTab character={character} onUpdate={onUpdate} />
+        {character && onUpdate && <NotesTab character={character} onUpdate={onUpdate} />}
       </TabsContent>
     </Tabs>
   );

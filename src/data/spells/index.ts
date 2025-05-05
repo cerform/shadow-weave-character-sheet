@@ -51,13 +51,19 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter((spell) => {
     if (!spell.classes) return false;
     
-    // Safely handle potentially undefined classes array
-    return spell.classes.some(
-      (spellClass) => 
-        spellClass && 
-        typeof spellClass === 'string' && 
-        spellClass.toLowerCase() === normalizedClassName
-    );
+    // Проверка типа classes и безопасное обращение
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.some(
+        (spellClass) => 
+          spellClass && 
+          typeof spellClass === 'string' && 
+          spellClass.toLowerCase() === normalizedClassName
+      );
+    } else if (typeof spell.classes === 'string') {
+      return spell.classes.toLowerCase() === normalizedClassName;
+    }
+    
+    return false;
   });
 };
 

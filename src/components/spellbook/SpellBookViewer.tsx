@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -17,11 +18,13 @@ import {
   SheetClose 
 } from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CharacterSpell } from '@/types/character';
 
 const SpellBookViewer: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [spellsData, setSpellsData] = useState<SpellData[]>([]);
 
   const {
     filteredSpells,
@@ -158,12 +161,12 @@ const SpellBookViewer: React.FC = () => {
       id: spell.id?.toString() || Math.random().toString(),
       name: spell.name,
       level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime || "1 действие", // Значение по умолчанию
+      school: spell.school || 'Неизвестная', // Добавляем значение по умолчанию
+      castingTime: spell.castingTime || "1 действие",
       range: spell.range || "Касание",
       components: spell.components || "В, С",
       duration: spell.duration || "Мгновенная",
-      description: spell.description,
+      description: spell.description || "",
       higherLevels: spell.higherLevels || "",
       verbal: spell.verbal || false,
       somatic: spell.somatic || false,

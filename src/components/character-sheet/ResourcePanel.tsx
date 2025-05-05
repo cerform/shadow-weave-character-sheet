@@ -1,294 +1,275 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { getNumericModifier } from "@/utils/abilityScoreUtils";
-import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
-import { getHitDieByClass } from '@/utils/classUtils';
+import { Progress } from "@/components/ui/progress";
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Plus, Minus, Heart, Shield, Skull, RefreshCw } from "lucide-react";
+import { Character } from '@/contexts/CharacterContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { HitPointEvent, Character } from '@/types/character';
-import DamageLog from './DamageLog';
 
-interface ResourcePanelProps {
-  character: Character | null;
-  onUpdate: (character: Partial<Character>) => void;
+// Обновляем интерфейс ResourcePanelProps, добавляя недостающие свойства
+export interface ResourcePanelProps {
+  character?: Character | null;
+  onUpdate?: (character: Partial<Character>) => void;
   isDM?: boolean;
+  // Добавляем свойства, которые используются в CharacterSheet
+  currentHp?: number;
+  maxHp?: number;
+  onHpChange?: (newHp: number) => void;
 }
 
-export const ResourcePanel = ({ character, onUpdate, isDM = false }: ResourcePanelProps) => {
-  const [currentHp, setCurrentHp] = useState(character?.currentHp || 0);
-  const [maxHp, setMaxHp] = useState(character?.maxHp || 0);
+const ResourcePanel: React.FC<ResourcePanelProps> = ({ 
+  character, 
+  onUpdate, 
+  isDM = false,
+  currentHp, 
+  maxHp, 
+  onHpChange 
+}) => {
+  // Используем либо переданные значения, либо значения из character
+  const hp = currentHp ?? character?.currentHp ?? 0;
+  const maxHitPoints = maxHp ?? character?.maxHp ?? 0;
   const [tempHp, setTempHp] = useState(character?.temporaryHp || 0);
-  const [damageEvents, setDamageEvents] = useState<HitPointEvent[]>([]);
+  const [damageAmount, setDamageAmount] = useState(1);
+  const [healAmount, setHealAmount] = useState(1);
+  const [tempAmount, setTempAmount] = useState(1);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  // Получаем модификатор телосложения
-  const constitution = character?.abilities?.constitution || character?.abilities?.CON || 10;
-  
-  useEffect(() => {
-    if (character) {
-      setCurrentHp(character.currentHp || 0);
-      setMaxHp(character.maxHp || 0);
-      setTempHp(character.temporaryHp || 0);
-    }
-  }, [character]);
-  
-  // Функция для применения урона или лечения
-  const applyHpChange = (amount: number, type: 'damage' | 'healing' | 'tempHP') => {
-    if (!character) return;
+  const handleHpChange = (amount: number) => {
+    const newHp = Math.max(0, Math.min(hp + amount, maxHitPoints));
     
-    let newHp = currentHp;
-    let newTempHp = tempHp;
-    
-    if (type === 'damage') {
-      if (newTempHp > 0) {
-        const remainingTempHp = newTempHp - amount;
-        if (remainingTempHp >= 0) {
-          newTempHp = remainingTempHp;
-        } else {
-          newTempHp = 0;
-          newHp += remainingTempHp; // remainingTempHp is negative here
-        }
-      } else {
-        newHp -= amount;
-      }
-    } else if (type === 'healing') {
-      newHp += amount;
-      if (newHp > maxHp) {
-        newHp = maxHp;
-      }
-    } else if (type === 'tempHP') {
-      newTempHp += amount;
-    }
-    
-    // Ensure currentHp does not exceed maxHp
-    if (newHp > maxHp) {
-      newHp = maxHp;
-    }
-    
-    // Ensure currentHp is not less than 0
-    if (newHp < 0) {
-      newHp = 0;
-    }
-    
-    // Обновляем состояние персонажа
-    onUpdate({
-      ...character,
-      currentHp: newHp,
-      temporaryHp: newTempHp
-    });
-    
-    // Обновляем локальное состояние
-    setCurrentHp(newHp);
-    setTempHp(newTempHp);
-    
-    // Добавляем событие в лог
-    const newEvent: HitPointEvent = {
-      id: Math.random().toString(36).substring(2, 11),
-      type: type,
-      amount: amount,
-      source: 'Ручное изменение',
-      timestamp: new Date()
-    };
-    
-    setDamageEvents(prev => [newEvent, ...prev].slice(0, 20));
-    
-    // Показываем сообщение пользователю
-    toast({
-      title: type === 'damage' ? "Урон" : type === 'healing' ? "Лечение" : "Временные хиты",
-      description: `Вы ${type === 'damage' ? "получили" : type === 'healing' ? "восстановили" : "получили временные"} ${amount} хитов.`,
-    });
-  };
-
-  // Функция для обработки результата броска кубов хитов
-  const handleHitDieRollComplete = (result: number) => {
-    if (!character) return;
-    
-    // Обрабатываем результат броска кубиков хитов
-    const healingAmount = result;
-    
-    // Восстанавливаем хиты, но не больше максимального значения
-    let newHp = (character.currentHp || 0) + healingAmount;
-    const maxHp = character.maxHp || 0;
-    
-    if (newHp > maxHp) {
-      newHp = maxHp;
-    }
-    
-    // Обновляем состояние персонажа
-    onUpdate({
-      ...character,
-      currentHp: newHp,
-      hitDice: {
-        ...character.hitDice,
-        used: (character.hitDice?.used || 0) + 1
-      }
-    });
-    
-    // Добавляем событие в лог
-    const newEvent: HitPointEvent = {
-      id: Math.random().toString(36).substring(2, 11),
-      type: 'healing',
-      amount: healingAmount,
-      source: 'Кубики хитов',
-      timestamp: new Date()
-    };
-    
-    setDamageEvents(prev => [newEvent, ...prev].slice(0, 20));
-    
-    // Показываем сообщение пользователю
-    toast({
-      title: "Восстановление хитов",
-      description: `Вы восстановили ${healingAmount} хитов, используя кубик хитов.`
-    });
-  };
-  
-  // Функция для использования кубика хитов
-  const useHitDie = () => {
-    if (!character) return;
-    
-    if ((character.hitDice?.used || 0) < (character.hitDice?.total || 0)) {
-      // Запускаем бросок кубика хитов
-      const roller = document.querySelector('.dice-roller-container');
-      if (roller) {
-        (roller as any).click();
-      }
-    } else {
-      toast({
-        title: "Кубики хитов закончились",
-        description: "У вас не осталось доступных кубиков хитов для использования.",
-        variant: "destructive",
+    // Используем переданный onHpChange callback, если он есть
+    if (onHpChange) {
+      onHpChange(newHp);
+    } 
+    // В противном случае используем onUpdate
+    else if (onUpdate && character) {
+      onUpdate({
+        currentHp: newHp
       });
     }
   };
   
+  const handleTempHpChange = (amount: number) => {
+    const newTempHp = Math.max(0, tempHp + amount);
+    setTempHp(newTempHp);
+    
+    if (onUpdate && character) {
+      onUpdate({
+        temporaryHp: newTempHp
+      });
+    }
+  };
+
+  const handleDamage = () => {
+    // Сначала применяем урон к временным хитам
+    let remainingDamage = damageAmount;
+    if (tempHp > 0) {
+      if (tempHp >= remainingDamage) {
+        handleTempHpChange(-remainingDamage);
+        remainingDamage = 0;
+      } else {
+        remainingDamage -= tempHp;
+        handleTempHpChange(-tempHp);
+      }
+    }
+    
+    // Оставшийся урон применяем к обычным хитам
+    if (remainingDamage > 0) {
+      handleHpChange(-remainingDamage);
+    }
+  };
+
+  const handleHeal = () => {
+    handleHpChange(healAmount);
+  };
+
+  const handleAddTempHp = () => {
+    // Для временных хитов берем максимальное значение
+    const newTempHp = Math.max(tempHp, tempAmount);
+    setTempHp(newTempHp);
+    
+    if (onUpdate && character) {
+      onUpdate({
+        temporaryHp: newTempHp
+      });
+    }
+  };
+
+  const getHpPercentage = () => {
+    if (!maxHitPoints) return 0;
+    return (hp / maxHitPoints) * 100;
+  };
+
+  const getHpColor = () => {
+    const percent = getHpPercentage();
+    if (percent > 50) return "bg-green-500";
+    if (percent > 25) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
   return (
-    <div className="space-y-4">
-      <Card className="border-t-4 border-t-primary/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Ресурсы</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="currentHp">Текущие хиты</Label>
-              <Input
-                type="number"
-                id="currentHp"
-                value={currentHp}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setCurrentHp(value);
-                  if (character) {
-                    onUpdate({ ...character, currentHp: value });
-                  }
-                }}
-                disabled={!isDM}
-              />
+    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="text-xl flex items-center justify-between">
+          <div className="flex items-center">
+            <Heart className="mr-2 h-5 w-5 text-red-500" />
+            Здоровье
+          </div>
+          {tempHp > 0 && (
+            <div className="flex items-center text-sm font-normal text-cyan-400">
+              <Shield className="mr-1 h-4 w-4" />
+              +{tempHp} временных
             </div>
-            <div>
-              <Label htmlFor="maxHp">Максимальные хиты</Label>
-              <Input
-                type="number"
-                id="maxHp"
-                value={maxHp}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setMaxHp(value);
-                  if (character) {
-                    onUpdate({ ...character, maxHp: value });
-                  }
-                }}
-                disabled={!isDM}
-              />
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <div className="mb-2">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-muted-foreground">HP</span>
+            <span className="text-sm font-medium">
+              {hp}/{maxHitPoints}
+            </span>
+          </div>
+          <Progress 
+            value={getHpPercentage()} 
+            className="h-2"
+            indicatorClassName={getHpColor()}
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Урон</span>
+              <div className="flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-r-none"
+                  onClick={() => setDamageAmount(Math.max(1, damageAmount - 1))}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <div className="h-5 px-2 flex items-center justify-center border-y">
+                  {damageAmount}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-l-none"
+                  onClick={() => setDamageAmount(damageAmount + 1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="tempHp">Временные хиты</Label>
-              <Input
-                type="number"
-                id="tempHp"
-                value={tempHp}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setTempHp(value);
-                  if (character) {
-                    onUpdate({ ...character, temporaryHp: value });
-                  }
-                }}
-                disabled={!isDM}
-              />
-            </div>
+            <Button 
+              variant="destructive" 
+              className="w-full flex items-center justify-center gap-1"
+              onClick={handleDamage}
+              size="sm"
+            >
+              <Skull className="h-4 w-4" />
+              <span>Урон</span>
+            </Button>
           </div>
           
-          <div className="flex justify-between gap-4">
-            <Button onClick={() => applyHpChange(1, 'damage')} disabled={!isDM}>
-              Получить урон
-            </Button>
-            <Button onClick={() => applyHpChange(1, 'healing')} disabled={!isDM}>
-              Исцелиться
-            </Button>
-            <Button onClick={() => applyHpChange(1, 'tempHP')} disabled={!isDM}>
-              Временные хиты
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Лечение</span>
+              <div className="flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-r-none"
+                  onClick={() => setHealAmount(Math.max(1, healAmount - 1))}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <div className="h-5 px-2 flex items-center justify-center border-y">
+                  {healAmount}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-5 w-5 rounded-l-none"
+                  onClick={() => setHealAmount(healAmount + 1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            <Button 
+              variant="default"
+              className="w-full flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700"
+              onClick={handleHeal}
+              size="sm"
+            >
+              <Heart className="h-4 w-4" />
+              <span>Лечить</span>
             </Button>
           </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="border-t-4 border-t-primary/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Кубики хитов</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="totalHitDice">Всего кубиков</Label>
-              <Input
-                type="text"
-                id="totalHitDice"
-                value={character?.hitDice?.total || 0}
-                disabled
-              />
-            </div>
-            <div>
-              <Label htmlFor="usedHitDice">Использовано кубиков</Label>
-              <Input
-                type="text"
-                id="usedHitDice"
-                value={character?.hitDice?.used || 0}
-                disabled
-              />
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Временные хиты</span>
+            <div className="flex items-center">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-5 w-5 rounded-r-none"
+                onClick={() => setTempAmount(Math.max(1, tempAmount - 1))}
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <div className="h-5 px-2 flex items-center justify-center border-y">
+                {tempAmount}
+              </div>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-5 w-5 rounded-l-none"
+                onClick={() => setTempAmount(tempAmount + 1)}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
             </div>
           </div>
-          <Button onClick={useHitDie}>
-            Использовать кубик хитов
+          <Button 
+            variant="default"
+            className="w-full flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700"
+            onClick={handleAddTempHp}
+            size="sm"
+          >
+            <Shield className="h-4 w-4" />
+            <span>Добавить врем. хиты</span>
           </Button>
-        </CardContent>
-      </Card>
-      
-      <div className="dice-roller-container hidden">
-        <DiceRoller3D
-          initialDice={getHitDieByClass(character?.className)}
-          hideControls={false}
-          modifier={getNumericModifier(constitution)}
-          onRollComplete={handleHitDieRollComplete}
-          themeColor={currentTheme.accent}
-        />
-      </div>
-      
-      {/* Преобразуем события для совместимости с DamageLog */}
-      <DamageLog 
-        events={damageEvents.map(event => ({
-          ...event,
-          // Убедимся, что тип соответствует HitPointEvent из character.d.ts
-          type: event.type === 'heal' ? 'healing' : 
-                event.type === 'temp' ? 'tempHP' : event.type
-        }))} 
-      />
-    </div>
+        </div>
+        
+        {/* Полный отдых (восстановление всех хитов) */}
+        <Button 
+          variant="outline" 
+          className="w-full mt-4 flex items-center justify-center gap-1"
+          onClick={() => {
+            if (onHpChange) {
+              onHpChange(maxHitPoints);
+            } else if (onUpdate && character) {
+              onUpdate({ currentHp: maxHitPoints });
+            }
+            handleTempHpChange(-tempHp); // Сбрасываем временные хиты
+          }}
+        >
+          <RefreshCw className="h-4 w-4" />
+          <span>Полный отдых</span>
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

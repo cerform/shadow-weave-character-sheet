@@ -39,3 +39,26 @@ export const namesToSpells = (
     .map(name => findSpell(name))
     .filter((spell): spell is CharacterSpell => spell !== null);
 };
+
+/**
+ * Нормализует массив заклинаний - преобразует строки в объекты CharacterSpell
+ */
+export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      // Создаем базовый объект CharacterSpell из строки
+      return {
+        name: spell,
+        level: 0, // По умолчанию заговор
+        description: '',
+        // Добавляем другие обязательные поля с дефолтными значениями
+        school: '',
+        castingTime: '1 действие',
+        range: 'Касание',
+        components: '',
+        duration: 'Мгновенная'
+      };
+    }
+    return spell;
+  });
+};

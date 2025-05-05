@@ -172,8 +172,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
     <div 
       className="min-h-screen py-4"
       style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
-        color: currentTheme.textColor
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`
       }}
     >
       <div className="container mx-auto py-4 px-2">
@@ -239,23 +238,25 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           {/* Левая панель с ресурсами вверху */}
           <div className="md:col-span-3 space-y-4">
             <ResourcePanel 
-              currentHp={character?.currentHp || 0}
-              maxHp={character?.maxHp || 0}
+              character={character}
+              onUpdate={updateCharacter}
+              currentHp={character?.currentHp}
+              maxHp={character?.maxHp}
               onHpChange={handleHpChange}
             />
             
             <StatsPanel character={character} />
             
             <LevelUpPanel />
-            
-            {/* Убираем отсюда панель слотов заклинаний */}
           </div>
           
           {/* Основной контент с вкладками */}
           <div className="md:col-span-6">
             <CharacterTabs 
               activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
+              setActiveTab={setActiveTab}
+              character={character} 
+              onUpdate={updateCharacter}
             />
           </div>
           

@@ -1,7 +1,8 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import characterService from '@/services/characterService';
-import { SorceryPoints, CharacterSheet } from '@/types/character';
+import { SorceryPoints, CharacterSheet, CharacterSpell } from '@/types/character';
+import { normalizeSpells } from '@/utils/spellUtils';
 
 // Интерфейс для характеристик
 export interface AbilityScores {
@@ -35,7 +36,7 @@ export interface Character {
   abilities: AbilityScores;
   proficiencies: string[];
   equipment: string[];
-  spells: string[];
+  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
   languages: string[];
   gender: string;
   alignment: string;
@@ -115,7 +116,18 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await characterService.saveCharacter(updatedCharacter as CharacterSheet);
+      // Преобразуем к требуемому типу перед сохранением
+      const characterToSave = {
+        ...updatedCharacter,
+        // Убеждаемся, что spells - это массив строк для CharacterSheet
+        spells: Array.isArray(updatedCharacter.spells) 
+          ? updatedCharacter.spells.map(spell => 
+              typeof spell === 'string' ? spell : spell.name
+            )
+          : updatedCharacter.spells
+      } as unknown as CharacterSheet;
+      
+      const savedChar = await characterService.saveCharacter(characterToSave);
       if (savedChar) {
         setCharacter({...updatedCharacter, id: savedChar.id});
       }
