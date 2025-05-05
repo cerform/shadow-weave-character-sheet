@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { AlertCircle, Info } from "lucide-react"
+import { AlertCircle, Info, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -17,6 +17,8 @@ const alertVariants = cva(
           "border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 [&>svg]:text-yellow-500",
         info:
           "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500",
+        success:
+          "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400 [&>svg]:text-green-500",
       },
     },
     defaultVariants: {
@@ -41,8 +43,10 @@ const Alert = React.forwardRef<
     {...props}
   >
     {icon && icon}
-    {!icon && variant === "destructive" && <AlertCircle className="h-4 w-4" />}
+    {!icon && variant === "destructive" && <XCircle className="h-4 w-4" />}
     {!icon && variant === "info" && <Info className="h-4 w-4" />}
+    {!icon && variant === "warning" && <AlertTriangle className="h-4 w-4" />}
+    {!icon && variant === "success" && <CheckCircle className="h-4 w-4" />}
     {children}
   </div>
 ))

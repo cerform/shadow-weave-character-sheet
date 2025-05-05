@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { LogIn, UserPlus, AlertCircle, Info, AlertTriangle, CircleX } from "lucide-react";
+import { LogIn, UserPlus, AlertCircle, Info, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
@@ -39,12 +39,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<DetailedAuthError | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
+  const [popupSupported, setPopupSupported] = useState<boolean | null>(null);
   const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   const logger = useConsoleLogger({ maxPerCategory: 10, allowDuplicates: true });
+
+  // Проверка поддержки всплывающих окон при загрузке
+  useEffect(() => {
+    checkPopupSupport();
+  }, []);
 
   // Очистка сообщения об ошибке при смене вкладки или успешной аутентификации
   useEffect(() => {
@@ -74,7 +80,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       return <AlertTriangle className="h-4 w-4" />;
     }
     if (error.code?.includes('unauthorized-domain')) {
-      return <CircleX className="h-4 w-4" />;
+      return <XCircle className="h-4 w-4" />;
     }
     return <AlertCircle className="h-4 w-4" />;
   };
@@ -101,6 +107,25 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     }
     
     return info;
+  };
+
+  // Функция для проверки поддержки всплывающих окон
+  const checkPopupSupport = () => {
+    try {
+      logger.logInfo("Проверка поддержки всплывающих окон", "auth-env");
+      const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
+      if (testPopup) {
+        testPopup.close();
+        setPopupSupported(true);
+        logger.logInfo("Всплывающие окна разрешены", "auth-env");
+      } else {
+        setPopupSupported(false);
+        logger.logWarning("Всплывающие окна заблокированы!", "auth-env");
+      }
+    } catch (error) {
+      logger.logError("Ошибка при проверке всплывающих окон", "auth-env", error);
+      setPopupSupported(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -178,6 +203,27 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   };
 
   const handleGoogleLogin = async () => {
+    // Сначала проверяем поддержку попапов
+    if (popupSupported === false) {
+      const error = new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.") as DetailedAuthError;
+      error.code = "auth/popup-blocked-detected";
+      setAuthError(error);
+      toast({
+        title: "Всплывающие окна заблокированы",
+        description: "Разрешите всплывающие окна для этого сайта в настройках браузера и обновите страницу.",
+        variant: "warning"
+      });
+      return;
+    }
+    
+    // Если не знаем, поддерживаются ли попапы, проверим еще раз
+    if (popupSupported === null) {
+      checkPopupSupport();
+      if (popupSupported === false) {
+        return; // выходим, если попапы заблокированы
+      }
+    }
+    
     setIsLoading(true);
     setAuthError(null);
     setDebugInfo('');
@@ -191,9 +237,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       logger.logInfo(`Поддержка попапов: ${typeof window.open === 'function'}`, "auth-env");
       logger.logInfo(`Размер окна: ${window.innerWidth}x${window.innerHeight}`, "auth-env");
       logger.logInfo(`Экран: ${window.screen.width}x${window.screen.height}`, "auth-env");
+      logger.logInfo(`Cookies включены: ${navigator.cookieEnabled}`, "auth-env");
       logger.logInfo(`Браузер мобильный: ${/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)}`, "auth-env");
       
+      logger.logInfo("Перед вызовом googleLogin()", "auth-form");
+      
       const result = await googleLogin();
+      
       logger.logInfo("Результат входа через Google:", "auth-form");
       logger.logInfo(JSON.stringify(result), "auth-form");
       
@@ -206,14 +256,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         navigate(redirectTo);
       } else {
         logger.logWarning("Вход через Google вернул null результат", "auth-form");
-        const nullError = new Error("Вход через Google не был завершен") as DetailedAuthError;
-        nullError.code = "auth/login-cancelled";
+        const nullError = new Error("Сервер вернул пустой ответ при аутентификации через Google. Это может быть связано с проблемами сети, блокировкой cookies или настройками безопасности браузера.") as DetailedAuthError;
+        nullError.code = "auth/null-response";
         setAuthError(nullError);
-        setDebugInfo("Google авторизация вернула null. Это может означать, что процесс авторизации был прерван или произошла ошибка в Firebase.");
+        setDebugInfo("Google авторизация вернула null. Необходимо проверить:");
+        setDebugInfo(prev => prev + "\n- Не блокирует ли ваш браузер cookies");
+        setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
+        setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
+        setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
+        setDebugInfo(prev => prev + "\n- Включена ли авторизация через Google в Firebase");
         
         toast({
           title: "Вход не завершен",
-          description: "Вход через Google не был завершен",
+          description: "Сервер вернул пустой ответ при аутентификации",
           variant: "destructive"
         });
       }
@@ -246,6 +301,57 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     '--switch-border-checked': isDM ? currentTheme.accent : 'gray'
   } as React.CSSProperties;
 
+  // Определение содержимого для уведомления о всплывающих окнах
+  const renderPopupSupportAlert = () => {
+    if (popupSupported === false) {
+      return (
+        <Alert 
+          variant="warning"
+          className="mb-4"
+          icon={<AlertTriangle className="h-4 w-4" />}
+        >
+          <AlertTitle>Всплывающие окна заблокированы</AlertTitle>
+          <AlertDescription>
+            Для входа через Google необходимо разрешить всплывающие окна для этого сайта. 
+            <ol className="list-decimal list-inside mt-2 space-y-1">
+              <li>Найдите иконку блокировки в адресной строке браузера</li>
+              <li>Нажмите на нее и выберите "Разрешить всплывающие окна"</li>
+              <li>Обновите страницу</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
+  };
+  
+  // Определение рекомендаций для устранения проблем с Google аутентификацией
+  const renderGoogleAuthTroubleshooting = () => {
+    if (authError?.code === 'auth/null-response') {
+      return (
+        <Alert 
+          variant="info" 
+          className="mt-4"
+          icon={<Info className="h-4 w-4" />}
+        >
+          <AlertTitle>Рекомендации по устранению проблемы</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>Включите cookies в настройках браузера</li>
+              <li>Убедитесь, что ваш браузер не блокирует Google аутентификацию</li>
+              <li>Отключите VPN или прокси, если они используются</li>
+              <li>Используйте режим инкогнито или другой браузер</li>
+              <li>Очистите кэш и cookies вашего браузера</li>
+              <li>Проверьте работу интернет-соединения</li>
+              <li>Если вы используете корпоративную сеть, свяжитесь с администратором</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card className="w-full shadow-lg border-primary/20 bg-black/60 backdrop-blur-md">
       <Tabs defaultValue="login" className="w-full">
@@ -253,6 +359,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
           <TabsTrigger value="login">Вход</TabsTrigger>
           <TabsTrigger value="register">Регистрация</TabsTrigger>
         </TabsList>
+        
+        {/* Проверка поддержки всплывающих окон */}
+        {renderPopupSupportAlert()}
         
         {/* Отображение ошибки аутентификации, если есть */}
         {authError && (
@@ -263,11 +372,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               className="mb-4 text-left"
             >
               <AlertTitle className="text-md">
-                {authError.code === 'auth/popup-blocked' 
-                  ? 'Всплывающее окно заблокировано' 
+                {authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-blocked-detected'
+                  ? 'Всплывающие окна заблокированы' 
                   : authError.code === 'auth/unauthorized-domain'
                     ? 'Неавторизованный домен'
-                    : 'Ошибка авторизации'}
+                    : authError.code === 'auth/null-response'
+                      ? 'Сервер вернул пустой ответ'
+                      : 'Ошибка авторизации'}
               </AlertTitle>
               <AlertDescription className="mt-2">{authError.message}</AlertDescription>
               
@@ -282,13 +393,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               )}
               
               {/* Советы по устранению ошибок */}
-              {authError.code === 'auth/popup-blocked' && (
+              {(authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-blocked-detected') && (
                 <div className="mt-3 text-sm">
                   <strong>Рекомендации:</strong>
                   <ul className="list-disc list-inside mt-1">
                     <li>Разрешите всплывающие окна для этого сайта</li>
                     <li>Отключите блокировщики рекламы для этого сайта</li>
                     <li>Попробуйте использовать режим инкогнито</li>
+                    <li>После изменения настроек, обновите страницу</li>
                   </ul>
                 </div>
               )}
@@ -300,6 +412,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                   Администратору необходимо добавить этот домен в список авторизованных доменов в консоли Firebase.</p>
                 </div>
               )}
+              
+              {renderGoogleAuthTroubleshooting()}
             </Alert>
           </div>
         )}
@@ -371,7 +485,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               variant="outline"
               className="w-full"
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isLoading || popupSupported === false}
               style={{
                 borderColor: currentTheme.accent,
                 color: currentTheme.textColor
@@ -401,6 +515,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               </svg>
               {isLoading ? "Авторизация..." : "Войти с Google"}
             </Button>
+            
+            <Alert variant="info" className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                При использовании входа через Google:
+                <ul className="list-disc list-inside mt-1">
+                  <li>Разрешите всплывающие окна в браузере</li>
+                  <li>Отключите блокировщики рекламы</li>
+                  <li>Не закрывайте окно авторизации Google</li>
+                  <li>Включите cookies в браузере</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </TabsContent>
         
@@ -493,7 +620,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               variant="outline"
               className="w-full"
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isLoading || popupSupported === false}
               style={{
                 borderColor: currentTheme.accent,
                 color: currentTheme.textColor
@@ -534,6 +661,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                   <li>Отключите блокировщики рекламы</li>
                   <li>Попробуйте использовать другой браузер</li>
                   <li>При входе не закрывайте всплывающее окно Google</li>
+                  <li>Убедитесь, что cookies включены в настройках браузера</li>
                 </ul>
               </AlertDescription>
             </Alert>

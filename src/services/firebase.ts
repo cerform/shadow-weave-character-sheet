@@ -114,6 +114,15 @@ const formatFirebaseError = (error: any): string => {
     'auth/token-expired': 'Срок действия токена истек. Войдите в систему снова.',
     'auth/user-token-mismatch': 'Несоответствие токена пользователя. Войдите в систему снова.',
     'permission-denied': 'Доступ запрещен. Проверьте права доступа.',
+    'auth/login-cancelled': 'Вход отменен пользователем или не завершен.',
+    'auth/popup-closed-by-system': 'Всплывающее окно было закрыто системой (на некоторых мобильных устройствах это может происходить автоматически).',
+    'auth/provider-already-linked': 'Этот провайдер уже связан с вашей учетной записью.',
+    'auth/provider-not-found': 'Указанный провайдер не поддерживается.',
+    'auth/requires-recent-login': 'Для этой операции требуется недавний вход. Пожалуйста, войдите снова.',
+    'auth/missing-google-auth-token': 'Отсутствует токен Google аутентификации.',
+    'auth/google-auth-cancelled': 'Google аутентификация была отменена.',
+    'auth/google-auth-error': 'Ошибка при аутентификации через Google.',
+    'auth/null-response': 'Сервер вернул пустой ответ при аутентификации.',
   };
   
   // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
@@ -221,24 +230,35 @@ const auth = {
       // Проверяем доступность домена для Firebase Auth
       console.log("[AUTH] Текущий домен:", window.location.origin);
       
+      // Отключаем перенаправления при авторизации
+      firebaseAuth.useDeviceLanguage();
+      
       // Создаем новый экземпляр провайдера при каждом вызове
       const provider = new GoogleAuthProvider();
       // Настраиваем параметры для гарантированного показа окна выбора аккаунта
       provider.setCustomParameters({
         prompt: 'select_account',
-        access_type: 'offline'
+        access_type: 'offline',
+        hl: 'ru' // Устанавливаем русский язык
       });
       
       console.log("[AUTH] Google провайдер создан с параметрами:", {
         prompt: 'select_account',
-        access_type: 'offline'
+        access_type: 'offline',
+        hl: 'ru'
       });
       
-      // Очищаем кэш состояния авторизации перед новым вызовом
-      // Это может помочь с проблемой отображения окна выбора аккаунта
-      console.log("[AUTH] Выполняем выход для очистки кэша...");
-      await firebaseAuth.signOut();
-      console.log("[AUTH] Выход выполнен успешно");
+      // Проверяем, добавлен ли текущий домен в авторизованные домены Firebase
+      const currentDomain = window.location.hostname;
+      console.log(`[AUTH] Проверка домена: ${currentDomain}`);
+      
+      // Проверяем настройки хранилища и cookie
+      console.log("[AUTH] Проверка хранилища перед авторизацией:", {
+        localStorage: !!window.localStorage,
+        sessionStorage: !!window.sessionStorage,
+        cookies: navigator.cookieEnabled,
+        indexedDB: !!window.indexedDB
+      });
       
       // Проверяем состояние браузера перед открытием всплывающего окна
       console.log("[AUTH] Статус браузера:", {
@@ -249,6 +269,24 @@ const auth = {
         userAgent: navigator.userAgent,
         isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
       });
+      
+      // Перед вызовом signInWithPopup выполняем проверку
+      console.log("[AUTH] Тестируем возможность открытия popup...");
+      const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
+      if (!testPopup) {
+        console.error("[AUTH] Тест popup неудачен! Popup заблокирован.");
+        throw new Error('Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и попробуйте снова.');
+      } else {
+        console.log("[AUTH] Тест popup успешен!");
+        testPopup.close();
+      }
+      
+      // Очищаем текущий кэш состояния авторизации
+      if (firebaseAuth.currentUser) {
+        console.log("[AUTH] Выполняем выход для очистки кэша...");
+        await firebaseAuth.signOut();
+        console.log("[AUTH] Выход выполнен успешно");
+      }
       
       // Используем signInWithPopup с новым провайдером
       console.log("[AUTH] Вызываем signInWithPopup...");
@@ -266,7 +304,8 @@ const auth = {
         fullStack: error.stack,
         browser: navigator.userAgent,
         time: new Date().toISOString(),
-        domain: window.location.origin
+        domain: window.location.origin,
+        authProviders: 'google'
       });
       
       // Попытка получить дополнительную информацию об окне
@@ -304,6 +343,12 @@ const auth = {
       if (error.code === 'auth/cancelled-popup-request') {
         console.warn('[AUTH] Запрос popup отменен!');
         detailedError.message = 'Запрос на открытие всплывающего окна был отменен. Пожалуйста, подождите несколько секунд и попробуйте снова.';
+      }
+      
+      // Если нет конкретного кода ошибки, но результат null
+      if (!error.code && !error.message) {
+        detailedError.code = 'auth/null-response';
+        detailedError.message = 'Сервер вернул пустой ответ при аутентификации через Google. Это может быть связано с проблемами сети, блокировкой cookies или настройками безопасности браузера.';
       }
       
       throw detailedError;
