@@ -26,17 +26,18 @@ export function parseSpellEntry(entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
-  const { verbal, somatic, material, ritual, concentration } = parseComponents(componentCode);
+  // Используем обновленную функцию parseComponents, которая теперь поддерживает concentration
+  const parsedComponents = parseComponents(componentCode);
   
   return {
     name,
     level,
     components: componentCode,
-    verbal,
-    somatic,
-    material,
-    ritual,
-    concentration
+    verbal: parsedComponents.verbal,
+    somatic: parsedComponents.somatic,
+    material: parsedComponents.material,
+    ritual: parsedComponents.ritual,
+    concentration: parsedComponents.concentration
   };
 }
 
