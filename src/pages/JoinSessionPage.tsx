@@ -178,7 +178,7 @@ const JoinSessionPage = () => {
         </Card>
         
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Код сес��ии предоставляет Мастер Подземелий</p>
+          <p>Код сессии предоставляет Мастер Подземелий</p>
         </div>
       </div>
     </div>
