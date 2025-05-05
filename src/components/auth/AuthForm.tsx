@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -539,7 +538,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
           <CardHeader>
             <CardTitle>Создание аккаунта</CardTitle>
             <CardDescription>
-              Зарегистрируйтесь, чтобы создавать персонажей и присоединяться к игровым сессиям
+              Зарегистрируйтесь, чтобы создавать персонажами и присоединяться к игровым сессиям
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
