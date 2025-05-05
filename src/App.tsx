@@ -14,7 +14,7 @@ import './App.css';
 import { themes } from '@/lib/themes';
 // Делаем темы доступными глобально
 if (typeof window !== 'undefined') {
-  window.themes = themes;
+  (window as any).themes = themes;
 }
 
 import Index from './pages/Index';
@@ -45,20 +45,26 @@ const App = () => {
     document.documentElement.setAttribute('data-theme', savedTheme);
 
     // Проверяем наличие тем перед их использованием
-    const themesObj = window.themes || {};
+    const themesObj = (window as any).themes || themes;
     
     // Применяем стили для текущей темы
     const themeStyles = themesObj[savedTheme as keyof typeof themesObj] || { 
-      accent: '#6366f1', 
-      glow: 'rgba(99, 102, 241, 0.5)', 
-      textColor: '#ffffff', 
-      mutedTextColor: '#9ca3af' 
+      accent: '#8B5A2B', 
+      glow: '0 0 15px rgba(139, 90, 43, 0.5)', 
+      textColor: '#FFFFFF', 
+      mutedTextColor: '#DDDDDD',
+      cardBackground: 'rgba(0, 0, 0, 0.85)',
+      buttonText: '#FFFFFF',
+      buttonBackground: 'rgba(139, 90, 43, 0.8)'
     };
     
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
+    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText);
+    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground);
     
     console.log('Тема инициализирована:', savedTheme, themeStyles);
   }, []);
@@ -71,7 +77,7 @@ const App = () => {
             <CharacterProvider>
               <SessionProvider>
                 <SocketProvider>
-                  <div className="app-container">
+                  <div className="app-container min-h-screen w-full">
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<AuthPage />} />

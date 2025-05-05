@@ -22,6 +22,10 @@ export const ThemeSelector = () => {
     { name: "druid", label: "Друид" },
     { name: "warrior", label: "Воин" },
     { name: "bard", label: "Бард" },
+    { name: "dark", label: "Тёмная" },
+    { name: "fantasy", label: "Фэнтези" },
+    { name: "cyber", label: "Киберпанк" },
+    { name: "nature", label: "Природа" },
   ];
 
   // Получаем текущую тему из темы пользователя

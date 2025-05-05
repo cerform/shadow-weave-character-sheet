@@ -67,6 +67,9 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
+    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText);
+    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground);
     
     // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
     document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
