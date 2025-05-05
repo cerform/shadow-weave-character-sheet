@@ -35,24 +35,32 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   } = useSubraceSelection({
     race: character.race,
     initialSubrace: character.subrace || '',
-    onSubraceSelect: (subrace) => updateCharacter({ subrace })
+    onSubraceSelect: (subrace) => {
+      // Используем функцию обновления с задержкой, чтобы избежать циклов рендеринга
+      setTimeout(() => {
+        updateCharacter({ subrace });
+      }, 0);
+    }
   });
 
-  // Auto-redirect if no subraces are available
+  // Auto-redirect if no subraces are available - используем useEffect с меньшими зависимостями
   useEffect(() => {
     if (character.race && !hasSubraces && !autoRedirectAttempted) {
       console.log("No subraces for race", character.race, "redirecting to next step");
       setAutoRedirectAttempted(true);
-      setTimeout(() => {
+      // Используем задержку для перехода к следующему шагу
+      const redirectTimer = setTimeout(() => {
         nextStep();
       }, 100);
+      
+      return () => clearTimeout(redirectTimer);
     }
   }, [hasSubraces, character.race, autoRedirectAttempted, nextStep, setAutoRedirectAttempted]);
 
   // If no race is selected, show message
   if (!character.race) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         <SectionHeader 
           title="Подраса" 
           description="Пожалуйста, сначала выберите расу персонажа."
@@ -77,7 +85,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   // If race has no subraces, show message
   if (!hasSubraces) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         <SectionHeader 
           title={`Выбор подрасы для ${character.race}`} 
           description="Некоторые расы имеют различные подрасы с уникальными особенностями и бонусами."
@@ -99,28 +107,31 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     return String(desc);
   };
 
+  // Устанавливаем фиксированную высоту для ScrollArea, чтобы избежать прыжков
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <SectionHeader 
         title="Разновидность" 
         description={`Раса ${character.race} имеет несколько разновидностей. Выберите одну из них.`}
       />
 
-      <ScrollArea className="h-[calc(100vh-20rem)] pr-4 rounded-lg">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {availableSubraces.map((subrace) => (
-            <SubraceCard
-              key={subrace.name}
-              name={subrace.name}
-              description={getDescription(subrace.description)}
-              traits={Array.isArray(subrace.traits) ? subrace.traits : []}
-              abilityScoreIncrease={subrace.abilityScoreIncrease}
-              selected={selectedSubrace === subrace.name}
-              onClick={() => handleSubraceSelect(subrace.name)}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="h-[calc(100vh-25rem)] min-h-[400px]">
+        <ScrollArea className="h-full pr-4 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
+            {availableSubraces.map((subrace) => (
+              <SubraceCard
+                key={subrace.name}
+                name={subrace.name}
+                description={getDescription(subrace.description)}
+                traits={Array.isArray(subrace.traits) ? subrace.traits : []}
+                abilityScoreIncrease={subrace.abilityScoreIncrease}
+                selected={selectedSubrace === subrace.name}
+                onClick={() => handleSubraceSelect(subrace.name)}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
       <NavigationButtons
         allowNext={!!selectedSubrace}

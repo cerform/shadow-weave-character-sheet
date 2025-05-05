@@ -49,7 +49,9 @@ const SubraceCard: React.FC<SubraceProps> = ({
         background: selected
           ? `${currentTheme.cardBackground}`
           : 'rgba(0, 0, 0, 0.6)',
-        // Исправляем конфликт стилей, используя только borderColor вместо border
+        // Используем borderColor вместо border для избежания конфликтов
+        borderWidth: '1px',
+        borderStyle: 'solid',
         borderColor: selected
           ? currentTheme.accent
           : 'rgba(255, 255, 255, 0.1)',
@@ -92,10 +94,9 @@ const SubraceCard: React.FC<SubraceProps> = ({
                   className="flex justify-between items-center p-1 text-xs rounded"
                   style={{ 
                     background: 'rgba(0, 0, 0, 0.3)', 
-                    borderColor: `${currentTheme.accent}30`,
-                    // Используем borderWidth и borderStyle отдельно, а не единый border
                     borderWidth: '1px',
-                    borderStyle: 'solid'
+                    borderStyle: 'solid',
+                    borderColor: `${currentTheme.accent}30`
                   }}
                 >
                   <span>
