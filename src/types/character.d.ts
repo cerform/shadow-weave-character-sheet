@@ -62,7 +62,7 @@ export interface Character {
     attackBonus?: number;
     preparedSpellsLimit?: number;
   };
-  spells?: CharacterSpell[] | string[];
+  spells?: (CharacterSpell | string)[];
   spellSlots?: {
     [key: number]: {
       max: number;
