@@ -8,10 +8,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from '@/types/user';
+import { adaptFirebaseUser } from '@/types/user';
 
 const ProfilePage = () => {
-  const { currentUser, updateUserProfile } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
+  
+  // Use adaptFirebaseUser to convert Firebase User to our User type
+  const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
   
   const {
     register,
@@ -21,17 +24,18 @@ const ProfilePage = () => {
     defaultValues: {
       displayName: currentUser?.displayName || '',
       photoURL: currentUser?.photoURL || '',
-      username: currentUser?.username || '',
     }
   });
   
-  const onSubmit = async (data: { displayName: string; photoURL: string; username: string }) => {
+  const onSubmit = async (data: { displayName: string; photoURL: string }) => {
     try {
-      // Обновляем только displayName через Firebase Auth
-      await updateUserProfile(data.displayName);
+      // Update only displayName and photoURL through Firebase Auth
+      await updateProfile({
+        displayName: data.displayName,
+        photoURL: data.photoURL
+      });
       
-      // Здесь можно добавить логику для обновления дополнительных полей в Firestore
-      // Например, username и другие поля профиля, которые не входят в стандартный Firebase User
+      // Here you can add logic for updating additional fields in Firestore
       
       toast.success('Профиль успешно обновлен');
     } catch (error) {
@@ -40,8 +44,8 @@ const ProfilePage = () => {
     }
   };
   
-  // Получаем username безопасным способом
-  const username = currentUser?.username || '';
+  // Use username from adaptedUser
+  const username = adaptedUser?.username || '';
   
   return (
     <div className="container mx-auto py-10">
@@ -55,17 +59,6 @@ const ProfilePage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Имя пользователя</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Введите имя пользователя"
-                {...register('username', { required: 'Имя пользователя обязательно' })}
-                className={errors.username ? 'border-red-500' : ''}
-              />
-              {errors.username && <p className="text-red-500 text-sm">{errors.username.message}</p>}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="displayName">Отображаемое имя</Label>
               <Input
