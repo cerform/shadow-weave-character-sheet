@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
@@ -39,8 +39,11 @@ const ProfilePage = () => {
         const seed = currentUser.username || currentUser.email || Math.random().toString();
         setAvatarUrl(`https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}`);
       }
+    } else {
+      // Если пользователь не авторизован, перенаправляем на страницу входа
+      navigate('/auth', { state: { returnPath: '/profile' } });
     }
-  }, [currentUser]);
+  }, [currentUser, navigate]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -103,6 +106,14 @@ const ProfilePage = () => {
       description: "Случайный аватар сгенерирован",
     });
   };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Загрузка профиля...</p>
+      </div>
+    );
+  }
 
   return (
     <div 

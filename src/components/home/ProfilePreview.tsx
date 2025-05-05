@@ -3,19 +3,37 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogIn, User, Shield, UsersRound } from "lucide-react";
+import { LogIn, User, Shield, UsersRound, LogOut } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { toast } from '@/components/ui/use-toast';
 
 const ProfilePreview = () => {
   const navigate = useNavigate();
-  const { currentUser, isAuthenticated } = useAuth();
+  const { currentUser, isAuthenticated, logout } = useAuth();
   const { theme } = useTheme();
   
   // Получаем текущую тему для стилизации
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы"
+      });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось выйти из системы",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Если пользователь не авторизован, показываем кнопку входа
   if (!isAuthenticated || !currentUser) {
@@ -102,46 +120,64 @@ const ProfilePreview = () => {
         <Button 
           variant="outline" 
           size="sm"
-          className="w-full gap-2"
+          className="w-full gap-2 tooltip-wrapper"
           style={{
             borderColor: currentTheme.accent,
             color: currentTheme.textColor
           }}
           onClick={() => navigate('/profile')}
+          title="Перейти в профиль"
         >
           <User size={14} />
-          Профиль
+          <span>Профиль</span>
         </Button>
         
         <Button 
           variant="outline" 
           size="sm"
-          className="w-full gap-2"
+          className="w-full gap-2 tooltip-wrapper"
           style={{
             borderColor: currentTheme.accent,
             color: currentTheme.textColor
           }}
           onClick={() => navigate('/characters')}
+          title="Управление персонажами"
         >
           <UsersRound size={14} />
-          Персонажи
+          <span>Персонажи</span>
         </Button>
         
         {currentUser.isDM && (
           <Button 
             variant="outline"
             size="sm"
-            className="w-full col-span-2 gap-2 mt-1"
+            className="w-full gap-2 tooltip-wrapper"
             style={{
               borderColor: currentTheme.accent,
               color: currentTheme.textColor
             }}
             onClick={() => navigate('/dm')}
+            title="Панель мастера подземелий"
           >
             <Shield size={14} />
-            Панель Мастера
+            <span>Панель Мастера</span>
           </Button>
         )}
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          className={`w-full gap-2 tooltip-wrapper ${!currentUser.isDM ? 'col-span-2' : ''}`}
+          style={{
+            borderColor: currentTheme.accent,
+            color: currentTheme.textColor
+          }}
+          onClick={handleLogout}
+          title="Выйти из системы"
+        >
+          <LogOut size={14} />
+          <span>Выйти</span>
+        </Button>
       </div>
     </div>
   );

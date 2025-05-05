@@ -1,256 +1,49 @@
 
 import React from 'react';
+import { MoonIcon, SunIcon, Settings } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { 
-  Scroll, 
-  Shield, 
-  BookOpen, 
-  Wand2, 
-  LogIn, 
-  BookMarked, 
-  Map,
-  User,
-  LogOut
-} from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { useAuth } from '@/hooks/use-auth';
-import ThemeSelector from '@/components/ThemeSelector';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { toast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
+import NavigationButtons from "@/components/ui/NavigationButtons";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface IconOnlyNavigationProps {
-  className?: string;
   includeThemeSelector?: boolean;
 }
 
-const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ 
-  className = "",
-  includeThemeSelector = true
-}) => {
-  const { currentUser, logout } = useAuth();
-  const isDM = currentUser?.isDM;
-  const navigate = useNavigate();
-  
-  const { theme, themeStyles } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themeStyles || themes[themeKey] || themes.default;
-  
-  // Обработчик выхода из профиля
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({
-        title: "Успешный выход",
-        description: "Вы вышли из системы"
-      });
-      navigate('/auth');
-    } catch (error) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось выйти из системы",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Стиль для кнопок навигации
-  const buttonStyle = React.useMemo(() => ({ 
-    borderColor: currentTheme.accent,
-    color: currentTheme.textColor,
-    boxShadow: `0 0 5px ${currentTheme.accent}30`,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)'
-  }), [currentTheme.accent, currentTheme.textColor]);
+const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSelector = false }) => {
+  const { theme, toggleTheme } = useTheme();
   
   return (
-    <TooltipProvider>
-      <div className={`flex items-center gap-2 ${className}`}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon"
-              asChild
-              style={buttonStyle}
-              className="hover:shadow-lg transition-all hover:scale-105"
-            >
-              <Link to="/">
-                <Shield className="size-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Главная</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon"
-              asChild
-              style={buttonStyle}
-              className="hover:shadow-lg transition-all hover:scale-105"
-            >
-              <Link to="/handbook">
-                <BookMarked className="size-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Руководство игрока</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon"
-              asChild
-              style={buttonStyle}
-              className="hover:shadow-lg transition-all hover:scale-105"
-            >
-              <Link to="/spellbook">
-                <Scroll className="size-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Книга заклинаний</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon"
-              asChild
-              style={buttonStyle}
-              className="hover:shadow-lg transition-all hover:scale-105"
-            >
-              <Link to="/character-creation">
-                <Wand2 className="size-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Создание персонажа</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        {!currentUser ? (
+    <div className="flex items-center gap-2">
+      <NavigationButtons />
+      
+      {includeThemeSelector && (
+        <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
-                asChild
-                style={buttonStyle}
-                className="hover:shadow-lg transition-all hover:scale-105"
+                onClick={toggleTheme}
+                className="text-foreground border border-input hover:bg-accent hover:text-accent-foreground"
               >
-                <Link to="/auth">
-                  <LogIn className="size-4" />
-                </Link>
+                {theme === 'dark' ? (
+                  <SunIcon className="h-4 w-4" />
+                ) : (
+                  <MoonIcon className="h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+                </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Вход/Регистрация</p>
+              <p>{theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}</p>
             </TooltipContent>
           </Tooltip>
-        ) : (
-          <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  asChild
-                  style={buttonStyle}
-                  className="hover:shadow-lg transition-all hover:scale-105"
-                >
-                  <Link to="/profile">
-                    <User className="size-4" />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Профиль</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  style={buttonStyle}
-                  className="hover:shadow-lg transition-all hover:scale-105"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Выйти</p>
-              </TooltipContent>
-            </Tooltip>
-          </>
-        )}
-        
-        {isDM && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                asChild
-                style={buttonStyle}
-                className="hover:shadow-lg transition-all hover:scale-105"
-              >
-                <Link to="/dm">
-                  <BookOpen className="size-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Панель Мастера</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
-        {isDM && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                asChild
-                style={buttonStyle}
-                className="hover:shadow-lg transition-all hover:scale-105"
-              >
-                <Link to="/battle">
-                  <Map className="size-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Боевая карта</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
-        {includeThemeSelector && <ThemeSelector />}
-      </div>
-    </TooltipProvider>
+        </TooltipProvider>
+      )}
+    </div>
   );
 };
 
