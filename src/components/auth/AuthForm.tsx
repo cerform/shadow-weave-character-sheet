@@ -73,7 +73,7 @@ const AuthForm = ({ redirectTo = '/' }: Props) => {
     try {
       setLoading(true);
       setGoogleAuthError(false);
-      await googleLogin(false);
+      await googleLogin();
       toast.success('Вход с Google выполнен успешно');
       navigate(redirectTo);
     } catch (error: any) {

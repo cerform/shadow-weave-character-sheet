@@ -6,6 +6,7 @@ export interface UserType {
   photoURL?: string;
   isDM?: boolean;
   username?: string;
+  uid?: string; // Adding uid property to support CharactersListPage
 }
 
 export interface AuthContextType {
@@ -19,4 +20,5 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: UserType | null;
   updateProfile?: (data: Partial<UserType>) => Promise<void>;
+  signup?: (email: string, password: string, displayName: string) => Promise<void>;
 }

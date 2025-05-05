@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 
@@ -147,12 +146,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loading,
         error: error ? error.message : null,
         login,
-        signup,
         register,
         logout,
         googleLogin,
         isAuthenticated: !!user,
-        updateProfile
+        updateProfile,
+        signup
       }}
     >
       {children}

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const CharactersListPage = () => {
     const fetchCharacters = async () => {
       if (currentUser) {
         try {
-          const fetchedCharacters = await getAllCharacters(currentUser.uid);
+          const fetchedCharacters = await getAllCharacters(currentUser.id); // Use id instead of uid
           setCharacters(fetchedCharacters);
         } catch (error) {
           console.error("Failed to fetch characters:", error);
