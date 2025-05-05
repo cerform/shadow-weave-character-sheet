@@ -103,3 +103,10 @@ export interface Feature {
 export interface PlayerCharacter extends Character {
   userId: string;
 }
+
+// Export ability score caps
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};
