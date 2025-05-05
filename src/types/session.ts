@@ -45,6 +45,7 @@ export interface Character {
   name: string;
   race: string;
   class: string;
+  className?: string; // Добавляем для обратной совместимости с Home.tsx
   level: number;
   avatarUrl?: string;
   image?: string;

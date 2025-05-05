@@ -4,22 +4,22 @@ import { Firestore, DocumentData, DocumentReference, CollectionReference } from 
 import { Auth } from "firebase/auth";
 
 // Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth: Partial<Auth> = {
+const mockAuth: Auth = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки
     return () => {};
   },
-  signInWithEmailAndPassword: async () => {
+  signInWithEmailAndPassword: async (email: string, password: string) => {
     throw new Error('Firebase Auth not initialized');
   },
-  createUserWithEmailAndPassword: async () => {
+  createUserWithEmailAndPassword: async (email: string, password: string) => {
     throw new Error('Firebase Auth not initialized');
   },
   signOut: async () => {
     return Promise.resolve();
   },
-  sendPasswordResetEmail: async () => {
+  sendPasswordResetEmail: async (email: string) => {
     throw new Error('Firebase Auth not initialized');
   },
   // Добавляем дополнительные свойства для совместимости с типом Auth
@@ -108,7 +108,7 @@ const mockStorage = {
 };
 
 // Экспортируем моки в качестве сервисов Firebase
-export const auth = mockAuth as Auth;
+export const auth = mockAuth;
 export const db = mockFirestore;
 export const storage = mockStorage;
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,17 +20,16 @@ const ProfilePage = () => {
     defaultValues: {
       displayName: currentUser?.displayName || '',
       photoURL: currentUser?.photoURL || '',
-      username: currentUser?.username || '', // Добавлено поле username
+      username: currentUser?.username || '',
     }
   });
   
   const onSubmit = async (data: { displayName: string; photoURL: string; username: string }) => {
     try {
-      // Предполагаем, что updateUserProfile теперь поддерживает username
       await updateUserProfile({
         displayName: data.displayName,
         photoURL: data.photoURL,
-        username: data.username, // Добавлено поле username
+        username: data.username,
       });
       
       toast.success('Профиль успешно обновлен');

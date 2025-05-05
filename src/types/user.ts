@@ -79,3 +79,17 @@ export interface CustomAsset {
   tags?: string[];
   isPublic: boolean;
 }
+
+// Добавляем User, который соответствует Use из session.ts
+export interface User {
+  id: string;
+  name?: string;
+  themePreference?: string;
+  isOnline?: boolean;
+  isDM?: boolean;
+  username?: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
+  emailVerified?: boolean;
+}

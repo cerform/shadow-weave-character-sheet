@@ -2,18 +2,25 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth'; // Используем правильный импорт
+import { useAuth } from '@/hooks/use-auth';
 
 interface Props {
-  prevStep: () => void;
-  nextStep: () => void;
+  prevStep?: () => void;
+  nextStep?: () => void;
   nextLabel?: string;
   disableNext?: boolean;
   allowNext?: boolean;
   className?: string;
 }
 
-const NavigationButtons = ({ prevStep, nextStep, nextLabel = "Далее", disableNext = false, allowNext = true, className }: Props) => {
+const NavigationButtons = ({ 
+  prevStep = () => {}, 
+  nextStep = () => {}, 
+  nextLabel = "Далее", 
+  disableNext = false, 
+  allowNext = true, 
+  className 
+}: Props) => {
   const { currentUser } = useAuth();
 
   return (
@@ -22,7 +29,7 @@ const NavigationButtons = ({ prevStep, nextStep, nextLabel = "Далее", disab
         <ArrowLeft className="mr-2 h-4 w-4" />
         Назад
       </Button>
-      <Button onClick={nextStep} disabled={disableNext}>
+      <Button onClick={nextStep} disabled={disableNext || !allowNext}>
         {nextLabel}
         <ArrowRight className="ml-2 h-4 w-4" />
       </Button>

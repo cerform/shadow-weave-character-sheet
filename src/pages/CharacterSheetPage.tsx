@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
@@ -8,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { CharacterContext } from "@/contexts/CharacterContext";
 import { isOfflineMode } from "@/utils/authHelpers";
+import { User } from '@/types/user';
 
 const CharacterSheetPage = () => {
   const { theme } = useTheme();
@@ -90,7 +90,7 @@ const CharacterSheetPage = () => {
   }, [isConnected, connect, toast]);
   
   // Проверка оффлайн-режима для определения прав DM
-  const isDM = currentUser?.isDM === true || isOfflineMode();
+  const isUserDM = currentUser?.isDM || false;
   
   return (
     <div 
@@ -101,7 +101,7 @@ const CharacterSheetPage = () => {
     >
       <CharacterSheet 
         character={character} 
-        isDM={isDM}
+        isDM={isUserDM}
       />
       
       {isConnected && sessionData && (

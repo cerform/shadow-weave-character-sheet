@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { User as AuthUser } from 'firebase/auth'; // Переименовываем для избежания конфликта
-import { User } from '@/types/session'; // Используем User из session без переименования
+import { User, Character } from '@/types/session'; // Импортируем из session
 import {
   Card,
   CardHeader,
@@ -25,7 +26,7 @@ import { Plus, Dice1, User as UserIcon } from 'lucide-react'; // Переиме�
 import { toast } from 'sonner';
 import { useUserTheme } from '@/hooks/use-user-theme';
 import { themes } from '@/lib/themes';
-import { Character } from '@/types/session'; // Используем Character из session
+import CharacterCard from '@/components/CharacterCard'; // Импортируем компонент CharacterCard
 
 const Home = () => {
   const navigate = useNavigate();
@@ -143,11 +144,7 @@ const Home = () => {
   // Handle session creation
   const handleCreateSession = async () => {
     if (!sessionName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите название сессии",
-        variant: "destructive",
-      });
+      toast.error("Введите название сессии");
       return;
     }
     
@@ -161,20 +158,12 @@ const Home = () => {
   // Handle joining a session
   const handleJoinSession = async () => {
     if (!sessionCode.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите код сессии",
-        variant: "destructive",
-      });
+      toast.error("Введите код сессии");
       return;
     }
     
     if (!playerName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите ваше имя",
-        variant: "destructive",
-      });
+      toast.error("Введите ваше имя");
       return;
     }
     

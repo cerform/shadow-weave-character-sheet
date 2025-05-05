@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/session';
 import { Eye } from 'lucide-react';
+import { Character } from '@/types/session';
 
 interface CharacterCardProps {
   character: Character;
@@ -28,7 +28,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           <div>
             <h3 className="font-bold text-lg">{character.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {character.race} {character.class}, {character.level} уровень
+              {character.race} {character.class || character.className}, {character.level} уровень
             </p>
           </div>
           <Button
