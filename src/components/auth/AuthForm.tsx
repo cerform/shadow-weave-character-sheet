@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface AuthFormProps {
   redirectTo?: string;
@@ -24,6 +26,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,12 +91,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
 
     try {
       console.log("Начинаем вход через Google");
-      await googleLogin();
-      toast({
-        title: "Вход выполнен",
-        description: "Вы успешно вошли через Google"
-      });
-      navigate(redirectTo);
+      const result = await googleLogin();
+      console.log("Результат входа через Google:", result);
+      
+      if (result) {
+        toast({
+          title: "Вход выполнен",
+          description: "Вы успешно вошли через Google"
+        });
+        navigate(redirectTo);
+      }
     } catch (error: any) {
       console.error("Ошибка при входе через Google:", error);
       toast({
@@ -153,6 +162,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                 type="submit" 
                 className="w-full gap-2" 
                 disabled={isLoading}
+                style={{
+                  backgroundColor: currentTheme.accent,
+                  color: currentTheme.buttonText || '#FFFFFF'
+                }}
               >
                 <LogIn className="h-4 w-4" />
                 {isLoading ? "Выполняется вход..." : "Войти"}
@@ -176,6 +189,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               className="w-full"
               onClick={handleGoogleLogin}
               disabled={isLoading}
+              style={{
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -259,6 +276,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                 type="submit" 
                 className="w-full gap-2" 
                 disabled={isLoading}
+                style={{
+                  backgroundColor: currentTheme.accent,
+                  color: currentTheme.buttonText || '#FFFFFF'
+                }}
               >
                 <UserPlus className="h-4 w-4" />
                 {isLoading ? "Регистрация..." : "Зарегистрироваться"}
@@ -282,6 +303,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               className="w-full"
               onClick={handleGoogleLogin}
               disabled={isLoading}
+              style={{
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -40,7 +40,10 @@ export default function OBSLayout({
       {topPanelContent && (
         <div 
           className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b"
-          style={{ borderColor: `${currentTheme.accent}30` }}
+          style={{ 
+            borderColor: `${currentTheme.accent}30`,
+            boxShadow: `0 0 10px ${currentTheme.accent}20`
+          }}
         >
           {topPanelContent}
         </div>
@@ -58,7 +61,10 @@ export default function OBSLayout({
         {hasLeftPanel && (
           <div 
             className="h-full overflow-y-auto bg-muted/10 border-r"
-            style={{ borderColor: `${currentTheme.accent}20` }}
+            style={{ 
+              borderColor: `${currentTheme.accent}20`,
+              boxShadow: `inset -4px 0 10px ${currentTheme.accent}05`
+            }}
           >
             {leftPanelContent}
           </div>
@@ -71,7 +77,10 @@ export default function OBSLayout({
         {hasRightPanel && (
           <div 
             className="h-full overflow-y-auto bg-muted/10 border-l"
-            style={{ borderColor: `${currentTheme.accent}20` }}
+            style={{ 
+              borderColor: `${currentTheme.accent}20`,
+              boxShadow: `inset 4px 0 10px ${currentTheme.accent}05`
+            }}
           >
             {rightPanelContent}
           </div>
@@ -81,7 +90,10 @@ export default function OBSLayout({
       {bottomPanelContent && (
         <div 
           className="fixed bottom-0 left-0 right-0 border-t bg-muted/10"
-          style={{ borderColor: `${currentTheme.accent}20` }}
+          style={{ 
+            borderColor: `${currentTheme.accent}20`,
+            boxShadow: `0 -4px 10px ${currentTheme.accent}10`
+          }}
         >
           {bottomPanelContent}
         </div>

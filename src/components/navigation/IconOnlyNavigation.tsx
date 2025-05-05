@@ -17,7 +17,10 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSel
   return (
     <div 
       className="flex items-center gap-2 p-1 rounded-full bg-black/50 backdrop-blur-md"
-      style={{ border: `1px solid ${currentTheme.accent}30` }}
+      style={{ 
+        border: `1px solid ${currentTheme.accent}30`,
+        boxShadow: `0 0 8px ${currentTheme.accent}20`
+      }}
     >
       <NavigationButtons />
       

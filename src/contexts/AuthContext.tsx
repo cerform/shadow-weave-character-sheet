@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { auth as firebaseAuth } from '@/services/firebase';
@@ -35,9 +34,9 @@ const transformUser = (firebaseUser: FirebaseUser, extraData: Partial<UserType> 
     id: firebaseUser.uid,
     uid: firebaseUser.uid,
     email: firebaseUser.email || '',
-    displayName: firebaseUser.displayName || undefined,
-    photoURL: firebaseUser.photoURL || undefined,
-    username: firebaseUser.displayName || undefined,
+    displayName: firebaseUser.displayName || extraData.displayName,
+    photoURL: firebaseUser.photoURL || extraData.photoURL,
+    username: extraData.username || firebaseUser.displayName || '',
     isDM: extraData.isDM || false, // Используем переданное значение или false по умолчанию
   };
 };
@@ -57,27 +56,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (userSnap.exists()) {
         // Обновляем существующего пользователя
+        const userData = userSnap.data();
         await setDoc(userRef, {
-          username: user.username || user.displayName || '',
+          username: user.username || user.displayName || userData.username || '',
           email: user.email,
           updatedAt: new Date().toISOString(),
-          isDM: user.isDM || false,
-          photoURL: user.photoURL || '',
+          isDM: user.isDM !== undefined ? user.isDM : userData.isDM || false,
+          photoURL: user.photoURL || userData.photoURL || '',
+          displayName: user.displayName || userData.displayName || '',
           // Сохраняем другие поля, но не перезаписываем их
         }, { merge: true });
+        
+        console.log("Обновлен существующий пользователь:", user.id);
       } else {
         // Создаем нового пользователя
         await setDoc(userRef, {
           username: user.username || user.displayName || '',
           email: user.email,
+          displayName: user.displayName || '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDM: user.isDM || false,
           photoURL: user.photoURL || '',
           characters: [],
         });
+        
+        console.log("Создан новый пользователь:", user.id);
       }
-      console.log("User saved to Firestore:", user.id);
     } catch (error) {
       console.error("Ошибка при сохранении пользователя в Firestore:", error);
     }
@@ -104,6 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Настройка слушателя изменения состояния аутентификации
     console.log("Setting up auth state listener");
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (authUser) => {
+      setLoading(true);
       try {
         if (authUser) {
           console.log("Auth state changed: User logged in", authUser);
@@ -111,9 +117,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Получаем дополнительные данные из Firestore
           const userData = await getUserFromFirestore(authUser.uid);
           const transformedUser = transformUser(authUser, userData);
+          
+          // Убедимся, что пользователь правильно трансформирован и имеет все необходимые данные
+          console.log("Трансформированный пользователь:", transformedUser);
+          
           setUser(transformedUser);
           // Сохраняем пользователя в Firestore (создаем или обновляем)
           await saveUserToFirestore(transformedUser);
+          
+          // Показываем уведомление об успешном входе
+          toast({
+            title: "Вход выполнен",
+            description: `Вы успешно вошли в систему`
+          });
         } else {
           console.log("Auth state changed: User logged out");
           // Пользователь не авторизован
@@ -212,24 +228,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("Google login successful", userCredential);
         // Получаем дополнительные данные из Firestore
         const userData = await getUserFromFirestore(userCredential.uid);
-        const transformedUser = transformUser(userCredential, userData);
         
-        // Если это первый вход пользователя, сохраняем его фото профиля
-        transformedUser.photoURL = userCredential.photoURL || userData.photoURL;
+        // Создаем объект пользователя с учетом данных из Firestore
+        const transformedUser = transformUser(userCredential, {
+          ...userData,
+          photoURL: userCredential.photoURL || userData.photoURL,
+          displayName: userCredential.displayName || userData.displayName,
+          username: userData.username || userCredential.displayName
+        });
+        
+        console.log("Трансформированный пользователь Google:", transformedUser);
         
         // Сохраняем пользователя в Firestore для обновления или создания
         await saveUserToFirestore(transformedUser);
         
+        // Устанавливаем пользователя в контекст
         setUser(transformedUser);
         
         toast({
           title: "Вход выполнен",
           description: "Вы успешно вошли через Google"
         });
+        
+        return transformedUser;
       }
+      return null;
     } catch (err) {
       console.error("Google login error:", err);
       setError(err as Error);
+      toast({
+        title: "Ошибка входа",
+        description: (err as Error).message || "Не удалось войти через Google",
+        variant: "destructive"
+      });
       throw err;
     } finally {
       setLoading(false);

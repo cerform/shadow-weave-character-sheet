@@ -13,6 +13,7 @@ import HandbookPage from './pages/HandbookPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
+import CharactersListPage from './pages/CharactersListPage'; // Добавляем импорт страницы списка персонажей
 
 const AppRoutes: React.FC = () => {
   return (
@@ -24,6 +25,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/character/:id" element={<CharacterSheetPage />} />
+      <Route path="/characters" element={<CharactersListPage />} /> {/* Добавляем маршрут для страницы персонажей */}
       <Route path="/dm" element={<DMDashboardPage />} />
       <Route path="/battle" element={<BattleScenePage />} />
       <Route path="*" element={<NotFound />} />

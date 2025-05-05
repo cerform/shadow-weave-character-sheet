@@ -56,38 +56,73 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // Проверяем класс и содержание кнопки
     const hasDetailsClass = className ? className.includes('Details') : false;
-    const isBookButton = props.children && 
+    const isBookButton = props.children &&
+      (typeof props.children === 'string' ?
+        props.children.toString().toLowerCase().includes('книга') || 
+        props.children.toString().toLowerCase().includes('руководство') ||
+        props.children.toString().toLowerCase().includes('справочник') : 
+        false);
+    
+    // Проверяем, если это кнопка перейти
+    const isNavigateButton = props.children && 
       (typeof props.children === 'string' ? 
-        props.children.toLowerCase().includes('книга') || props.children.toLowerCase().includes('руководство') : 
+        props.children.toString().toLowerCase().includes('перейти') : 
         false);
     
     // Определяем стили с учетом темы
-    const style = {
-      ...props.style,
-      color: variant === 'ghost' && hasDetailsClass
-        ? '#FFFFFF' 
-        : variant === 'default' 
-          ? currentTheme.buttonText || '#FFFFFF' 
-          : props.style?.color || currentTheme.buttonText || '#FFFFFF',
-      borderColor: (variant === 'outline' || isBookButton)
-        ? props.style?.borderColor || currentTheme.accent 
-        : props.style?.borderColor,
-      backgroundColor: variant === 'default' && !props.style?.backgroundColor 
-        ? currentTheme.accent 
-        : props.style?.backgroundColor,
-      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
-      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
-      '--hover-border-color': currentTheme.accent,
-      '--hover-bg-color': `${currentTheme.accent}30`,
+    let buttonStyle: React.CSSProperties = {
+      ...props.style
     };
+    
+    // Устанавливаем цвет текста в зависимости от варианта кнопки
+    if (variant === 'default' && !props.style?.color) {
+      buttonStyle.color = currentTheme.buttonText || '#FFFFFF';
+    }
+    
+    // Для кнопок с вариантом outline или ghost устанавливаем цвет
+    if ((variant === 'outline' || variant === 'ghost')) {
+      buttonStyle.color = props.style?.color || currentTheme.textColor || '#FFFFFF';
+      buttonStyle.borderColor = props.style?.borderColor || `${currentTheme.accent}`;
+    }
+    
+    // Для кнопок типа "книга" или "руководство"
+    if (isBookButton) {
+      buttonStyle.borderColor = props.style?.borderColor || currentTheme.accent;
+      buttonStyle.color = props.style?.color || currentTheme.textColor || '#FFFFFF';
+    }
+    
+    // Для кнопок "Перейти"
+    if (isNavigateButton) {
+      buttonStyle.borderColor = props.style?.borderColor || currentTheme.accent;
+      buttonStyle.color = props.style?.color || currentTheme.textColor || '#FFFFFF';
+    }
+    
+    // Для кнопок variant=default устанавливаем фон в цвет акцента
+    if (variant === 'default' && !props.style?.backgroundColor) {
+      buttonStyle.backgroundColor = currentTheme.accent;
+    }
+    
+    // Добавляем тень для текста
+    buttonStyle.textShadow = props.style?.textShadow || "0px 1px 2px rgba(0, 0, 0, 0.5)";
+    
+    // Переменные для hover и focus эффектов
+    const hoverGlow = `0 0 10px ${currentTheme.accent}80`;
+    const hoverBorderColor = currentTheme.accent;
+    const hoverBgColor = `${currentTheme.accent}30`;
     
     // Определяем улучшенные классы для различных типов кнопок
     let enhancedClasses = baseClasses;
     
-    if (isBookButton || (className && (className.includes('book') || className.includes('руководство')))) {
+    if (isBookButton || className?.includes('book') || className?.includes('руководство') || className?.includes('справочник')) {
       enhancedClasses = cn(
         baseClasses,
         "border border-accent/60 hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+        "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
+      );
+    } else if (isNavigateButton) {
+      enhancedClasses = cn(
+        baseClasses,
+        "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
         "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
       );
     } else {
@@ -98,11 +133,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
     
+    // Добавляем CSS переменные для hover эффектов
+    buttonStyle['--hover-glow' as any] = hoverGlow;
+    buttonStyle['--hover-border-color' as any] = hoverBorderColor;
+    buttonStyle['--hover-bg-color' as any] = hoverBgColor;
+    
     return (
       <Comp
         className={enhancedClasses}
         ref={ref}
-        style={style}
+        style={buttonStyle}
         {...props}
       />
     )
