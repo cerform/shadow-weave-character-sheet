@@ -39,9 +39,14 @@ export const ThemeSelector = () => {
           variant="ghost" 
           size="icon" 
           className="relative"
-          style={{ borderColor: currentTheme.accent }}
+          style={{ 
+            borderColor: currentTheme.accent,
+            background: currentTheme.buttonBackground || 'rgba(0, 0, 0, 0.7)'
+          }}
         >
-          <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+          <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" 
+            style={{ color: currentTheme.buttonText || '#FFFFFF' }}
+          />
           <span className="sr-only">Изменить тему</span>
           <div 
             className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
@@ -52,8 +57,9 @@ export const ThemeSelector = () => {
       <DropdownMenuContent 
         align="end"
         style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderColor: currentTheme.accent 
+          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
+          borderColor: currentTheme.accent,
+          color: currentTheme.textColor || '#FFFFFF'
         }}
       >
         {themesList.map((theme) => {
@@ -67,7 +73,8 @@ export const ThemeSelector = () => {
               className={activeTheme === theme.name ? "bg-primary/20" : ""}
               style={{ 
                 borderLeft: activeTheme === theme.name ? `3px solid ${themeColor}` : '',
-                paddingLeft: activeTheme === theme.name ? '13px' : ''
+                paddingLeft: activeTheme === theme.name ? '13px' : '',
+                color: currentTheme.textColor || '#FFFFFF'
               }}
             >
               <div className="flex items-center gap-2">

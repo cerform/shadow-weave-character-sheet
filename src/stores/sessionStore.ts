@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { db, auth } from '@/services/firebase';
 import { 
@@ -157,22 +156,20 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       }
       
       const sessionDoc = sessionsSnapshot.docs[0];
-      // Используем тип any для sessionData чтобы избежать TS ошибок
-      const sessionData = { id: sessionDoc.id, ...sessionDoc.data() } as any;
+      const sessionData = sessionDoc.data();
       
       // Определяем ID игрока (авторизованный или временный)
       const user = auth.currentUser;
       const playerId = user ? user.uid : `guest-${Math.random().toString(36).substring(2, 9)}`;
       
       // Проверяем, не присоединился ли уже игрок к сессии
-      // Используем безопасный доступ к массиву users
       const users = sessionData.users || [];
       const existingUserIndex = users.findIndex((u: any) => u.id === playerId);
       
       if (existingUserIndex === -1) {
         // Добавляем игрока к сессии
         const updatedUsers = [
-          ...(sessionData.users || []),
+          ...users,
           {
             id: playerId,
             name: playerName,

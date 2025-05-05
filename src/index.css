@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -126,6 +125,15 @@
 /* Анимация для плавных переходов тем */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  color: var(--theme-text-color, #FFFFFF) !important;
+  background-color: #121212;
+  background-image: url('/lovable-uploads/3678611a-a17a-4a81-8df0-c56c63cfcf0d.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-blend-mode: multiply;
 }
 
 /* Плавные переходы для элементов UI */
@@ -207,7 +215,7 @@ button:hover {
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
 }
 
-/* Улучшение отображения для разных тем */
+/* Улучшение отображения дл�� разных тем */
 .theme-warlock {
   --theme-accent: #9061F9;
   --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
@@ -263,14 +271,9 @@ button:hover {
 }
 
 /* Дополнительные стили для улучшения контраста */
-.bg-background, body, .app-container {
-  background-color: #121212 !important;
+.bg-background, .app-container {
+  background-color: transparent !important;
   color: #FFFFFF !important;
-  background-image: url('/lovable-uploads/3678611a-a17a-4a81-8df0-c56c63cfcf0d.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 .text-foreground {
@@ -305,4 +308,19 @@ main {
   background-color: rgba(0, 0, 0, 0.7);
   padding: 1rem;
   position: relative;
+}
+
+/* Дополнительные стили для обеспечения видимости текста и контента */
+h1, h2, h3, h4, h5, h6, p, span, div {
+  color: var(--theme-text-color, #FFFFFF);
+}
+
+/* Улучшение стилей для контейнеров */
+.container {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
 }
