@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
-import { spells as allSpells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
 interface SpellImporterProps {
@@ -22,8 +20,8 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const handleImport = () => {
     try {
       setIsProcessing(true);
-      const updatedSpells = importSpellsFromText(inputText, allSpells);
-      const newCount = updatedSpells.length - allSpells.length;
+      const updatedSpells = importSpellsFromText(inputText);
+      const newCount = updatedSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
       if (onImport) {

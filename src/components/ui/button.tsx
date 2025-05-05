@@ -58,7 +58,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const hasDetailsClass = className ? className.includes('Details') : false;
     
     // Улучшаем подсветку для всех кнопок
-    const style = {
+    const style: React.CSSProperties = {
       ...props.style,
       color: variant === 'ghost' && hasDetailsClass
         ? '#FFFFFF' 
@@ -71,14 +71,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
         ? currentTheme.accent 
         : props.style?.backgroundColor,
-      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
-      // Добавим эффекты при наведении через CSS переменные
+      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
       '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
       '--hover-border-color': currentTheme.accent,
       '--hover-bg-color': `${currentTheme.accent}30`,
-      // Устанавливаем position: relative для поддержки псевдоэлементов
-      position: 'relative',
-      // Плавные переходы для анимаций
+      position: 'relative' as React.CSSProperties['position'],
       transition: 'all 0.3s ease',
     };
     

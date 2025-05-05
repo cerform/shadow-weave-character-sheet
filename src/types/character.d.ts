@@ -6,7 +6,6 @@ export interface CharacterAbilities {
   intelligence: number;
   wisdom: number;
   charisma: number;
-  // Добавляем сокращенные версии для совместимости
   STR?: number;
   DEX?: number;
   CON?: number;
@@ -72,11 +71,11 @@ export interface ClassLevel {
 }
 
 export interface HitPointEvent {
-  id?: string; // Добавляем id как опциональное поле
+  id?: string;
   amount: number;
-  type: 'damage' | 'healing' | 'temporary' | 'heal' | 'tempHP' | 'temp' | 'death-save'; // Расширяем допустимые типы
+  type: 'damage' | 'healing' | 'temporary' | 'heal' | 'tempHP' | 'temp' | 'death-save';
   source?: string;
-  timestamp: number | Date; // Разрешаем как число, так и Date
+  timestamp: number | Date;
 }
 
 // Интерфейс для очков чародейства
@@ -87,9 +86,9 @@ export interface SorceryPoints {
 
 // Constants for ability score caps at different levels
 export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,        // Default max for most levels
-  EPIC_CAP: 22,        // Max for levels 10-15
-  LEGENDARY_CAP: 24    // Max for levels 16+
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
 };
 
 export interface Character {
@@ -125,7 +124,7 @@ export interface Character {
   savingThrows?: SavingThrow[];
   proficiencies?: CharacterProficiencies;
   feats?: string[];
-  equipment?: { name: string; quantity: number }[] | string[]; // Поддерживаем оба формата
+  equipment?: { name: string; quantity: number }[] | string[];
   spells?: CharacterSpell[];
   spellSlots?: SpellSlots;
   backstory?: string;
@@ -166,4 +165,26 @@ export interface Character {
 
 export interface CharacterSheet extends Character {
   // Additional properties for character sheet if needed
+}
+
+// Adding a SpellData type for compatibility with SpellBookViewer
+export interface SpellData {
+  id?: number;
+  name: string;
+  level: number;
+  school: string;
+  castingTime: string;
+  range: string;
+  components: string;
+  duration: string;
+  description: string;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materialComponents?: string;
+  ritual?: boolean;
+  concentration?: boolean;
+  higherLevels?: string;
+  classes?: string[] | string;
+  prepared?: boolean;
 }

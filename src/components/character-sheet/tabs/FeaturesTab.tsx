@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
 import { Badge } from '@/components/ui/badge';
@@ -10,22 +11,28 @@ export const FeaturesTab: React.FC = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
   // Проверяем какое поле доступно - features или proficiencies
-  const featuresList = character?.proficiencies || [];
+  const featuresList = character?.proficiencies?.weapons || 
+                       character?.proficiencies?.languages || 
+                       character?.proficiencies?.tools || 
+                       character?.proficiencies?.armor || 
+                       [];
+  
+  const proficienciesArray = Array.isArray(featuresList) ? featuresList : [];
   
   // Используем доступные особенности и распределяем по категориям
-  const classFeatures = featuresList.filter(f => 
-    f.includes('Дополнительная атака') || 
-    f.includes('класс') || 
-    f.includes('Архетип:')
+  const classFeatures = proficienciesArray.filter(f => 
+    f?.includes('Дополнительная атака') || 
+    f?.includes('класс') || 
+    f?.includes('Архетип:')
   ) || [];
   
-  const raceFeatures = featuresList.filter(f => 
-    f.includes('раса') || 
-    f.includes('Темное зрение') || 
-    f.includes('Эльфийская проницательность')
+  const raceFeatures = proficienciesArray.filter(f => 
+    f?.includes('раса') || 
+    f?.includes('Темное зрение') || 
+    f?.includes('Эльфийская проницательность')
   ) || [];
   
-  const otherFeatures = featuresList.filter(f => 
+  const otherFeatures = proficienciesArray.filter(f => 
     !classFeatures.includes(f) && !raceFeatures.includes(f)
   ) || [];
 

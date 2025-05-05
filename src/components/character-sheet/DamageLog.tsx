@@ -19,8 +19,8 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   useEffect(() => {
     // Сортируем события по времени (самые новые сверху)
     const sortedEvents = [...events].sort((a, b) => {
-      const timeA = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
-      const timeB = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
       return timeB - timeA;
     });
     
@@ -88,7 +88,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   // Форматирование временных меток (например, "5 минут назад")
   const formatTimestamp = (timestamp: number | Date): string => {
     try {
-      const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
+      const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
       return formatDistance(date, new Date(), { 
         addSuffix: true,
         locale: ru 
