@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +11,6 @@ import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { createCharacter } from '@/lib/supabase';
 import { getCurrentUid } from '@/utils/authHelpers';
-import ThemeSelector from '@/components/character-sheet/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
 import CreationStepper from '@/components/character-creation/CreationStepper';
@@ -333,7 +331,7 @@ const CharacterCreationPage: React.FC = () => {
         color: pageColor 
       }}
     >
-      {/* Header with Theme Selector and Navigation Icons */}
+      {/* Header with Navigation Icons - ThemeSelector included in IconOnlyNavigation */}
       <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md py-3 px-4 border-b border-gray-800">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
@@ -342,8 +340,7 @@ const CharacterCreationPage: React.FC = () => {
             </h1>
             
             <div className="flex items-center space-x-4">
-              <IconOnlyNavigation />
-              <ThemeSelector />
+              <IconOnlyNavigation includeThemeSelector={true} />
             </div>
           </div>
         </div>

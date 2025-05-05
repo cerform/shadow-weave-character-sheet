@@ -25,7 +25,7 @@ export const useTheme = () => {
     // Приоритет отдаем пользовательской теме, если она существует
     const effectiveTheme = userTheme?.activeTheme || context.theme;
     
-    // Получаем активные стили темы
+    // Получаем активные стили темы без вычисления при каждом рендеринге
     const themeKey = (effectiveTheme || 'default') as keyof typeof themes;
     const themeStyles = themes[themeKey] || themes.default;
     
