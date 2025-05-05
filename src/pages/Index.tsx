@@ -173,13 +173,18 @@ const Index = () => {
           ))}
         </div>
 
-        {/* Декоративный элемент-меч внизу страницы */}
+        {/* Декоративный элемент-меч внизу страницы с ссылкой на страницу авторизации */}
         <div className="mt-12 mb-6 flex justify-center">
-          <Sword 
-            size={32} 
-            className="opacity-50 animate-pulse-accent"
-            style={{ color: currentTheme.accent }}
-          />
+          <Link to="/auth">
+            <Sword 
+              size={32} 
+              className="opacity-80 hover:opacity-100 animate-pulse-accent transition-all duration-300 hover:scale-110 cursor-pointer"
+              style={{ 
+                color: currentTheme.accent,
+                filter: `drop-shadow(0 0 6px ${currentTheme.accent})` 
+              }}
+            />
+          </Link>
         </div>
       </div>
       <FloatingDiceButton />
