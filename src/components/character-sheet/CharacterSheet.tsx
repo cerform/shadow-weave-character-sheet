@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Character } from '@/types/character.d';
-import { CharacterTabs } from './CharacterTabs';
+import CharacterTabs from './CharacterTabs';
 import { CharacterHeader } from './CharacterHeader';
 import ResourcePanel from './ResourcePanel';
 import RestPanel from './RestPanel';
@@ -54,9 +54,6 @@ const CharacterSheet = ({ character, isDM = false }: CharacterSheetProps) => {
           
           <CharacterTabs 
             character={character} 
-            onUpdate={handleUpdate}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
             isDM={isDM}
           />
         </div>

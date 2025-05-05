@@ -24,7 +24,7 @@ interface CharacterTabsProps {
   isDM?: boolean;
 }
 
-const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) => {
+export const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) => {
   const [activeTab, setActiveTab] = useState("general");
   
   return (
