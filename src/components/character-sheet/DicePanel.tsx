@@ -9,10 +9,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface DicePanelProps {
-  character: Character;
-}
-
 interface DiceRollResult {
   type: string;
   result: number;
@@ -21,7 +17,30 @@ interface DiceRollResult {
   timestamp: string;
 }
 
-const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
+// Extend Character type to include lastDiceRoll
+declare module '@/types/character' {
+  interface Character {
+    lastDiceRoll?: DiceRollResult;
+  }
+}
+
+interface DicePanelProps {
+  character: Character;
+  compactMode?: boolean;
+  isDM?: boolean;
+  tokens?: any[];
+  selectedTokenId?: number | null;
+  setSelectedTokenId?: (id: number | null) => void;
+}
+
+const DicePanel: React.FC<DicePanelProps> = ({ 
+  character,
+  compactMode = false,
+  isDM = false,
+  tokens = [],
+  selectedTokenId = null,
+  setSelectedTokenId = () => {}
+}) => {
   const [rolls, setRolls] = useState<DiceRollResult[]>([]);
   const { toast } = useToast();
   const { sendUpdate } = useSocket();
@@ -61,10 +80,11 @@ const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
     });
 
     // Отправляем результат через сокет если есть комната
-    sendUpdate({
+    const updatedCharacter = {
       ...character,
       lastDiceRoll: newRoll
-    });
+    };
+    sendUpdate(updatedCharacter);
 
     return newRoll;
   };
@@ -90,10 +110,11 @@ const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
     });
 
     // Отправляем результат через сокет
-    sendUpdate({
+    const updatedCharacter = {
       ...character,
       lastDiceRoll: skillRoll
-    });
+    };
+    sendUpdate(updatedCharacter);
   };
 
   // Бросок атаки
@@ -120,10 +141,11 @@ const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
     });
 
     // Отправляем результат через сокет
-    sendUpdate({
+    const updatedCharacter = {
       ...character,
       lastDiceRoll: attackRoll
-    });
+    };
+    sendUpdate(updatedCharacter);
   };
 
   // Форматирование времени
@@ -207,3 +229,6 @@ const DicePanel: React.FC<DicePanelProps> = ({ character }) => {
 };
 
 export default DicePanel;
+
+// Also export as named export for backwards compatibility
+export { DicePanel };

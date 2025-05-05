@@ -139,7 +139,8 @@ export const useCharacterCreation = () => {
 
   // Вычисляем модификатор характеристики
   const getModifier = (score: number): string => {
-    return getModifierFromAbilityScore(score);
+    const modifier = getModifierFromAbilityScore(score);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
   
   // Получаем особенности подкласса, доступные для текущего уровня

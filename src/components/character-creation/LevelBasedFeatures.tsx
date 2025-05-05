@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Character } from "@/types/character";
 import { useLevelFeatures } from "@/hooks/useLevelFeatures";
-import { getModifierFromAbilityScore } from "@/utils/characterUtils";
+import { getNumericModifier } from "@/utils/characterUtils";
 
 // Define a type for proficiencies that allows both string[] and the structured object format
 type ProficienciesType = string[] | {

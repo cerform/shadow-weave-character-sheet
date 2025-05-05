@@ -68,15 +68,16 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {(character.skills || []).map((skill, index) => (
-              <div key={`skill-${index}`} className="flex justify-between items-center">
-                <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
+            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => (
+              <div key={`skill-${skillName}`} className="flex justify-between items-center">
+                <span style={{ color: currentTheme.textColor }}>{skillName}</span>
                 <span style={{ color: currentTheme.textColor }}>
-                  {skill.modifier >= 0 ? `+${skill.modifier}` : skill.modifier}
+                  {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
+                  {typeof skillValue === 'object' && skillValue.bonus ? (skillValue.bonus >= 0 ? `+${skillValue.bonus}` : skillValue.bonus) : ''}
                 </span>
               </div>
             ))}
-            {(!character.skills || character.skills.length === 0) && (
+            {(!character.skills || Object.keys(character.skills).length === 0) && (
               <div className="text-center text-muted-foreground">
                 Нет доступных навыков
               </div>

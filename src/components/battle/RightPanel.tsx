@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
-import { DicePanel } from '@/components/character-sheet/DicePanel';
+import DicePanel from '@/components/character-sheet/DicePanel'; // Fixed import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

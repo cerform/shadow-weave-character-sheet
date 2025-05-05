@@ -16,8 +16,8 @@ export const createDefaultCharacter = (): Character => {
     intelligence: 10,
     wisdom: 10,
     charisma: 10,
-    currentHp: 10,
-    maxHp: 10,
+    currentHp: 10, // Corrected from string to number
+    maxHp: 10, // Corrected from string to number
     temporaryHp: 0,
     armorClass: 10,
     initiative: '+0',
@@ -27,11 +27,16 @@ export const createDefaultCharacter = (): Character => {
     alignment: '',
     experience: 0,
     inspiration: false,
-    hitDice: 'd8',
+    hitDice: { // Corrected from string to object
+      total: 1,
+      used: 0,
+      dieType: 'd8',
+      value: 'd8'
+    },
     equipment: [],
     spells: [],
-    skills: [],
-    savingThrows: [],
+    skills: {}, // Corrected from array to object
+    savingThrows: {}, // Corrected from array to object
     languages: [],
     proficiencies: [],
     personalityTraits: '',
@@ -48,6 +53,16 @@ export const createDefaultCharacter = (): Character => {
 // Другие полезные функции для работы с персонажами
 export const calculateAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
+};
+
+// Alias for getModifierFromAbilityScore
+export const getModifierFromAbilityScore = (abilityScore: number): number => {
+  return calculateAbilityModifier(abilityScore);
+};
+
+// Alias for getNumericModifier
+export const getNumericModifier = (abilityScore: number): number => {
+  return calculateAbilityModifier(abilityScore);
 };
 
 export const calculateProficiencyBonus = (level: number): number => {
@@ -74,13 +89,12 @@ export const updateCharacterStats = (character: Character): Character => {
   updatedCharacter.proficiencyBonus = calculateProficiencyBonus(character.level || 1);
   
   // Обновляем модификаторы спасбросков и навыков если они существуют
-  if (updatedCharacter.savingThrows) {
-    updatedCharacter.savingThrows = updatedCharacter.savingThrows.map(save => {
-      const ability = save.ability.toLowerCase();
+  if (updatedCharacter.savingThrows && typeof updatedCharacter.savingThrows === 'object') {
+    Object.keys(updatedCharacter.savingThrows).forEach(ability => {
       let abilityScore = 10;
       
       // Находим значение характеристики
-      switch (ability) {
+      switch (ability.toLowerCase()) {
         case 'сила': abilityScore = character.strength || 10; break;
         case 'ловкость': abilityScore = character.dexterity || 10; break;
         case 'телосложение': abilityScore = character.constitution || 10; break;
@@ -90,12 +104,16 @@ export const updateCharacterStats = (character: Character): Character => {
       }
       
       const baseModifier = calculateAbilityModifier(abilityScore);
-      const proficiencyBonus = save.proficient ? (character.proficiencyBonus || 2) : 0;
+      const isProficient = updatedCharacter.savingThrows[ability] === true;
+      const proficiencyBonus = isProficient ? (character.proficiencyBonus || 2) : 0;
       
-      return {
-        ...save,
-        modifier: baseModifier + proficiencyBonus
-      };
+      // Обновляем модификатор
+      if (typeof updatedCharacter.savingThrows[ability] === 'object') {
+        updatedCharacter.savingThrows[ability] = {
+          ...updatedCharacter.savingThrows[ability],
+          modifier: baseModifier + proficiencyBonus
+        };
+      }
     });
   }
   

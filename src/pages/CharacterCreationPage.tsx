@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -58,8 +57,8 @@ const CharacterCreationPage = () => {
   
   // Обновляем конфигурацию хука useCreationStep с актуальной информацией о классе и подрасах
   const { currentStep, nextStep, prevStep, setCurrentStep, visibleSteps } = useCreationStep({
-    isMagicClass: isMagicClass(),
-    hasSubraces: hasSubraces
+    hasSubraces: hasSubraces,
+    isMagicClass: isMagicClass()
   });
 
   // Определяем максимальное значение для характеристик на основе уровня

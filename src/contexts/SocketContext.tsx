@@ -4,12 +4,18 @@ import { Character } from '@/types/character';
 
 export interface SocketContextType {
   connected: boolean;
+  isConnected: boolean; // Added property
+  sessionData: any; // Added property
+  connect: (sessionCode: string, playerName: string, characterId?: string | null) => void; // Added method
   sendUpdate: (character: Character) => void;
   lastUpdate: any;
 }
 
 const defaultContext: SocketContextType = {
   connected: false,
+  isConnected: false, // Added property
+  sessionData: null, // Added property
+  connect: () => {}, // Added method
   sendUpdate: () => {},
   lastUpdate: null
 };
@@ -23,6 +29,26 @@ interface SocketProviderProps {
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<any>(null);
+  const [sessionData, setSessionData] = useState<any>(null);
+
+  // Функция для подключения к сессии
+  const connect = (sessionCode: string, playerName: string, characterId?: string | null) => {
+    console.log(`Подключение к сессии ${sessionCode} с именем ${playerName}...`);
+    
+    // Эмулируем подключение к сессии
+    setTimeout(() => {
+      setConnected(true);
+      setSessionData({
+        code: sessionCode,
+        name: `Игровая сессия ${sessionCode}`,
+        dm: 'Мастер Подземелий',
+        players: [playerName],
+        characterId: characterId
+      });
+      
+      console.log('Подключено к сессии!');
+    }, 1000);
+  };
 
   // Функция для отправки обновлений персонажа
   const sendUpdate = (character: Character) => {
@@ -48,7 +74,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <SocketContext.Provider value={{ connected, sendUpdate, lastUpdate }}>
+    <SocketContext.Provider value={{ 
+      connected, 
+      isConnected: connected, // Alias for connected
+      sessionData, 
+      connect,
+      sendUpdate, 
+      lastUpdate 
+    }}>
       {children}
     </SocketContext.Provider>
   );

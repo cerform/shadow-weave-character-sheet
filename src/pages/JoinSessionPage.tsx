@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ const JoinSessionPage: React.FC = () => {
   const [playerName, setPlayerName] = useState('');
   const { setCharacter } = useCharacter();
   const { toast } = useToast();
-  const { connect, isConnected, sessionData } = useSocket();
+  const { connect, connected: isConnected, sessionData } = useSocket();
   
   useEffect(() => {
     if (isConnected && sessionData) {

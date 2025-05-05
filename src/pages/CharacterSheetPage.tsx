@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
@@ -12,7 +11,7 @@ import { isOfflineMode } from "@/utils/authHelpers";
 const CharacterSheetPage = () => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const { isConnected, sessionData, connect } = useSocket();
+  const { connected: isConnected, sessionData, connect } = useSocket();
   const { toast } = useToast();
   const { currentUser } = useAuth();
   const { character, setCharacter } = useContext(CharacterContext);
