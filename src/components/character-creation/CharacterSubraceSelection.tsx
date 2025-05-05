@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import type { Character } from "@/types/character";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import NavigationButtons from "./NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
@@ -37,15 +38,44 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     onSubraceSelect: (subrace) => updateCharacter({ subrace })
   });
 
-  // Redirect only if the race has no subraces and on first render
+  // Важное изменение: не делаем автоматическую редирект без проверки наличия расы
   useEffect(() => {
-    if (!hasSubraces && character.race && !autoRedirectAttempted) {
+    if (character.race && !hasSubraces && !autoRedirectAttempted) {
+      console.log("No subraces for race", character.race, "redirecting to next step");
       setAutoRedirectAttempted(true);
-      nextStep();
+      // Добавляем задержку, чтобы UI успел обновиться
+      setTimeout(() => {
+        nextStep();
+      }, 100);
     }
   }, [hasSubraces, character.race, autoRedirectAttempted, nextStep, setAutoRedirectAttempted]);
 
-  // If no subraces, show loading message
+  // Если ещё нет выбранной расы, показываем сообщение
+  if (!character.race) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <SectionHeader 
+          title="Подраса" 
+          description="Пожалуйста, сначала выберите расу персонажа."
+        />
+        <div className="bg-red-900/20 border border-red-500/50 p-4 rounded-lg">
+          <p className="text-red-100">Необходимо сначала выбрать расу персонажа.</p>
+          <Button 
+            onClick={prevStep} 
+            className="mt-4"
+            style={{ 
+              backgroundColor: themeStyles?.accent,
+              color: themeStyles?.buttonText || 'white'
+            }}
+          >
+            Вернуться к выбору расы
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Если нет подрас для выбранной расы, показываем соответствующее сообщение
   if (!hasSubraces) {
     return (
       <div className="space-y-6 animate-fade-in">

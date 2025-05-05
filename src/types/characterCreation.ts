@@ -5,6 +5,7 @@ export interface Step {
   description?: string;
   requiresSubraces?: boolean;
   requiresMagicClass?: boolean;
+  completed?: boolean;
 }
 
 export interface UseCreationStepConfig {

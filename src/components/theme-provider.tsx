@@ -24,8 +24,13 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 
   // Load saved theme on initialization
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'default';
+    const savedTheme = localStorage.getItem('theme') || localStorage.getItem('userTheme') || localStorage.getItem('dnd-theme') || 'default';
     setTheme(savedTheme);
+    
+    // Применяем тему к корневому элементу
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.body.className = '';
+    document.body.classList.add(`theme-${savedTheme}`);
   }, []);
 
   // Save theme when it changes
@@ -37,6 +42,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     document.documentElement.setAttribute('data-theme', newTheme);
     document.body.className = '';
     document.body.classList.add(`theme-${newTheme}`);
+    
+    console.log("Theme set in ThemeProvider:", newTheme);
   };
 
   const themeContextValue = React.useMemo(() => ({

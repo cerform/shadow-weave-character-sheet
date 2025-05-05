@@ -17,9 +17,15 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     try {
-      const savedUserTheme = localStorage.getItem('userTheme');
+      // Проверяем несколько возможных мест хранения темы
+      const savedUserTheme = 
+        localStorage.getItem('userTheme') || 
+        localStorage.getItem('dnd-theme') || 
+        localStorage.getItem('theme');
+        
       if (savedUserTheme && themes[savedUserTheme as keyof typeof themes]) {
         setActiveTheme(savedUserTheme);
+        console.log("Loaded user theme from storage:", savedUserTheme);
       }
     } catch (e) {
       console.error('Error loading user theme:', e);
@@ -28,12 +34,18 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
   
   const setUserTheme = (theme: string) => {
     if (theme === 'default') {
+      // При выборе темы по умолчанию, очищаем пользовательскую тему
       localStorage.removeItem('userTheme');
+      localStorage.removeItem('dnd-theme');
       setActiveTheme(null);
     } else {
+      // Сохраняем новую пользовательскую тему
       localStorage.setItem('userTheme', theme);
+      localStorage.setItem('dnd-theme', theme);
       setActiveTheme(theme);
     }
+    
+    console.log("User theme set to:", theme);
   };
   
   return (

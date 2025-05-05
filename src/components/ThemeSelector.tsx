@@ -37,9 +37,10 @@ const ThemeSelector = () => {
   // Обработчик для изменения темы
   const handleThemeChange = (themeId: string) => {
     // Сначала установим тему в глобальном контексте
-    setTheme(themeId);
+    if (setTheme) setTheme(themeId);
+    
     // Затем установим тему в пользовательском контексте
-    setUserTheme(themeId);
+    if (setUserTheme) setUserTheme(themeId);
     
     // Сохраняем тему в localStorage для обоих контекстов
     localStorage.setItem('theme', themeId);

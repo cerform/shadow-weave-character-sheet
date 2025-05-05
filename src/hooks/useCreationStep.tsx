@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Step, UseCreationStepConfig } from '@/types/characterCreation';
 
 export const useCreationStep = (config: UseCreationStepConfig) => {
-  const { steps = [], initialStep = 0, onStepChange, isMagicClass = false } = config;
+  const { steps = [], initialStep = 0, onStepChange, hasSubraces = false, isMagicClass = false } = config;
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [visibleSteps, setVisibleSteps] = useState<Step[]>([]);
 
@@ -11,32 +11,34 @@ export const useCreationStep = (config: UseCreationStepConfig) => {
   const getVisibleSteps = (): Step[] => {
     // Apply filters based on configuration
     return steps.filter((step: Step) => {
-      // If step requires subraces, but there are none - hide step
-      if (step.requiresSubraces && !config.hasSubraces) {
+      // Если шаг требует подрасы, но их нет - скрываем шаг
+      if (step.requiresSubraces && !hasSubraces) {
         return false;
       }
       
-      // If step requires magic class, but class isn't magical - hide step
+      // Если шаг требует магического класса, но класс не магический - скрываем шаг
       if (step.requiresMagicClass && !isMagicClass) {
         return false;
       }
       
-      // In all other cases, show step
+      // В остальных случаях показываем шаг
       return true;
     });
   };
 
-  // Update visible steps when configuration changes
+  // Обновляем видимые шаги при изменении конфигурации
   useEffect(() => {
     const filteredSteps = getVisibleSteps();
     setVisibleSteps(filteredSteps);
-    // Ensure current step is still valid
+    
+    // Если текущий шаг больше, чем общее количество шагов после фильтрации,
+    // сбрасываем на последний доступный шаг
     if (currentStep >= filteredSteps.length) {
       setCurrentStep(Math.max(0, filteredSteps.length - 1));
     }
   }, [config.hasSubraces, isMagicClass, steps]);
 
-  // Function to move to next step
+  // Функция для перехода к следующему шагу
   const nextStep = () => {
     if (currentStep < visibleSteps.length - 1) {
       const newStep = currentStep + 1;
@@ -47,7 +49,7 @@ export const useCreationStep = (config: UseCreationStepConfig) => {
     }
   };
 
-  // Function to move to previous step
+  // Функция для перехода к предыдущему шагу
   const prevStep = () => {
     if (currentStep > 0) {
       const newStep = currentStep - 1;
