@@ -15,7 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useConsoleLogger } from '@/hooks/use-console-logger';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DetailedAuthError } from '@/services/firebase';
+import type { DetailedAuthError } from '@/services/firebase';
 
 interface AuthFormProps {
   redirectTo?: string;
