@@ -29,8 +29,8 @@ export const createDefaultCharacter = (): Character => {
     maxHp: 10,
     currentHp: 10,
     armorClass: 10,
-    initiative: '+0',
-    speed: '30 фт',
+    initiative: 0,
+    speed: 30,
     proficiencyBonus: 2,
     skills: {},
     savingThrows: {},
@@ -41,7 +41,29 @@ export const createDefaultCharacter = (): Character => {
     resources: {},
     proficiencies: [],
     languages: ['Общий'],
-    gold: 0
+    gold: 0,
+    abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    stats: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    }
   };
 };
 

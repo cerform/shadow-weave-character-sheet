@@ -12,4 +12,5 @@ export interface UseCreationStepConfig {
   initialStep?: number;
   onStepChange?: (step: number) => void;
   isMagicClass?: boolean;
+  hasSubraces?: boolean;
 }

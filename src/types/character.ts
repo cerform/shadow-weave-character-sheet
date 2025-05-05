@@ -19,8 +19,8 @@ export interface Character {
   currentHp: number;
   temporaryHp?: number;
   armorClass?: number;
-  initiative?: string;
-  speed?: string;
+  initiative?: string | number;
+  speed?: string | number;
   inspiration?: boolean;
   proficiencyBonus?: number;
   skills?: { [key: string]: number | boolean | { proficient: boolean; expertise: boolean; bonus?: number } };
@@ -45,6 +45,51 @@ export interface Character {
     label: string;
     timestamp: string;
   };
+  // Additional properties to support backward compatibility
+  gender?: string;
+  className?: string;
+  subclass?: string;
+  userId?: string;
+  stats?: {
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+  };
+  abilities?: {
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+  };
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+    preparedSpellsLimit?: number;
+  };
+  spellSlots?: {
+    [key: number]: {
+      max: number;
+      used: number;
+    };
+  };
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  abilityPointsUsed?: number;
+  additionalClasses?: ClassLevel[];
 }
 
 export interface CharacterSpell {
@@ -60,3 +105,16 @@ export interface CharacterSpell {
   classes?: string[] | string;
   source?: string;
 }
+
+export interface ClassLevel {
+  class: string;
+  subclass?: string;
+  level: number;
+}
+
+// Define ability score caps to be used in character creation
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};

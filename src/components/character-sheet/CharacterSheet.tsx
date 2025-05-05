@@ -125,9 +125,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
           {/* Health Bar */}
           <div className="mb-4">
             <HPBar
-              current={character.currentHp || 0}
-              max={character.maxHp || 1}
-              temporary={character.temporaryHp || 0}
+              currentHp={character.currentHp || 0}
+              maxHp={character.maxHp || 1}
+              temporaryHp={character.temporaryHp || 0}
               onUpdate={(hp) => handleUpdateCharacter(hp)}
             />
           </div>

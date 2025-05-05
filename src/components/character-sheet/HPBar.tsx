@@ -1,156 +1,189 @@
 
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Plus, Minus } from 'lucide-react';
 
-interface HPBarProps {
+export interface HPBarProps {
   currentHp: number;
   maxHp: number;
-  tempHp?: number;
-  showValues?: boolean;
-  height?: string;
-  className?: string;
+  temporaryHp?: number;
+  onUpdate: (updates: any) => void;
 }
 
 export const HPBar: React.FC<HPBarProps> = ({ 
   currentHp, 
   maxHp, 
-  tempHp = 0,
-  showValues = true,
-  height = '1.5rem',
-  className = ''
+  temporaryHp = 0,
+  onUpdate 
 }) => {
-  const [prevCurrentHp, setPrevCurrentHp] = useState(currentHp);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const initializedRef = useRef(false);
+  const [damageAmount, setDamageAmount] = useState<string>('');
+  const [healAmount, setHealAmount] = useState<string>('');
+  const [tempHpAmount, setTempHpAmount] = useState<string>('');
   
-  // Безопасные значения для расчетов
-  const safeCurrentHp = isNaN(currentHp) ? 0 : Math.max(0, currentHp);
-  const safeMaxHp = isNaN(maxHp) || maxHp <= 0 ? 1 : maxHp;
-  const safeTempHp = isNaN(tempHp) ? 0 : Math.max(0, tempHp);
+  // Calculate health percentage for the progress bar
+  const calculateHealthPercentage = () => {
+    if (maxHp <= 0) return 0;
+    let percentage = (currentHp / maxHp) * 100;
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    return percentage;
+  };
   
-  // Обработка изменения HP для анимации
-  useEffect(() => {
-    // Пропускаем анимацию при первой инициализации
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      setPrevCurrentHp(safeCurrentHp);
-      return;
+  // Handle taking damage
+  const handleTakeDamage = () => {
+    if (!damageAmount || isNaN(Number(damageAmount))) return;
+    
+    const damage = parseInt(damageAmount);
+    if (damage <= 0) return;
+    
+    let newTempHp = temporaryHp;
+    let newCurrentHp = currentHp;
+    
+    // Damage reduces temporary HP first
+    if (newTempHp > 0) {
+      if (damage <= newTempHp) {
+        newTempHp -= damage;
+      } else {
+        // If damage is greater than temp HP, the rest goes to current HP
+        const remainingDamage = damage - newTempHp;
+        newTempHp = 0;
+        newCurrentHp = Math.max(0, newCurrentHp - remainingDamage);
+      }
+    } else {
+      // No temp HP, directly reduce current HP
+      newCurrentHp = Math.max(0, newCurrentHp - damage);
     }
     
-    // Анимируем только при реальных изменениях
-    if (safeCurrentHp !== prevCurrentHp) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => {
-        setIsAnimating(false);
-        setPrevCurrentHp(safeCurrentHp);
-      }, 600);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [safeCurrentHp, prevCurrentHp]);
-  
-  // Расчет процентов для HP баров
-  const healthPercentage = Math.max(0, Math.min(100, (safeCurrentHp / safeMaxHp) * 100));
-  const tempHpPercentage = Math.max(0, Math.min(100, (safeTempHp / safeMaxHp) * 100));
-  
-  // Определяем цвет обычного HP на основе процента здоровья
-  const getHealthColor = () => {
-    if (healthPercentage > 60) return 'bg-green-500';
-    if (healthPercentage > 30) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  // Получаем цвет анимации изменения HP
-  const getAnimationColor = () => {
-    return safeCurrentHp < prevCurrentHp ? 'bg-red-500/30' : 'bg-green-500/30';
+    onUpdate({ 
+      currentHp: newCurrentHp, 
+      temporaryHp: newTempHp 
+    });
+    
+    setDamageAmount('');
   };
   
-  // ARIA атрибуты для доступности
-  const ariaLabel = `Здоровье: ${safeCurrentHp} из ${safeMaxHp}${safeTempHp > 0 ? `, временных: ${safeTempHp}` : ''}`;
+  // Handle healing
+  const handleHeal = () => {
+    if (!healAmount || isNaN(Number(healAmount))) return;
+    
+    const heal = parseInt(healAmount);
+    if (heal <= 0) return;
+    
+    // Can't heal beyond max HP
+    const newHp = Math.min(maxHp, currentHp + heal);
+    
+    onUpdate({ currentHp: newHp });
+    setHealAmount('');
+  };
+  
+  // Handle adding temporary HP
+  const handleAddTempHp = () => {
+    if (!tempHpAmount || isNaN(Number(tempHpAmount))) return;
+    
+    const tempHp = parseInt(tempHpAmount);
+    if (tempHp <= 0) return;
+    
+    // Temporary HP doesn't stack, it replaces if higher
+    const newTempHp = Math.max(temporaryHp, tempHp);
+    
+    onUpdate({ temporaryHp: newTempHp });
+    setTempHpAmount('');
+  };
+  
+  const healthPercentage = calculateHealthPercentage();
+  const healthBarColor = healthPercentage > 50 ? 'bg-green-500' : 
+                         healthPercentage > 25 ? 'bg-yellow-500' : 'bg-red-500';
   
   return (
-    <div 
-      className={`w-full ${className}`}
-      role="progressbar" 
-      aria-valuenow={safeCurrentHp} 
-      aria-valuemin={0} 
-      aria-valuemax={safeMaxHp}
-      aria-label={ariaLabel}
-    >
-      {showValues && (
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center">
-            <Heart className="h-5 w-5 mr-1 text-red-500" />
-            <span className="text-sm font-medium" style={{ color: currentTheme.textColor }}>
-              Здоровье
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-semibold">Здоровье</h3>
+          <div className="text-right">
+            <span className="text-xl font-bold">
+              {currentHp} / {maxHp}
             </span>
-          </div>
-          <span className="text-sm" style={{ color: currentTheme.textColor }}>
-            {safeCurrentHp} / {safeMaxHp}
-            {safeTempHp > 0 && (
-              <span className="ml-1 text-emerald-400">(+{safeTempHp})</span>
+            {temporaryHp > 0 && (
+              <span className="text-sm text-blue-500 ml-2">
+                +{temporaryHp} врем.
+              </span>
             )}
-          </span>
+          </div>
         </div>
-      )}
-      
-      <div 
-        className="relative w-full overflow-hidden rounded-full bg-gray-800/50" 
-        style={{ height }}
-      >
-        {/* Основная полоса здоровья */}
-        <motion.div 
-          className={`absolute top-0 left-0 h-full transition-all ${getHealthColor()}`} 
-          style={{ width: `${healthPercentage}%` }}
-          initial={{ width: `${prevCurrentHp / safeMaxHp * 100}%` }}
-          animate={{ width: `${healthPercentage}%` }}
-          transition={{ duration: 0.3 }}
-        />
         
-        {/* Индикатор изменения HP */}
-        <AnimatePresence>
-          {isAnimating && (
-            <motion.div 
-              className={`absolute top-0 left-0 h-full ${getAnimationColor()}`}
-              style={{ width: `${Math.max(healthPercentage, (prevCurrentHp / safeMaxHp) * 100)}%` }}
-              initial={{ opacity: 0.7 }}
-              animate={{ opacity: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6 }}
-            />
-          )}
-        </AnimatePresence>
-        
-        {/* Временное HP */}
-        {safeTempHp > 0 && (
-          <motion.div
-            className="absolute top-0 h-full bg-emerald-400/70"
-            style={{ 
-              left: `${healthPercentage}%`,
-              width: `${tempHpPercentage}%`,
-              boxShadow: '0 0 5px rgba(52, 211, 153, 0.7)'
-            }}
-            initial={{ width: 0, opacity: 0.5 }}
-            animate={{ width: `${tempHpPercentage}%`, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
-        
-        {/* Сегментированный оверлей для стильного эффекта */}
-        <div className="absolute top-0 left-0 right-0 bottom-0 flex pointer-events-none">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div 
-              key={i} 
-              className="flex-1 border-r border-black/20 last:border-0" 
-            />
-          ))}
+        {/* Health bar */}
+        <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full mb-4 overflow-hidden">
+          <div 
+            className={`h-full ${healthBarColor} rounded-full transition-all duration-500 ease-out`}
+            style={{ width: `${healthPercentage}%` }}
+          ></div>
         </div>
-      </div>
-    </div>
+        
+        {/* HP Controls */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Damage */}
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              min="0"
+              placeholder="Урон"
+              value={damageAmount}
+              onChange={(e) => setDamageAmount(e.target.value)}
+              className="mr-1"
+            />
+            <Button 
+              size="sm" 
+              variant="destructive"
+              onClick={handleTakeDamage}
+              className="flex-shrink-0"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Heal */}
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              min="0"
+              placeholder="Лечение"
+              value={healAmount}
+              onChange={(e) => setHealAmount(e.target.value)}
+              className="mr-1"
+            />
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={handleHeal}
+              className="flex-shrink-0 bg-green-500 hover:bg-green-600"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Temp HP */}
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              min="0"
+              placeholder="Врем. ХП"
+              value={tempHpAmount}
+              onChange={(e) => setTempHpAmount(e.target.value)}
+              className="mr-1"
+            />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleAddTempHp}
+              className="flex-shrink-0 text-blue-500 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

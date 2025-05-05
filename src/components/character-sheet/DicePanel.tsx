@@ -1,278 +1,232 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Character } from '@/types/character';
-import { useSocket } from '@/contexts/SocketContext';
-import { 
-  Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
-  CircleCheck, ChevronsDown, ChevronsUp
-} from 'lucide-react';
 
-export interface DicePanelProps {
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Character } from '@/types/character';
+import { Input } from '@/components/ui/input';
+import { getModifierFromAbilityScore } from '@/utils/characterUtils';
+
+interface DicePanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-  compactMode?: boolean;
-  isDM?: boolean;
-  tokens?: any[];
-  selectedTokenId?: number;
-  onSelectToken?: (id: number | null) => void;
 }
 
-const DicePanel: React.FC<DicePanelProps> = ({ 
-  character,
-  onUpdate,
-  compactMode = false,
-  isDM = false,
-  tokens = [],
-  selectedTokenId,
-  onSelectToken
-}) => {
-  const { toast } = useToast();
-  const [diceType, setDiceType] = useState('d20');
-  const [diceCount, setDiceCount] = useState(1);
-  const [modifier, setModifier] = useState(0);
-  const [customModifier, setCustomModifier] = useState('');
-  const [lastRoll, setLastRoll] = useState<number[]>([]);
-  const [total, setTotal] = useState<number | null>(null);
-  const { connected, sendUpdate } = useSocket();
-
-  // Roll the dice
-  const rollDice = (sides: number, count: number = 1, mod: number = 0, label: string = '') => {
-    // Generate random roll results
-    const rolls: number[] = [];
-    for (let i = 0; i < count; i++) {
-      rolls.push(Math.floor(Math.random() * sides) + 1);
-    }
+const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
+  const [diceSides, setDiceSides] = useState<number>(20);
+  const [diceCount, setDiceCount] = useState<number>(1);
+  const [modifier, setModifier] = useState<number>(0);
+  const [rollLabel, setRollLabel] = useState<string>('');
+  const [isRolling, setIsRolling] = useState(false);
+  
+  const diceTypes = [4, 6, 8, 10, 12, 20, 100];
+  
+  const rollDice = (sides: number, count: number, mod: number, label: string) => {
+    setIsRolling(true);
     
-    // Calculate total
-    const rollTotal = rolls.reduce((sum, roll) => sum + roll, 0) + mod;
-    
-    // Update state
-    setLastRoll(rolls);
-    setTotal(rollTotal);
-    
-    // Store the roll in character data for history
-    if (character) {
-      onUpdate({
-        lastDiceRoll: {
-          diceType: `d${sides}`,
-          count,
-          modifier: mod,
-          rolls,
-          total: rollTotal,
-          label,
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
-    
-    // Show toast notification
-    const modDisplay = mod > 0 ? `+${mod}` : mod < 0 ? mod : '';
-    toast({
-      title: `${label || 'Dice Roll'}: ${count}d${sides}${modDisplay}`,
-      description: `Rolls: [${rolls.join(', ')}] = ${rollTotal}`,
-    });
-    
-    // Send update to socket if connected
-    if (connected && sendUpdate) {
-      const updatedCharacter = {
-        ...character,
-        lastDiceRoll: {
-          diceType: `d${sides}`,
-          count,
-          modifier: mod,
-          rolls,
-          total: rollTotal,
-          label,
-          timestamp: new Date().toISOString()
-        }
+    // Simulate dice rolling delay
+    setTimeout(() => {
+      const rolls = Array(count).fill(0).map(() => Math.floor(Math.random() * sides) + 1);
+      const total = rolls.reduce((sum, roll) => sum + roll, 0) + mod;
+      
+      const newRoll = {
+        diceType: `d${sides}`,
+        count: count,
+        modifier: mod,
+        rolls: rolls,
+        total: total,
+        label: label || `${count}d${sides}${mod >= 0 ? '+' + mod : mod}`,
+        timestamp: new Date().toISOString()
       };
-      sendUpdate(updatedCharacter);
-    }
-    
-    return { rolls, total: rollTotal };
+      
+      onUpdate({ 
+        lastDiceRoll: newRoll 
+      });
+      
+      setIsRolling(false);
+    }, 600);
   };
-
-  // Roll abilities
-  const rollAbility = (ability: string) => {
-    let abilityScore = 10;
-    let abilityName = '';
-    
-    // Get ability score based on ability name
-    switch (ability.toLowerCase()) {
-      case 'str':
-      case 'strength':
-        abilityScore = character.strength || 10;
-        abilityName = 'Сила';
-        break;
-      case 'dex':
-      case 'dexterity':
-        abilityScore = character.dexterity || 10;
-        abilityName = 'Ловкость';
-        break;
-      case 'con':
-      case 'constitution':
-        abilityScore = character.constitution || 10;
-        abilityName = 'Телосложение';
-        break;
-      case 'int':
-      case 'intelligence':
-        abilityScore = character.intelligence || 10;
-        abilityName = 'Интеллект';
-        break;
-      case 'wis':
-      case 'wisdom':
-        abilityScore = character.wisdom || 10;
-        abilityName = 'Мудрость';
-        break;
-      case 'cha':
-      case 'charisma':
-        abilityScore = character.charisma || 10;
-        abilityName = 'Харизма';
-        break;
-    }
-    
-    // Calculate modifier
-    const mod = Math.floor((abilityScore - 10) / 2);
-    
-    // Roll the dice with the modifier
-    return rollDice(20, 1, mod, `${abilityName} (${mod >= 0 ? '+' + mod : mod})`);
-  };
-
-  // Handle custom roll
+  
   const handleCustomRoll = () => {
-    const mod = parseInt(customModifier) || 0;
-    const sides = parseInt(diceType.replace('d', ''));
+    if (diceCount <= 0) return;
     
-    rollDice(sides, diceCount, mod, `Custom ${diceCount}${diceType}${mod > 0 ? '+' + mod : mod < 0 ? mod : ''}`);
+    const label = rollLabel.trim() || `${diceCount}d${diceSides}${modifier >= 0 ? '+' + modifier : modifier}`;
+    rollDice(diceSides, diceCount, modifier, label);
   };
-
-  // Increment/decrement dice count
-  const changeDiceCount = (increment: boolean) => {
-    if (increment && diceCount < 20) {
-      setDiceCount(diceCount + 1);
-    } else if (!increment && diceCount > 1) {
-      setDiceCount(diceCount - 1);
-    }
+  
+  const handleAbilityCheck = (ability: string) => {
+    const abilityScore = character[ability.toLowerCase() as keyof Character] as number;
+    const abilityMod = getModifierFromAbilityScore(abilityScore);
+    
+    rollDice(20, 1, abilityMod, `Проверка ${getAbilityLabel(ability)}`);
   };
-
-  // Get dice icon based on result
-  const getDiceIcon = (result: number) => {
-    switch (result) {
-      case 1: return <Dice1 className="h-6 w-6" />;
-      case 2: return <Dice2 className="h-6 w-6" />;
-      case 3: return <Dice3 className="h-6 w-6" />;
-      case 4: return <Dice4 className="h-6 w-6" />;
-      case 5: return <Dice5 className="h-6 w-6" />;
-      case 6: return <Dice6 className="h-6 w-6" />;
-      default: return result;
-    }
+  
+  const getAbilityLabel = (ability: string): string => {
+    const abilityLabels: Record<string, string> = {
+      strength: 'Силы',
+      dexterity: 'Ловкости',
+      constitution: 'Телосложения',
+      intelligence: 'Интеллекта',
+      wisdom: 'Мудрости',
+      charisma: 'Харизмы'
+    };
+    return abilityLabels[ability.toLowerCase()] || ability;
   };
-
+  
+  // Format the dice roll result for display
+  const formatRollResult = () => {
+    if (!character.lastDiceRoll) return null;
+    
+    const { diceType, count, modifier, rolls, total, label } = character.lastDiceRoll;
+    const modifierStr = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+    
+    return (
+      <div className="text-center my-2 p-2 bg-muted/20 rounded-md">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="flex items-center justify-center gap-1 flex-wrap">
+          {rolls.map((roll, i) => (
+            <span
+              key={i}
+              className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                roll === parseInt(diceType.slice(1)) ? 'bg-success text-success-foreground' :
+                roll === 1 ? 'bg-destructive text-destructive-foreground' :
+                'bg-secondary text-secondary-foreground'
+              }`}
+            >
+              {roll}
+            </span>
+          ))}
+        </div>
+        {count > 1 || modifier !== 0 ? (
+          <p className="text-sm mt-1">
+            {rolls.join(' + ')} {modifier !== 0 ? modifierStr : ''} = <span className="font-bold">{total}</span>
+          </p>
+        ) : (
+          <p className="text-sm mt-1">
+            <span className="font-bold">{total}</span>
+          </p>
+        )}
+      </div>
+    );
+  };
+  
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex justify-between items-center">
-          <span>Бросок костей</span>
-          {total !== null && (
-            <div className="text-2xl font-bold">{total}</div>
-          )}
-        </CardTitle>
+        <CardTitle className="text-lg">Кости</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Last Roll Results */}
-        {lastRoll.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3 p-2 bg-secondary/30 rounded-md">
-            {lastRoll.map((roll, i) => (
-              <span 
-                key={i} 
-                className={`inline-flex items-center justify-center h-8 w-8 rounded-md 
-                  ${roll === 1 ? 'bg-red-500 text-white' : roll === 20 ? 'bg-green-500 text-white' : 'bg-secondary'}`
-                }
-              >
-                {diceType === 'd6' ? getDiceIcon(roll) : roll}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Display last roll result */}
+        {character.lastDiceRoll && formatRollResult()}
         
-        {/* Ability Rolls */}
-        {!compactMode && (
-          <div className="grid grid-cols-3 gap-1 mb-3">
-            {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map((ability) => (
-              <Button 
-                key={ability} 
-                variant="outline" 
-                size="sm"
-                onClick={() => rollAbility(ability)}
-                className="text-xs py-1 h-auto"
-              >
-                {ability}
-              </Button>
-            ))}
-          </div>
-        )}
+        {/* Ability checks */}
+        <div className="grid grid-cols-3 gap-1 mb-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('strength')}
+            disabled={isRolling}
+          >
+            СИЛ
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('dexterity')}
+            disabled={isRolling}
+          >
+            ЛОВ
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('constitution')}
+            disabled={isRolling}
+          >
+            ТЕЛ
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('intelligence')}
+            disabled={isRolling}
+          >
+            ИНТ
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('wisdom')}
+            disabled={isRolling}
+          >
+            МДР
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleAbilityCheck('charisma')}
+            disabled={isRolling}
+          >
+            ХАР
+          </Button>
+        </div>
         
-        {/* Dice Type Selection */}
-        <div className="grid grid-cols-6 gap-1 mb-3">
-          {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
+        {/* Common dice rolls */}
+        <div className="grid grid-cols-7 gap-1 mb-3">
+          {diceTypes.map(sides => (
             <Button
-              key={dice}
-              variant={diceType === dice ? "default" : "outline"}
+              key={sides}
+              variant="secondary"
               size="sm"
-              onClick={() => setDiceType(dice)}
-              className="text-xs py-1 h-auto"
+              onClick={() => rollDice(sides, 1, 0, `d${sides}`)}
+              disabled={isRolling}
+              className="text-xs sm:text-sm"
             >
-              {dice}
+              d{sides}
             </Button>
           ))}
         </div>
         
-        {/* Dice Count */}
-        <div className="flex items-center mb-3 gap-1">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => changeDiceCount(false)}
-          >
-            <ChevronsDown className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex-1 text-center">
-            {diceCount} {diceType}
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => changeDiceCount(true)}
-          >
-            <ChevronsUp className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {/* Modifier */}
-        <div className="flex items-center mb-3">
-          <span className="mr-2">Модификатор:</span>
-          <input
-            type="text"
-            value={customModifier}
-            onChange={(e) => setCustomModifier(e.target.value)}
-            placeholder="0"
-            className="w-12 h-8 px-2 bg-background border rounded-md text-center"
+        {/* Custom roll */}
+        <div className="flex items-center space-x-1">
+          <Input
+            type="number"
+            min={1}
+            max={10}
+            value={diceCount}
+            onChange={(e) => setDiceCount(parseInt(e.target.value) || 1)}
+            className="w-16"
           />
+          <span>d</span>
+          <Input
+            type="number"
+            min={2}
+            value={diceSides}
+            onChange={(e) => setDiceSides(parseInt(e.target.value) || 20)}
+            className="w-16"
+          />
+          <span>+</span>
+          <Input
+            type="number"
+            value={modifier}
+            onChange={(e) => setModifier(parseInt(e.target.value) || 0)}
+            className="w-16"
+          />
+          <Button
+            onClick={handleCustomRoll}
+            disabled={isRolling}
+            variant="default"
+            size="sm"
+          >
+            {isRolling ? "..." : "Бросок"}
+          </Button>
         </div>
         
-        {/* Roll Button */}
-        <Button 
-          className="w-full" 
-          onClick={handleCustomRoll}
-        >
-          Бросить {diceCount}{diceType}{customModifier && parseInt(customModifier) > 0 ? '+' + customModifier : customModifier}
-        </Button>
+        <Input
+          placeholder="Название броска"
+          value={rollLabel}
+          onChange={(e) => setRollLabel(e.target.value)}
+          className="mt-2"
+        />
       </CardContent>
     </Card>
   );
