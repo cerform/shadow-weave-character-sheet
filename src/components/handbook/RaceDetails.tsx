@@ -98,7 +98,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
         </div>
       </div>
       
-      <p style={{ color: currentTheme.textColor }}>{race.description}</p>
+      <p style={{ color: currentTheme.textColor }}>{renderContent(race.description)}</p>
       
       <Tabs 
         defaultValue="traits" 
@@ -215,7 +215,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               >
                 Размер
               </h3>
-              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.size}</p>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{renderContent(race.size)}</p>
             </div>
             
             <div 
