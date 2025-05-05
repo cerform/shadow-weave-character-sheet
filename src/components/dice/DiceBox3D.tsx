@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { DiceBox, type DiceBoxOptions } from "@3d-dice/dice-box";
+import * as DiceBoxModule from "@3d-dice/dice-box";
 import { Spinner } from "../ui/spinner";
 
 interface DiceBox3DProps {
@@ -10,8 +11,32 @@ interface DiceBox3DProps {
   onRollComplete?: (result: number) => void;
   themeColor?: string;
   fixedPosition?: boolean;
-  hideControls?: boolean; // Added the missing prop
+  hideControls?: boolean;
 }
+
+// Создаем тип для опций DiceBox из библиотеки
+type DiceBoxOptions = {
+  theme: string;
+  throwForce: number;
+  gravity: number;
+  linearAngularFactor: number;
+  spinForce: number;
+  mass: number;
+  inertia: number;
+  timeInterval: number;
+  hiddenDice: boolean;
+  onRollFinished: () => void;
+  onReroll: () => void;
+  onRolled: () => void;
+  enableShadows: boolean;
+  shadowTransparency: number;
+  friction: number;
+  collisionIterations: number;
+  spinPeriod: number;
+  lightIntensity: number;
+  scale: number;
+  themeColor?: string;
+};
 
 // Настройки кубика по умолчанию
 const diceOptions: DiceBoxOptions = {
@@ -44,7 +69,7 @@ const DiceScene = ({
   onRollComplete,
   themeColor,
   fixedPosition = false,
-  hideControls = false, // Added default value
+  hideControls = false,
 }) => {
   const { camera, gl } = useThree();
   const prevDiceType = useRef(diceType);
@@ -57,7 +82,7 @@ const DiceScene = ({
     (async () => {
       if (!diceManager.current) {
         // Создаем экземпляр DiceBox
-        diceManager.current = new DiceBox("#dice-canvas", {
+        diceManager.current = new DiceBoxModule.default("#dice-canvas", {
           ...diceOptions,
           themeColor: themeColor || '#8B5A2B',
         });
@@ -167,7 +192,7 @@ export const DiceBox3D: React.FC<DiceBox3DProps> = ({
   onRollComplete,
   themeColor,
   fixedPosition,
-  hideControls = false, // Added the missing prop with default value
+  hideControls = false,
 }) => {
   const diceManager = useRef<any>(null);
 
@@ -183,7 +208,7 @@ export const DiceBox3D: React.FC<DiceBox3DProps> = ({
         onRollComplete={onRollComplete}
         themeColor={themeColor}
         fixedPosition={fixedPosition}
-        hideControls={hideControls} // Pass the hideControls prop
+        hideControls={hideControls}
       />
     </Canvas>
   );
