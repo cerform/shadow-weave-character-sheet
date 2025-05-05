@@ -210,10 +210,3 @@ export interface ClassLevel {
   level: number;
   subclass?: string;
 }
-
-// Define ability score caps for different character levels
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,      // Standard maximum for abilities (levels 1-9)
-  EPIC_CAP: 22,      // Epic tier maximum (levels 10-15)
-  LEGENDARY_CAP: 24  // Legendary tier maximum (levels 16-20)
-};

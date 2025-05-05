@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
@@ -6,7 +5,7 @@ import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
-import { CharacterSheet } from "@/types/character.d";
+import { CharacterSheet } from "@/types/character";
 import { ABILITY_SCORE_CAPS } from "@/constants/characterConstants";
 import { useToast } from "@/hooks/use-toast";
 
