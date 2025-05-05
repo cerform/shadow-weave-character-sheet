@@ -6,6 +6,7 @@ import { sessionService, characterService } from '../services/sessionService';
 import { auth } from '../services/firebase';
 import { toast } from 'sonner';
 import { Character } from '@/contexts/CharacterContext';
+import { Character, CharacterSheet } from '@/types/character';
 
 interface SessionStore {
   // Состояние

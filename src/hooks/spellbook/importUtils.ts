@@ -1,122 +1,72 @@
 
-import { CharacterSpell } from '@/types/character';
-import { parseComponents } from '@/utils/spellProcessors';
+import { CharacterSpell } from '@/types/character.d';
+import { SpellData } from './types';
 
-/**
- * Парсит запись заклинания из текстового формата
- * Формат: [уровень] название компоненты
- * Пример: [3] Молния ВСМ
- */
-export function parseSpellEntry(entry: string): {
-  name: string;
-  level: number;
-  components: string;
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-} | null {
-  // Соответствие шаблону [3] Название ВСМ
-  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([\wКВСМР\.]*)$/);
-  
-  if (!match) return null;
-  
-  const level = parseInt(match[1], 10);
-  const name = match[2].trim();
-  const componentCode = match[3] || '';
-  
-  const { verbal, somatic, material, ritual, concentration } = parseComponents(componentCode);
-  
-  return {
-    name,
-    level,
-    components: componentCode,
-    verbal,
-    somatic,
-    material,
-    ritual,
-    concentration
-  };
-}
-
-/**
- * Обрабатывает блок текста с заклинаниями
- */
-export function processSpellBatch(text: string): Array<{
-  name: string;
-  level: number;
-  components: string;
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-}> {
-  const lines = text.split('\n').filter(line => line.trim().length > 0);
-  const results = [];
-  
-  for (const line of lines) {
-    const parsed = parseSpellEntry(line);
-    if (parsed) {
-      results.push(parsed);
-    }
+// Simple import utility for text-based spell descriptions
+export const importSpellsFromText = (text: string): CharacterSpell[] => {
+  if (!text || typeof text !== 'string') {
+    return [];
   }
-  
-  return results;
-}
 
-/**
- * Импортирует заклинания из текста в существующий список
- */
-export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
-  const parsedSpells = processSpellBatch(text);
-  const updatedSpells = [...existingSpells];
-  
-  // Создаем объект для быстрого поиска
-  const existingSpellsMap = new Map<string, number>();
-  existingSpells.forEach((spell, index) => {
-    const key = `${spell.name}-${spell.level}`;
-    existingSpellsMap.set(key, index);
-  });
-  
-  parsedSpells.forEach(parsed => {
-    const key = `${parsed.name}-${parsed.level}`;
-    const existingIndex = existingSpellsMap.get(key);
+  try {
+    // Simple parsing logic - this is a basic implementation
+    // Split the text by double newlines which typically separate spell entries
+    const spellBlocks = text.split(/\n\n+/);
+    const spells: CharacterSpell[] = [];
     
-    if (existingIndex !== undefined) {
-      // Обновляем существующее заклинание
-      updatedSpells[existingIndex] = {
-        ...updatedSpells[existingIndex],
-        components: parsed.components,
-        verbal: parsed.verbal,
-        somatic: parsed.somatic,
-        material: parsed.material,
-        ritual: parsed.ritual,
-        concentration: parsed.concentration
-      };
-    } else {
-      // Добавляем новое заклинание с базовыми параметрами
-      const newSpell: CharacterSpell = {
-        name: parsed.name,
-        level: parsed.level,
-        school: "Прорицание", // Школа по умолчанию
-        castingTime: "1 действие",
-        range: "На себя",
-        components: parsed.components,
-        duration: parsed.concentration ? "Концентрация, вплоть до 1 минуты" : "Мгновенная",
-        description: "Нет описания",
-        classes: ["Волшебник"], // Класс по умолчанию
-        verbal: parsed.verbal,
-        somatic: parsed.somatic,
-        material: parsed.material,
-        ritual: parsed.ritual,
-        concentration: parsed.concentration
-      };
+    for (const block of spellBlocks) {
+      if (!block.trim()) continue;
       
-      updatedSpells.push(newSpell);
+      const lines = block.split('\n');
+      if (lines.length > 0) {
+        const name = lines[0].trim();
+        let level = 0;
+        let school = 'Неизвестная';
+        
+        // Try to parse level and school
+        if (lines.length > 1) {
+          const secondLine = lines[1].toLowerCase();
+          
+          if (secondLine.includes('заговор')) {
+            level = 0;
+          } else {
+            const levelMatch = secondLine.match(/(\d+)\s+уровень/);
+            if (levelMatch) {
+              level = parseInt(levelMatch[1], 10);
+            }
+          }
+          
+          // Extract school name if available
+          const schoolMatches = [
+            'воплощение', 'некромантия', 'очарование', 'преобразование',
+            'прорицание', 'вызов', 'ограждение', 'иллюзия'
+          ];
+          
+          for (const schoolName of schoolMatches) {
+            if (secondLine.includes(schoolName)) {
+              school = schoolName.charAt(0).toUpperCase() + schoolName.slice(1);
+              break;
+            }
+          }
+        }
+        
+        // Extract description
+        const description = lines.slice(1).join('\n');
+        
+        // Create a new spell with mandatory school property
+        spells.push({
+          name,
+          level,
+          school,
+          description,
+          prepared: false
+        });
+      }
     }
-  });
-  
-  return updatedSpells;
-}
+    
+    return spells;
+  } catch (error) {
+    console.error("Error parsing spell text:", error);
+    return [];
+  }
+};

@@ -120,8 +120,9 @@ export const filterSpellsByClass = (spells: SpellData[], classes: string[]): Spe
     } 
     
     if (typeof spell.classes === 'string') {
+      const spellClassLower = spell.classes.toLowerCase();
       return classes.some(className => 
-        spell.classes.toLowerCase().includes(className.toLowerCase())
+        spellClassLower.includes(className.toLowerCase())
       );
     }
     

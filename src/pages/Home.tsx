@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, User, Sparkles, Book, Dice1 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useToast } from '@/hooks/use-toast';
 import { useSessionStore } from '@/stores/sessionStore';
 import { Character } from '@/types/character.d';
 import { User } from '@/types/session';
 import { isOfflineMode } from '@/utils/authHelpers';
-import { Dice, Plus, Users } from 'lucide-react';
-import CharacterCard from '@/components/character-card/CharacterCard';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -197,11 +202,11 @@ const Home = () => {
         <Tabs defaultValue="characters" className="w-full max-w-4xl mx-auto">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="characters">
-              <Dice className="mr-2 h-4 w-4" />
+              <Dice1 className="mr-2 h-4 w-4" />
               Персонажи
             </TabsTrigger>
             <TabsTrigger value="sessions">
-              <Users className="mr-2 h-4 w-4" />
+              <User className="mr-2 h-4 w-4" />
               Сессии
             </TabsTrigger>
           </TabsList>

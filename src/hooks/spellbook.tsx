@@ -1,11 +1,10 @@
-
 import { useState, useMemo } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
 import { spells } from '@/data/spells';
 import { SpellData } from './spellbook/types';
 import { CharacterSpell } from '@/types/character';
-import { convertToSpellData } from './spellbook/filterUtils';
+import { convertToSpellData } from './spellbook/types';
 
 export const useSpellbook = () => {
   // Состояния для фильтрации

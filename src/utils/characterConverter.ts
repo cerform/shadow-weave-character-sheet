@@ -1,11 +1,10 @@
-
 import { CharacterSheet } from '@/types/character';
 import { Character } from '@/types/character.d';
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения
  */
-export const convertToCharacter = (sheet: CharacterSheet): Character => {
+export const convertToCharacter = (data: any): Character => {
   // Расчет максимального HP на основе класса и уровня
   const calculateMaxHp = (): number => {
     // Базовое значение в зависимости от класса
@@ -25,37 +24,37 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
     };
     
     // Убедимся, что у нас есть класс перед вычислением HP
-    const characterClass = sheet.class || "Воин"; // По умолчанию "Воин", если класс не указан
+    const characterClass = data.class || "Воин"; // По умолчанию "Воин", если класс не указан
     const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
-    const constitutionMod = Math.floor((sheet.abilities.constitution - 10) / 2);
+    const constitutionMod = Math.floor((data.abilities.constitution - 10) / 2);
     
     // HP первого уровня = максимум хитов кости + модификатор телосложения
     let maxHp = baseHp + constitutionMod;
     
     // Для каждого уровня выше первого добавляем среднее значение кости хитов + модификатор телосложения
-    if (sheet.level > 1) {
-      maxHp += ((baseHp / 2 + 1) + constitutionMod) * (sheet.level - 1);
+    if (data.level > 1) {
+      maxHp += ((baseHp / 2 + 1) + constitutionMod) * (data.level - 1);
     }
     
     return Math.round(maxHp);
   };
   
   // Вычисляем максимальные хиты
-  const maxHp = sheet.maxHp || calculateMaxHp();
+  const maxHp = data.maxHp || calculateMaxHp();
   
   // Преобразуем структуру заклинаний
-  const spellsArray = sheet.spells || [];
+  const spellsArray = data.spells || [];
   
   // Определяем слоты заклинаний в зависимости от класса и уровня
   const spellSlots: Record<number, { max: number; used: number }> = {};
   
   // Определяем класс персонажа, обеспечивая непустое значение
-  const characterClass = sheet.class || "";
+  const characterClass = data.class || "";
   
   // Заполняем слоты заклинаний для заклинателей
   if (["Бард", "Волшебник", "Жрец", "Друид", "Чародей", "Колдун"].includes(characterClass)) {
     // Упрощённая логика слотов заклинаний
-    const level = sheet.level;
+    const level = data.level;
     
     if (level >= 1) spellSlots[1] = { max: Math.min(4, level), used: 0 };
     if (level >= 3) spellSlots[2] = { max: Math.min(3, level - 2), used: 0 };
@@ -69,7 +68,7 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
   } 
   // Для полузаклинателей (паладины, следопыты)
   else if (["Паладин", "Следопыт"].includes(characterClass)) {
-    const level = sheet.level;
+    const level = data.level;
     
     if (level >= 2) spellSlots[1] = { max: Math.min(3, level - 1), used: 0 };
     if (level >= 5) spellSlots[2] = { max: Math.min(2, level - 4), used: 0 };
@@ -79,40 +78,40 @@ export const convertToCharacter = (sheet: CharacterSheet): Character => {
   }
   
   return {
-    id: sheet.id || "",
-    userId: sheet.userId,
-    name: sheet.name || "Безымянный",
-    race: sheet.race || "",
-    // Используем свойство subrace как отдельное поле только если оно есть в Character
-    ...(sheet.subrace && { subrace: sheet.subrace }),
-    className: sheet.class || "",
-    class: sheet.class || "",  // Важно! Устанавливаем значение для обязательного поля
-    level: sheet.level || 1,
+    id: data.id || "",
+    userId: data.userId,
+    name: data.name || "Безымянный",
+    race: data.race || 'Человек',
+    ...(data.subrace && { subrace: data.subrace }),
+    className: data.class || "",
+    class: data.class || "",  // Важно! Устанавливаем значение для обязательного поля
+    level: data.level || 1,
     abilities: {
-      STR: sheet.abilities?.strength || 10,
-      DEX: sheet.abilities?.dexterity || 10,
-      CON: sheet.abilities?.constitution || 10,
-      INT: sheet.abilities?.intelligence || 10,
-      WIS: sheet.abilities?.wisdom || 10,
-      CHA: sheet.abilities?.charisma || 10,
-      strength: sheet.abilities?.strength || 10,
-      dexterity: sheet.abilities?.dexterity || 10,
-      constitution: sheet.abilities?.constitution || 10,
-      intelligence: sheet.abilities?.intelligence || 10,
-      wisdom: sheet.abilities?.wisdom || 10,
-      charisma: sheet.abilities?.charisma || 10,
+      STR: data.abilities?.strength || 10,
+      DEX: data.abilities?.dexterity || 10,
+      CON: data.abilities?.constitution || 10,
+      INT: data.abilities?.intelligence || 10,
+      WIS: data.abilities?.wisdom || 10,
+      CHA: data.abilities?.charisma || 10,
+      strength: data.abilities?.strength || 10,
+      dexterity: data.abilities?.dexterity || 10,
+      constitution: data.abilities?.constitution || 10,
+      intelligence: data.abilities?.intelligence || 10,
+      wisdom: data.abilities?.wisdom || 10,
+      charisma: data.abilities?.charisma || 10,
     },
     spells: spellsArray,
     spellSlots: spellSlots,
-    gender: sheet.gender || "",
-    alignment: sheet.alignment || "",
-    background: sheet.background || "",
-    equipment: sheet.equipment || [],
-    languages: sheet.languages || [],
-    proficiencies: sheet.proficiencies?.languages || [],
+    gender: data.gender || "",
+    alignment: data.alignment || "",
+    background: data.background || "",
+    equipment: data.equipment || [],
+    languages: data.languages || [],
+    proficiencies: data.proficiencies?.languages || [],
     maxHp: maxHp,
     currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
-    inspiration: false, // Добавляем свойство inspiration
+    inspiration: data.inspiration || false, // Добавляем свойство inspiration
+    backstory: data.backstory || '', // Add the missing property
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

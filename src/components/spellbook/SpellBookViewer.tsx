@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,10 +20,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useSpellbook, importSpellsFromText } from '@/hooks/spellbook';
+import { useSpellbook } from '@/hooks/spellbook';
+import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
 import SpellList from './SpellList';
 import { CharacterSpell } from '@/types/character.d';
-import { SpellData, convertToCharacterSpell, convertToSpellData } from '@/hooks/spellbook/types';
+import { SpellData, convertToSpellData } from '@/hooks/spellbook/types';
 
 const SpellBookViewer = () => {
   const { 
@@ -115,16 +115,14 @@ const SpellBookViewer = () => {
       
       if (importedSpells.length > 0) {
         // Make sure all spells have required school property
-        const processedSpells = importedSpells.map(spell => ({
+        const processedSpells: SpellData[] = importedSpells.map(spell => ({
           ...spell,
-          school: spell.school || 'Неизвестная'  // Ensure school is never undefined
+          school: spell.school || 'Неизвестная', // Ensure school is never undefined
+          prepared: spell.prepared || false
         }));
         
-        // Convert CharacterSpell to SpellData ensuring school property is always defined
-        const importedSpellsData = processedSpells.map(spell => convertToSpellData(spell));
-        
         // Update the spells list
-        setSpellsData(importedSpellsData);
+        setSpellsData(processedSpells);
         
         toast({
           title: "Импорт успешен",

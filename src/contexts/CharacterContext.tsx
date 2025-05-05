@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import { Character, CharacterSpell, CharacterSheet } from '@/types/character.d';
+import { Character, CharacterSpell } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
@@ -12,6 +12,8 @@ interface CharacterContextProps {
   updateCharacter: (updates: Partial<Character>) => void;
   createNewCharacter?: (initialData: Omit<Character, 'id'>) => Promise<Character>;
   deleteCharacter?: (characterId: string) => Promise<void>;
+  characters: Character[]; // Add this property
+  getUserCharacters: () => Promise<Character[]>; // Add this method
 }
 
 // Создаем контекст персонажа с значениями по умолчанию
@@ -20,6 +22,8 @@ const defaultCharacterContext: CharacterContextProps = {
   setCharacter: () => {},
   loading: false,
   updateCharacter: () => {},
+  characters: [], // Default empty array
+  getUserCharacters: async () => [] // Default implementation
 };
 
 export const CharacterContext = createContext<CharacterContextProps>(defaultCharacterContext);
@@ -82,7 +86,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       localStorage.setItem('dnd-characters', JSON.stringify(characters));
       localStorage.setItem('last-selected-character', character.id);
     } catch (error) {
-      console.error('Ошибка при сохранении персонажа в localStorage:', error);
+      console.error('Ошибка при с��хранении персонажа в localStorage:', error);
     }
   };
 
@@ -299,6 +303,15 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
     createNewCharacter,
     deleteCharacter,
+    characters: [], // Add placeholder array
+    getUserCharacters: async () => { // Add method implementation
+      try {
+        return await characterService.getUserCharacters();
+      } catch (error) {
+        console.error("Error fetching user characters:", error);
+        return [];
+      }
+    }
   };
 
   // Предоставляем контекст всем дочерним элементам
