@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -681,3 +682,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               href="#"
               className="underline underline-offset-4 hover:text-primary"
             >
+              Политикой конфиденциальности
+            </a>
+            .
+          </p>
+        </CardFooter>
+      </Tabs>
+    </Card>
+  );
+};
+
+export default AuthForm;
