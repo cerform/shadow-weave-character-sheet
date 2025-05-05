@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Character } from '@/contexts/CharacterContext';
+import { Button } from '@/components/ui/button';
 
 interface CombatTabProps {
   character: Character;

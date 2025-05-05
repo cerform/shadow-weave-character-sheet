@@ -135,8 +135,8 @@ export interface CharacterSheet {
     attackBonus?: number;
   };
   equipment?: string[];
-  features?: string[];
-  traits?: string[];
+  features?: string[];  // Добавляем массив особенностей класса
+  traits?: string[];    // Добавляем массив расовых особенностей
   backstory: string;  // Теперь обязательное поле
   xp?: number;
   inspiration?: boolean;
@@ -168,6 +168,13 @@ export interface CharacterSheet {
     };
   };
   sorceryPoints?: SorceryPoints;
+  money?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -198,7 +205,11 @@ export interface Character {
     charisma: number;
   };
   proficiencies: string[];
-  equipment: string[];
+  equipment: string[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
   languages: string[];
   gender: string;
@@ -210,6 +221,8 @@ export interface Character {
   ideals?: string;  // Добавляем
   bonds?: string;  // Добавляем
   flaws?: string;  // Добавляем
+  features?: string[];  // Добавляем массив особенностей класса
+  traits?: string[];    // Добавляем массив расовых особенностей
   maxHp?: number;
   currentHp?: number;
   temporaryHp?: number;
@@ -229,6 +242,13 @@ export interface Character {
     };
   };
   sorceryPoints?: SorceryPoints;
+  money?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
   createdAt?: string;
   updatedAt?: string;
   skillProficiencies?: {[skillName: string]: boolean};
