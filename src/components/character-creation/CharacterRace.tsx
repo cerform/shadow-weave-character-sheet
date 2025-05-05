@@ -174,7 +174,7 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
                             className="font-semibold"
                             style={{ color: currentTheme.accent }}
                           >
-                            +{value}
+                            +{renderContent(value)}
                           </span>
                         </div>
                       ))}
