@@ -87,6 +87,18 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     );
   }
 
+  // Helper function to safely ensure the description is a string
+  const getDescription = (desc: any): string => {
+    if (typeof desc === 'string') {
+      return desc;
+    } else if (desc === null || desc === undefined) {
+      return 'Нет описания';
+    } else if (typeof desc === 'object') {
+      return 'Подробное описание особенностей этой подрасы';
+    }
+    return String(desc);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <SectionHeader 
@@ -100,7 +112,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
             <SubraceCard
               key={subrace.name}
               name={subrace.name}
-              description={typeof subrace.description === 'string' ? subrace.description : 'Нет описания'}
+              description={getDescription(subrace.description)}
               traits={Array.isArray(subrace.traits) ? subrace.traits : []}
               abilityScoreIncrease={subrace.abilityScoreIncrease}
               selected={selectedSubrace === subrace.name}

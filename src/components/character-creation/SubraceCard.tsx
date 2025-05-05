@@ -26,6 +26,20 @@ const SubraceCard: React.FC<SubraceProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themeStyles || themes[themeKey] || themes.default;
 
+  // Safe renderer helper function to prevent object rendering errors
+  const renderSafely = (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    } else if (typeof content === 'number') {
+      return content.toString();
+    } else if (content === null || content === undefined) {
+      return '';
+    } else if (typeof content === 'object') {
+      return JSON.stringify(content);
+    }
+    return String(content);
+  };
+
   return (
     <Card 
       className={`cursor-pointer transition-all duration-300 ${
@@ -46,9 +60,9 @@ const SubraceCard: React.FC<SubraceProps> = ({
       onClick={onClick}
     >
       <CardHeader className="pb-2">
-        <CardTitle style={{ color: currentTheme.accent }}>{name}</CardTitle>
+        <CardTitle style={{ color: currentTheme.accent }}>{renderSafely(name)}</CardTitle>
         <CardDescription style={{ color: `${currentTheme.textColor}90` }}>
-          {description}
+          {renderSafely(description)}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,7 +73,7 @@ const SubraceCard: React.FC<SubraceProps> = ({
             </h4>
             <ul className="list-disc pl-5 space-y-1 text-sm" style={{ color: `${currentTheme.textColor}80` }}>
               {traits.map((trait, idx) => (
-                <li key={idx}>{trait}</li>
+                <li key={idx}>{renderSafely(trait)}</li>
               ))}
             </ul>
           </div>
@@ -88,8 +102,12 @@ const SubraceCard: React.FC<SubraceProps> = ({
                     {key === 'intelligence' && 'Интеллект'}
                     {key === 'wisdom' && 'Мудрость'}
                     {key === 'charisma' && 'Харизма'}
+                    {key === 'all' && 'Все характеристики'}
+                    {key === 'custom' && 'Выбор игрока'}
                   </span>
-                  <span style={{ color: currentTheme.accent }}>+{value}</span>
+                  <span style={{ color: currentTheme.accent }}>
+                    {typeof value === 'number' ? `+${value}` : renderSafely(value)}
+                  </span>
                 </div>
               ))}
             </div>

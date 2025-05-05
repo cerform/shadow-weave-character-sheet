@@ -25,20 +25,34 @@ export const useSubraceSelection = ({
       const raceData = races.find(r => r.name === race);
       if (raceData && raceData.subraces && raceData.subraces.length > 0) {
         // Convert subrace strings to objects with descriptions
-        const subraceObjects = raceData.subraces.map(subraceName => {
-          // Check if subRaceDetails exists in the race object
-          const details = 
-            (raceData as any).subRaceDetails ? 
-            (raceData as any).subRaceDetails[subraceName] || {} : 
-            {};
-            
-          return {
-            name: subraceName,
-            description: details.description || `Подраса ${subraceName}`,
-            traits: details.traits || [],
-            abilityScoreIncrease: details.abilityScoreIncrease || {}
-          };
+        const subraceObjects = raceData.subraces.map(subrace => {
+          // Check if subrace is already an object or just a string
+          if (typeof subrace === 'string') {
+            // Check if subRaceDetails exists in the race object
+            const details = 
+              (raceData as any).subRaceDetails ? 
+              (raceData as any).subRaceDetails[subrace] || {} : 
+              {};
+              
+            return {
+              name: subrace,
+              description: details.description || `Подраса ${subrace}`,
+              traits: details.traits || [],
+              abilityScoreIncrease: details.abilityScoreIncrease || {}
+            };
+          } else {
+            // It's already an object, ensure proper typing
+            return {
+              name: subrace.name || 'Неизвестная подраса',
+              description: typeof subrace.description === 'string' 
+                ? subrace.description 
+                : 'Подробное описание',
+              traits: Array.isArray(subrace.traits) ? subrace.traits : [],
+              abilityScoreIncrease: subrace.abilityScoreIncrease || {}
+            };
+          }
         });
+        
         setAvailableSubraces(subraceObjects);
         setHasSubraces(true);
         
@@ -61,7 +75,7 @@ export const useSubraceSelection = ({
         setHasSubraces(false);
       }
     }
-  }, [race, selectedSubrace]);
+  }, [race, selectedSubrace, onSubraceSelect]);
 
   const handleSubraceSelect = (subraceName: string) => {
     setSelectedSubrace(subraceName);
