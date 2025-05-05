@@ -119,9 +119,22 @@ export const useSpellbook = () => {
       9: "#7c3aed"  // 9 уровень
     };
 
-    // Проверяем спеллы в теме и badge
+    // Проверяем spellLevels в теме
     if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
       return currentTheme.spellLevels[level];
+    }
+    
+    // Если есть badge как объект, пробуем получить соответствующий ключ
+    if (typeof currentTheme.badge === 'object' && currentTheme.badge !== null) {
+      const badgeKey = level === 0 ? 'cantrip' : `level${level}`;
+      if (currentTheme.badge[badgeKey as keyof typeof currentTheme.badge]) {
+        return currentTheme.badge[badgeKey as keyof typeof currentTheme.badge] as string;
+      }
+    }
+    
+    // Если badge - строка, используем ее как базовый цвет
+    if (typeof currentTheme.badge === 'string') {
+      return currentTheme.badge;
     }
     
     // Если нет специальных настроек, используем значения по умолчанию

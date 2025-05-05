@@ -218,7 +218,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
       
       {standalone && (
         <div className="mt-8">
-          <NavigationButtons className="mt-8" />
+          <NavigationButtons />
         </div>
       )}
     </div>

@@ -1,156 +1,91 @@
-import { db } from './firebase';
-import { collection, addDoc, doc, updateDoc, getDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
-import { CharacterSheet } from '@/types/character';
-import { auth } from './firebase';
+import { Character } from '@/types/character';
+import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Сохраняет персонажа в базу данных
- * @param character Данные персонажа
- * @returns Объект с id сохраненного персонажа
- */
-export const saveCharacter = async (character: CharacterSheet): Promise<{id: string}> => {
+export const saveCharacter = (character: Character): Character => {
   try {
-    // Проверяем авторизацию
-    const currentUser = auth.currentUser;
-    if (!currentUser && !character.userId) {
-      throw new Error('Пользователь не авторизован');
+    // Generate ID if not present
+    if (!character.id) {
+      character = { ...character, id: uuidv4() };
     }
-
-    // Если userId не установлен, берем из текущего пользователя
-    const userId = character.userId || currentUser?.uid;
     
-    // Проверяем наличие id (для обновления существующего персонажа)
-    if (character.id) {
-      // Конвертируем id в строку, если это число
-      const characterId = typeof character.id === 'number' 
-        ? character.id.toString() 
-        : character.id;
-        
-      // Обновляем существующего персонажа
-      const characterRef = doc(db, 'characters', characterId);
-      
-      // Добавляем timestamp обновления и userId
-      const updatedCharacter = { 
-        ...character, 
-        updatedAt: new Date().toISOString(),
-        userId
-      };
-      
-      // Удаляем id из объекта, т.к. оно уже в пути документа
-      delete updatedCharacter.id;
-      
-      await updateDoc(characterRef, updatedCharacter);
-      console.log("Персонаж успешно обновлен:", characterId);
-      
-      return { id: characterId };
-    } else {
-      // Создаем нового персонажа
-      const characterData = { 
-        ...character,
-        userId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Если есть id в объекте, удаляем его перед созданием документа
-      if (characterData.id) {
-        delete characterData.id;
+    // Get existing characters from localStorage
+    const existingChars = localStorage.getItem('dnd-characters');
+    let characters: Character[] = [];
+    
+    if (existingChars) {
+      try {
+        characters = JSON.parse(existingChars);
+      } catch (e) {
+        console.error('Error parsing stored characters, starting fresh', e);
       }
-      
-      const docRef = await addDoc(collection(db, 'characters'), characterData);
-      console.log("Персонаж успешно создан с ID:", docRef.id);
-      
-      return { id: docRef.id };
     }
+    
+    // Check if character already exists to update, otherwise add
+    const index = characters.findIndex(char => char.id === character.id);
+    
+    if (index >= 0) {
+      characters[index] = { ...characters[index], ...character };
+    } else {
+      characters.push(character);
+    }
+    
+    // Save back to localStorage
+    localStorage.setItem('dnd-characters', JSON.stringify(characters));
+    
+    return character;
   } catch (error) {
-    console.error('Ошибка при сохранении персонажа:', error);
-    throw new Error('Не удалось сохранить персонажа');
+    console.error('Error saving character:', error);
+    throw error;
   }
 };
 
-/**
- * Получает персонажа по его ID
- * @param id ID персонажа
- * @returns Данные персонажа или null
- */
-export const getCharacterById = async (id: string): Promise<CharacterSheet | null> => {
+export const getCharacter = (id: string): Character | null => {
   try {
-    const characterRef = doc(db, 'characters', id);
-    const characterDoc = await getDoc(characterRef);
+    const existingChars = localStorage.getItem('dnd-characters');
     
-    if (characterDoc.exists()) {
-      const characterData = characterDoc.data() as CharacterSheet;
-      return { ...characterData, id: characterDoc.id };
+    if (!existingChars) {
+      return null;
     }
     
+    const characters: Character[] = JSON.parse(existingChars);
+    const character = characters.find(char => char.id === id);
+    
+    return character || null;
+  } catch (error) {
+    console.error('Error getting character:', error);
     return null;
-  } catch (error) {
-    console.error('Ошибка при получении персонажа:', error);
-    throw new Error('Не удалось получить персонажа');
   }
 };
 
-/**
- * Получает всех персонажей текущего пользователя
- * @returns Массив персонажей
- */
-export const getCharactersByUserId = async (): Promise<CharacterSheet[]> => {
+export const deleteCharacter = (id: string): void => {
   try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      console.log('Пользователь не авторизован, возвращаем пустой список персонажей');
+    const existingChars = localStorage.getItem('dnd-characters');
+    
+    if (!existingChars) {
+      return;
+    }
+    
+    let characters: Character[] = JSON.parse(existingChars);
+    characters = characters.filter(char => char.id !== id);
+    
+    localStorage.setItem('dnd-characters', JSON.stringify(characters));
+  } catch (error) {
+    console.error('Error deleting character:', error);
+  }
+};
+
+export const getAllCharacters = (): Character[] => {
+  try {
+    const existingChars = localStorage.getItem('dnd-characters');
+    
+    if (!existingChars) {
       return [];
     }
-
-    const userId = currentUser.uid;
-    console.log('Получение персонажей для пользователя:', userId);
     
-    const charactersQuery = query(
-      collection(db, 'characters'),
-      where('userId', '==', userId)
-    );
-    
-    const querySnapshot = await getDocs(charactersQuery);
-    const characters = querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    } as CharacterSheet));
-
-    console.log('Получены персонажи:', characters.length);
+    const characters: Character[] = JSON.parse(existingChars);
     return characters;
   } catch (error) {
-    console.error('Ошибка при получении персонажей пользователя:', error);
-    throw new Error('Не удалось получить персонажей');
+    console.error('Error getting all characters:', error);
+    return [];
   }
-};
-
-/**
- * Получает всех персонажей (алиас для getCharactersByUserId)
- * @returns Массив персонажей
- */
-export const getCharacters = async (): Promise<CharacterSheet[]> => {
-  return getCharactersByUserId();
-};
-
-/**
- * Удаляет персонажа по его ID
- * @param id ID персонажа
- */
-export const deleteCharacter = async (id: string): Promise<void> => {
-  try {
-    await deleteDoc(doc(db, 'characters', id));
-    console.log('Персонаж успешно удален:', id);
-  } catch (error) {
-    console.error('Ошибка при удалении персонажа:', error);
-    throw new Error('Не удалось удалить персонажа');
-  }
-};
-
-// Для совместимости с предыдущим API
-export default {
-  saveCharacter,
-  getCharacterById,
-  getCharactersByUserId,
-  getCharacters,
-  deleteCharacter
 };

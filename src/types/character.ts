@@ -113,7 +113,7 @@ export interface Character {
     attackBonus?: number;
     preparedSpellsLimit?: number;
   };
-  spells?: CharacterSpell[] | string[];
+  spells?: (CharacterSpell | string)[];
   spellSlots?: {
     [key: number]: {
       max: number;
@@ -215,5 +215,4 @@ export interface AbilityScores {
   CHA?: number;
 }
 
-// Экспортируем тип Character чтобы он был доступен для импорта из других файлов
-export { Character as Character };
+// Removing duplicate export to avoid conflicts

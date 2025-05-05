@@ -1,5 +1,4 @@
-import { CharacterSheet } from '@/types/character';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/utils/characterImports';
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения

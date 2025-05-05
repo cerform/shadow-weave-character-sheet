@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Update props to match the expected props in SpellPanel
 export interface SpellSelectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,21 +73,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Add the spell to the character's spell list
-    const newSpell: CharacterSpell = {
-      id: spell.id,
-      name: spell.name,
-      level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: typeof spell.description === 'string' ? 
-                 spell.description : 
-                 Array.isArray(spell.description) ? 
-                 spell.description.join('\n') : '',
-      prepared: false,
-    };
+    const newSpell: CharacterSpell = convertSpellDataToCharacterSpell(spell);
     
     const updatedSpells = [...(character.spells || []), newSpell];
     
