@@ -1,75 +1,38 @@
 
-import { CharacterSpell } from '@/types/character.d';
 import { SpellData } from './types';
 
-// We'll rename the imported function to avoid name conflicts
-import { convertToSpellData as importedConvertToSpellData } from './types';
-
-// Helper functions for filtering spells
-export const filterSpellsBySearchTerm = (spells: CharacterSpell[], searchTerm: string): CharacterSpell[] => {
-  const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  return spells.filter(spell => 
-    spell.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-    (spell.description && spell.description.toLowerCase().includes(lowerCaseSearchTerm))
-  );
+// Получаем все уникальные уровни заклинаний
+export const getAllLevels = (spells: SpellData[]): number[] => {
+  const levels = Array.from(new Set(spells.map(spell => spell.level)));
+  return levels.sort((a, b) => a - b);
 };
 
-export const filterSpellsByLevel = (spells: CharacterSpell[], levels: number[]): CharacterSpell[] => {
-  return spells.filter(spell => levels.includes(spell.level));
+// Получаем все уникальные школы магии
+export const getAllSchools = (spells: SpellData[]): string[] => {
+  const schools = Array.from(new Set(spells.map(spell => spell.school)));
+  return schools.sort();
 };
 
-export const filterSpellsBySchool = (spells: CharacterSpell[], schools: string[]): CharacterSpell[] => {
-  return spells.filter(spell => spell.school && schools.includes(spell.school));
-};
-
-export const filterSpellsByClass = (spells: CharacterSpell[], classes: string[]): CharacterSpell[] => {
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    if (Array.isArray(spell.classes)) {
-      return spell.classes.some(c => 
-        classes.some(cls => c.toLowerCase().includes(cls.toLowerCase()))
-      );
-    }
-    
-    if (typeof spell.classes === 'string') {
-      return classes.some(cls => spell.classes?.toLowerCase().includes(cls.toLowerCase()));
-    }
-    
-    return false;
-  });
-};
-
-// Type checking helpers
-export const isString = (value: any): value is string => {
-  return typeof value === 'string';
-};
-
-export const isStringArray = (value: any): value is string[] => {
-  return Array.isArray(value) && value.every(item => typeof item === 'string');
-};
-
-// Extract unique classes from spells
-export const extractClasses = (spells: CharacterSpell[]): string[] => {
-  const classSet = new Set<string>();
+// Получаем все уникальные классы
+export const getAllClasses = (spells: SpellData[]): string[] => {
+  const classesSet = new Set<string>();
   
   spells.forEach(spell => {
-    if (!spell.classes) return;
-    
-    if (Array.isArray(spell.classes)) {
-      spell.classes.forEach(c => classSet.add(c));
-    } else if (typeof spell.classes === 'string') {
-      // Split by comma and trim
-      spell.classes.split(',').forEach(c => classSet.add(c.trim()));
+    if (spell.classes) {
+      if (Array.isArray(spell.classes)) {
+        spell.classes.forEach(className => classesSet.add(className));
+      } else if (typeof spell.classes === 'string') {
+        classesSet.add(spell.classes);
+      }
     }
   });
   
-  return Array.from(classSet).sort();
+  return Array.from(classesSet).sort();
 };
 
-// Format classes for display
-export const formatClasses = (classes: string[] | string | undefined): string => {
-  if (!classes) return 'Нет данных';
+// Форматирование списка классов для отображения
+export const formatClassesString = (classes: string[] | string | undefined): string => {
+  if (!classes) return '';
   
   if (Array.isArray(classes)) {
     return classes.join(', ');
@@ -78,16 +41,90 @@ export const formatClasses = (classes: string[] | string | undefined): string =>
   return classes;
 };
 
-// Create our local version of convertToSpellData that ensures school is always present
-export const convertToSpellData = (characterSpell: CharacterSpell): SpellData => {
-  return {
-    ...characterSpell,
-    school: characterSpell.school || 'Неизвестная', // Provide a default value for required field
-    prepared: characterSpell.prepared || false
-  };
+// Получаем цвет для уровня заклинания
+export const getBadgeColorByLevel = (level: number): string => {
+  switch (level) {
+    case 0: return '#78716c'; // Заговор
+    case 1: return '#2563eb'; // 1 уровень
+    case 2: return '#7c3aed'; // 2 уровень
+    case 3: return '#db2777'; // 3 уровень
+    case 4: return '#b91c1c'; // 4 уровень
+    case 5: return '#ea580c'; // 5 уровень
+    case 6: return '#65a30d'; // 6 уровень
+    case 7: return '#0d9488'; // 7 уровень
+    case 8: return '#6d28d9'; // 8 уровень
+    case 9: return '#4c1d95'; // 9 уровень
+    default: return '#1e293b';
+  }
 };
 
-// Helper function to convert CharacterSpell array to SpellData array
-export const convertCharacterSpellsToSpellData = (characterSpells: CharacterSpell[]): SpellData[] => {
-  return characterSpells.map(spell => convertToSpellData(spell));
+// Получаем цвет для школы магии
+export const getSchoolBadgeColor = (school: string): string => {
+  const normalizedSchool = typeof school === 'string' ? school.toLowerCase() : '';
+  
+  switch (normalizedSchool) {
+    case 'воплощение': return '#dc2626';
+    case 'некромантия': return '#4b5563';
+    case 'очарование': return '#ec4899';
+    case 'преобразование': return '#2563eb';
+    case 'прорицание': return '#9333ea';
+    case 'вызов': return '#ea580c';
+    case 'ограждение': return '#65a30d';
+    case 'иллюзия': return '#8b5cf6';
+    default: return '#475569';
+  }
+};
+
+// Фильтрация заклинаний по поисковому запросу
+export const filterSpellsBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+  if (!searchTerm) return spells;
+  
+  const lowercasedTerm = searchTerm.toLowerCase();
+  
+  return spells.filter(spell => {
+    // Фильтрация по имени
+    const nameMatch = spell.name.toLowerCase().includes(lowercasedTerm);
+    
+    // Фильтрация по описанию
+    const descriptionMatch = spell.description?.toLowerCase().includes(lowercasedTerm) || false;
+    
+    return nameMatch || descriptionMatch;
+  });
+};
+
+// Фильтрация заклинаний по уровню
+export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
+  if (levels.length === 0) return spells;
+  return spells.filter(spell => levels.includes(spell.level));
+};
+
+// Фильтрация заклинаний по школе
+export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
+  if (schools.length === 0) return spells;
+  return spells.filter(spell => schools.includes(spell.school));
+};
+
+// Фильтрация заклинаний по классу
+export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
+  if (classes.length === 0) return spells;
+  
+  return spells.filter(spell => {
+    if (!spell.classes) return false;
+    
+    if (Array.isArray(spell.classes)) {
+      return classes.some(className => 
+        spell.classes.some(spellClass => 
+          typeof spellClass === 'string' && spellClass.toLowerCase().includes(className.toLowerCase())
+        )
+      );
+    } 
+    
+    if (typeof spell.classes === 'string') {
+      return classes.some(className => 
+        spell.classes.toLowerCase().includes(className.toLowerCase())
+      );
+    }
+    
+    return false;
+  });
 };

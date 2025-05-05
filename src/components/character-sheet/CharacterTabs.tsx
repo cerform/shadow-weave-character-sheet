@@ -18,13 +18,15 @@ interface CharacterTabsProps {
   setActiveTab: (tab: string) => void;
   character: Character | null;
   onUpdate: (updates: any) => void;
+  isDM?: boolean;
 }
 
 export const CharacterTabs: React.FC<CharacterTabsProps> = ({
   activeTab,
   setActiveTab,
   character,
-  onUpdate
+  onUpdate,
+  isDM = false
 }) => {
   return (
     <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
@@ -113,3 +115,5 @@ export const CharacterTabs: React.FC<CharacterTabsProps> = ({
     </Tabs>
   );
 };
+
+export default CharacterTabs;

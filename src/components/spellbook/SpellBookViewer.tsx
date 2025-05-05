@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSpellbook, importSpellsFromText } from '@/hooks/spellbook';
 import SpellList from './SpellList';
 import { CharacterSpell } from '@/types/character.d';
-import { SpellData, convertToCharacterSpell } from '@/hooks/spellbook/types';
+import { SpellData, convertToCharacterSpell, convertToSpellData } from '@/hooks/spellbook/types';
 
 const SpellBookViewer = () => {
   const { 
@@ -61,6 +62,44 @@ const SpellBookViewer = () => {
   // State for spell data
   const [spellsData, setSpellsData] = useState<SpellData[]>([]);
 
+  const handleExportSpells = () => {
+    if (spellsData.length === 0) {
+      toast({
+        title: "Нет данных для экспорта",
+        description: "В книге заклинаний нет заклинаний для экспорта",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const spellText = spellsData.map(spell => {
+        return `${spell.name}\n${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}, ${spell.school}\n${spell.description || ''}`
+      }).join('\n\n');
+
+      const blob = new Blob([spellText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spellbook-export.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Экспорт успешен",
+        description: `Экспортировано ${spellsData.length} заклинаний.`
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка экспорта",
+        description: "Произошла ошибка при экспорте заклинаний.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleImportSpells = () => {
     if (!importText.trim()) {
       toast({
@@ -75,10 +114,16 @@ const SpellBookViewer = () => {
       const importedSpells = importSpellsFromText(importText);
       
       if (importedSpells.length > 0) {
-        // Convert CharacterSpell to SpellData
-        const importedSpellsData = convertCharacterSpellsToSpellData(importedSpells);
+        // Make sure all spells have required school property
+        const processedSpells = importedSpells.map(spell => ({
+          ...spell,
+          school: spell.school || 'Неизвестная'  // Ensure school is never undefined
+        }));
         
-        // Обновляем список заклинаний
+        // Convert CharacterSpell to SpellData ensuring school property is always defined
+        const importedSpellsData = processedSpells.map(spell => convertToSpellData(spell));
+        
+        // Update the spells list
         setSpellsData(importedSpellsData);
         
         toast({
