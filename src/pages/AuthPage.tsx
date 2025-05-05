@@ -1,19 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import AuthForm from '@/components/auth/AuthForm';
 import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AuthPage = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const returnPath = location.state?.returnPath || '/';
-  const [authType, setAuthType] = useState<'standard' | 'firebase'>('standard');
 
   return (
     <div className={`min-h-screen p-6 flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
@@ -36,20 +33,7 @@ const AuthPage = () => {
             Войдите или зарегистрируйтесь, чтобы сохранять своих персонажей в облаке и иметь к ним доступ с любого устройства
           </p>
           
-          <Tabs value={authType} onValueChange={(value) => setAuthType(value as 'standard' | 'firebase')} className="w-full mb-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="standard">Стандартная форма</TabsTrigger>
-              <TabsTrigger value="firebase">Упрощенная форма</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="standard">
-              <AuthForm redirectTo={returnPath} />
-            </TabsContent>
-            
-            <TabsContent value="firebase">
-              <FirebaseAuthForm />
-            </TabsContent>
-          </Tabs>
+          <FirebaseAuthForm />
         </div>
       </div>
     </div>
