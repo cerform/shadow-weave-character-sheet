@@ -19,6 +19,7 @@ import CreationStepper from '@/components/character-creation/CreationStepper';
 import CreationSidebar from '@/components/character-creation/CreationSidebar';
 import FloatingActionButton from '@/components/character-creation/FloatingActionButton';
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
+import { getEquipmentLength } from '@/utils/safetyUtils';
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -107,7 +108,7 @@ const CharacterCreationPage: React.FC = () => {
         id: 7, 
         name: "Снаряжение", 
         description: "Выбор снаряжения",
-        completed: !!character.equipment && character.equipment.length > 0
+        completed: !!character.equipment && getEquipmentLength(character.equipment) > 0
       },
       { 
         id: 8, 
