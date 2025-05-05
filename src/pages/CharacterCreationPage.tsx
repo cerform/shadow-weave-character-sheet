@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Character } from '@/types/character';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { ArrowLeft, ArrowRight, ChevronRight, Save, Dices } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { getAllRaces, getSubracesForRace } from '@/data/races';
 import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
@@ -20,6 +20,7 @@ import CreationSidebar from '@/components/character-creation/CreationSidebar';
 import FloatingActionButton from '@/components/character-creation/FloatingActionButton';
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
 import { getEquipmentLength } from '@/utils/safetyUtils';
+import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -326,7 +327,7 @@ const CharacterCreationPage: React.FC = () => {
         color: themeStyles?.textColor 
       }}
     >
-      {/* Header with Theme Selector */}
+      {/* Header with Theme Selector and Navigation Icons */}
       <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md py-3 px-4 border-b border-gray-800">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
@@ -334,7 +335,8 @@ const CharacterCreationPage: React.FC = () => {
               Создание персонажа
             </h1>
             
-            <div className="flex space-x-2">
+            <div className="flex items-center space-x-4">
+              <IconOnlyNavigation />
               <ThemeSelector />
             </div>
           </div>

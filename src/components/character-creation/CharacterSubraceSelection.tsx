@@ -39,7 +39,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
       // Используем функцию обновления с задержкой, чтобы избежать циклов рендеринга
       setTimeout(() => {
         updateCharacter({ subrace });
-      }, 0);
+      }, 50);
     }
   });
 
@@ -107,7 +107,6 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     return String(desc);
   };
 
-  // Устанавливаем фиксированную высоту для ScrollArea, чтобы избежать прыжков
   return (
     <div className="space-y-6">
       <SectionHeader 

@@ -18,6 +18,7 @@ export const useSubraceSelection = ({
   const [availableSubraces, setAvailableSubraces] = useState<Omit<SubraceProps, 'selected' | 'onClick'>[]>([]);
   const [autoRedirectAttempted, setAutoRedirectAttempted] = useState<boolean>(false);
   const [hasSubraces, setHasSubraces] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Функция для преобразования данных подрасы
   const mapSubraceData = useCallback((subrace: any, raceData: any) => {
@@ -85,33 +86,42 @@ export const useSubraceSelection = ({
     setHasSubraces(true);
     
     // Проверяем, валидна ли текущая подраса для новой расы
-    // Делаем это только при изменении расы, чтобы избежать циклов
     if (!isValidSubrace(race, selectedSubrace) && selectedSubrace !== '') {
       console.log("Resetting invalid subrace:", selectedSubrace);
-      // Устанавливаем значения напрямую, без использования setState, чтобы избежать повторного рендеринга
+      // Используем setIsProcessing для предотвращения повторных сбросов
+      setIsProcessing(true);
+      setSelectedSubrace('');
+      
+      // Используем setTimeout, чтобы избежать циклических вызовов
       setTimeout(() => {
-        setSelectedSubrace('');
         onSubraceSelect('');
-      }, 0);
+        setIsProcessing(false);
+      }, 50);
     }
-    // Убираем selectedSubrace из зависимостей, чтобы избежать циклических обновлений
-  }, [race, onSubraceSelect, mapSubraceData, isValidSubrace]);
+  }, [race, mapSubraceData, isValidSubrace, selectedSubrace, onSubraceSelect]);
 
   // При изменении initialSubrace (если пользователь выбрал вариант из другого места)
   useEffect(() => {
-    if (initialSubrace && initialSubrace !== selectedSubrace && isValidSubrace(race, initialSubrace)) {
+    if (!isProcessing && initialSubrace && initialSubrace !== selectedSubrace && isValidSubrace(race, initialSubrace)) {
       setSelectedSubrace(initialSubrace);
     }
-  }, [initialSubrace, race, isValidSubrace, selectedSubrace]);
+  }, [initialSubrace, race, isValidSubrace, selectedSubrace, isProcessing]);
 
   const handleSubraceSelect = useCallback((subraceName: string) => {
     console.log("Selected subrace:", subraceName);
+    
+    // Предотвращаем повторные вызовы во время обработки
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
     setSelectedSubrace(subraceName);
-    // Вызываем callback после небольшой задержки, чтобы избежать лишних циклов рендеринга
+    
+    // Используем setTimeout для предотвращения циклических обновлений
     setTimeout(() => {
       onSubraceSelect(subraceName);
-    }, 0);
-  }, [onSubraceSelect]);
+      setIsProcessing(false);
+    }, 50);
+  }, [onSubraceSelect, isProcessing]);
 
   return {
     selectedSubrace,

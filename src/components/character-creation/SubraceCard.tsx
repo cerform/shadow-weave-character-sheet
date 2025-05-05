@@ -40,26 +40,28 @@ const SubraceCard: React.FC<SubraceProps> = ({
     return String(content);
   };
 
+  // Выделим стили в одно место для предотвращения конфликтов
+  const cardStyles = {
+    background: selected
+      ? `${currentTheme.cardBackground}`
+      : 'rgba(0, 0, 0, 0.6)',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: selected
+      ? currentTheme.accent
+      : 'rgba(255, 255, 255, 0.1)',
+    boxShadow: selected
+      ? `0 0 12px ${currentTheme.accent}80`
+      : 'none',
+    color: currentTheme.textColor
+  };
+
   return (
     <Card 
       className={`cursor-pointer transition-all duration-300 ${
         selected ? 'ring-2' : 'hover:bg-accent/10'
       }`}
-      style={{ 
-        background: selected
-          ? `${currentTheme.cardBackground}`
-          : 'rgba(0, 0, 0, 0.6)',
-        // Используем borderColor вместо border для избежания конфликтов
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderColor: selected
-          ? currentTheme.accent
-          : 'rgba(255, 255, 255, 0.1)',
-        boxShadow: selected
-          ? `0 0 12px ${currentTheme.accent}80`
-          : 'none',
-        color: currentTheme.textColor
-      }}
+      style={cardStyles}
       onClick={onClick}
     >
       <CardHeader className="pb-2">
