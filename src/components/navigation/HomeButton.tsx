@@ -23,13 +23,15 @@ const HomeButton: React.FC<HomeButtonProps> = ({
   
   // Создаем CSS-переменную для RGB версии цвета акцента
   const buttonStyle = {
-    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
+    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+    borderColor: `${currentTheme.accent}80`,
+    boxShadow: `0 0 10px ${currentTheme.accent}40`
   } as React.CSSProperties;
   
   return (
     <Button 
       variant={variant}
-      className={`flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] ${className}`}
+      className={`flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow ${className}`}
       asChild
       style={buttonStyle}
     >

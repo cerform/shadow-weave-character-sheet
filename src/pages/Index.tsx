@@ -33,6 +33,23 @@ const Index = () => {
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Динамические стили для карточек на основе текущей темы
+  const cardStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderColor: currentTheme.accent,
+    boxShadow: `0 0 15px ${currentTheme.accent}40`,
+    transition: 'all 0.3s ease'
+  };
+
+  // Стили для кнопок с подсветкой
+  const primaryButtonStyle = {
+    backgroundColor: currentTheme.accent, 
+    borderColor: `${currentTheme.accent}90`,
+    boxShadow: `0 0 10px ${currentTheme.accent}60`,
+    background: `linear-gradient(170deg, ${currentTheme.accent} 0%, ${currentTheme.accent}99 100%)`,
+    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
+  } as React.CSSProperties;
+  
   // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -130,14 +147,6 @@ const Index = () => {
     }
   };
 
-  // Динамические стили для карточек на основе текущей темы
-  const cardStyle = {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderColor: currentTheme.accent,
-    boxShadow: currentTheme.glow,
-    transition: 'all 0.3s ease'
-  };
-
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
@@ -172,13 +181,14 @@ const Index = () => {
                 )}
               </p>
               <p className="text-sm text-muted-foreground mb-3">{currentUser?.email}</p>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1 animated-glow">
                 <LogOut className="h-3.5 w-3.5" />
                 Выйти
               </Button>
             </div>
           ) : (
-            <Button onClick={() => navigate("/auth")} className="flex items-center gap-2">
+            <Button onClick={() => navigate("/auth")} className="flex items-center gap-2 primary-button-glow" 
+              style={primaryButtonStyle}>
               <LogIn className="h-4 w-4" />
               Войти в аккаунт
             </Button>
@@ -197,8 +207,12 @@ const Index = () => {
             {/* Колонка игрока */}
             <div className="grid grid-cols-1 gap-4">
               <Card 
-                className="backdrop-blur-sm transition-shadow" 
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow border border-[var(--theme-accent)]" 
+                style={{
+                  '--theme-accent': currentTheme.accent,
+                  '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+                  boxShadow: `0 0 15px ${currentTheme.accent}40`
+                } as React.CSSProperties}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -210,14 +224,16 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button asChild className="w-full gap-2">
+                  <Button asChild className="w-full gap-2 primary-button-glow"
+                    style={primaryButtonStyle}>
                     <Link to="/character-creation">
                       <Plus className="size-4" />
                       Создать персонажа
                     </Link>
                   </Button>
                   
-                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
+                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} 
+                    className="w-full gap-2 animated-glow">
                     <FileUp className="size-4" />
                     Загрузить персонажа (JSON)
                   </Button>
@@ -232,7 +248,7 @@ const Index = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setPdfImportDialogOpen(true)}
-                    className="w-full gap-2"
+                    className="w-full gap-2 animated-glow"
                   >
                     <FileUp className="size-4" />
                     Импорт из PDF
@@ -241,8 +257,12 @@ const Index = () => {
               </Card>
               
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow border border-[var(--theme-accent)]"
+                style={{
+                  '--theme-accent': currentTheme.accent,
+                  '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+                  boxShadow: `0 0 15px ${currentTheme.accent}40`
+                } as React.CSSProperties}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -254,7 +274,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full primary-button-glow" style={primaryButtonStyle}>
                     <Link to="/join">
                       Присоединиться к сессии
                     </Link>
@@ -266,8 +286,12 @@ const Index = () => {
             {/* Колонка мастера */}
             <div className="grid grid-cols-1 gap-4">
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow border border-[var(--theme-accent)]"
+                style={{
+                  '--theme-accent': currentTheme.accent,
+                  '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+                  boxShadow: `0 0 15px ${currentTheme.accent}40`
+                } as React.CSSProperties}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -279,7 +303,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full primary-button-glow" style={primaryButtonStyle}>
                     <Link to="/dm">
                       Панель мастера
                     </Link>
@@ -289,8 +313,12 @@ const Index = () => {
 
               {/* Две отдельные карточки для Руководства и Книги заклинаний */}
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow border border-[var(--theme-accent)]"
+                style={{
+                  '--theme-accent': currentTheme.accent,
+                  '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+                  boxShadow: `0 0 15px ${currentTheme.accent}40`
+                } as React.CSSProperties}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -302,7 +330,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full primary-button-glow" style={primaryButtonStyle}>
                     <Link to="/handbook">
                       Открыть руководство
                     </Link>
@@ -311,8 +339,12 @@ const Index = () => {
               </Card>
               
               <Card 
-                className="backdrop-blur-sm transition-shadow"
-                style={cardStyle}
+                className="backdrop-blur-sm transition-shadow border border-[var(--theme-accent)]"
+                style={{
+                  '--theme-accent': currentTheme.accent,
+                  '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+                  boxShadow: `0 0 15px ${currentTheme.accent}40`
+                } as React.CSSProperties}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -324,7 +356,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full primary-button-glow" style={primaryButtonStyle}>
                     <Link to="/spellbook">
                       Открыть книгу заклинаний
                     </Link>

@@ -19,14 +19,16 @@ const MainNavigation = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   const buttonStyle = {
-    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
+    '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+    borderColor: `${currentTheme.accent}80`,
+    boxShadow: `0 0 8px ${currentTheme.accent}40`
   } as React.CSSProperties;
   
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)]"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
         style={buttonStyle}
         asChild
       >
@@ -38,7 +40,7 @@ const MainNavigation = () => {
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)]"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
         style={buttonStyle}
         asChild
       >
@@ -50,7 +52,7 @@ const MainNavigation = () => {
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)]"
+        className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
         style={buttonStyle}
         asChild
       >
@@ -63,7 +65,7 @@ const MainNavigation = () => {
       {!isAuthenticated && (
         <Button 
           variant="outline" 
-          className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)]"
+          className="flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] animated-glow"
           style={buttonStyle}
           asChild
         >

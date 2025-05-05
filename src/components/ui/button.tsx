@@ -54,10 +54,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Получаем базовые классы кнопки
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
-    // Исправляем проверку класса Details - без обращения к props.className
+    // Определяем, имеет ли класс Details
     const hasDetailsClass = className ? className.includes('Details') : false;
     
-    // Улучшаем подсветку для всех кнопок
+    // Создаем стили для градиента и свечения
     const style = {
       ...props.style,
       color: variant === 'ghost' && hasDetailsClass
@@ -66,23 +66,26 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ? currentTheme.buttonText || '#FFFFFF' 
           : props.style?.color || currentTheme.buttonText || '#FFFFFF',
       borderColor: variant === 'outline' 
-        ? props.style?.borderColor || currentTheme.accent 
-        : props.style?.borderColor,
+        ? `${currentTheme.accent}80` 
+        : props.style?.borderColor || `${currentTheme.accent}80`,
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
         ? currentTheme.accent 
         : props.style?.backgroundColor,
-      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
-      // Добавим эффекты при наведении через CSS переменные
-      '--hover-glow': `0 0 12px ${currentTheme.accent}80`,
-      '--hover-border-color': currentTheme.accent,
-      '--hover-bg-color': `${currentTheme.accent}30`,
-    };
+      textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
+      // Добавляем переменные для гибкой настройки эффектов в CSS
+      '--theme-accent': currentTheme.accent,
+      '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(','),
+      '--theme-glow': `0 0 15px ${currentTheme.accent}80`,
+      boxShadow: className?.includes('primary') ? `0 0 10px ${currentTheme.accent}60` : 'none',
+    } as React.CSSProperties;
     
-    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
+    // Добавляем классы для CSS эффектов
     const enhancedClasses = cn(
       baseClasses,
-      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
-      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
+      "transition-all duration-300",
+      variant === 'default' && !className?.includes('Details') && "bg-gradient-to-r from-[var(--theme-accent)] to-[var(--theme-accent)]",
+      variant === 'outline' && "border border-[var(--theme-accent)] hover:border-[var(--theme-accent)] hover:shadow-[var(--theme-glow)]",
+      variant !== 'ghost' && variant !== 'link' && "hover:shadow-[var(--theme-glow)] focus:shadow-[var(--theme-glow)]",
     );
     
     return (
