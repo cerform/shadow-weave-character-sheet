@@ -218,10 +218,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     // Если не знаем, поддерживаются ли попапы, проверим еще раз
     if (popupSupported === null) {
       checkPopupSupport();
-      // Исправляем проблемное условие - здесь была ошибка TS2367
-      // Вместо сравнения popupSupported с false напрямую, 
-      // проверяем его значение после обновления
-      if (!popupSupported) {
+      if (popupSupported === false) {
         return; // выходим, если попапы заблокированы
       }
     }
@@ -244,6 +241,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       
       logger.logInfo("Перед вызовом googleLogin()", "auth-form");
       
+      // Повторная проверка поддержки попапов непосредственно перед вызовом
+      const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
+      if (!testPopup) {
+        throw new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.");
+      } else {
+        testPopup.close();
+      }
+      
       const result = await googleLogin();
       
       logger.logInfo("Результат входа через Google:", "auth-form");
@@ -258,10 +263,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         navigate(redirectTo);
       } else {
         logger.logWarning("Вход через Google вернул null результат", "auth-form");
-        const nullError = new Error("Сервер вернул пустой ответ при аутентификации через Google. Это может быть связано с проблемами сети, блокировкой cookies или настройками безопасности браузера.") as DetailedAuthError;
+        const nullError = new Error("Сервер вернул пустой ответ при аутентификации через Google. Возможно, это связано с проблемами сети или настройками безопасности браузера.") as DetailedAuthError;
         nullError.code = "auth/null-response";
         setAuthError(nullError);
-        setDebugInfo("Google авторизация вернула null. Необходимо проверить:");
+        setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:");
         setDebugInfo(prev => prev + "\n- Не блокирует ли ваш браузер cookies");
         setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
         setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
@@ -270,7 +275,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         
         toast({
           title: "Вход не завершен",
-          description: "Сервер вернул пустой ответ при аутентификации",
+          description: "Сервер вернул пустой ответ при аутентификации. Проверьте настройки браузера.",
           variant: "destructive"
         });
       }
@@ -285,7 +290,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         setDebugInfo(`Код ошибки: ${error.code || 'неизвестно'}\nСообщение: ${error.message || 'неизвестно'}`);
       }
       
-      const errorMsg = error.message || "Не удалось войти через Google";
+      const errorMsg = error.message || "Не удало��ь войти через Google";
       toast({
         title: "Ошибка входа",
         description: errorMsg,
@@ -341,7 +346,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
             <ul className="list-disc list-inside mt-1 space-y-1">
               <li>Включите cookies в настройках браузера</li>
               <li>Убедитесь, что ваш браузер не блокирует Google аутентификацию</li>
-              <li>Отключите VPN или прокси, если они используются</li>
+              <li>Отключите VPN или прокси, если они использую��ся</li>
               <li>Используйте режим инкогнито или другой браузер</li>
               <li>Очистите кэш и cookies вашего браузера</li>
               <li>Проверьте работу интернет-соединения</li>
@@ -363,7 +368,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         </TabsList>
         
         {/* Проверка поддержки всплывающих окон */}
-        {renderPopupSupportAlert()}
+        {renderPopupSupportAlert && renderPopupSupportAlert()}
         
         {/* Отображение ошибки аутентификации, если есть */}
         {authError && (
@@ -410,12 +415,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               {authError.code === 'auth/unauthorized-domain' && (
                 <div className="mt-3 text-sm">
                   <strong>Рекомендации:</strong>
-                  <p>Домен {window.location.origin} не авторизован в Firebase. 
+                  <p>Домен {window.location.origin} н�� авторизован в Firebase. 
                   Администратору необходимо добавить этот домен в список авторизованных доменов в консоли Firebase.</p>
                 </div>
               )}
               
-              {renderGoogleAuthTroubleshooting()}
+              {renderGoogleAuthTroubleshooting && renderGoogleAuthTroubleshooting()}
             </Alert>
           </div>
         )}

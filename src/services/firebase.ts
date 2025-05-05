@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -10,7 +9,9 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   AuthError,
-  AuthErrorCodes 
+  AuthErrorCodes,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -222,7 +223,7 @@ const auth = {
     }
   },
 
-  // Вход через Google
+  // Вход через Google - исправленная версия для устранения проблемы с null-ответом
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
       console.log("[AUTH] Начинаем вход через Google");
@@ -230,126 +231,104 @@ const auth = {
       // Проверяем доступность домена для Firebase Auth
       console.log("[AUTH] Текущий домен:", window.location.origin);
       
-      // Отключаем перенаправления при авторизации
-      firebaseAuth.useDeviceLanguage();
-      
       // Создаем новый экземпляр провайдера при каждом вызове
       const provider = new GoogleAuthProvider();
-      // Настраиваем параметры для гарантированного показа окна выбора аккаунта
+      
+      // Настраиваем параметры для показа окна выбора аккаунта
       provider.setCustomParameters({
         prompt: 'select_account',
-        access_type: 'offline',
-        hl: 'ru' // Устанавливаем русский язык
+        hl: 'ru' // Русский язык интерфейса
       });
+      
+      // Добавляем области доступа для получения профиля пользователя
+      provider.addScope('profile');
+      provider.addScope('email');
       
       console.log("[AUTH] Google провайдер создан с параметрами:", {
         prompt: 'select_account',
-        access_type: 'offline',
         hl: 'ru'
       });
       
-      // Проверяем, добавлен ли текущий домен в авторизованные домены Firebase
-      const currentDomain = window.location.hostname;
-      console.log(`[AUTH] Проверка домена: ${currentDomain}`);
-      
-      // Проверяем настройки хранилища и cookie
-      console.log("[AUTH] Проверка хранилища перед авторизацией:", {
+      // Проверка состояния браузера перед открытием всплывающего окна
+      const browserFeatures = {
         localStorage: !!window.localStorage,
         sessionStorage: !!window.sessionStorage,
         cookies: navigator.cookieEnabled,
-        indexedDB: !!window.indexedDB
-      });
+        popupSupport: typeof window.open === 'function',
+        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      };
       
-      // Проверяем состояние браузера перед открытием всплывающего окна
-      console.log("[AUTH] Статус браузера:", {
-        windowOpener: !!window.opener,
-        popupsBlocked: window.screenLeft === 0 && window.screenTop === 0, // Примерная проверка на блокировку
-        hasActivePopups: document.querySelectorAll('iframe[src*="accounts.google.com"]').length > 0,
-        browserSupportsPopups: typeof window.open === 'function',
-        userAgent: navigator.userAgent,
-        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-      });
+      console.log("[AUTH] Состояние браузера:", browserFeatures);
       
-      // Перед вызовом signInWithPopup выполняем проверку
-      console.log("[AUTH] Тестируем возможность открытия popup...");
-      const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
-      if (!testPopup) {
-        console.error("[AUTH] Тест popup неудачен! Popup заблокирован.");
-        throw new Error('Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и попробуйте снова.');
-      } else {
-        console.log("[AUTH] Тест popup успешен!");
-        testPopup.close();
+      // Тест возможности открытия popup
+      let popupSupported = false;
+      try {
+        const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
+        if (testPopup) {
+          testPopup.close();
+          popupSupported = true;
+          console.log("[AUTH] Тест popup успешен");
+        } else {
+          console.warn("[AUTH] Тест popup неудачен - popup блокирован");
+        }
+      } catch (e) {
+        console.error("[AUTH] Ошибка при тесте popup:", e);
       }
       
-      // Очищаем текущий кэш состояния авторизации
-      if (firebaseAuth.currentUser) {
-        console.log("[AUTH] Выполняем выход для очистки кэша...");
-        await firebaseAuth.signOut();
-        console.log("[AUTH] Выход выполнен успешно");
+      if (!popupSupported) {
+        console.error("[AUTH] Всплывающие окна заблокированы. Аутентификация через popup не возможна");
+        throw new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и попробуйте снова.");
       }
       
-      // Используем signInWithPopup с новым провайдером
+      // Принудительно очищаем персистентное хранилище для исключения конфликтов
+      await setPersistence(firebaseAuth, browserLocalPersistence);
+      
+      console.log("[AUTH] Устанавливаем персистентность:", "browserLocalPersistence");
+      
+      // Используем signInWithPopup с новым провайдером и обработкой ошибок
       console.log("[AUTH] Вызываем signInWithPopup...");
-      const result = await signInWithPopup(firebaseAuth, provider);
-      console.log("[AUTH] Google login успешен:", result.user);
-      return result.user;
+      
+      try {
+        const result = await signInWithPopup(firebaseAuth, provider);
+        
+        // Проверяем, что результат не пустой
+        if (!result || !result.user) {
+          console.error("[AUTH] signInWithPopup вернул пустой результат");
+          throw new Error("Сервер вернул пустой ответ при аутентификации через Google.");
+        }
+        
+        console.log("[AUTH] Google login успешен:", result.user.uid);
+        return result.user;
+      } catch (popupError: any) {
+        console.error("[AUTH] Ошибка в signInWithPopup:", popupError);
+        
+        // Более детальная обработка конкретных ошибок popup
+        if (popupError.code === 'auth/popup-blocked') {
+          throw new Error("Всплывающее окно для авторизации было заблокировано браузером. Пожалуйста, разрешите всплывающие окна для этого сайта и попробуйте снова.");
+        }
+        
+        if (popupError.code === 'auth/popup-closed-by-user') {
+          throw new Error("Окно авторизации было закрыто до завершения процесса. Пожалуйста, не закрывайте окно авторизации Google до завершения входа.");
+        }
+        
+        if (popupError.code === 'auth/cancelled-popup-request') {
+          throw new Error("Запрос на открытие окна авторизации был отменен. Пожалуйста, повторите попытку через несколько секунд.");
+        }
+        
+        // Общая обработка других ошибок
+        throw popupError;
+      }
     } catch (error: any) {
       const detailedError = logAuthError('Вход через Google', error);
-      console.error('[AUTH] Ошибка при входе через Google. Полная информация:', {
-        errorCode: error.code,
+      
+      // Вывод дополнительной отладочной информации
+      console.error('[AUTH] Расширенная информация об ошибке:', {
+        errorCode: error.code || 'unknown',
         errorMessage: error.message,
-        email: error.email,
-        credential: error.credential,
-        customData: error.customData,
-        fullStack: error.stack,
         browser: navigator.userAgent,
-        time: new Date().toISOString(),
         domain: window.location.origin,
-        authProviders: 'google'
+        time: new Date().toISOString()
       });
-      
-      // Попытка получить дополнительную информацию об окне
-      try {
-        const windowState = {
-          innerHeight: window.innerHeight,
-          innerWidth: window.innerWidth,
-          outerHeight: window.outerHeight,
-          outerWidth: window.outerWidth,
-          screenX: window.screenX,
-          screenY: window.screenY,
-          screen: {
-            availHeight: window.screen.availHeight,
-            availWidth: window.screen.availWidth,
-            height: window.screen.height,
-            width: window.screen.width
-          }
-        };
-        console.log('[AUTH] Состояние окна браузера:', windowState);
-      } catch (windowError) {
-        console.error('[AUTH] Ошибка при получении состояния окна:', windowError);
-      }
-      
-      // Специфичная обработка для ошибок popup
-      if (error.code === 'auth/popup-blocked') {
-        console.warn('[AUTH] Блокировка popup! Проверьте настройки браузера.');
-        detailedError.message = 'Всплывающее окно заблокировано. Пожалуйста, разрешите всплывающие окна для этого сайта и попробуйте снова.';
-      }
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        console.warn('[AUTH] Popup закрыт пользователем!');
-        detailedError.message = 'Окно авторизации было закрыто до завершения процесса. Пожалуйста, оставьте окно открытым до завершения входа.';
-      }
-      
-      if (error.code === 'auth/cancelled-popup-request') {
-        console.warn('[AUTH] Запрос popup отменен!');
-        detailedError.message = 'Запрос на открытие всплывающего окна был отменен. Пожалуйста, подождите несколько секунд и попробуйте снова.';
-      }
-      
-      // Если нет конкретного кода ошибки, но результат null
-      if (!error.code && !error.message) {
-        detailedError.code = 'auth/null-response';
-        detailedError.message = 'Сервер вернул пустой ответ при аутентификации через Google. Это может быть связано с проблемами сети, блокировкой cookies или настройками безопасности браузера.';
-      }
       
       throw detailedError;
     }
