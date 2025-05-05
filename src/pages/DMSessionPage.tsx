@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,7 +137,7 @@ const DMSessionPage = () => {
     
     const newMessage = {
       id: Date.now().toString(),
-      sender: currentUser?.name || 'DM',
+      sender: currentUser?.displayName || 'DM', // Use displayName instead of name
       content: message,
       timestamp: new Date().toISOString(),
       isDM: true
