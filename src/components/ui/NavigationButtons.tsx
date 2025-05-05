@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth'; // Fix the import to use our correct hook
 
 interface Props {
   prevStep: () => void;
@@ -9,13 +10,14 @@ interface Props {
   nextLabel?: string;
   disableNext?: boolean;
   allowNext?: boolean;
+  className?: string; // Add className prop to support the className in TopPanel
 }
 
-const NavigationButtons = ({ prevStep, nextStep, nextLabel = "Далее", disableNext = false, allowNext = true }: Props) => {
+const NavigationButtons = ({ prevStep, nextStep, nextLabel = "Далее", disableNext = false, allowNext = true, className }: Props) => {
   const { currentUser } = useAuth();
 
   return (
-    <div className="flex justify-between">
+    <div className={`flex justify-between ${className || ''}`}>
       <Button variant="outline" onClick={prevStep}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Назад

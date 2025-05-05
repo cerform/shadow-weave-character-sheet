@@ -3,7 +3,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, SkipForward, Image, Home, ArrowLeft, Grid, Eye, EyeOff, ZoomIn, ZoomOut, X, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import NavigationButtons from "@/components/ui/NavigationButtons";
 
 interface BattleState {
   isActive: boolean;
@@ -187,10 +186,17 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <span>Раунд: {battleState.round}</span>
           )}
         </div>
-        <NavigationButtons className="!flex-row" />
+        
+        {/* Remove className prop from NavigationButtons component */}
+        <div className="flex flex-row">
+          <NavigationButtons />
+        </div>
       </div>
     </div>
   );
 };
+
+// Import NavigationButtons at the top to avoid errors
+import NavigationButtons from "@/components/ui/NavigationButtons";
 
 export default TopPanel;

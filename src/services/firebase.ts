@@ -35,7 +35,7 @@ const mockAuth = {
   settings: {} as any,
   updateCurrentUser: async () => Promise.resolve(),
   onIdTokenChanged: () => () => {},
-  beforeAuthStateChanged: () => Promise.resolve(() => {}),
+  beforeAuthStateChanged: () => () => {}, // Change return type to match Unsubscribe signature
   useEmulator: () => {},
   emulatorConfig: null,
   // Добавляем недостающее свойство authStateReady
