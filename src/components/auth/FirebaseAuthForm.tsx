@@ -37,17 +37,22 @@ const FirebaseAuthForm: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
 
   useEffect(() => {
+    console.log("Firebase Auth Form mounted");
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed in FirebaseAuthForm:", currentUser?.email);
       setUser(currentUser);
       if (currentUser) {
+        // Перенаправляем на главную страницу при успешной авторизации
+        console.log("User is logged in, redirecting to home");
         toast({
           title: "Вход выполнен",
           description: `Добро пожаловать, ${currentUser.email}`
         });
+        navigate('/');
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleEmailAuth = async () => {
     setError("");
