@@ -191,44 +191,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     }
   };
 
-  // Исправленная функция входа через Google
+  // Упрощенная функция входа через Google
   const handleGoogleLogin = async () => {
-    // Исправляем сравнение с null, которое вызывало ошибку
-    if (popupSupported === null) {
-      // Сначала проверяем поддержку попапов еще раз
-      checkPopupSupport();
-      // Выходим из функции и не выполняем вход, пока не завершится проверка
-      return;
-    }
-    
-    // Теперь проверка выполняется правильно
-    if (popupSupported === false) {
-      const error = new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.") as DetailedAuthError;
-      error.code = "auth/popup-blocked-detected";
-      setAuthError(error);
-      toast({
-        title: "Всплывающие окна заблокированы",
-        description: "Разрешите всплывающие окна для этого сайта в настройках браузера и обновите страницу.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setIsLoading(true);
     setAuthError(null);
     setDebugInfo('');
 
     try {
       logger.logInfo("Начинаем вход через Google из AuthForm", "auth-form");
-      logger.logInfo(`Текущее окружение: ${window.location.origin}`, "auth-env");
-      
-      // Дополнительная проверка непосредственно перед вызовом
-      const testPopup = window.open('about:blank', '_blank', 'width=100,height=100');
-      if (!testPopup) {
-        throw new Error("Всплывающие окна заблокированы. Разрешите всплывающие окна для этого сайта и обновите страницу.");
-      } else {
-        testPopup.close();
-      }
       
       // Вызываем функцию входа через Google из контекста авторизации
       const result = await googleLogin();
@@ -242,14 +212,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         navigate(redirectTo);
       } else {
         logger.logWarning("Вход через Google вернул null результат", "auth-form");
-        const nullError = new Error("Сервер вернул пустой ответ при аутентификации через Google. Возможно, это связано с проблемами сети или настройками безопасности браузера.") as DetailedAuthError;
-        nullError.code = "auth/null-response";
-        setAuthError(nullError);
-        setDebugInfo("Google авторизация вернула null. Рекомендуем проверить:\n- Не блокирует ли ваш браузер cookies\n- Разрешены ли всплывающие окна\n- Не блокирует ли сеть запросы к Google\n- Авторизован ли домен в консоли Firebase\n- Включена ли авторизация через Google в Firebase");
-        
         toast({
-          title: "Вход не завершен",
-          description: "Сервер вернул пустой ответ при аутентификации. Проверьте настройки браузера.",
+          title: "Ошибка входа",
+          description: "Сервер вернул пустой ответ при аутентификации",
           variant: "destructive"
         });
       }
@@ -257,17 +222,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       logger.logError("Ошибка при входе через Google", "auth-form", error);
       setAuthError(error);
       
-      // Сохраняе�� расширенную отладочную информацию
       if (error.fullDetails) {
         setDebugInfo(formatDebugInfo(error));
-      } else {
-        setDebugInfo(`Код ошибки: ${error.code || 'неизвестно'}\nСообщение: ${error.message || 'неизвестно'}`);
       }
       
-      const errorMsg = error.message || "Не удалось войти через Google";
       toast({
         title: "Ошибка входа",
-        description: errorMsg,
+        description: error.message || "Не удалось войти через Google",
         variant: "destructive"
       });
     } finally {
@@ -275,7 +236,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     }
   };
   
-  // Стили для переключателя DM, меняем на более выразительные
+  // Стили для переключателя DM
   const dmSwitchStyle = {
     '--switch-thumb-color': isDM ? currentTheme.accent : 'white',
     '--switch-background-checked': isDM ? `${currentTheme.accent}50` : 'transparent',
@@ -466,7 +427,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               variant="outline"
               className="w-full"
               onClick={handleGoogleLogin}
-              disabled={isLoading || popupSupported === false}
+              disabled={isLoading}
               style={{
                 borderColor: currentTheme.accent,
                 color: currentTheme.textColor
@@ -601,7 +562,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               variant="outline"
               className="w-full"
               onClick={handleGoogleLogin}
-              disabled={isLoading || popupSupported === false}
+              disabled={isLoading}
               style={{
                 borderColor: currentTheme.accent,
                 color: currentTheme.textColor
@@ -632,20 +593,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               {isLoading ? "Авторизация..." : "Регистрация с Google"}
             </Button>
             
-            {/* Информация о возможных причинах ошибок */}
-            <Alert variant="info" className="mt-4">
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                Если у вас возникают проблемы с входом через Google:
-                <ul className="list-disc list-inside mt-1">
-                  <li>Убедитесь, что в вашем браузере разрешены всплывающие окна</li>
-                  <li>Отключите блокировщики рекламы</li>
-                  <li>Попробуйте использовать другой браузер</li>
-                  <li>При входе не закрывайте всплывающее окно Google</li>
-                  <li>Убедитесь, что cookies включены в настройках браузера</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            {/* Остальной контент вкладки регистрации... */}
           </CardContent>
         </TabsContent>
         
