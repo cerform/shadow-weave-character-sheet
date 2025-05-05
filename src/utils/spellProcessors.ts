@@ -1,4 +1,3 @@
-
 // Экспортируем функцию для разбора компонентов заклинания
 export const parseComponents = (componentStr: string): {
   verbal: boolean;
@@ -223,6 +222,9 @@ export const calculateAvailableSpellsByClassAndLevel = (
   
   return { spells: spellsCount, cantrips: cantripsCount, maxSpellLevel };
 };
+
+// Импортируем необходимые типы
+import { CharacterSpell } from '@/types/character';
 
 // Экспортируем функцию для обработки пакетного ввода заклинаний
 export interface SpellBatchItem {

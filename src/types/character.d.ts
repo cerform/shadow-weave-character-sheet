@@ -48,6 +48,7 @@ export interface Character {
   flaws?: string;
   backstory?: string;
   personalityTraits?: string; // Added for CharacterBackground
+  appearance?: string; // Adding appearance field
   
   // Spellcasting
   spellcastingAbility?: string;
@@ -60,6 +61,7 @@ export interface Character {
   features?: Feature[];
   racialFeatures?: Feature[];
   backgroundFeatures?: Feature[];
+  feats?: Feature[]; // Added feats field
   
   // Meta properties
   image?: string;
@@ -102,7 +104,10 @@ export interface Character {
 // Константы для ограничения значений характеристик
 export const ABILITY_SCORE_CAPS = {
   MIN: 3,
-  MAX: 20
+  MAX: 20,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
 };
 
 // Define Character abilities

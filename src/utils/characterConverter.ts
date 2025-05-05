@@ -1,4 +1,3 @@
-
 import { CharacterSheet, Character } from '@/types/character';
 
 /**
@@ -52,8 +51,25 @@ export const convertToCharacter = (data: any): Character => {
   // Преобразуем структуру заклинаний
   const spellsArray = data.spells || [];
   
+  // Convert spell slots to the required format
+  const convertSpellSlots = (slots: Record<number, { max: number; used: number; }> | undefined) => {
+    if (!slots) return {};
+    
+    const result: { [level: string]: { total: number; used: number; max: number } } = {};
+    
+    Object.entries(slots).forEach(([level, data]) => {
+      result[level] = {
+        total: data.max,
+        used: data.used,
+        max: data.max
+      };
+    });
+    
+    return result;
+  };
+  
   // Определяем слоты заклинаний в зависимости от класса и уровня
-  const spellSlots: Record<number, { max: number; used: number }> = {};
+  const spellSlots = convertSpellSlots(data.spellSlots);
   
   // Определяем класс персонажа, обеспечивая непустое значение
   const characterClass = data.class || "";

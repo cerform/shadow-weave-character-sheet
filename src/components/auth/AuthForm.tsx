@@ -1,113 +1,140 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/use-auth';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
-// Мы создаем заглушку для этого компонента, чтобы починить ошибки сборки
-// Этот компонент должен быть доработан в зависимости от реальной структуры проекта
-const AuthForm = () => {
+interface AuthFormProps {
+  redirectTo?: string;
+}
+
+const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
-  
-  // Создаем заглушку useAuth с методами, которые требует AuthForm
+  const [displayName, setDisplayName] = useState('');
+  const navigate = useNavigate();
   const { login, register, resetPassword } = useAuth();
-  
+  const { toast } = useToast();
+  const [isLogin, setIsLogin] = useState(true);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
     try {
-      if (isRegister) {
-        await register(email, password);
-        toast.success('Регистрация успешна! Теперь вы можете войти.');
-        setIsRegister(false);
-      } else {
+      if (isLogin) {
         await login(email, password);
-        toast.success('Авторизация успешна!');
+        toast({
+          title: "Вход выполнен",
+          description: "Вы успешно вошли в систему.",
+        });
+        navigate(redirectTo);
+      } else {
+        await register(email, password);
+        toast({
+          title: "Регистрация успешна",
+          description: "Вы успешно зарегистрировались. Теперь можете войти.",
+        });
+        setIsLogin(true); // Automatically switch to login after registration
       }
-    } catch (error) {
-      toast.error('Ошибка: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      toast({
+        title: "Ошибка аутентификации",
+        description: error.message || "Не удалось войти или зарегистрироваться.",
+        variant: "destructive",
+      });
     }
   };
-  
+
   const handleResetPassword = async () => {
-    if (!email) {
-      toast.error('Введите email для сброса пароля');
-      return;
-    }
-    
     try {
       await resetPassword(email);
-      toast.success('Инструкции по сбросу пароля отправлены на ваш email');
-    } catch (error) {
-      toast.error('Ошибка при сбросе пароля: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
+      toast({
+        title: "Сброс пароля",
+        description: "Инструкции по сбросу пароля отправлены на вашу электронную почту.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка сброса пароля",
+        description: error.message || "Не удалось сбросить пароль.",
+        variant: "destructive",
+      });
     }
   };
-  
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>{isRegister ? 'Регистрация' : 'Вход'}</CardTitle>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+    <Tabs defaultValue={isLogin ? "login" : "register"} className="w-[400px]" onValueChange={(value) => setIsLogin(value === "login")}>
+      <TabsList>
+        <TabsTrigger value="login">Войти</TabsTrigger>
+        <TabsTrigger value="register">Зарегистрироваться</TabsTrigger>
+      </TabsList>
+      <TabsContent value="login">
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              placeholder="example@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@example.com"
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Пароль</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
               required
             />
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Загрузка...' : isRegister ? 'Зарегистрироваться' : 'Войти'}
+          <Button type="submit">Войти</Button>
+          <Button type="button" variant="link" onClick={handleResetPassword}>
+            Забыли пароль?
           </Button>
-          <div className="flex justify-between w-full text-sm">
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => setIsRegister(!isRegister)}
-              className="p-0"
-            >
-              {isRegister ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Регистрация'}
-            </Button>
-            {!isRegister && (
-              <Button
-                type="button"
-                variant="link"
-                onClick={handleResetPassword}
-                className="p-0"
-              >
-                Забыли пароль?
-              </Button>
-            )}
+        </form>
+      </TabsContent>
+      <TabsContent value="register">
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="register-email">Email</Label>
+            <Input
+              id="register-email"
+              type="email"
+              placeholder="example@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-        </CardFooter>
-      </form>
-    </Card>
+          <div className="grid gap-2">
+            <Label htmlFor="register-password">Пароль</Label>
+            <Input
+              id="register-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="display-name">Имя пользователя</Label>
+            <Input
+              id="display-name"
+              type="text"
+              placeholder="Имя пользователя"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </div>
+          <Button type="submit">Зарегистрироваться</Button>
+        </form>
+      </TabsContent>
+    </Tabs>
   );
 };
 

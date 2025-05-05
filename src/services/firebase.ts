@@ -4,7 +4,7 @@ import { Firestore, DocumentData, DocumentReference, CollectionReference } from 
 import { Auth } from "firebase/auth";
 
 // Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth: Auth = {
+const mockAuth: Partial<Auth> = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки

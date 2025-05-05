@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/services/firebase';
 import {
@@ -18,6 +17,7 @@ interface AuthContextProps {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (displayName: string) => Promise<void>;
+  updateProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>; // Added for ProfilePage
   isAuthenticated: boolean;
   isLoading: boolean;
   googleLogin?: () => Promise<void>; // Опционально, возможно будет добавлено позже
@@ -109,6 +109,18 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   };
 
+  // Добавляем метод updateProfile для совместимости с ProfilePage
+  const updateProfileMethod = async (data: { displayName?: string, photoURL?: string }): Promise<void> => {
+    try {
+      if (currentUser) {
+        await updateProfile(currentUser, data);
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      throw error;
+    }
+  };
+
   const value: AuthContextProps = {
     currentUser,
     login,
@@ -116,6 +128,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     logout,
     resetPassword,
     updateUserProfile,
+    updateProfile: updateProfileMethod,
     isAuthenticated: !!currentUser,
     isLoading
   };

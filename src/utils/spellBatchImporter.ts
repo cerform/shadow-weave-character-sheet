@@ -1,5 +1,6 @@
 
-import { parseComponents } from './spellProcessors';
+import { CharacterSpell } from '@/types/character';
+import { parseComponents, processSpellBatch } from './spellProcessors';
 
 export interface SpellBatchItem {
   name: string;
@@ -9,29 +10,42 @@ export interface SpellBatchItem {
     somatic: boolean;
     material: boolean;
     ritual: boolean;
-    concentration?: boolean;
   };
 }
 
-export const processSpellBatch = (rawText: string): SpellBatchItem[] => {
-  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
-  const result: SpellBatchItem[] = [];
+export const importSpellsFromText = (
+  rawText: string,
+  existingSpells: CharacterSpell[]
+): CharacterSpell[] => {
+  const batchItems = processSpellBatch(rawText);
+  const result = [...existingSpells];
   
-  for (const line of lines) {
-    const match = line.match(/\[(\d+)\]\s+(.+?)\s+([\w\.]*)$/);
+  batchItems.forEach(item => {
+    // Проверяем, существует ли уже заклинание с таким именем
+    const existingIndex = result.findIndex(spell => spell.name === item.name);
     
-    if (match) {
-      const level = parseInt(match[1], 10);
-      const name = match[2].trim();
-      const componentCode = match[3] || '';
-      
+    if (existingIndex === -1) {
+      // Добавляем новое заклинание
       result.push({
-        name,
-        level,
-        components: parseComponents(componentCode)
+        id: `spell_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name,
+        level: item.level,
+        school: 'Неизвестная', // Можно заменить на более точное определение
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: `${item.components.verbal ? 'В' : ''}${item.components.somatic ? 'С' : ''}${item.components.material ? 'М' : ''}`,
+        duration: 'Мгновенная',
+        description: 'Описание отсутствует',
+        prepared: false,
+        verbal: item.components.verbal,
+        somatic: item.components.somatic,
+        material: item.components.material,
+        ritual: item.components.ritual,
+        concentration: false,
+        classes: []
       });
     }
-  }
+  });
   
   return result;
 };

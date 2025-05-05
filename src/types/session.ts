@@ -33,6 +33,10 @@ export interface User {
   isOnline: boolean;
   isDM: boolean;
   username?: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
+  emailVerified?: boolean;
   character?: Character; // Добавляем персонажа к пользователю
 }
 
@@ -43,6 +47,7 @@ export interface Character {
   class: string;
   level: number;
   avatarUrl?: string;
+  image?: string;
 }
 
 // Добавляем типы для хранения персонажей

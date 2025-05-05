@@ -1,183 +1,186 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { Character } from '@/types/character';
+import { Character, SkillProficiency } from '@/types/character';
 
-const FONT = 'Roboto-Regular';
-const FONT_BOLD = 'Roboto-Bold';
+// Function to generate a PDF character sheet
+export const generateCharacterPdf = (character: Character) => {
+  // Import jsPDF
+  const { jsPDF } = require("jspdf");
 
-const addHeader = (doc: jsPDF, text: string, y: number) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(14);
-  doc.setTextColor(40);
-  doc.text(text, 15, y);
-  return y + 10;
-};
-
-const addSubHeader = (doc: jsPDF, text: string, y: number) => {
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(12);
-  doc.setTextColor(40);
-  doc.text(text, 15, y);
-  return y + 8;
-};
-
-const addText = (doc: jsPDF, text: string, x: number, y: number) => {
-  doc.setFont(FONT, 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(40);
-  doc.text(text, x, y);
-};
-
-const addSkill = (doc: jsPDF, skill: any, y: number) => {
-  doc.setFont(FONT, 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(40);
-  let skillText = `${skill.name} (${skill.ability}): `;
-
-  if (skill.proficient && skill.bonus > 0) {
-    skillText += `+${skill.bonus}`;
-  } else {
-    skillText += 'Не владеет';
-  }
-
-  doc.text(skillText, 15, y);
-  return y + 6;
-};
-
-const addSavingThrow = (doc: jsPDF, savingThrow: any, y: number) => {
-  doc.setFont(FONT, 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(40);
-  let savingThrowText = `${savingThrow.ability}: `;
-
-  if (savingThrow.proficient && savingThrow.bonus > 0) {
-    savingThrowText += `+${savingThrow.bonus}`;
-  } else {
-    savingThrowText += 'Не владеет';
-  }
-
-  doc.text(savingThrowText, 115, y);
-  return y + 6;
-};
-
-const generateCharacterPdf = (character: Character) => {
+  // Initialize jsPDF
   const doc = new jsPDF();
 
-  // Register fonts
-  doc.addFont('Roboto-Regular.ttf', FONT, 'normal');
-  doc.addFont('Roboto-Bold.ttf', FONT_BOLD, 'normal');
+  // Function to add a section title
+  const addSectionTitle = (title: string) => {
+    doc.setFontSize(16);
+    doc.text(title, 10, doc.y + 10);
+    doc.line(10, doc.y + 11, 200, doc.y + 11);
+    doc.y += 12;
+  };
 
-  let y = 20;
+  // Function to add character info
+  const addCharacterInfo = () => {
+    doc.setFontSize(20).text(character.name, 10, 20);
+    doc.setFontSize(12);
+    doc.text(`Класс: ${character.class || 'Не указан'}`, 10, 30);
+    doc.text(`Уровень: ${character.level || '1'}`, 10, 40);
+    doc.text(`Раса: ${character.race || 'Не указана'}`, 10, 50);
+    doc.text(`Мировоззрение: ${character.alignment || 'Не указано'}`, 10, 60);
+    doc.y = 70;
+  };
 
-  // Character Info
-  doc.setFont(FONT_BOLD, 'normal');
-  doc.setFontSize(20);
-  doc.setTextColor(40);
-  doc.text(character.name, 15, y);
-  y += 12;
+  // Function to add ability scores
+  const addAbilityScores = () => {
+    addSectionTitle('Характеристики');
+    const abilities = character.abilities;
+    if (abilities) {
+      let x = 10;
+      for (const key in abilities) {
+        if (typeof abilities[key] === 'number') {
+          doc.text(`${key}: ${abilities[key]}`, x, doc.y);
+          x += 30;
+        }
+      }
+      doc.y += 10;
+    }
+  };
 
-  addText(doc, `Класс: ${character.class}`, 15, y);
-  addText(doc, `Уровень: ${character.level}`, 65, y);
-  addText(doc, `Раса: ${character.race}`, 115, y);
-  y += 8;
+  // Function to calculate skill modifier
+  const getSkillModifier = (character: Character, skillName: string): string => {
+    const skill = character.skills?.[skillName];
+    if (!skill) return "+0";
+    
+    // Check the isProficient property instead of calling the object
+    const isProficient = skill.isProficient;
+    const proficiencyBonus = character.proficiencyBonus || 2;
+    
+    let modifier = Math.floor((getAbilityScore(character, skillName) - 10) / 2);
+    
+    if (isProficient) {
+      modifier += proficiencyBonus;
+    }
+    
+    return (modifier >= 0 ? "+" : "") + modifier.toString();
+  };
 
-  // Abilities
-  y = addHeader(doc, 'Характеристики', y);
-  addText(doc, `Сила: ${character.abilities?.strength}`, 15, y);
-  addText(doc, `Ловкость: ${character.abilities?.dexterity}`, 65, y);
-  addText(doc, `Телосложение: ${character.abilities?.constitution}`, 115, y);
-  y += 8;
-  addText(doc, `Интеллект: ${character.abilities?.intelligence}`, 15, y);
-  addText(doc, `Мудрость: ${character.abilities?.wisdom}`, 65, y);
-  addText(doc, `Харизма: ${character.abilities?.charisma}`, 115, y);
-  y += 10;
+  // Function to get ability score based on skill
+  const getAbilityScore = (character: Character, skillName: string): number => {
+    switch (skillName) {
+      case "athletics": return character.abilities?.strength || 10;
+      case "acrobatics": return character.abilities?.dexterity || 10;
+      case "sleightOfHand": return character.abilities?.dexterity || 10;
+      case "stealth": return character.abilities?.dexterity || 10;
+      case "arcana": return character.abilities?.intelligence || 10;
+      case "history": return character.abilities?.intelligence || 10;
+      case "investigation": return character.abilities?.intelligence || 10;
+      case "nature": return character.abilities?.intelligence || 10;
+      case "religion": return character.abilities?.intelligence || 10;
+      case "animalHandling": return character.abilities?.wisdom || 10;
+      case "insight": return character.abilities?.wisdom || 10;
+      case "medicine": return character.abilities?.wisdom || 10;
+      case "perception": return character.abilities?.wisdom || 10;
+      case "survival": return character.abilities?.wisdom || 10;
+      case "deception": return character.abilities?.charisma || 10;
+      case "intimidation": return character.abilities?.charisma || 10;
+      case "performance": return character.abilities?.charisma || 10;
+      case "persuasion": return character.abilities?.charisma || 10;
+      default: return 10;
+    }
+  };
 
-  // Skills
-  y = addHeader(doc, 'Навыки', y);
-  let skillY = y;
-  let savingThrowY = y;
+  // Function to get saving throw modifier
+  const getSavingThrowModifier = (character: Character, abilityKey: string): string => {
+    let modifier = Math.floor(((character.abilities as any)?.[abilityKey] || 10 - 10) / 2);
+    const proficiencyBonus = character.proficiencyBonus || 2;
+    
+    // Use the boolean value directly instead of calling it
+    const isProficient = character.savingThrowProficiencies?.[abilityKey] || false;
+    
+    if (isProficient) {
+      modifier += proficiencyBonus;
+    }
+    
+    return (modifier >= 0 ? "+" : "") + modifier.toString();
+  };
 
-  if (character.skills) {
-    character.skills.forEach((skill, index) => {
-      if (index < 9) {
-        skillY = addSkill(doc, skill, skillY);
+  // Function to add skills
+  const addSkillsSection = () => {
+    addSectionTitle('Навыки');
+    let x = 10;
+    const skills = [
+      "athletics", "acrobatics", "sleightOfHand", "stealth",
+      "arcana", "history", "investigation", "nature", "religion",
+      "animalHandling", "insight", "medicine", "perception", "survival",
+      "deception", "intimidation", "performance", "persuasion"
+    ];
+
+    skills.forEach(skill => {
+      const skillName = skill.charAt(0).toUpperCase() + skill.slice(1);
+      doc.text(`${skillName}: ${getSkillModifier(character, skill)}`, x, doc.y);
+      x += 50;
+      if (x > 100) {
+        x = 10;
+        doc.y += 10;
       }
     });
-  }
+    doc.y += 10;
+  };
 
-  if (character.savingThrows) {
-    character.savingThrows.forEach((savingThrow, index) => {
-      if (index < 6) {
-        savingThrowY = addSavingThrow(doc, savingThrow, savingThrowY);
+  // Function to add saving throws
+  const addSavingThrowsSection = () => {
+    addSectionTitle('Спасброски');
+    let x = 10;
+    const savingThrows = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
+
+    savingThrows.forEach(savingThrow => {
+      const savingThrowName = savingThrow.charAt(0).toUpperCase() + savingThrow.slice(1);
+      doc.text(`${savingThrowName}: ${getSavingThrowModifier(character, savingThrow)}`, x, doc.y);
+      x += 50;
+      if (x > 100) {
+        x = 10;
+        doc.y += 10;
       }
     });
-  }
+    doc.y += 10;
+  };
 
-  y = Math.max(skillY, savingThrowY) + 5;
+  // Function to add equipment
+  const addEquipmentSection = () => {
+    addSectionTitle('Снаряжение');
+    doc.setFontSize(12);
+    if (character.equipment && Array.isArray(character.equipment)) {
+      character.equipment.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.name || item}`, 10, doc.y);
+        doc.y += 10;
+      });
+    } else {
+      doc.text('Нет снаряжения', 10, doc.y);
+      doc.y += 10;
+    }
+  };
 
-  // Proficiencies
-  y = addHeader(doc, 'Владения', y);
-  let proficienciesText = '';
+  // Function to add features
+  const addFeaturesSection = (doc: any, character: Character) => {
+    doc.fontSize(14).text('Особенности и черты', { align: 'center' });
+    
+    // Use features instead of feats
+    const features = character.features || [];
+    
+    if (features.length > 0) {
+      features.forEach(feat => {
+        // Implementation
+      });
+    } else {
+      doc.fontSize(10).text('Нет особенностей', { align: 'center' });
+    }
+  };
 
-  if (character.proficiencies?.languages && character.proficiencies.languages.length > 0) {
-    proficienciesText += `Языки: ${character.proficiencies.languages.join(', ')}\n`;
-  }
-
-  if (character.proficiencies?.armor && character.proficiencies.armor.length > 0) {
-    proficienciesText += `Доспехи: ${character.proficiencies.armor.join(', ')}\n`;
-  }
-
-  if (character.proficiencies?.weapons && character.proficiencies.weapons.length > 0) {
-    proficienciesText += `Оружие: ${character.proficiencies.weapons.join(', ')}\n`;
-  }
-
-  if (character.proficiencies?.tools && character.proficiencies.tools.length > 0) {
-    proficienciesText += `Инструменты: ${character.proficiencies.tools.join(', ')}\n`;
-  }
-
-  addText(doc, proficienciesText, 15, y);
-  y += 20;
-
-  // Spells
-  if (character.spells && character.spells.length > 0) {
-    y = addHeader(doc, 'Заклинания', y);
-    character.spells.forEach((spell, index) => {
-      const spellText = `${spell.name} (Уровень ${spell.level})`;
-      addText(doc, spellText, 15, y);
-      y += 6;
-    });
-  }
-
-  // Equipment
-  if (character.equipment && character.equipment.length > 0) {
-    y = addHeader(doc, 'Снаряжение', y);
-    character.equipment.forEach((item, index) => {
-      addText(doc, item, 15, y);
-      y += 6;
-    });
-  }
-
-  // Backstory
-  if (character.backstory) {
-    y = addHeader(doc, 'Предыстория', y);
-    const backstoryLines = doc.splitTextToSize(character.backstory, 170);
-    backstoryLines.forEach(line => {
-      addText(doc, line, 15, y);
-      y += 6;
-    });
-  }
-
-  // Feats
-  if (character.feats && character.feats.length > 0) {
-    y = addHeader(doc, 'Черты', y);
-    character.feats.forEach((feat, index) => {
-      addText(doc, feat, 15, y);
-      y += 6;
-    });
-  }
+  // Add sections to the PDF
+  addCharacterInfo();
+  addAbilityScores();
+  addSkillsSection();
+  addSavingThrowsSection();
+  addEquipmentSection();
+  addFeaturesSection(doc, character);
 
   // Save the PDF
-  doc.save(`${character.name}.pdf`);
+  doc.save(`${character.name || 'Персонаж'}.pdf`);
 };
-
-export default generateCharacterPdf;

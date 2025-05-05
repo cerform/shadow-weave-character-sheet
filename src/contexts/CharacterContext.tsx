@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 
@@ -7,6 +8,9 @@ interface CharacterContextProps {
   updateCharacter: (updates: Partial<Character>) => void;
   isLoading: boolean;
   error: Error | null;
+  characters?: Character[]; // Added for Index.tsx
+  getUserCharacters?: () => Promise<Character[]>; // Added for Index.tsx
+  deleteCharacter?: (characterId: string) => Promise<boolean>; // Added for Index.tsx
 }
 
 export const CharacterContext = createContext<CharacterContextProps>({
@@ -14,7 +18,10 @@ export const CharacterContext = createContext<CharacterContextProps>({
   setCharacter: () => {},
   updateCharacter: () => {},
   isLoading: false,
-  error: null
+  error: null,
+  characters: [],
+  getUserCharacters: async () => [],
+  deleteCharacter: async () => false
 });
 
 export const useCharacter = () => useContext(CharacterContext);
