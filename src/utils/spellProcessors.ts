@@ -1,4 +1,8 @@
 // Исправляем спеллы для всех классов, добавляя недостающее свойство known
+export const calculateAvailableSpellsByClassAndLevel = (className: string, level: number) => {
+  return getSpellSlotsByClass(className, level);
+};
+
 export const getSpellSlotsByClass = (className: string, level: number) => {
   switch(className.toLowerCase()) {
     case 'бард':

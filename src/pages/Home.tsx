@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
-import { User as AuthUser } from 'firebase/auth'; // Переименовываем для избежания конфликта
 import { User, Character } from '@/types/session'; // Импортируем из session
 import {
   Card,
@@ -153,6 +151,18 @@ const Home = () => {
     if (session) {
       navigate('/session');
     }
+  };
+  
+  // Заглушка для функции присоединения к сессии
+  const joinSession = async (sessionCode: string, playerName: string, character?: any) => {
+    console.log("Присоединяемся к сессии", sessionCode, playerName, character);
+    return true;
+  };
+  
+  // Заглушка для функции создания сессии
+  const createSession = async (sessionName: string, sessionDescription: string) => {
+    console.log("Создаем сессию", sessionName, sessionDescription);
+    return { id: "mock-session-id", name: sessionName };
   };
   
   // Handle joining a session
@@ -343,7 +353,7 @@ const Home = () => {
                               <div>
                                 <p className="font-medium">{char.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {char.race} {char.class || char.className}, {char.level} уровень
+                                  {char.race} {char.class || char.className || '', char.level} уровень
                                 </p>
                               </div>
                             </CardContent>

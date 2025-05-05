@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   username: string;
@@ -80,7 +79,7 @@ export interface CustomAsset {
   isPublic: boolean;
 }
 
-// Добавляем User, который соответствует Use из session.ts
+// Обновляем тип User, добавив недостающие поля
 export interface User {
   id: string;
   name?: string;

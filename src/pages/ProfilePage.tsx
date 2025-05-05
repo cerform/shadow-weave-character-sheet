@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ProfilePage = () => {
-  const { currentUser, updateUserProfile } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   
   const {
     register,
@@ -26,7 +26,7 @@ const ProfilePage = () => {
   
   const onSubmit = async (data: { displayName: string; photoURL: string; username: string }) => {
     try {
-      await updateUserProfile({
+      await updateProfile({
         displayName: data.displayName,
         photoURL: data.photoURL,
         username: data.username,
