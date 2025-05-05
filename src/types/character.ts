@@ -182,6 +182,7 @@ export interface Character {
   updatedAt?: string;
   image?: string;
   sorceryPoints?: SorceryPoints;
+  playerName?: string;
 }
 
 export interface ClassLevel {

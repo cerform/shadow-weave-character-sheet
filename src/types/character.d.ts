@@ -1,3 +1,4 @@
+
 import { SpellData } from './spells';
 
 // Consolidate character interfaces to avoid duplicate type errors
