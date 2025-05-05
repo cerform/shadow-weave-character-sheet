@@ -1,9 +1,10 @@
 
 import { CharacterSpell } from '@/types/character';
+import { wrapWithPrepared } from './ensureSpellFields';
 
-export const spells: CharacterSpell[] = [
+const baseSpells = [
   {
-    id: "light",
+    id: "light",  // ИД останется строкой, а далее мы преобразуем его
     name: "Свет",
     level: 0,
     school: "Воплощение",
@@ -12,7 +13,6 @@ export const spells: CharacterSpell[] = [
     components: "В, М",
     duration: "1 час",
     description: "Вы касаетесь одного предмета, не превышающего 10 футов в любом измерении. Пока заклинание активно, предмет испускает яркий свет в радиусе 20 футов и тусклый свет в пределах ещё 20 футов. Свет может быть любого цвета на ваш выбор.",
-    prepared: false,
     verbal: true,
     somatic: false,
     material: true,
@@ -31,7 +31,6 @@ export const spells: CharacterSpell[] = [
     components: "В, С, М",
     duration: "Концентрация, вплоть до 1 минуты",
     description: "Вы создаёте до четырёх огоньков размером с факел, которые парят в воздухе в пределах дистанции. Вы можете перемещать их на расстояние до 60 футов бонусным действием.",
-    prepared: false,
     verbal: true,
     somatic: true,
     material: true,
@@ -50,7 +49,6 @@ export const spells: CharacterSpell[] = [
     components: "В, С",
     duration: "1 минута",
     description: "Призрачная парящая рука появляется в указанной вами точке в пределах дистанции и существует, пока заклинание активно, или пока вы не отпустите её действием.",
-    prepared: false,
     verbal: true,
     somatic: true,
     material: false,
@@ -59,3 +57,6 @@ export const spells: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Колдун", "Волшебник"]
   }
 ];
+
+// Оборачиваем в функцию для добавления поля prepared и других необходимых полей
+export const spells: CharacterSpell[] = wrapWithPrepared(baseSpells);

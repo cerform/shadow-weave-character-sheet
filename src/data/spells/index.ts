@@ -3,6 +3,9 @@
 import { CharacterSpell } from '@/types/character';
 import { spells as cantripSpells } from './cantrips';
 import { level4 } from './level4';
+import { level3Spells } from './level3';
+import { level4Part2 } from './level4_part2';
+import { level4Part3 } from './level4_part3';
 import { ensureSpellFields } from './ensureSpellFields';
 
 // Empty arrays for class-specific spells until they're implemented
@@ -18,6 +21,9 @@ const wizardSpells: CharacterSpell[] = [];
 export const allSpells = [
   ...cantripSpells,
   ...level4,
+  ...level3Spells,
+  ...level4Part2,
+  ...level4Part3,
   ...clericSpells,
   ...druidSpells,
   ...paladinSpells,
@@ -65,6 +71,9 @@ export const getSpellDetails = (spellName: string): CharacterSpell | null => {
 export { 
   cantripSpells,
   level4,
+  level3Spells,
+  level4Part2,
+  level4Part3,
   clericSpells,
   druidSpells,
   paladinSpells,
