@@ -64,14 +64,15 @@ export const steps = [
 // Функция для получения видимых шагов на основе фильтрации
 export const getCharacterSteps = (config?: { isMagicClass?: boolean, hasSubraces?: boolean }) => {
   return steps.filter(step => {
-    // Фильтруем шаги заклинаний для немагических классов
-    if (step.id === 9 && step.onlyFor === "magic" && config?.isMagicClass === false) {
-      return false;
+    // Всегда показываем шаг подрасы в списке шагов,
+    // но его доступность будет контролироваться внутри компонента CharacterSubraceSelection
+    if (step.id === 1 && step.onlyFor === "hasSubraces") {
+      return config?.hasSubraces || false;
     }
     
-    // Фильтруем шаг подрасы, если у выбранной расы нет подрас
-    if (step.id === 1 && step.onlyFor === "hasSubraces" && config?.hasSubraces === false) {
-      return false;
+    // Фильтруем шаги заклинаний для немагических классов
+    if (step.id === 9 && step.onlyFor === "magic") {
+      return config?.isMagicClass || false;
     }
     
     return true;

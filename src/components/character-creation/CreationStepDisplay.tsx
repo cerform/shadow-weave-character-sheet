@@ -38,20 +38,9 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Фильтруем шаги, чтобы показывать только те, которые применимы к текущему персонажу
-  const filteredSteps = steps.filter(step => {
-    // Шаг подрасы виден только если есть подрасы
-    if (step.id === 1 && step.onlyFor === 'hasSubraces' && !hasSubraces) {
-      return false;
-    }
-    
-    // Шаг заклинаний виден только для магических классов
-    if (step.id === 9 && step.onlyFor === 'magic' && !isMagicClass) {
-      return false;
-    }
-    
-    return true;
-  });
+  // Теперь мы всегда показываем шаг подрасы, если он есть в шагах,
+  // но его доступность будет контролироваться внутри компонента CharacterSubraceSelection
+  const filteredSteps = steps;
 
   return (
     <div className="relative w-full mb-8">
