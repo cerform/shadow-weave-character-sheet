@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import JoinSession from "@/components/session/JoinSession";
-import { useSessionStore } from '@/utils/sessionImports';
+import useSessionStore from '@/stores/sessionStore';
 import { ArrowLeft } from 'lucide-react';
 
 const JoinGamePage = () => {
@@ -35,8 +36,18 @@ const JoinGamePage = () => {
       // Другие свойства персонажа
     };
 
+    // Проверяем наличие метода присоединения к сессии
+    if (typeof sessionStore.joinSession !== 'function') {
+      toast({
+        title: "Ошибка",
+        description: "Функция присоединения к сессии недоступна",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Присоединяемся к сессии
-    const joined = sessionStore.joinSession ? sessionStore.joinSession(roomCode, character) : false;
+    const joined = sessionStore.joinSession(roomCode, character);
 
     if (joined) {
       toast({

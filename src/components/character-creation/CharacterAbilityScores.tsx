@@ -1,14 +1,18 @@
+import React from 'react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
-import React, { useState, useEffect } from "react";
-import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
-import AbilityRollingPanel from "./AbilityRollingPanel";
-import PointBuyPanel from "./PointBuyPanel";
-import StandardArrayPanel from "./StandardArrayPanel";
-import ManualInputPanel from "./ManualInputPanel";
-import { ABILITY_SCORE_CAPS } from "@/types/character";
-import type { CharacterSheet } from '@/utils/characterImports';
-import { useToast } from "@/hooks/use-toast";
+import type { CharacterSheet } from "@/utils/characterImports";
+import AbilityScoreMethodSelector from './AbilityScoreMethodSelector';
+import PointBuyPanel from './PointBuyPanel';
+import StandardArrayPanel from './StandardArrayPanel';
+import AbilityRollingPanel from './AbilityRollingPanel';
+import ManualInputPanel from './ManualInputPanel';
+import NavigationButtons from './NavigationButtons';
+import SectionHeader from "@/components/ui/section-header";
 
 interface CharacterAbilityScoresProps {
   character: CharacterSheet;

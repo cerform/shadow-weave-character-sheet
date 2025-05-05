@@ -28,8 +28,7 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
     }
     
     try {
-      // Проверяем наличие метода joinSession
-      if (!sessionStore.joinSession) {
+      if (typeof sessionStore.joinSession !== 'function') {
         toast({
           title: "Ошибка",
           description: "Функция присоединения к сессии недоступна",

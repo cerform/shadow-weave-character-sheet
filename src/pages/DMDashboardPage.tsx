@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import useSessionStore from "@/stores/sessionStore";
+import { Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useSessionStore } from '@/utils/sessionImports';
-import { PlusCircle, Users, ArrowRight } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { useTheme } from "@/hooks/use-theme";
+import { Map, Activity, Swords } from "lucide-react";
 
 const DMDashboardPage = () => {
   const navigate = useNavigate();
@@ -95,7 +97,7 @@ const DMDashboardPage = () => {
               <div className="space-y-4">
                 {loading ? (
                   <div className="text-center p-8">
-                    <p>Загрузка сессий...</p>
+                    <p>Заг��узка сессий...</p>
                   </div>
                 ) : sessions.length > 0 ? (
                   sessions.map((session) => (

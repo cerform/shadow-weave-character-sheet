@@ -1,338 +1,192 @@
+
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/types/character';
-// Локальные функции для работы с сессиями
-const saveSession = (session: any): void => {
-  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-  const index = sessions.findIndex((s: any) => s.id === session.id);
-  
-  if (index !== -1) {
-    sessions[index] = session;
-  } else {
-    sessions.push(session);
-  }
-  
-  localStorage.setItem('sessions', JSON.stringify(sessions));
-};
+import { socketService } from '@/services/socket';
+import type { Character } from '@/types/character';
 
-const getSession = (sessionId: string): any | null => {
-  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-  return sessions.find((s: any) => s.id === sessionId) || null;
-};
-
-interface SessionPlayer {
+export interface Player {
   id: string;
   name: string;
-  character?: Character;
-  isConnected: boolean;
-  lastSeen?: Date;
+  character: Character | null;
+  connected: boolean;
 }
 
-interface DiceRoll {
-  id: string;
-  playerId: string;
-  playerName: string;
-  type: string;
-  rolls: number[];
-  total: number;
-  timestamp: Date;
-  isPrivate?: boolean;
-  modifier?: number;
-  label?: string;
-}
-
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  content: string;
-  timestamp: Date;
-  type: 'system' | 'player' | 'dm' | 'whisper';
-  recipientId?: string;
-}
-
-interface Initiative {
-  id: string;
-  name: string;
-  initiative: number;
-  playerId?: string;
-}
-
-interface SessionState {
-  isLoaded: boolean;
+export interface Session {
   id: string;
   name: string;
   code: string;
-  dmId: string | null;
-  players: SessionPlayer[];
-  diceRolls: DiceRoll[];
-  chatMessages: ChatMessage[];
-  initiativeOrder: Initiative[];
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  
-  // Player functions
-  addPlayer: (name: string, characterId?: string) => void;
-  removePlayer: (playerId: string) => void;
-  updatePlayer: (playerId: string, updates: Partial<SessionPlayer>) => void;
-  
-  // Dice roll functions
-  addDiceRoll: (playerId: string, playerName: string, type: string, rolls: number[], total: number, options?: { modifier?: number, label?: string, isPrivate?: boolean }) => void;
-  clearDiceRolls: () => void;
-  
-  // Chat functions
-  addChatMessage: (senderId: string, senderName: string, content: string, type: 'system' | 'player' | 'dm' | 'whisper', recipientId?: string) => void;
-  clearChat: () => void;
-  
-  // Initiative functions
-  addInitiative: (name: string, initiative: number, playerId?: string) => void;
-  removeInitiative: (id: string) => void;
-  clearInitiative: () => void;
-  sortInitiative: () => void;
-  
-  // Session management
-  createSession: (name: string, dmId?: string) => any;
-  saveSessionToStorage: () => void;
-  loadSessionFromStorage: (sessionId: string) => boolean;
-  setSessionStatus: (isActive: boolean) => void;
+  dmId: string;
+  players: Player[];
+  createdAt: string;
+  description?: string;
 }
 
-const useSessionStore = create<SessionState>()(
-  persist(
-    (set, get) => ({
-      isLoaded: false,
-      id: '',
-      name: '',
-      code: '',
-      dmId: null,
-      players: [],
-      diceRolls: [],
-      chatMessages: [],
-      initiativeOrder: [],
-      isActive: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      
-      // Player functions
-      addPlayer: (name, characterId) => {
-        const newPlayer: SessionPlayer = {
-          id: uuidv4(),
-          name,
-          isConnected: true,
-          lastSeen: new Date()
-        };
-        
-        // If characterId is provided, find the character and add it
-        if (characterId) {
-          const storedChars = localStorage.getItem('dnd-characters');
-          if (storedChars) {
-            const characters: Character[] = JSON.parse(storedChars);
-            const selectedChar = characters.find(char => char.id === characterId);
-            if (selectedChar) {
-              newPlayer.character = selectedChar;
-            }
-          }
-        }
-        
-        set(state => ({
-          players: [...state.players, newPlayer],
-          updatedAt: new Date()
-        }));
-      },
-      
-      removePlayer: (playerId) => {
-        set(state => ({
-          players: state.players.filter(p => p.id !== playerId),
-          updatedAt: new Date()
-        }));
-      },
-      
-      updatePlayer: (playerId, updates) => {
-        set(state => ({
-          players: state.players.map(player =>
-            player.id === playerId ? { ...player, ...updates } : player
-          ),
-          updatedAt: new Date()
-        }));
-      },
-      
-      // Dice roll functions
-      addDiceRoll: (playerId, playerName, type, rolls, total, options) => {
-        const newRoll: DiceRoll = {
-          id: uuidv4(),
-          playerId,
-          playerName,
-          type,
-          rolls,
-          total,
-          timestamp: new Date(),
-          ...options
-        };
-        
-        set(state => ({
-          diceRolls: [newRoll, ...state.diceRolls.slice(0, 99)], // Keep only the last 100 rolls
-          updatedAt: new Date()
-        }));
-      },
-      
-      clearDiceRolls: () => {
-        set(state => ({
-          diceRolls: [],
-          updatedAt: new Date()
-        }));
-      },
-      
-      // Chat functions
-      addChatMessage: (senderId, senderName, content, type, recipientId) => {
-        const newMessage: ChatMessage = {
-          id: uuidv4(),
-          senderId,
-          senderName,
-          content,
-          type,
-          recipientId,
-          timestamp: new Date()
-        };
-        
-        set(state => ({
-          chatMessages: [...state.chatMessages, newMessage],
-          updatedAt: new Date()
-        }));
-      },
-      
-      clearChat: () => {
-        set(state => ({
-          chatMessages: [],
-          updatedAt: new Date()
-        }));
-      },
-      
-      // Initiative functions
-      addInitiative: (name, initiative, playerId) => {
-        const newInitiative: Initiative = {
-          id: uuidv4(),
-          name,
-          initiative,
-          playerId
-        };
-        
-        set(state => {
-          const newState = {
-            initiativeOrder: [...state.initiativeOrder, newInitiative],
-            updatedAt: new Date()
-          };
-          
-          // Sort initiative
-          newState.initiativeOrder.sort((a, b) => b.initiative - a.initiative);
-          
-          return newState;
-        });
-      },
-      
-      removeInitiative: (id) => {
-        set(state => ({
-          initiativeOrder: state.initiativeOrder.filter(i => i.id !== id),
-          updatedAt: new Date()
-        }));
-      },
-      
-      clearInitiative: () => {
-        set(state => ({
-          initiativeOrder: [],
-          updatedAt: new Date()
-        }));
-      },
-      
-      sortInitiative: () => {
-        set(state => ({
-          initiativeOrder: [...state.initiativeOrder].sort((a, b) => b.initiative - a.initiative),
-          updatedAt: new Date()
-        }));
-      },
-      
-      // Session management
-      createSession: (name, dmId) => {
-        const sessionCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-        
-        const newSession = {
-          id: uuidv4(),
-          name,
-          code: sessionCode,
-          dmId: dmId || null,
-          players: [],
-          diceRolls: [],
-          chatMessages: [],
-          initiativeOrder: [],
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isLoaded: true
-        };
-        
-        set(newSession);
-        
-        // Save the session after creation
-        setTimeout(() => {
-          get().saveSessionToStorage();
-        }, 0);
-        
-        return newSession;
-      },
-      
-      saveSessionToStorage: () => {
-        const state = get();
-        saveSession({
-          id: state.id,
-          name: state.name,
-          code: state.code,
-          dmId: state.dmId,
-          players: state.players,
-          diceRolls: state.diceRolls,
-          chatMessages: state.chatMessages,
-          initiativeOrder: state.initiativeOrder,
-          isActive: state.isActive,
-          createdAt: state.createdAt,
-          updatedAt: new Date()
-        });
-      },
-      
-      loadSessionFromStorage: (sessionId) => {
-        try {
-          const session = getSession(sessionId);
-          
-          if (session) {
-            set({
-              ...session,
-              isLoaded: true
-            });
-            return true;
-          }
-          
-          return false;
-        } catch (error) {
-          console.error('Error loading session:', error);
-          return false;
-        }
-      },
-      
-      setSessionStatus: (isActive) => {
-        set({
-          isActive,
-          updatedAt: new Date()
-        });
-        
-        // Save the session status to storage
-        setTimeout(() => {
-          get().saveSessionToStorage();
-        }, 0);
-      }
-    }),
-    {
-      name: 'session-storage',
+export interface SessionState {
+  sessions: Session[];
+  currentSession: Session | null;
+  loading: boolean;
+  error: string | null;
+  characters: Character[];
+  currentUser: { id: string; name: string; isDM: boolean } | null;
+  
+  // Methods
+  fetchSessions: () => Promise<Session[]>;
+  createSession: (name: string, description?: string) => Session;
+  joinSession: (code: string, character: any) => boolean;
+  endSession: (sessionId: string) => void;
+  fetchCharacters: () => Promise<Character[]>;
+  deleteCharacter: (id: string) => Promise<void>;
+  clearAllCharacters: () => void;
+  
+  // Internal actions
+  setCurrentSession: (session: Session | null) => void;
+  addPlayerToSession: (sessionId: string, player: Player) => void;
+  removePlayerFromSession: (sessionId: string, playerId: string) => void;
+}
+
+const useSessionStore = create<SessionState>((set, get) => ({
+  sessions: [],
+  currentSession: null,
+  loading: false,
+  error: null,
+  characters: [],
+  currentUser: null,
+
+  fetchSessions: async () => {
+    try {
+      set({ loading: true });
+      // Mock fetching sessions from localStorage for now
+      const savedSessions = localStorage.getItem('dnd-sessions');
+      const sessions = savedSessions ? JSON.parse(savedSessions) : [];
+      set({ sessions, loading: false });
+      return sessions;
+    } catch (error) {
+      set({ error: 'Failed to fetch sessions', loading: false });
+      return [];
     }
-  )
-);
+  },
+
+  createSession: (name, description) => {
+    const newSession: Session = {
+      id: uuidv4(),
+      name,
+      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      dmId: get().currentUser?.id || 'unknown',
+      players: [],
+      createdAt: new Date().toISOString(),
+      description
+    };
+    
+    const updatedSessions = [...get().sessions, newSession];
+    set({ sessions: updatedSessions, currentSession: newSession });
+    
+    // Save to localStorage
+    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
+    
+    return newSession;
+  },
+
+  joinSession: (code, character) => {
+    try {
+      const sessionToJoin = get().sessions.find(s => s.code === code);
+      
+      if (!sessionToJoin) {
+        set({ error: 'Session not found' });
+        return false;
+      }
+      
+      const player: Player = {
+        id: uuidv4(),
+        name: character.name || 'Unknown Player',
+        character,
+        connected: true
+      };
+      
+      get().addPlayerToSession(sessionToJoin.id, player);
+      set({ currentSession: sessionToJoin });
+      
+      // Connect to socket if needed
+      socketService.connect(code, player.name);
+      
+      return true;
+    } catch (error) {
+      set({ error: 'Failed to join session' });
+      return false;
+    }
+  },
+
+  endSession: (sessionId) => {
+    const sessions = get().sessions.filter(s => s.id !== sessionId);
+    set({ 
+      sessions, 
+      currentSession: get().currentSession?.id === sessionId ? null : get().currentSession 
+    });
+    
+    localStorage.setItem('dnd-sessions', JSON.stringify(sessions));
+  },
+
+  fetchCharacters: async () => {
+    try {
+      set({ loading: true });
+      // Mock fetching characters from localStorage
+      const savedChars = localStorage.getItem('dnd-characters');
+      const characters = savedChars ? JSON.parse(savedChars) : [];
+      set({ characters, loading: false });
+      return characters;
+    } catch (error) {
+      set({ error: 'Failed to fetch characters', loading: false });
+      return [];
+    }
+  },
+
+  deleteCharacter: async (id) => {
+    try {
+      const updatedCharacters = get().characters.filter(char => char.id !== id);
+      set({ characters: updatedCharacters });
+      localStorage.setItem('dnd-characters', JSON.stringify(updatedCharacters));
+    } catch (error) {
+      set({ error: 'Failed to delete character' });
+    }
+  },
+
+  clearAllCharacters: () => {
+    set({ characters: [] });
+    localStorage.removeItem('dnd-characters');
+  },
+
+  setCurrentSession: (session) => {
+    set({ currentSession: session });
+  },
+
+  addPlayerToSession: (sessionId, player) => {
+    const updatedSessions = get().sessions.map(session => {
+      if (session.id === sessionId) {
+        return {
+          ...session,
+          players: [...session.players, player]
+        };
+      }
+      return session;
+    });
+    
+    set({ sessions: updatedSessions });
+    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
+  },
+
+  removePlayerFromSession: (sessionId, playerId) => {
+    const updatedSessions = get().sessions.map(session => {
+      if (session.id === sessionId) {
+        return {
+          ...session,
+          players: session.players.filter(p => p.id !== playerId)
+        };
+      }
+      return session;
+    });
+    
+    set({ sessions: updatedSessions });
+    localStorage.setItem('dnd-sessions', JSON.stringify(updatedSessions));
+  }
+}));
 
 export default useSessionStore;

@@ -1,7 +1,9 @@
 
-import { Character, CharacterSpell } from '@/types/character';
+// Re-export for easier imports across the project
+import type { Character } from '@/types/character';
 
-// Используем export type для переэкспорта типов с включенным isolatedModules
-export type { Character, CharacterSpell };
+// Use Character as CharacterSheet for backward compatibility
 export type CharacterSheet = Character;
 
+// Re-export other common character-related types
+export { Character };

@@ -1,187 +1,245 @@
-
-// Интерфейс для темы
 export interface Theme {
   name: string;
   background: string;
   foreground: string;
   primary: string;
-  secondary?: string;
   accent: string;
   textColor: string;
   cardBackground: string;
   glow?: string;
-  mutedTextColor?: string;
-  buttonText?: string;
   spellLevels?: {
-    [level: number]: string;
+    0: string; // Cantrips
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+    5: string;
+    6: string;
+    7: string;
+    8: string;
+    9: string;
   };
 }
 
-// Объект с доступными темами
-export const themes: Record<string, Theme> = {
+export const themes: { [key: string]: Theme } = {
   default: {
-    name: "Default",
-    background: "#0f0f0f",
-    foreground: "#1a1a1a",
-    primary: "#8351a8",
-    secondary: "#6a4087",
-    accent: "#9969c7",
-    textColor: "#ffffff",
-    cardBackground: "rgba(26, 26, 26, 0.8)",
-    glow: "0 0 10px rgba(153, 105, 199, 0.5)",
-    mutedTextColor: "#9ca3af",
-    buttonText: "#ffffff",
+    name: "default",
+    background: "#F5F5F4",
+    foreground: "#09090B",
+    primary: "#7E22CE",
+    accent: "#E2E8F0",
+    textColor: "#475569",
+    cardBackground: "#FFFFFF",
+    glow: '0 0 8px rgba(126, 34, 206, 0.5)',
     spellLevels: {
-      0: "#6b7280", // Заговоры
-      1: "#10b981", // 1 уровень
-      2: "#3b82f6", // 2 уровень
-      3: "#8b5cf6", // 3 уровень
-      4: "#ec4899", // 4 уровень
-      5: "#f59e0b", // 5 уровень
-      6: "#ef4444", // 6 уровень
-      7: "#6366f1", // 7 уровень
-      8: "#0ea5e9", // 8 уровень
-      9: "#7c3aed"  // 9 уровень
+      0: '#4ade80',  // Green
+      1: '#38bdf8',  // Blue
+      2: '#f472b6',  // Pink
+      3: '#facc15',  // Yellow
+      4: '#a78bfa',  // Purple
+      5: '#ef4444',  // Red
+      6: '#64ffda',  // Teal
+      7: '#e040fb',  // Violet
+      8: '#ffab40',  // Orange
+      9: '#4fc3f7'   // Light Blue
     }
   },
   dark: {
-    name: "Dark",
-    background: "#121212",
-    foreground: "#1e1e1e",
-    primary: "#6b21a8",
-    secondary: "#4a1578",
-    accent: "#7928ca",
-    textColor: "#e2e2e2",
-    cardBackground: "rgba(30, 30, 30, 0.9)",
-    glow: "0 0 8px rgba(121, 40, 202, 0.4)",
-    mutedTextColor: "#9ca3af",
-    buttonText: "#ffffff",
+    name: "dark",
+    background: "#18181B",
+    foreground: "#F8FAFC",
+    primary: "#9333EA",
+    accent: "#334155",
+    textColor: "#CBD5E1",
+    cardBackground: "#1E293B",
+    glow: '0 0 8px rgba(147, 51, 234, 0.5)',
     spellLevels: {
-      0: "#6b7280", // Заговоры
-      1: "#10b981", // 1 уровень
-      2: "#3b82f6", // 2 уровень
-      3: "#8b5cf6", // 3 уровень
-      4: "#ec4899", // 4 уровень
-      5: "#f59e0b", // 5 уровень
-      6: "#ef4444", // 6 уровень
-      7: "#6366f1", // 7 уровень
-      8: "#0ea5e9", // 8 уровень
-      9: "#7c3aed"  // 9 уровень
+      0: '#4ade80',  // Green
+      1: '#38bdf8',  // Blue
+      2: '#f472b6',  // Pink
+      3: '#facc15',  // Yellow
+      4: '#a78bfa',  // Purple
+      5: '#ef4444',  // Red
+      6: '#64ffda',  // Teal
+      7: '#e040fb',  // Violet
+      8: '#ffab40',  // Orange
+      9: '#4fc3f7'   // Light Blue
     }
   },
-  blood: {
-    name: "Blood",
-    background: "#1a0a0c",
-    foreground: "#230d11",
-    primary: "#9a0000",
-    accent: "#c41e3a",
-    textColor: "#f8d7da",
-    cardBackground: "rgba(35, 13, 17, 0.85)",
-    glow: "0 0 10px rgba(196, 30, 58, 0.6)",
-    mutedTextColor: "#b68d93",
+  fantasy: {
+    name: "fantasy",
+    background: "#EADDCA",
+    foreground: "#272343",
+    primary: "#6246EA",
+    accent: "#A3A380",
+    textColor: "#5F6368",
+    cardBackground: "#F0EAD6",
+    glow: '0 0 8px rgba(98, 70, 234, 0.5)',
     spellLevels: {
-      0: "#6b7280", // Заговоры
-      1: "#bf0603", // 1 уровень
-      2: "#d00000", // 2 уровень
-      3: "#dc2f02", // 3 уровень
-      4: "#e85d04", // 4 уровень
-      5: "#f48c06", // 5 уровень
-      6: "#faa307", // 6 уровень
-      7: "#ffba08", // 7 уровень
-      8: "#9d0208", // 8 уровень
-      9: "#6a040f"  // 9 уровень
+      0: '#4ade80',  // Green
+      1: '#38bdf8',  // Blue
+      2: '#f472b6',  // Pink
+      3: '#facc15',  // Yellow
+      4: '#a78bfa',  // Purple
+      5: '#ef4444',  // Red
+      6: '#64ffda',  // Teal
+      7: '#e040fb',  // Violet
+      8: '#ffab40',  // Orange
+      9: '#4fc3f7'   // Light Blue
     }
   },
-  forest: {
-    name: "Forest",
-    background: "#0a1a0c",
-    foreground: "#0d230f",
-    primary: "#007236",
-    accent: "#00924a",
-    textColor: "#d7f8db",
-    cardBackground: "rgba(13, 35, 15, 0.85)",
-    glow: "0 0 10px rgba(0, 146, 74, 0.6)",
-    mutedTextColor: "#8db693",
+  cyber: {
+    name: "cyber",
+    background: "#1A1A1A",
+    foreground: "#64FFDA",
+    primary: "#BB86FC",
+    accent: "#333333",
+    textColor: "#B2B2B2",
+    cardBackground: "#2B2B2B",
+    glow: '0 0 8px rgba(187, 134, 252, 0.5)',
     spellLevels: {
-      0: "#606c38", // Заговоры
-      1: "#283618", // 1 уровень
-      2: "#3a5a40", // 2 уровень
-      3: "#588157", // 3 уровень
-      4: "#a3b18a", // 4 уровень
-      5: "#344e41", // 5 уровень
-      6: "#52796f", // 6 уровень
-      7: "#84a98c", // 7 уровень
-      8: "#2d6a4f", // 8 уровень
-      9: "#1b4332"  // 9 уровень
+      0: '#4ade80',  // Green
+      1: '#38bdf8',  // Blue
+      2: '#f472b6',  // Pink
+      3: '#facc15',  // Yellow
+      4: '#a78bfa',  // Purple
+      5: '#ef4444',  // Red
+      6: '#64ffda',  // Teal
+      7: '#e040fb',  // Violet
+      8: '#ffab40',  // Orange
+      9: '#4fc3f7'   // Light Blue
     }
   },
-  ocean: {
-    name: "Ocean",
-    background: "#0a101a",
-    foreground: "#0d1423",
-    primary: "#005b99",
-    accent: "#0072c4",
-    textColor: "#d7eaf8",
-    cardBackground: "rgba(13, 20, 35, 0.85)",
-    glow: "0 0 10px rgba(0, 114, 196, 0.6)",
-    mutedTextColor: "#8d9db6",
+  nature: {
+    name: "nature",
+    background: "#E8F5E9",
+    foreground: "#1B5E20",
+    primary: "#388E3C",
+    accent: "#A5D6A7",
+    textColor: "#43A047",
+    cardBackground: "#C8E6C9",
+    glow: '0 0 8px rgba(56, 142, 60, 0.5)',
     spellLevels: {
-      0: "#023e8a", // Заговоры
-      1: "#0077b6", // 1 уровень
-      2: "#0096c7", // 2 уровень
-      3: "#00b4d8", // 3 уровень
-      4: "#48cae4", // 4 уровень
-      5: "#90e0ef", // 5 уровень
-      6: "#03045e", // 6 уровень
-      7: "#0077b6", // 7 уровень
-      8: "#0096c7", // 8 уровень
-      9: "#023e8a"  // 9 уровень
+      0: '#4ade80',  // Green
+      1: '#38bdf8',  // Blue
+      2: '#f472b6',  // Pink
+      3: '#facc15',  // Yellow
+      4: '#a78bfa',  // Purple
+      5: '#ef4444',  // Red
+      6: '#64ffda',  // Teal
+      7: '#e040fb',  // Violet
+      8: '#ffab40',  // Orange
+      9: '#4fc3f7'   // Light Blue
     }
   },
-  sunset: {
-    name: "Sunset",
-    background: "#1a0e0a",
-    foreground: "#23120d",
-    primary: "#cb6c34",
-    accent: "#e67e22",
-    textColor: "#f8e4d7",
-    cardBackground: "rgba(35, 18, 13, 0.85)",
-    glow: "0 0 10px rgba(230, 126, 34, 0.6)",
-    mutedTextColor: "#b69a8d",
+   warlock: {
+    name: "warlock",
+    background: "#301934", // Deep Purple
+    foreground: "#FF4081", // Hot Pink
+    primary: "#D0B4DE", // Lavender
+    accent: "#4A235A", // Dark Amethyst
+    textColor: "#E1BEE7", // Light Lavender
+    cardBackground: "#4E342E", // Dark Brown
+    glow: '0 0 8px rgba(208, 180, 222, 0.5)',
     spellLevels: {
-      0: "#ffcdb2", // Заговоры
-      1: "#ffb4a2", // 1 уровень
-      2: "#e5989b", // 2 уровень
-      3: "#b5838d", // 3 уровень
-      4: "#6d6875", // 4 уровень
-      5: "#cb997e", // 5 уровень
-      6: "#ddbea9", // 6 уровень
-      7: "#ffe8d6", // 7 уровень
-      8: "#b08968", // 8 уровень
-      9: "#7f5539"  // 9 уровень
+      0: '#BE9CFF',  // Light Purple
+      1: '#E91E63',  // Rose
+      2: '#9C27B0',  // Purple
+      3: '#673AB7',  // Deep Purple
+      4: '#3F51B5',  // Indigo
+      5: '#2196F3',  // Blue
+      6: '#03A9F4',  // Light Blue
+      7: '#00BCD4',  // Cyan
+      8: '#009688',  // Teal
+      9: '#4CAF50'   // Green
     }
   },
-  twilight: {
-    name: "Twilight",
-    background: "#0f0a1a",
-    foreground: "#150d23",
-    primary: "#4834cb",
-    accent: "#5e3fd4",
-    textColor: "#dcd7f8",
-    cardBackground: "rgba(21, 13, 35, 0.85)",
-    glow: "0 0 10px rgba(94, 63, 212, 0.6)",
-    mutedTextColor: "#9a8db6",
+  wizard: {
+    name: "wizard",
+    background: "#0D47A1", // Dark Blue
+    foreground: "#E3F2FD", // Light Blue
+    primary: "#90CAF9", // Blue
+    accent: "#1565C0", // Darker Blue
+    textColor: "#BBDEFB", // Light Blue
+    cardBackground: "#1A237E", // Dark Navy
+    glow: '0 0 8px rgba(144, 202, 249, 0.5)',
     spellLevels: {
-      0: "#7371fc", // Заговоры
-      1: "#5e60ce", // 1 уровень
-      2: "#4ea8de", // 2 уровень
-      3: "#48bfe3", // 3 уровень
-      4: "#56cfe1", // 4 уровень
-      5: "#64dfdf", // 5 уровень
-      6: "#72efdd", // 6 уровень
-      7: "#80ffdb", // 7 уровень
-      8: "#5390d9", // 8 уровень
-      9: "#4361ee"  // 9 уровень
+      0: '#81D4FA',  // Sky Blue
+      1: '#4FC3F7',  // Light Blue
+      2: '#29B6F6',  // Cyan
+      3: '#03A9F4',  // Light Cyan
+      4: '#039BE5',  // Deep Sky Blue
+      5: '#0288D1',  // Blue
+      6: '#01579B',  // Dark Blue
+      7: '#1A237E',  // Navy Blue
+      8: '#303F9F',  // Indigo
+      9: '#3949AB'   // Dark Indigo
     }
-  }
+  },
+  druid: {
+    name: "druid",
+    background: "#43A047", // Dark Green
+    foreground: "#A5D6A7", // Light Green
+    primary: "#66BB6A", // Green
+    accent: "#2E7D32", // Darker Green
+    textColor: "#C8E6C9", // Light Green
+    cardBackground: "#33691E", // Dark Olive
+    glow: '0 0 8px rgba(102, 187, 106, 0.5)',
+    spellLevels: {
+      0: '#81C784',  // Light Green
+      1: '#66BB6A',  // Green
+      2: '#4CAF50',  // Forest Green
+      3: '#43A047',  // Dark Green
+      4: '#388E3C',  // Olive Green
+      5: '#2E7D32',  // Dark Olive Green
+      6: '#1B5E20',  // Deep Green
+      7: '#33691E',  // Dark Olive
+      8: '#212121',  // Black
+      9: '#424242'   // Gray
+    }
+  },
+   warrior: {
+    name: "warrior",
+    background: "#B71C1C", // Dark Red
+    foreground: "#FFCDD2", // Light Red
+    primary: "#E57373", // Red
+    accent: "#880E4F", // Darker Red
+    textColor: "#EF9A9A", // Light Red
+    cardBackground: "#311B92", // Dark Purple
+    glow: '0 0 8px rgba(229, 115, 115, 0.5)',
+    spellLevels: {
+      0: '#EF5350',  // Red
+      1: '#E53935',  // Dark Red
+      2: '#D32F2F',  // Even Darker Red
+      3: '#C62828',  // Deep Red
+      4: '#B71C1C',  // Darkest Red
+      5: '#F44336',  // Light Red
+      6: '#E57373',  // Lighter Red
+      7: '#EF9A9A',  // Lightest Red
+      8: '#FFCDD2',  // Pale Red
+      9: '#FFEBEE'   // Very Pale Red
+    }
+  },
+  bard: {
+    name: "bard",
+    background: "#9C27B0", // Purple
+    foreground: "#E1BEE7", // Lavender
+    primary: "#CE93D8", // Light Purple
+    accent: "#7B1FA2", // Darker Purple
+    textColor: "#D1C4E9", // Light Lavender
+    cardBackground: "#4A148C", // Dark Violet
+    glow: '0 0 8px rgba(206, 147, 216, 0.5)',
+    spellLevels: {
+      0: '#E040FB',  // Purple
+      1: '#D500F9',  // Dark Purple
+      2: '#AA00FF',  // Even Darker Purple
+      3: '#6200EA',  // Deep Purple
+      4: '#4A148C',  // Darkest Purple
+      5: '#BA68C8',  // Light Purple
+      6: '#CE93D8',  // Lighter Purple
+      7: '#E1BEE7',  // Lightest Purple
+      8: '#F3E5F5',  // Pale Purple
+      9: '#F5F5F5'   // Very Pale Purple
+    }
+  },
 };
