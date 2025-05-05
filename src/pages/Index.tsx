@@ -13,7 +13,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  
+  // Безопасно получаем тему
+  const currentTheme = theme && themes[theme as keyof typeof themes] 
+    ? themes[theme as keyof typeof themes] 
+    : themes.default;
   
   // Адаптируем Firebase User для получения правильных полей
   const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
@@ -119,7 +123,7 @@ const Index = () => {
     <div 
       className="min-h-screen bg-gradient-to-b from-background to-background/80"
       style={{ 
-        backgroundImage: `url(/public/lovable-uploads/20c9f9c5-095b-4e58-95ab-fe1777117a9e.png)`, 
+        backgroundImage: `url(/lovable-uploads/20c9f9c5-095b-4e58-95ab-fe1777117a9e.png)`, 
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundBlendMode: 'overlay'

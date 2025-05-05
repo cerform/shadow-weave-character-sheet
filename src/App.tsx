@@ -23,6 +23,7 @@ import CharactersListPage from './pages/CharactersListPage';
 import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import CharacterViewPage from './pages/CharacterViewPage';
+import ProfilePage from './pages/ProfilePage'; // Импортируем страницу профиля
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
@@ -36,8 +37,11 @@ const App = () => {
     document.body.classList.add(`theme-${savedTheme}`);
     document.documentElement.setAttribute('data-theme', savedTheme);
 
+    // Проверяем наличие тем перед их использованием
+    const themes = window.themes || {};
+    
     // Применяем стили для текущей темы
-    const themeStyles = themes[savedTheme as keyof typeof themes] || themes.default;
+    const themeStyles = themes[savedTheme as keyof typeof themes] || { accent: '#6366f1', glow: 'rgba(99, 102, 241, 0.5)', textColor: '#ffffff', mutedTextColor: '#9ca3af' };
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
@@ -69,6 +73,7 @@ const App = () => {
                       <Route path="/characters" element={<CharactersListPage />} />
                       <Route path="/battle" element={<PlayBattlePage />} />
                       <Route path="/dm/battle" element={<PlayBattlePage />} />
+                      <Route path="/profile" element={<ProfilePage />} /> {/* Добавляем маршрут для страницы профиля */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <AppDiceButton />
@@ -88,3 +93,5 @@ export default App;
 
 // Импорт тем
 import { themes } from '@/lib/themes';
+// Делаем темы доступными глобально
+window.themes = themes;
