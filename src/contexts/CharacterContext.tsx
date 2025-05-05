@@ -1,9 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Character, CharacterSpell } from '@/types/character';
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { Character, CharacterSpell, CharacterProficiencies } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
 import { isOfflineMode } from '@/utils/authHelpers';
+
+// Define CharacterSheet type for compatibility with the service
+type CharacterSheet = Character;
 
 interface CharacterContextProps {
   character: Character | null;
@@ -138,7 +142,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               if (currentUser && !isOfflineMode()) {
                 try {
                   foundCharacter.userId = currentUser.uid;
-                  await characterService.saveCharacter(foundCharacter);
+                  await characterService.saveCharacter(foundCharacter as CharacterSheet);
                 } catch (syncError) {
                   console.error("Ошибка синхронизации с Firestore:", syncError);
                 }
@@ -191,7 +195,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Если пользователь авторизован, также сохраняем в Firestore
     if (!isOfflineMode() && normalizedCharacter.userId) {
       try {
-        await characterService.saveCharacter(normalizedCharacter as unknown as CharacterSheet);
+        await characterService.saveCharacter(normalizedCharacter as CharacterSheet);
       } catch (error) {
         console.error('Ошибка при сохранении персонажа в Firestore:', error);
       }
@@ -228,6 +232,26 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     } catch (error) {
       console.error('Ошибка при удалении персонажа:', error);
+    }
+  };
+  
+  // Функция для получения персонажей пользователя
+  const getUserCharacters = async () => {
+    try {
+      if (isOfflineMode()) {
+        // В оффлайн режиме загружаем из localStorage
+        const savedCharacters = localStorage.getItem('dnd-characters');
+        return savedCharacters ? JSON.parse(savedCharacters) : [];
+      } else {
+        // Иначе пытаемся загрузить из Firestore
+        return await characterService.getCharacters();
+      }
+    } catch (error) {
+      console.error("Ошибка при получении персонажей:", error);
+      
+      // В случае ошибки возвращаем локальные персонажи
+      const savedCharacters = localStorage.getItem('dnd-characters');
+      return savedCharacters ? JSON.parse(savedCharacters) : [];
     }
   };
   
@@ -293,7 +317,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             armor: [],
             tools: []
           }
-        } as unknown as CharacterSheet;
+        } as CharacterSheet;
         
         characterService.saveCharacter(characterSheetData)
           .catch(error => {
@@ -304,14 +328,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     createNewCharacter,
     deleteCharacter,
     characters: [], // Add placeholder array
-    getUserCharacters: async () => { // Add method implementation
-      try {
-        return await characterService.getUserCharacters();
-      } catch (error) {
-        console.error("Error fetching user characters:", error);
-        return [];
-      }
-    }
+    getUserCharacters // Add method implementation
   };
 
   // Предоставляем контекст всем дочерним элементам

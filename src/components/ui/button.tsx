@@ -72,18 +72,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? currentTheme.accent 
         : props.style?.backgroundColor,
       textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
-      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
-      '--hover-border-color': currentTheme.accent,
-      '--hover-bg-color': `${currentTheme.accent}30`,
-      position: 'relative' as React.CSSProperties['position'],
+      position: 'relative',
       transition: 'all 0.3s ease',
     };
     
-    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
+    // Добавляем дополнительные классы для всех кнопок с подсветкой через классы вместо CSS переменных
+    const glowColor = `${currentTheme.accent}80`;
     const enhancedClasses = cn(
       baseClasses,
-      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
-      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]",
+      "hover:shadow-lg focus:shadow-lg",
+      variant === 'outline' && "hover:bg-opacity-30 hover:bg-accent",
       "relative overflow-hidden"
     );
     

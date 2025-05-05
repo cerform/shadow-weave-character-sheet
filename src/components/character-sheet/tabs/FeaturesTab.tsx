@@ -1,201 +1,123 @@
-
 import React from 'react';
-import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
-import { Badge } from '@/components/ui/badge';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Character } from '@/types/character';
 
-export const FeaturesTab: React.FC = () => {
-  const { character, updateCharacter } = useCharacter();
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  
-  // Проверяем какое поле доступно - features или proficiencies
-  const featuresList = character?.proficiencies?.weapons || 
-                       character?.proficiencies?.languages || 
-                       character?.proficiencies?.tools || 
-                       character?.proficiencies?.armor || 
-                       [];
-  
-  const proficienciesArray = Array.isArray(featuresList) ? featuresList : [];
-  
-  // Используем доступные особенности и распределяем по категориям
-  const classFeatures = proficienciesArray.filter(f => 
-    f?.includes('Дополнительная атака') || 
-    f?.includes('класс') || 
-    f?.includes('Архетип:')
-  ) || [];
-  
-  const raceFeatures = proficienciesArray.filter(f => 
-    f?.includes('раса') || 
-    f?.includes('Темное зрение') || 
-    f?.includes('Эльфийская проницательность')
-  ) || [];
-  
-  const otherFeatures = proficienciesArray.filter(f => 
-    !classFeatures.includes(f) && !raceFeatures.includes(f)
-  ) || [];
+interface FeaturesTabProps {
+  character: Character;
+}
 
-  // Получаем подкласс из className, если есть формат "Класс: Подкласс"
-  const getSubclass = (): string | undefined => {
-    // Проверяем наличие строк с соответствующими полями
-    const characterClassName = character?.className || '';
-    
-    const parts = characterClassName.split(':');
-    if (parts.length > 1) {
-      return parts[1].trim();
-    }
-    return undefined;
-  };
+const FeaturesTab: React.FC<FeaturesTabProps> = ({ character }) => {
+  // Добавим проверку на массив перед использованием filter:
+  
+  // Вместо
+  // character.proficiencies.filter(prof => prof.type === 'weapon')
 
-  const subclass = getSubclass();
+  const weaponProficiencies = Array.isArray(character.proficiencies) 
+    ? character.proficiencies.filter(prof => prof.type === 'weapon')
+    : [];
 
-  // Функция для определения иконки особенности
-  const getFeatureIcon = (feature: string) => {
-    if (feature.includes('атака') || feature.includes('Атака'))
-      return "⚔️";
-    if (feature.includes('заклинание') || feature.includes('Заклинание'))
-      return "✨";
-    if (feature.includes('зрение') || feature.includes('Зрение'))
-      return "👁️";
-    if (feature.includes('сопротивление') || feature.includes('Сопротивление'))
-      return "🛡️";
-    if (feature.includes('чувств') || feature.includes('Чувств'))
-      return "🔮";
-    return "🔹";
-  };
+  // Аналогично для других типов профессий
+  const armorProficiencies = Array.isArray(character.proficiencies)
+    ? character.proficiencies.filter(prof => prof.type === 'armor')
+    : [];
+
+  const toolProficiencies = Array.isArray(character.proficiencies)
+    ? character.proficiencies.filter(prof => prof.type === 'tool')
+    : [];
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Особенности и черты</h2>
-      <div className="space-y-6">
-        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center text-white">
-            <span 
-              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
-              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
-            >
-              C
-            </span>
-            Классовые особенности
-          </h4>
-          <div className="space-y-3 pl-8">
-            {classFeatures.length > 0 ? (
-              classFeatures.map((feature, index) => (
-                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
-                    {feature}
-                  </h5>
-                </div>
-              ))
-            ) : (
-              <div className="border-b border-primary/10 pb-2">
-                <h5 className="font-medium flex items-center text-white">
-                  <span className="mr-2">⚔️</span> 
-                  Скрытая атака
-                </h5>
-                <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Один раз за ход вы можете нанести дополнительный урон 1d6, если совершаете атаку с преимуществом.</p>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center text-white">
-            <span 
-              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
-              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
-            >
-              Р
-            </span>
-            Расовые особенности
-          </h4>
-          <div className="space-y-3 pl-8">
-            {raceFeatures.length > 0 ? (
-              raceFeatures.map((feature, index) => (
-                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
-                    {feature}
-                  </h5>
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">👁️</span> 
-                    Темное зрение
-                  </h5>
-                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы можете видеть в темноте на расстоянии 60 футов.</p>
-                </div>
-                <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">🔮</span> 
-                    Эльфийская проницательность
-                  </h5>
-                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы владеете навыком Восприятие.</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        
-        <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center text-white">
-            <span 
-              className="w-6 h-6 mr-2 rounded-full flex items-center justify-center text-xs"
-              style={{ backgroundColor: currentTheme.accent, color: '#000' }}
-            >
-              Д
-            </span>
-            Черты и другие особенности
-          </h4>
-          <div className="space-y-3 pl-8">
-            {subclass && (
-              <div className="mb-4 p-3 bg-black/60 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">⭐</span>
-                    Архетип
-                  </h5>
-                  <Badge 
-                    className="font-semibold"
-                    style={{
-                      backgroundColor: currentTheme.accent,
-                      color: '#FFFFFF'
-                    }}
-                  >
-                    {subclass}
-                  </Badge>
-                </div>
-              </div>
-            )}
-            
-            {otherFeatures.length > 0 ? (
-              otherFeatures.map((feature, index) => (
-                <div key={index} className="border-b border-primary/10 pb-2 last:border-0">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">{getFeatureIcon(feature)}</span> 
-                    {feature}
-                  </h5>
-                </div>
-              ))
-            ) : (
-              !subclass && (
-                <div className="border-b border-primary/10 pb-2">
-                  <h5 className="font-medium flex items-center text-white">
-                    <span className="mr-2">⚔️</span> 
-                    Мастер легкого оружия
-                  </h5>
-                  <p className="text-sm text-white opacity-80 ml-6 bg-black/40 p-2 rounded">Вы получаете +1 к броскам атаки с легким оружием и можете использовать модификатор Ловкости для рукопашных атак.</p>
-                </div>
-              )
-            )}
-          </div>
-        </div>
-      </div>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Особенности класса</CardTitle>
+          <CardDescription>Особенности и умения, полученные от класса</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {character.classFeatures && character.classFeatures.length > 0 ? (
+            <ul>
+              {character.classFeatures.map((feature, index) => (
+                <li key={index} className="mb-2">
+                  <strong>{feature.name}</strong>: {feature.description}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет особенностей класса.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Языки</CardTitle>
+          <CardDescription>Языки, которыми владеет персонаж</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {character.languages && character.languages.length > 0 ? (
+            <ul>
+              {character.languages.map((language, index) => (
+                <li key={index}>{language}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет известных языков.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Владение оружием</CardTitle>
+          <CardDescription>Оружие, которым владеет персонаж</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {weaponProficiencies.length > 0 ? (
+            <ul>
+              {weaponProficiencies.map((proficiency, index) => (
+                <li key={index}>{proficiency.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет владений оружием.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Владение доспехами</CardTitle>
+          <CardDescription>Доспехи, которыми владеет персонаж</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {armorProficiencies.length > 0 ? (
+            <ul>
+              {armorProficiencies.map((proficiency, index) => (
+                <li key={index}>{proficiency.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет владений доспехами.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Владение инструментами</CardTitle>
+          <CardDescription>Инструменты, которыми владеет персонаж</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {toolProficiencies.length > 0 ? (
+            <ul>
+              {toolProficiencies.map((proficiency, index) => (
+                <li key={index}>{proficiency.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет владений инструментами.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

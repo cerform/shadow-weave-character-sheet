@@ -26,6 +26,9 @@ import SpellList from './SpellList';
 import { CharacterSpell } from '@/types/character.d';
 import { SpellData, convertToSpellData } from '@/hooks/spellbook/types';
 
+// Импортируем функцию validateSpellData
+import { validateSpellData } from '@/hooks/spellbook/themeUtils';
+
 const SpellBookViewer = () => {
   const { 
     filteredSpells, 

@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { CharacterSpell, SpellData } from '@/types/character';
 import { getSpellsByClass, getAllSpells } from '@/data/spells';
+import { validateSpellData } from './themeUtils';
 
 // Адаптер для преобразования CharacterSpell в SpellData
 const adaptToSpellData = (spell: CharacterSpell): SpellData => {
-  return {
+  return validateSpellData({
     ...spell,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
@@ -14,7 +15,7 @@ const adaptToSpellData = (spell: CharacterSpell): SpellData => {
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
     prepared: spell.prepared || false,
-  };
+  });
 };
 
 // Адаптер для преобразования SpellData обратно в CharacterSpell
