@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet } from '@/types/character.d'; 
 import NavigationButtons from './NavigationButtons';
@@ -30,9 +31,20 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
   nextStep,
   prevStep
 }) => {
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
-    character.equipment || []
-  );
+  // Получаем список элементов как массив строк, независимо от того, в каком формате они хранятся
+  const getEquipmentAsStrings = (): string[] => {
+    if (!character.equipment) return [];
+    
+    // Если это массив объектов, извлекаем только имена
+    if (typeof character.equipment[0] === 'object' && character.equipment[0] !== null) {
+      return (character.equipment as { name: string; quantity: number }[]).map(item => item.name);
+    }
+    
+    // Иначе возвращаем как есть (это уже массив строк)
+    return character.equipment as string[];
+  };
+  
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(getEquipmentAsStrings());
   const [customItem, setCustomItem] = useState('');
   const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
   

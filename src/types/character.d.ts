@@ -1,5 +1,4 @@
 
-
 export interface CharacterAbilities {
   strength: number;
   dexterity: number;
@@ -7,6 +6,13 @@ export interface CharacterAbilities {
   intelligence: number;
   wisdom: number;
   charisma: number;
+  // Добавляем сокращенные версии для совместимости
+  STR?: number;
+  DEX?: number;
+  CON?: number;
+  INT?: number;
+  WIS?: number;
+  CHA?: number;
 }
 
 export interface Skill {
@@ -66,10 +72,17 @@ export interface ClassLevel {
 }
 
 export interface HitPointEvent {
+  id?: string; // Добавляем id как опциональное поле
   amount: number;
-  type: 'damage' | 'healing' | 'temporary';
+  type: 'damage' | 'healing' | 'temporary' | 'heal' | 'tempHP' | 'temp' | 'death-save'; // Расширяем допустимые типы
   source?: string;
-  timestamp: number;
+  timestamp: number | Date; // Разрешаем как число, так и Date
+}
+
+// Интерфейс для очков чародейства
+export interface SorceryPoints {
+  max: number;
+  current: number;
 }
 
 // Constants for ability score caps at different levels
@@ -112,7 +125,7 @@ export interface Character {
   savingThrows?: SavingThrow[];
   proficiencies?: CharacterProficiencies;
   feats?: string[];
-  equipment?: { name: string; quantity: number }[];
+  equipment?: { name: string; quantity: number }[] | string[]; // Поддерживаем оба формата
   spells?: CharacterSpell[];
   spellSlots?: SpellSlots;
   backstory?: string;
@@ -132,6 +145,14 @@ export interface Character {
   subclass?: string;
   className?: string;
   additionalClasses?: ClassLevel[];
+  // Добавляем точки чародейства
+  sorceryPoints?: SorceryPoints;
+  // Добавляем поле для отслеживания использованных очков характеристик
+  abilityPointsUsed?: number;
+  // Поля для спасбросков
+  savingThrowProficiencies?: Record<string, boolean>;
+  // Навыки
+  skillProficiencies?: Record<string, boolean>;
   // For backward compatibility with existing code
   stats?: {
     strength: number;

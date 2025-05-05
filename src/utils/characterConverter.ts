@@ -1,5 +1,5 @@
-import { CharacterSheet } from '@/types/character';
-import { Character } from '@/types/character.d';
+
+import { CharacterSheet, Character } from '@/types/character';
 
 /**
  * Преобразует объект CharacterSheet в объект Character для сохранения
@@ -26,7 +26,14 @@ export const convertToCharacter = (data: any): Character => {
     // Убедимся, что у нас есть класс перед вычислением HP
     const characterClass = data.class || "Воин"; // По умолчанию "Воин", если класс не указан
     const baseHp = baseHpByClass[characterClass] || 8; // По умолчанию 8, если класс не найден
-    const constitutionMod = Math.floor((data.abilities.constitution - 10) / 2);
+    
+    // Получаем модификатор телосложения
+    let constitutionMod = 0;
+    if (data.abilities?.constitution) {
+      constitutionMod = Math.floor((data.abilities.constitution - 10) / 2);
+    } else if (data.abilities?.CON) {
+      constitutionMod = Math.floor((data.abilities.CON - 10) / 2);
+    }
     
     // HP первого уровня = максимум хитов кости + модификатор телосложения
     let maxHp = baseHp + constitutionMod;
@@ -76,7 +83,8 @@ export const convertToCharacter = (data: any): Character => {
     if (level >= 13) spellSlots[4] = { max: Math.min(1, level - 12), used: 0 };
     if (level >= 17) spellSlots[5] = { max: 1, used: 0 };
   }
-  
+
+  // Обеспечиваем наличие всех необходимых полей
   return {
     id: data.id || "",
     userId: data.userId,
@@ -86,19 +94,22 @@ export const convertToCharacter = (data: any): Character => {
     className: data.class || "",
     class: data.class || "",  // Важно! Устанавливаем значение для обязательного поля
     level: data.level || 1,
+    backstory: data.backstory || '', // Добавляем значение по умолчанию
     abilities: {
-      STR: data.abilities?.strength || 10,
-      DEX: data.abilities?.dexterity || 10,
-      CON: data.abilities?.constitution || 10,
-      INT: data.abilities?.intelligence || 10,
-      WIS: data.abilities?.wisdom || 10,
-      CHA: data.abilities?.charisma || 10,
+      // Длинные имена
       strength: data.abilities?.strength || 10,
       dexterity: data.abilities?.dexterity || 10,
       constitution: data.abilities?.constitution || 10,
       intelligence: data.abilities?.intelligence || 10,
       wisdom: data.abilities?.wisdom || 10,
       charisma: data.abilities?.charisma || 10,
+      // Короткие имена
+      STR: data.abilities?.STR || data.abilities?.strength || 10,
+      DEX: data.abilities?.DEX || data.abilities?.dexterity || 10,
+      CON: data.abilities?.CON || data.abilities?.constitution || 10,
+      INT: data.abilities?.INT || data.abilities?.intelligence || 10,
+      WIS: data.abilities?.WIS || data.abilities?.wisdom || 10,
+      CHA: data.abilities?.CHA || data.abilities?.charisma || 10,
     },
     spells: spellsArray,
     spellSlots: spellSlots,
@@ -107,13 +118,21 @@ export const convertToCharacter = (data: any): Character => {
     background: data.background || "",
     equipment: data.equipment || [],
     languages: data.languages || [],
-    proficiencies: data.proficiencies?.languages || [],
+    proficiencies: data.proficiencies || { languages: [] },
     maxHp: maxHp,
-    currentHp: maxHp, // Устанавливаем текущие хиты равными максимальным
-    inspiration: data.inspiration || false, // Добавляем свойство inspiration
-    backstory: data.backstory || '', // Add the missing property
+    currentHp: data.currentHp || maxHp, // Устанавливаем текущие хиты равными максимальным если не указаны
+    inspiration: data.inspiration || false,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    // Добавляем поле для очков чародейства для чародеев
+    ...(characterClass === "Чародей" && {
+      sorceryPoints: {
+        max: data.level,
+        current: data.level
+      }
+    }),
+    // Добавляем отслеживание использованных очков характеристик если они были
+    ...(data.abilityPointsUsed !== undefined && { abilityPointsUsed: data.abilityPointsUsed })
   };
 };
 

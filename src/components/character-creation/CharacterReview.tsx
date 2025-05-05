@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,28 @@ const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter
             <div key={index} className="text-sm">
               {spellName}
             </div>
+          );
+        })}
+      </div>
+    );
+  };
+  
+  // Получаем строковое представление снаряжения
+  const formatEquipment = (equipment: CharacterSheet['equipment']): JSX.Element => {
+    if (!equipment || equipment.length === 0) {
+      return <span className="text-muted-foreground">Нет выбранного снаряжения</span>;
+    }
+    
+    return (
+      <div className="space-y-1">
+        {equipment.map((item, index) => {
+          // Проверка типа item для правильного рендеринга
+          const itemName = typeof item === 'string' 
+            ? item 
+            : `${item.name} (${item.quantity})`;
+          
+          return (
+            <div key={index} className="text-sm">{itemName}</div>
           );
         })}
       </div>
@@ -86,13 +109,7 @@ const CharacterReview: React.FC<Props> = ({ character, prevStep, updateCharacter
               <CardTitle>Снаряжение</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {character.equipment && character.equipment.length > 0 ? (
-                character.equipment.map((item, index) => (
-                  <div key={index} className="text-sm">{item}</div>
-                ))
-              ) : (
-                <span className="text-muted-foreground">Нет выбранного снаряжения</span>
-              )}
+              {formatEquipment(character.equipment || [])}
             </CardContent>
           </Card>
         </div>

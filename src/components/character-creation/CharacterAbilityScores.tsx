@@ -212,19 +212,19 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   const handleNext = () => {
     // Создаем объекты для обоих форматов abilities и stats
     const abilitiesFormat = {
-      STR: stats.strength,
-      DEX: stats.dexterity,
-      CON: stats.constitution,
-      INT: stats.intelligence,
-      WIS: stats.wisdom,
-      CHA: stats.charisma,
-      // Для обратной совместимости
       strength: stats.strength,
       dexterity: stats.dexterity,
       constitution: stats.constitution,
       intelligence: stats.intelligence,
       wisdom: stats.wisdom,
-      charisma: stats.charisma
+      charisma: stats.charisma,
+      // Добавляем и сокращенные версии
+      STR: stats.strength,
+      DEX: stats.dexterity,
+      CON: stats.constitution,
+      INT: stats.intelligence,
+      WIS: stats.wisdom,
+      CHA: stats.charisma
     };
 
     const statsFormat = {
@@ -236,11 +236,12 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       charisma: stats.charisma
     };
     
-    // Сохраняем в оба поля abilities и stats для совместимости
+    // Обновляем персонажа
     updateCharacter({ 
       abilities: abilitiesFormat,
       stats: statsFormat,
-      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
+      // Добавляем информацию об использованных очках
+      ...(abilitiesMethod === 'pointbuy' && { abilityPointsUsed: totalPointsAvailable - pointsLeft })
     });
     nextStep();
   };
@@ -254,6 +255,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     return false;
   };
 
+  // ... держим остальной код без изменений
+  
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-foreground">Распределение характеристик</h2>

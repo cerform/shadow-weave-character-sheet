@@ -3,7 +3,6 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-// Удалим импорт ABILITY_SCORE_CAPS из типов
 interface ManualInputPanelProps {
   abilityScores: {
     strength: number;
@@ -51,7 +50,7 @@ const ManualInputPanel: React.FC<ManualInputPanelProps> = ({
             type="number"
             id={stat}
             value={value}
-            onChange={(e) => handleChange(stat, parseInt(e.target.value))}
+            onChange={(e) => handleChange(stat, parseInt(e.target.value) || 1)}
             className="bg-background text-foreground"
             min="1"
             max={maxAbilityScore}
