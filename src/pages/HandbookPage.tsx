@@ -36,6 +36,86 @@ const HandbookPage: React.FC = () => {
     textShadow: '0px 1px 1px rgba(0, 0, 0, 0.4)'
   };
 
+  // Функция для отображения информации об увеличениях характеристик
+  const renderAbilityScoreIncrease = (race: any) => {
+    if (!race.abilityScoreIncrease) return "Нет информации";
+    
+    const increases = [];
+    
+    // Обрабатываем общие бонусы
+    if (race.abilityScoreIncrease.all) {
+      increases.push(`Все характеристики +${race.abilityScoreIncrease.all}`);
+    }
+    
+    // Обрабатываем индивидуальные бонусы
+    if (race.abilityScoreIncrease.strength) increases.push(`Сила +${race.abilityScoreIncrease.strength}`);
+    if (race.abilityScoreIncrease.dexterity) increases.push(`Ловкость +${race.abilityScoreIncrease.dexterity}`);
+    if (race.abilityScoreIncrease.constitution) increases.push(`Телосложение +${race.abilityScoreIncrease.constitution}`);
+    if (race.abilityScoreIncrease.intelligence) increases.push(`Интеллект +${race.abilityScoreIncrease.intelligence}`);
+    if (race.abilityScoreIncrease.wisdom) increases.push(`Мудрость +${race.abilityScoreIncrease.wisdom}`);
+    if (race.abilityScoreIncrease.charisma) increases.push(`Харизма +${race.abilityScoreIncrease.charisma}`);
+    
+    return increases.join(', ');
+  };
+
+  // В функции render для отображения подрас
+  const renderRaceSubraces = (race: any) => {
+    if (!race.subraces || race.subraces.length === 0) {
+      return <p>У этой расы нет подрас.</p>;
+    }
+    
+    return (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">Подрасы</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {race.subraces.map((subrace: any, index: number) => (
+            <Card key={index} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle>{subrace.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{subrace.description}</p>
+                {subrace.abilityScoreIncrease && (
+                  <div className="mt-2">
+                    <span className="font-medium">Увеличение характеристик: </span>
+                    {renderAbilityScoreIncrease(subrace)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Для отображения особенностей расы
+  const renderRaceTraits = (race: any) => {
+    if (!race.traits || race.traits.length === 0) {
+      return <p>Информация об особенностях не найдена.</p>;
+    }
+    
+    return (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">Особенности</h3>
+        <div className="space-y-4">
+          {race.traits.map((trait: any, index: number) => {
+            // Проверяем, является ли особенность объектом или строкой
+            const traitName = typeof trait === 'string' ? trait : trait.name;
+            const traitDescription = typeof trait === 'string' ? '' : trait.description;
+            
+            return (
+              <div key={index} className="p-3 bg-muted/30 rounded-lg">
+                <h4 className="font-medium">{traitName}</h4>
+                {traitDescription && <p className="mt-1 text-sm">{traitDescription}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="container relative pb-10 pt-8">
       <div className="mb-8">

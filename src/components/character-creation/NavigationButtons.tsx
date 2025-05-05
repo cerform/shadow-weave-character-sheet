@@ -10,8 +10,7 @@ interface NavigationButtonsProps {
   isFirstStep: boolean;
   nextLabel?: string;
   prevLabel?: string;
-  // Ошибка показывает, что disableNext используется в CharacterEquipmentSelection,
-  // но не определен в этом интерфейсе. Добавим его как алиас для !allowNext.
+  // Добавляем поддержку disableNext как алиас для !allowNext
   disableNext?: boolean;
 }
 
@@ -22,7 +21,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isFirstStep,
   nextLabel = 'Далее',
   prevLabel = 'Назад',
-  disableNext, // Добавляем, но не используем - это для совместимости
+  disableNext, // Добавляем, но используем его как альтернативу !allowNext
 }) => {
   // Если disableNext передан, используем его, иначе !allowNext
   const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;

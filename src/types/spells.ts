@@ -24,6 +24,10 @@ export interface SpellData {
   materials?: string;
   id?: string | number;
   name_en?: string;
+  // Добавляем свойства для совместимости с существующим кодом
+  isRitual?: boolean;
+  isConcentration?: boolean;
+  prepared?: boolean;
 }
 
 // Функция для конвертации CharacterSpell в SpellData
@@ -43,6 +47,10 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     material: spell.material || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
+    // Добавляем совместимость с различными форматами
+    isRitual: spell.ritual || false,
+    isConcentration: spell.concentration || false,
+    prepared: spell.prepared,
     higherLevels: spell.higherLevel || spell.higherLevels || '',
     id: spell.id
   };
@@ -67,8 +75,9 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     verbal: spell.verbal,
     somatic: spell.somatic,
     material: spell.material,
-    ritual: spell.ritual,
-    concentration: spell.concentration,
+    ritual: spell.ritual || spell.isRitual,
+    concentration: spell.concentration || spell.isConcentration,
+    prepared: spell.prepared,
     higherLevel: spell.higherLevels || spell.higherLevel,
     id: spell.id
   };

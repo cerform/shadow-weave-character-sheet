@@ -116,7 +116,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       return isClassSpell && isLevelAllowed;
     });
     
-    setAvailableSpells(filteredSpells);
+    // Преобразуем CharacterSpell в SpellData перед установкой
+    const spellDataArray = filteredSpells.map(spell => convertCharacterSpellToSpellData(spell));
+    setAvailableSpells(spellDataArray);
   }, [character.class, character.level]);
 
   // Рассчитываем лимиты заклинаний

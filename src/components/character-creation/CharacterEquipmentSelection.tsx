@@ -172,6 +172,7 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
         prevStep={prevStep}
         allowNext={selectedEquipment.length > 0}
         disableNext={selectedEquipment.length === 0}
+        isFirstStep={false}
       />
     </div>
   );
