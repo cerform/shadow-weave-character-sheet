@@ -1,149 +1,150 @@
+
 import React from 'react';
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Minus } from "lucide-react";
+import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen, Sparkles, Circle, CheckCircle2 } from 'lucide-react';
 
-interface SpellSlotsProps {
-  spellSlots: Record<number, { max: number; used: number }>;
-  onUseSlot: (level: number) => void;
-  onRestoreSlot: (level: number) => void;
+interface SpellSlotProps {
+  level: number;
+  used?: number;
+  max?: number;
+  onUse?: () => void;
+  onRestore?: () => void;
+  character?: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
 }
 
-export const SpellSlotsPopover: React.FC<SpellSlotsProps> = ({ 
-  spellSlots, 
-  onUseSlot,
-  onRestoreSlot
+export const SpellSlotsPopover: React.FC<SpellSlotProps> = ({ 
+  level, 
+  used, 
+  max, 
+  onUse, 
+  onRestore,
+  character,
+  onUpdate
 }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-
-  const orderedLevels = Object.keys(spellSlots)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .filter(level => spellSlots[level] && spellSlots[level].max > 0);
-
+  
+  // If character and onUpdate are provided, we'll manage slots internally
+  const handleUseSlot = () => {
+    if (character && onUpdate) {
+      const updatedSpellSlots = { ...(character.spellSlots || {}) };
+      const currentSlot = updatedSpellSlots[level] || { max: 0, used: 0 };
+      if (currentSlot.used < currentSlot.max) {
+        updatedSpellSlots[level] = { ...currentSlot, used: currentSlot.used + 1 };
+        onUpdate({ spellSlots: updatedSpellSlots });
+      }
+    } else if (onUse) {
+      onUse();
+    }
+  };
+  
+  const handleRestoreSlot = () => {
+    if (character && onUpdate) {
+      const updatedSpellSlots = { ...(character.spellSlots || {}) };
+      const currentSlot = updatedSpellSlots[level] || { max: 0, used: 0 };
+      if (currentSlot.used > 0) {
+        updatedSpellSlots[level] = { ...currentSlot, used: currentSlot.used - 1 };
+        onUpdate({ spellSlots: updatedSpellSlots });
+      }
+    } else if (onRestore) {
+      onRestore();
+    }
+  };
+  
+  // Get slot info either from props or from character
+  const slotUsed = used !== undefined ? used : (character?.spellSlots?.[level]?.used || 0);
+  const slotMax = max !== undefined ? max : (character?.spellSlots?.[level]?.max || 0);
+  
+  // Get background color based on level
+  const getBgColor = () => {
+    if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
+      return currentTheme.spellLevels[level];
+    }
+    
+    const defaultColors = [
+      '#6b7280', // Level 0 (cantrips)
+      '#10b981', // Level 1
+      '#3b82f6', // Level 2
+      '#8b5cf6', // Level 3
+      '#ec4899', // Level 4
+      '#f59e0b', // Level 5
+      '#ef4444', // Level 6
+      '#6366f1', // Level 7
+      '#0ea5e9', // Level 8
+      '#7c3aed'  // Level 9
+    ];
+    
+    return defaultColors[level] || defaultColors[0];
+  };
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button 
-          variant="outline"
-          className="relative group"
-          style={{
-            backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`,
-            borderColor: currentTheme.accent,
-            color: currentTheme.textColor
+          variant="outline" 
+          size="sm"
+          className="flex items-center justify-between min-w-[100px]"
+          style={{ 
+            borderColor: getBgColor() + '80',
+            backgroundColor: getBgColor() + '20' 
           }}
         >
-          <BookOpen className="w-5 h-5 mr-2" />
-          Слоты заклинаний
-          <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {orderedLevels.reduce((acc, level) => {
-              return acc + (spellSlots[level].max - spellSlots[level].used);
-            }, 0)}
+          <span>Уровень {level}</span>
+          <span className="ml-2 font-bold">
+            {slotUsed}/{slotMax}
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-80 p-0"
-        style={{
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-          borderColor: currentTheme.accent,
-          boxShadow: `0 0 10px ${currentTheme.glow || 'none'}`
-        }}
-      >
-        <div className="p-4 border-b border-border"
-             style={{ borderColor: `${currentTheme.accent}50` }}>
-          <h4 className="text-lg font-semibold" style={{ color: currentTheme.textColor }}>
-            Слоты заклинаний
-          </h4>
-          <p className="text-sm" style={{ color: currentTheme.mutedTextColor || '#9ca3af' }}>
-            Используйте слоты для сотворения заклинаний
-          </p>
-        </div>
-        
-        <ScrollArea className="h-72">
-          <div className="p-4 space-y-4">
-            {orderedLevels.map(level => {
-              const { max, used } = spellSlots[level];
-              const remaining = max - used;
-              
-              return (
-                <div key={level} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium" style={{ color: currentTheme.textColor }}>
-                      Уровень {level}
-                    </span>
-                    <span className="text-sm" style={{ color: currentTheme.textColor }}>
-                      {remaining}/{max}
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {[...Array(max)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all`}
-                        style={{
-                          backgroundColor: i < used ? `${currentTheme.accent}20` : `${currentTheme.accent}40`,
-                          border: `1px solid ${currentTheme.accent}`,
-                          color: currentTheme.buttonText
-                        }}
-                        onClick={() => i >= used ? onUseSlot(level) : onRestoreSlot(level)}
-                      >
-                        {i < used ? (
-                          <Circle className="w-4 h-4" />
-                        ) : (
-                          <CheckCircle2 className="w-4 h-4" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => onUseSlot(level)}
-                      disabled={used >= max}
-                      style={{
-                        borderColor: currentTheme.accent,
-                        color: used >= max ? `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                      }}
-                    >
-                      Использовать
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => onRestoreSlot(level)}
-                      disabled={used <= 0}
-                      style={{
-                        borderColor: currentTheme.accent,
-                        color: used <= 0 ? `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                      }}
-                    >
-                      Восстановить
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-
-            {orderedLevels.length === 0 && (
-              <div className="py-8 text-center">
-                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-40" />
-                <p style={{ color: currentTheme.mutedTextColor }}>
-                  Нет доступных слотов заклинаний
-                </p>
-              </div>
-            )}
+      <PopoverContent className="w-56 p-4">
+        <div className="space-y-3">
+          <h4 className="font-medium text-center">Слоты {level} уровня</h4>
+          
+          <div className="flex justify-between items-center">
+            <span>Использовано:</span>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleRestoreSlot}
+                disabled={slotUsed <= 0}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-lg font-bold min-w-[20px] text-center">
+                {slotUsed}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleUseSlot}
+                disabled={slotUsed >= slotMax}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </ScrollArea>
+          
+          <div className="flex justify-between items-center">
+            <span>Всего слотов:</span>
+            <span className="text-lg font-bold">{slotMax}</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span>Осталось:</span>
+            <span className="text-lg font-bold">{slotMax - slotUsed}</span>
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );
 };
+
+export default SpellSlotsPopover;

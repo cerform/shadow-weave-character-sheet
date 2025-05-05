@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
@@ -13,7 +14,7 @@ import { themes } from '@/lib/themes';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { SpellSelectionModal } from '../SpellSelectionModal';
+import SpellSelectionModal from '../SpellSelectionModal'; // Changed to default import
 import { SpellSlotsPopover } from '../SpellSlotsPopover';
 
 interface SpellsTabProps {

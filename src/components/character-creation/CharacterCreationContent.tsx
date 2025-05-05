@@ -11,12 +11,13 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
-import { CharacterSheet } from '@/types/character.d';
+import { Character } from '@/types/character';
 
+// Use Character type instead of CharacterSheet to avoid confusion
 interface CharacterCreationContentProps {
   currentStep: number;
-  character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  character: Character;
+  updateCharacter: (updates: Partial<Character>) => void;
   nextStep: () => void;
   prevStep: () => void;
   abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";

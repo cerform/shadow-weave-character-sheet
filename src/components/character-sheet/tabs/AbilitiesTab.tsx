@@ -17,3 +17,5 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
     </div>
   );
 };
+
+export default AbilitiesTab;

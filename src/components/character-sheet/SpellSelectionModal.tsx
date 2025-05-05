@@ -20,7 +20,7 @@ interface SpellSelectionModalProps {
   characterLevel?: number;
 }
 
-const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
+export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   open,
   onOpenChange,
   availableSpells,
@@ -252,4 +252,5 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   );
 };
 
+// Also export as default for backward compatibility
 export default SpellSelectionModal;

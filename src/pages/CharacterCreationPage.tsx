@@ -20,7 +20,7 @@ import HomeButton from "@/components/navigation/HomeButton";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
-import { ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { ABILITY_SCORE_CAPS } from "@/types/character";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();

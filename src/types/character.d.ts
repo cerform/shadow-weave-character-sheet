@@ -1,13 +1,15 @@
 
 import { SpellData } from './spells';
 
+// Consolidate character interfaces to avoid duplicate type errors
 export interface Character {
-  id: string;
+  id?: string;
   userId?: string;
   name: string;
-  race?: string;
+  race: string;
+  class?: string;
   className?: string;
-  level?: number;
+  level: number;
   subclass?: string;
   background?: string;
   alignment?: string;
@@ -28,6 +30,7 @@ export interface Character {
     total?: number;
     used?: number;
     dieType?: string;
+    value?: string;
   };
   deathSaves?: {
     successes: number;
@@ -37,17 +40,29 @@ export interface Character {
   savingThrows?: {
     [key: string]: boolean;
   };
-  skills?: {
-    [key: string]: boolean | number;
+  savingThrowProficiencies?: {
+    [ability: string]: boolean;
   };
-  proficiencies?: string[];
+  skills?: {
+    [key: string]: boolean | number | { proficient: boolean; expertise: boolean; bonus?: number };
+  };
+  skillProficiencies?: {
+    [skillName: string]: boolean;
+  };
+  proficiencies?: string[] | {
+    armor?: string[];
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   languages?: string[];
   spellcasting?: {
     ability?: string;
     saveDC?: number;
     attackBonus?: number;
+    preparedSpellsLimit?: number;
   };
-  spells?: SpellData[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: {
     [key: number]: {
       max: number;
@@ -75,12 +90,6 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-}
-
-export interface CharacterSheet extends Character {
-  class?: string;
-  gender?: string;
-  subrace?: string;
   abilities?: {
     STR?: number;
     DEX?: number;
@@ -104,15 +113,88 @@ export interface CharacterSheet extends Character {
     charisma?: number;
   };
   additionalClasses?: ClassLevel[];
+  gender?: string;
+  subrace?: string;
+  abilityPointsUsed?: number;
+  hitPoints?: {
+    current: number;
+    max: number;
+    temporary: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+  image?: string;
+  sorceryPoints?: SorceryPoints;
+}
+
+// Forward the types for backward compatibility
+export interface CharacterSheet extends Character {
+  // Empty interface that extends Character for backward compatibility
 }
 
 export interface ClassLevel {
   class: string;
-  level: number;
   subclass?: string;
+  level: number;
 }
 
 export interface SorceryPoints {
   max: number;
   current: number;
+}
+
+export interface CharacterSpell {
+  id?: number | string;
+  name: string;
+  level: number;
+  description?: string;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  duration?: string;
+  higherLevels?: string;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materialComponents?: string;
+  ritual?: boolean;
+  concentration?: boolean;
+  classes?: string[] | string;
+  prepared?: boolean;
+}
+
+export interface AbilityScores {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+  
+  // Short form aliases
+  STR?: number;
+  DEX?: number;
+  CON?: number;
+  INT?: number;
+  WIS?: number;
+  CHA?: number;
+}
+
+// Added constants for ability score caps
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
+};
+
+// HitPointEvent for DamageLog
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  amount: number;
+  source?: string;
+  timestamp: number | Date;
+  previousHP?: number;
+  newHP?: number;
 }
