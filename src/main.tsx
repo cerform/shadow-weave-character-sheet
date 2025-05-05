@@ -12,10 +12,7 @@ import { UserThemeProvider } from './hooks/use-user-theme';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <UserThemeProvider>
-        <App />
-        <Toaster />
-      </UserThemeProvider>
+      <App />
     </BrowserRouter>
   </React.StrictMode>,
 );
