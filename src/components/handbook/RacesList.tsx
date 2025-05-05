@@ -48,9 +48,6 @@ const RacesList: React.FC<RacesListProps> = ({
             borderColor: `${currentTheme.accent}20`,
             color: currentTheme.textColor,
             boxShadow: `0 0 5px ${currentTheme.accent}10`,
-            '&:hover': {
-              boxShadow: `0 0 10px ${currentTheme.accent}50`
-            } as any
           }}
         >
           <CardHeader className="pb-2 flex flex-row justify-between items-center">
@@ -98,9 +95,6 @@ const RacesList: React.FC<RacesListProps> = ({
                 background: `${currentTheme.accent}80`,
                 borderColor: `${currentTheme.accent}50`,
                 color: currentTheme.buttonText || '#fff',
-                '&:hover': {
-                  background: `${currentTheme.accent}`
-                } as any
               }}
             >
               ПОДРОБНЕЕ

@@ -164,8 +164,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                   <AccordionTrigger 
                     className="text-white hover:text-purple-300"
                     style={{ 
-                      color: currentTheme.textColor, 
-                      ['&:hover' as any]: { color: currentTheme.accent } 
+                      color: currentTheme.textColor
                     }}
                   >
                     {trait.split(':')[0] || trait}
@@ -325,7 +324,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                         }
                       })()}
                       
-                      {subraceObj.traits && (
+                      {subraceObj.traits && Array.isArray(subraceObj.traits) && (
                         <div className="mt-3">
                           <h4 
                             className="font-semibold mb-1 text-purple-300"
@@ -334,18 +333,14 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                             Дополнительные черты:
                           </h4>
                           <ul className="list-disc pl-5 text-gray-300" style={{ color: currentTheme.textColor }}>
-                            {Array.isArray(subraceObj.traits) ? (
-                              subraceObj.traits.map((trait: string, idx: number) => (
-                                <li key={idx}>{trait}</li>
-                              ))
-                            ) : (
-                              <li>Информация о чертах недоступна</li>
-                            )}
+                            {subraceObj.traits.map((trait: string, idx: number) => (
+                              <li key={idx}>{trait}</li>
+                            ))}
                           </ul>
                         </div>
                       )}
                       
-                      {subraceObj.abilityScoreIncrease && (
+                      {subraceObj.abilityScoreIncrease && typeof subraceObj.abilityScoreIncrease === 'object' && (
                         <div className="mt-3">
                           <h4 
                             className="font-semibold mb-1 text-purple-300"

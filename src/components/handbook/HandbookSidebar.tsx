@@ -85,7 +85,6 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
               onClick={() => setSearchQuery('')}
               style={{ 
                 color: `${currentTheme.textColor}80`,
-                '&:hover': { color: currentTheme.textColor } as any
               }}
             >
               <X size={14} />
@@ -170,7 +169,6 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
               onClick={clearSources}
               style={{ 
                 color: `${currentTheme.textColor}80`,
-                '&:hover': { color: currentTheme.textColor } as any
               }}
             >
               Очистить
