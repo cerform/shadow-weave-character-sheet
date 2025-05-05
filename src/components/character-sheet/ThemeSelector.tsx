@@ -59,7 +59,10 @@ export const ThemeSelector = () => {
           return (
             <DropdownMenuItem
               key={theme.name}
-              onClick={() => setUserTheme(theme.name)}
+              onClick={() => {
+                console.log('Switching theme to:', theme.name);
+                setUserTheme(theme.name);
+              }}
               className={activeTheme === theme.name ? "bg-primary/20" : ""}
               style={{ 
                 borderLeft: activeTheme === theme.name ? `3px solid ${themeColor}` : '',

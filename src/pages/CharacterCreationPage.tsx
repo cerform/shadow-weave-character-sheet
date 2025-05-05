@@ -1,99 +1,45 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Character } from '@/types/character';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { useCreationStep } from '@/hooks/useCreationStep';
-import { Step } from '@/types/characterCreation';
-import CharacterBasics from '@/components/character-creation/CharacterBasics';
-import CharacterRaceSelection from '@/components/character-creation/CharacterRaceSelection';
-import CharacterSubraceSelection from '@/components/character-creation/CharacterSubraceSelection';
-import CharacterClass from '@/components/character-creation/CharacterClass';
-import CharacterAbilities from '@/components/character-creation/CharacterAbilities';
-import CharacterBackground from '@/components/character-creation/CharacterBackground';
-import CharacterEquipment from '@/components/character-creation/CharacterEquipment';
-import CharacterSpells from '@/components/character-creation/CharacterSpells';
-import CharacterSummary from '@/components/character-creation/CharacterSummary';
+import { ArrowLeft, ArrowRight, ChevronRight, Save, Dices } from 'lucide-react';
 import { getAllRaces, getSubracesForRace } from '@/data/races';
 import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { createCharacter } from '@/lib/supabase';
 import { getCurrentUid } from '@/utils/authHelpers';
-import ThemeSelector from '@/components/ThemeSelector';
+import ThemeSelector from '@/components/character-sheet/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-
-// Определение шагов процесса создания персонажа
-const characterCreationSteps: Step[] = [
-  {
-    id: 'basics',
-    title: 'Основная информация',
-    description: 'Основные данные персонажа'
-  },
-  {
-    id: 'race',
-    title: 'Раса',
-    description: 'Выбор расы персонажа'
-  },
-  {
-    id: 'subrace',
-    title: 'Разновидность',
-    description: 'Выбор подрасы персонажа',
-    requiresSubraces: true
-  },
-  {
-    id: 'class',
-    title: 'Класс',
-    description: 'Выбор класса персонажа'
-  },
-  {
-    id: 'abilities',
-    title: 'Характеристики',
-    description: 'Распределение характеристик'
-  },
-  {
-    id: 'background',
-    title: 'Предыстория',
-    description: 'Выбор предыстории персонажа'
-  },
-  {
-    id: 'equipment',
-    title: 'Снаряжение',
-    description: 'Выбор снаряжения'
-  },
-  {
-    id: 'spells',
-    title: 'Заклинания',
-    description: 'Выбор заклинаний',
-    requiresMagicClass: true
-  },
-  {
-    id: 'summary',
-    title: 'Завершение',
-    description: 'Просмотр и сохранение персонажа'
-  }
-];
+import CreationStepper from '@/components/character-creation/CreationStepper';
+import CreationSidebar from '@/components/character-creation/CreationSidebar';
+import FloatingActionButton from '@/components/character-creation/FloatingActionButton';
+import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
-  const [races, setRaces] = useState(getAllRaces());
-  const [classes, setClasses] = useState(getAllClasses());
-  const [backgrounds, setBackgrounds] = useState(getAllBackgrounds());
+  const [races] = useState(getAllRaces());
+  const [classes] = useState(getAllClasses());
+  const [backgrounds] = useState(getAllBackgrounds());
   const [subracesForRace, setSubracesForRace] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
+  const [diceResults, setDiceResults] = useState<number[][]>([]);
+  const [abilityScorePoints, setAbilityScorePoints] = useState(27);
+  const [rollsHistory, setRollsHistory] = useState<{ ability: string; rolls: number[]; total: number }[]>([]);
+  const [maxAbilityScore, setMaxAbilityScore] = useState(15);
   
-  // Получаем текущую тему
-  const { theme, themeStyles } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themeStyles || themes[themeKey] || themes.default;
+  // Get current theme
+  const { themeStyles } = useTheme();
 
-  // Функция для получения подрас на основе выбранной расы
+  // Fetch subraces based on selected race
   const fetchSubraces = useCallback(async (race: string) => {
     const subraces = getSubracesForRace(race);
     setSubracesForRace(subraces);
@@ -107,69 +53,209 @@ const CharacterCreationPage: React.FC = () => {
     }
   }, [character.race, fetchSubraces]);
 
-  const { currentStep, nextStep, prevStep, visibleSteps } = useCreationStep({
-    steps: characterCreationSteps,
-    hasSubraces: Boolean(subracesForRace?.length),
-    isMagicClass: isMagicClass()
-  });
+  // Define steps for the character creation process
+  const steps = useMemo(() => {
+    return [
+      { 
+        id: 0, 
+        name: "Раса", 
+        description: "Выбор расы персонажа",
+        completed: !!character.race
+      },
+      { 
+        id: 1, 
+        name: "Подраса", 
+        description: "Выбор подрасы персонажа",
+        completed: !subracesForRace?.length || !!character.subrace
+      },
+      { 
+        id: 2, 
+        name: "Класс", 
+        description: "Выбор класса персонажа",
+        completed: !!character.class
+      },
+      { 
+        id: 3, 
+        name: "Уровень", 
+        description: "Выбор уровня персонажа",
+        completed: !!character.level
+      },
+      { 
+        id: 4, 
+        name: "Характеристики", 
+        description: "Распределение характеристик",
+        completed: character.strength !== 10 || 
+                 character.dexterity !== 10 || 
+                 character.constitution !== 10 || 
+                 character.intelligence !== 10 || 
+                 character.wisdom !== 10 || 
+                 character.charisma !== 10
+      },
+      { 
+        id: 5, 
+        name: "Предыстория", 
+        description: "Выбор предыстории персонажа",
+        completed: !!character.background
+      },
+      { 
+        id: 6, 
+        name: "Здоровье", 
+        description: "Определение очков здоровья",
+        completed: !!character.maxHp && character.maxHp > 0
+      },
+      { 
+        id: 7, 
+        name: "Снаряжение", 
+        description: "Выбор снаряжения",
+        completed: !!character.equipment && character.equipment.length > 0
+      },
+      { 
+        id: 8, 
+        name: "Детали", 
+        description: "Персональные детали",
+        completed: !!character.name
+      },
+      { 
+        id: 9, 
+        name: "Заклинания", 
+        description: "Выбор заклинаний",
+        completed: !isMagicClass() || (!!character.spells && character.spells.length > 0)
+      },
+      { 
+        id: 10, 
+        name: "Завершение", 
+        description: "Проверка и сохранение персонажа",
+        completed: false
+      }
+    ];
+  }, [character, subracesForRace, isMagicClass]);
 
-  // Проверка, можно ли перейти к следующему шагу
-  const canProceedToNextStep = () => {
-    switch (visibleSteps[currentStep]?.id) {
-      case 'basics':
-        return !!character.name?.trim();
-      case 'race':
-        return !!character.race;
-      case 'subrace':
-        // Автоматически разрешаем переход, если выбрана подраса или нет подрас
-        return !Boolean(subracesForRace?.length) || !!character.subrace;
-      case 'class':
-        return !!character.class;
-      default:
-        return true;
+  // Filter steps if needed (for example, skip subrace step if no subraces)
+  const visibleSteps = useMemo(() => {
+    return steps.filter((step) => {
+      // Skip subrace step if race has no subraces
+      if (step.id === 1 && !subracesForRace?.length) {
+        return false;
+      }
+      
+      // Skip spells step if class isn't magical
+      if (step.id === 9 && !isMagicClass()) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [steps, subracesForRace, isMagicClass]);
+
+  // Get modifier function
+  const getModifier = useCallback((abilityScore: number): string => {
+    const mod = Math.floor((abilityScore - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  }, []);
+
+  // Roll abilities functions
+  const rollSingleAbility = useCallback((index: number) => {
+    // Roll 4d6, drop lowest
+    const rolls = Array(4).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
+    rolls.sort((a, b) => b - a);
+    const total = rolls[0] + rolls[1] + rolls[2];
+    
+    // Update dice results
+    const newDiceResults = [...diceResults];
+    newDiceResults[index] = rolls;
+    setDiceResults(newDiceResults);
+    
+    return { rolls, total };
+  }, [diceResults]);
+
+  const rollAllAbilities = useCallback(() => {
+    const newDiceResults: number[][] = [];
+    const abilities = ["Сила", "Ловкость", "Телосложение", "Интеллект", "Мудрость", "Харизма"];
+    const history: { ability: string; rolls: number[]; total: number }[] = [];
+    
+    const stats = {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0
+    };
+    
+    abilities.forEach((ability, index) => {
+      const { rolls, total } = rollSingleAbility(index);
+      newDiceResults.push(rolls);
+      
+      // Add to history
+      history.push({
+        ability,
+        rolls,
+        total
+      });
+      
+      // Set stats
+      if (index === 0) stats.strength = total;
+      else if (index === 1) stats.dexterity = total;
+      else if (index === 2) stats.constitution = total;
+      else if (index === 3) stats.intelligence = total;
+      else if (index === 4) stats.wisdom = total;
+      else if (index === 5) stats.charisma = total;
+    });
+    
+    setDiceResults(newDiceResults);
+    setRollsHistory(history);
+    
+    // Update character stats
+    updateCharacter({ 
+      stats,
+      strength: stats.strength,
+      dexterity: stats.dexterity,
+      constitution: stats.constitution,
+      intelligence: stats.intelligence,
+      wisdom: stats.wisdom,
+      charisma: stats.charisma
+    });
+  }, [rollSingleAbility, updateCharacter]);
+
+  // Handle level change
+  const handleLevelChange = useCallback((level: number) => {
+    updateCharacter({ level });
+    
+    // Adjust max ability score based on level
+    if (level >= 16) {
+      setMaxAbilityScore(30);
+    } else if (level >= 10) {
+      setMaxAbilityScore(22);
+    } else {
+      setMaxAbilityScore(20);
     }
-  };
+    
+    // Adjust ability score points based on level
+    let points = 27;
+    if (level >= 5) points += 3;
+    if (level >= 10) points += 2;
+    if (level >= 15) points += 2;
+    
+    setAbilityScorePoints(points);
+  }, [updateCharacter]);
 
-  const renderStepContent = () => {
-    switch (visibleSteps[currentStep]?.id) {
-      case 'basics':
-        return <CharacterBasics character={character} onUpdate={updateCharacter} />;
-      case 'race':
-        return <CharacterRaceSelection 
-                character={character} 
-                updateCharacter={updateCharacter} 
-                nextStep={nextStep}
-                prevStep={prevStep}
-              />;
-      case 'subrace':
-        return <CharacterSubraceSelection 
-                character={character} 
-                updateCharacter={updateCharacter}
-                nextStep={nextStep}
-                prevStep={prevStep}
-              />;
-      case 'class':
-        return <CharacterClass classes={classes} character={character} onUpdate={updateCharacter} />;
-      case 'abilities':
-        return <CharacterAbilities character={character} onUpdate={updateCharacter} />;
-      case 'background':
-        return <CharacterBackground 
-          character={character} 
-          onUpdate={updateCharacter} 
-          backgrounds={backgrounds} 
-        />;
-      case 'equipment':
-        return <CharacterEquipment character={character} onUpdate={updateCharacter} />;
-      case 'spells':
-        return <CharacterSpells character={character} onUpdate={updateCharacter} />;
-      case 'summary':
-        return <CharacterSummary character={character} />
-      default:
-        return <div>Шаг не найден</div>;
+  // Handle next and previous step navigation
+  const nextStep = useCallback(() => {
+    if (currentStep < visibleSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [currentStep, visibleSteps.length]);
 
-  const handleSaveCharacter = async () => {
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
+  // Handle save character
+  const handleSaveCharacter = useCallback(async () => {
     setIsLoading(true);
     try {
       const uid = getCurrentUid();
@@ -183,7 +269,7 @@ const CharacterCreationPage: React.FC = () => {
         return;
       }
 
-      // Проверяем, что все обязательные поля заполнены
+      // Check required fields
       if (!character.name || !character.race || !character.class) {
         toast({
           title: "Ошибка",
@@ -193,10 +279,10 @@ const CharacterCreationPage: React.FC = () => {
         return;
       }
 
-      // Подготавливаем персонажа к сохранению
+      // Prepare character for saving
       const characterToSave = convertToCharacter(character);
 
-      // Сохраняем персонажа в базу данных
+      // Save character to database
       const newCharacter = await createCharacter(characterToSave);
 
       if (newCharacter) {
@@ -222,88 +308,119 @@ const CharacterCreationPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [character, convertToCharacter, navigate, toast]);
+
+  // Calculate whether 'Next' button should be allowed based on current step
+  const canProceedToNextStep = useMemo(() => {
+    const step = visibleSteps[currentStep];
+    if (!step) return false;
+    return step.completed;
+  }, [visibleSteps, currentStep]);
 
   return (
     <div 
-      className="min-h-screen p-4"
+      className="min-h-screen pb-20"
       style={{ 
-        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
-        color: currentTheme.textColor 
+        background: `linear-gradient(to bottom, ${themeStyles?.accent}20, ${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        color: themeStyles?.textColor 
       }}
     >
-      <div className="container mx-auto max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: currentTheme.accent }}>
-            Создание персонажа
-          </h1>
-          
-          <div className="flex space-x-2">
-            <ThemeSelector />
-          </div>
-        </div>
-
-        <Card 
-          className="mb-4"
-          style={{ 
-            background: currentTheme.cardBackground, 
-            borderColor: `${currentTheme.accent}30`,
-            color: currentTheme.textColor 
-          }}
-        >
-          <CardHeader>
-            <CardTitle style={{ color: currentTheme.accent }}>{visibleSteps[currentStep]?.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {renderStepContent()}
-          </CardContent>
-        </Card>
-
-        {/* Показываем кнопки навигации только для шагов, которые не имеют собственных кнопок */}
-        {['basics', 'class', 'abilities', 'background', 'equipment', 'spells', 'summary'].includes(visibleSteps[currentStep]?.id) && (
-          <div className="flex justify-between">
-            {currentStep > 0 && (
-              <Button 
-                onClick={prevStep} 
-                variant="outline"
-                style={{ 
-                  borderColor: currentTheme.accent,
-                  color: currentTheme.textColor 
-                }}
-              >
-                Назад
-              </Button>
-            )}
+      {/* Header with Theme Selector */}
+      <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md py-3 px-4 border-b border-gray-800">
+        <div className="container mx-auto">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold" style={{ color: themeStyles?.accent }}>
+              Создание персонажа
+            </h1>
             
-            <div className="ml-auto">
-              {currentStep < visibleSteps.length - 1 ? (
-                <Button 
-                  onClick={nextStep} 
-                  disabled={!canProceedToNextStep()}
-                  style={{ 
-                    backgroundColor: currentTheme.accent,
-                    color: '#FFFFFF'
-                  }}
-                >
-                  Далее
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleSaveCharacter} 
-                  disabled={isLoading}
-                  style={{ 
-                    backgroundColor: currentTheme.accent,
-                    color: '#FFFFFF'
-                  }}
-                >
-                  Сохранить персонажа
-                </Button>
-              )}
+            <div className="flex space-x-2">
+              <ThemeSelector />
             </div>
           </div>
-        )}
+        </div>
+      </div>
+
+      {/* Stepper */}
+      <div className="container mx-auto px-4 mt-4">
+        <CreationStepper 
+          steps={visibleSteps} 
+          currentStep={currentStep} 
+          setCurrentStep={setCurrentStep} 
+        />
       </div>
       
+      {/* Main Content */}
+      <div className="container mx-auto px-4 flex gap-6">
+        {/* Sidebar */}
+        <CreationSidebar 
+          steps={visibleSteps} 
+          currentStep={currentStep} 
+          setCurrentStep={setCurrentStep} 
+        />
+        
+        {/* Content Area */}
+        <Card 
+          className="mt-4 flex-1 rounded-lg overflow-hidden shadow-xl animate-fade-in"
+          style={{ 
+            background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
+            borderColor: `${themeStyles?.accent}30`,
+            color: themeStyles?.textColor 
+          }}
+        >
+          <CardContent className="p-6">
+            <CharacterCreationContent
+              currentStep={visibleSteps[currentStep]?.id || 0}
+              character={character}
+              updateCharacter={updateCharacter}
+              nextStep={nextStep}
+              prevStep={prevStep}
+              abilitiesMethod={abilitiesMethod}
+              setAbilitiesMethod={setAbilitiesMethod}
+              diceResults={diceResults}
+              getModifier={getModifier}
+              rollAllAbilities={rollAllAbilities}
+              rollSingleAbility={rollSingleAbility}
+              abilityScorePoints={abilityScorePoints}
+              isMagicClass={isMagicClass()}
+              rollsHistory={rollsHistory}
+              onLevelChange={handleLevelChange}
+              maxAbilityScore={maxAbilityScore}
+              setCurrentStep={setCurrentStep}
+            />
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Floating Action Buttons */}
+      {currentStep > 0 && (
+        <FloatingActionButton
+          icon={<ArrowLeft size={18} />}
+          label="Назад"
+          onClick={prevStep}
+          position="bottom-left"
+          variant="outline"
+        />
+      )}
+      
+      {currentStep < visibleSteps.length - 1 ? (
+        <FloatingActionButton
+          icon={<ArrowRight size={18} />}
+          label="Далее"
+          onClick={nextStep}
+          disabled={!canProceedToNextStep}
+          position="bottom-right"
+        />
+      ) : (
+        <FloatingActionButton
+          icon={<Save size={18} />}
+          label="Сохранить персонажа"
+          onClick={handleSaveCharacter}
+          disabled={isLoading}
+          position="bottom-right"
+        />
+      )}
+      
+      {/* Dice Button */}
       <FloatingDiceButton />
     </div>
   );

@@ -7,6 +7,7 @@ import SectionHeader from "@/components/ui/section-header";
 import SubraceCard from './SubraceCard';
 import NoSubracesAlert from './NoSubracesAlert';
 import { useSubraceSelection } from '@/hooks/useSubraceSelection';
+import { useTheme } from '@/hooks/use-theme';
 
 interface CharacterSubraceSelectionProps {
   character: Character;
@@ -21,6 +22,8 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   nextStep,
   prevStep,
 }) => {
+  const { themeStyles } = useTheme();
+  
   const { 
     selectedSubrace, 
     availableSubraces, 
@@ -45,7 +48,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   // If no subraces, show loading message
   if (!hasSubraces) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         <SectionHeader 
           title={`Выбор подрасы для ${character.race}`} 
           description="Некоторые расы имеют различные подрасы с уникальными особенностями и бонусами."
@@ -56,13 +59,13 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <SectionHeader 
         title="Разновидность" 
         description={`Раса ${character.race} имеет несколько разновидностей. Выберите одну из них.`}
       />
 
-      <ScrollArea className="h-[500px] pr-4">
+      <ScrollArea className="h-[calc(100vh-20rem)] pr-4 rounded-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {availableSubraces.map((subrace) => (
             <SubraceCard

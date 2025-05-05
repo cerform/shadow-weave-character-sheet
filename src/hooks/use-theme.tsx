@@ -15,7 +15,8 @@ export const useTheme = () => {
       setTheme: (theme: Theme) => {
         console.error(`Не удалось установить тему ${theme}: ThemeProvider не найден`);
       },
-      themeStyles: themes.default
+      themeStyles: themes.default,
+      effectiveTheme: 'default'
     };
   }
   
