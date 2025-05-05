@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search, Filter, Book, X, Bookmark, BookmarkCheck } from "lucide-react";
 import { useSpellbook } from '@/hooks/spellbook';
 import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/hooks/spellbook/types'; // Import SpellData from our types
 import SpellImporter from './SpellImporter';
 
 const SpellBookViewer: React.FC = () => {
@@ -32,7 +33,8 @@ const SpellBookViewer: React.FC = () => {
     formatClasses
   } = useSpellbook();
 
-  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
+  // Change type to SpellData | null to match what we're passing to it
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [showImporter, setShowImporter] = useState(false);
   
   // Получаем все доступные школы магии
