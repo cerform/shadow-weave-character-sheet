@@ -78,6 +78,23 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
     return "Подробное описание";
   };
 
+  // Функция для безопасного рендеринга контента
+  const renderContent = (content: unknown): React.ReactNode => {
+    if (content === null || content === undefined) {
+      return null;
+    }
+    
+    if (typeof content === 'string' || typeof content === 'number' || typeof content === 'boolean') {
+      return content.toString();
+    }
+    
+    if (React.isValidElement(content)) {
+      return content;
+    }
+    
+    return String(content);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -106,7 +123,7 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
                   ? `0 0 12px ${currentTheme.accent}80` 
                   : 'none',
                 color: currentTheme.textColor,
-                ringColor: currentTheme.accent
+                // Исправление: ring стиль добавлен через className выше
               }}
               onClick={() => handleRaceSelect(race.name)}
             >
@@ -127,7 +144,7 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
                   )}
                 </div>
                 <CardDescription style={{ color: `${currentTheme.textColor}80` }}>
-                  {getRaceDescription(race.name)}
+                  {renderContent(getRaceDescription(race.name))}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 pt-2">
@@ -199,7 +216,7 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
                       ? `0 0 8px ${currentTheme.accent}80` 
                       : 'none',
                     color: currentTheme.textColor,
-                    ringColor: currentTheme.accent
+                    // Исправление: ring стиль добавлен через className выше
                   }}
                   onClick={() => handleSubraceSelect(subraceName)}
                 >
