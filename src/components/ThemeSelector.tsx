@@ -4,8 +4,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useUserTheme } from "@/hooks/use-user-theme";
 import { themes } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
-import { useDeviceType } from "@/hooks/use-mobile";
-import { Check, PaintBucket, Palette, Sparkles, Wand, Leaf, Sword, Music } from "lucide-react";
+import { Palette } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,20 +17,18 @@ import {
 const ThemeSelector = () => {
   const { theme } = useTheme();
   const { activeTheme, setUserTheme } = useUserTheme();
-  const deviceType = useDeviceType();
-  const isMobile = deviceType === 'mobile';
   
   // Используем активную тему из UserThemeContext с запасным вариантом из ThemeContext
   const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
   const themesList = [
-    { id: 'default', name: 'Стандартная', icon: <PaintBucket size={16} /> },
-    { id: 'warlock', name: 'Чернокнижник', icon: <Sparkles size={16} /> },
-    { id: 'wizard', name: 'Волшебник', icon: <Wand size={16} /> },
-    { id: 'druid', name: 'Друид', icon: <Leaf size={16} /> },
-    { id: 'warrior', name: 'Воин', icon: <Sword size={16} /> },
-    { id: 'bard', name: 'Бард', icon: <Music size={16} /> },
+    { id: 'default', name: 'Стандартная' },
+    { id: 'warlock', name: 'Чернокнижник' },
+    { id: 'wizard', name: 'Волшебник' },
+    { id: 'druid', name: 'Друид' },
+    { id: 'warrior', name: 'Воин' },
+    { id: 'bard', name: 'Бард' }
   ];
 
   return (
@@ -44,7 +41,6 @@ const ThemeSelector = () => {
           style={{ 
             borderColor: currentTheme.accent,
             color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}30`,
             backgroundColor: 'rgba(0, 0, 0, 0.7)'
           }}
         >
@@ -62,7 +58,6 @@ const ThemeSelector = () => {
         style={{ 
           backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
           borderColor: currentTheme.accent,
-          boxShadow: currentTheme.glow,
           color: currentTheme.textColor
         }}
       >
@@ -91,19 +86,15 @@ const ThemeSelector = () => {
             >
               <div className="flex items-center gap-2">
                 <span 
-                  className="flex items-center justify-center h-5 w-5 rounded-full" 
+                  className="flex items-center justify-center h-4 w-4 rounded-full" 
                   style={{ 
-                    backgroundColor: isActive ? themeColor : 'transparent',
-                    color: isActive ? '#000' : themeColor,
-                    boxShadow: isActive ? `0 0 5px ${themeColor}` : 'none'
+                    backgroundColor: themeColor,
                   }}
-                >
-                  {item.icon}
-                </span>
+                />
                 <span>{item.name}</span>
               </div>
               {isActive && (
-                <Check size={16} style={{ color: currentTheme.accent }} />
+                <span className="text-sm">✓</span>
               )}
             </DropdownMenuItem>
           );

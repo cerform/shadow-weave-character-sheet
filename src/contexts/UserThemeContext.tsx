@@ -70,10 +70,6 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
     document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText || '#FFFFFF');
     document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground || 'rgba(139, 90, 43, 0.8)');
-    
-    // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
-    document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
-    document.documentElement.style.setProperty('--muted-text-color', themeStyles.mutedTextColor || '#DDDDDD');
   };
   
   // Функция для изменения темы пользователя

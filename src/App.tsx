@@ -7,7 +7,6 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { Toaster } from './components/ui/toaster';
 import { SocketProvider } from './contexts/SocketContext';
-import { UserThemeProvider } from './contexts/UserThemeContext';
 import './App.css';
 
 // Импорт тем
@@ -30,7 +29,7 @@ import CharactersListPage from './pages/CharactersListPage';
 import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import CharacterViewPage from './pages/CharacterViewPage';
-import ProfilePage from './pages/ProfilePage'; // Импортируем страницу профиля
+import ProfilePage from './pages/ProfilePage'; 
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
@@ -45,67 +44,57 @@ const App = () => {
     document.documentElement.setAttribute('data-theme', savedTheme);
 
     // Проверяем наличие тем перед их использованием
-    const themesObj = (window as any).themes || themes;
+    const themesObj = themes;
     
     // Применяем стили для текущей темы
-    const themeStyles = themesObj[savedTheme as keyof typeof themesObj] || { 
-      accent: '#8B5A2B', 
-      glow: '0 0 15px rgba(139, 90, 43, 0.5)', 
-      textColor: '#FFFFFF', 
-      mutedTextColor: '#DDDDDD',
-      cardBackground: 'rgba(0, 0, 0, 0.85)',
-      buttonText: '#FFFFFF',
-      buttonBackground: 'rgba(139, 90, 43, 0.8)'
-    };
+    const themeStyles = themesObj[savedTheme as keyof typeof themesObj] || themes.default;
     
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
     document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
-    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText);
-    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground);
+    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText || '#FFFFFF');
+    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground || 'rgba(139, 90, 43, 0.8)');
     
     console.log('Тема инициализирована:', savedTheme, themeStyles);
   }, []);
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-      <UserThemeProvider>
-        <Router>
-          <AuthProvider>
-            <CharacterProvider>
-              <SessionProvider>
-                <SocketProvider>
-                  <div className="app-container min-h-screen w-full">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/sheet" element={<CharacterSheetPage />} />
-                      <Route path="/character-creation" element={<CharacterCreationPage />} />
-                      <Route path="/character/:id" element={<CharacterViewPage />} />
-                      <Route path="/join" element={<JoinSessionPage />} />
-                      <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
-                      <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-                      <Route path="/dm-session/:id" element={<DMSessionPage />} />
-                      <Route path="/play" element={<PlayerSessionPage />} />
-                      <Route path="/spellbook" element={<SpellbookPage />} />
-                      <Route path="/handbook" element={<HandbookPage />} />
-                      <Route path="/characters" element={<CharactersListPage />} />
-                      <Route path="/battle" element={<PlayBattlePage />} />
-                      <Route path="/dm/battle" element={<PlayBattlePage />} />
-                      <Route path="/profile" element={<ProfilePage />} /> {/* Добавляем маршрут для страницы профиля */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <AppDiceButton />
-                    <Toaster />
-                  </div>
-                </SocketProvider>
-              </SessionProvider>
-            </CharacterProvider>
-          </AuthProvider>
-        </Router>
-      </UserThemeProvider>
+      <Router>
+        <AuthProvider>
+          <CharacterProvider>
+            <SessionProvider>
+              <SocketProvider>
+                <div className="app-container min-h-screen w-full">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/sheet" element={<CharacterSheetPage />} />
+                    <Route path="/character-creation" element={<CharacterCreationPage />} />
+                    <Route path="/character/:id" element={<CharacterViewPage />} />
+                    <Route path="/join" element={<JoinSessionPage />} />
+                    <Route path="/dm" element={<Navigate to="/dm-dashboard" replace />} />
+                    <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+                    <Route path="/dm-session/:id" element={<DMSessionPage />} />
+                    <Route path="/play" element={<PlayerSessionPage />} />
+                    <Route path="/spellbook" element={<SpellbookPage />} />
+                    <Route path="/handbook" element={<HandbookPage />} />
+                    <Route path="/characters" element={<CharactersListPage />} />
+                    <Route path="/battle" element={<PlayBattlePage />} />
+                    <Route path="/dm/battle" element={<PlayBattlePage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <AppDiceButton />
+                  <Toaster />
+                </div>
+              </SocketProvider>
+            </SessionProvider>
+          </CharacterProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 };

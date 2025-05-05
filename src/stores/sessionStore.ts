@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { db, auth } from '@/services/firebase';
 import { 
@@ -13,6 +14,25 @@ import {
   serverTimestamp,
   deleteDoc
 } from 'firebase/firestore';
+
+// Определение типов для улучшения типизации
+interface User {
+  id: string;
+  name: string;
+  isDM: boolean;
+  character?: any;
+}
+
+interface Session {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  creatorId: string;
+  creatorName: string;
+  createdAt: any;
+  users: User[];
+}
 
 interface SessionStore {
   currentUser: any | null;
@@ -156,7 +176,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       }
       
       const sessionDoc = sessionsSnapshot.docs[0];
-      const sessionData = sessionDoc.data();
+      const sessionData = sessionDoc.data() as { users?: User[], [key: string]: any };
       
       // Определяем ID игрока (авторизованный или временный)
       const user = auth.currentUser;
@@ -164,7 +184,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       
       // Проверяем, не присоединился ли уже игрок к сессии
       const users = sessionData.users || [];
-      const existingUserIndex = users.findIndex((u: any) => u.id === playerId);
+      const existingUserIndex = users.findIndex((u) => u.id === playerId);
       
       if (existingUserIndex === -1) {
         // Добавляем игрока к сессии

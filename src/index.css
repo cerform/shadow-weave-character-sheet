@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,9 +76,15 @@
   }
 }
 
-/* Добавляем стили для тем D&D */
 /* Базовые стили для различных тем */
 :root {
+  --theme-accent: #8B5A2B;
+  --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(0, 0, 0, 0.85);
+  --theme-button-text: #FFFFFF;
+  --theme-button-background: rgba(139, 90, 43, 0.8);
   --background: #121212;
   --foreground: #ffffff;
   --primary: #1a56db;
@@ -86,43 +93,7 @@
   --card-foreground: #ffffff;
 }
 
-.theme-dark {
-  --background: #121212;
-  --foreground: #ffffff;
-  --primary: #4c6ef5;
-  --accent: #6366f1;
-  --card: #1a1a1a;
-  --card-foreground: #ffffff;
-}
-
-.theme-fantasy {
-  --background: #2c2a35;
-  --foreground: #e6d8b5;
-  --primary: #9d7e59;
-  --accent: #b69f7e;
-  --card: #353441;
-  --card-foreground: #e6d8b5;
-}
-
-.theme-cyber {
-  --background: #0c0c14;
-  --foreground: #00ffaa;
-  --primary: #00aaff;
-  --accent: #ff00aa;
-  --card: #14141e;
-  --card-foreground: #c8f5ff;
-}
-
-.theme-nature {
-  --background: #1d332a;
-  --foreground: #e5f5eb;
-  --primary: #5a9e7a;
-  --accent: #8cc474;
-  --card: #2a4438;
-  --card-foreground: #e5f5eb;
-}
-
-/* Анимация для плавных переходов тем */
+/* Тема по умолчанию */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
@@ -215,12 +186,13 @@ button:hover {
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
 }
 
-/* Улучшение отображения дл�� разных тем */
+/* Темы */
 .theme-warlock {
   --theme-accent: #9061F9;
   --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(25, 15, 40, 0.95);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(144, 97, 249, 0.8);
 }
@@ -230,6 +202,7 @@ button:hover {
   --theme-glow: 0 0 15px rgba(59, 130, 246, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(15, 23, 42, 0.95);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(59, 130, 246, 0.8);
 }
@@ -239,6 +212,7 @@ button:hover {
   --theme-glow: 0 0 15px rgba(16, 185, 129, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(15, 40, 25, 0.95);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(16, 185, 129, 0.8);
 }
@@ -248,6 +222,7 @@ button:hover {
   --theme-glow: 0 0 15px rgba(244, 63, 94, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(40, 15, 20, 0.95);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(244, 63, 94, 0.8);
 }
@@ -257,6 +232,7 @@ button:hover {
   --theme-glow: 0 0 15px rgba(245, 158, 11, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(40, 30, 10, 0.95);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(245, 158, 11, 0.8);
 }
@@ -266,14 +242,55 @@ button:hover {
   --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(0, 0, 0, 0.85);
   --theme-button-text: #FFFFFF;
   --theme-button-background: rgba(139, 90, 43, 0.8);
+}
+
+.theme-dark {
+  --theme-accent: #6366F1;
+  --theme-glow: 0 0 15px rgba(99, 102, 241, 0.5);
+  --theme-text-color: #FFFFFF;
+  --theme-muted-text-color: #DDDDDD;
+  --theme-card-background: rgba(0, 0, 0, 0.85);
+  --theme-button-text: #FFFFFF;
+  --theme-button-background: rgba(99, 102, 241, 0.8);
+}
+
+.theme-fantasy {
+  --theme-accent: #B69F7E;
+  --theme-glow: 0 0 15px rgba(182, 159, 126, 0.5);
+  --theme-text-color: #E6D8B5;
+  --theme-muted-text-color: #D0C4A6;
+  --theme-card-background: rgba(31, 29, 27, 0.95);
+  --theme-button-text: #E6D8B5;
+  --theme-button-background: rgba(182, 159, 126, 0.8);
+}
+
+.theme-cyber {
+  --theme-accent: #00FFAA;
+  --theme-glow: 0 0 15px rgba(0, 255, 170, 0.5);
+  --theme-text-color: #00FFAA;
+  --theme-muted-text-color: #00D699;
+  --theme-card-background: rgba(0, 20, 40, 0.95);
+  --theme-button-text: #000000;
+  --theme-button-background: rgba(0, 255, 170, 0.8);
+}
+
+.theme-nature {
+  --theme-accent: #8CC474;
+  --theme-glow: 0 0 15px rgba(140, 196, 116, 0.5);
+  --theme-text-color: #E5F5EB;
+  --theme-muted-text-color: #C2E0D0;
+  --theme-card-background: rgba(29, 51, 42, 0.95);
+  --theme-button-text: #E5F5EB;
+  --theme-button-background: rgba(140, 196, 116, 0.8);
 }
 
 /* Дополнительные стили для улучшения контраста */
 .bg-background, .app-container {
   background-color: transparent !important;
-  color: #FFFFFF !important;
+  color: var(--theme-text-color, #FFFFFF) !important;
 }
 
 .text-foreground {
