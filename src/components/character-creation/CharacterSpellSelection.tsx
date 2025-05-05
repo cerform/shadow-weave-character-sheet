@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CharacterSpell } from '@/types/character';
@@ -7,11 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import NavigationButtons from './NavigationButtons';
-
-// Импортируем необходимые функции
-import { normalizeSpells, convertToSpellData, convertToSpellDataArray, calculateKnownSpells, getMaxSpellLevel } from '@/utils/spellUtils';
 import { getAllSpells } from '@/data/spells';
+import { calculateKnownSpells, getMaxSpellLevel } from '@/utils/spellUtils';
 
 interface CharacterSpellSelectionProps {
   character: any;
@@ -94,44 +94,62 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Загружаем доступные заклинания
   useEffect(() => {
-    if (!isMagicUser()) return;
+    if (!isMagicUser()) {
+      nextStep(); // Пропускаем шаг, если класс не магический
+      return;
+    }
     
-    // Получаем все заклинания из базы данных
-    const allSpells = getAllSpells();
-    
-    // Фильтруем заклинания для конкретного класса и уровня
-    const filteredSpells = allSpells.filter(spell => {
-      const spellClasses = (typeof spell.classes === 'string') 
-        ? [spell.classes] 
-        : (Array.isArray(spell.classes) ? spell.classes : []);
+    try {
+      // Получаем все заклинания из базы данных
+      const allSpells = getAllSpells();
+      
+      // Фильтруем заклинания для конкретного класса и уровня
+      const filteredSpells = allSpells.filter(spell => {
+        // Проверяем, есть ли у заклинания поле classes
+        if (!spell.classes) return false;
         
-      // Проверяем, что заклинание доступно для класса персонажа
-      const isClassSpell = spellClasses.some(
-        cls => cls.toLowerCase() === character.class.toLowerCase()
-      );
+        const spellClasses = typeof spell.classes === 'string' 
+          ? [spell.classes] 
+          : Array.isArray(spell.classes) ? spell.classes : [];
+        
+        // Проверяем, что заклинание доступно для класса персонажа
+        const isClassSpell = spellClasses.some(
+          cls => cls.toLowerCase() === character.class.toLowerCase()
+        );
+        
+        // Проверяем уровень заклинания
+        const isLevelAllowed = spell.level <= maxSpellLevel;
+        
+        return isClassSpell && isLevelAllowed;
+      });
       
-      // Проверяем уровень заклинания
-      const isLevelAllowed = spell.level <= maxSpellLevel;
-      
-      return isClassSpell && isLevelAllowed;
-    });
-    
-    // Преобразуем CharacterSpell в SpellData перед установкой
-    const spellDataArray = filteredSpells.map(spell => convertCharacterSpellToSpellData(spell));
-    setAvailableSpells(spellDataArray);
-  }, [character.class, character.level]);
+      console.log(`Найдено ${filteredSpells.length} заклинаний для класса ${character.class}`);
+      setAvailableSpells(filteredSpells);
+    } catch (error) {
+      console.error("Ошибка при загрузке заклинаний:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить список доступных заклинаний.",
+        variant: "destructive"
+      });
+    }
+  }, [character.class, character.level, maxSpellLevel, nextStep]);
 
   // Рассчитываем лимиты заклинаний
   useEffect(() => {
     if (!isMagicUser()) return;
     
     const mod = getSpellcasterModifier();
-    const limits = calculateKnownSpells(character.class, character.level, mod);
-    setSpellLimits(limits);
+    const { cantripsCount, knownSpells } = calculateKnownSpells(character.class, character.level, mod);
+    
+    setSpellLimits({
+      cantrips: cantripsCount,
+      spells: knownSpells
+    });
     
     toast({
       title: "Информация о заклинаниях",
-      description: `Вы можете выбрать ${limits.cantrips} заговоров и ${limits.spells} заклинаний.`
+      description: `Вы можете выбрать ${cantripsCount} заговоров и ${knownSpells} заклинаний для вашего персонажа.`
     });
   }, [character.class, character.level]);
 
@@ -159,9 +177,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Обработка выбора заклинания
   const toggleSpellSelection = (spell: SpellData) => {
+    // Проверяем, выбрано ли уже заклинание
     const isSelected = selectedSpells.some(s => s.name === spell.name);
     
     if (isSelected) {
+      // Удаляем заклинание из выбранных
       setSelectedSpells(selectedSpells.filter(s => s.name !== spell.name));
     } else {
       // Проверяем, не превышен ли лимит
@@ -175,9 +195,20 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       }
       
       // Преобразуем SpellData в CharacterSpell
-      const newSpell = convertSpellDataToCharacterSpell(spell);
-      // Установим prepared для некоторых классов
-      newSpell.prepared = character.class === 'Волшебник' || character.class === 'Жрец' || character.class === 'Друид' ? false : true;
+      const newSpell: CharacterSpell = {
+        name: spell.name,
+        level: spell.level,
+        school: spell.school,
+        castingTime: spell.castingTime,
+        range: spell.range,
+        components: spell.components,
+        duration: spell.duration,
+        description: spell.description,
+        classes: spell.classes,
+        // Устанавливаем prepared в зависимости от класса
+        prepared: character.class === 'Волшебник' || character.class === 'Жрец' || character.class === 'Друид' ? false : true,
+        id: spell.id
+      };
       
       setSelectedSpells([...selectedSpells, newSpell]);
     }
@@ -222,19 +253,32 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Обработка перехода к следующему шагу
   const handleNext = () => {
+    // Проверяем, выбраны ли все заклинания в пределах лимита
+    const counts = getSelectedSpellCount();
+    const isCompleted = counts.cantrips <= spellLimits.cantrips && counts.spells <= spellLimits.spells;
+    
+    if (!isCompleted) {
+      const cantripsNeeded = Math.max(0, spellLimits.cantrips - counts.cantrips);
+      const spellsNeeded = Math.max(0, spellLimits.spells - counts.spells);
+      
+      const message = [];
+      if (cantripsNeeded > 0) message.push(`${cantripsNeeded} заговоров`);
+      if (spellsNeeded > 0) message.push(`${spellsNeeded} заклинаний`);
+      
+      if (message.length > 0) {
+        toast({
+          title: "Рекомендация",
+          description: `Вы можете выбрать еще ${message.join(' и ')}. Продолжить без выбора всех доступных заклинаний?`
+        });
+      }
+    }
+    
     // Сохраняем выбранные заклинания
     updateCharacter({ spells: selectedSpells });
     nextStep();
   };
 
   // Если персонаж не является заклинателем, пропускаем этот шаг
-  useEffect(() => {
-    if (!isMagicUser()) {
-      updateCharacter({ spells: [] });
-      nextStep();
-    }
-  }, []);
-
   if (!isMagicUser()) {
     return null;
   }
@@ -291,7 +335,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 {filteredSpells.length > 0 ? (
                   filteredSpells.map((spell) => (
                     <div
-                      key={spell.name}
+                      key={spell.id}
                       className={`p-3 border rounded-md cursor-pointer transition-colors ${
                         selectedSpells.some(s => s.name === spell.name)
                           ? 'bg-primary/20 border-primary'
@@ -301,12 +345,17 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     >
                       <div className="flex justify-between items-start mb-1">
                         <h4 className="font-medium">{spell.name}</h4>
-                        <div className="text-xs bg-primary/10 px-2 py-1 rounded">
-                          {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                        <div className="flex gap-2 items-center">
+                          <div className="text-xs bg-primary/10 px-2 py-1 rounded">
+                            {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                          </div>
+                          <Badge variant={spell.school === "Воплощение" ? "destructive" : "outline"} className="text-xs">
+                            {spell.school}
+                          </Badge>
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground mb-1">
-                        {spell.school} • {spell.castingTime} • {spell.range}
+                        {spell.castingTime} • {spell.range}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {formatComponents(spell.components)}
@@ -334,7 +383,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 {selectedSpells.length > 0 ? (
                   selectedSpells.map((spell) => (
                     <div
-                      key={spell.name}
+                      key={spell.id || spell.name}
                       className="p-3 border border-primary/40 rounded-md bg-primary/10"
                     >
                       <div className="flex justify-between items-start mb-1">
@@ -347,7 +396,18 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                             variant="ghost"
                             size="sm"
                             className="h-6 px-2 text-xs"
-                            onClick={() => toggleSpellSelection(convertCharacterSpellToSpellData(spell))}
+                            onClick={() => toggleSpellSelection({
+                              id: spell.id || spell.name,
+                              name: spell.name,
+                              level: spell.level,
+                              school: spell.school || '',
+                              castingTime: spell.castingTime || '',
+                              range: spell.range || '',
+                              components: spell.components || '',
+                              duration: spell.duration || '',
+                              description: spell.description || '',
+                              classes: spell.classes || []
+                            })}
                           >
                             Удалить
                           </Button>
