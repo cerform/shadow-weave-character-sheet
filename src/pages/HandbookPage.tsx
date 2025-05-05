@@ -199,16 +199,14 @@ const HandbookPage: React.FC = () => {
                       <CardTitle>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Using JSX expression with explicit string conversion for safety */}
-                      {(() => {
-                        if (typeof subraceObj.description === 'object') {
-                          return 'Подробное описание';
-                        } else if (typeof subraceObj.description === 'string') {
-                          return subraceObj.description;
-                        } else {
-                          return 'Нет описания';
-                        }
-                      })()}
+                      {/* Fixed rendering with proper type annotations */}
+                      {typeof subraceObj.description === 'object' ? (
+                        <span>Подробное описание</span>
+                      ) : typeof subraceObj.description === 'string' ? (
+                        <span>{subraceObj.description}</span>
+                      ) : (
+                        <span>Нет описания</span>
+                      )}
                     </CardContent>
                   </Card>
                 );
