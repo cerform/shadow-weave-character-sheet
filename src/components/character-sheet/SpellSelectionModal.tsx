@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CharacterSpell } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -12,10 +11,11 @@ import { Separator } from "@/components/ui/separator";
 interface SpellSelectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  availableSpells: CharacterSpell[];
-  onConfirm: (selectedSpells: CharacterSpell[]) => void;
-  maxSpellsCount: number;
-  maxCantripsCount: number;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+  availableSpells?: CharacterSpell[];
+  maxSpellsCount?: number;
+  maxCantripsCount?: number;
   characterClass?: string;
   characterLevel?: number;
 }
@@ -23,12 +23,13 @@ interface SpellSelectionModalProps {
 export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   open,
   onOpenChange,
+  character,
+  onUpdate,
   availableSpells,
-  onConfirm,
-  maxSpellsCount,
-  maxCantripsCount,
+  maxSpellsCount = 2,
+  maxCantripsCount = 1,
   characterClass,
-  characterLevel
+  characterLevel = 1
 }) => {
   const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -40,8 +41,15 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
   }, [open]);
   
+  // Используем доступные заклинания из пропов или формируем заглушку
+  const spellsToUse = availableSpells || [
+    { id: '1', name: 'Огненный снаряд', level: 0, school: 'Воплощение', castingTime: '1 действие', description: 'Бросок огненного снаряда' },
+    { id: '2', name: 'Магическая стрела', level: 1, school: 'Воплощение', castingTime: '1 действие', description: 'Выпускает три стрелы энергии' },
+    { id: '3', name: 'Щит', level: 1, school: 'Ограждение', castingTime: '1 реакция', description: 'Создает щит, блокирующий урон' }
+  ];
+  
   // Группируем заклинания по уровням
-  const spellsByLevel = availableSpells.reduce((acc, spell) => {
+  const spellsByLevel = spellsToUse.reduce((acc, spell) => {
     const level = spell.level || 0;
     if (!acc[level]) acc[level] = [];
     acc[level].push(spell);
@@ -50,7 +58,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Разделяем заклинания на заговоры и обычные
   const cantrips = spellsByLevel[0] || [];
-  const spells = availableSpells.filter(spell => (spell.level || 0) > 0);
+  const spells = spellsToUse.filter(spell => (spell.level || 0) > 0);
   
   // Счетчики выбранных заклинаний
   const selectedCantripsCount = selectedSpells.filter(spell => (spell.level || 0) === 0).length;
@@ -72,7 +80,25 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Обработчик подтверждения выбора заклинаний
   const handleConfirm = () => {
-    onConfirm(selectedSpells);
+    // Добавляем выбранные заклинания к существующим заклинаниям персонажа
+    const currentSpells = character.spells || [];
+    const updatedSpells = [...currentSpells];
+    
+    // Добавляем только те заклинания, которых еще нет у персонажа
+    selectedSpells.forEach(newSpell => {
+      const exists = currentSpells.some(existingSpell => 
+        typeof existingSpell === 'string' 
+          ? existingSpell === newSpell.name
+          : existingSpell.id === newSpell.id);
+      
+      if (!exists) {
+        updatedSpells.push(newSpell);
+      }
+    });
+    
+    // Обновляем персонажа с новыми заклинаниями
+    onUpdate({ spells: updatedSpells });
+    onOpenChange(false);
   };
   
   return (
@@ -83,7 +109,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
           <SheetDescription>
             {characterClass && characterLevel && (
               <>
-                Персонаж класса {characterClass} уровня {characterLevel + 1} может выбрать:
+                Персонаж класса {characterClass} уровня {characterLevel} может выбрать:
                 {maxCantripsCount > 0 && (
                   <div className="mt-1">• {maxCantripsCount} новых заговоров</div>
                 )}
@@ -143,20 +169,23 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                           {levelSpells.map(spell => (
                             <div key={spell.id} className="flex items-start space-x-2 p-2 rounded-md bg-card/50">
                               <Checkbox 
-                                id={`spell-${spell.id}`} 
+                                id={`spell-level-${spell.id}`} 
                                 checked={selectedSpells.some(s => s.id === spell.id)}
                                 onCheckedChange={(checked) => handleSpellToggle(spell, checked === true)}
                                 disabled={!selectedSpells.some(s => s.id === spell.id) && selectedSpellsCount >= maxSpellsCount}
                               />
                               <div className="space-y-1">
                                 <Label 
-                                  htmlFor={`spell-${spell.id}`} 
+                                  htmlFor={`spell-level-${spell.id}`} 
                                   className="font-medium cursor-pointer"
                                 >
                                   {spell.name}
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
                                   {spell.school} • {spell.castingTime}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {spell.description.substring(0, 100)}...
                                 </p>
                               </div>
                             </div>
@@ -241,8 +270,6 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         <SheetFooter>
           <Button 
             onClick={handleConfirm}
-            disabled={(maxCantripsCount > 0 && selectedCantripsCount < maxCantripsCount) || 
-                      (maxSpellsCount > 0 && selectedSpellsCount < maxSpellsCount)}
           >
             Подтвердить выбор
           </Button>

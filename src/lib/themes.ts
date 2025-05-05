@@ -9,6 +9,8 @@ export interface Theme {
   mutedTextColor: string;
   buttonText: string;
   border?: string;
+  glow?: string;
+  badge?: string;
   spellLevels?: {
     [key: number]: string;
   };

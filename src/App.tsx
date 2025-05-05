@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
@@ -25,6 +26,9 @@ import CharacterViewPage from './pages/CharacterViewPage';
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
+
+// Import themes
+import { themes } from '@/lib/themes';
 
 const App = () => {
   // При монтировании компонента устанавливаем дефолтную тему
@@ -84,6 +88,3 @@ const App = () => {
 };
 
 export default App;
-
-// Import themes
-import { themes } from '@/lib/themes';

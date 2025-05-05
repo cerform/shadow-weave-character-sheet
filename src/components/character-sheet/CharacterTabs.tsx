@@ -6,7 +6,7 @@ import AbilitiesTab from './tabs/AbilitiesTab';
 import CombatTab from './tabs/CombatTab';
 import FeaturesTab from './tabs/FeaturesTab';
 import BackgroundTab from './tabs/BackgroundTab';
-import EquipmentTab from './tabs/EquipmentTab';
+import { EquipmentTab } from './tabs/EquipmentTab';
 import NotesTab from './tabs/NotesTab';
 import { Character } from '@/types/character';
 

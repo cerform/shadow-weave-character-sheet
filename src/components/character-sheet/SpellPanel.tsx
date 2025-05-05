@@ -13,7 +13,7 @@ import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { convertCharacterSpellToSpellData } from '@/utils/spellHelpers';
+import { convertCharacterSpellToSpellData, isCharacterSpellObject, getSpellName } from '@/utils/spellHelpers';
 
 interface SpellPanelProps {
   character: Character;
@@ -32,36 +32,12 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
     setIsModalOpen(!isModalOpen);
   };
 
-  // Helper function to safely handle character spells that may be strings or CharacterSpell objects
-  const getSpellName = (spell: string | CharacterSpell): string => {
-    if (typeof spell === 'string') {
-      return spell;
-    }
-    return spell.name;
-  };
-
-  // Helper function to convert spell to SpellData
-  const convertSpell = (spell: string | CharacterSpell): SpellData => {
-    if (typeof spell === 'string') {
-      return {
-        id: spell,
-        name: spell,
-        level: 0,
-        school: 'Unknown',
-        castingTime: '1 action',
-        range: '30 feet',
-        components: '',
-        duration: 'Instantaneous',
-        description: ''
-      };
-    }
-    return convertCharacterSpellToSpellData(spell);
-  };
-
+  // Получаем отфильтрованные заклинания
   const filteredSpells = character.spells?.filter(spell =>
     getSpellName(spell).toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  // Функция для отображения использования слотов заклинаний
   const renderSpellSlotUse = (character: Character, level: number) => {
     if (!character.spellSlots) return null;
     
@@ -116,7 +92,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
                 key={getSpellName(spell)}
                 variant="secondary"
                 className="w-full justify-start"
-                onClick={() => onSpellClick && onSpellClick(convertSpell(spell))}
+                onClick={() => onSpellClick && onSpellClick(convertCharacterSpellToSpellData(spell))}
                 style={{ color: currentTheme.textColor }}
               >
                 {getSpellName(spell)}
@@ -133,7 +109,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
       </CardFooter>
       <SpellSelectionModal
         open={isModalOpen}
-        onClose={toggleModal}
+        onOpenChange={setIsModalOpen}
         character={character}
         onUpdate={onUpdate}
       />

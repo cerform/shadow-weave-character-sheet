@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
 import { Theme, useTheme } from '@/contexts/ThemeContext';
@@ -6,7 +7,7 @@ import { themes } from '@/lib/themes';
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
   activeTheme: string;
-  currentThemeStyles: any; // Добавляем текущие стили темы
+  currentThemeStyles: any;
 }
 
 export const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);

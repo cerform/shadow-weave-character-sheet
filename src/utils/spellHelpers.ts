@@ -2,7 +2,21 @@
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+export const convertCharacterSpellToSpellData = (spell: string | CharacterSpell): SpellData => {
+  if (typeof spell === 'string') {
+    return {
+      id: spell,
+      name: spell,
+      level: 0,
+      school: 'Универсальная',
+      castingTime: '1 действие',
+      range: 'Касание',
+      components: '',
+      duration: 'Мгновенная',
+      description: '',
+    };
+  }
+  
   return {
     ...spell,
     school: spell.school || 'Универсальная',
@@ -18,11 +32,18 @@ export const isCharacterSpellObject = (spell: string | CharacterSpell): spell is
   return typeof spell !== 'string';
 };
 
+export const getSpellName = (spell: string | CharacterSpell): string => {
+  if (typeof spell === 'string') {
+    return spell;
+  }
+  return spell.name || '';
+};
+
 export const getSpellLevel = (spell: string | CharacterSpell): number => {
   if (typeof spell === 'string') {
     return 0; // Default level for string-based spells
   }
-  return spell.level;
+  return spell.level || 0;
 };
 
 export const isSpellPrepared = (spell: string | CharacterSpell): boolean => {
