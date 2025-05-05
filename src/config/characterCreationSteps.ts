@@ -50,8 +50,8 @@ export const steps = [
   {
     id: 9,
     name: "Заклинания",
-    description: "Выбор заклинаний для персонажа",
-    // Удаляем ограничение isMagicClass, заклинания доступны для всех классов
+    description: "Выбор заклинаний для персонажа"
+    // Заклинания всегда доступны
   },
   {
     id: 10,
@@ -61,7 +61,7 @@ export const steps = [
 ];
 
 // Функция для получения видимых шагов на основе фильтрации
-export const getCharacterSteps = (config?: { isMagicClass?: boolean, hasSubraces?: boolean }) => {
+export const getCharacterSteps = (config?: { hasSubraces?: boolean }) => {
   return steps.filter(step => {
     // Для шага подрасы
     if (step.id === 1 && step.onlyFor === "hasSubraces") {

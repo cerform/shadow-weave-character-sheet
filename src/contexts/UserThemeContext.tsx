@@ -7,12 +7,14 @@ interface ThemeContextType {
   theme: string;
   setTheme: (theme: string) => void;
   currentTheme: Theme;
+  activeTheme: string; // Добавляем активную тему для совместимости с useUserTheme
 }
 
 export const ThemeContext = createContext<ThemeContextType>({
   theme: 'default',
   setTheme: () => {},
-  currentTheme: themes.default
+  currentTheme: themes.default,
+  activeTheme: 'default'
 });
 
 export const ThemeProvider = ({ children }: {children: React.ReactNode}) => {
@@ -39,13 +41,24 @@ export const ThemeProvider = ({ children }: {children: React.ReactNode}) => {
   }, [theme, currentTheme]);
   
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, currentTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, currentTheme, activeTheme: theme }}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
 export const useTheme = () => useContext(ThemeContext);
+
+// Обеспечим совместимость с useUserTheme
+export function useUserTheme() {
+  const context = useContext(ThemeContext);
+  return {
+    theme: context.theme,
+    activeTheme: context.theme,
+    setTheme: context.setTheme,
+    currentTheme: context.currentTheme,
+  };
+}
 
 // Экспортируем для совместимости с App.tsx
 export { ThemeProvider as UserThemeProvider };

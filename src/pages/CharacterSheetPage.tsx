@@ -19,10 +19,13 @@ const CharacterSheetPage = () => {
   
   // Флаг для отслеживания инициализации
   const [isInitialized, setIsInitialized] = useState(false);
+  // Флаг для отслеживания загрузки данных персонажа
+  const [isLoading, setIsLoading] = useState(true);
   
   // Оптимизированная загрузка персонажа из локального хранилища
   const loadCharacter = useCallback(() => {
     try {
+      setIsLoading(true);
       const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
       
       if (lastSelectedCharacterId) {
@@ -33,6 +36,7 @@ const CharacterSheetPage = () => {
           
           if (foundCharacter) {
             setCharacter(foundCharacter);
+            setIsLoading(false);
             return;
           }
         }
@@ -45,10 +49,16 @@ const CharacterSheetPage = () => {
         if (parsedCharacters.length > 0) {
           setCharacter(parsedCharacters[0]);
           localStorage.setItem('last-selected-character', parsedCharacters[0].id);
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Ошибка при загрузке персонажа:', error);
+      setIsLoading(false);
     }
   }, [setCharacter]);
   
@@ -92,6 +102,46 @@ const CharacterSheetPage = () => {
   // Проверка оффлайн-режима для определения прав DM
   const isDM = currentUser?.isDM === true || isOfflineMode();
   
+  // Если данные еще загружаются, показываем индикатор загрузки
+  if (isLoading) {
+    return (
+      <div 
+        className="min-h-screen w-full flex items-center justify-center"
+        style={{ 
+          background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`
+        }}
+      >
+        <div className="text-white text-2xl">Загрузка персонажа...</div>
+      </div>
+    );
+  }
+  
+  // Если персонаж не выбран или не найден
+  if (!character || !character.id) {
+    return (
+      <div 
+        className="min-h-screen w-full flex flex-col items-center justify-center"
+        style={{ 
+          background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`
+        }}
+      >
+        <div className="text-white text-2xl mb-4">Персонаж не выбран</div>
+        <div className="text-white text-lg mb-8">Создайте нового персонажа или выберите существующего из списка</div>
+        <button 
+          onClick={() => window.location.href = '/'}
+          className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/80"
+          style={{
+            background: currentTheme.accent,
+            color: currentTheme.buttonText || 'white',
+            boxShadow: `0 0 10px ${currentTheme.accent}80`
+          }}
+        >
+          На главную
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="min-h-screen w-full"

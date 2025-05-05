@@ -46,9 +46,9 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
-    const { activeTheme } = useUserTheme();
+    const { activeTheme, theme } = useUserTheme();
     // Добавляем защиту от undefined
-    const themeKey = (activeTheme || 'default') as keyof typeof themes;
+    const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
     const currentTheme = themes[themeKey] || themes.default;
     
     // Получаем базовые классы кнопки
@@ -56,6 +56,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // Исправляем проверку класса Details - без обращения к props.className
     const hasDetailsClass = className ? className.includes('Details') : false;
+    
+    // Проверяем, содержит ли текст кнопки текст "книга" или "руководство"
+    const isBookButton = props.children && 
+      (typeof props.children === 'string' ? 
+        props.children.toLowerCase().includes('книга') || props.children.toLowerCase().includes('руководство') : 
+        false);
     
     // Улучшаем подсветку для всех кнопок
     const style = {
@@ -65,7 +71,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         : variant === 'default' 
           ? currentTheme.buttonText || '#FFFFFF' 
           : props.style?.color || currentTheme.buttonText || '#FFFFFF',
-      borderColor: variant === 'outline' 
+      borderColor: (variant === 'outline' || isBookButton)
         ? props.style?.borderColor || currentTheme.accent 
         : props.style?.borderColor,
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
@@ -78,12 +84,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       '--hover-bg-color': `${currentTheme.accent}30`,
     };
     
-    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
-    const enhancedClasses = cn(
-      baseClasses,
-      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
-      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
-    );
+    // Проверяем, является ли это кнопкой для книги заклинаний или руководства игрока
+    // и добавляем дополнительные стили для кнопок книги заклинаний или руководства
+    let enhancedClasses = baseClasses;
+    
+    if (isBookButton || (className && (className.includes('book') || className.includes('руководство')))) {
+      enhancedClasses = cn(
+        baseClasses,
+        "border border-accent/60 hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+        "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
+      );
+    } else {
+      // Добавляем дополнительные классы для всех остальных кнопок
+      enhancedClasses = cn(
+        baseClasses,
+        "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+        variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
+      );
+    }
     
     return (
       <Comp
