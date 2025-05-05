@@ -1,3 +1,4 @@
+
 export interface Character {
   id: string;
   name: string;
@@ -132,7 +133,7 @@ export interface CharacterSpell {
   components?: string;
   duration?: string;
   school?: string;
-  description?: string;
+  description?: string | string[]; // Updating to match .d.ts file
   classes?: string[] | string;
   source?: string;
   id?: string | number;

@@ -1,7 +1,7 @@
 
 import { CharacterSpell } from './character';
 
-// Интерфейс для данных заклинания
+// SpellData interface used for the UI components
 export interface SpellData {
   name: string;
   level: number;
@@ -11,26 +11,23 @@ export interface SpellData {
   components: string;
   duration: string;
   description: string | string[];
-  classes?: string[] | string;
-  subclasses?: string[];
+  classes: string[] | string;
+  isRitual?: boolean;
+  isConcentration?: boolean;
   ritual?: boolean;
   concentration?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
-  source?: string;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  materials?: string;
-  id?: string | number;
-  name_en?: string;
-  // Добавляем свойства для совместимости с существующим кодом
-  isRitual?: boolean;
-  isConcentration?: boolean;
   prepared?: boolean;
+  materials?: string;
+  higherLevel?: string;
+  higherLevels?: string;
+  id?: string | number;
+  source?: string;
 }
 
-// Функция для конвертации CharacterSpell в SpellData
+// Convert CharacterSpell to SpellData
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
   return {
     name: spell.name,
@@ -42,26 +39,24 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
     classes: spell.classes || [],
+    isRitual: spell.ritual || false,
+    isConcentration: spell.concentration || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
     verbal: spell.verbal || false,
     somatic: spell.somatic || false,
     material: spell.material || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    // Добавляем совместимость с различными форматами
-    isRitual: spell.ritual || false,
-    isConcentration: spell.concentration || false,
-    prepared: spell.prepared,
-    higherLevels: spell.higherLevel || spell.higherLevels || '',
-    id: spell.id
+    prepared: spell.prepared || false,
+    materials: spell.materials,
+    higherLevel: spell.higherLevel,
+    higherLevels: spell.higherLevels,
+    id: spell.id,
+    source: spell.source
   };
 };
 
-// Функция для конвертации SpellData в CharacterSpell
+// Convert SpellData to CharacterSpell
 export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
-  const descriptionStr = typeof spell.description === 'string' 
-    ? spell.description 
-    : spell.description?.join('\n') || '';
-    
   return {
     name: spell.name,
     level: spell.level,
@@ -70,15 +65,18 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     range: spell.range,
     components: spell.components,
     duration: spell.duration,
-    description: descriptionStr,
-    classes: typeof spell.classes === 'string' ? [spell.classes] : spell.classes,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    ritual: spell.ritual || spell.isRitual,
-    concentration: spell.concentration || spell.isConcentration,
-    prepared: spell.prepared,
-    higherLevel: spell.higherLevels || spell.higherLevel,
-    id: spell.id
+    description: spell.description,
+    classes: spell.classes,
+    ritual: spell.ritual || spell.isRitual || false,
+    concentration: spell.concentration || spell.isConcentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    prepared: spell.prepared || false,
+    materials: spell.materials,
+    higherLevel: spell.higherLevel,
+    higherLevels: spell.higherLevels,
+    id: spell.id,
+    source: spell.source
   };
 };
