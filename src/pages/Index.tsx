@@ -58,7 +58,7 @@ const Index = () => {
     if (isAuthenticated) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-          <div className="bg-card/80 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
+          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
             <Button 
               variant="ghost" 
               size="lg" 
@@ -73,7 +73,7 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="bg-card/80 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
+          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
             <Button 
               variant="ghost" 
               size="lg" 
@@ -88,7 +88,7 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="bg-card/80 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
+          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
             <Button 
               variant="ghost" 
               size="lg" 
@@ -113,14 +113,14 @@ const Index = () => {
 
     return (
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-card/80 p-6 rounded-lg shadow-lg text-center border border-border/50">
+        <div className="bg-card/90 p-6 rounded-lg shadow-lg text-center border border-border/50">
           <h3 className="text-xl font-bold mb-4">Для игроков</h3>
           <p className="text-muted-foreground mb-6">
             Создавайте персонажей, управляйте их характеристиками и участвуйте в приключениях вместе с друзьями.
           </p>
           <Button onClick={handleNavigateToAuth}>Начать игру</Button>
         </div>
-        <div className="bg-card/80 p-6 rounded-lg shadow-lg text-center border border-border/50">
+        <div className="bg-card/90 p-6 rounded-lg shadow-lg text-center border border-border/50">
           <h3 className="text-xl font-bold mb-4">Для Мастеров</h3>
           <p className="text-muted-foreground mb-6">
             Создавайте и проводите игровые сессии, управляйте NPC, монстрами и многим другим.
@@ -133,17 +133,11 @@ const Index = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gradient-to-b from-background to-background/80"
-      style={{ 
-        backgroundImage: `url(/assets/backgrounds/login-bg.jpg)`, 
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundBlendMode: 'overlay'
-      }}
+      className="min-h-screen bg-gradient-to-b from-black/50 to-black/70"
     >
       <div className="container mx-auto px-4 py-6">
         <header className="mb-10">
-          <div className="rounded-lg shadow-md p-4 bg-background/80 backdrop-blur-sm">
+          <div className="rounded-lg shadow-md p-4 bg-black/80 backdrop-blur-sm">
             <MainNavigation />
           </div>
         </header>
@@ -159,14 +153,14 @@ const Index = () => {
             >
               D&D 5e Лист персонажа
             </h1>
-            <p className="text-xl text-foreground/80 mb-8">
+            <p className="text-xl text-foreground/90 mb-8">
               Создавайте персонажей, управляйте характеристиками и участвуйте в захватывающих приключениях вместе с друзьями
             </p>
             
             {renderMainContent()}
           </section>
           
-          <section className="mt-20 py-10 rounded-lg bg-card/50 backdrop-blur-sm">
+          <section className="mt-20 py-10 rounded-lg bg-black/80 backdrop-blur-sm">
             <div className="max-w-4xl mx-auto px-6">
               <h2 className="text-3xl font-bold text-center mb-12">Особенности приложения</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

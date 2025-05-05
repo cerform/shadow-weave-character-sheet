@@ -24,8 +24,7 @@ const MainNavigation = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex items-center gap-2"
-            style={{ color: currentThemeStyles.textColor }}
+            className="flex items-center gap-2 text-white hover:bg-white/10"
           >
             <Home className="h-5 w-5" />
             <span className="hidden md:inline">Главная</span>
@@ -38,8 +37,7 @@ const MainNavigation = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-2 ml-2"
-                style={{ color: currentThemeStyles.textColor }}
+                className="flex items-center gap-2 ml-2 text-white hover:bg-white/10"
               >
                 <BookText className="h-5 w-5" />
                 <span className="hidden md:inline">Справочник</span>
@@ -58,8 +56,7 @@ const MainNavigation = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-2"
-                style={{ color: currentThemeStyles.textColor }}
+                className="flex items-center gap-2 text-white hover:bg-white/10"
               >
                 <User className="h-5 w-5" />
                 <span className="hidden md:inline">{currentUser?.displayName || 'Профиль'}</span>
@@ -69,8 +66,7 @@ const MainNavigation = () => {
               variant="ghost" 
               size="sm" 
               onClick={handleLogout}
-              className="flex items-center gap-2"
-              style={{ color: currentThemeStyles.textColor }}
+              className="flex items-center gap-2 text-white hover:bg-white/10"
             >
               <LogOut className="h-5 w-5" />
               <span className="hidden md:inline">Выход</span>
@@ -78,7 +74,9 @@ const MainNavigation = () => {
           </>
         ) : (
           <Link to="/auth">
-            <Button size="sm">Войти</Button>
+            <Button size="sm" className="bg-primary/80 hover:bg-primary border border-primary/20">
+              Войти
+            </Button>
           </Link>
         )}
       </div>

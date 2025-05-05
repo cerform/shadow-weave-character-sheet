@@ -98,7 +98,7 @@ body {
   min-height: 100vh;
   color: var(--theme-text-color, #FFFFFF) !important;
   background-color: #121212;
-  background-image: url('/assets/backgrounds/login-bg.jpg');
+  background-image: url('/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -129,7 +129,7 @@ html, body {
   min-height: 100vh;
 }
 
-/* Стили для карточек */
+/* Стили для карточек - модифицируем для лучшей видимости на новом фоне */
 .card, [class*="bg-card"] {
   background-color: var(--theme-card-background, rgba(0, 0, 0, 0.85)) !important;
   border: 1px solid var(--theme-accent, #8B5A2B);

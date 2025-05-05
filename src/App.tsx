@@ -17,6 +17,7 @@ if (typeof window !== 'undefined') {
   (window as any).themes = themes;
 }
 
+// Импортируем страницы и компоненты
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
@@ -40,6 +41,10 @@ const App = () => {
   useEffect(() => {
     // Инициализация основных процессов
     console.log('Инициализация приложения...');
+    
+    // Предзагрузка фонового изображения
+    const preloadImage = new Image();
+    preloadImage.src = '/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png';
     
     // Задаем дефолтную тему
     const savedTheme = localStorage.getItem('theme') || 'default';
@@ -77,7 +82,18 @@ const App = () => {
             <SessionProvider>
               <UserThemeProvider>
                 <SocketProvider>
-                  <div className="app-container min-h-screen w-full">
+                  <div 
+                    className="app-container min-h-screen w-full" 
+                    style={{
+                      backgroundImage: `url('/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundAttachment: 'fixed',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      backgroundBlendMode: 'multiply'
+                    }}
+                  >
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<AuthPage />} />
