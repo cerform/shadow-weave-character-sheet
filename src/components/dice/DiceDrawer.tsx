@@ -25,8 +25,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const DiceDrawer: React.FC = () => {
+export const DiceDrawer: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme } = useTheme();
   const currentThemeId = theme || 'default';
@@ -44,7 +45,7 @@ const DiceDrawer: React.FC = () => {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderColor: currentTheme.accent,
     color: currentTheme.textColor,
-    boxShadow: `0 0 8px ${currentTheme.accent}50`,
+    boxShadow: `0 0 5px ${currentTheme.accent}30`,
   };
 
   // Стиль для контента панели
@@ -59,21 +60,30 @@ const DiceDrawer: React.FC = () => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            style={buttonStyle}
-            className="relative"
-          >
-            <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-            <span className="sr-only">Открыть кубики</span>
-            <div 
-              className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-              style={{ backgroundColor: currentTheme.accent }}
-            />
-          </Button>
-        </DrawerTrigger>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DrawerTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  style={buttonStyle}
+                  className="relative hover:shadow-lg transition-all hover:scale-105"
+                >
+                  <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                  <span className="sr-only">Открыть кубики</span>
+                  <div 
+                    className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
+                    style={{ backgroundColor: currentTheme.accent }}
+                  />
+                </Button>
+              </DrawerTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Кубики</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <DrawerContent style={{ backgroundColor: 'rgba(15, 15, 15, 0.95)' }}>
           <div className="flex justify-between items-center px-4 pt-4">
             <DrawerHeader className="p-0">
@@ -82,7 +92,6 @@ const DiceDrawer: React.FC = () => {
                 Бросайте кубики и отслеживайте результаты
               </DrawerDescription>
             </DrawerHeader>
-            {/* Оставляем только одну кнопку закрытия */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -102,21 +111,30 @@ const DiceDrawer: React.FC = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          style={buttonStyle}
-          className="relative"
-        >
-          <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-          <span className="sr-only">Открыть кубики</span>
-          <div 
-            className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-            style={{ backgroundColor: currentTheme.accent }}
-          />
-        </Button>
-      </SheetTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                style={buttonStyle}
+                className="relative hover:shadow-lg transition-all hover:scale-105"
+              >
+                <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                <span className="sr-only">Открыть кубики</span>
+                <div 
+                  className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
+                  style={{ backgroundColor: currentTheme.accent }}
+                />
+              </Button>
+            </SheetTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Кубики</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <SheetContent 
         side="right" 
         style={contentStyle}
@@ -129,7 +147,6 @@ const DiceDrawer: React.FC = () => {
               Бросайте кубики и отслеживайте результаты
             </SheetDescription>
           </SheetHeader>
-          {/* Используем собственную кнопку закрытия, убираем стандартную */}
           <Button 
             variant="ghost" 
             size="icon" 

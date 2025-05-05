@@ -1,6 +1,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface OBSLayoutProps {
   children: React.ReactNode;
@@ -28,11 +30,18 @@ export default function OBSLayout({
   const hasLeftPanel = !!leftPanelContent;
   const hasRightPanel = !!rightPanelContent;
   
+  const { theme } = useTheme();
+  const currentThemeId = theme || 'default';
+  const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
+  
   return (
     <div className={cn("grid h-full w-full", className)}>
       {/* Верхняя панель, фиксированная и растянутая на всю ширину */}
       {topPanelContent && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
+        <div 
+          className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b"
+          style={{ borderColor: `${currentTheme.accent}30` }}
+        >
           {topPanelContent}
         </div>
       )}
@@ -42,12 +51,15 @@ export default function OBSLayout({
         className="grid h-full w-full"
         style={{
           gridTemplateColumns: `${hasLeftPanel ? leftPanelWidth : '0'} 1fr ${hasRightPanel ? rightPanelWidth : '0'}`,
-          marginTop: hasTopPanel ? '56px' : '0', // отступ под верхнюю панель
+          marginTop: hasTopPanel ? '56px' : '0', 
           height: hasTopPanel ? 'calc(100% - 56px)' : '100%'
         }}
       >
         {hasLeftPanel && (
-          <div className="h-full overflow-y-auto bg-muted/10 border-r">
+          <div 
+            className="h-full overflow-y-auto bg-muted/10 border-r"
+            style={{ borderColor: `${currentTheme.accent}20` }}
+          >
             {leftPanelContent}
           </div>
         )}
@@ -57,14 +69,20 @@ export default function OBSLayout({
         </div>
         
         {hasRightPanel && (
-          <div className="h-full overflow-y-auto bg-muted/10 border-l">
+          <div 
+            className="h-full overflow-y-auto bg-muted/10 border-l"
+            style={{ borderColor: `${currentTheme.accent}20` }}
+          >
             {rightPanelContent}
           </div>
         )}
       </div>
       
       {bottomPanelContent && (
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-muted/10">
+        <div 
+          className="fixed bottom-0 left-0 right-0 border-t bg-muted/10"
+          style={{ borderColor: `${currentTheme.accent}20` }}
+        >
           {bottomPanelContent}
         </div>
       )}

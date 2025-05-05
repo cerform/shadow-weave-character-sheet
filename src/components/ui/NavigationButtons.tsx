@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { BookMarked, Scroll, Map, Wand2, BookOpen, Shield, LogIn, User, LogOut } from "lucide-react";
+import { BookMarked, Scroll, Map, Wand2, BookOpen, Shield, LogIn, User, LogOut, Dices } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { useDeviceType } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DiceDrawer } from '@/components/dice/DiceDrawer';
 
 interface NavigationButtonsProps {
   className?: string;
@@ -111,6 +111,9 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
             <p>Создание персонажа</p>
           </TooltipContent>
         </Tooltip>
+        
+        {/* Добавляем кнопку кубиков в навигацию */}
+        <DiceDrawer />
         
         {currentUser ? (
           <>

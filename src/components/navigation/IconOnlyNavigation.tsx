@@ -2,7 +2,6 @@
 import React from 'react';
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import ThemeSelector from "@/components/ThemeSelector";
-import DiceDrawer from '@/components/dice/DiceDrawer';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -21,9 +20,6 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSel
       style={{ border: `1px solid ${currentTheme.accent}30` }}
     >
       <NavigationButtons />
-      
-      {/* Добавляем кнопку кубиков */}
-      <DiceDrawer />
       
       {includeThemeSelector && (
         <ThemeSelector />

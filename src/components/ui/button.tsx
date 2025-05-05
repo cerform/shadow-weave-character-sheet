@@ -4,8 +4,8 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { useTheme } from "@/contexts/UserThemeContext"
-import { themes } from "@/lib/themes"
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes'
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -45,24 +45,23 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
-    const { activeTheme } = useTheme();
-    // Добавляем защиту от undefined
-    const themeKey = (activeTheme || 'default') as keyof typeof themes;
+    
+    // Получаем текущую тему
+    const { theme } = useTheme();
+    const themeKey = (theme || 'default') as keyof typeof themes;
     const currentTheme = themes[themeKey] || themes.default;
     
-    // Получаем базовые классы кнопки
+    // Определяем базовые классы
     const baseClasses = cn(buttonVariants({ variant, size, className }));
     
-    // Исправляем проверку класса Details - без обращения к props.className
+    // Проверяем класс и содержание кнопки
     const hasDetailsClass = className ? className.includes('Details') : false;
-    
-    // Проверяем, содержит ли текст кнопки текст "книга" или "руководство"
     const isBookButton = props.children && 
       (typeof props.children === 'string' ? 
         props.children.toLowerCase().includes('книга') || props.children.toLowerCase().includes('руководство') : 
         false);
     
-    // Улучшаем подсветку для всех кнопок
+    // Определяем стили с учетом темы
     const style = {
       ...props.style,
       color: variant === 'ghost' && hasDetailsClass
@@ -76,15 +75,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
         ? currentTheme.accent 
         : props.style?.backgroundColor,
-      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
-      // Добавим эффекты при наведении через CSS переменные
+      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
       '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
       '--hover-border-color': currentTheme.accent,
       '--hover-bg-color': `${currentTheme.accent}30`,
     };
     
-    // Проверяем, является ли это кнопкой для книги заклинаний или руководства игрока
-    // и добавляем дополнительные стили для кнопок книги заклинаний или руководства
+    // Определяем улучшенные классы для различных типов кнопок
     let enhancedClasses = baseClasses;
     
     if (isBookButton || (className && (className.includes('book') || className.includes('руководство')))) {
@@ -94,7 +91,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
       );
     } else {
-      // Добавляем дополнительные классы для всех остальных кнопок
       enhancedClasses = cn(
         baseClasses,
         "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
