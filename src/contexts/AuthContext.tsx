@@ -20,22 +20,13 @@ interface AuthContextProps {
   updateUserProfile: (displayName: string) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  googleLogin?: () => Promise<void>; // Опционально, возможно будет добавлено позже
 }
 
-const AuthContext = createContext<AuthContextProps>({
-  currentUser: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  resetPassword: async () => {},
-  updateUserProfile: async () => {},
-  isAuthenticated: false,
-  isLoading: true
-});
+// Экспортируем AuthContext для использования в useAuth
+export const AuthContext = createContext<AuthContextProps | null>(null);
 
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -112,3 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
+export { AuthProvider };
+
+// Удаляем экспорт useAuth отсюда, так как он будет в отдельном файле
