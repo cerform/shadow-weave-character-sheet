@@ -82,6 +82,11 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
   };
 };
 
+// Добавляем функцию convertSpellArray, которая отсутствовала
+export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+};
+
 // Преобразование строковых компонентов в объект
 export const parseComponents = (componentsStr: string): { verbal: boolean; somatic: boolean; material: boolean; materials?: string } => {
   const result = {
