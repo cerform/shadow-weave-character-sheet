@@ -12,6 +12,7 @@ interface SelectionCardProps {
   descriptionClassName?: string
   children?: React.ReactNode
   badges?: React.ReactNode // Adding badges prop
+  style?: React.CSSProperties // Добавляем поддержку для стилей
 }
 
 export function SelectionCard({
@@ -23,7 +24,8 @@ export function SelectionCard({
   titleClassName,
   descriptionClassName,
   children,
-  badges // Adding badges prop
+  badges, // Adding badges prop
+  style // Добавляем поддержку для стилей
 }: SelectionCardProps) {
   return (
     <div
@@ -35,6 +37,7 @@ export function SelectionCard({
         className
       )}
       onClick={onClick}
+      style={style} // Применяем стили
     >
       <div className="flex justify-between items-start mb-1">
         <h3 className={cn(
@@ -72,15 +75,23 @@ export function SelectionCard({
 }
 
 // Adding SelectionCardBadge component
-export function SelectionCardBadge({ children, className }: { 
+export function SelectionCardBadge({ 
+  children, 
+  className,
+  style // Добавляем поддержку для стилей
+}: { 
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties; // Добавляем поддержку для стилей
 }) {
   return (
-    <div className={cn(
-      "inline-flex px-2 py-1 rounded-md text-xs font-medium bg-primary/20 text-white",
-      className
-    )}>
+    <div 
+      className={cn(
+        "inline-flex px-2 py-1 rounded-md text-xs font-medium bg-primary/20 text-white",
+        className
+      )}
+      style={style} // Применяем стили
+    >
       {children}
     </div>
   );
