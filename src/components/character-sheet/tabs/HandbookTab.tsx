@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,7 +66,7 @@ export const HandbookTab = () => {
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-2">Заклинания</h3>
                 <p className="mb-2">
-                  Заклинания в D&D делятся на уровни от 0 (заговоры) до 9. Каждый класс заклинателя 
+                  Заклинания в D&D делятся на уровни от 0 (заговоры) до 9. Каждый кла��с заклинателя 
                   имеет свой список доступных заклинаний.
                 </p>
                 <h4 className="font-medium mt-4 mb-2">Школы магии:</h4>
