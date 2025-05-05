@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { races } from "@/data/races";
-import { CharacterSheet } from "@/types/character";
+import type { CharacterSheet } from "@/utils/characterImports";
 import NavigationButtons from "./NavigationButtons";
 import { 
   SelectionCard,

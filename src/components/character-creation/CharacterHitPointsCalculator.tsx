@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { CharacterSheet } from "@/types/character";
+import type { CharacterSheet } from "@/utils/characterImports";
 import NavigationButtons from "./NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";

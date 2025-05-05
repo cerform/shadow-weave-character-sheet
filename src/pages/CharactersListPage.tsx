@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useSessionStore } from '@/stores/sessionStore';
+import { useSessionStore } from '@/utils/sessionImports';
 import { Character } from '@/types/session';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft, Plus, Trash, Users, FileX, Loader2 } from 'lucide-react';

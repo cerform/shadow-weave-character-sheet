@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { Check } from 'lucide-react';
-import { CharacterSheet } from '@/types/character';
+import type { CharacterSheet } from '@/utils/characterImports';
 
 interface Props {
   character: CharacterSheet;

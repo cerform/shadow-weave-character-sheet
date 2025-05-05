@@ -28,10 +28,18 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
     }
     
     try {
+      // Проверяем наличие метода joinSession
+      if (!sessionStore.joinSession) {
+        toast({
+          title: "Ошибка",
+          description: "Функция присоединения к сессии недоступна",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Присоединяемся к сессии через SessionStore
-      const joined = sessionStore.joinSession ? 
-        sessionStore.joinSession(roomCode.trim().toUpperCase(), nickname) : 
-        false;
+      const joined = sessionStore.joinSession(roomCode.trim().toUpperCase(), nickname); 
       
       if (!joined) {
         toast({

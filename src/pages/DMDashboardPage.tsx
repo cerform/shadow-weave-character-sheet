@@ -1,16 +1,13 @@
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ChevronRight, Plus, Users, Activity, Map, Swords } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { useSessionStore } from '@/stores/sessionStore';
-import { Session } from "@/types/session";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useSessionStore } from '@/utils/sessionImports';
+import { PlusCircle, Users, ArrowRight } from 'lucide-react';
 
 const DMDashboardPage = () => {
   const navigate = useNavigate();
@@ -90,7 +87,7 @@ const DMDashboardPage = () => {
                 </CardDescription>
               </div>
               <Button onClick={() => setOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2" />
                 Создать
               </Button>
             </CardHeader>
@@ -116,7 +113,7 @@ const DMDashboardPage = () => {
                           {session.users ? session.users.filter(user => !user.isDM).length : 0} игроков
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                   ))
                 ) : (
@@ -125,7 +122,7 @@ const DMDashboardPage = () => {
                       У вас пока нет активных сессий
                     </p>
                     <Button onClick={() => setOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <PlusCircle className="h-4 w-4 mr-2" />
                       Создать сессию
                     </Button>
                   </div>
