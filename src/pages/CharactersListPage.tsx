@@ -9,7 +9,7 @@ import { Character } from '@/types/session';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft, Plus, Trash, Users, FileX, Loader2 } from 'lucide-react';
 import NavigationButtons from '@/components/ui/NavigationButtons';
-import { firebaseAuth } from '@/services/firebase';
+import { auth } from '@/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { toast } from 'sonner';
 
@@ -24,7 +24,7 @@ const CharactersListPage = () => {
 
   useEffect(() => {
     // Проверяем авторизацию
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         toast.warning("Для доступа к персонажам необходимо войти в аккаунт");
         navigate('/auth', { state: { returnPath: '/characters' } });
@@ -93,7 +93,7 @@ const CharactersListPage = () => {
           <div>
             <h1 className="text-3xl font-bold mb-2">Ваши персонажи</h1>
             <p className="text-muted-foreground">
-              Управляйте созданными персонажами и создавайте новых
+              Управляйте созда��ными персонажами и создавайте новых
             </p>
           </div>
           <div className="flex gap-4">
