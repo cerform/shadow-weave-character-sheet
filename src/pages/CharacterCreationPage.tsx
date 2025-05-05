@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import HomeButton from "@/components/navigation/HomeButton";
 
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
-import { ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { ABILITY_SCORE_CAPS } from "@/constants/characterConstants";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();

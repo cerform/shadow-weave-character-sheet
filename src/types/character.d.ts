@@ -74,6 +74,21 @@ export interface Character {
   isActive?: boolean;
   connectedToSession?: boolean;
   sessionId?: string;
+
+  // Additional fields for character creation
+  gender?: string;
+  subrace?: string;
+  subclass?: string;
+  abilityPointsUsed?: number;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  additionalClasses?: ClassLevel[];
 }
 
 // Define Character abilities
@@ -188,3 +203,17 @@ export interface HitPointEvent {
 
 // Define CharacterSheet type for compatibility with services
 export type CharacterSheet = Character;
+
+// Define ClassLevel for multiclassing
+export interface ClassLevel {
+  class: string;
+  level: number;
+  subclass?: string;
+}
+
+// Define ability score caps for different character levels
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,      // Standard maximum for abilities (levels 1-9)
+  EPIC_CAP: 22,      // Epic tier maximum (levels 10-15)
+  LEGENDARY_CAP: 24  // Legendary tier maximum (levels 16-20)
+};

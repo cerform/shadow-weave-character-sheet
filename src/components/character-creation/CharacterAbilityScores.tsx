@@ -7,7 +7,7 @@ import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
 import { CharacterSheet } from "@/types/character.d";
-import { ABILITY_SCORE_CAPS } from "@/types/character.d";
+import { ABILITY_SCORE_CAPS } from "@/constants/characterConstants";
 import { useToast } from "@/hooks/use-toast";
 
 interface CharacterAbilityScoresProps {
