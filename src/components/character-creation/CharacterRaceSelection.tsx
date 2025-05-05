@@ -9,6 +9,7 @@ import NavigationButtons from "./NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
 import { ScrollArea } from '@/components/ui/scroll-area'; 
 import { Badge } from '@/components/ui/badge';
+import { SelectionCard, SelectionCardBadge } from '@/components/ui/selection-card';
 
 interface CharacterRaceSelectionProps {
   character: Character;
@@ -71,29 +72,24 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] pr-4">
-            <RadioGroup defaultValue={selectedRace} onValueChange={handleRaceChange} className="grid gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {races.map((race) => (
-                <div 
-                  key={race.name} 
-                  className={`flex flex-col border rounded-lg p-4 transition-colors ${selectedRace === race.name ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent/10'}`}
-                >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value={race.name} id={race.name} />
-                    <Label htmlFor={race.name} className="font-semibold text-lg flex items-center gap-2">
-                      {race.name}
-                      {hasSubracesForRace(race.name) && (
-                        <Badge variant="outline" className="text-xs bg-primary/30">
-                          Доступны подрасы
-                        </Badge>
-                      )}
-                    </Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {getRaceDescription(race.name).substring(0, 150)}...
-                  </p>
-                </div>
+                <SelectionCard
+                  key={race.name}
+                  title={race.name}
+                  description={getRaceDescription(race.name).substring(0, 150) + "..."}
+                  selected={selectedRace === race.name}
+                  onClick={() => handleRaceChange(race.name)}
+                  badges={
+                    hasSubracesForRace(race.name) ? (
+                      <SelectionCardBadge>
+                        Доступны подрасы
+                      </SelectionCardBadge>
+                    ) : null
+                  }
+                />
               ))}
-            </RadioGroup>
+            </div>
           </ScrollArea>
         </CardContent>
       </Card>

@@ -10,7 +10,6 @@ import {
   TooltipProvider, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
-import { getCharacterSteps } from "@/config/characterCreationSteps";
 
 interface Step {
   id: number;
@@ -38,7 +37,7 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Показываем все шаги из переданного массива
+  // Используем шаги напрямую из props
   const filteredSteps = steps;
 
   return (

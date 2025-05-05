@@ -26,6 +26,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
 }) => {
   const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || '');
   const [availableSubraces, setAvailableSubraces] = useState<{name: string, description: string}[]>([]);
+  const [autoRedirectAttempted, setAutoRedirectAttempted] = useState(false);
 
   useEffect(() => {
     // Загрузка доступных подрас для выбранной расы
@@ -59,19 +60,15 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     updateCharacter({ subrace: subraceName });
   };
 
-  // Если для выбранной расы нет подрас, автоматически переходим к следующему шагу
-  // Но делаем это только один раз при монтировании компонента
+  // Редирект только если у расы нет подрас и при первом рендере
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (availableSubraces.length === 0) {
-        nextStep();
-      }
-    }, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, []); // Пустой массив зависимостей означает, что эффект выполнится только один раз
+    if (availableSubraces.length === 0 && character.race && !autoRedirectAttempted) {
+      setAutoRedirectAttempted(true);
+      nextStep();
+    }
+  }, [availableSubraces, character.race, autoRedirectAttempted]);
 
-  // Если нет подрас, показываем сообщение и ждем перехода
+  // Если нет подрас, показываем загрузочное сообщение
   if (availableSubraces.length === 0) {
     return (
       <div className="space-y-6">
@@ -108,7 +105,10 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
           <ScrollArea className="h-[400px] pr-4">
             <RadioGroup value={selectedSubrace} onValueChange={handleSubraceChange} className="space-y-4">
               {availableSubraces.map((subrace) => (
-                <div key={subrace.name} className="border border-border rounded-lg p-4 hover:bg-accent/20 transition-colors">
+                <div 
+                  key={subrace.name} 
+                  className={`border rounded-lg p-4 transition-colors ${selectedSubrace === subrace.name ? 'border-primary bg-primary/10 shadow-[0_0_10px] shadow-primary/30' : 'border-border hover:bg-accent/20'}`}
+                >
                   <div className="flex items-center space-x-2 mb-2">
                     <RadioGroupItem value={subrace.name} id={subrace.name} />
                     <Label htmlFor={subrace.name} className="font-semibold text-lg">{subrace.name}</Label>
@@ -122,7 +122,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
       </Card>
 
       <NavigationButtons
-        allowNext={!!selectedSubrace || availableSubraces.length === 0}
+        allowNext={!!selectedSubrace}
         nextStep={nextStep}
         prevStep={prevStep}
         isFirstStep={false}

@@ -50,9 +50,9 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
     }
   };
 
-  // Обновляем currentStepId, если шаг стал недоступен после изменения фильтров
+  // Если конфигурация изменилась, проверяем доступность текущего шага
   useEffect(() => {
-    console.log(`Конфигурация шагов изменилась: isMagicClass=${config?.isMagicClass}`);
+    console.log(`Конфигурация шагов изменилась: hasSubraces=${config?.hasSubraces}`);
     console.log(`Видимые шаги:`, visibleSteps.map(s => s.id));
 
     const currentStepExists = visibleSteps.some(step => step.id === currentStepId);
@@ -65,7 +65,7 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
       console.log(`Текущий шаг ${currentStepId} недоступен после изменения фильтров, переходим к ближайшему: ${closestStep.id}`);
       setCurrentStepId(closestStep.id);
     }
-  }, [config?.isMagicClass, visibleSteps]);
+  }, [config?.hasSubraces, config?.isMagicClass]);
 
   // Вычисляем процент завершения создания персонажа
   const calculateProgress = (): number => {
