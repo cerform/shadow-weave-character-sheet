@@ -1,11 +1,11 @@
 
 import { CharacterSpell } from '@/types/character';
 import { cantrips } from './cantrips';
-import { level1 } from './level1';
 import { level0 } from './level0';
+import { level1 } from './level1';
+import { level2 } from './level2';
 
 // Временно добавим мок данные для других уровней
-const level2: CharacterSpell[] = [];
 const level3: CharacterSpell[] = [];
 const level4: CharacterSpell[] = [];
 const level5: CharacterSpell[] = [];
@@ -20,6 +20,7 @@ export { level0, cantrips, level1, level2, level3, level4, level5, level6, level
 // Объединенный массив всех заклинаний
 export const spells: CharacterSpell[] = [
   ...cantrips,
+  ...level0,
   ...level1,
   ...level2,
   ...level3,
@@ -51,4 +52,9 @@ export const getSpellsByClass = (className: string) => {
 // Функция получения заклинаний по уровню
 export const getSpellsByLevel = (level: number) => {
   return spells.filter(spell => spell.level === level);
+};
+
+// Функция получения конкретного заклинания по имени
+export const getSpellDetails = (spellName: string) => {
+  return spells.find((spell) => spell.name === spellName) || null;
 };
