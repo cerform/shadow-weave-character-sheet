@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Character } from '@/types/character';
+import { useTheme } from '@/hooks/use-theme';
 
 interface CharacterBasicsProps {
   character: Character;
@@ -19,6 +20,16 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
   const [name, setName] = useState(character.name || '');
   const [gender, setGender] = useState(character.gender || '');
   const [alignment, setAlignment] = useState(character.alignment || '');
+  
+  // Получаем текущие стили темы
+  const { themeStyles } = useTheme();
+  
+  // Мемоизируем стили для предотвращения мерцания
+  const selectStyle = useMemo(() => ({
+    color: themeStyles?.textColor || '#E3F2FD',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderColor: `${themeStyles?.accent}50` || 'rgba(255, 255, 255, 0.1)'
+  }), [themeStyles]);
 
   // Обработчик для автоматического сохранения данных при изменении
   const handleInputChange = (field: string, value: string) => {
@@ -46,7 +57,8 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
             <Label htmlFor="gender">Пол</Label>
             <select
               id="gender"
-              className="w-full p-2 border rounded bg-background text-foreground"
+              className="w-full p-2 border rounded"
+              style={selectStyle}
               value={gender}
               onChange={(e) => handleInputChange('gender', e.target.value)}
             >
@@ -60,7 +72,8 @@ const CharacterBasics: React.FC<CharacterBasicsProps> = ({
             <Label htmlFor="alignment">Мировоззрение</Label>
             <select
               id="alignment"
-              className="w-full p-2 border rounded bg-background text-foreground"
+              className="w-full p-2 border rounded"
+              style={selectStyle}
               value={alignment}
               onChange={(e) => handleInputChange('alignment', e.target.value)}
             >
