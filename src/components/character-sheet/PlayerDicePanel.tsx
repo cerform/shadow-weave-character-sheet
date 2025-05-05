@@ -118,12 +118,45 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             ))}
           </div>
           
-          {/* Секция настройки броска */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
+          {/* 3D кубик в центре - перемещён вверх */}
+          <div 
+            className="mb-2 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
+            style={{ height: '220px' }}
+          >
+            <DiceRoller3D 
+              initialDice={diceType}
+              hideControls={true}
+              modifier={modifier}
+              onRollComplete={handleDiceRollComplete}
+              themeColor={currentTheme.accent}
+              diceCount={diceCount}
+              forceReroll={forceReroll}
+            />
+          </div>
+          
+          {/* Секция настройки броска - перемещена вниз */}
+          <div className="flex flex-wrap justify-between gap-2 mb-2">
+            {/* Диалог дополнительных настроек */}
+            <div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
+                      {showDetails ? 'Скрыть' : 'Опции'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Дополнительные опции броска</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            
+            {/* Количество кубиков и модификатор в одну строку */}
+            <div className="flex items-center gap-3">
               {/* Количество кубиков */}
               <div className="flex items-center gap-1">
-                <Label className="text-sm">Кол-во:</Label>
+                <Label className="text-sm whitespace-nowrap">Кол-во:</Label>
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -147,7 +180,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
               
               {/* Модификатор броска */}
               <div className="flex items-center gap-1">
-                <Label className="text-sm">Мод:</Label>
+                <Label className="text-sm whitespace-nowrap">Мод:</Label>
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -170,95 +203,63 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                   +
                 </Button>
               </div>
-              
-              {/* Диалог дополнительных настроек */}
-              <div className="ml-auto">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button size="sm" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
-                        {showDetails ? 'Скрыть' : 'Опции'}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Дополнительные опции броска</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
             </div>
+          </div>
             
-            {/* 3D кубик в центре */}
-            <div 
-              className="mb-4 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
-              style={{ height: '220px' }}
-            >
-              <DiceRoller3D 
-                initialDice={diceType}
-                hideControls={true}
-                modifier={modifier}
-                onRollComplete={handleDiceRollComplete}
-                themeColor={currentTheme.accent}
-                diceCount={diceCount}
-                forceReroll={forceReroll}
-              />
-            </div>
-            
-            {/* Дополнительные настройки */}
-            {showDetails && (
-              <div className="p-2 bg-background/50 rounded border">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="custom-reason">Своя причина броска</Label>
-                    <Switch 
-                      id="custom-reason" 
-                      checked={useCustomReason} 
-                      onCheckedChange={setUseCustomReason} 
-                    />
-                  </div>
-                  
-                  {useCustomReason ? (
-                    <Input 
-                      type="text" 
-                      placeholder="Причина броска..." 
-                      value={rollReason} 
-                      onChange={(e) => setRollReason(e.target.value)}
-                    />
-                  ) : (
-                    <Select value={rollReason} onValueChange={setRollReason}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Выберите причину броска" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {predefinedRollReasons.map((reason) => (
-                          <SelectItem key={reason.value} value={reason.value}>
-                            {reason.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  
-                  <Input 
-                    type="text" 
-                    placeholder="Сообщение (опционально)" 
-                    value={rollMessage} 
-                    onChange={(e) => setRollMessage(e.target.value)}
+          {/* Дополнительные настройки */}
+          {showDetails && (
+            <div className="p-2 bg-background/50 rounded border">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="custom-reason">Своя причина броска</Label>
+                  <Switch 
+                    id="custom-reason" 
+                    checked={useCustomReason} 
+                    onCheckedChange={setUseCustomReason} 
                   />
                 </div>
+                
+                {useCustomReason ? (
+                  <Input 
+                    type="text" 
+                    placeholder="Причина броска..." 
+                    value={rollReason} 
+                    onChange={(e) => setRollReason(e.target.value)}
+                  />
+                ) : (
+                  <Select value={rollReason} onValueChange={setRollReason}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите причину броска" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedRollReasons.map((reason) => (
+                        <SelectItem key={reason.value} value={reason.value}>
+                          {reason.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                
+                <Input 
+                  type="text" 
+                  placeholder="Сообщение (опционально)" 
+                  value={rollMessage} 
+                  onChange={(e) => setRollMessage(e.target.value)}
+                />
               </div>
-            )}
-            
-            {/* Кнопка броска */}
-            <div className="flex flex-col gap-2">
-              <Button 
-                className="w-full bg-primary/90 hover:bg-primary"
-                onClick={handleRoll}
-              >
-                <Dices className="mr-2" size={16} />
-                Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
-              </Button>
             </div>
+          )}
+            
+          {/* Кнопка броска - уменьшена */}
+          <div className="flex flex-col gap-2">
+            <Button 
+              className="w-full bg-primary/90 hover:bg-primary h-10 text-sm"
+              onClick={handleRoll}
+            >
+              <Dices className="mr-2" size={14} />
+              Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
+            </Button>
           </div>
         </div>
       </Card>
@@ -294,3 +295,4 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     </div>
   );
 };
+
