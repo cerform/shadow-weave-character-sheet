@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -62,7 +61,6 @@ export interface Character {
 }
 
 export interface CharacterSpell {
-  id?: string;
   name: string;
   level: number;
   school?: string;
@@ -70,16 +68,19 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[];
+  description: string | string[]; // Обновлено: поддерживает как строку, так и массив строк
   classes?: string[] | string;
+  source?: string;
+  ritual?: boolean;
+  concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  materials?: string;
   prepared?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
   higherLevel?: string;
+  higherLevels?: string;
+  id?: string | number;
+  materials?: string;
 }
 
 export interface Item {
