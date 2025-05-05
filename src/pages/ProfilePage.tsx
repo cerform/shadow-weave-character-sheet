@@ -28,7 +28,7 @@ import {
 import { Link } from 'react-router-dom';
 import HomeButton from '@/components/navigation/HomeButton';
 import { Badge } from '@/components/ui/badge';
-import { Scroll, Shield, Sword, BookText, Users, MagicWand } from 'lucide-react';
+import { Scroll, Shield, Sword, BookText, Users, Wand } from 'lucide-react';
 
 const ProfilePage = () => {
   const { currentUser, updateProfile } = useAuth();
@@ -75,7 +75,7 @@ const ProfilePage = () => {
       description: "Вдохновители, целители, использующие силу музыки и магии.", 
       primaryAbility: "Харизма",
       saves: "Ловкость, Харизма",
-      icon: <MagicWand className="h-6 w-6" />
+      icon: <Wand className="h-6 w-6" />
     },
     { 
       name: "Варвар", 
