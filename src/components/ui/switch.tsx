@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 
@@ -17,8 +18,12 @@ const Switch = React.forwardRef<
   >
     <SwitchPrimitives.Thumb
       className={cn(
-        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
+        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
+        "data-[state=checked]:bg-[var(--switch-thumb-color,white)]"
       )}
+      style={{
+        backgroundColor: props.checked ? 'var(--switch-thumb-color, white)' : undefined
+      }}
     />
   </SwitchPrimitives.Root>
 ))

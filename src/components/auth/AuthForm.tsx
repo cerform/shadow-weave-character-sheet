@@ -94,15 +94,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       const result = await googleLogin();
       console.log("Результат входа через Google:", result);
       
-      // Проверяем результат как объект, а не булево значение
-      if (result !== null) {
+      if (result) {
         toast({
           title: "Вход выполнен",
           description: "Вы успешно вошли через Google"
         });
         navigate(redirectTo);
       } else {
-        // Если результат null, но ошибки не было - показываем сообщение
         toast({
           title: "Вход не завершен",
           description: "Вход через Google не был завершен",
@@ -120,6 +118,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       setIsLoading(false);
     }
   };
+  
+  // Стили для переключателя DM, меняем на более выразительные
+  const dmSwitchStyle = {
+    '--switch-thumb-color': isDM ? currentTheme.accent : 'white',
+    '--switch-background-checked': isDM ? `${currentTheme.accent}50` : 'transparent',
+    '--switch-border-checked': isDM ? currentTheme.accent : 'gray'
+  } as React.CSSProperties;
 
   return (
     <Card className="w-full shadow-lg border-primary/20 bg-black/60 backdrop-blur-md">
@@ -277,8 +282,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
                   id="is-dm" 
                   checked={isDM}
                   onCheckedChange={setIsDM}
+                  style={dmSwitchStyle}
+                  className={`${isDM ? 'border-accent bg-accent/30' : ''} transition-colors`}
                 />
-                <Label htmlFor="is-dm">Я буду Мастером Подземелий</Label>
+                <Label 
+                  htmlFor="is-dm" 
+                  className={`${isDM ? 'text-accent font-medium' : ''} cursor-pointer transition-colors`}
+                  style={{ color: isDM ? currentTheme.accent : undefined }}
+                >
+                  Я буду Мастером Подземелий
+                </Label>
               </div>
               <Button 
                 type="submit" 

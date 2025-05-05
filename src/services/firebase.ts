@@ -49,13 +49,8 @@ const firebaseAuth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Провайдеры аутентификации
-const googleProvider = new GoogleAuthProvider();
-// Явно настраиваем параметры для обеспечения отображения окна выбора аккаунта
-googleProvider.setCustomParameters({
-  prompt: 'select_account',
-  access_type: 'offline'
-});
+// ВАЖНО: Не создаем провайдер заранее, а создаем новый экземпляр при каждом вызове
+// Это помогает избежать проблем с кэшированием провайдера
 
 // Функция для форматирования сообщений ошибок Firebase
 const formatFirebaseError = (error: any): string => {
@@ -113,14 +108,21 @@ const auth = {
   // Вход через Google
   loginWithGoogle: async (): Promise<FirebaseUser | null> => {
     try {
-      // Принудительно обновляем провайдер перед каждым вызовом для уверенности
+      // Создаем новый экземпляр провайдера при каждом вызове
       const provider = new GoogleAuthProvider();
+      // Настраиваем параметры для гарантированного показа окна выбора аккаунта
       provider.setCustomParameters({
         prompt: 'select_account',
         access_type: 'offline'
       });
       
       console.log("Запускаем вход через Google с обновленными параметрами");
+      
+      // Очищаем кэш состояния авторизации перед новым вызовом
+      // Это может помочь с проблемой отображения окна выбора аккаунта
+      await firebaseAuth.signOut();
+      
+      // Используем signInWithPopup с новым провайдером
       const result = await signInWithPopup(firebaseAuth, provider);
       console.log("Google login successful", result.user);
       return result.user;
