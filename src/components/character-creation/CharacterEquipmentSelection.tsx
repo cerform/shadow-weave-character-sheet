@@ -226,6 +226,7 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
         </Card>
       )}
       
+      {/* Используем только один NavigationButtons */}
       <NavigationButtons
         nextStep={nextStep}
         prevStep={prevStep}

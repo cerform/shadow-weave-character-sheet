@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Character } from '@/types/character';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { getAllRaces, getSubracesForRace } from '@/data/races';
 import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
@@ -17,7 +17,6 @@ import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
 import CreationStepper from '@/components/character-creation/CreationStepper';
 import CreationSidebar from '@/components/character-creation/CreationSidebar';
-import FloatingActionButton from '@/components/character-creation/FloatingActionButton';
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
 import { getEquipmentLength } from '@/utils/safetyUtils';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
@@ -394,36 +393,7 @@ const CharacterCreationPage: React.FC = () => {
         </Card>
       </div>
       
-      {/* Floating Action Buttons */}
-      {currentStep > 0 && (
-        <FloatingActionButton
-          icon={<ArrowLeft size={18} />}
-          label="Назад"
-          onClick={prevStep}
-          position="bottom-left"
-          variant="outline"
-        />
-      )}
-      
-      {currentStep < visibleSteps.length - 1 ? (
-        <FloatingActionButton
-          icon={<ArrowRight size={18} />}
-          label="Далее"
-          onClick={nextStep}
-          disabled={!canProceedToNextStep}
-          position="bottom-right"
-        />
-      ) : (
-        <FloatingActionButton
-          icon={<Save size={18} />}
-          label="Сохранить персонажа"
-          onClick={handleSaveCharacter}
-          disabled={isLoading}
-          position="bottom-right"
-        />
-      )}
-      
-      {/* Dice Button */}
+      {/* Добавляем только одну кнопку Dice Button */}
       <FloatingDiceButton />
     </div>
   );

@@ -1,17 +1,14 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Step {
   id: number;
   name: string;
   description: string;
-  icon?: React.ReactNode;
-  completed?: boolean;
-  active?: boolean;
-  disabled?: boolean;
 }
 
 interface CreationSidebarProps {
@@ -26,72 +23,96 @@ const CreationSidebar: React.FC<CreationSidebarProps> = ({
   setCurrentStep,
 }) => {
   const { themeStyles } = useTheme();
-
-  // Handle step click - only allow clicking on completed steps or current step
-  const handleStepClick = (stepId: number) => {
-    const step = steps.find(s => s.id === stepId);
-    if (step && (step.completed || step.id === currentStep)) {
-      setCurrentStep(stepId);
-    }
-  };
-
+  
   return (
-    <div className="hidden md:block w-64 h-[calc(100vh-6rem)] sticky top-24 overflow-y-auto pr-4">
-      <div 
-        className="py-3 px-4 mb-4 rounded-lg font-semibold text-center"
-        style={{ backgroundColor: `${themeStyles?.accent}20`, color: themeStyles?.accent }}
+    <div className="hidden md:block w-80 mt-4">
+      <Card 
+        className="rounded-lg sticky top-24"
+        style={{ 
+          background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
+          borderColor: `${themeStyles?.accent}30`,
+          color: themeStyles?.textColor 
+        }}
       >
-        Этапы создания
-      </div>
-      <ul className="space-y-2">
-        {steps.map((step) => {
-          const isActive = step.id === currentStep;
-          const isCompleted = step.completed || step.id < currentStep;
-          const isDisabled = !isCompleted && !isActive;
-          
-          return (
-            <li key={step.id}>
-              <button
-                onClick={() => handleStepClick(step.id)}
-                className={cn(
-                  "w-full text-left py-3 px-4 rounded-lg transition-all duration-300 flex items-center",
-                  isActive
-                    ? `bg-opacity-20 font-medium`
-                    : isCompleted
-                    ? "hover:bg-opacity-10"
-                    : "opacity-50 cursor-not-allowed",
-                  isDisabled && "opacity-50 cursor-not-allowed"
-                )}
-                disabled={isDisabled}
-                style={{ 
-                  backgroundColor: isActive ? `${themeStyles?.accent}20` : 'transparent',
-                  borderLeft: isActive ? `3px solid ${themeStyles?.accent}` : '',
-                  paddingLeft: isActive ? "calc(1rem - 3px)" : "1rem"
-                }}
-              >
-                <div 
-                  className={cn(
-                    "w-6 h-6 rounded-full mr-3 flex items-center justify-center flex-shrink-0",
-                    isActive
-                      ? "bg-yellow-500 text-black"
-                      : isCompleted
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-700 text-gray-300"
-                  )}
-                >
-                  {isCompleted ? (
-                    <CheckIcon className="w-4 h-4" />
-                  ) : (
-                    <span className="text-xs">{step.id + 1}</span>
-                  )}
-                </div>
-                <span>{step.name}</span>
-                {isActive && <ChevronRightIcon className="w-4 h-4 ml-auto" />}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+        <CardContent className="p-4">
+          <h3 
+            className="text-lg font-medium mb-4"
+            style={{ color: themeStyles?.accent }}
+          >
+            Шаги создания
+          </h3>
+          <ScrollArea 
+            className="h-[60vh] -mr-4 pr-2" // Удаляем правый отступ, чтобы полоса прокрутки не выходила за пределы карточки
+          >
+            <div className="space-y-1">
+              {steps.map((step, index) => {
+                const isActive = index === currentStep;
+                const isCompleted = index < currentStep;
+
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => {
+                      if (isCompleted || isActive) {
+                        setCurrentStep(index);
+                      }
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-md transition-all",
+                      isActive 
+                        ? "bg-primary/15" 
+                        : "hover:bg-primary/5",
+                      (!isCompleted && !isActive) && "opacity-50 cursor-not-allowed"
+                    )}
+                    disabled={!isCompleted && !isActive}
+                    style={{
+                      backgroundColor: isActive 
+                        ? `${themeStyles?.accent}20` 
+                        : undefined,
+                      borderLeft: isActive 
+                        ? `3px solid ${themeStyles?.accent}` 
+                        : undefined,
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className={cn(
+                          "flex items-center justify-center w-6 h-6 rounded-full mr-2 text-xs font-medium",
+                          isActive 
+                            ? "bg-primary text-white" 
+                            : isCompleted 
+                            ? "bg-green-600 text-white" 
+                            : "bg-gray-600 text-gray-300"
+                        )}
+                        style={{
+                          backgroundColor: isActive ? themeStyles?.accent : undefined
+                        }}
+                      >
+                        {isCompleted ? "✓" : index + 1}
+                      </div>
+                      <span 
+                        className={cn(
+                          "font-medium",
+                          isActive 
+                            ? "text-white" 
+                            : "text-gray-300"
+                        )}
+                      >
+                        {step.name}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <p className="mt-1 text-sm opacity-80 pl-8">
+                        {step.description}
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 };
