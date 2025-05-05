@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 
 export const cantrips: CharacterSpell[] = [
@@ -621,4 +622,26 @@ export const cantrips: CharacterSpell[] = [
     school: "Воплощение",
     castingTime: "1 действие",
     range: "Касание",
-    verbal:
+    verbal: true,
+    somatic: true,
+    material: false,
+    components: "В, С",
+    duration: "Мгновенная",
+    description: "Совершите рукопашную атаку заклинанием по существу в пределах досягаемости. При попадании цель получит урон электричеством 1к8, и не сможет совершать реакции до начала своего следующего хода.",
+    classes: ["Чародей", "Волшебник"]
+  },
+  {
+    name: "Ядовитые брызги",
+    level: 0,
+    school: "Воплощение",
+    castingTime: "1 действие",
+    range: "10 футов",
+    verbal: true,
+    somatic: true,
+    material: false,
+    components: "В, С",
+    duration: "Мгновенная",
+    description: "Вы протягиваете руку к существу, которое видите в пределах дистанции, и выпускаете из своей ладони облачко ядовитого газа. Существо должно преуспеть в спасброске Телосложения, иначе получит урон ядом 1к12.",
+    classes: ["Друид", "Чародей", "Волшебник"]
+  }
+];
