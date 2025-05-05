@@ -1,3 +1,4 @@
+
 export interface Character {
   id?: string;
   name: string;
@@ -68,7 +69,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description: string | string[]; // Обновлено: поддерживает как строку, так и массив строк
+  description?: string | string[]; // Поддерживает как строку, так и массив строк
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
