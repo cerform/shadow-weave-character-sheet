@@ -49,6 +49,10 @@ export const convertSpellDataToCharacterSpell = (spellData: SpellData): Characte
     ...spellData,
     ritual: spellData.isRitual || spellData.ritual,
     concentration: spellData.isConcentration || spellData.concentration,
-    higherLevels: spellData.higherLevel || spellData.higherLevels
+    higherLevels: spellData.higherLevel || spellData.higherLevels,
+    description: typeof spellData.description === 'string' ? 
+                spellData.description : 
+                Array.isArray(spellData.description) ?
+                spellData.description.join('\n') : ''
   };
 };

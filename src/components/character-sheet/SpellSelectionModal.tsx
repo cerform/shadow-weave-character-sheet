@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Character } from '@/types/character';
@@ -11,8 +12,8 @@ import { convertCharacterSpellToSpellData, getSpellName } from '@/utils/spellHel
 
 // Update props to match the expected props in SpellPanel
 export interface SpellSelectionModalProps {
-  open: boolean;  // renamed from isOpen
-  onOpenChange: (open: boolean) => void;  // renamed from onClose
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
@@ -81,7 +82,10 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       range: spell.range,
       components: spell.components,
       duration: spell.duration,
-      description: spell.description,
+      description: typeof spell.description === 'string' ? 
+                 spell.description : 
+                 Array.isArray(spell.description) ? 
+                 spell.description.join('\n') : '',
       prepared: false,
     };
     

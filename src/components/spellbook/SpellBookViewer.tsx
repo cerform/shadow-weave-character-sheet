@@ -11,6 +11,11 @@ import SpellFilters from './SpellFilters';
 import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import SpellDetailModal from '../spell-detail/SpellDetailModal';
+import { SpellData } from '@/types/spells';
+
+interface NavigationButtonsProps {
+  className?: string;
+}
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -209,14 +214,14 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
       {selectedSpell && (
         <SpellDetailModal
           spell={selectedSpell}
-          isOpen={isModalOpen}
+          open={isModalOpen}
           onClose={handleClose}
         />
       )}
       
       {standalone && (
         <div className="mt-8">
-          <NavigationButtons homeButton backButton />
+          <NavigationButtons className="mt-8" />
         </div>
       )}
     </div>

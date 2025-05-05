@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -306,7 +305,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
       
       <SpellSelectionModal
         open={isAddSpellModalOpen}
-        onClose={() => setIsAddSpellModalOpen(false)}
+        onOpenChange={setIsAddSpellModalOpen}
         character={character}
         onUpdate={onUpdate}
       />

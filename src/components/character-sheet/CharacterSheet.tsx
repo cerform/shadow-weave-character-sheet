@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Character } from '@/types/character';
 import { CharacterContext } from '@/contexts/CharacterContext';
@@ -241,8 +240,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             <ResourcePanel 
               character={character}
               onUpdate={updateCharacter}
-              currentHp={character?.currentHp}
-              maxHp={character?.maxHp}
               onHpChange={handleHpChange}
             />
             

@@ -6,6 +6,17 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24
 };
 
+// Interface for level-based features (needed for useLevelFeatures)
+export interface LevelFeature {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  type: string;
+  class?: string;
+  subclass?: string;
+}
+
 export interface CharacterSpell {
   id?: string | number;
   name: string;
@@ -148,6 +159,12 @@ export interface Character {
     intelligence?: number;
     wisdom?: number;
     charisma?: number;
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
   };
   additionalClasses?: ClassLevel[];
   gender?: string;
@@ -164,7 +181,7 @@ export interface Character {
   sorceryPoints?: SorceryPoints;
 }
 
-// For backward compatibility, CharacterSheet is now just an alias for Character
+// For backward compatibility, CharacterSheet is now an alias for Character
 export type CharacterSheet = Character;
 
 export interface ClassLevel {

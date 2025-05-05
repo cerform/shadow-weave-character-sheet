@@ -1,3 +1,4 @@
+
 export interface Theme {
   name: string;
   label: string;
@@ -8,6 +9,9 @@ export interface Theme {
   mutedTextColor?: string;
   background?: string;
   cardBackground?: string;
+  buttonText?: string;
+  primary?: string;
+  badge?: string;
   spellLevels?: {
     [key: number]: string;
     0: string; // Cantrips
@@ -33,6 +37,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#9ca3af',
     background: '#1e293b',
     cardBackground: '#334155',
+    buttonText: "#FFFFFF",
+    primary: "#7dd3fc",
+    badge: "#334155",
     spellLevels: {
       0: '#a8b2ba',
       1: '#93c5fd',
@@ -55,6 +62,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#9ca3af',
     background: '#0f172a',
     cardBackground: '#1e293b',
+    buttonText: "#FFFFFF",
+    primary: "#4f46e5",
+    badge: "#1e293b",
     spellLevels: {
       0: '#a8b2ba',
       1: '#8b5cf6',
@@ -77,7 +87,10 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#a7f3d0',
     background: '#15803d',
     cardBackground: '#166534',
-     spellLevels: {
+    buttonText: "#FFFFFF",
+    primary: "#22c55e",
+    badge: "#166534",
+    spellLevels: {
       0: '#a8b2ba',
       1: '#a7f3d0',
       2: '#74c476',
@@ -99,6 +112,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#ddd6fe',
     background: '#4c1d95',
     cardBackground: '#5b21b6',
+    buttonText: "#FFFFFF",
+    primary: "#a855f7",
+    badge: "#5b21b6",
     spellLevels: {
       0: '#a8b2ba',
       1: '#ddd6fe',
@@ -121,6 +137,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#6272a4',
     background: '#282a36',
     cardBackground: '#44475a',
+    buttonText: "#FFFFFF",
+    primary: "#ff79c6",
+    badge: "#44475a",
     spellLevels: {
       0: '#a8b2ba',
       1: '#f8f8f2',
@@ -142,6 +161,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#a3be8c',
     background: '#2e3440',
     cardBackground: '#3b4252',
+    buttonText: "#FFFFFF",
+    primary: "#81a1c1",
+    badge: "#3b4252",
     spellLevels: {
       0: '#a8b2ba',
       1: '#81a1c1',
@@ -163,6 +185,9 @@ export const themes: { [key: string]: Theme } = {
     mutedTextColor: '#64ffda',
     background: '#121212',
     cardBackground: '#212121',
+    buttonText: "#FFFFFF",
+    primary: "#e91e63",
+    badge: "#212121",
     spellLevels: {
       0: '#a8b2ba',
       1: '#64ffda',
