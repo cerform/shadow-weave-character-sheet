@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,12 +61,12 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
     return spells.filter(spell => {
       const matchesSearch = searchTerm === '' || 
         spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        spell.description.toLowerCase().includes(searchTerm.toLowerCase());
+        spell.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesTab = activeTab === 'all' || 
         (activeTab === 'prepared' && spell.prepared) ||
         (activeTab === 'cantrips' && spell.level === 0) ||
-        (activeTab === spell.level.toString());
+        (activeTab === spell.level?.toString());
       
       return matchesSearch && matchesTab;
     });
@@ -104,15 +105,15 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Получение варианта для бейджа школы магии
   const getSchoolVariant = (school: string) => {
-    switch (school.toLowerCase()) {
+    switch (school?.toLowerCase()) {
       case 'воплощение': return 'destructive';
       case 'некромантия': return 'outline';
       case 'очарование': return 'secondary';
       case 'преобразование': return 'default';
-      case 'прорицание': return 'accent';
-      case 'вызов': return 'warning';
-      case 'ограждение': return 'info';
-      case 'иллюзия': return 'subtle';
+      case 'прорицание': return 'secondary';
+      case 'вызов': return 'default';
+      case 'ограждение': return 'outline';
+      case 'иллюзия': return 'secondary';
       default: return 'default';
     }
   };

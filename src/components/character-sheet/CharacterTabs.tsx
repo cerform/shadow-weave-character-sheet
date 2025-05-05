@@ -8,6 +8,7 @@ import { FeaturesTab } from './tabs/FeaturesTab';
 import { BackgroundTab } from './tabs/BackgroundTab';
 import { EquipmentTab } from './tabs/EquipmentTab';
 import { NotesTab } from './tabs/NotesTab';
+import { HandbookTab } from './tabs/HandbookTab';
 
 interface CharacterTabsProps {
   activeTab: string;
