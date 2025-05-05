@@ -109,13 +109,13 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               <span style={{ color: currentTheme.textColor }}>{spell.components}</span>
               <div className="flex space-x-1 ml-2">
                 {spell.verbal && (
-                  <Badge variant="outline" size="sm" className="px-1.5 h-5">В</Badge>
+                  <Badge variant="outline" className="px-1.5 h-5">В</Badge>
                 )}
                 {spell.somatic && (
-                  <Badge variant="outline" size="sm" className="px-1.5 h-5">С</Badge>
+                  <Badge variant="outline" className="px-1.5 h-5">С</Badge>
                 )}
                 {spell.material && (
-                  <Badge variant="outline" size="sm" className="px-1.5 h-5">М</Badge>
+                  <Badge variant="outline" className="px-1.5 h-5">М</Badge>
                 )}
               </div>
             </div>

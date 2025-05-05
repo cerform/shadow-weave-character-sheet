@@ -5,18 +5,27 @@ import { level0 } from './level0';
 import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
-
-// Импортируем остальные уровни заклинаний
-// В будущем можно добавить больше уровней заклинаний по мере их добавления
-const level4: CharacterSpell[] = [];
-const level5: CharacterSpell[] = [];
-const level6: CharacterSpell[] = [];
-const level7: CharacterSpell[] = [];
-const level8: CharacterSpell[] = [];
-const level9: CharacterSpell[] = [];
+import { level4 } from './level4';
+import { level5 } from './level5';
+import { level6 } from './level6';
+import { level7 } from './level7';
+import { level8 } from './level8';
+import { level9 } from './level9';
 
 // Экспорт заклинаний по уровням
-export { level0, cantrips, level1, level2, level3, level4, level5, level6, level7, level8, level9 };
+export { 
+  cantrips, 
+  level0, 
+  level1, 
+  level2, 
+  level3, 
+  level4, 
+  level5, 
+  level6, 
+  level7, 
+  level8, 
+  level9 
+};
 
 // Объединенный массив всех заклинаний
 export const spells: CharacterSpell[] = [
