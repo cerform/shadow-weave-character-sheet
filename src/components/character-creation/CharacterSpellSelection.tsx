@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { getSpellsByClass, getSpellsByLevel } from '@/data/spells';
+import { getSpellsByClass } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { Check, X, Trash2, Sparkles } from 'lucide-react';
@@ -164,7 +163,7 @@ const CharacterSpellSelection: React.FC<Props> = ({ character, updateCharacter, 
         return 4;
       
       case "Колдун":
-        // Заговоры для колдуна: 2 на 1 уровне, +1 на 4-м и 10-м уровнях
+        // Заговоры для колдуна: 2 на 1 ��ровне, +1 на 4-м и 10-м уровнях
         if (classLevel >= 10) return 4;
         if (classLevel >= 4) return 3;
         return 2;

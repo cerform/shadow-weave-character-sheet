@@ -1,7 +1,8 @@
+
 import { useState, useMemo } from 'react';
 import { useTheme } from './use-theme';
 import { themes } from '@/lib/themes';
-import { getAllSpells } from '@/data/spells';
+import { spells, getAllSpells } from '@/data/spells';
 import { SpellData } from './spellbook/types';
 import { CharacterSpell } from '@/types/character';
 import { convertToSpellData } from './spellbook/types';
