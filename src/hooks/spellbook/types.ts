@@ -2,7 +2,7 @@
 import { CharacterSpell } from '@/types/character';
 
 export interface SpellData {
-  id?: string | number;
+  id?: string | number; // Обновлено: теперь id может быть строкой или числом
   name: string;
   level: number;
   school: string;
@@ -21,6 +21,30 @@ export interface SpellData {
   higherLevels?: string;
   classes?: string[] | string;
 }
+
+// Вспомогательная функция для проверки и коррекции полей SpellData
+export const validateSpellData = (data: Partial<SpellData>): SpellData => {
+  return {
+    id: data.id,
+    name: data.name || 'Неизвестное заклинание',
+    level: typeof data.level === 'number' ? data.level : 0,
+    school: data.school || 'Универсальная',
+    castingTime: data.castingTime || '1 действие',
+    range: data.range || 'На себя',
+    components: data.components || '',
+    duration: data.duration || 'Мгновенная',
+    description: data.description || 'Нет описания',
+    prepared: data.prepared ?? false,
+    verbal: data.verbal ?? false,
+    somatic: data.somatic ?? false,
+    material: data.material ?? false,
+    materialComponents: data.materialComponents,
+    ritual: data.ritual ?? false,
+    concentration: data.concentration ?? false,
+    higherLevels: data.higherLevels,
+    classes: data.classes || []
+  };
+};
 
 export const convertToSpellData = (spell: CharacterSpell): SpellData => {
   return {

@@ -94,7 +94,16 @@ export interface Character {
     charisma: number;
   };
   additionalClasses?: ClassLevel[];
+  
+  // Добавляем поле languages для устранения ошибки в useCharacterCreation
+  languages?: string[];
 }
+
+// Константы для ограничения значений характеристик
+export const ABILITY_SCORE_CAPS = {
+  MIN: 3,
+  MAX: 20
+};
 
 // Define Character abilities
 export interface CharacterAbilities {
@@ -172,7 +181,7 @@ export interface SkillProficiency {
 
 // Define Spell Data structure
 export interface SpellData {
-  id?: number;
+  id?: string | number;
   name: string;
   level: number;
   school: string;
@@ -195,6 +204,7 @@ export interface SpellData {
 // Define Character Spell structure
 export interface CharacterSpell extends SpellData {
   prepared: boolean;
+  id?: string | number; // Обновлено: теперь id может быть строкой или числом
 }
 
 // Define Hit Point Event for damage log
@@ -217,4 +227,16 @@ export interface ClassLevel {
   class: string;
   level: number;
   subclass?: string;
+}
+
+// Добавлены расширения для User
+export interface User {
+  id: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
+  emailVerified?: boolean;
+  username?: string;
+  isDM?: boolean;
+  themePreference?: string;
 }

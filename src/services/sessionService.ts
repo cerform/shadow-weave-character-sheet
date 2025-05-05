@@ -1,5 +1,18 @@
+
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  addDoc, 
+  deleteDoc, 
+  setDoc, 
+  updateDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 import { auth, db, storage } from './firebase';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/types/character';
@@ -36,21 +49,23 @@ export const sessionService = {
       };
       
       // Сохраняем сессию в Firestore
-      const sessionRef = doc(db, 'sessions', sessionId);
-      await setDoc(sessionRef, {
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      await setDoc(sessionDocRef, {
         ...session,
         lastActivity: serverTimestamp()
       });
       
       // Добавляем сессию в список у пользователя
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
+      const usersRef = collection(db, 'users');
+      const userDocRef = doc(usersRef, uid);
+      const userSnap = await getDoc(userDocRef);
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const campaigns = userData.campaigns || [];
         
-        await updateDoc(userRef, {
+        await updateDoc(userDocRef, {
           campaigns: [...campaigns, sessionId]
         });
       }
@@ -74,8 +89,8 @@ export const sessionService = {
       const querySnapshot = await getDocs(q);
       
       const sessions: Session[] = [];
-      querySnapshot.forEach((doc) => {
-        sessions.push({ id: doc.id, ...doc.data() } as Session);
+      querySnapshot.forEach((docSnapshot) => {
+        sessions.push({ id: docSnapshot.id, ...docSnapshot.data() } as Session);
       });
       
       // TODO: получение сессий, где пользователь - игрок
@@ -90,8 +105,9 @@ export const sessionService = {
   // Получение сессии по ID
   getSessionById: async (sessionId: string): Promise<Session | null> => {
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      const sessionSnap = await getDoc(sessionDocRef);
       
       if (sessionSnap.exists()) {
         return { id: sessionSnap.id, ...sessionSnap.data() } as Session;
@@ -112,8 +128,8 @@ export const sessionService = {
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Session;
+        const docSnapshot = querySnapshot.docs[0];
+        return { id: docSnapshot.id, ...docSnapshot.data() } as Session;
       }
       
       return null;
@@ -126,8 +142,9 @@ export const sessionService = {
   // Присоединение к сессии
   joinSession: async (sessionId: string, user: SessionUser): Promise<boolean> => {
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      const sessionSnap = await getDoc(sessionDocRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -148,7 +165,7 @@ export const sessionService = {
       }
       
       // Обновляем сессию
-      await updateDoc(sessionRef, {
+      await updateDoc(sessionDocRef, {
         users,
         updatedAt: new Date().toISOString()
       });
@@ -166,8 +183,9 @@ export const sessionService = {
     if (!uid) return false;
     
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      const sessionSnap = await getDoc(sessionDocRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -182,17 +200,18 @@ export const sessionService = {
       }
       
       // Удаляем сессию
-      await deleteDoc(sessionRef);
+      await deleteDoc(sessionDocRef);
       
       // Удаляем сессию из списка у пользователя
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
+      const usersRef = collection(db, 'users');
+      const userDocRef = doc(usersRef, uid);
+      const userSnap = await getDoc(userDocRef);
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const campaigns = userData.campaigns || [];
         
-        await updateDoc(userRef, {
+        await updateDoc(userDocRef, {
           campaigns: campaigns.filter((id: string) => id !== sessionId)
         });
       }
@@ -210,8 +229,9 @@ export const sessionService = {
     if (!uid) return null;
     
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      const sessionSnap = await getDoc(sessionDocRef);
       
       if (!sessionSnap.exists()) {
         return null;
@@ -229,7 +249,7 @@ export const sessionService = {
       const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
       // Обновляем код в Firestore
-      await updateDoc(sessionRef, {
+      await updateDoc(sessionDocRef, {
         code: newCode,
         lastActivity: serverTimestamp()
       });
@@ -246,8 +266,9 @@ export const sessionService = {
     if (!uid) return false;
     
     try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
+      const sessionsRef = collection(db, 'sessions');
+      const sessionDocRef = doc(sessionsRef, sessionId);
+      const sessionSnap = await getDoc(sessionDocRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -274,7 +295,7 @@ export const sessionService = {
       notes.push(newNote);
       
       // Обновляем заметки в Firestore
-      await updateDoc(sessionRef, {
+      await updateDoc(sessionDocRef, {
         notes,
         lastActivity: serverTimestamp()
       });

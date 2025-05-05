@@ -139,7 +139,7 @@ export const useSpellbook = () => {
       components: spellData.components || '',
       duration: spellData.duration || 'Мгновенная',
       description: spellData.description || 'Нет описания'
-    };
+    } as CharacterSpell; // Используем `as CharacterSpell` для приведения типа
   };
 
   // Функции для получения цветов бейджей в зависимости от темы
@@ -202,11 +202,8 @@ export const useSpellbook = () => {
     allLevels,
     allSchools,
     allClasses,
-    handleOpenSpell: (spell: SpellData) => {
-      setSelectedSpell(spell);
-      setIsModalOpen(true);
-    },
-    handleClose: () => setIsModalOpen(false),
+    handleOpenSpell,
+    handleClose,
     toggleLevel,
     toggleSchool,
     toggleClass,
@@ -219,3 +216,6 @@ export const useSpellbook = () => {
     adaptToCharacterSpell
   };
 };
+
+// Обратите внимание, что src/hooks/spellbook.tsx становится слишком длинным (222 строки).
+// Рассмотрите возможность разбить его на более мелкие компоненты и хуки.

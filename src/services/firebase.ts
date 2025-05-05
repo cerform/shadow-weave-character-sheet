@@ -1,6 +1,10 @@
 
+// Импортируем необходимые типы из firebase
+import { Firestore, DocumentData, DocumentReference, CollectionReference } from "firebase/firestore";
+import { Auth } from "firebase/auth";
+
 // Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth = {
+const mockAuth: Auth = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки
@@ -43,28 +47,56 @@ const mockAuth = {
   authStateReady: () => Promise.resolve()
 };
 
-// Создаем моки для Firestore и Storage
-const mockFirestore = {
+// Создаем типизированные моки для Firestore
+const mockFirestore: Firestore = {
+  type: "firestore",
+  app: {} as any,
+  toJSON: () => ({}),
   collection: () => ({
+    type: "collection",
+    id: "mock-collection",
+    path: "mock-path",
+    parent: null,
+    withConverter: () => ({} as any),
     doc: () => ({
+      type: "document",
+      id: "mock-id",
+      path: "mock-path",
+      parent: {} as any,
+      withConverter: () => ({} as any),
+      collection: () => ({} as any),
+      firestore: {} as any,
+      converter: null,
       get: async () => ({
         exists: false,
-        data: () => null
+        data: () => null,
+        id: "mock-id",
+        ref: {} as any,
+        metadata: {} as any
       }),
       set: async () => {},
       update: async () => {}
-    }),
+    } as DocumentReference<DocumentData>),
     where: () => ({
       get: async () => ({
         empty: true,
-        docs: []
+        docs: [],
+        size: 0,
+        forEach: () => {},
+        docChanges: () => []
       })
-    }),
+    } as any),
     add: async () => ({
       id: 'mock-id'
-    })
-  })
-};
+    } as any),
+    orderBy: () => ({} as any),
+    limit: () => ({} as any),
+    startAfter: () => ({} as any),
+    endBefore: () => ({} as any),
+    firestore: {} as any,
+    converter: null,
+  } as CollectionReference<DocumentData>)
+} as Firestore;
 
 const mockStorage = {
   ref: () => ({

@@ -32,6 +32,7 @@ export interface User {
   themePreference: string;
   isOnline: boolean;
   isDM: boolean;
+  username?: string;
   character?: Character; // Добавляем персонажа к пользователю
 }
 
