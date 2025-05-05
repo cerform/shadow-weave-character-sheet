@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { filterBySearchTerm, filterByLevel, filterBySchool, filterByClass, extractClasses } from './filterUtils';
 import { SpellData } from './types';
-import usePreloadSpells from './usePreloadSpells';
+import { allSpells } from '@/data/allSpells'; // Import the full spells database
 import { getSpellSchoolBadgeVariant } from './schemeUtils';
 import { getSchoolBadgeColor } from './themeUtils';
 
@@ -31,7 +31,9 @@ export function useSpellbook() {
   const [schoolFilters, setSchoolFilters] = useState<string[]>([]);
   const [classFilters, setClassFilters] = useState<string[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
-  const spells = usePreloadSpells();
+  
+  // Use the full spells database directly instead of preloading
+  const spells = allSpells;
 
   useEffect(() => {
     let results = [...spells];

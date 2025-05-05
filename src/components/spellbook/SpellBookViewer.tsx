@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -121,8 +120,8 @@ const SpellBookViewer: React.FC = () => {
         <div className="md:col-span-1">
           <Card className="border-accent w-full bg-black/70 backdrop-blur-sm border-accent/30">
             <CardHeader className="px-4 py-3">
-              <CardTitle className="text-xl flex items-center" style={{ color: currentTheme.textColor }}>
-                <Book className="mr-2 h-5 w-5" style={{ color: currentTheme.accent }} /> 
+              <CardTitle className="text-xl flex items-center" style={{ color: '#9b87f5' }}>
+                <Book className="mr-2 h-5 w-5" style={{ color: '#9b87f5' }} /> 
                 Поиск
               </CardTitle>
             </CardHeader>
@@ -137,12 +136,14 @@ const SpellBookViewer: React.FC = () => {
                 toggleSchool={(school) => toggleFilter('school', school)}
                 activeClass={classFilters}
                 toggleClass={(className) => toggleFilter('class', className)}
-                clearFilters={clearFilters}
+                clearFilters={() => {
+                  setSearchTerm('');
+                }}
                 allLevels={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                allSchools={schools}
-                allClasses={classes}
-                getBadgeColor={getBadgeColor}
-                getSchoolBadgeColor={getSchoolBadgeColor}
+                allSchools={extractClasses()}
+                allClasses={extractClasses()}
+                getBadgeColor={(level) => level === 0 ? '#9b87f550' : '#9b87f5'}
+                getSchoolBadgeColor={() => '#9b87f5'}
                 totalFound={filteredSpells.length}
                 totalSpells={allSpells.length}
               />
@@ -154,9 +155,9 @@ const SpellBookViewer: React.FC = () => {
               onClick={() => setShowImporter(true)} 
               className="w-full"
               style={{
-                backgroundColor: `${currentTheme.accent}90`,
-                color: currentTheme.textColor,
-                borderColor: currentTheme.accent
+                backgroundColor: '#9b87f580',
+                color: 'white',
+                borderColor: '#9b87f5'
               }}
             >
               Импорт заклинаний
@@ -169,10 +170,10 @@ const SpellBookViewer: React.FC = () => {
           <ScrollArea className="h-[calc(100vh-130px)]">
             <SpellList 
               spells={filteredSpells}
-              getBadgeColor={getBadgeColor}
-              getSchoolBadgeColor={getSchoolBadgeColor}
-              currentTheme={currentTheme}
-              handleOpenSpell={handleOpenSpell}
+              getBadgeColor={(level) => level === 0 ? '#9b87f550' : '#9b87f5'}
+              getSchoolBadgeColor={() => '#9b87f5'}
+              currentTheme={{textColor: 'white', accent: '#9b87f5', cardBackground: 'rgba(0, 0, 0, 0.75)'}}
+              handleOpenSpell={setSelectedSpell}
               formatClasses={formatClasses}
               totalShown={`${filteredSpells.length} из ${allSpells.length}`}
             />

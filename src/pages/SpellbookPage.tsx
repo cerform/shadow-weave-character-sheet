@@ -20,12 +20,12 @@ const SpellbookPage: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
-        color: currentTheme.textColor
+        color: '#9b87f5'
       }}
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold" style={{color: currentTheme.textColor}}>
+          <h1 className="text-2xl font-bold" style={{color: '#9b87f5'}}>
             Книга заклинаний
           </h1>
           <ThemeSelector />
