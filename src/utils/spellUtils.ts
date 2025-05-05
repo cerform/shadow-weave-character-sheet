@@ -39,7 +39,8 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
       range: 'На себя',
       components: 'В, С',
       duration: 'Мгновенная',
-      description: 'Не указано'
+      description: 'Не указано',
+      classes: [] // Добавляем обязательное поле classes как пустой массив
     };
   }
   return convertCharacterSpellToSpellData(spell);

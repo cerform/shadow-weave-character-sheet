@@ -11,7 +11,7 @@ export interface SpellData {
   components: string;
   duration: string;
   description: string | string[];
-  classes: string[] | string;
+  classes: string[] | string; // This is required
   isRitual?: boolean;
   isConcentration?: boolean;
   ritual?: boolean;
