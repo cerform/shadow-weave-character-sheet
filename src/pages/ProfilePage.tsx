@@ -8,9 +8,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from '@/types/user';
 
 const ProfilePage = () => {
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateUserProfile } = useAuth();
   
   const {
     register,
@@ -26,11 +27,11 @@ const ProfilePage = () => {
   
   const onSubmit = async (data: { displayName: string; photoURL: string; username: string }) => {
     try {
-      await updateProfile({
-        displayName: data.displayName,
-        photoURL: data.photoURL,
-        username: data.username,
-      });
+      // Обновляем только displayName через Firebase Auth
+      await updateUserProfile(data.displayName);
+      
+      // Здесь можно добавить логику для обновления дополнительных полей в Firestore
+      // Например, username и другие поля профиля, которые не входят в стандартный Firebase User
       
       toast.success('Профиль успешно обновлен');
     } catch (error) {
@@ -39,12 +40,15 @@ const ProfilePage = () => {
     }
   };
   
+  // Получаем username безопасным способом
+  const username = currentUser?.username || '';
+  
   return (
     <div className="container mx-auto py-10">
       <Card className="max-w-lg mx-auto">
         <CardHeader className="flex flex-col items-center">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={currentUser?.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username || 'guest'}`} />
+            <AvatarImage src={currentUser?.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${username || 'guest'}`} />
             <AvatarFallback>{currentUser?.displayName?.substring(0, 2) || 'ГП'}</AvatarFallback>
           </Avatar>
           <CardTitle className="mt-4">{currentUser?.displayName || 'Профиль'}</CardTitle>

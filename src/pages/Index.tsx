@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
@@ -14,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCharacter } from "@/contexts/CharacterContext";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as CustomUser } from "@/types/user";
+import { User as CustomUser, adaptFirebaseUser } from "@/types/user";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -33,6 +34,9 @@ const Index = () => {
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { character } = useCharacter();
+  
+  // Адаптируем Firebase пользователя к нашему типу
+  const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
   
   // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
   useEffect(() => {
@@ -159,8 +163,8 @@ const Index = () => {
 
   // Получаем инициалы пользователя безопасным способом
   const getUserInitials = () => {
-    if (currentUser && (currentUser as CustomUser).username) {
-      return (currentUser as CustomUser).username?.substring(0, 2).toUpperCase() || "";
+    if (adaptedUser && adaptedUser.username) {
+      return adaptedUser.username.substring(0, 2).toUpperCase() || "";
     }
     return "ГП"; // "Герой Подземелий" - подставляем значение по умолчанию
   };
@@ -181,18 +185,18 @@ const Index = () => {
           {isAuthenticated ? (
             <div className="flex flex-col items-center">
               <Avatar className="h-16 w-16 mb-2">
-                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${(currentUser as CustomUser)?.username || 'guest'}`} />
+                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${adaptedUser?.username || 'guest'}`} />
                 <AvatarFallback>{getUserInitials()}</AvatarFallback>
               </Avatar>
               <p className="font-medium text-lg mb-1">
-                {(currentUser as CustomUser)?.username || 'Гость'}
-                {(currentUser as CustomUser)?.isDM && (
+                {adaptedUser?.username || 'Гость'}
+                {adaptedUser?.isDM && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
                     Мастер
                   </span>
                 )}
               </p>
-              <p className="text-sm text-muted-foreground mb-3">{(currentUser as CustomUser)?.email || ''}</p>
+              <p className="text-sm text-muted-foreground mb-3">{adaptedUser?.email || ''}</p>
               <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
                 <LogOut className="h-3.5 w-3.5" />
                 Выйти

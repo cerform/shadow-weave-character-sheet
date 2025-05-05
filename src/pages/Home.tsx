@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -58,8 +59,8 @@ const Home = () => {
   const useSessionStore = () => {
     // Заглушка для хука
     return {
-      createSession: async () => ({}),
-      joinSession: async () => true,
+      createSession: async (_sessionName: string, _sessionDescription: string) => ({}),
+      joinSession: async (_sessionCode: string, _playerName: string, _character?: any) => true,
       currentSession: null,
       fetchSessions: () => {},
       sessions: [],
@@ -70,8 +71,6 @@ const Home = () => {
   
   // Session store - используем хук
   const { 
-    createSession, 
-    joinSession, 
     currentSession,
     fetchSessions,
     sessions,
@@ -139,33 +138,7 @@ const Home = () => {
     navigate('/character-sheet');
   };
   
-  // Handle session creation
-  const handleCreateSession = async () => {
-    if (!sessionName.trim()) {
-      toast.error("Введите название сессии");
-      return;
-    }
-    
-    const session = await createSession(sessionName, sessionDescription);
-    
-    if (session) {
-      navigate('/session');
-    }
-  };
-  
-  // Заглушка для функции присоединения к сессии
-  const joinSession = async (sessionCode: string, playerName: string, character?: any) => {
-    console.log("Присоединяемся к сессии", sessionCode, playerName, character);
-    return true;
-  };
-  
-  // Заглушка для функции создания сессии
-  const createSession = async (sessionName: string, sessionDescription: string) => {
-    console.log("Создаем сессию", sessionName, sessionDescription);
-    return { id: "mock-session-id", name: sessionName };
-  };
-  
-  // Handle joining a session
+  // Функции для работы с сессиями
   const handleJoinSession = async () => {
     if (!sessionCode.trim()) {
       toast.error("Введите код сессии");
@@ -180,7 +153,8 @@ const Home = () => {
     // Find selected character
     const selectedCharacter = characters.find(c => c.id === selectedCharacterId);
     
-    const success = await joinSession(
+    const sessionStore = useSessionStore();
+    const success = await sessionStore.joinSession(
       sessionCode, 
       playerName,
       selectedCharacter ? {
@@ -201,6 +175,21 @@ const Home = () => {
         characterId: selectedCharacterId
       }));
       
+      navigate('/session');
+    }
+  };
+  
+  // Handle session creation
+  const handleCreateSession = async () => {
+    if (!sessionName.trim()) {
+      toast.error("Введите название сессии");
+      return;
+    }
+    
+    const sessionStore = useSessionStore();
+    const session = await sessionStore.createSession(sessionName, sessionDescription);
+    
+    if (session) {
       navigate('/session');
     }
   };
@@ -353,7 +342,7 @@ const Home = () => {
                               <div>
                                 <p className="font-medium">{char.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {char.race} {char.class || char.className || '', char.level} уровень
+                                  {char.race} {char.class || char.className || ''} уровень {char.level}
                                 </p>
                               </div>
                             </CardContent>

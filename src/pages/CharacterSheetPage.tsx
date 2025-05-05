@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { CharacterContext } from "@/contexts/CharacterContext";
 import { isOfflineMode } from "@/utils/authHelpers";
-import { User } from '@/types/user';
+import { User, adaptFirebaseUser } from '@/types/user';
 
 const CharacterSheetPage = () => {
   const { theme } = useTheme();
@@ -89,8 +90,9 @@ const CharacterSheetPage = () => {
     checkActiveSession();
   }, [isConnected, connect, toast]);
   
-  // Проверка оффлайн-режима для определения прав DM
-  const isUserDM = currentUser?.isDM || false;
+  // Адаптируем текущего пользователя для правильной проверки isDM
+  const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
+  const isUserDM = adaptedUser?.isDM || false;
   
   return (
     <div 

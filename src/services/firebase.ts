@@ -1,3 +1,4 @@
+
 // Импортируем необходимые типы из firebase
 import { Firestore, DocumentData, DocumentReference, CollectionReference } from "firebase/firestore";
 import { Auth, UserCredential } from "firebase/auth";
@@ -8,20 +9,32 @@ const mockAuth: Partial<Auth> = {
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Возвращаем функцию отписки
     return () => {};
-  },
-  // Реализуем типизированные версии методов аутентификации
-  signInWithEmailAndPassword: async (email: string, password: string): Promise<UserCredential> => {
-    throw new Error('Firebase Auth not initialized');
-  },
-  createUserWithEmailAndPassword: async (email: string, password: string): Promise<UserCredential> => {
-    throw new Error('Firebase Auth not initialized');
-  },
-  signOut: async () => {
-    return Promise.resolve();
-  },
-  sendPasswordResetEmail: async (email: string) => {
-    throw new Error('Firebase Auth not initialized');
-  },
+  }
+};
+
+// Добавляем типизированные версии методов аутентификации
+const signInWithEmailAndPasswordMock = async (email: string, password: string): Promise<UserCredential> => {
+  throw new Error('Firebase Auth not initialized');
+};
+
+const createUserWithEmailAndPasswordMock = async (email: string, password: string): Promise<UserCredential> => {
+  throw new Error('Firebase Auth not initialized');
+};
+
+const signOutMock = async () => {
+  return Promise.resolve();
+};
+
+const sendPasswordResetEmailMock = async (email: string) => {
+  throw new Error('Firebase Auth not initialized');
+};
+
+// Явно добавляем методы к mockAuth
+Object.assign(mockAuth, {
+  signInWithEmailAndPassword: signInWithEmailAndPasswordMock,
+  createUserWithEmailAndPassword: createUserWithEmailAndPasswordMock,
+  signOut: signOutMock,
+  sendPasswordResetEmail: sendPasswordResetEmailMock,
   // Добавляем дополнительные свойства для совместимости с типом Auth
   app: {} as any,
   name: 'auth-mock',
@@ -32,7 +45,7 @@ const mockAuth: Partial<Auth> = {
     tokenApiHost: 'mock',
     sdkClientVersion: 'mock'
   }
-};
+});
 
 // Создаем типизированные моки для Firestore
 const mockFirestore: Firestore = {

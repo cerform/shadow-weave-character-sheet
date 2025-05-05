@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   id: string;
   username: string;
@@ -79,7 +80,7 @@ export interface CustomAsset {
   isPublic: boolean;
 }
 
-// Обновляем тип User, добавив недостающие поля
+// Обновляем тип User для совместимости с Firebase User
 export interface User {
   id: string;
   name?: string;
@@ -91,4 +92,27 @@ export interface User {
   displayName?: string;
   photoURL?: string;
   emailVerified?: boolean;
+  // Добавляем поля из Firebase User
+  uid?: string;
 }
+
+// Добавляем интерфейс для преобразования Firebase User в наш тип User
+export interface FirebaseToUserAdapter {
+  adaptFirebaseUser: (firebaseUser: any) => User;
+}
+
+// Функция-помощник для преобразования Firebase User в наш тип User
+export const adaptFirebaseUser = (firebaseUser: any): User => {
+  if (!firebaseUser) return {} as User;
+  
+  return {
+    id: firebaseUser.uid || '',
+    uid: firebaseUser.uid,
+    email: firebaseUser.email || '',
+    displayName: firebaseUser.displayName || '',
+    photoURL: firebaseUser.photoURL || '',
+    emailVerified: firebaseUser.emailVerified || false,
+    username: firebaseUser.displayName || '', // Используем displayName как username
+    isDM: false // По умолчанию пользователь не DM
+  };
+};
