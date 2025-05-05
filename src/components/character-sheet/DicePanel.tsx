@@ -5,13 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
 import { Input } from '@/components/ui/input';
 import { getModifierFromAbilityScore } from '@/utils/characterUtils';
+import { Token } from '@/stores/battleStore';
 
 interface DicePanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+  compactMode?: boolean;
+  isDM?: boolean;
+  tokens?: Token[];
+  selectedTokenId?: number | null;
+  onSelectToken?: (id: number | null) => void;
 }
 
-const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
+const DicePanel: React.FC<DicePanelProps> = ({ 
+  character, 
+  onUpdate, 
+  compactMode = false,
+  isDM = false,
+  tokens = [],
+  selectedTokenId = null,
+  onSelectToken = () => {}
+}) => {
   const [diceSides, setDiceSides] = useState<number>(20);
   const [diceCount, setDiceCount] = useState<number>(1);
   const [modifier, setModifier] = useState<number>(0);
@@ -108,6 +122,65 @@ const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
       </div>
     );
   };
+
+  // Компактный режим отображения
+  if (compactMode) {
+    return (
+      <div className="space-y-2">
+        {character.lastDiceRoll && formatRollResult()}
+        
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {diceTypes.map(sides => (
+            <Button
+              key={sides}
+              variant="secondary"
+              size="sm"
+              onClick={() => rollDice(sides, 1, 0, `d${sides}`)}
+              disabled={isRolling}
+              className="text-xs"
+            >
+              d{sides}
+            </Button>
+          ))}
+        </div>
+        
+        <div className="flex items-center space-x-1">
+          <Input
+            type="number"
+            min={1}
+            max={10}
+            value={diceCount}
+            onChange={(e) => setDiceCount(parseInt(e.target.value) || 1)}
+            className="w-12 h-8 text-xs"
+          />
+          <span>d</span>
+          <Input
+            type="number"
+            min={2}
+            value={diceSides}
+            onChange={(e) => setDiceSides(parseInt(e.target.value) || 20)}
+            className="w-12 h-8 text-xs"
+          />
+          <span>+</span>
+          <Input
+            type="number"
+            value={modifier}
+            onChange={(e) => setModifier(parseInt(e.target.value) || 0)}
+            className="w-12 h-8 text-xs"
+          />
+          <Button
+            onClick={handleCustomRoll}
+            disabled={isRolling}
+            variant="default"
+            size="sm"
+            className="h-8"
+          >
+            {isRolling ? "..." : "Бросок"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <Card>

@@ -1,145 +1,168 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import React from 'react';
 import { Character } from '@/types/character';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from '@/hooks/use-toast';
+import { getMaxSpellLevel } from '@/utils/spellUtils';
 
-export interface RestPanelProps {
+interface RestPanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
 export const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
-  
-  // Handle short rest
+
   const handleShortRest = () => {
-    setIsProcessing(true);
+    // Восстанавливаем часть ресурсов, которые возвращаются после короткого отдыха
     
-    setTimeout(() => {
-      // 1. Calculate hit dice recovery
-      const hitDice = character.hitDice || { total: character.level || 1, used: 0, dieType: 'd8', value: `${character.level || 1}d8` };
-      
-      // 2. Reset features that recover on a short rest
-      // Class-specific recoveries would go here (e.g., warlock spell slots)
-      
-      // 3. Update character
-      onUpdate({
-        hitDice: {
-          ...hitDice,
-          // No hit dice recovery on short rest by default, user needs to manually use them
-        }
-      });
-      
-      toast({
-        title: "Короткий отдых",
-        description: "Персонаж завершил короткий отдых. Вы можете использовать кости хитов для восстановления здоровья.",
-      });
-      
-      setIsProcessing(false);
-    }, 500);
+    // 1. Кости хитов (максимум половина от общего количества)
+    const hitDice = character.hitDice || { total: 1, used: 0, dieType: 'd8', value: '1d8' };
+    const recoveredHitDice = Math.min(
+      Math.max(1, Math.floor(character.level / 2)),
+      hitDice.used
+    );
+    
+    const updatedHitDice = {
+      ...hitDice,
+      used: Math.max(0, hitDice.used - recoveredHitDice)
+    };
+    
+    // 2. Восстанавливаем ресурсы, которые восстанавливаются после короткого отдыха
+    const updatedResources = { ...character.resources };
+    Object.keys(updatedResources).forEach(key => {
+      const resource = updatedResources[key];
+      if (resource.recoveryType === 'shortRest') {
+        updatedResources[key] = {
+          ...resource,
+          used: 0
+        };
+      }
+    });
+    
+    // 3. Восстанавливаем слоты заклинаний колдуна
+    let updatedSpellSlots = { ...character.spellSlots };
+    if (character.class?.toLowerCase() === 'колдун' || character.class?.toLowerCase() === 'warlock') {
+      // У колдунов все слоты заклинаний одного уровня и восстанавливаются после короткого отдыха
+      const warlockSlotLevel = Math.min(5, Math.ceil(character.level / 2));
+      if (updatedSpellSlots && updatedSpellSlots[warlockSlotLevel]) {
+        updatedSpellSlots[warlockSlotLevel] = {
+          ...updatedSpellSlots[warlockSlotLevel],
+          used: 0
+        };
+      }
+    }
+
+    // Применяем изменения
+    onUpdate({
+      hitDice: updatedHitDice,
+      resources: updatedResources,
+      spellSlots: updatedSpellSlots
+    });
+    
+    toast({
+      title: "Короткий отдых",
+      description: `Восстановлено ${recoveredHitDice} костей хитов и некоторые ресурсы персонажа.`,
+    });
   };
-  
-  // Handle long rest
+
   const handleLongRest = () => {
-    setIsProcessing(true);
+    // Восстанавливаем все ресурсы после продолжительного отдыха
     
-    setTimeout(() => {
-      // 1. Restore hit points to maximum
-      const fullHealth = character.maxHp || 1;
-      
-      // 2. Recover hit dice (up to half of total hit dice, minimum of 1)
-      const maxHitDice = character.level || 1;
-      const hitDiceUsed = character.hitDice?.used || 0;
-      const hitDiceRecovery = Math.max(1, Math.floor(maxHitDice / 2));
-      const newHitDiceUsed = Math.max(0, hitDiceUsed - hitDiceRecovery);
-      
-      // 3. Reset all features and spell slots that recover on a long rest
-      const updatedSpellSlots = { ...character.spellSlots };
-      if (updatedSpellSlots) {
-        // Reset all spell slots
-        Object.keys(updatedSpellSlots).forEach(level => {
-          if (updatedSpellSlots[Number(level)]) {
-            updatedSpellSlots[Number(level)].used = 0;
-          }
-        });
-      }
-      
-      // Reset death saving throws
-      const resetDeathSaves = { successes: 0, failures: 0 };
-      
-      // 4. Update character
-      onUpdate({
-        currentHp: fullHealth,
-        temporaryHp: 0, // Remove any temporary hit points
-        hitDice: {
-          ...character.hitDice,
-          used: newHitDiceUsed
-        },
-        spellSlots: updatedSpellSlots,
-        deathSaves: resetDeathSaves
+    // 1. Восстанавливаем здоровье до максимума
+    const updatedHp = character.maxHp;
+    
+    // 2. Полностью восстанавливаем кости хитов
+    const hitDice = character.hitDice || { total: 1, used: 0, dieType: 'd8', value: '1d8' };
+    const recoveredHitDice = Math.max(1, Math.floor(hitDice.total / 2));
+    
+    const updatedHitDice = {
+      ...hitDice,
+      used: Math.max(0, hitDice.used - recoveredHitDice),
+      value: `${hitDice.total}${hitDice.dieType}`
+    };
+    
+    // 3. Восстанавливаем все ресурсы
+    const updatedResources = { ...character.resources };
+    Object.keys(updatedResources).forEach(key => {
+      updatedResources[key] = {
+        ...updatedResources[key],
+        used: 0
+      };
+    });
+    
+    // 4. Восстанавливаем все слоты заклинаний
+    let updatedSpellSlots = { ...character.spellSlots };
+    if (updatedSpellSlots) {
+      Object.keys(updatedSpellSlots).forEach(level => {
+        updatedSpellSlots[parseInt(level)] = {
+          ...updatedSpellSlots[parseInt(level)],
+          used: 0
+        };
       });
-      
-      // Reset any class resources
-      if (character.resources) {
-        const updatedResources = { ...character.resources };
-        
-        // Reset all resources
-        Object.keys(updatedResources).forEach(key => {
-          if (updatedResources[key]) {
-            updatedResources[key].used = 0;
-          }
-        });
-        
-        onUpdate({ resources: updatedResources });
-      }
-      
-      toast({
-        title: "Продолжительный отдых",
-        description: "Персонаж полностью восстановился после продолжительного отдыха.",
-      });
-      
-      setIsProcessing(false);
-    }, 800);
+    }
+    
+    // 5. Восстанавливаем очки колдовства чародея
+    let updatedSorceryPoints = character.sorceryPoints;
+    if (updatedSorceryPoints) {
+      updatedSorceryPoints = {
+        ...updatedSorceryPoints,
+        current: updatedSorceryPoints.max
+      };
+    }
+    
+    // Применяем изменения
+    onUpdate({
+      currentHp: updatedHp,
+      hitDice: updatedHitDice,
+      resources: updatedResources,
+      spellSlots: updatedSpellSlots,
+      temporaryHp: 0,
+      sorceryPoints: updatedSorceryPoints
+    });
+    
+    toast({
+      title: "Продолжительный отдых",
+      description: "Восстановлены хиты, кости хитов, слоты заклинаний и другие ресурсы персонажа.",
+      variant: "default",
+    });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Отдых</CardTitle>
+        <CardTitle className="text-lg">Отдых</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium mb-2">Короткий отдых (1 час)</h4>
           <p className="text-sm text-muted-foreground mb-2">
-            Восстанавливает некоторые способности и позволяет использовать кости хитов для лечения.
+            Короткий отдых позволяет восстановить часть ресурсов и использовать кости хитов.
           </p>
           <Button 
-            onClick={handleShortRest} 
-            disabled={isProcessing}
-            variant="outline"
+            variant="outline" 
             className="w-full"
+            onClick={handleShortRest}
           >
-            {isProcessing ? "Обработка..." : "Короткий отдых"}
+            Короткий отдых (1 час)
           </Button>
         </div>
         
         <div>
-          <h4 className="text-sm font-medium mb-2">Продолжительный отдых (8 часов)</h4>
           <p className="text-sm text-muted-foreground mb-2">
-            Полностью восстанавливает здоровье, половину костей хитов и все способности.
+            Продолжительный отдых восстанавливает хиты до максимума, половину костей хитов, все слоты заклинаний и особые ресурсы.
           </p>
           <Button 
-            onClick={handleLongRest}
-            disabled={isProcessing}
+            variant="default" 
             className="w-full"
+            onClick={handleLongRest}
           >
-            {isProcessing ? "Обработка..." : "Продолжительный отдых"}
+            Продолжительный отдых (8 часов)
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 };
+
+export default RestPanel;

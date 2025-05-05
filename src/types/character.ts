@@ -90,6 +90,16 @@ export interface Character {
   flaws?: string;
   abilityPointsUsed?: number;
   additionalClasses?: ClassLevel[];
+  
+  // Добавляем недостающие поля
+  appearance?: string;
+  sorceryPoints?: {
+    max: number;
+    current: number;
+  };
+  skillProficiencies?: {
+    [skillName: string]: boolean;
+  };
 }
 
 export interface CharacterSpell {
@@ -104,6 +114,7 @@ export interface CharacterSpell {
   description?: string;
   classes?: string[] | string;
   source?: string;
+  id?: string | number;
 }
 
 export interface ClassLevel {
@@ -118,3 +129,14 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24
 };
+
+// Добавляем недостающий HitPointEvent для DamageLog
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  amount: number;
+  source?: string;
+  timestamp: number | Date;
+  previousHP?: number;
+  newHP?: number;
+}

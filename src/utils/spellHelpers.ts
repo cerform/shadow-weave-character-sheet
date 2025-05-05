@@ -1,136 +1,89 @@
 
-import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+// Вспомогательные функции для работы с заклинаниями
 
-export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
-  return typeof spell === 'object';
+export const isCharacterSpellObject = (spell: any): spell is any => {
+  return typeof spell === 'object' && spell !== null;
 };
 
-export const getSpellName = (spell: CharacterSpell | string): string => {
-  if (typeof spell === 'string') return spell;
-  return spell.name;
-};
-
-export const getSpellLevel = (spell: CharacterSpell | string): number => {
-  if (typeof spell === 'string') return 0; // По умолчанию заговор
-  return spell.level;
-};
-
-export const getSpellSchool = (spell: CharacterSpell | string): string => {
-  if (typeof spell === 'string') return "Неизвестная";
-  return spell.school || "Неизвестная";
-};
-
-export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
-  if (typeof spell === 'string') return false;
-  return spell.prepared || false;
-};
-
-export const toggleSpellPrepared = (spell: CharacterSpell | string): CharacterSpell => {
+export const getSpellLevel = (spell: any): number => {
   if (typeof spell === 'string') {
-    return {
-      name: spell,
-      level: 0,
-      prepared: true,
-      school: 'Неизвестная', // Добавляем обязательное поле school
-      castingTime: '1 действие',
-      range: 'Неизвестная',
-      components: '',
-      duration: 'Мгновенная',
-      description: ''
-    };
+    return 0; // По умолчанию заговоры
+  }
+  return spell.level || 0;
+};
+
+export const isSpellPrepared = (spell: any): boolean => {
+  if (typeof spell === 'string') {
+    return false;
+  }
+  return !!spell.prepared;
+};
+
+export const getSpellSchool = (school: string): string => {
+  const schoolTranslations: Record<string, string> = {
+    'abjuration': 'Ограждение',
+    'conjuration': 'Призыв',
+    'divination': 'Прорицание',
+    'enchantment': 'Очарование',
+    'evocation': 'Воплощение',
+    'illusion': 'Иллюзия',
+    'necromancy': 'Некромантия',
+    'transmutation': 'Преобразование',
+    'universal': 'Универсальная'
+  };
+  
+  return schoolTranslations[school.toLowerCase()] || school;
+};
+
+export const getSpellComponents = (components: string): { verbal: boolean; somatic: boolean; material: boolean; materials?: string } => {
+  const verbal = components.toLowerCase().includes('в') || components.toLowerCase().includes('v');
+  const somatic = components.toLowerCase().includes('с') || components.toLowerCase().includes('s');
+  
+  let material = false;
+  let materials = '';
+  
+  // Проверяем на наличие материальных компонентов
+  if (components.toLowerCase().includes('м') || components.toLowerCase().includes('m')) {
+    material = true;
+    
+    // Извлекаем описание материальных компонентов, если они указаны в скобках
+    const match = components.match(/\(([^)]+)\)/);
+    if (match && match[1]) {
+      materials = match[1].trim();
+    }
   }
   
-  return {
-    ...spell,
-    prepared: !spell.prepared,
-    school: spell.school || 'Неизвестная' // Убедимся, что school всегда определена
-  };
+  return { verbal, somatic, material, materials };
 };
 
-export const getSpellsByLevel = (spells: (CharacterSpell | string)[], level: number): (CharacterSpell | string)[] => {
-  return spells.filter(spell => {
-    if (typeof spell === 'string') {
-      return level === 0; // Строковые заклинания считаются заговорами
-    }
-    return spell.level === level;
-  });
-};
-
-// Функция конвертации из CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
-  return {
-    // Обязательные поля для SpellData
-    id: spell.id || String(Date.now()),
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || "Универсальная", // Дефолтное значение для обязательного поля
-    castingTime: spell.castingTime || "1 действие", 
-    range: spell.range || "На себя",
-    components: spell.components || "В",
-    duration: spell.duration || "Мгновенная",
-    description: spell.description || "",
-    
-    // Опциональные поля
-    prepared: spell.prepared,
-    higherLevels: spell.higherLevels,
-    ritual: spell.ritual,
-    concentration: spell.concentration,
-    // Убираем свойство source, которого нет в типе CharacterSpell
-    material: spell.material,
-    classes: spell.classes
-  };
-};
-
-// Функция для обработки смешанного типа (строка или объект) при конвертации в SpellData
-export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
-  if (typeof spell === 'string') {
-    return {
-      id: String(Date.now()),
-      name: spell,
-      level: 0,
-      school: "Неизвестная",
-      castingTime: "1 действие",
-      range: "На себя",
-      components: "В",
-      duration: "Мгновенная",
-      description: ""
-    };
+export const getSpellDuration = (duration: string): { concentration: boolean; duration: string } => {
+  const isConcentration = duration.toLowerCase().includes('концентрация') || 
+                          duration.toLowerCase().includes('concentration');
+  
+  // Удаляем упоминание о концентрации из строки продолжительности
+  let cleanDuration = duration;
+  if (isConcentration) {
+    cleanDuration = duration.replace(/концентрация,?\s*/i, '').replace(/concentration,?\s*/i, '');
   }
-  return convertCharacterSpellToSpellData(spell);
+  
+  return { concentration: isConcentration, duration: cleanDuration };
 };
 
-// Функция конвертации из массива CharacterSpell в массив SpellData
-export const convertCharacterSpellsToSpellData = (spells: (CharacterSpell | string)[]): SpellData[] => {
-  return spells.map(spell => {
-    if (isCharacterSpellObject(spell)) {
-      return convertCharacterSpellToSpellData(spell);
-    }
-    // Если заклинание - строка, создаем базовый объект SpellData
-    return {
-      id: String(Date.now()),
-      name: spell,
-      level: 0,
-      school: "Неизвестная",
-      castingTime: "1 действие",
-      range: "На себя",
-      components: "В",
-      duration: "Мгновенная",
-      description: ""
-    };
-  });
-};
-
-// Функция конвертации из SpellData в CharacterSpell
-export const convertSpellDataToCharacterSpell = (spellData: SpellData): CharacterSpell => {
-  return {
-    ...spellData,
-    ritual: spellData.isRitual || spellData.ritual,
-    concentration: spellData.isConcentration || spellData.concentration,
-    higherLevels: spellData.higherLevel || spellData.higherLevels,
-    description: typeof spellData.description === 'string' ? 
-                spellData.description : 
-                Array.isArray(spellData.description) ?
-                spellData.description.join('\n') : ''
+export const getSpellCastingTime = (castingTime: string): string => {
+  const timeTranslations: Record<string, string> = {
+    '1 action': '1 действие',
+    'bonus action': 'бонусное действие',
+    'reaction': 'реакция',
+    'minute': 'минута',
+    'minutes': 'минут',
+    'hour': 'час',
+    'hours': 'часов'
   };
+  
+  let result = castingTime;
+  for (const [eng, rus] of Object.entries(timeTranslations)) {
+    result = result.replace(new RegExp(eng, 'gi'), rus);
+  }
+  
+  return result;
 };

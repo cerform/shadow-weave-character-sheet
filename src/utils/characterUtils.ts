@@ -63,7 +63,14 @@ export const createDefaultCharacter = (): Character => {
       intelligence: 10,
       wisdom: 10,
       charisma: 10
-    }
+    },
+    // Добавляем новые поля для устранения ошибок типизации
+    notes: '',
+    sorceryPoints: {
+      max: 0,
+      current: 0
+    },
+    appearance: ''
   };
 };
 
@@ -85,4 +92,25 @@ export const isMagicClass = (className: string): boolean => {
   ];
   
   return magicClasses.includes(className.toLowerCase());
+};
+
+// Вспомогательная функция для работы с заклинаниями
+export const isCharacterSpellObject = (spell: any): spell is any => {
+  return typeof spell === 'object' && spell !== null;
+};
+
+// Вспомогательная функция для получения уровня заклинания
+export const getSpellLevel = (spell: any): number => {
+  if (typeof spell === 'string') {
+    return 0; // По умолчанию заговоры
+  }
+  return spell.level || 0;
+};
+
+// Вспомогательная функция для проверки, подготовлено ли заклинание
+export const isSpellPrepared = (spell: any): boolean => {
+  if (typeof spell === 'string') {
+    return false;
+  }
+  return !!spell.prepared;
 };

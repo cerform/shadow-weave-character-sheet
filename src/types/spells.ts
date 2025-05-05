@@ -1,36 +1,62 @@
 
+import { CharacterSpell } from './character';
+
 export interface SpellData {
+  id?: string | number;
   name: string;
+  name_en?: string;
   level: number;
   school: string;
   castingTime: string;
   range: string;
   components: string;
   duration: string;
-  description: string;
-  prepared?: boolean;
+  description: string | string[];
   classes?: string[] | string;
   source?: string;
+  // Добавляем недостающие поля
+  isRitual?: boolean;
+  isConcentration?: boolean;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  prepared?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
+  ritual?: boolean;
+  concentration?: boolean;
 }
 
-// Helper function to convert SpellData to CharacterSpell
-export const convertSpellDataToCharacterSpell = (spellData: SpellData) => {
+export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
   return {
-    name: spellData.name,
-    level: spellData.level,
-    school: spellData.school,
-    castingTime: spellData.castingTime,
-    range: spellData.range,
-    components: spellData.components,
-    duration: spellData.duration,
-    description: spellData.description,
-    prepared: spellData.prepared || false,
-    classes: spellData.classes || [],
-    source: spellData.source || 'PHB'
+    ...spell,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'Касание',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    ritual: false,
+    concentration: false,
+    verbal: true,
+    somatic: true,
+    material: false,
   };
 };
 
-// Function to calculate how many spells a character can know based on class and level
+export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+  return {
+    ...spell,
+    name: spell.name,
+    level: spell.level,
+    id: spell.id
+  };
+};
+
+export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+};
+
+// Функция для расчета известных заклинаний
 export const calculateKnownSpells = (characterClass: string, level: number, abilityModifier: number) => {
   // Default values
   let cantrips = 0;

@@ -27,15 +27,15 @@ export const calculateSpellSaveDC = (character: Character, spellcastingAbility: 
   switch (spellcastingAbility.toLowerCase()) {
     case 'intelligence':
     case 'int':
-      abilityScore = character.intelligence;
+      abilityScore = character.intelligence || 10;
       break;
     case 'wisdom':
     case 'wis':
-      abilityScore = character.wisdom;
+      abilityScore = character.wisdom || 10;
       break;
     case 'charisma':
     case 'cha':
-      abilityScore = character.charisma;
+      abilityScore = character.charisma || 10;
       break;
   }
   
@@ -54,15 +54,15 @@ export const calculateSpellAttackBonus = (character: Character, spellcastingAbil
   switch (spellcastingAbility.toLowerCase()) {
     case 'intelligence':
     case 'int':
-      abilityScore = character.intelligence;
+      abilityScore = character.intelligence || 10;
       break;
     case 'wisdom':
     case 'wis':
-      abilityScore = character.wisdom;
+      abilityScore = character.wisdom || 10;
       break;
     case 'charisma':
     case 'cha':
-      abilityScore = character.charisma;
+      abilityScore = character.charisma || 10;
       break;
   }
   
@@ -119,4 +119,121 @@ export const getSpellcastingAbility = (className: string): string => {
   }
   
   return 'intelligence'; // Default
+};
+
+// Новые функции для исправления ошибок
+export const normalizeSpells = (spells: any[]): CharacterSpell[] => {
+  if (!spells) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return { name: spell, level: 0 };
+    }
+    return spell as CharacterSpell;
+  });
+};
+
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'Касание',
+    components: spell.components || 'В, С, М',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    prepared: spell.prepared || false,
+    classes: spell.classes || [],
+    source: spell.source || 'PHB',
+    // Добавляем недостающие поля
+    ritual: false,
+    concentration: false,
+    verbal: true,
+    somatic: true,
+    material: false,
+    higherLevel: '',
+    higherLevels: '',
+    isRitual: false,
+    isConcentration: false
+  };
+};
+
+export const convertToSpellDataArray = (spells: any[]): SpellData[] => {
+  return normalizeSpells(spells).map(spell => convertToSpellData(spell));
+};
+
+// Расчет известных заклинаний
+export const calculateKnownSpells = (characterClass: string, level: number, abilityScore: number): { cantrips: number; spells: number } => {
+  const modifier = typeof abilityScore === 'object' ? 
+      Math.floor(((abilityScore.intelligence || 10) - 10) / 2) : 
+      Math.floor((abilityScore - 10) / 2);
+      
+  let cantrips = 0;
+  let spells = 0;
+  
+  switch (characterClass.toLowerCase()) {
+    case 'бард':
+    case 'bard':
+      cantrips = level >= 10 ? 4 : (level >= 4 ? 3 : 2);
+      spells = Math.min(level + modifier, 22);
+      break;
+    case 'жрец':
+    case 'cleric':
+      cantrips = level >= 10 ? 5 : (level >= 4 ? 4 : 3);
+      spells = level + modifier;
+      break;
+    case 'друид':
+    case 'druid':
+      cantrips = level >= 4 ? 3 : 2;
+      spells = level + modifier;
+      break;
+    case 'паладин':
+    case 'paladin':
+      cantrips = 0;
+      spells = Math.floor(level / 2) + modifier;
+      break;
+    case 'следопыт':
+    case 'ranger':
+      cantrips = 0;
+      spells = Math.floor(level / 2) + modifier;
+      break;
+    case 'волшебник':
+    case 'wizard':
+      cantrips = level >= 10 ? 5 : (level >= 4 ? 4 : 3);
+      spells = level + modifier;
+      break;
+    case 'чародей':
+    case 'sorcerer':
+      cantrips = level >= 10 ? 6 : (level >= 4 ? 5 : 4);
+      spells = level + 1;
+      break;
+    case 'колдун':
+    case 'warlock':
+      cantrips = level >= 10 ? 4 : (level >= 4 ? 3 : 2);
+      spells = level + 1;
+      break;
+    default:
+      cantrips = 0;
+      spells = 0;
+  }
+  
+  return {
+    cantrips: Math.max(0, cantrips),
+    spells: Math.max(0, spells)
+  };
+};
+
+// Добавляем функцию для получения максимального уровня заклинаний
+export const getMaxSpellLevel = (level: number): number => {
+  if (level <= 0) return 0;
+  if (level <= 2) return 1;
+  if (level <= 4) return 2;
+  if (level <= 6) return 3;
+  if (level <= 8) return 4;
+  if (level <= 10) return 5;
+  if (level <= 12) return 6;
+  if (level <= 14) return 7;
+  if (level <= 16) return 8;
+  return 9;
 };
