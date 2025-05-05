@@ -14,7 +14,7 @@ const usePreloadSpells = (): SpellData[] => {
     setLoadedSpells(spells.map(spell => ({
       ...spell,
       // Устанавливаем значения по умолчанию для обязательных полей, если они отсутствуют
-      prepared: spell.prepared ?? false,
+      prepared: spell.prepared !== undefined ? spell.prepared : false,
       material: spell.material ?? false,
       somatic: spell.somatic ?? false,
       verbal: spell.verbal ?? false,

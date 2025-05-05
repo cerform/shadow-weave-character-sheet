@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter, Book, X, Bookmark, BookmarkCheck } from "lucide-react";
 import { useSpellbook } from '@/hooks/spellbook';
-import { CharacterSpell } from '@/types/character';
+import { CharacterSpell, SpellData } from '@/types/character';
 import SpellImporter from './SpellImporter';
 
 const SpellBookViewer: React.FC = () => {
@@ -33,7 +33,8 @@ const SpellBookViewer: React.FC = () => {
     formatClasses
   } = useSpellbook();
 
-  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
+  // Правильно типизируем selectedSpell как SpellData | null
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [showImporter, setShowImporter] = useState(false);
   
   // Получаем все доступные школы магии

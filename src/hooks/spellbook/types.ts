@@ -15,7 +15,7 @@ export interface SpellData {
   higherLevels?: string;
   higherLevel?: string; // Альтернативное имя в некоторых структурах данных
   classes?: string[] | string;
-  prepared?: boolean;
+  prepared?: boolean; // Опциональное свойство
   concentration?: boolean;
   ritual?: boolean;
   duration?: string;
