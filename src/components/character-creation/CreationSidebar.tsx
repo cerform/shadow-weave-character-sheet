@@ -41,10 +41,8 @@ const CreationSidebar: React.FC<CreationSidebarProps> = ({
           >
             Шаги создания
           </h3>
-          <ScrollArea 
-            className="h-[60vh] -mr-4 pr-2" // Удаляем правый отступ, чтобы полоса прокрутки не выходила за пределы карточки
-          >
-            <div className="space-y-1">
+          <ScrollArea className="h-[60vh]">
+            <div className="space-y-1 pr-3">
               {steps.map((step, index) => {
                 const isActive = index === currentStep;
                 const isCompleted = index < currentStep;

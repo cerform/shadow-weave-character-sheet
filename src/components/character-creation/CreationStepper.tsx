@@ -36,20 +36,26 @@ const CreationStepper: React.FC<CreationStepperProps> = ({
     }
   };
 
+  // Вычисляем градиент для прогресс бара, чтобы избежать мерцания
+  const getProgressBarBackground = () => {
+    const baseColor = themeStyles?.accent || '#8B5A2B';
+    return baseColor;
+  };
+
   return (
     <div className="relative w-full mb-8 sticky top-0 z-10 py-4 bg-black/30 backdrop-blur-md">
-      {/* Progress bar background */}
+      {/* Progress bar background - фиксированный цвет фона */}
       <div 
         className="absolute top-1/2 left-0 w-full h-1 -translate-y-1/2 rounded-full z-0"
-        style={{ backgroundColor: `${themeStyles?.accent}30` }}
+        style={{ backgroundColor: `rgba(30, 30, 46, 0.5)` }}
       ></div>
       
-      {/* Progress bar fill */}
+      {/* Progress bar fill - фиксированный цвет заполнения */}
       <div 
         className="absolute top-1/2 left-0 h-1 -translate-y-1/2 rounded-full z-1 transition-all duration-300"
         style={{ 
           width: `${Math.max(5, (currentStep / (steps.length - 1)) * 100)}%`,
-          backgroundColor: themeStyles?.accent || '#8B5A2B' 
+          backgroundColor: getProgressBarBackground()
         }}
       ></div>
       
