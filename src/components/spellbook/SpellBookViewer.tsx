@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +13,7 @@ import SpellFilters from './SpellFilters';
 import SpellCard from './SpellCard';
 import SpellTable from './SpellTable';
 import { SpellData } from '@/types/spells';
+import SpellDetailModal from '@/components/spell-detail/SpellDetailModal';
 
 interface SpellBookViewerProps {
   standalone?: boolean;
@@ -86,6 +88,8 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
                 toggleSchool={toggleSchool}
                 toggleClass={toggleClass}
                 clearFilters={clearFilters}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
               />
             </SheetContent>
           </Sheet>
@@ -132,7 +136,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-2">
-              {activeLevel.map((level) => (
+              {activeLevel.map((level: number) => (
                 <Button
                   key={`level-${level}`}
                   variant="outline"
@@ -145,7 +149,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
                 </Button>
               ))}
               
-              {activeSchool.map((school) => (
+              {activeSchool.map((school: string) => (
                 <Button
                   key={`school-${school}`}
                   variant="outline"
@@ -158,7 +162,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
                 </Button>
               ))}
               
-              {activeClass.map((cls) => (
+              {activeClass.map((cls: string) => (
                 <Button
                   key={`class-${cls}`}
                   variant="outline"
@@ -205,18 +209,17 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({
         />
       )}
       
-      {selectedSpell && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          {/* Modal content would go here */}
-        </div>
+      {selectedSpell && isModalOpen && (
+        <SpellDetailModal 
+          spell={selectedSpell}
+          open={isModalOpen} 
+          onClose={handleClose}
+        />
       )}
       
       {standalone && (
         <div className="mt-8">
-          <NavigationButtons
-            homeButton
-            backButton
-          />
+          <NavigationButtons />
         </div>
       )}
     </div>

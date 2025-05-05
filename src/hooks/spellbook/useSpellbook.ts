@@ -46,7 +46,9 @@ export const useSpellbook = () => {
       (spell.description && 
        (typeof spell.description === 'string' 
         ? spell.description.toLowerCase().includes(searchTerm.toLowerCase())
-        : spell.description.some(d => d.toLowerCase().includes(searchTerm.toLowerCase()))
+        : Array.isArray(spell.description) && spell.description.some(d => 
+            typeof d === 'string' && d.toLowerCase().includes(searchTerm.toLowerCase())
+          )
        )
       );
     
@@ -103,19 +105,38 @@ export const useSpellbook = () => {
   
   // Получение цвета для бейджа уровня заклинания
   const getBadgeColor = (level: number): string => {
-    switch(level) {
-      case 0: return currentTheme.badge?.cantrip || "#6b7280";
-      case 1: return currentTheme.badge?.level1 || "#10b981";
-      case 2: return currentTheme.badge?.level2 || "#3b82f6";
-      case 3: return currentTheme.badge?.level3 || "#8b5cf6";
-      case 4: return currentTheme.badge?.level4 || "#ec4899";
-      case 5: return currentTheme.badge?.level5 || "#f59e0b";
-      case 6: return currentTheme.badge?.level6 || "#ef4444";
-      case 7: return currentTheme.badge?.level7 || "#6366f1";
-      case 8: return currentTheme.badge?.level8 || "#0ea5e9";
-      case 9: return currentTheme.badge?.level9 || "#7c3aed";
-      default: return "#6b7280";
+    const defaultColors = {
+      0: "#6b7280", // Заговор
+      1: "#10b981", // 1 уровень
+      2: "#3b82f6", // 2 уровень
+      3: "#8b5cf6", // 3 уровень
+      4: "#ec4899", // 4 уровень
+      5: "#f59e0b", // 5 уровень
+      6: "#ef4444", // 6 уровень
+      7: "#6366f1", // 7 уровень
+      8: "#0ea5e9", // 8 уровень
+      9: "#7c3aed"  // 9 уровень
+    };
+
+    // Если есть настройки в теме, используем их
+    if (currentTheme.badge) {
+      switch(level) {
+        case 0: return currentTheme.badge.cantrip || defaultColors[0];
+        case 1: return currentTheme.badge.level1 || defaultColors[1];
+        case 2: return currentTheme.badge.level2 || defaultColors[2];
+        case 3: return currentTheme.badge.level3 || defaultColors[3];
+        case 4: return currentTheme.badge.level4 || defaultColors[4];
+        case 5: return currentTheme.badge.level5 || defaultColors[5];
+        case 6: return currentTheme.badge.level6 || defaultColors[6];
+        case 7: return currentTheme.badge.level7 || defaultColors[7];
+        case 8: return currentTheme.badge.level8 || defaultColors[8];
+        case 9: return currentTheme.badge.level9 || defaultColors[9];
+        default: return defaultColors[0];
+      }
     }
+
+    // Если нет специальных настроек, используем значения по умолчанию
+    return defaultColors[level as keyof typeof defaultColors] || defaultColors[0];
   };
   
   // Получение цвета для бейджа школы магии
