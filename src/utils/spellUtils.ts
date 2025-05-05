@@ -1,4 +1,3 @@
-
 import { SpellData } from "@/types/spells";
 import { CharacterSpell, Character } from "@/types/character";
 
@@ -100,7 +99,8 @@ export const calculateKnownSpells = (className: string, level: number, modifierB
  */
 export const calculateAvailableSpellsByClassAndLevel = (
   className: string, 
-  level: number
+  level: number,
+  modifierBonus: number = 3
 ): { 
   maxLevel: number;
   cantripsCount: number;
@@ -109,7 +109,7 @@ export const calculateAvailableSpellsByClassAndLevel = (
   spells: number;
   maxSpellLevel: number;
 } => {
-  return calculateKnownSpells(className, level);
+  return calculateKnownSpells(className, level, modifierBonus);
 };
 
 /**
@@ -199,7 +199,7 @@ const getSpellcastingModifier = (character: Character): number => {
 /**
  * Проверяет, может ли персонаж подготовить еще заклинания
  */
-export const canPrepareMoreSpells = (character: Character): boolean => {
+export const canPrepareMoreSpells = (character: Character, abilityName?: string): boolean => {
   if (!character.spells || !Array.isArray(character.spells)) return true;
   
   const preparedSpells = character.spells.filter(spell => spell.prepared && spell.level > 0);

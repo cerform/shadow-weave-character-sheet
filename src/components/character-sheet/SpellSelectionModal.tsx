@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -173,7 +172,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     if (!character.spells) return;
     
     // Проверяем, можно ли подготовить еще заклинания
-    if (!spell.prepared && !canPrepareMoreSpells(character, character.spellcasting?.ability || '')) {
+    if (!spell.prepared && !canPrepareMoreSpells(character)) {
       toast({
         title: "Лимит подготовленных заклинаний",
         description: `Вы не можете подготовить больше заклинаний. Максимум: ${preparedSpellsLimit}`,

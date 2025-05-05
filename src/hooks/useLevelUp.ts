@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { Character } from '@/types/character';
 
 const useLevelUp = () => {
   const { character, setCharacter } = useCharacter();
@@ -26,20 +27,19 @@ const useLevelUp = () => {
       console.log('Новые данные о заклинаниях:', spellsInfo);
       
       // Обновляем персонажа с новыми данными о заклинаниях
-      // Используем any для временного обхода TypeScript, позже исправим типы Character
-      setCharacter((prev: any) => ({
+      setCharacter((prev: Character) => ({
         ...prev,
         cantripsKnown: spellsInfo.cantripsCount,
         spellsKnown: spellsInfo.knownSpells,
         maxSpellLevel: spellsInfo.maxLevel
-      }));
+      } as Character));
     }
 
     // Обновляем уровень персонажа
-    setCharacter((prev: any) => ({
+    setCharacter((prev: Character) => ({
       ...prev,
       level: newLevel
-    }));
+    } as Character));
 
     setIsLevelingUp(false);
   };

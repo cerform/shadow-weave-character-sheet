@@ -9,7 +9,7 @@ interface SpellbookContextType {
   removeSpell: (spellId: string) => void;
 }
 
-const SpellbookContext = createContext<SpellbookContextType>({
+export const SpellbookContext = createContext<SpellbookContextType>({
   selectedSpells: [],
   setSelectedSpells: () => {},
   addSpell: () => {},

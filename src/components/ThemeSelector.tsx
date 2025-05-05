@@ -1,197 +1,110 @@
-
-import React, { useState } from "react";
-import { useTheme } from "@/hooks/use-theme";
-import { useUserTheme } from "@/hooks/use-user-theme";
-import { themes, ThemeName } from "@/lib/themes";
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { useDeviceType } from "@/hooks/use-mobile";
-import { Check, PaintBucket, Palette, Sparkles, Wand2, Scroll, Sword, Music, BookOpen, Castle, Flame, Moon, Sun } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
+import { Paintbrush, Check } from "lucide-react";
+import { useUserTheme } from '@/hooks/use-user-theme';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-const ThemeSelector = () => {
-  const { theme, setTheme } = useTheme();
-  const { activeTheme, setUserTheme } = useUserTheme();
-  const deviceType = useDeviceType();
-  const isMobile = deviceType === 'mobile';
-  const [hoveredTheme, setHoveredTheme] = useState<ThemeName | null>(null);
+export const ThemeSelector = () => {
+  const { setUserTheme, activeTheme } = useUserTheme();
+  const { theme, setTheme, themeStyles } = useTheme();
   
-  // Используем активную тему из UserThemeContext с запасным вариантом из ThemeContext
-  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  // Получаем список тем в формате массива объектов
+  const themesList = useMemo(() => [
+    { name: "default", label: "По умолчанию" },
+    { name: "warlock", label: "Чернокнижник" },
+    { name: "wizard", label: "Волшебник" },
+    { name: "druid", label: "Друид" },
+    { name: "warrior", label: "Воин" },
+    { name: "bard", label: "Бард" },
+  ], []);
 
-  // Расширенный список тем с иконками
-  const themesList = [
-    { id: 'default', name: 'Стандартная', icon: <PaintBucket size={16} />, group: 'base' },
-    { id: 'warlock', name: 'Чернокнижник', icon: <Sparkles size={16} />, group: 'class' },
-    { id: 'wizard', name: 'Волшебник', icon: <Wand2 size={16} />, group: 'class' },
-    { id: 'druid', name: 'Друид', icon: <Scroll size={16} />, group: 'class' },
-    { id: 'warrior', name: 'Воин', icon: <Sword size={16} />, group: 'class' },
-    { id: 'bard', name: 'Бард', icon: <Music size={16} />, group: 'class' },
-    { id: 'parchment', name: 'Пергамент', icon: <BookOpen size={16} />, group: 'world' },
-    { id: 'dungeon', name: 'Подземелье', icon: <Castle size={16} />, group: 'world' },
-    { id: 'infernal', name: 'Инфернальная', icon: <Flame size={16} />, group: 'world' },
-    { id: 'celestial', name: 'Небесная', icon: <Sun size={16} />, group: 'world' },
-    { id: 'dark', name: 'Тёмная', icon: <Moon size={16} />, group: 'base' }
-  ];
+  // Получаем текущую тему из контекстов - мемоизируем для предотвращения мерцания
+  const currentThemeId = useMemo(() => activeTheme || theme || 'default', [activeTheme, theme]);
+  const currentTheme = useMemo(() => themeStyles || themes[currentThemeId as keyof typeof themes] || themes.default, [themeStyles, currentThemeId]);
+  
+  // Кешируем стили для предотвращения мерцания
+  const accentColor = useMemo(() => currentTheme.accent, [currentTheme]);
+  
+  // Синхронизируем темы между контекстами при инициализации - только один раз
+  useEffect(() => {
+    if (activeTheme && theme !== activeTheme) {
+      setTheme(activeTheme);
+    }
+  }, []); // Запускаем только при монтировании
 
-  // Группировка тем для более удобного выбора
-  const themeGroups = {
-    base: "Основные",
-    class: "Классы",
-    world: "Миры"
-  };
-
-  // Обработчик для изменения темы
-  const handleThemeChange = (themeId: string) => {
-    // Сначала установим тему в глобальном контексте
-    if (setTheme) setTheme(themeId);
+  // Обработчик переключения тем - мемоизируем для стабильности
+  const handleThemeChange = useCallback((themeName: string) => {
+    // Чтобы избежать лишних ререндеров, проверяем, нужно ли обновлять тему
+    if (themeName === currentThemeId) return;
     
-    // Затем установим тему в пользовательском контексте
-    if (setUserTheme) setUserTheme(themeId);
+    // Обновляем темы в обоих контекстах только если они изменились
+    setUserTheme(themeName);
+    setTheme(themeName);
     
-    // Сохраняем тему в localStorage для обоих контекстов
-    localStorage.setItem('theme', themeId);
-    localStorage.setItem('userTheme', themeId);
-    localStorage.setItem('dnd-theme', themeId);
-
-    console.log('Theme changed to:', themeId);
-  };
-
-  // Получение предпросмотра темы при наведении
-  const getPreviewStyle = (themeId: ThemeName) => {
-    const previewTheme = themes[themeId];
-    return {
-      background: `linear-gradient(135deg, ${previewTheme.accent}40, ${previewTheme.primary}40)`,
-      border: `1px solid ${previewTheme.accent}`,
-      boxShadow: previewTheme.glow || '0 0 5px rgba(0, 0, 0, 0.2)'
-    };
-  };
+    // Сохраняем в localStorage
+    localStorage.setItem('theme', themeName);
+    localStorage.setItem('userTheme', themeName);
+    localStorage.setItem('dnd-theme', themeName);
+    
+    console.log('Switching theme to:', themeName);
+  }, [currentThemeId, setUserTheme, setTheme]);
 
   return (
-    <DropdownMenu onOpenChange={() => setHoveredTheme(null)}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="icon" 
           className="relative"
-          style={{ 
-            borderColor: currentTheme.accent,
-            color: currentTheme.textColor,
-            boxShadow: `0 0 5px ${currentTheme.accent}30`,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)'
-          }}
+          style={{ borderColor: accentColor }}
         >
-          <Palette className="h-5 w-5 animate-glow" />
-          <span className="sr-only">Сменить тему</span>
-          <span 
-            className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full" 
-            style={{ backgroundColor: currentTheme.accent }}
+          <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+          <span className="sr-only">Изменить тему</span>
+          <div 
+            className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
+            style={{ backgroundColor: accentColor }}
           />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align="end" 
-        className="min-w-[16rem] max-h-[400px] overflow-y-auto" 
+        align="end"
         style={{ 
-          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
-          borderColor: currentTheme.accent,
-          boxShadow: currentTheme.glow || '0 0 5px rgba(0, 0, 0, 0.5)',
-          color: currentTheme.textColor
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          borderColor: accentColor 
         }}
       >
-        <DropdownMenuLabel 
-          style={{ color: currentTheme.textColor }}
-        >
-          Выберите тему
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator style={{ backgroundColor: `${currentTheme.accent}50` }} />
-        
-        {/* Группируем темы по категориям */}
-        {Object.entries(themeGroups).map(([groupKey, groupLabel]) => (
-          <DropdownMenuGroup key={groupKey}>
-            <DropdownMenuLabel
-              className="text-xs pt-2"
-              style={{ color: `${currentTheme.accent}`, opacity: 0.8 }}
+        {themesList.map((themeItem) => {
+          // Получаем цвета для каждой темы - кешируем для избежания мерцания
+          const themeColor = themes[themeItem.name as keyof typeof themes]?.accent || themes.default.accent;
+          const isActive = currentThemeId === themeItem.name;
+          
+          return (
+            <DropdownMenuItem
+              key={themeItem.name}
+              onClick={() => handleThemeChange(themeItem.name)}
+              className={isActive ? "bg-primary/20" : ""}
+              style={{ 
+                borderLeft: isActive ? `3px solid ${themeColor}` : '',
+                paddingLeft: isActive ? '13px' : ''
+              }}
             >
-              {groupLabel}
-            </DropdownMenuLabel>
-            
-            {themesList
-              .filter(item => item.group === groupKey)
-              .map((themeItem) => {
-                // Получаем цвета для текущей темы в списке
-                const themeId = themeItem.id as ThemeName;
-                const themeColor = themes[themeId]?.accent || themes.default.accent;
-                const isActive = activeTheme === themeId || (!activeTheme && theme === themeId);
-                const isHovered = hoveredTheme === themeId;
-                
-                return (
-                  <DropdownMenuItem 
-                    key={themeId} 
-                    onClick={() => handleThemeChange(themeId)} 
-                    onMouseEnter={() => setHoveredTheme(themeId)}
-                    onMouseLeave={() => setHoveredTheme(null)}
-                    className="flex items-center justify-between cursor-pointer my-0.5 transition-all duration-200"
-                    style={{
-                      color: currentTheme.textColor,
-                      backgroundColor: isActive 
-                        ? `${currentTheme.accent}20` 
-                        : isHovered 
-                          ? `${themes[themeId].accent}10` 
-                          : 'transparent',
-                      borderLeft: isActive ? `3px solid ${themeColor}` : '',
-                      paddingLeft: isActive ? '13px' : '',
-                      ...(isHovered ? getPreviewStyle(themeId) : {}),
-                      transform: isHovered ? 'translateX(2px)' : 'none'
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span 
-                        className="flex items-center justify-center h-5 w-5 rounded-full transition-all duration-200" 
-                        style={{ 
-                          backgroundColor: isActive ? themeColor : 'transparent',
-                          color: isActive ? '#000' : themeColor,
-                          boxShadow: isActive 
-                            ? `0 0 5px ${themeColor}` 
-                            : isHovered 
-                              ? `0 0 3px ${themeColor}50` 
-                              : 'none'
-                        }}
-                      >
-                        {themeItem.icon}
-                      </span>
-                      <span 
-                        className="transition-all"
-                        style={{
-                          fontWeight: isActive || isHovered ? 600 : 400,
-                          textShadow: isHovered ? `0 0 1px ${themeColor}50` : 'none'
-                        }}
-                      >
-                        {themeItem.name}
-                      </span>
-                    </div>
-                    {isActive && (
-                      <Check 
-                        size={16} 
-                        style={{ 
-                          color: currentTheme.accent,
-                          filter: `drop-shadow(0 0 2px ${currentTheme.accent}70)`
-                        }} 
-                      />
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-          </DropdownMenuGroup>
-        ))}
+              <div className="flex items-center gap-2">
+                <div 
+                  className="h-3 w-3 rounded-full" 
+                  style={{ backgroundColor: themeColor }}
+                />
+                {themeItem.label} {isActive && <Check className="ml-2 h-3 w-3" />}
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
