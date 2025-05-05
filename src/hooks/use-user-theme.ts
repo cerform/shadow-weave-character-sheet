@@ -12,7 +12,8 @@ export const useUserTheme = () => {
       activeTheme: 'default',
       setUserTheme: (theme: string) => {
         console.warn(`Unable to set theme to ${theme}: UserThemeProvider not found`);
-      }
+      },
+      currentThemeStyles: themes.default
     };
   }
   

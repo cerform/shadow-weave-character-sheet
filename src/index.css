@@ -179,12 +179,42 @@ html, body {
 button, .btn {
   text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8);
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
 }
 
-button:hover {
+/* Эффект при наведении для кнопок */
+button:hover, .btn:hover {
   border-color: var(--theme-accent, #8B5A2B) !important;
   background-color: var(--theme-accent, #8B5A2B) !important;
+  box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
+}
+
+/* Эффект при активации */
+button:active, .btn:active {
+  transform: translateY(1px) !important;
+}
+
+/* Эффект свечения для кнопок */
+button::after, .btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 0.5s ease;
+}
+
+button:hover::after, .btn:hover::after {
+  left: 100%;
 }
 
 /* Стили для улучшения контрастности в выпадающих меню */
@@ -252,7 +282,7 @@ button:hover {
 .bg-background, body, .app-container {
   background-color: #121212 !important;
   color: #FFFFFF !important;
-  background-image: url('/lovable-uploads/3678611a-a17a-4a81-8df0-c56c63cfcf0d.png');
+  background-image: url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
