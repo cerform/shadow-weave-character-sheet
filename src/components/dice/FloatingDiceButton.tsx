@@ -16,6 +16,9 @@ const FloatingDiceButton: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLDivElement>(null);
+  
+  // Кешируем цвет кнопки для предотвращения мерцания
+  const buttonColor = themeStyles?.accent || '#8B5A2B';
 
   // Сохраняем позицию в localStorage
   useEffect(() => {
@@ -38,20 +41,26 @@ const FloatingDiceButton: React.FC = () => {
 
   // Проверка и коррекция позиции, чтобы кнопка не вышла за экран
   useEffect(() => {
-    if (buttonRef.current) {
-      const buttonWidth = buttonRef.current.offsetWidth;
-      const buttonHeight = buttonRef.current.offsetHeight;
-      
-      const maxX = window.innerWidth - buttonWidth;
-      const maxY = window.innerHeight - buttonHeight;
-      
-      if (position.x < 0 || position.x > maxX || position.y < 0 || position.y > maxY) {
-        setPosition({
-          x: Math.max(0, Math.min(position.x, maxX)),
-          y: Math.max(0, Math.min(position.y, maxY))
-        });
+    const handleResize = () => {
+      if (buttonRef.current) {
+        const buttonWidth = buttonRef.current.offsetWidth;
+        const buttonHeight = buttonRef.current.offsetHeight;
+        
+        const maxX = window.innerWidth - buttonWidth;
+        const maxY = window.innerHeight - buttonHeight;
+        
+        if (position.x < 0 || position.x > maxX || position.y < 0 || position.y > maxY) {
+          setPosition({
+            x: Math.max(0, Math.min(position.x, maxX)),
+            y: Math.max(0, Math.min(position.y, maxY))
+          });
+        }
       }
-    }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [position]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -94,6 +103,53 @@ const FloatingDiceButton: React.FC = () => {
     };
   }, [isDragging]);
 
+  // Обработчики тач-событий
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (buttonRef.current) {
+      const touch = e.touches[0];
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging && e.touches.length > 0) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragOffset.x,
+        y: touch.clientY - dragOffset.y
+      });
+      e.preventDefault(); // Предотвращаем прокрутку страницы
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Добавляем обработчики тач-событий
+  useEffect(() => {
+    const buttonElement = buttonRef.current;
+    if (buttonElement) {
+      if (isDragging) {
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd);
+      } else {
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
+      }
+    }
+    
+    return () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging]);
+
   return (
     <>
       <div
@@ -101,9 +157,9 @@ const FloatingDiceButton: React.FC = () => {
         className={`fixed z-50 flex items-center justify-center p-3 rounded-full shadow-lg cursor-pointer transition-all 
                    ${isDragging ? 'scale-110' : 'hover:scale-110'}`}
         style={{
-          backgroundColor: themeStyles?.accent || '#8B5A2B',
+          backgroundColor: buttonColor,
           color: '#FFFFFF',
-          boxShadow: `0 4px 12px ${themeStyles?.accent}40`,
+          boxShadow: `0 4px 12px ${buttonColor}40`,
           left: `${position.x}px`,
           top: `${position.y}px`,
           touchAction: 'none',
@@ -111,13 +167,7 @@ const FloatingDiceButton: React.FC = () => {
         }}
         onClick={() => !isDragging && setIsOpen(true)}
         onMouseDown={handleMouseDown}
-        onTouchStart={(e) => {
-          const touch = e.touches[0];
-          handleMouseDown({
-            clientX: touch.clientX,
-            clientY: touch.clientY
-          } as React.MouseEvent);
-        }}
+        onTouchStart={handleTouchStart}
       >
         <Dices size={24} />
       </div>

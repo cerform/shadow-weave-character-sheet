@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,29 +17,35 @@ export const ThemeSelector = () => {
   const { theme, setTheme, themeStyles } = useTheme();
   
   // Получаем список тем в формате массива объектов
-  const themesList = [
+  const themesList = useMemo(() => [
     { name: "default", label: "По умолчанию" },
     { name: "warlock", label: "Чернокнижник" },
     { name: "wizard", label: "Волшебник" },
     { name: "druid", label: "Друид" },
     { name: "warrior", label: "Воин" },
     { name: "bard", label: "Бард" },
-  ];
+  ], []);
 
-  // Получаем текущую тему из контекстов
-  const currentThemeId = activeTheme || theme || 'default';
-  const currentTheme = themeStyles || themes[currentThemeId as keyof typeof themes] || themes.default;
+  // Получаем текущую тему из контекстов - мемоизируем для предотвращения мерцания
+  const currentThemeId = useMemo(() => activeTheme || theme || 'default', [activeTheme, theme]);
+  const currentTheme = useMemo(() => themeStyles || themes[currentThemeId as keyof typeof themes] || themes.default, [themeStyles, currentThemeId]);
   
-  // Синхронизируем темы между контекстами
+  // Кешируем стили для предотвращения мерцания
+  const accentColor = useMemo(() => currentTheme.accent, [currentTheme]);
+  
+  // Синхронизируем темы между контекстами при инициализации - только один раз
   useEffect(() => {
     if (activeTheme && theme !== activeTheme) {
       setTheme(activeTheme);
     }
-  }, [activeTheme, theme, setTheme]);
+  }, []); // Запускаем только при монтировании
 
-  // Обработчик переключения тем
-  const handleThemeChange = (themeName: string) => {
-    // Обновляем темы в обоих контекстах
+  // Обработчик переключения тем - мемоизируем для стабильности
+  const handleThemeChange = useCallback((themeName: string) => {
+    // Чтобы избежать лишних ререндеров, проверяем, нужно ли обновлять тему
+    if (themeName === currentThemeId) return;
+    
+    // Обновляем темы в обоих контекстах только если они изменились
     setUserTheme(themeName);
     setTheme(themeName);
     
@@ -49,7 +55,7 @@ export const ThemeSelector = () => {
     localStorage.setItem('dnd-theme', themeName);
     
     console.log('Switching theme to:', themeName);
-  };
+  }, [currentThemeId, setUserTheme, setTheme]);
 
   return (
     <DropdownMenu>
@@ -58,13 +64,13 @@ export const ThemeSelector = () => {
           variant="ghost" 
           size="icon" 
           className="relative"
-          style={{ borderColor: currentTheme.accent }}
+          style={{ borderColor: accentColor }}
         >
           <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
           <span className="sr-only">Изменить тему</span>
           <div 
             className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-            style={{ backgroundColor: currentTheme.accent }}
+            style={{ backgroundColor: accentColor }}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -72,18 +78,18 @@ export const ThemeSelector = () => {
         align="end"
         style={{ 
           backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderColor: currentTheme.accent 
+          borderColor: accentColor 
         }}
       >
-        {themesList.map((theme) => {
-          // Получаем цвета для каждой темы
-          const themeColor = themes[theme.name as keyof typeof themes]?.accent || themes.default.accent;
-          const isActive = currentThemeId === theme.name;
+        {themesList.map((themeItem) => {
+          // Получаем цвета для каждой темы - кешируем для избежания мерцания
+          const themeColor = themes[themeItem.name as keyof typeof themes]?.accent || themes.default.accent;
+          const isActive = currentThemeId === themeItem.name;
           
           return (
             <DropdownMenuItem
-              key={theme.name}
-              onClick={() => handleThemeChange(theme.name)}
+              key={themeItem.name}
+              onClick={() => handleThemeChange(themeItem.name)}
               className={isActive ? "bg-primary/20" : ""}
               style={{ 
                 borderLeft: isActive ? `3px solid ${themeColor}` : '',
@@ -95,7 +101,7 @@ export const ThemeSelector = () => {
                   className="h-3 w-3 rounded-full" 
                   style={{ backgroundColor: themeColor }}
                 />
-                {theme.label} {isActive && <Check className="ml-2 h-3 w-3" />}
+                {themeItem.label} {isActive && <Check className="ml-2 h-3 w-3" />}
               </div>
             </DropdownMenuItem>
           );

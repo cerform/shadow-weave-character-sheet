@@ -37,8 +37,15 @@ const CharacterCreationPage: React.FC = () => {
   const [rollsHistory, setRollsHistory] = useState<{ ability: string; rolls: number[]; total: number }[]>([]);
   const [maxAbilityScore, setMaxAbilityScore] = useState(15);
   
-  // Get current theme
+  // Get current theme - вызываем один раз и запоминаем значения, чтобы избежать мерцания
   const { themeStyles } = useTheme();
+  
+  // Кешируем стили для избежания мерцания
+  const pageBackground = useMemo(() => `linear-gradient(to bottom, ${themeStyles?.accent}20, ${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.85)'})`, [themeStyles]);
+  const pageColor = useMemo(() => themeStyles?.textColor, [themeStyles]);
+  const cardBackground = useMemo(() => themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)', [themeStyles]);
+  const cardBorderColor = useMemo(() => `${themeStyles?.accent}30`, [themeStyles]);
+  const accentColor = useMemo(() => themeStyles?.accent, [themeStyles]);
 
   // Fetch subraces based on selected race
   const fetchSubraces = useCallback(async (race: string) => {
@@ -322,15 +329,15 @@ const CharacterCreationPage: React.FC = () => {
     <div 
       className="min-h-screen pb-20"
       style={{ 
-        background: `linear-gradient(to bottom, ${themeStyles?.accent}20, ${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
-        color: themeStyles?.textColor 
+        background: pageBackground,
+        color: pageColor 
       }}
     >
       {/* Header with Theme Selector and Navigation Icons */}
       <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md py-3 px-4 border-b border-gray-800">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold" style={{ color: themeStyles?.accent }}>
+            <h1 className="text-2xl font-bold" style={{ color: accentColor }}>
               Создание персонажа
             </h1>
             
@@ -364,9 +371,9 @@ const CharacterCreationPage: React.FC = () => {
         <Card 
           className="mt-4 flex-1 rounded-lg overflow-hidden shadow-xl animate-fade-in"
           style={{ 
-            background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
-            borderColor: `${themeStyles?.accent}30`,
-            color: themeStyles?.textColor 
+            background: cardBackground,
+            borderColor: cardBorderColor,
+            color: pageColor 
           }}
         >
           <CardContent className="p-6">

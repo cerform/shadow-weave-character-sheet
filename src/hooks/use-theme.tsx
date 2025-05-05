@@ -1,5 +1,5 @@
 
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { ThemeContext, Theme } from '@/contexts/ThemeContext';
 import { themes } from '@/lib/themes';
 import { useUserTheme } from '@/hooks/use-user-theme';
@@ -20,18 +20,21 @@ export const useTheme = () => {
     };
   }
   
-  // Приоритет отдаем пользовательской теме, если она существует
-  const effectiveTheme = userTheme?.activeTheme || context.theme;
-  
-  // Получаем активные стили темы
-  const themeKey = (effectiveTheme || 'default') as keyof typeof themes;
-  const themeStyles = themes[themeKey] || themes.default;
-  
-  return {
-    ...context,
-    themeStyles,
-    effectiveTheme
-  };
+  // Мемоизируем значения, чтобы избежать лишних ререндеров компонентов
+  return useMemo(() => {
+    // Приоритет отдаем пользовательской теме, если она существует
+    const effectiveTheme = userTheme?.activeTheme || context.theme;
+    
+    // Получаем активные стили темы
+    const themeKey = (effectiveTheme || 'default') as keyof typeof themes;
+    const themeStyles = themes[themeKey] || themes.default;
+    
+    return {
+      ...context,
+      themeStyles,
+      effectiveTheme
+    };
+  }, [context, userTheme?.activeTheme]); // Зависим только от этих значений
 };
 
 export default useTheme;
