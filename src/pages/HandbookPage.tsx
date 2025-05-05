@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -200,10 +199,14 @@ const HandbookPage: React.FC = () => {
                       <CardTitle>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Ensure description is safely rendered as string with proper type casting */}
-                      <p>{typeof subraceObj.description === 'object' ? 
-                          'Подробное описание' : 
-                          String(subraceObj.description || 'Нет описания')}</p>
+                      {/* Safe rendering with proper type handling */}
+                      <p>
+                        {typeof subraceObj.description === 'object' 
+                          ? 'Подробное описание' 
+                          : typeof subraceObj.description === 'string' 
+                              ? subraceObj.description 
+                              : 'Нет описания'}
+                      </p>
                     </CardContent>
                   </Card>
                 );
