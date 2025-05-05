@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,11 @@ const ProfilePreview = () => {
   // Получаем текущую тему для стилизации
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
+  // Эффект для отладки
+  useEffect(() => {
+    console.log("ProfilePreview - Auth state:", { isAuthenticated, currentUser });
+  }, [isAuthenticated, currentUser]);
   
   const handleLogout = async () => {
     try {
@@ -80,6 +85,8 @@ const ProfilePreview = () => {
   // Определяем аватар пользователя или генерируем на основе имени
   const avatarUrl = currentUser.photoURL || 
     `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser.username || currentUser.email}`;
+  
+  console.log("Rendering authenticated profile for:", currentUser.email);
   
   return (
     <div 

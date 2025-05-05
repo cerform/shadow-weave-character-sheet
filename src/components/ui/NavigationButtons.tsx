@@ -1,25 +1,31 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { BookMarked, Scroll, Map, Wand2, BookOpen, Shield, LogIn, User, LogOut, Dices } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DiceDrawer } from '@/components/dice/DiceDrawer';
+import { toast } from '@/components/ui/use-toast';
 
 interface NavigationButtonsProps {
   className?: string;
 }
 
 export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAuthenticated } = useAuth();
+  const location = useLocation();
   const isDM = currentUser?.isDM;
   
   const { theme, themeStyles } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themeStyles || themes[themeKey] || themes.default;
+
+  // Эффект для отладки состояния аутентификации
+  useEffect(() => {
+    console.log("NavigationButtons - Auth state:", { isAuthenticated, currentUser });
+  }, [isAuthenticated, currentUser]);
 
   // Общие стили для всех кнопок
   const buttonStyle = {
@@ -27,6 +33,18 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
     color: currentTheme.textColor,
     boxShadow: `0 0 5px ${currentTheme.accent}30`,
     backgroundColor: 'rgba(0, 0, 0, 0.7)'
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы"
+      });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+    }
   };
 
   return (
@@ -115,7 +133,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         {/* Добавляем кнопку кубиков в навигацию */}
         <DiceDrawer />
         
-        {currentUser ? (
+        {isAuthenticated && currentUser ? (
           <>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -144,7 +162,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
                   size="icon"
                   style={buttonStyle}
                   className="hover:shadow-lg transition-all hover:scale-105"
-                  onClick={() => logout()}
+                  onClick={handleLogout}
                 >
                   <LogOut className="size-4" />
                   <span className="sr-only">Выход</span>
