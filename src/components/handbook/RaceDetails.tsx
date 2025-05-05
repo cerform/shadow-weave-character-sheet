@@ -32,6 +32,21 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
   
   if (!race) return null;
 
+  // Helper function to safely render content regardless of type
+  const renderContent = (content: unknown): React.ReactNode => {
+    if (typeof content === 'string') {
+      return content;
+    } else if (typeof content === 'number') {
+      return String(content);
+    } else if (content === null || content === undefined) {
+      return 'Нет данных';
+    } else if (typeof content === 'object') {
+      return 'Подробное описание';
+    } else {
+      return String(content);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center mb-4">
@@ -321,16 +336,10 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       <CardTitle style={{ color: currentTheme.textColor }}>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Правильно отображаем описание в зависимости от типа */}
-                      {(() => {
-                        if (typeof subraceObj.description === 'object') {
-                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>Подробное описание</p>;
-                        } else if (typeof subraceObj.description === 'string') {
-                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{subraceObj.description}</p>;
-                        } else {
-                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>Нет описания</p>;
-                        }
-                      })()}
+                      {/* Безопасно отображаем описание подрасы */}
+                      <p className="text-gray-300" style={{ color: currentTheme.textColor }}>
+                        {renderContent(subraceObj.description)}
+                      </p>
                       
                       {subraceObj.traits && Array.isArray(subraceObj.traits) && (
                         <div className="mt-3">
