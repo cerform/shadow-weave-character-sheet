@@ -44,3 +44,5 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useUserTheme = () => useContext(UserThemeContext);
+
+export default useUserTheme;
