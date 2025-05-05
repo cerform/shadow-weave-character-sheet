@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FileUp, Plus, Users, User, Swords, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
+import { FileUp, Plus, Users, User, Swords, UserPlus, FileText, Crown, LogIn, LogOut, Trash, BookOpen, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
