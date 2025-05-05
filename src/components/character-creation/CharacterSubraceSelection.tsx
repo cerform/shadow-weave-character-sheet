@@ -49,7 +49,15 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
         setAvailableSubraces(subraceObjects);
         
         // Если подраса не была выбрана или не соответствует текущей расе, сбрасываем её
-        if (!selectedSubrace || !raceData.subraces.some(sr => sr === selectedSubrace)) {
+        if (!selectedSubrace || !raceData.subraces.some(sr => {
+          // Проверяем, является ли sr объектом с полем name или строкой
+          if (typeof sr === 'string') {
+            return sr === selectedSubrace;
+          } else if (typeof sr === 'object' && sr !== null) {
+            return sr.name === selectedSubrace;
+          }
+          return false;
+        })) {
           setSelectedSubrace('');
           updateCharacter({ subrace: '' });
         }

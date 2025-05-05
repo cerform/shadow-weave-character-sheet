@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,9 +125,8 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       <CardTitle>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {/* Properly handle different types with explicit rendering */}
+                      {/* Правильно отображаем описание в зависимости от типа */}
                       {(() => {
-                        // Use an IIFE to ensure we return a ReactNode
                         if (typeof subraceObj.description === 'object') {
                           return <p>Подробное описание</p>;
                         } else if (typeof subraceObj.description === 'string') {
