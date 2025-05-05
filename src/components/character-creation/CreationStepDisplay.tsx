@@ -38,8 +38,7 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Теперь мы всегда показываем шаг подрасы, если он есть в шагах,
-  // но его доступность будет контролироваться внутри компонента CharacterSubraceSelection
+  // Показываем все шаги из переданного массива
   const filteredSteps = steps;
 
   return (

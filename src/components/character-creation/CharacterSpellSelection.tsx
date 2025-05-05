@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,18 +47,26 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   useEffect(() => {
     const allSpells = getAllSpells();
     
-    if (character.className) {
-      // Фильтруем заклинания по классу персонажа
+    if (character.className || character.class) {
+      const className = character.className || character.class;
+      // Фильтруем заклинания по классу персонажа, учитывая максимальный уровень заклинаний
       const classSpells = allSpells.filter(spell => {
-        // Проверяем, что classes существует и является массивом или строкой
+        // Проверяем, что classes существует
         if (!spell.classes) return false;
         
-        const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes].filter(Boolean);
-        return spellClasses.some(spellClass => 
+        const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+        
+        // Проверяем уровень заклинания в зависимости от уровня персонажа
+        const characterLevel = character.level || 1;
+        const maxSpellLevel = getMaxSpellLevel(className || '', characterLevel);
+        
+        return spell.level <= maxSpellLevel && spellClasses.some(spellClass => 
           spellClass && typeof spellClass === 'string' && 
-          spellClass.toLowerCase().includes(character.className?.toLowerCase() || '')
+          spellClass.toLowerCase().includes(className?.toLowerCase() || '')
         );
       });
+      
+      console.log(`Найдено ${classSpells.length} заклинаний для класса ${className}`);
       
       // Преобразуем CharacterSpell в SpellData для правильной типизации
       const convertedSpells = convertToSpellDataArray(classSpells);
@@ -67,7 +76,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       setAvailableSpells([]);
       setFilteredSpells([]);
     }
-  }, [character.className]);
+  }, [character.className, character.class, character.level]);
   
   // Фильтруем заклинания при изменении активного таба или поискового запроса
   useEffect(() => {
@@ -85,39 +94,99 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     setFilteredSpells(filtered);
   }, [activeTab, searchQuery, availableSpells]);
   
+  // Определяем максимальный уровень заклинаний в зависимости от класса и уровня персонажа
+  const getMaxSpellLevel = (className: string, characterLevel: number): number => {
+    // Преобразуем название класса к нижнему регистру для сравнения
+    const normalizedClass = className.toLowerCase();
+    
+    // Полные заклинатели (до 9-го уровня)
+    if (['волшебник', 'жрец', 'друид', 'бард', 'чародей'].includes(normalizedClass)) {
+      if (characterLevel >= 17) return 9;
+      if (characterLevel >= 15) return 8;
+      if (characterLevel >= 13) return 7;
+      if (characterLevel >= 11) return 6;
+      if (characterLevel >= 9) return 5;
+      if (characterLevel >= 7) return 4;
+      if (characterLevel >= 5) return 3;
+      if (characterLevel >= 3) return 2;
+      return 1;
+    } 
+    // Полузаклинатели (до 5-го уровня)
+    else if (['паладин', 'следопыт', 'рейнджер'].includes(normalizedClass)) {
+      if (characterLevel >= 17) return 5;
+      if (characterLevel >= 13) return 4;
+      if (characterLevel >= 9) return 3;
+      if (characterLevel >= 5) return 2;
+      if (characterLevel >= 2) return 1;
+      return 0;
+    }
+    // Особые заклинатели (колдун)
+    else if (['колдун', 'чернокнижник'].includes(normalizedClass)) {
+      if (characterLevel >= 17) return 5; // У колдуна особая механика, но максимум 5 уровень слотов
+      if (characterLevel >= 11) return 5;
+      if (characterLevel >= 9) return 5;
+      if (characterLevel >= 7) return 4;
+      if (characterLevel >= 5) return 3;
+      if (characterLevel >= 3) return 2;
+      return 1;
+    }
+    // Для остальных классов
+    return 0;
+  };
+  
   // Определяем количество доступных для выбора заклинаний
-  const getAvailableSpellCount = () => {
-    if (!character.className || !character.level) return 0;
+  const getAvailableSpellCount = (): number => {
+    if (!character.className && !character.class || !character.level) return 0;
+    
+    const className = character.className || character.class;
+    if (!className) return 0;
     
     // Логика расчета количества заклинаний в зависимости от класса и уровня
-    switch(character.className.toLowerCase()) {
+    const normalizedClass = className.toLowerCase();
+    const characterLevel = character.level || 1;
+    
+    console.log(`Расчет количества заклинаний для ${normalizedClass} уровня ${characterLevel}`);
+    
+    switch(normalizedClass) {
       case 'волшебник':
-        return 6 + (character.level > 1 ? (character.level - 1) * 2 : 0);
+        return 6 + (characterLevel > 1 ? (characterLevel - 1) * 2 : 0);
       case 'чародей':
+        return Math.min(15, characterLevel + 1);
       case 'жрец':
       case 'друид':
+        return characterLevel + Math.max(0, getAbilityModifier());
       case 'бард':
-        return character.level + Math.max(0, Math.floor((getAbilityModifier() + 1) / 2));
+        return Math.min(22, 4 + (characterLevel > 1 ? (characterLevel - 1) * 1 : 0));
       case 'колдун':
-        return Math.min(8, Math.max(1, Math.ceil(character.level / 2) + 1));
+      case 'чернокнижник':
+        return Math.min(15, Math.max(1, Math.ceil(characterLevel / 2) + 1));
+      case 'паладин':
+      case 'следопыт':
+      case 'рейнджер':
+        return Math.min(11, Math.ceil(characterLevel / 2) + 1);
       default:
-        return 0;
+        return characterLevel > 3 ? 4 : characterLevel; // Базовое значение для остальных классов
     }
   };
   
   // Получаем модификатор основной характеристики заклинаний
-  const getAbilityModifier = () => {
+  const getAbilityModifier = (): number => {
     if (!character.abilities) return 0;
     
-    switch(character.className?.toLowerCase()) {
+    const className = (character.className || character.class || '').toLowerCase();
+    
+    switch(className) {
       case 'волшебник':
         return Math.floor((character.abilities.intelligence - 10) / 2);
       case 'чародей':
       case 'бард':
       case 'колдун':
+      case 'чернокнижник':
         return Math.floor((character.abilities.charisma - 10) / 2);
       case 'жрец':
       case 'друид':
+      case 'следопыт':
+      case 'рейнджер':
         return Math.floor((character.abilities.wisdom - 10) / 2);
       default:
         return 0;
