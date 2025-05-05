@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, ChevronRight, ChevronLeft, Home, Book } from 'lucide-react';
+import { ArrowLeft, Download, ChevronRight, ChevronLeft, Home, Book, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import ThemeSelector from '@/components/ThemeSelector';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface RaceDetailsProps {
   race: any;
@@ -14,6 +18,9 @@ interface RaceDetailsProps {
 
 const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
   const [activeTab, setActiveTab] = useState("traits");
+  const { theme, themeStyles } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themeStyles || themes[themeKey] || themes.default;
   
   if (!race) return null;
 
@@ -25,53 +32,145 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
           size="icon" 
           onClick={onBack}
           className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+          style={{ borderColor: `${currentTheme.accent}50` }}
         >
           <ArrowLeft size={16} />
         </Button>
-        <h2 className="text-2xl font-bold ml-4 text-white">{race.name}</h2>
+        <h2 className="text-2xl font-bold ml-4" style={{ color: currentTheme.textColor }}>{race.name}</h2>
         <div className="ml-auto flex space-x-2">
           <Button 
             variant="outline" 
             size="icon"
             className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+            style={{ borderColor: `${currentTheme.accent}50` }}
+            asChild
           >
-            <Home size={16} />
+            <Link to="/">
+              <Home size={16} />
+            </Link>
           </Button>
           <Button 
             variant="outline" 
             size="icon"
             className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+            style={{ borderColor: `${currentTheme.accent}50` }}
+            asChild
           >
-            <Book size={16} />
+            <Link to="/spellbook">
+              <Book size={16} />
+            </Link>
           </Button>
           <Button 
             variant="outline" 
             size="icon"
             className="flex items-center bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+            style={{ borderColor: `${currentTheme.accent}50` }}
+            asChild
           >
-            <Download size={16} />
+            <Link to="/auth">
+              <User size={16} />
+            </Link>
           </Button>
+          <ThemeSelector />
         </div>
       </div>
       
-      <p className="text-gray-300">{race.description}</p>
+      <p style={{ color: currentTheme.textColor }}>{race.description}</p>
       
-      <Tabs defaultValue="traits" onValueChange={setActiveTab} value={activeTab} className="text-white">
-        <TabsList className="mb-4 bg-gray-800 border border-purple-700/30">
-          <TabsTrigger value="traits" className="data-[state=active]:bg-purple-800 data-[state=active]:text-white">Особенности</TabsTrigger>
-          <TabsTrigger value="abilities" className="data-[state=active]:bg-purple-800 data-[state=active]:text-white">Характеристики</TabsTrigger>
-          <TabsTrigger value="subraces" className="data-[state=active]:bg-purple-800 data-[state=active]:text-white">Разновидности</TabsTrigger>
-          <TabsTrigger value="builds" className="data-[state=active]:bg-purple-800 data-[state=active]:text-white">Рекомендации</TabsTrigger>
+      <Tabs 
+        defaultValue="traits" 
+        onValueChange={setActiveTab} 
+        value={activeTab} 
+        className="text-white"
+      >
+        <TabsList 
+          className="mb-4 bg-gray-800 border border-purple-700/30"
+          style={{ 
+            background: `${currentTheme.cardBackground}`, 
+            borderColor: `${currentTheme.accent}30` 
+          }}
+        >
+          <TabsTrigger 
+            value="traits" 
+            className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
+            style={{ 
+              color: currentTheme.textColor,
+              ['--tw-bg-opacity' as any]: 'data-[state=active]:1',
+              background: `data-[state=active]:${currentTheme.accent}`
+            }}
+          >
+            Особенности
+          </TabsTrigger>
+          <TabsTrigger 
+            value="abilities" 
+            className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
+            style={{ 
+              color: currentTheme.textColor,
+              ['--tw-bg-opacity' as any]: 'data-[state=active]:1',
+              background: `data-[state=active]:${currentTheme.accent}`
+            }}
+          >
+            Характеристики
+          </TabsTrigger>
+          <TabsTrigger 
+            value="subraces" 
+            className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
+            style={{ 
+              color: currentTheme.textColor,
+              ['--tw-bg-opacity' as any]: 'data-[state=active]:1',
+              background: `data-[state=active]:${currentTheme.accent}`
+            }}
+          >
+            Разновидности
+          </TabsTrigger>
+          <TabsTrigger 
+            value="builds" 
+            className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
+            style={{ 
+              color: currentTheme.textColor,
+              ['--tw-bg-opacity' as any]: 'data-[state=active]:1',
+              background: `data-[state=active]:${currentTheme.accent}`
+            }}
+          >
+            Рекомендации
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="traits" className="space-y-4">
-          <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-            <h3 className="text-lg font-semibold mb-2 text-purple-300">Расовые черты</h3>
-            <Accordion type="multiple" className="w-full">
+          <div 
+            className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+            style={{ 
+              background: `${currentTheme.cardBackground}`, 
+              borderColor: `${currentTheme.accent}20` 
+            }}
+          >
+            <h3 
+              className="text-lg font-semibold mb-2 text-purple-300"
+              style={{ color: currentTheme.accent }}
+            >
+              Расовые черты
+            </h3>
+            <Accordion 
+              type="multiple" 
+              className="w-full"
+            >
               {race.traits.map((trait: string, index: number) => (
-                <AccordionItem key={index} value={`trait-${index}`} className="border-purple-700/30">
-                  <AccordionTrigger className="text-white hover:text-purple-300">{trait.split(':')[0] || trait}</AccordionTrigger>
-                  <AccordionContent className="text-gray-300">
+                <AccordionItem 
+                  key={index} 
+                  value={`trait-${index}`} 
+                  className="border-purple-700/30"
+                  style={{ borderColor: `${currentTheme.accent}30` }}
+                >
+                  <AccordionTrigger 
+                    className="text-white hover:text-purple-300"
+                    style={{ 
+                      color: currentTheme.textColor, 
+                      ['&:hover' as any]: { color: currentTheme.accent } 
+                    }}
+                  >
+                    {trait.split(':')[0] || trait}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-300" style={{ color: currentTheme.textColor }}>
                     {trait.includes(':') ? trait.split(':')[1].trim() : 
                     "Подробное описание этой особенности вы можете найти в Книге игрока."}
                   </AccordionContent>
@@ -81,35 +180,97 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-              <h3 className="text-lg font-semibold mb-2 text-purple-300">Размер</h3>
-              <p className="text-gray-300">{race.size}</p>
+            <div 
+              className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+              style={{ 
+                background: `${currentTheme.cardBackground}`, 
+                borderColor: `${currentTheme.accent}20` 
+              }}
+            >
+              <h3 
+                className="text-lg font-semibold mb-2 text-purple-300"
+                style={{ color: currentTheme.accent }}
+              >
+                Размер
+              </h3>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.size}</p>
             </div>
             
-            <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-              <h3 className="text-lg font-semibold mb-2 text-purple-300">Скорость</h3>
-              <p className="text-gray-300">{race.speed} фт.</p>
+            <div 
+              className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+              style={{ 
+                background: `${currentTheme.cardBackground}`, 
+                borderColor: `${currentTheme.accent}20` 
+              }}
+            >
+              <h3 
+                className="text-lg font-semibold mb-2 text-purple-300"
+                style={{ color: currentTheme.accent }}
+              >
+                Скорость
+              </h3>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.speed} фт.</p>
             </div>
             
-            <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-              <h3 className="text-lg font-semibold mb-2 text-purple-300">Языки</h3>
-              <p className="text-gray-300">{race.languages.join(', ')}</p>
+            <div 
+              className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+              style={{ 
+                background: `${currentTheme.cardBackground}`, 
+                borderColor: `${currentTheme.accent}20` 
+              }}
+            >
+              <h3 
+                className="text-lg font-semibold mb-2 text-purple-300"
+                style={{ color: currentTheme.accent }}
+              >
+                Языки
+              </h3>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.languages.join(', ')}</p>
             </div>
             
-            <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-              <h3 className="text-lg font-semibold mb-2 text-purple-300">Зрение</h3>
-              <p className="text-gray-300">{race.vision || "Обычное"}</p>
+            <div 
+              className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+              style={{ 
+                background: `${currentTheme.cardBackground}`, 
+                borderColor: `${currentTheme.accent}20` 
+              }}
+            >
+              <h3 
+                className="text-lg font-semibold mb-2 text-purple-300"
+                style={{ color: currentTheme.accent }}
+              >
+                Зрение
+              </h3>
+              <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{race.vision || "Обычное"}</p>
             </div>
           </div>
         </TabsContent>
         
         <TabsContent value="abilities">
-          <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-            <h3 className="text-lg font-semibold mb-2 text-purple-300">Прирост характеристик</h3>
+          <div 
+            className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+            style={{ 
+              background: `${currentTheme.cardBackground}`, 
+              borderColor: `${currentTheme.accent}20` 
+            }}
+          >
+            <h3 
+              className="text-lg font-semibold mb-2 text-purple-300"
+              style={{ color: currentTheme.accent }}
+            >
+              Прирост характеристик
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {race.abilityScoreIncrease && Object.entries(race.abilityScoreIncrease).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between p-2 border rounded border-purple-700/30 bg-gray-800">
-                  <span className="text-gray-300">
+                <div 
+                  key={key} 
+                  className="flex items-center justify-between p-2 border rounded border-purple-700/30 bg-gray-800"
+                  style={{ 
+                    background: 'rgba(0, 0, 0, 0.3)', 
+                    borderColor: `${currentTheme.accent}30` 
+                  }}
+                >
+                  <span className="text-gray-300" style={{ color: currentTheme.textColor }}>
                     {key === 'strength' && 'Сила'}
                     {key === 'dexterity' && 'Ловкость'}
                     {key === 'constitution' && 'Телосложение'}
@@ -118,7 +279,12 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                     {key === 'charisma' && 'Харизма'}
                     {key === 'all' && 'Все характеристики'}
                   </span>
-                  <span className="font-semibold text-purple-300">+{value}</span>
+                  <span 
+                    className="font-semibold text-purple-300"
+                    style={{ color: currentTheme.accent }}
+                  >
+                    +{value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -135,26 +301,39 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                   : subrace;
                   
                 return (
-                  <Card key={index} className="overflow-hidden border border-purple-700/20 bg-gray-900/80 text-white">
+                  <Card 
+                    key={index} 
+                    className="overflow-hidden border border-purple-700/20 bg-gray-900/80 text-white"
+                    style={{ 
+                      background: `${currentTheme.cardBackground}`, 
+                      borderColor: `${currentTheme.accent}20`,
+                      color: currentTheme.textColor 
+                    }}
+                  >
                     <CardHeader className="pb-2">
-                      <CardTitle>{subraceObj.name}</CardTitle>
+                      <CardTitle style={{ color: currentTheme.textColor }}>{subraceObj.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {/* Правильно отображаем описание в зависимости от типа */}
                       {(() => {
                         if (typeof subraceObj.description === 'object') {
-                          return <p className="text-gray-300">Подробное описание</p>;
+                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>Подробное описание</p>;
                         } else if (typeof subraceObj.description === 'string') {
-                          return <p className="text-gray-300">{subraceObj.description}</p>;
+                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>{subraceObj.description}</p>;
                         } else {
-                          return <p className="text-gray-300">Нет описания</p>;
+                          return <p className="text-gray-300" style={{ color: currentTheme.textColor }}>Нет описания</p>;
                         }
                       })()}
                       
                       {subraceObj.traits && (
                         <div className="mt-3">
-                          <h4 className="font-semibold mb-1 text-purple-300">Дополнительные черты:</h4>
-                          <ul className="list-disc pl-5 text-gray-300">
+                          <h4 
+                            className="font-semibold mb-1 text-purple-300"
+                            style={{ color: currentTheme.accent }}
+                          >
+                            Дополнительные черты:
+                          </h4>
+                          <ul className="list-disc pl-5 text-gray-300" style={{ color: currentTheme.textColor }}>
                             {Array.isArray(subraceObj.traits) ? (
                               subraceObj.traits.map((trait: string, idx: number) => (
                                 <li key={idx}>{trait}</li>
@@ -168,11 +347,23 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                       
                       {subraceObj.abilityScoreIncrease && (
                         <div className="mt-3">
-                          <h4 className="font-semibold mb-1 text-purple-300">Дополнительный прирост характеристик:</h4>
+                          <h4 
+                            className="font-semibold mb-1 text-purple-300"
+                            style={{ color: currentTheme.accent }}
+                          >
+                            Дополнительный прирост характеристик:
+                          </h4>
                           <div className="grid grid-cols-2 gap-2">
                             {Object.entries(subraceObj.abilityScoreIncrease).map(([key, value]) => (
-                              <div key={key} className="flex justify-between p-1 border rounded border-purple-700/30 bg-gray-800">
-                                <span className="text-gray-300">
+                              <div 
+                                key={key} 
+                                className="flex justify-between p-1 border rounded border-purple-700/30 bg-gray-800"
+                                style={{ 
+                                  background: 'rgba(0, 0, 0, 0.3)', 
+                                  borderColor: `${currentTheme.accent}30` 
+                                }}
+                              >
+                                <span className="text-gray-300" style={{ color: currentTheme.textColor }}>
                                   {key === 'strength' && 'Сила'}
                                   {key === 'dexterity' && 'Ловкость'}
                                   {key === 'constitution' && 'Телосложение'}
@@ -180,7 +371,12 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
                                   {key === 'wisdom' && 'Мудрость'}
                                   {key === 'charisma' && 'Харизма'}
                                 </span>
-                                <span className="font-semibold text-purple-300">+{value}</span>
+                                <span 
+                                  className="font-semibold text-purple-300"
+                                  style={{ color: currentTheme.accent }}
+                                >
+                                  +{value}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -192,23 +388,59 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
               })}
             </div>
           ) : (
-            <div className="text-center p-8 text-gray-300 bg-gray-900/50 rounded-lg border border-purple-700/20">
+            <div 
+              className="text-center p-8 text-gray-300 bg-gray-900/50 rounded-lg border border-purple-700/20"
+              style={{ 
+                background: `${currentTheme.cardBackground}40`, 
+                borderColor: `${currentTheme.accent}20`,
+                color: currentTheme.textColor 
+              }}
+            >
               <p>У этой расы нет подрас.</p>
             </div>
           )}
         </TabsContent>
         
         <TabsContent value="builds">
-          <div className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20">
-            <h3 className="text-lg font-semibold mb-2 text-purple-300">Рекомендуемые комбинации с классами</h3>
+          <div 
+            className="bg-gray-900/80 p-4 rounded-lg border border-purple-700/20"
+            style={{ 
+              background: `${currentTheme.cardBackground}`, 
+              borderColor: `${currentTheme.accent}20` 
+            }}
+          >
+            <h3 
+              className="text-lg font-semibold mb-2 text-purple-300"
+              style={{ color: currentTheme.accent }}
+            >
+              Рекомендуемые комбинации с классами
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {getRecommendedBuilds(race.name).map((build: any, index: number) => (
-                <Card key={index} className="border border-purple-700/20 bg-gray-900/80 text-white">
+                <Card 
+                  key={index} 
+                  className="border border-purple-700/20 bg-gray-900/80 text-white"
+                  style={{ 
+                    background: `${currentTheme.cardBackground}`, 
+                    borderColor: `${currentTheme.accent}20`,
+                    color: currentTheme.textColor 
+                  }}
+                >
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{build.class}</CardTitle>
+                    <CardTitle 
+                      className="text-lg"
+                      style={{ color: currentTheme.textColor }}
+                    >
+                      {build.class}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-300">{build.description}</p>
+                    <p 
+                      className="text-sm text-gray-300"
+                      style={{ color: currentTheme.textColor }}
+                    >
+                      {build.description}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -222,6 +454,11 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
           variant="outline" 
           size="icon" 
           className="bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+          style={{ 
+            background: `${currentTheme.cardBackground}`, 
+            borderColor: `${currentTheme.accent}50`,
+            color: currentTheme.textColor 
+          }}
         >
           <ChevronLeft size={16} />
         </Button>
@@ -229,6 +466,11 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
           variant="outline" 
           size="icon"
           className="bg-purple-900/60 text-white border-purple-500/50 hover:bg-purple-800"
+          style={{ 
+            background: `${currentTheme.cardBackground}`, 
+            borderColor: `${currentTheme.accent}50`,
+            color: currentTheme.textColor 
+          }}
         >
           <ChevronRight size={16} />
         </Button>

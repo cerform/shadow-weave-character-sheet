@@ -10,6 +10,10 @@ import BackgroundDetails from '@/components/handbook/BackgroundDetails';
 import { getAllRaces, getAllRaceSources } from '@/data/races';
 import { getAllClasses, getAllClassSources } from '@/data/classes';
 import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import ThemeSelector from '@/components/ThemeSelector';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const HandbookPage: React.FC = () => {
   // Состояния для данных
@@ -27,6 +31,11 @@ const HandbookPage: React.FC = () => {
   // Состояния для фильтров
   const [sources, setSources] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  
+  // Получаем тему
+  const { theme, themeStyles } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themeStyles || themes[themeKey] || themes.default;
   
   // Загрузка данных при инициализации
   useEffect(() => {
@@ -83,12 +92,25 @@ const HandbookPage: React.FC = () => {
               setSelectedBackground={setSelectedBackground} 
             />;
       default:
-        return <div className="p-6 text-gray-300">Выберите категорию из справочника.</div>;
+        return (
+          <div 
+            className="p-6 text-gray-300"
+            style={{ color: currentTheme.textColor }}
+          >
+            Выберите категорию из справочника.
+          </div>
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex text-white">
+    <div 
+      className="min-h-screen bg-gray-900 flex text-white"
+      style={{ 
+        background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
+        color: currentTheme.textColor 
+      }}
+    >
       {/* Боковая панель */}
       <HandbookSidebar 
         activeSection={activeSection}
@@ -103,11 +125,21 @@ const HandbookPage: React.FC = () => {
       {/* Основное содержимое */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-6 text-purple-300">
-            {activeSection === 'races' && 'Расы'}
-            {activeSection === 'classes' && 'Классы'}
-            {activeSection === 'backgrounds' && 'Предыстории'}
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 
+              className="text-3xl font-bold text-purple-300"
+              style={{ color: currentTheme.accent }}
+            >
+              {activeSection === 'races' && 'Расы'}
+              {activeSection === 'classes' && 'Классы'}
+              {activeSection === 'backgrounds' && 'Предыстории'}
+            </h1>
+            
+            <div className="flex space-x-2">
+              <NavigationButtons />
+              <ThemeSelector />
+            </div>
+          </div>
           
           {renderContent()}
         </div>
