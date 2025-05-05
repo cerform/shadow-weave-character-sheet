@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useConsoleLogger } from '@/hooks/use-console-logger';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { DetailedAuthError } from '@/services/firebase';
 
 interface AuthFormProps {
   redirectTo?: string;
@@ -215,11 +216,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       return;
     }
     
-    // FIX: Changed comparison from "if (popupSupported === null)" to "if (popupSupported === null)"
-    // This fixes the TS2367 error by ensuring proper boolean comparison
+    // Если popupSupported равен null, проверяем поддержку
     if (popupSupported === null) {
       checkPopupSupport();
-      // FIX: Changed from comparing literal booleans to comparing variable
+      // Проверяем результат после обновления состояния
       if (popupSupported === false) {
         return; // выходим, если попапы заблокированы
       }

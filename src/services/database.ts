@@ -1,4 +1,3 @@
-
 import { db } from './firebase';
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import type { CharacterSheet } from '@/utils/characterImports';

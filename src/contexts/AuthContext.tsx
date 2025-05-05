@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
-import { auth as firebaseAuth } from '@/services/firebase';
+import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
-import { db } from '@/services/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { toast } from '@/components/ui/use-toast';
 
