@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +27,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 }) => {
   const { toast } = useToast();
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(character.spells || []);
+  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);  // Изменено на SpellData[]
   const [filterText, setFilterText] = useState('');
   const [activeTab, setActiveTab] = useState('cantrips');
   const [spellLimits, setSpellLimits] = useState<{ cantrips: number; spells: number }>({
@@ -124,7 +123,14 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       });
       
       console.log(`Найдено ${filteredSpells.length} заклинаний для класса ${character.class}`);
-      setAvailableSpells(filteredSpells);
+      
+      // Преобразуем CharacterSpell[] в SpellData[]
+      setAvailableSpells(convertSpellArray(filteredSpells));
+      
+      // Если у персонажа есть заклинания, конвертируем и устанавливаем их
+      if (character.spells && character.spells.length > 0) {
+        setSelectedSpells(convertSpellArray(character.spells));
+      }
     } catch (error) {
       console.error("Ошибка при загрузке заклинаний:", error);
       toast({
@@ -178,11 +184,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   // Обработка выбора заклинания
   const toggleSpellSelection = (spell: SpellData) => {
     // Проверяем, выбрано ли уже заклинание
-    const isSelected = selectedSpells.some(s => s.name === spell.name);
+    const isSelected = selectedSpells.some(s => s.id === spell.id);
     
     if (isSelected) {
       // Удаляем заклинание из выбранных
-      setSelectedSpells(selectedSpells.filter(s => s.name !== spell.name));
+      setSelectedSpells(selectedSpells.filter(s => s.id !== spell.id));
     } else {
       // Проверяем, не превышен ли лимит
       if (isLimitReached(spell.level)) {
@@ -194,23 +200,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      // Преобразуем SpellData в CharacterSpell
-      const newSpell: CharacterSpell = {
-        name: spell.name,
-        level: spell.level,
-        school: spell.school,
-        castingTime: spell.castingTime,
-        range: spell.range,
-        components: spell.components,
-        duration: spell.duration,
-        description: spell.description,
-        classes: spell.classes,
-        // Устанавливаем prepared в зависимости от класса
-        prepared: character.class === 'Волшебник' || character.class === 'Жрец' || character.class === 'Друид' ? false : true,
-        id: spell.id
-      };
-      
-      setSelectedSpells([...selectedSpells, newSpell]);
+      // Добавляем новое заклинание (уже SpellData)
+      setSelectedSpells([...selectedSpells, spell]);
     }
   };
 
@@ -273,8 +264,23 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       }
     }
     
+    // Преобразуем selectedSpells (SpellData) обратно в CharacterSpell для обновления персонажа
+    const characterSpells: CharacterSpell[] = selectedSpells.map(spell => ({
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      classes: spell.classes,
+      prepared: true, // По умолчанию заклинания подготовлены
+    }));
+    
     // Сохраняем выбранные заклинания
-    updateCharacter({ spells: selectedSpells });
+    updateCharacter({ spells: characterSpells });
     nextStep();
   };
 
@@ -337,7 +343,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     <div
                       key={spell.id}
                       className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                        selectedSpells.some(s => s.name === spell.name)
+                        selectedSpells.some(s => s.id === spell.id)
                           ? 'bg-primary/20 border-primary'
                           : 'hover:bg-muted'
                       }`}

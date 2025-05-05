@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
@@ -57,27 +57,13 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         );
       });
       
-      setAvailableSpells(classSpells);
+      // Преобразуем CharacterSpell[] в SpellData[]
+      setAvailableSpells(convertSpellArray(classSpells));
       
       // Если у персонажа уже есть заклинания, загружаем их
       if (character.spells && character.spells.length > 0) {
-        const characterSpellData = character.spells.map(spell => {
-          const foundSpell = allSpells.find(s => s.name === spell.name);
-          return foundSpell || {
-            id: spell.id || spell.name,
-            name: spell.name,
-            level: spell.level,
-            description: spell.description || '',
-            school: spell.school || '',
-            castingTime: spell.castingTime || '',
-            range: spell.range || '',
-            components: spell.components || '',
-            duration: spell.duration || '',
-            classes: spell.classes || []
-          };
-        });
-        
-        setSelectedSpells(characterSpellData);
+        // Преобразуем CharacterSpell[] в SpellData[]
+        setSelectedSpells(convertSpellArray(character.spells));
       }
     }
   }, [character]);
@@ -111,10 +97,10 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     
     const spellClasses = typeof spell.classes === 'string' 
       ? [spell.classes] 
-      : spell.classes;
+      : spell.classes || [];
       
     return spellClasses.some(cls => 
-      cls.toLowerCase() === character.class?.toLowerCase()
+      cls?.toLowerCase() === character.class?.toLowerCase()
     );
   };
   
@@ -191,6 +177,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (!character) return;
     
     const characterSpells: CharacterSpell[] = selectedSpells.map(spell => ({
+      id: spell.id,
       name: spell.name,
       level: spell.level,
       school: spell.school,
@@ -201,7 +188,6 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       description: spell.description,
       classes: spell.classes,
       prepared: true, // По умолчанию заклинания подготовлены
-      id: spell.id
     }));
     
     updateCharacter({ spells: characterSpells });

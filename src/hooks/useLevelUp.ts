@@ -39,9 +39,14 @@ const useLevelUp = () => {
         // Обновляем персонажа с новыми данными о заклинаниях и уровнем
         updateCharacter({
           level: newLevel,
-          cantripsKnown: spellsInfo.cantripsCount,
-          spellsKnown: spellsInfo.knownSpells,
-          maxSpellLevel: spellsInfo.maxLevel
+          // Используем правильные названия полей для Character
+          spellcasting: {
+            // Обновляем информацию о заклинаниях
+            preparedSpellsLimit: spellsInfo.knownSpells
+          },
+          // Если нужно, добавляем другие поля для заклинаний
+          // Этих полей нет в типе Character, поэтому мы не можем их обновить напрямую
+          // maxSpellLevel: spellsInfo.maxLevel
         });
         
         // Сохраняем обновленного персонажа
