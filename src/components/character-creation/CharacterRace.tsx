@@ -20,8 +20,6 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
 }) => {
   const [selectedRace, setSelectedRace] = useState(character.race || '');
   const [hasSubraces, setHasSubraces] = useState<boolean>(false);
-  const [subraces, setSubraces] = useState<any[]>([]);
-  const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || '');
   
   // Получаем текущую тему
   const { theme, themeStyles } = useTheme();
@@ -36,12 +34,9 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
       
       // Проверяем наличие подрас у выбранной расы
       setHasSubraces(subracesList.length > 0);
-      setSubraces(subracesList);
       
       // Если выбираем расу впервые, сбрасываем выбранную подрасу
-      if (character.race !== selectedRace) {
-        setSelectedSubrace('');
-        
+      if (character.race !== selectedRace) {        
         // Обновляем персонажа
         onUpdate({
           race: selectedRace,
@@ -53,15 +48,6 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
 
   const handleRaceSelect = (raceName: string) => {
     setSelectedRace(raceName);
-  };
-  
-  const handleSubraceSelect = (subraceName: string) => {
-    setSelectedSubrace(subraceName);
-    
-    onUpdate({
-      race: selectedRace,
-      subrace: subraceName
-    });
   };
   
   const getRaceDescription = (raceName: string) => {
@@ -123,7 +109,6 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
                   ? `0 0 12px ${currentTheme.accent}80` 
                   : 'none',
                 color: currentTheme.textColor,
-                // Исправление: ring стиль добавлен через className выше
               }}
               onClick={() => handleRaceSelect(race.name)}
             >
@@ -186,51 +171,6 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
           ))}
         </div>
       </ScrollArea>
-      
-      {/* Отображаем выбор подрасы, если она есть у выбранной расы */}
-      {selectedRace && hasSubraces && subraces.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-700">
-          <div className="flex items-center gap-2 mb-4">
-            <Info size={18} style={{ color: currentTheme.accent }} />
-            <h3 className="text-xl font-bold" style={{ color: currentTheme.accent }}>
-              Выберите подрасу для {selectedRace}
-            </h3>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {subraces.map((subrace) => {
-              const subraceName = typeof subrace === 'string' ? subrace : subrace.name;
-              
-              return (
-                <Card 
-                  key={subraceName}
-                  className={`cursor-pointer transition-all duration-300 ${selectedSubrace === subraceName ? 'ring-2' : 'hover:bg-accent/10'}`}
-                  style={{ 
-                    background: selectedSubrace === subraceName 
-                      ? `${currentTheme.cardBackground}` 
-                      : 'rgba(0, 0, 0, 0.6)',
-                    borderColor: selectedSubrace === subraceName 
-                      ? currentTheme.accent 
-                      : 'rgba(255, 255, 255, 0.1)',
-                    boxShadow: selectedSubrace === subraceName 
-                      ? `0 0 8px ${currentTheme.accent}80` 
-                      : 'none',
-                    color: currentTheme.textColor,
-                    // Исправление: ring стиль добавлен через className выше
-                  }}
-                  onClick={() => handleSubraceSelect(subraceName)}
-                >
-                  <CardHeader className="p-3">
-                    <CardTitle className="text-lg" style={{ color: currentTheme.accent }}>
-                      {subraceName}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

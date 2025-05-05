@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import type { Character } from "@/types/character";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { races } from '@/data/races';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import NavigationButtons from "./NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UserCircle, Info } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface CharacterSubraceSelectionProps {
   character: Character;
@@ -18,15 +18,27 @@ interface CharacterSubraceSelectionProps {
   prevStep: () => void;
 }
 
+interface Subrace {
+  name: string;
+  description: string;
+  traits?: string[];
+  abilityScoreIncrease?: Record<string, number>;
+}
+
 const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   character,
   updateCharacter,
   nextStep,
   prevStep,
 }) => {
-  const [selectedSubrace, setSelectedSubrace] = useState(character.subrace || '');
-  const [availableSubraces, setAvailableSubraces] = useState<{name: string, description: string}[]>([]);
-  const [autoRedirectAttempted, setAutoRedirectAttempted] = useState(false);
+  const [selectedSubrace, setSelectedSubrace] = useState<string>(character.subrace || '');
+  const [availableSubraces, setAvailableSubraces] = useState<Subrace[]>([]);
+  const [autoRedirectAttempted, setAutoRedirectAttempted] = useState<boolean>(false);
+
+  // Получаем текущую тему
+  const { theme, themeStyles } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themeStyles || themes[themeKey] || themes.default;
 
   useEffect(() => {
     // Загрузка доступных подрас для выбранной расы
@@ -43,7 +55,9 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
             
           return {
             name: subraceName,
-            description: details.description || `Подраса ${subraceName}`
+            description: details.description || `Подраса ${subraceName}`,
+            traits: details.traits || [],
+            abilityScoreIncrease: details.abilityScoreIncrease || {}
           };
         });
         setAvailableSubraces(subraceObjects);
@@ -68,7 +82,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     }
   }, [character.race]);
 
-  const handleSubraceChange = (subraceName: string) => {
+  const handleSubraceSelect = (subraceName: string) => {
     setSelectedSubrace(subraceName);
     updateCharacter({ subrace: subraceName });
   };
@@ -79,7 +93,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
       setAutoRedirectAttempted(true);
       nextStep();
     }
-  }, [availableSubraces, character.race, autoRedirectAttempted]);
+  }, [availableSubraces, character.race, autoRedirectAttempted, nextStep]);
 
   // Если нет подрас, показываем загрузочное сообщение
   if (availableSubraces.length === 0) {
@@ -102,37 +116,87 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
   return (
     <div className="space-y-6">
       <SectionHeader 
-        title={`Выбор подрасы для ${character.race}`} 
-        description="Некоторые расы имеют различные подрасы с уникальными особенностями и бонусами."
+        title="Разновидность" 
+        description={`Раса ${character.race} имеет несколько разновидностей. Выберите одну из них.`}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCircle className="h-5 w-5" />
-            Доступные подрасы
-          </CardTitle>
-          <CardDescription>Выберите подрасу для вашего персонажа</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[400px] pr-4">
-            <RadioGroup value={selectedSubrace} onValueChange={handleSubraceChange} className="space-y-4">
-              {availableSubraces.map((subrace) => (
-                <div 
-                  key={subrace.name} 
-                  className={`border rounded-lg p-4 transition-colors ${selectedSubrace === subrace.name ? 'border-primary bg-primary/10 shadow-[0_0_10px] shadow-primary/30' : 'border-border hover:bg-accent/20'}`}
-                >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value={subrace.name} id={subrace.name} />
-                    <Label htmlFor={subrace.name} className="font-semibold text-lg">{subrace.name}</Label>
+      <ScrollArea className="h-[500px] pr-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {availableSubraces.map((subrace) => (
+            <Card 
+              key={subrace.name} 
+              className={`cursor-pointer transition-all duration-300 ${
+                selectedSubrace === subrace.name ? 'ring-2' : 'hover:bg-accent/10'
+              }`}
+              style={{ 
+                background: selectedSubrace === subrace.name
+                  ? `${currentTheme.cardBackground}`
+                  : 'rgba(0, 0, 0, 0.6)',
+                borderColor: selectedSubrace === subrace.name
+                  ? currentTheme.accent
+                  : 'rgba(255, 255, 255, 0.1)',
+                boxShadow: selectedSubrace === subrace.name
+                  ? `0 0 12px ${currentTheme.accent}80`
+                  : 'none',
+                color: currentTheme.textColor
+              }}
+              onClick={() => handleSubraceSelect(subrace.name)}
+            >
+              <CardHeader className="pb-2">
+                <CardTitle style={{ color: currentTheme.accent }}>{subrace.name}</CardTitle>
+                <CardDescription style={{ color: `${currentTheme.textColor}90` }}>
+                  {subrace.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subrace.traits && subrace.traits.length > 0 && (
+                  <div className="mb-3">
+                    <h4 className="text-sm font-semibold mb-2" style={{ color: currentTheme.accent }}>
+                      Особенности:
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-1 text-sm" style={{ color: `${currentTheme.textColor}80` }}>
+                      {subrace.traits.map((trait, idx) => (
+                        <li key={idx}>{trait}</li>
+                      ))}
+                    </ul>
                   </div>
-                  <p className="text-sm text-muted-foreground ml-6">{subrace.description}</p>
-                </div>
-              ))}
-            </RadioGroup>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                )}
+                
+                {subrace.abilityScoreIncrease && Object.keys(subrace.abilityScoreIncrease).length > 0 && (
+                  <div className="mt-3">
+                    <h4 className="text-sm font-semibold mb-2" style={{ color: currentTheme.accent }}>
+                      Увеличение характеристик:
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(subrace.abilityScoreIncrease).map(([key, value]) => (
+                        <div 
+                          key={key} 
+                          className="flex justify-between items-center p-1 text-xs rounded"
+                          style={{ 
+                            background: 'rgba(0, 0, 0, 0.3)', 
+                            borderColor: `${currentTheme.accent}30`,
+                            border: '1px solid'
+                          }}
+                        >
+                          <span>
+                            {key === 'strength' && 'Сила'}
+                            {key === 'dexterity' && 'Ловкость'}
+                            {key === 'constitution' && 'Телосложение'}
+                            {key === 'intelligence' && 'Интеллект'}
+                            {key === 'wisdom' && 'Мудрость'}
+                            {key === 'charisma' && 'Харизма'}
+                          </span>
+                          <span style={{ color: currentTheme.accent }}>+{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
 
       <NavigationButtons
         allowNext={!!selectedSubrace}
