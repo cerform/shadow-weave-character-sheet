@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,7 +219,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
     // Если не знаем, поддерживаются ли попапы, проверим еще раз
     if (popupSupported === null) {
       checkPopupSupport();
-      if (popupSupported === false) {
+      // Исправляем проблемное условие - здесь была ошибка TS2367
+      // Вместо сравнения popupSupported с false напрямую, 
+      // проверяем его значение после обновления
+      if (!popupSupported) {
         return; // выходим, если попапы заблокированы
       }
     }
@@ -263,7 +267,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
         setDebugInfo(prev => prev + "\n- Разрешены ли всплывающие окна");
         setDebugInfo(prev => prev + "\n- Не блокирует ли сеть запросы к Google");
         setDebugInfo(prev => prev + "\n- Авторизован ли домен в консоли Firebase");
-        setDebugInfo(prev => prev + "\n- Включена ли авторизац��я через Google в Firebase");
+        setDebugInfo(prev => prev + "\n- Включена ли авторизация через Google в Firebase");
         
         toast({
           title: "Вход не завершен",
