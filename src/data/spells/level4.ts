@@ -1,12 +1,14 @@
 
 import { CharacterSpell } from '@/types/character';
+import level4Part2Spells from './level4_part2';
+import level4Part3Spells from './level4_part3';
 
 export const level4Spells: CharacterSpell[] = [
   {
     name: "Власть над водами",
     level: 4,
     school: "Преобразование",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "300 футов",
     components: "В, С, М (капля воды и щепотка пыли)",
     verbal: true,
@@ -40,7 +42,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Высшая невидимость",
     level: 4,
     school: "Иллюзия",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "Касание",
     components: "В, С",
     verbal: true,
@@ -57,7 +59,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Иссушение",
     level: 4,
     school: "Некромантия",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "60 футов",
     components: "В, С, М (высушенный язык, сердце и лёгкие существа)",
     verbal: true,
@@ -74,7 +76,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Каменная кожа",
     level: 4,
     school: "Ограждение",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "Касание",
     components: "В, С, М (щепотка гранитной пыли)",
     verbal: true,
@@ -91,7 +93,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Контроль над растениями",
     level: 4,
     school: "Преобразование",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "30 футов",
     components: "В, С",
     verbal: true,
@@ -108,7 +110,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Метаморфоза",
     level: 4,
     school: "Преобразование",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "Касание",
     components: "В, С, М (гусеница и кокон)",
     verbal: true,
@@ -125,7 +127,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Огненный щит",
     level: 4,
     school: "Воплощение",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "На себя",
     components: "В, С, М (щепотка серы)",
     verbal: true,
@@ -142,7 +144,7 @@ export const level4Spells: CharacterSpell[] = [
     name: "Разговор с чудовищами",
     level: 4,
     school: "Прорицание",
-    castingTime: "Действие",
+    castingTime: "1 действие",
     range: "На себя",
     components: "В, С, М (нефрит стоимостью не менее 50 зм)",
     verbal: true,
@@ -155,6 +157,8 @@ export const level4Spells: CharacterSpell[] = [
     description: "Вы получаете возможность понимать и общаться с чудовищами. Вы можете задавать вопросы и получать ответы, но заклинание не делает чудовищ дружелюбными или сговорчивыми.",
     classes: ["Бард", "Жрец", "Друид", "Следопыт"]
   },
+  ...level4Part2Spells,
+  ...level4Part3Spells
 ];
 
-export default { level4Spells };
+export default level4Spells;

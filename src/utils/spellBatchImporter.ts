@@ -1,202 +1,147 @@
 
 import { CharacterSpell } from '@/types/character';
+import { parseComponents } from './spellProcessors';
 
-// Функция для импорта заклинаний из текстового формата
-export function importSpellsFromText(
-  rawText: string, 
-  existingSpells: CharacterSpell[] = []
-): CharacterSpell[] {
-  try {
-    // Разбиваем текст по двойным новым строкам (обычно разделяют заклинания)
-    const spellBlocks = rawText.split('\n\n').filter(block => block.trim().length > 0);
+/**
+ * Импорт заклинаний из текстового формата
+ * @param text Текст в формате: [уровень] Название заклинания ВСМ
+ * @param existingSpells Существующий массив заклинаний
+ */
+export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
+  const parsedEntries = processSpellBatch(text);
+  const existingSpellsMap = new Map<string, CharacterSpell>();
+
+  // Создаем карту существующих заклинаний для быстрого поиска
+  existingSpells.forEach(spell => {
+    const key = `${spell.name}|${spell.level}`;
+    existingSpellsMap.set(key, spell);
+  });
+
+  // Создаем новый массив результатов
+  const result: CharacterSpell[] = [...existingSpells];
+
+  // Обрабатываем каждую запись
+  parsedEntries.forEach(entry => {
+    const key = `${entry.name}|${entry.level}`;
     
-    // Анализируем каждый блок
-    const importedSpells: CharacterSpell[] = spellBlocks.map(block => {
-      const lines = block.split('\n');
+    if (existingSpellsMap.has(key)) {
+      // Обновляем существующее заклинание
+      const existingSpellIndex = result.findIndex(
+        spell => spell.name === entry.name && spell.level === entry.level
+      );
       
-      // Предполагаем, что первая строка - имя заклинания
-      const name = lines[0]?.trim() || 'Unknown Spell';
-      
-      // Остальные поля попробуем найти в тексте
-      let level = 0;
-      let school = 'Универсальная';
-      let castingTime = '1 действие';
-      let range = '30 футов';
-      let components = 'В, С, М';
-      let duration = 'Мгновенная';
-      let description = '';
-      let higherLevels = '';
-      
-      // Ищем шаблоны текста для выделения различных свойств заклинания
-      lines.forEach(line => {
-        const trimmedLine = line.trim();
-        
-        if (trimmedLine.includes('уровень') || trimmedLine.includes('уровня') || trimmedLine.includes('Заговор')) {
-          // Определяем уровень заклинания
-          if (trimmedLine.includes('Заговор')) {
-            level = 0;
-          } else {
-            const levelMatch = trimmedLine.match(/(\d+)/);
-            if (levelMatch) level = parseInt(levelMatch[1]);
-          }
-          
-          // Определяем школу из той же строки
-          ['Воплощение', 'Вызов', 'Ограждение', 'Прорицание', 'Некромантия', 
-           'Преобразование', 'Очарование', 'Иллюзия', 'Универсальная'].forEach(s => {
-            if (trimmedLine.includes(s)) school = s;
-          });
-        }
-        
-        // Ищем время накладывания
-        if (trimmedLine.includes('Время накладывания:')) {
-          castingTime = trimmedLine.replace('Время накладывания:', '').trim();
-        }
-        
-        // Ищем дальность
-        if (trimmedLine.includes('Дальность:')) {
-          range = trimmedLine.replace('Дальность:', '').trim();
-        }
-        
-        // Ищем компоненты
-        if (trimmedLine.includes('Компоненты:')) {
-          components = trimmedLine.replace('Компоненты:', '').trim();
-        }
-        
-        // Ищем длительность
-        if (trimmedLine.includes('Длительность:')) {
-          duration = trimmedLine.replace('Длительность:', '').trim();
-        }
-        
-        // Если строка не содержит перечисленные выше маркеры,
-        // добавляем её к описанию заклинания
-        if (!trimmedLine.includes(':') && trimmedLine.length > 0 && 
-            !trimmedLine.includes('уровень') && !trimmedLine.includes('уровня') &&
-            !trimmedLine.includes('Заговор')) {
-          description += trimmedLine + ' ';
-        }
-        
-        // Ищем описание повышения уровня
-        if (trimmedLine.includes('На более высоких уровнях:')) {
-          higherLevels = trimmedLine.replace('На более высоких уровнях:', '').trim() + ' ';
-        }
-      });
-      
-      // Определяем концентрацию и ритуал из поля длительности
-      const concentration = duration.includes('Концентрация');
-      const ritual = components.includes('ритуал');
-      
-      // Определяем компоненты
-      const verbal = components.includes('В');
-      const somatic = components.includes('С');
-      const material = components.includes('М');
-      
+      if (existingSpellIndex !== -1) {
+        result[existingSpellIndex] = {
+          ...result[existingSpellIndex],
+          verbal: entry.components.verbal,
+          somatic: entry.components.somatic,
+          material: entry.components.material,
+          ritual: entry.components.ritual,
+          concentration: entry.components.concentration,
+        };
+      }
+    } else {
       // Создаем новое заклинание
-      const newSpell: CharacterSpell = {
-        name,
-        level,
-        school,
-        castingTime,
-        range,
-        components,
-        duration,
-        description: description.trim(),
-        higherLevels: higherLevels.trim(),
-        concentration,
-        ritual,
-        verbal,
-        somatic,
-        material,
-        prepared: false, // Обязательное поле для CharacterSpell
-        // Предполагаем классы (для точности требуется дополнительный анализ)
+      result.push({
+        name: entry.name,
+        level: entry.level,
+        school: "Неизвестная",
+        castingTime: "1 действие",
+        range: "Неизвестно",
+        components: makeComponentsString(entry.components),
+        duration: "Неизвестно",
+        description: "Нет описания",
+        verbal: entry.components.verbal,
+        somatic: entry.components.somatic,
+        material: entry.components.material,
+        ritual: entry.components.ritual,
+        concentration: entry.components.concentration,
+        prepared: false,
         classes: []
-      };
-      
-      return newSpell;
-    });
-    
-    // Объединяем импортированные заклинания с существующими, исключая дубликаты
-    const combinedSpells = [...existingSpells];
-    importedSpells.forEach(newSpell => {
-      if (!combinedSpells.some(s => s.name === newSpell.name)) {
-        combinedSpells.push(newSpell);
-      }
-    });
-    
-    return combinedSpells;
-  } catch (error) {
-    console.error('Error importing spells from text:', error);
-    return existingSpells;
-  }
+      });
+    }
+  });
+
+  return result;
 }
 
-// Добавляем функцию processSpellBatch
-export function processSpellBatch(rawText: string): any[] {
-  try {
-    // Разбиваем текст по строкам
-    const lines = rawText.split('\n').filter(line => line.trim().length > 0);
-    
-    // Анализируем каждую строку
-    return lines.map(line => {
-      // Регулярное выражение для поиска уровня заклинания [число]
-      const levelMatch = line.match(/\[(\d+)\]/);
-      const level = levelMatch ? parseInt(levelMatch[1]) : 0;
-      
-      // Извлекаем имя заклинания - всё после [число] до компонентов
-      let name = line.replace(/\[\d+\]/, '').trim();
-      
-      // Проверяем наличие компонентов в конце строки (обычно буквы В, С, М)
-      const componentsMatch = name.match(/\s([ВСМ]+|[VSM]+)$/i);
-      let components = {
-        verbal: false,
-        somatic: false,
-        material: false,
-        ritual: false,
-        concentration: false
-      };
-      
-      if (componentsMatch) {
-        const componentStr = componentsMatch[1];
-        name = name.replace(componentsMatch[0], '').trim();
-        
-        // Определяем компоненты
-        components.verbal = /[ВV]/i.test(componentStr);
-        components.somatic = /[СS]/i.test(componentStr);
-        components.material = /[МM]/i.test(componentStr);
-        // Проверяем дополнительные метки
-        components.ritual = /[Р]/i.test(componentStr);
-        components.concentration = /[К]/i.test(componentStr);
-      }
-      
-      return {
-        name,
-        level,
-        components
-      };
-    });
-  } catch (error) {
-    console.error("Ошибка при обработке заклинаний:", error);
-    return [];
-  }
-}
-
-// Создадим функцию для конвертации заклинания в правильный формат с полем prepared
-export const convertToCharacterSpell = (spell: any): CharacterSpell => {
-  return {
-    name: spell.name,
-    level: spell.level,
-    school: spell.school,
-    castingTime: spell.castingTime,
-    range: spell.range,
-    components: spell.components,
-    duration: spell.duration,
-    description: spell.description,
-    higherLevels: spell.higherLevels,
-    concentration: spell.concentration,
-    ritual: spell.ritual,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    classes: spell.classes,
-    prepared: false // Добавляем обязательное поле prepared
+/**
+ * Обработка партии заклинаний из текста
+ */
+export function processSpellBatch(text: string): Array<{
+  name: string;
+  level: number;
+  components: {
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    ritual: boolean;
+    concentration: boolean;
   };
-};
+}> {
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  const results = [];
+
+  for (const line of lines) {
+    const entry = parseSpellEntry(line);
+    if (entry) {
+      results.push(entry);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Парсинг одного заклинания из текста
+ */
+function parseSpellEntry(line: string): {
+  name: string;
+  level: number;
+  components: {
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    ritual: boolean;
+    concentration: boolean;
+  };
+} | null {
+  // Паттерн [уровень] Название ВСМ
+  const match = line.match(/\[(\d+)\]\s+([^]+?)(?:\s+([ВСМРК]+))?$/);
+  
+  if (!match) return null;
+  
+  const level = parseInt(match[1], 10);
+  const name = match[2].trim();
+  const componentCode = (match[3] || '').trim();
+  
+  return {
+    name,
+    level,
+    components: parseComponents(componentCode)
+  };
+}
+
+/**
+ * Создает строку компонентов из объекта компонентов
+ */
+function makeComponentsString(components: {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+  concentration: boolean;
+}): string {
+  let result = '';
+  if (components.verbal) result += 'В';
+  if (components.somatic) result += 'С';
+  if (components.material) result += 'М';
+  if (components.ritual) result += 'Р';
+  if (components.concentration) result += 'К';
+  return result;
+}
+
+/**
+ * Экспортируем в глобальный скоуп для использования в компонентах
+ */
+export { parseComponents };

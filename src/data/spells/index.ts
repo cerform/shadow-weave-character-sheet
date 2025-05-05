@@ -10,23 +10,24 @@ import level6 from "./level6";
 import level7 from "./level7";
 import level8 from "./level8";
 import level9 from "./level9";
+import cantrips from "./cantrips";
 
 // Компилируем все заклинания в единый массив для удобства
 export const spells: CharacterSpell[] = [
-  ...(Object.values(level0) || []),
-  ...(Object.values(level1) || []),
-  ...(Object.values(level2) || []),
-  ...(Object.values(level3) || []),
-  ...(Object.values(level4) || []),
-  ...(Object.values(level5) || []),
-  ...(Object.values(level6) || []),
-  ...(Object.values(level7) || []),
-  ...(Object.values(level8) || []),
-  ...(Object.values(level9) || []),
+  ...(Array.isArray(cantrips) ? cantrips : []),
+  ...(Array.isArray(level1) ? level1 : []),
+  ...(Array.isArray(level2) ? level2 : []),
+  ...(Array.isArray(level3) ? level3 : []),
+  ...(Array.isArray(level4) ? level4 : []),
+  ...(Array.isArray(level5) ? level5 : []),
+  ...(Array.isArray(level6) ? level6 : []),
+  ...(Array.isArray(level7) ? level7 : []),
+  ...(Array.isArray(level8) ? level8 : []),
+  ...(Array.isArray(level9) ? level9 : []),
 ].map(spell => ({
   ...spell,
   // Гарантируем обязательное поле prepared
-  prepared: false
+  prepared: spell.prepared !== undefined ? spell.prepared : false
 })) as CharacterSpell[];
 
 export const spellsByLevel = {
@@ -46,9 +47,9 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   const allClassSpells: CharacterSpell[] = [];
 
   for (let level = 0; level <= 9; level++) {
-    const levelSpells = Object.values(spellsByLevel[level as keyof typeof spellsByLevel] || {}) as any[];
+    const levelSpells = spellsByLevel[level as keyof typeof spellsByLevel] || [];
     
-    for (const spell of levelSpells) {
+    for (const spell of (Array.isArray(levelSpells) ? levelSpells : [])) {
       // Проверяем, что spell существует и имеет свойство classes
       if (!spell || !spell.classes) {
         continue;
@@ -71,13 +72,16 @@ export const getSpellsByLevel = (level: number): CharacterSpell[] => {
   if (level < 0 || level > 9) return [];
   
   const levelKey = level as keyof typeof spellsByLevel;
-  return Object.values(spellsByLevel[levelKey] || {}) as CharacterSpell[];
+  const levelSpells = spellsByLevel[levelKey];
+  return Array.isArray(levelSpells) ? levelSpells : [];
 };
 
 export const getSpellByName = (name: string): CharacterSpell | undefined => {
   for (let level = 0; level <= 9; level++) {
-    const levelSpells = Object.values(spellsByLevel[level as keyof typeof spellsByLevel] || {}) as CharacterSpell[];
-    const spell = levelSpells.find((s: any) => s.name === name);
+    const levelSpells = spellsByLevel[level as keyof typeof spellsByLevel] || [];
+    if (!Array.isArray(levelSpells)) continue;
+    
+    const spell = levelSpells.find((s) => s.name === name);
     if (spell) {
       return spell;
     }
