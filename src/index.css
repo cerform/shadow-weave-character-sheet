@@ -175,6 +175,7 @@ button:hover {
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
   color: var(--theme-text-color, #FFFFFF) !important;
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
+  z-index: 50 !important;
 }
 
 /* Улучшение внешнего вида диалогов */
@@ -184,6 +185,7 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.9) !important;
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
+  z-index: 50 !important;
 }
 
 /* Темы */
@@ -340,4 +342,31 @@ h1, h2, h3, h4, h5, h6, p, span, div {
   margin-top: 1rem;
   margin-bottom: 1rem;
   padding: 1rem;
+}
+
+/* Стили для перетаскиваемой кнопки кубиков */
+.dice-button-container {
+  touch-action: none; /* Отключаем стандартное поведение касаний браузера */
+  user-select: none; /* Запрещаем выделение */
+}
+
+.dice-button-container.dragging {
+  opacity: 0.8;
+  cursor: grabbing;
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 768px) {
+  .dice-button-container {
+    width: 70px;
+    height: 70px;
+  }
+  .dice-button-container button {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  .dice-button-container button svg {
+    width: 40px !important;
+    height: 40px !important;
+  }
 }

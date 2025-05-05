@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Book, ScrollText, UserPlus, Shield, Swords } from 'lucide-react';
 import MainNavigation from '@/components/main-navigation';
 import { useTheme } from '@/hooks/use-theme';
+import { useUserTheme } from '@/hooks/use-user-theme';
 import { themes } from '@/lib/themes';
 import { adaptFirebaseUser } from '@/types/user';
 
@@ -13,11 +14,17 @@ const Index = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const { theme } = useTheme();
+  const { activeTheme, currentThemeStyles } = useUserTheme();
   
   // Безопасно получаем тему
   let currentTheme = themes.default; // Устанавливаем дефолтное значение
   try {
-    if (theme && themes[theme as keyof typeof themes]) {
+    // Сначала пробуем использовать тему из UserThemeContext
+    if (activeTheme && themes[activeTheme as keyof typeof themes]) {
+      currentTheme = themes[activeTheme as keyof typeof themes];
+    }
+    // Затем из ThemeContext, если activeTheme не определен
+    else if (theme && themes[theme as keyof typeof themes]) {
       currentTheme = themes[theme as keyof typeof themes];
     }
   } catch (error) {

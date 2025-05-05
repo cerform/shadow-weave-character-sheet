@@ -27,6 +27,8 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   // Применяем тему при монтировании и при изменении текущего пользователя
   useEffect(() => {
+    console.log('UserThemeProvider: монтирование/изменение пользователя', currentUser?.themePreference);
+    
     // Применяем базовую тему из localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {

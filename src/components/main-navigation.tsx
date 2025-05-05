@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import ThemeSelector from '@/components/ThemeSelector';
 import { BookText, LogOut, User, Home } from 'lucide-react';
+import { useUserTheme } from '@/hooks/use-user-theme';
 
 const MainNavigation = () => {
   const { currentUser, logout, isAuthenticated } = useAuth();
+  const { currentThemeStyles } = useUserTheme();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -19,7 +21,12 @@ const MainNavigation = () => {
     <nav className="flex justify-between items-center w-full">
       <div className="flex items-center">
         <Link to="/">
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2"
+            style={{ color: currentThemeStyles.textColor }}
+          >
             <Home className="h-5 w-5" />
             <span className="hidden md:inline">Главная</span>
           </Button>
@@ -28,7 +35,12 @@ const MainNavigation = () => {
         {isAuthenticated && (
           <>
             <Link to="/handbook">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 ml-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center gap-2 ml-2"
+                style={{ color: currentThemeStyles.textColor }}
+              >
                 <BookText className="h-5 w-5" />
                 <span className="hidden md:inline">Справочник</span>
               </Button>
@@ -43,7 +55,12 @@ const MainNavigation = () => {
         {isAuthenticated ? (
           <>
             <Link to="/profile">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center gap-2"
+                style={{ color: currentThemeStyles.textColor }}
+              >
                 <User className="h-5 w-5" />
                 <span className="hidden md:inline">{currentUser?.displayName || 'Профиль'}</span>
               </Button>
@@ -53,6 +70,7 @@ const MainNavigation = () => {
               size="sm" 
               onClick={handleLogout}
               className="flex items-center gap-2"
+              style={{ color: currentThemeStyles.textColor }}
             >
               <LogOut className="h-5 w-5" />
               <span className="hidden md:inline">Выход</span>

@@ -54,7 +54,7 @@ const ThemeSelector = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="min-w-[12rem]" 
+        className="min-w-[12rem] z-50" 
         style={{ 
           backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
           borderColor: currentTheme.accent,
