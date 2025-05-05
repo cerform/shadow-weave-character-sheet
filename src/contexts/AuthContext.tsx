@@ -26,6 +26,29 @@ interface AuthContextProps {
 // Экспортируем AuthContext для использования в useAuth
 export const AuthContext = createContext<AuthContextProps | null>(null);
 
+// Создаем хук useAuth для удобства использования контекста
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    console.error('useAuth должен использоваться внутри AuthProvider');
+    
+    // Возвращаем заглушку с базовыми данными, чтобы избежать ошибок при использовании
+    return {
+      currentUser: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: () => Promise.reject('AuthProvider не найден'),
+      logout: () => Promise.reject('AuthProvider не найден'),
+      register: () => Promise.reject('AuthProvider не найден'),
+      resetPassword: () => Promise.reject('AuthProvider не найден'),
+      updateUserProfile: () => Promise.reject('AuthProvider не найден'),
+      googleLogin: () => Promise.reject('AuthProvider не найден')
+    };
+  }
+  
+  return context;
+};
+
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,5 +128,3 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 export { AuthProvider };
-
-// Удаляем экспорт useAuth отсюда, так как он будет в отдельном файле

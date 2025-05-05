@@ -2,40 +2,49 @@
 import { CharacterSpell } from '@/types/character';
 
 /**
- * Преобразует объект CharacterSpell в строку (возвращает имя заклинания)
- * Это нужно для корректного отображения заклинаний в списках
+ * Преобразует объект заклинания в строку (например, для сохранения в базе данных)
  */
 export const characterSpellToString = (spell: CharacterSpell): string => {
   return spell.name;
 };
 
 /**
- * Проверяет, является ли объект CharacterSpell или строкой
- * и возвращает имя заклинания в любом случае
+ * Преобразует строку или объект в объект CharacterSpell
  */
-export const getSpellName = (spell: CharacterSpell | string): string => {
+export const stringToCharacterSpell = (spell: string | CharacterSpell): CharacterSpell => {
   if (typeof spell === 'string') {
-    return spell;
+    return {
+      name: spell,
+      level: 0, // Уровень по умолчанию
+      school: 'Неизвестная',
+      castingTime: '1 действие',
+      range: 'На себя',
+      components: '',
+      duration: 'Мгновенная',
+      description: 'Нет описания',
+      prepared: false
+    };
   }
-  return spell.name;
+  
+  return {
+    ...spell,
+    prepared: spell.prepared ?? false
+  };
 };
 
 /**
- * Преобразует массив заклинаний CharacterSpell в массив строк с именами
+ * Проверяет, является ли заклинание заговором
  */
-export const spellsToNames = (spells: CharacterSpell[]): string[] => {
-  return spells.map(spell => spell.name);
+export const isCantrip = (spell: CharacterSpell | { level: number }): boolean => {
+  return spell.level === 0;
 };
 
 /**
- * Преобразует массив строк с именами заклинаний в массив объектов CharacterSpell
- * используя функцию поиска для получения полной информации о заклинании
+ * Обновляет статус подготовки заклинания
  */
-export const namesToSpells = (
-  names: string[], 
-  findSpell: (name: string) => CharacterSpell | null
-): CharacterSpell[] => {
-  return names
-    .map(name => findSpell(name))
-    .filter((spell): spell is CharacterSpell => spell !== null);
+export const toggleSpellPrepared = (spell: CharacterSpell): CharacterSpell => {
+  return {
+    ...spell,
+    prepared: !spell.prepared
+  };
 };

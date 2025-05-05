@@ -31,8 +31,16 @@ const mockAuth = {
   onIdTokenChanged: () => () => {},
   beforeAuthStateChanged: () => Promise.resolve(() => {}),
   useEmulator: () => {},
-  emulatorConfig: null
+  emulatorConfig: null,
+  // Добавляем недостающее свойство authStateReady
+  authStateReady: () => Promise.resolve()
 };
 
-// Export the mock auth instance
+// Создаем моки для Firestore и Storage
+const mockDb = {};
+const mockStorage = {};
+
+// Export the mock instances
 export const auth = mockAuth;
+export const db = mockDb;
+export const storage = mockStorage;
