@@ -15,7 +15,7 @@ export const ThemeContext = createContext<ThemeContextType>({
   currentTheme: themes.default
 });
 
-export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+export const ThemeProvider = ({ children }: {children: React.ReactNode}) => {
   const [theme, setTheme] = useState<string>(() => {
     // Загружаем тему из localStorage или используем тему по умолчанию
     const savedTheme = localStorage.getItem('dnd-theme') || 'default';
@@ -46,3 +46,6 @@ export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children 
 };
 
 export const useTheme = () => useContext(ThemeContext);
+
+// Экспортируем для совместимости с App.tsx
+export { ThemeProvider as UserThemeProvider };

@@ -1,5 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
   return typeof spell === 'object';
@@ -47,4 +48,44 @@ export const getSpellsByLevel = (spells: (CharacterSpell | string)[], level: num
     }
     return spell.level === level;
   });
+};
+
+// Добавляем функцию конвертации из CharacterSpell в SpellData
+export const convertCharacterSpellToSpellData = (characterSpell: CharacterSpell | string): SpellData => {
+  if (typeof characterSpell === 'string') {
+    return {
+      name: characterSpell,
+      level: 0,
+      school: "Неизвестная",
+      castingTime: "1 действие",
+      range: "Неизвестная",
+      components: "",
+      duration: "Мгновенная",
+      description: ""
+    };
+  }
+  
+  return {
+    ...characterSpell,
+    school: characterSpell.school || "Неизвестная", // Обязательное поле в SpellData
+    castingTime: characterSpell.castingTime || "1 действие",
+    range: characterSpell.range || "Неизвестная",
+    components: characterSpell.components || "",
+    duration: characterSpell.duration || "Мгновенная",
+    description: characterSpell.description || ""
+  };
+};
+
+// Функция конвертации из SpellData в CharacterSpell
+export const convertSpellDataToCharacterSpell = (spellData: SpellData): CharacterSpell => {
+  return {
+    ...spellData,
+    ritual: spellData.isRitual || spellData.ritual,
+    concentration: spellData.isConcentration || spellData.concentration,
+    higherLevels: spellData.higherLevel || spellData.higherLevels,
+    description: typeof spellData.description === 'string' ? 
+                spellData.description : 
+                Array.isArray(spellData.description) ?
+                spellData.description.join('\n') : ''
+  };
 };
