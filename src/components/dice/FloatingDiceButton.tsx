@@ -122,7 +122,7 @@ const FloatingDiceButton: React.FC = () => {
         <Dices size={24} />
       </div>
 
-      <DiceRollModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <DiceRollModal open={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 };

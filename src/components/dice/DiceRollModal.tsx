@@ -12,7 +12,7 @@ import { themes } from '@/lib/themes';
 interface DiceRollModalProps {
   open: boolean;
   onClose: () => void;
-  onRoll: (formula: string, reason?: string, playerName?: string) => void;
+  onRoll?: (formula: string, reason?: string, playerName?: string) => void;
   playerName?: string;
 }
 
@@ -69,7 +69,9 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   };
 
   const handleRoll = () => {
-    onRoll(formula, reason, playerName);
+    if (onRoll) {
+      onRoll(formula, reason, playerName);
+    }
     onClose();
   };
 

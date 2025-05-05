@@ -7,6 +7,7 @@ import SectionHeader from '@/components/ui/section-header';
 import { SelectionCard, SelectionCardGrid } from '@/components/ui/selection-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+import { isEquipmentEmpty } from '@/utils/safetyUtils';
 
 // Интерфейс для предыстории
 interface Background {
@@ -77,7 +78,21 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
 
       // Добавим владение навыками из предыстории
       if (currentBackground && currentBackground.proficiencies.skills.length > 0) {
-        const proficiencyUpdates = [...(character.proficiencies || [])];
+        // Создаем массив навыков, если его нет
+        let proficiencyUpdates: string[] = [];
+        
+        // Если proficiencies уже существует и это массив, используем его
+        if (Array.isArray(character.proficiencies)) {
+          proficiencyUpdates = [...character.proficiencies];
+        } 
+        // Иначе, если это объект, создаем новый массив
+        else if (character.proficiencies) {
+          // Конвертируем объект в массив для обновления
+          const existingProficiencies = character.proficiencies;
+          if (existingProficiencies.weapons) proficiencyUpdates.push(...existingProficiencies.weapons);
+          if (existingProficiencies.tools) proficiencyUpdates.push(...existingProficiencies.tools);
+          if (existingProficiencies.languages) proficiencyUpdates.push(...existingProficiencies.languages);
+        }
         
         // Добавляем навыки из предыстории, если их ещё нет
         currentBackground.proficiencies.skills.forEach(skill => {
