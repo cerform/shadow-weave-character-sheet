@@ -83,12 +83,12 @@ const HandbookPage: React.FC = () => {
               setSelectedBackground={setSelectedBackground} 
             />;
       default:
-        return <div className="p-6">Выберите категорию из справочника.</div>;
+        return <div className="p-6 text-gray-300">Выберите категорию из справочника.</div>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-900 flex text-white">
       {/* Боковая панель */}
       <HandbookSidebar 
         activeSection={activeSection}
@@ -103,7 +103,7 @@ const HandbookPage: React.FC = () => {
       {/* Основное содержимое */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-6">
+          <h1 className="text-3xl font-bold mb-6 text-purple-300">
             {activeSection === 'races' && 'Расы'}
             {activeSection === 'classes' && 'Классы'}
             {activeSection === 'backgrounds' && 'Предыстории'}
