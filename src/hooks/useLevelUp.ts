@@ -27,19 +27,23 @@ const useLevelUp = () => {
       console.log('Новые данные о заклинаниях:', spellsInfo);
       
       // Обновляем персонажа с новыми данными о заклинаниях
-      setCharacter((prev: Character) => ({
-        ...prev,
+      const updatedCharacter = {
+        ...character,
         cantripsKnown: spellsInfo.cantripsCount,
         spellsKnown: spellsInfo.knownSpells,
         maxSpellLevel: spellsInfo.maxLevel
-      } as Character));
+      };
+      
+      setCharacter(updatedCharacter);
     }
 
     // Обновляем уровень персонажа
-    setCharacter((prev: Character) => ({
-      ...prev,
+    const levelUpdatedCharacter = {
+      ...character,
       level: newLevel
-    } as Character));
+    };
+    
+    setCharacter(levelUpdatedCharacter);
 
     setIsLevelingUp(false);
   };

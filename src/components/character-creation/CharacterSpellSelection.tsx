@@ -42,8 +42,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     'Чародей', 'Паладин', 'Следопыт'
   ];
 
-  // Получаем максимальный уровень заклинаний
-  const maxSpellLevel = getMaxSpellLevel(character.level);
+  // Получаем максимальный уровень заклинаний - передаем класс и уровень
+  const maxSpellLevel = getMaxSpellLevel(character.class, character.level);
 
   // Проверка имеет ли персонаж доступ к заклинаниям
   const isMagicUser = () => {
