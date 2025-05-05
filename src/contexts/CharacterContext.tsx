@@ -1,91 +1,187 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import characterService from '@/services/characterService';
+import { SorceryPoints, CharacterSheet } from '@/types/character';
 
-interface CharacterContextProps {
+// Интерфейс для характеристик
+export interface AbilityScores {
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
+  
+  // Для совместимости с CharacterSheet
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+}
+
+// Интерфейс персонажа для хранения в CharacterContext
+export interface Character {
+  id?: string;
+  userId?: string;
+  name: string;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string;
+  subclass?: string;
+  level: number;
+  abilities: AbilityScores;
+  proficiencies: string[];
+  equipment: string[];
+  spells: string[];
+  languages: string[];
+  gender: string;
+  alignment: string;
+  background: string;
+  backstory?: string; // Добавляем поле, которое требуется в CharacterSheet
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    value: string;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
+}
+
+export interface CharacterContextType {
   character: Character | null;
   setCharacter: (character: Character | null) => void;
   updateCharacter: (updates: Partial<Character>) => void;
-  isLoading: boolean;
-  error: Error | null;
-  characters?: Character[]; // Added for Index.tsx
-  getUserCharacters?: () => Promise<Character[]>; // Added for Index.tsx
-  deleteCharacter?: (characterId: string) => Promise<boolean>; // Added for Index.tsx
+  saveCurrentCharacter: () => Promise<void>;
+  characters: Character[];
+  getUserCharacters: () => Promise<Character[]>;
+  deleteCharacter: (id: string) => Promise<void>;
 }
 
-export const CharacterContext = createContext<CharacterContextProps>({
+export const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
   updateCharacter: () => {},
-  isLoading: false,
-  error: null,
+  saveCurrentCharacter: async () => {},
   characters: [],
   getUserCharacters: async () => [],
-  deleteCharacter: async () => false
+  deleteCharacter: async () => {},
 });
 
-export const useCharacter = () => useContext(CharacterContext);
-
-export type { Character };
-
-interface CharacterProviderProps {
-  characterId?: string;
-  initialCharacter?: Character | null;
-  children: React.ReactNode;
-}
-
-export const CharacterProvider: React.FC<CharacterProviderProps> = ({ 
-  characterId, 
-  initialCharacter = null, 
-  children 
-}) => {
-  const [character, setCharacter] = useState<Character | null>(initialCharacter);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
+export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
   
-  useEffect(() => {
-    if (!characterId && initialCharacter) {
-      setCharacter(initialCharacter);
-      return;
-    }
-    
-    if (characterId) {
-      setIsLoading(true);
-      
-      // Здесь должна быть логика загрузки персонажа по ID
-      // Для заглушки просто установим начальное значение
-      
-      setCharacter(initialCharacter);
-      setIsLoading(false);
-    }
-  }, [characterId, initialCharacter]);
-  
+  // Функция для обновления частичных данных персонажа
   const updateCharacter = (updates: Partial<Character>) => {
-    setCharacter((prevCharacter) => {
-      if (!prevCharacter) return null;
-      
-      const updatedCharacter = { ...prevCharacter, ...updates };
-      
-      // Здесь должна быть логика сохранения персонажа в базу данных
-      // Для заглушки просто обновляем локальное состояние
-      
-      return updatedCharacter;
+    setCharacter(prev => {
+      if (!prev) return prev;
+      return { ...prev, ...updates };
     });
   };
   
-  const value = {
-    character,
-    setCharacter,
-    updateCharacter,
-    isLoading,
-    error
+  // Функция для сохранения персонажа
+  const saveCurrentCharacter = async () => {
+    if (!character) return;
+    
+    try {
+      const updatedCharacter = { 
+        ...character, 
+        updatedAt: new Date().toISOString(),
+        // Гарантируем наличие обязательных полей для CharacterSheet
+        backstory: character.backstory || ''
+      };
+      
+      if (!updatedCharacter.createdAt) {
+        updatedCharacter.createdAt = new Date().toISOString();
+      }
+      
+      const savedChar = await characterService.saveCharacter(updatedCharacter as CharacterSheet);
+      if (savedChar) {
+        setCharacter({...updatedCharacter, id: savedChar.id});
+      }
+      
+      // Обновляем список персонажей, если сохранение прошло успешно
+      await getUserCharacters();
+    } catch (error) {
+      console.error('Ошибка при сохранении персонажа:', error);
+    }
   };
   
+  // Получаем список персонажей пользователя
+  const getUserCharacters = async () => {
+    try {
+      const fetchedCharacters = await characterService.getCharactersByUserId();
+      // Приводим CharacterSheet к типу Character
+      const characterArray: Character[] = fetchedCharacters.map((char: CharacterSheet) => ({
+        ...(char as unknown as Character)
+      }));
+      
+      setCharacters(characterArray);
+      return characterArray;
+    } catch (error) {
+      console.error('Ошибка при получении персонажей:', error);
+      return [];
+    }
+  };
+  
+  // Удаление персонажа
+  const handleDeleteCharacter = async (id: string) => {
+    try {
+      await characterService.deleteCharacter(id);
+      setCharacters(prev => prev.filter(char => char.id !== id));
+      
+      // Если удаляем текущего персонажа, сбрасываем его
+      if (character && character.id === id) {
+        setCharacter(null);
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении персонажа:', error);
+    }
+  };
+  
+  // При инициализации получаем список персонажей
+  useEffect(() => {
+    const loadCharacters = async () => {
+      await getUserCharacters();
+    };
+    loadCharacters();
+  }, []);
+  
   return (
-    <CharacterContext.Provider value={value}>
+    <CharacterContext.Provider 
+      value={{ 
+        character, 
+        setCharacter,
+        updateCharacter, 
+        saveCurrentCharacter,
+        characters,
+        getUserCharacters,
+        deleteCharacter: handleDeleteCharacter
+      }}
+    >
       {children}
     </CharacterContext.Provider>
   );
 };
 
-export default CharacterProvider;
+export const useCharacter = () => useContext(CharacterContext);

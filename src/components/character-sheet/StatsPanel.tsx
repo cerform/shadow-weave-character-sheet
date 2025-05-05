@@ -29,25 +29,6 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
-  // Получаем значение характеристики с учетом двух форматов
-  const getAbilityScore = (key: string): number | undefined => {
-    if (!character?.abilities) return undefined;
-    
-    // Проверяем наличие короткой формы
-    const shortKey = key.toUpperCase() as keyof typeof character.abilities;
-    if (character.abilities[shortKey] !== undefined) {
-      return character.abilities[shortKey] as number;
-    }
-    
-    // Проверяем наличие полной формы
-    const longKey = key.toLowerCase() as keyof typeof character.abilities;
-    if (character.abilities[longKey] !== undefined) {
-      return character.abilities[longKey] as number;
-    }
-    
-    return undefined;
-  };
-
   // Обработчик использования ячеек заклинаний
   const handleUseSpellSlot = (level: number) => {
     if (!character?.spellSlots) return;
@@ -142,88 +123,6 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
     );
   };
 
-  // Функция для отображения очков чародейства
-  const renderSorceryPoints = () => {
-    if (character?.sorceryPoints && character.sorceryPoints.max > 0) {
-      return (
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-medium" style={{ color: currentTheme.textColor }}>
-              Очки чародейства
-            </span>
-            <span className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
-              {character.sorceryPoints.current}/{character.sorceryPoints.max}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <div className="flex flex-wrap gap-1">
-              {[...Array(character.sorceryPoints.max)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-5 h-5 rounded-full"
-                  style={{
-                    backgroundColor: i < character.sorceryPoints!.current ? 
-                      `${currentTheme.accent}` : "transparent",
-                    border: `1px solid ${currentTheme.accent}`,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="flex gap-1">
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="h-6 w-6 p-0"
-                onClick={() => {
-                  if (character.sorceryPoints && character.sorceryPoints.current < character.sorceryPoints.max) {
-                    updateCharacter({
-                      sorceryPoints: {
-                        ...character.sorceryPoints,
-                        current: character.sorceryPoints.current + 1
-                      }
-                    });
-                  }
-                }}
-                disabled={character.sorceryPoints?.current >= character.sorceryPoints?.max}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: character.sorceryPoints?.current >= character.sorceryPoints?.max ? 
-                    `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                }}
-              >
-                +
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="h-6 w-6 p-0"
-                onClick={() => {
-                  if (character.sorceryPoints && character.sorceryPoints.current > 0) {
-                    updateCharacter({
-                      sorceryPoints: {
-                        ...character.sorceryPoints,
-                        current: character.sorceryPoints.current - 1
-                      }
-                    });
-                  }
-                }}
-                disabled={character.sorceryPoints?.current <= 0}
-                style={{
-                  borderColor: currentTheme.accent,
-                  color: character.sorceryPoints?.current <= 0 ? 
-                    `${currentTheme.mutedTextColor}80` : currentTheme.textColor
-                }}
-              >
-                -
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <Card className="bg-card/30 backdrop-blur-sm border-primary/20 p-4">
       <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.textColor }}>
@@ -235,7 +134,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-primary">Сила</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('strength'))}
+              {getModifier(character?.abilities?.STR)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -243,7 +142,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center my-2">
             <span className="text-sm font-medium text-primary">Телосложение</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('constitution'))}
+              {getModifier(character?.abilities?.CON)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -251,7 +150,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center my-2">
             <span className="text-sm font-medium text-primary">Мудрость</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('wisdom'))}
+              {getModifier(character?.abilities?.WIS)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -261,7 +160,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-primary">Ловкость</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('dexterity'))}
+              {getModifier(character?.abilities?.DEX)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -269,7 +168,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center my-2">
             <span className="text-sm font-medium text-primary">Интеллект</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('intelligence'))}
+              {getModifier(character?.abilities?.INT)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -277,7 +176,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
           <div className="flex justify-between items-center my-2">
             <span className="text-sm font-medium text-primary">Харизма</span>
             <span className="text-sm font-bold text-emerald-400">
-              {getModifier(getAbilityScore('charisma'))}
+              {getModifier(character?.abilities?.CHA)}
             </span>
           </div>
           <Separator className="bg-primary/20" />
@@ -291,8 +190,82 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
         </h3>
         {renderSpellSlots()}
         
-        {/* Отображение очков чародейства */}
-        {renderSorceryPoints()}
+        {/* Отображение очков чародейства, если они есть */}
+        {character?.sorceryPoints && character.sorceryPoints.max > 0 && (
+          <div className="mt-3">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-medium" style={{ color: currentTheme.textColor }}>
+                Очки чародейства
+              </span>
+              <span className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
+                {character.sorceryPoints.current}/{character.sorceryPoints.max}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <div className="flex flex-wrap gap-1">
+                {[...Array(character.sorceryPoints.max)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-5 h-5 rounded-full"
+                    style={{
+                      backgroundColor: i < character.sorceryPoints.current ? 
+                        `${currentTheme.accent}` : "transparent",
+                      border: `1px solid ${currentTheme.accent}`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="h-6 w-6 p-0"
+                  onClick={() => {
+                    if (character.sorceryPoints && character.sorceryPoints.current < character.sorceryPoints.max) {
+                      updateCharacter({
+                        sorceryPoints: {
+                          ...character.sorceryPoints,
+                          current: character.sorceryPoints.current + 1
+                        }
+                      });
+                    }
+                  }}
+                  disabled={character.sorceryPoints?.current >= character.sorceryPoints?.max}
+                  style={{
+                    borderColor: currentTheme.accent,
+                    color: character.sorceryPoints?.current >= character.sorceryPoints?.max ? 
+                      `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                  }}
+                >
+                  +
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="h-6 w-6 p-0"
+                  onClick={() => {
+                    if (character.sorceryPoints && character.sorceryPoints.current > 0) {
+                      updateCharacter({
+                        sorceryPoints: {
+                          ...character.sorceryPoints,
+                          current: character.sorceryPoints.current - 1
+                        }
+                      });
+                    }
+                  }}
+                  disabled={character.sorceryPoints?.current <= 0}
+                  style={{
+                    borderColor: currentTheme.accent,
+                    color: character.sorceryPoints?.current <= 0 ? 
+                      `${currentTheme.mutedTextColor}80` : currentTheme.textColor
+                  }}
+                >
+                  -
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );

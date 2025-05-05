@@ -1,15 +1,14 @@
+
 import { useState } from "react";
 import { CharacterSheet, ClassLevel } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { convertToCharacter } from "@/utils/characterConverter";
 import { getModifierFromAbilityScore, isMagicClass as checkIsMagicClass } from "@/utils/characterUtils";
-import { getCurrentUserId } from "@/utils/authHelpers";
-import { v4 as uuidv4 } from "uuid"; // Import UUID for generating character IDs
+import { getCurrentUid } from "@/utils/authHelpers";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
   const [character, setCharacter] = useState<CharacterSheet>({
-    id: uuidv4(), // Generate a unique ID for new characters
     name: "",
     gender: "",
     race: "",
@@ -60,42 +59,22 @@ export const useCharacterCreation = () => {
     ideals: "",
     bonds: "",
     flaws: "",
-    appearance: "", // Это поле добавлено в Character.d.ts
+    appearance: "",
     backstory: ""
   });
 
   const updateCharacter = (updates: Partial<CharacterSheet>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
     if (updates.abilities) {
-      updates.stats = {
-        strength: updates.abilities.strength || updates.abilities.STR || 10,
-        dexterity: updates.abilities.dexterity || updates.abilities.DEX || 10,
-        constitution: updates.abilities.constitution || updates.abilities.CON || 10,
-        intelligence: updates.abilities.intelligence || updates.abilities.INT || 10,
-        wisdom: updates.abilities.wisdom || updates.abilities.WIS || 10,
-        charisma: updates.abilities.charisma || updates.abilities.CHA || 10
-      };
+      updates.stats = updates.abilities;
     }
     // Если обновляются stats, также обновляем и abilities для совместимости
     else if (updates.stats) {
-      updates.abilities = {
-        STR: updates.stats.strength || 10,
-        DEX: updates.stats.dexterity || 10,
-        CON: updates.stats.constitution || 10,
-        INT: updates.stats.intelligence || 10,
-        WIS: updates.stats.wisdom || 10,
-        CHA: updates.stats.charisma || 10,
-        strength: updates.stats.strength || 10,
-        dexterity: updates.stats.dexterity || 10,
-        constitution: updates.stats.constitution || 10,
-        intelligence: updates.stats.intelligence || 10,
-        wisdom: updates.stats.wisdom || 10,
-        charisma: updates.stats.charisma || 10
-      };
+      updates.abilities = updates.stats;
     }
     
     // Добавляем userId из текущего авторизованного пользователя, если он доступен
-    const uid = getCurrentUserId();
+    const uid = getCurrentUid();
     if (uid && !character.userId) {
       updates.userId = uid;
     }

@@ -1,51 +1,35 @@
 
-import React, { useState } from 'react';
-import { Character } from '@/types/character';
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from 'sonner';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 interface NotesTabProps {
-  character: Character | null;
+  character?: any;
+  onUpdate?: (updates: any) => void;
 }
 
-export const NotesTab: React.FC<NotesTabProps> = ({ character }) => {
-  const [notes, setNotes] = useState(character?.notes || '');
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
-  
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNotes(e.target.value);
-    setUnsavedChanges(true);
+export const NotesTab: React.FC<NotesTabProps> = ({ character, onUpdate }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (onUpdate && character) {
+      onUpdate({
+        ...character,
+        notes: e.target.value
+      });
+    }
   };
-  
-  const saveNotes = () => {
-    // В реальном приложении здесь будет логика сохранения заметок
-    // через контекст или API
-    toast.success('Заметки сохранены');
-    setUnsavedChanges(false);
-  };
-  
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Заметки</h2>
-        <Button 
-          onClick={saveNotes} 
-          disabled={!unsavedChanges}
-          variant={unsavedChanges ? "default" : "outline"}
-        >
-          Сохранить
-        </Button>
-      </div>
-      
+    <div className="space-y-4">
       <Card>
-        <CardContent className="p-4">
+        <CardHeader>
+          <CardTitle>Заметки</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Textarea 
-            value={notes} 
-            onChange={handleNotesChange} 
+            value={character?.notes || ''}
+            onChange={handleChange}
+            placeholder="Здесь вы можете записывать важные события, встречи с NPC, найденные предметы и другую информацию..."
             className="min-h-[400px]"
-            placeholder="Введите заметки для вашего персонажа..."
           />
         </CardContent>
       </Card>

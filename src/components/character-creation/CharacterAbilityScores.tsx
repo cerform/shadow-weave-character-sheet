@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
 import { AbilityScoreMethodSelector } from "./AbilityScoreMethodSelector";
@@ -5,8 +6,7 @@ import AbilityRollingPanel from "./AbilityRollingPanel";
 import PointBuyPanel from "./PointBuyPanel";
 import StandardArrayPanel from "./StandardArrayPanel";
 import ManualInputPanel from "./ManualInputPanel";
-import { CharacterSheet } from "@/types/character";
-import { ABILITY_SCORE_CAPS } from "@/constants/characterConstants";
+import { CharacterSheet, ABILITY_SCORE_CAPS } from "@/types/character.d";
 import { useToast } from "@/hooks/use-toast";
 
 interface CharacterAbilityScoresProps {
@@ -211,19 +211,19 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   const handleNext = () => {
     // Создаем объекты для обоих форматов abilities и stats
     const abilitiesFormat = {
-      strength: stats.strength,
-      dexterity: stats.dexterity,
-      constitution: stats.constitution,
-      intelligence: stats.intelligence,
-      wisdom: stats.wisdom,
-      charisma: stats.charisma,
-      // Добавляем и сокращенные версии
       STR: stats.strength,
       DEX: stats.dexterity,
       CON: stats.constitution,
       INT: stats.intelligence,
       WIS: stats.wisdom,
-      CHA: stats.charisma
+      CHA: stats.charisma,
+      // Для обратной совместимости
+      strength: stats.strength,
+      dexterity: stats.dexterity,
+      constitution: stats.constitution,
+      intelligence: stats.intelligence,
+      wisdom: stats.wisdom,
+      charisma: stats.charisma
     };
 
     const statsFormat = {
@@ -235,12 +235,11 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       charisma: stats.charisma
     };
     
-    // Обновляем персонажа
+    // Сохраняем в оба поля abilities и stats для совместимости
     updateCharacter({ 
       abilities: abilitiesFormat,
       stats: statsFormat,
-      // Добавляем информацию об использованных очках
-      ...(abilitiesMethod === 'pointbuy' && { abilityPointsUsed: totalPointsAvailable - pointsLeft })
+      abilityPointsUsed: abilitiesMethod === 'pointbuy' ? totalPointsAvailable - pointsLeft : undefined
     });
     nextStep();
   };
@@ -254,8 +253,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     return false;
   };
 
-  // ... держим остальной код без изменений
-  
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-foreground">Распределение характеристик</h2>

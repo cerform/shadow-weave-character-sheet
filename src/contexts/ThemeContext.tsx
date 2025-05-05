@@ -22,18 +22,19 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Первичная инициализация из localStorage
+  const [theme, setTheme] = useState<Theme>('default');
+
+  // Загружаем сохраненную тему при инициализации
+  useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature', 'warlock', 'wizard', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
-        return savedTheme as Theme;
+        setTheme(savedTheme as Theme);
       }
     } catch (error) {
       console.error('Ошибка при загрузке темы из localStorage:', error);
     }
-    return 'default';
-  });
+  }, []);
 
   // Сохраняем тему при изменении
   const handleSetTheme = (newTheme: Theme) => {
@@ -50,17 +51,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       console.error('Ошибка при сохранении темы в localStorage:', error);
     }
   };
-
-  // Применяем сохраненную тему при монтировании
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme) {
-      handleSetTheme(savedTheme);
-    } else {
-      // Если тема не найдена, устанавливаем дефолтную
-      handleSetTheme('default');
-    }
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>

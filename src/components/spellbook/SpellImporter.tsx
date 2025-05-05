@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
+import { spells as allSpells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
 interface SpellImporterProps {
@@ -17,51 +19,11 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  // Import spells from text function
-  const importSpellsFromText = (text: string): CharacterSpell[] => {
-    if (!text.trim()) return [];
-    
-    const spells: CharacterSpell[] = [];
-    const lines = text.split('\n').filter(line => line.trim());
-    
-    for (const line of lines) {
-      // Match pattern like [3] Огненный шар ВСМ
-      const levelMatch = line.match(/^\[(\d+)\]\s+(.*?)(?:\s+([ВСМ]+))?$/);
-      if (levelMatch) {
-        const level = parseInt(levelMatch[1], 10);
-        const name = levelMatch[2].trim();
-        const components = levelMatch[3] || '';
-        
-        // Create basic spell
-        const newSpell: CharacterSpell = {
-          name,
-          level,
-          school: 'Универсальная', // Default
-          castingTime: '1 действие', // Default
-          range: '60 футов', // Default
-          components,
-          duration: 'Мгновенная', // Default
-          description: 'Описание отсутствует', // Default
-          prepared: false,
-          verbal: components.includes('В'),
-          somatic: components.includes('С'),
-          material: components.includes('М'),
-          ritual: false,
-          concentration: false,
-        };
-        
-        spells.push(newSpell);
-      }
-    }
-    
-    return spells;
-  };
-
   const handleImport = () => {
     try {
       setIsProcessing(true);
-      const updatedSpells = importSpellsFromText(inputText);
-      const newCount = updatedSpells.length;
+      const updatedSpells = importSpellsFromText(inputText, allSpells);
+      const newCount = updatedSpells.length - allSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
       if (onImport) {

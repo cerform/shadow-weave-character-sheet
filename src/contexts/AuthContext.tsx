@@ -1,145 +1,469 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '@/services/firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User,
-  sendPasswordResetEmail,
-  updateProfile
-} from 'firebase/auth';
+import { auth, db } from '@/services/firebase';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { firebaseAuth } from '@/services/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-interface AuthContextProps {
-  currentUser: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateUserProfile: (displayName: string) => Promise<void>;
-  updateProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>; // Added for ProfilePage
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  googleLogin?: () => Promise<void>; // Опционально, возможно будет добавлено позже
+// Интерфейс для текущего пользователя
+interface CurrentUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  username: string;
+  isDM?: boolean;
+  characters?: string[];
 }
 
-// Экспортируем AuthContext для использования в useAuth
-export const AuthContext = createContext<AuthContextProps | null>(null);
+// Интерфейс для контекста аутентификации
+interface AuthContextType {
+  currentUser: CurrentUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isOfflineMode: boolean; // Добавлено свойство для автономного режима
+  register: (email: string, password: string, username: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  googleLogin: (isDM: boolean) => Promise<void>; // Добавлен метод для входа через Google
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (data: { displayName?: string; photoURL?: string; username?: string; isDM?: boolean }) => Promise<void>;
+  updateUser: (userData: Partial<CurrentUser>) => Promise<void>; // Добавлен метод для обновления пользователя
+}
 
-// Создаем хук useAuth для удобства использования контекста
+// Интерфейс для данных пользователя в Firestore
+interface FirestoreUserData {
+  displayName?: string;
+  email?: string;
+  isDM?: boolean;
+  characters?: string[];
+  createdAt: string | Date;
+  updatedAt?: string | Date;
+  photoURL?: string;
+  username?: string;
+  settings?: {
+    theme?: string;
+    language?: string;
+    notifications?: {
+      email?: boolean;
+      push?: boolean;
+      inApp?: boolean;
+    }
+  };
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    console.error('useAuth должен использоваться внутри AuthProvider');
-    
-    // Возвращаем заглушку с базовыми данными, чтобы избежать ошибок при использовании
-    return {
-      currentUser: null,
-      isAuthenticated: false,
-      isLoading: false,
-      login: () => Promise.reject('AuthProvider не найден'),
-      logout: () => Promise.reject('AuthProvider не найден'),
-      register: () => Promise.reject('AuthProvider не найден'),
-      resetPassword: () => Promise.reject('AuthProvider не найден'),
-      updateUserProfile: () => Promise.reject('AuthProvider не найден'),
-      updateProfile: () => Promise.reject('AuthProvider не найден'),
-      googleLogin: () => Promise.reject('AuthProvider не найден')
-    };
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };
 
-const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOfflineMode, setIsOfflineMode] = useState(false); // Состояние автономного режима
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
+  // Функция для синхронизации пользователя с Firestore
+  const syncUserWithFirestore = async (userData: { 
+    username?: string;
+    email?: string;
+    isDM?: boolean;
+  }) => {
+    try {
+      const uid = getCurrentUid();
+      if (!uid) {
+        console.error("syncUserWithFirestore: Пользователь не авторизован");
+        return null;
+      }
+
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+
+      const timestamp = new Date().toISOString();
+      
+      if (userDoc.exists()) {
+        // Обновляем существующего пользователя
+        console.log("syncUserWithFirestore: Обновляем пользователя", uid);
+        await updateDoc(userRef, {
+          ...userData,
+          updatedAt: timestamp
+        });
+      } else {
+        // Создаем нового пользователя
+        console.log("syncUserWithFirestore: Создаем нового пользователя", uid);
+        await setDoc(userRef, {
+          ...userData,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          characters: []
+        });
+      }
+      
+      return uid;
+    } catch (error) {
+      console.error("Ошибка при синхронизации пользователя с Firestore:", error);
+      return null;
+    }
+  };
+
+  // Функция для получения данных пользователя из Firestore
+  const getCurrentUserWithData = async (): Promise<FirestoreUserData | null> => {
+    try {
+      const uid = getCurrentUid();
+      if (!uid) {
+        console.error("getCurrentUserWithData: Пользователь не авторизован");
+        return null;
+      }
+
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        console.log("getCurrentUserWithData: Данные пользователя получены");
+        return userDoc.data() as FirestoreUserData;
+      } else {
+        console.log("getCurrentUserWithData: Пользователь найден в Firebase Auth, но не в Firestore");
+        return null;
+      }
+    } catch (error) {
+      console.error("Ошибка при получении данных пользователя:", error);
+      return null;
+    }
+  };
+
+  // Вспомогательная функция для получения текущего UID
+  const getCurrentUid = (): string | null => {
+    return firebaseAuth.currentUser?.uid || null;
+  };
+
+  // При изменении состояния авторизации обновляем текущего пользователя
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth as any, (user) => {
-      setCurrentUser(user);
+    setIsLoading(true);
+    console.log("AuthProvider: Инициализация слушателя авторизации");
+
+    const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
+      console.log("AuthProvider: Изменение состояния авторизации", user ? user.uid : "Не авторизован");
+      
+      if (user) {
+        try {
+          // Получаем дополнительные данные пользователя из Firestore
+          const firestoreData = await getCurrentUserWithData();
+          console.log("AuthProvider: Данные пользователя из Firestore:", firestoreData);
+          
+          setCurrentUser({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            username: firestoreData?.username || user.displayName || "Пользователь",
+            isDM: firestoreData?.isDM || false,
+            characters: firestoreData?.characters || []
+          });
+          
+          // Отключаем автономный режим, так как пользователь авторизован
+          setIsOfflineMode(false);
+        } catch (error) {
+          console.error("AuthProvider: Ошибка при получении данных пользователя:", error);
+          setCurrentUser(null);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+      
       setIsLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
-
-  const login = async (email: string, password: string): Promise<void> => {
+  
+  // Регистрация нового пользователя
+  const register = async (email: string, password: string, username: string) => {
     try {
-      await signInWithEmailAndPassword(auth as any, email, password);
-    } catch (error) {
-      console.error('Ошибка при входе:', error);
-      throw error;
-    }
-  };
-
-  const register = async (email: string, password: string): Promise<void> => {
-    try {
-      await createUserWithEmailAndPassword(auth as any, email, password);
-    } catch (error) {
-      console.error('Ошибка при регистрации:', error);
-      throw error;
-    }
-  };
-
-  const logout = async (): Promise<void> => {
-    try {
-      await signOut(auth as any);
-    } catch (error) {
-      console.error('Ошибка при выходе:', error);
-      throw error;
-    }
-  };
-
-  const resetPassword = async (email: string): Promise<void> => {
-    try {
-      await sendPasswordResetEmail(auth as any, email);
-    } catch (error) {
-      console.error('Ошибка при сбросе пароля:', error);
-      throw error;
-    }
-  };
-
-  const updateUserProfile = async (displayName: string): Promise<void> => {
-    try {
-      if (currentUser) {
-        await updateProfile(currentUser, { displayName });
+      setIsLoading(true);
+      const userCredential = await auth.registerWithEmail(email, password);
+      
+      if (userCredential) {
+        // Синхронизируем данные пользователя с Firestore
+        await syncUserWithFirestore({ username, email });
+        
+        toast({
+          title: "Успешная регистрация",
+          description: "Ваш аккаунт создан успешно"
+        });
+        
+        // Обновляем текущего пользователя
+        setCurrentUser({
+          uid: userCredential.uid,
+          email: userCredential.email,
+          displayName: userCredential.displayName,
+          photoURL: userCredential.photoURL,
+          username: username || "Пользователь",
+          isDM: false,
+          characters: []
+        });
+        
+        navigate('/');
       }
-    } catch (error) {
-      console.error('Ошибка при обновлении профиля:', error);
-      throw error;
+    } catch (error: any) {
+      console.error("Ошибка при регистрации:", error);
+      toast({
+        title: "Ошибка регистрации",
+        description: error.message || "Не удалось зарегистрироваться. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // Добавляем метод updateProfile для совместимости с ProfilePage
-  const updateProfileMethod = async (data: { displayName?: string, photoURL?: string }): Promise<void> => {
+  
+  // Вход в аккаунт
+  const login = async (email: string, password: string) => {
     try {
-      if (currentUser) {
-        await updateProfile(currentUser, data);
+      setIsLoading(true);
+      const userCredential = await auth.loginWithEmail(email, password);
+      
+      if (userCredential) {
+        // Получаем дополнительные данные пользователя из Firestore
+        const firestoreData = await getCurrentUserWithData();
+        
+        toast({
+          title: "Успешный вход",
+          description: "Вы вошли в свой аккаунт"
+        });
+        
+        // Обновляем текущего пользователя
+        setCurrentUser({
+          uid: userCredential.uid,
+          email: userCredential.email,
+          displayName: userCredential.displayName,
+          photoURL: userCredential.photoURL,
+          username: firestoreData?.username || userCredential.displayName || "Пользователь",
+          isDM: firestoreData?.isDM || false,
+          characters: firestoreData?.characters || []
+        });
+        
+        navigate('/');
       }
-    } catch (error) {
-      console.error('Ошибка при обновлении профиля:', error);
-      throw error;
+    } catch (error: any) {
+      console.error("Ошибка при входе:", error);
+      toast({
+        title: "Ошибка входа",
+        description: error.message || "Не удалось войти. Пожалуйста, проверьте свои учетные данные и попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Вход через Google
+  const googleLogin = async (isDM: boolean) => {
+    try {
+      setIsLoading(true);
+      const userCredential = await auth.loginWithGoogle();
+      
+      if (userCredential) {
+        const username = userCredential.displayName || "Пользователь Google";
+        const email = userCredential.email;
+        
+        // Синхронизируем данные пользователя с Firestore
+        await syncUserWithFirestore({ username, email, isDM });
+        
+        // Получаем дополнительные данные пользователя из Firestore
+        const firestoreData = await getCurrentUserWithData();
+        
+        toast({
+          title: "Успешный вход через Google",
+          description: "Вы вошли в свой аккаунт через Google"
+        });
+        
+        // Обновляем текущего пользователя
+        setCurrentUser({
+          uid: userCredential.uid,
+          email: userCredential.email,
+          displayName: userCredential.displayName,
+          photoURL: userCredential.photoURL,
+          username: firestoreData?.username || username,
+          isDM: firestoreData?.isDM || isDM,
+          characters: firestoreData?.characters || []
+        });
+        
+        navigate('/');
+      }
+    } catch (error: any) {
+      console.error("Ошибка при входе через Google:", error);
+      toast({
+        title: "Ошибка входа через Google",
+        description: error.message || "Не удалось войти через Google. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Выход из аккаунта
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      await auth.logout();
+      setCurrentUser(null);
+      
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из своего аккаунта"
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      console.error("Ошибка при выходе:", error);
+      toast({
+        title: "Ошибка выхода",
+        description: error.message || "Не удалось выйти. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Сброс пароля
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      // TODO: Реализовать сброс пароля через Firebase
+      toast({
+        title: "Ссылка отправлена",
+        description: "Проверьте вашу электронную почту для сброса пароля"
+      });
+    } catch (error: any) {
+      console.error("Ошибка при сбросе пароля:", error);
+      toast({
+        title: "Ошибка сброса пароля",
+        description: error.message || "Не удалось отправить ссылку для сброса пароля. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Обновление профиля пользователя
+  const updateProfile = async (data: { displayName?: string; photoURL?: string; username?: string; isDM?: boolean }) => {
+    try {
+      setIsLoading(true);
+      
+      if (!currentUser) {
+        throw new Error("Пользователь не авторизован");
+      }
+      
+      // Синхронизируем данные пользователя с Firestore
+      await syncUserWithFirestore(data);
+      
+      // Обновляем локальное состояние пользователя
+      setCurrentUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          displayName: data.displayName || prev.displayName,
+          photoURL: data.photoURL || prev.photoURL,
+          username: data.username || prev.username,
+          isDM: data.isDM !== undefined ? data.isDM : prev.isDM
+        };
+      });
+      
+      toast({
+        title: "Профиль обновлен",
+        description: "Ваш профиль был успешно обновлен"
+      });
+    } catch (error: any) {
+      console.error("Ошибка при обновлении профиля:", error);
+      toast({
+        title: "Ошибка обновления профиля",
+        description: error.message || "Не удалось обновить профиль. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const value: AuthContextProps = {
+  // Обновление пользователя (для ProfilePage)
+  const updateUser = async (userData: Partial<CurrentUser>) => {
+    try {
+      setIsLoading(true);
+      
+      if (!currentUser) {
+        throw new Error("Пользователь не авторизован");
+      }
+      
+      // Синхронизируем данные пользователя с Firestore
+      await syncUserWithFirestore({
+        username: userData.username,
+        isDM: userData.isDM
+      });
+      
+      // Обновляем локальное состояние пользователя
+      setCurrentUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...userData
+        };
+      });
+      
+      toast({
+        title: "Данные обновлены",
+        description: "Информация пользователя успешно обновлена"
+      });
+    } catch (error: any) {
+      console.error("Ошибка при обновлении данных пользователя:", error);
+      toast({
+        title: "Ошибка обновления",
+        description: error.message || "Не удалось обновить данные пользователя. Пожалуйста, попробуйте снова.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Включение автономного режима
+  const enableOfflineMode = () => {
+    setIsOfflineMode(true);
+    toast({
+      title: "Автономный режим включен",
+      description: "Вы работаете без подключения к сети"
+    });
+  };
+
+  const value = {
     currentUser,
-    login,
+    isLoading,
+    isAuthenticated: !!currentUser,
+    isOfflineMode,
     register,
+    login,
+    googleLogin,
     logout,
     resetPassword,
-    updateUserProfile,
-    updateProfile: updateProfileMethod,
-    isAuthenticated: !!currentUser,
-    isLoading
+    updateProfile,
+    updateUser
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export { AuthProvider };
+export default AuthContext;

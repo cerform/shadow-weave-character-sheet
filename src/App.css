@@ -12,7 +12,7 @@
 body {
   background-color: #121212 !important;
   color: #FFFFFF !important;
-  background-image: url('/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png');
+  background-image: url('/assets/background.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -120,7 +120,7 @@ button.accent-button:hover::after {
   transform: translateX(100%);
 }
 
-/* Стилизация карточек с улучшенным эффектом свечения */
+/* Стилизация карточек */
 .card {
   background-color: rgba(0, 0, 0, 0.8) !important;
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
@@ -131,61 +131,15 @@ button.accent-button:hover::after {
 }
 
 .card:hover {
-  box-shadow: 0 0 20px var(--theme-accent, #8B5A2B) !important;
-  transform: translateY(-3px);
+  box-shadow: 0 0 15px var(--theme-accent, #8B5A2B) !important;
 }
 
-/* Улучшенные анимации */
-@keyframes glow-pulse {
-  0% { box-shadow: 0 0 5px var(--theme-accent, #8B5A2B); }
-  50% { box-shadow: 0 0 15px var(--theme-accent, #8B5A2B); }
-  100% { box-shadow: 0 0 5px var(--theme-accent, #8B5A2B); }
+/* Убираем резкие края элементов */
+* {
+  border-radius: 0.25rem;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 2s infinite ease-in-out;
-}
-
-.animate-fade-in {
-  opacity: 0;
-  animation: fade-in 0.5s forwards ease-out;
-}
-
-/* Улучшенные стили границ карточек */
-[class*="card"], [class*="Card"] {
-  border-width: 2px !important;
-  border-style: solid !important;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Декоративные элементы для карточек */
-[class*="card"]::before, [class*="Card"]::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    var(--theme-accent, #8B5A2B), 
-    transparent
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-[class*="card"]:hover::before, [class*="Card"]:hover::before {
-  opacity: 1;
-}
-
-/* Стили для dropdown меню */
+/* Стилизация для dropdown меню */
 .dropdown-content {
   background-color: rgba(0, 0, 0, 0.95) !important;
   border: 1px solid var(--theme-accent, #8B5A2B) !important;

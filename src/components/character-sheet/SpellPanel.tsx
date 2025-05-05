@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,39 +27,6 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Функция для нормализации заклинаний (преобразование строк в объекты CharacterSpell)
-  const normalizeSpells = (spells: any[] | undefined): CharacterSpell[] => {
-    if (!spells || !Array.isArray(spells)) return [];
-    
-    return spells.map(spell => {
-      if (typeof spell === 'string') {
-        // Ensure all required properties are provided when converting a string to CharacterSpell
-        return {
-          name: spell,
-          level: 0,
-          school: 'Неизвестная',
-          castingTime: '1 действие',
-          range: 'На себя',
-          components: '-',
-          duration: 'Мгновенная',
-          description: 'Нет описания',
-          prepared: false
-        };
-      }
-      // If it's already an object, ensure prepared property exists
-      return {
-        ...spell,
-        prepared: spell.prepared ?? false
-      } as CharacterSpell;
-    });
-  };
-  
-  // Получение нормализованных заклинаний персонажа
-  const getCharacterSpells = (): CharacterSpell[] => {
-    if (!character || !character.spells) return [];
-    return normalizeSpells(character.spells);
-  };
-
   // Вспомогательная функция для безопасного преобразования строки или массива в строку
   const safeJoin = (value: string | string[] | undefined, separator: string = ', '): string => {
     if (!value) return '';
@@ -68,9 +36,13 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Группировка заклинаний по уровням
   const spellsByLevel = React.useMemo(() => {
-    const normalizedSpells = getCharacterSpells();
-    
-    return normalizedSpells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
+    if (!character?.spells || !Array.isArray(character.spells)) return {};
+
+    const spells = character.spells.filter(spell => 
+      typeof spell === 'object' && spell !== null
+    ) as CharacterSpell[];
+
+    return spells.reduce((acc: {[key: number]: CharacterSpell[]}, spell) => {
       const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
@@ -80,12 +52,16 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Фильтрация заклинаний по поиску и вкладке
   const filteredSpells = React.useMemo(() => {
-    const normalizedSpells = getCharacterSpells();
-    
-    return normalizedSpells.filter(spell => {
+    if (!character?.spells || !Array.isArray(character.spells)) return [];
+
+    const spells = character.spells.filter(spell => 
+      typeof spell === 'object' && spell !== null
+    ) as CharacterSpell[];
+
+    return spells.filter(spell => {
       const matchesSearch = searchTerm === '' || 
         spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (spell.description && spell.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        spell.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesTab = activeTab === 'all' || 
         (activeTab === 'prepared' && spell.prepared) ||
@@ -109,10 +85,8 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
   const toggleSpellPrepared = (spellId: string | number | undefined) => {
     if (!character || !spellId) return;
     
-    const normalizedSpells = getCharacterSpells();
-    const updatedSpells = normalizedSpells.map(spell => {
-      if ((spell.id?.toString() || '') === spellId.toString() || 
-          (spell.name === spellId.toString())) {
+    const updatedSpells = (character.spells as CharacterSpell[]).map(spell => {
+      if ((spell.id?.toString() || '') === spellId.toString()) {
         return { ...spell, prepared: !spell.prepared };
       }
       return spell;
@@ -285,9 +259,9 @@ const SpellPanel = ({ character, onUpdate }: SpellPanelProps) => {
 
   // Получение количества подготовленных заклинаний
   const getPreparedSpellsCount = () => {
-    const normalizedSpells = getCharacterSpells();
+    if (!character?.spells || !Array.isArray(character.spells)) return 0;
     
-    return normalizedSpells
+    return (character.spells as CharacterSpell[])
       .filter(spell => spell.prepared && spell.level > 0)
       .length;
   };

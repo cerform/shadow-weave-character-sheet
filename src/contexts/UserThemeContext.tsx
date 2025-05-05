@@ -2,12 +2,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
 import { Theme, useTheme } from '@/contexts/ThemeContext';
-import { themes, ThemeStyle } from '@/lib/themes';
+import { themes } from '@/lib/themes';
 
 interface UserThemeContextType {
   setUserTheme: (theme: string) => void;
   activeTheme: string;
-  currentThemeStyles: ThemeStyle;
+  currentThemeStyles: any; // Добавляем текущие стили темы
 }
 
 export const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
@@ -27,8 +27,6 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   // Применяем тему при монтировании и при изменении текущего пользователя
   useEffect(() => {
-    console.log('UserThemeProvider: монтирование/изменение пользователя', currentUser?.themePreference);
-    
     // Применяем базовую тему из localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
@@ -69,9 +67,10 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
-    document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
-    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText || '#FFFFFF');
-    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground || 'rgba(139, 90, 43, 0.8)');
+    
+    // Устанавливаем цвет текста для лучшей видимости в зависимости от темы
+    document.documentElement.style.setProperty('--text-color', themeStyles.textColor || '#FFFFFF');
+    document.documentElement.style.setProperty('--muted-text-color', themeStyles.mutedTextColor || '#DDDDDD');
   };
   
   // Функция для изменения темы пользователя

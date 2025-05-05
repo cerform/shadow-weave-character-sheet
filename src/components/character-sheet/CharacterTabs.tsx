@@ -1,121 +1,62 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BookOpen, 
-  ScrollText, 
-  FileText, 
-  Package, 
-  Heart,
-  Dices,
-  User,
-  Notebook
-} from "lucide-react";
-import FeaturesTab from "./tabs/FeaturesTab";
-import { SpellsTab } from "./tabs/SpellsTab";
-import { NotesTab } from "./tabs/NotesTab";
-import InventoryTab from "./tabs/InventoryTab";
-import { CombatTab } from "./tabs/CombatTab";
-import GeneralTab from "./tabs/GeneralTab";
-import { Character } from '@/types/character';
+import { SpellsTab } from './tabs/SpellsTab';
+import { AbilitiesTab } from './tabs/AbilitiesTab';
+import { CombatTab } from './tabs/CombatTab';
+import { FeaturesTab } from './tabs/FeaturesTab';
+import { BackgroundTab } from './tabs/BackgroundTab';
+import { EquipmentTab } from './tabs/EquipmentTab';
+import { NotesTab } from './tabs/NotesTab';
+import { HandbookTab } from './tabs/HandbookTab';
 
 interface CharacterTabsProps {
-  character: Character | null;
-  isDM?: boolean;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  character?: any; // Add these props to be passed to children
+  onUpdate?: (updates: any) => void; 
 }
 
-export const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) => {
-  const [activeTab, setActiveTab] = useState("general");
-  
-  // Mock onUpdate handler for components requiring it
-  const handleUpdate = (updates: any) => {
-    console.log('Character update requested:', updates);
-    // Реальный обработчик обновлений должен быть реализован в родительском компоненте
-  };
-  
+export const CharacterTabs = ({ activeTab, setActiveTab, character, onUpdate }: CharacterTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 md:grid-cols-8 mb-6">
-        <TabsTrigger value="general" className="flex flex-col items-center gap-1">
-          <User className="h-4 w-4" />
-          <span className="text-xs">Основное</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="combat" className="flex flex-col items-center gap-1">
-          <Heart className="h-4 w-4" />
-          <span className="text-xs">Бой</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="features" className="flex flex-col items-center gap-1">
-          <ScrollText className="h-4 w-4" />
-          <span className="text-xs">Умения</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="spells" className="flex flex-col items-center gap-1">
-          <BookOpen className="h-4 w-4" />
-          <span className="text-xs">Заклинания</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="inventory" className="flex flex-col items-center gap-1">
-          <Package className="h-4 w-4" />
-          <span className="text-xs">Инвентарь</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="notes" className="flex flex-col items-center gap-1">
-          <Notebook className="h-4 w-4" />
-          <span className="text-xs">Заметки</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="dice" className="flex flex-col items-center gap-1">
-          <Dices className="h-4 w-4" />
-          <span className="text-xs">Кубики</span>
-        </TabsTrigger>
-        
-        <TabsTrigger value="details" className="flex flex-col items-center gap-1">
-          <FileText className="h-4 w-4" />
-          <span className="text-xs">Детали</span>
-        </TabsTrigger>
+      <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full mb-4 bg-zinc-800/40">
+        <TabsTrigger value="abilities">Характеристики</TabsTrigger>
+        <TabsTrigger value="combat">Бой</TabsTrigger>
+        <TabsTrigger value="spells">Заклинания</TabsTrigger>
+        <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
+        <TabsTrigger value="features">Особенности</TabsTrigger>
+        <TabsTrigger value="background">Предыстория</TabsTrigger>
+        <TabsTrigger value="notes">Заметки</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="general">
-        <GeneralTab character={character} />
+      <TabsContent value="abilities" className="focus-visible:outline-none">
+        <AbilitiesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="combat">
-        <CombatTab character={character} />
+      <TabsContent value="combat" className="focus-visible:outline-none">
+        <CombatTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="features">
-        <FeaturesTab character={character} />
+      <TabsContent value="spells" className="focus-visible:outline-none">
+        <SpellsTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="spells">
-        <SpellsTab character={character} onUpdate={handleUpdate} />
+      <TabsContent value="equipment" className="focus-visible:outline-none">
+        <EquipmentTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="inventory">
-        <InventoryTab character={character} onUpdate={handleUpdate} />
+      <TabsContent value="features" className="focus-visible:outline-none">
+        <FeaturesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="notes">
-        <NotesTab character={character} />
+      <TabsContent value="background" className="focus-visible:outline-none">
+        <BackgroundTab character={character} onUpdate={onUpdate} />
       </TabsContent>
       
-      <TabsContent value="dice">
-        <div className="p-4 bg-card/30 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">Кубики</h3>
-          {/* Dice roller will be added here */}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="details">
-        <div className="p-4 bg-card/30 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">Детали персонажа</h3>
-          {/* Character details will be added here */}
-        </div>
+      <TabsContent value="notes" className="focus-visible:outline-none">
+        <NotesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
     </Tabs>
   );
 };
-
-export default CharacterTabs;

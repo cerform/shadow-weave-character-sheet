@@ -1,137 +1,107 @@
 
-import { SpellData } from "./types";
-import { CharacterSpell } from "@/types/character.d";
+import { SpellData } from './types';
+import { CharacterSpell } from '@/types/character';
 
-// Get all unique levels from spells array
-export const getAllLevels = (spells: SpellData[] | CharacterSpell[]): number[] => {
-  const levels = new Set<number>();
-  spells.forEach(spell => {
-    if (typeof spell.level === 'number') {
-      levels.add(spell.level);
-    }
-  });
-  return Array.from(levels).sort((a, b) => a - b);
-};
-
-// Get all unique schools from spells array
-export const getAllSchools = (spells: SpellData[] | CharacterSpell[]): string[] => {
-  const schools = new Set<string>();
-  spells.forEach(spell => {
-    if (spell.school) {
-      schools.add(spell.school);
-    }
-  });
-  return Array.from(schools).sort();
-};
-
-// Get all unique classes from spells array
-export const getAllClasses = (spells: SpellData[] | CharacterSpell[]): string[] => {
-  const classes = new Set<string>();
-  spells.forEach(spell => {
-    if (spell.classes) {
-      if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => classes.add(cls));
-      } else {
-        classes.add(spell.classes);
-      }
-    }
-  });
-  return Array.from(classes).sort();
-};
-
-// Get badge color by spell level
-export const getBadgeColorByLevel = (level: number): string => {
-  switch (level) {
-    case 0: return "bg-gray-500";
-    case 1: return "bg-blue-500";
-    case 2: return "bg-green-500";
-    case 3: return "bg-yellow-500";
-    case 4: return "bg-orange-500";
-    case 5: return "bg-red-500";
-    case 6: return "bg-purple-500";
-    case 7: return "bg-pink-500";
-    case 8: return "bg-indigo-500";
-    case 9: return "bg-black";
-    default: return "bg-gray-500";
-  }
-};
-
-// Get badge color by school
-export const getSchoolBadgeColor = (school: string): string => {
-  switch (school.toLowerCase()) {
-    case "abjuration": return "bg-blue-500";
-    case "conjuration": return "bg-indigo-500";
-    case "divination": return "bg-purple-500";
-    case "enchantment": return "bg-pink-500";
-    case "evocation": return "bg-red-500";
-    case "illusion": return "bg-orange-500";
-    case "necromancy": return "bg-gray-700";
-    case "transmutation": return "bg-green-500";
-    default: return "bg-gray-500";
-  }
-};
-
-// Format classes array/string for display
-export const formatClassesString = (classes: string[] | string | undefined): string => {
-  if (!classes) return "";
-  if (Array.isArray(classes)) {
-    return classes.join(", ");
-  }
-  return classes;
-};
-
-// Filter spells by search term
-export const filterSpellsBySearchTerm = (spells: SpellData[] | CharacterSpell[], searchTerm: string): (SpellData | CharacterSpell)[] => {
-  if (!searchTerm) return spells;
+// Фильтрация заклинаний по поисковому запросу
+export const filterSpellsBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+  if (!searchTerm || searchTerm.trim() === '') return spells;
   
-  const lowerSearchTerm = searchTerm.toLowerCase();
-  return spells.filter(spell => {
-    // Search in name
-    if (spell.name.toLowerCase().includes(lowerSearchTerm)) return true;
-    
-    // Search in description
-    if (spell.description?.toLowerCase().includes(lowerSearchTerm)) return true;
-    
-    // Search in classes
-    if (spell.classes) {
-      if (Array.isArray(spell.classes)) {
-        if (spell.classes.some(cls => cls.toLowerCase().includes(lowerSearchTerm))) return true;
-      } else {
-        if (spell.classes.toLowerCase().includes(lowerSearchTerm)) return true;
-      }
-    }
-    
-    // Search in other fields
-    if (spell.school?.toLowerCase().includes(lowerSearchTerm)) return true;
-    if (spell.castingTime?.toLowerCase().includes(lowerSearchTerm)) return true;
-    
-    return false;
-  });
+  const normalizedSearchTerm = searchTerm.toLowerCase();
+  
+  return spells.filter(spell => 
+    (spell.name && spell.name.toLowerCase().includes(normalizedSearchTerm)) || 
+    (spell.description && typeof spell.description === 'string' && spell.description.toLowerCase().includes(normalizedSearchTerm))
+  );
 };
 
-// Filter spells by level
-export const filterSpellsByLevel = (spells: SpellData[] | CharacterSpell[], level: number | null): (SpellData | CharacterSpell)[] => {
-  if (level === null) return spells;
-  return spells.filter(spell => spell.level === level);
+// Преобразование CharacterSpell в SpellData
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || 'Неизвестно',
+    castingTime: spell.castingTime || '',
+    range: spell.range || '',
+    components: spell.components || '',
+    duration: spell.duration || '',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    higherLevels: spell.higherLevels,
+    prepared: spell.prepared
+  };
 };
 
-// Filter spells by school
-export const filterSpellsBySchool = (spells: SpellData[] | CharacterSpell[], school: string | null): (SpellData | CharacterSpell)[] => {
-  if (!school) return spells;
-  return spells.filter(spell => spell.school?.toLowerCase() === school.toLowerCase());
+// Фильтрация заклинаний по уровню
+export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
+  if (!levels || levels.length === 0) return spells;
+  return spells.filter(spell => levels.includes(spell.level));
 };
 
-// Filter spells by class
-export const filterSpellsByClass = (spells: SpellData[] | CharacterSpell[], spellClass: string | null): (SpellData | CharacterSpell)[] => {
-  if (!spellClass) return spells;
+// Фильтрация заклинаний по школе
+export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
+  if (!schools || schools.length === 0) return spells;
+  return spells.filter(spell => schools.includes(spell.school));
+};
+
+// Фильтрация заклинаний по классу
+export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
+  if (!classes || classes.length === 0) return spells;
   
   return spells.filter(spell => {
     if (!spell.classes) return false;
     
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => cls.toLowerCase() === spellClass.toLowerCase());
-    } else {
-      return spell.classes.toLowerCase() === spellClass.toLowerCase();
+      return spell.classes.some(c => classes.includes(c));
+    } else if (typeof spell.classes === 'string') {
+      // Если classes - это строка, проверяем, содержит ли она какой-либо из указанных классов
+      return classes.some(c => spell.classes.includes(c));
+    }
+    
+    return false;
+  });
+};
+
+// Извлечение уникальных классов из заклинаний
+export const extractClasses = (spells: SpellData[]): string[] => {
+  const classesSet = new Set<string>();
+  
+  spells.forEach(spell => {
+    if (!spell.classes) return;
+    
+    if (Array.isArray(spell.classes)) {
+      spell.classes.forEach(c => classesSet.add(c));
+    } else if (typeof spell.classes === 'string') {
+      // Разделяем строку с классами по запятым и добавляем в Set
+      spell.classes.split(',').map(c => c.trim()).forEach(c => classesSet.add(c));
     }
   });
+  
+  return Array.from(classesSet).sort();
+};
+
+// Форматирование классов для отображения
+export const formatClasses = (classes: string[] | string | undefined): string => {
+  if (!classes) return '';
+  
+  if (Array.isArray(classes)) {
+    return classes.join(', ');
+  }
+  
+  return classes;
+};
+
+// Проверка, является ли значение строкой
+export const isString = (value: any): value is string => {
+  return typeof value === 'string';
+};
+
+// Проверка, является ли значение массивом строк
+export const isStringArray = (value: any): value is string[] => {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
 };

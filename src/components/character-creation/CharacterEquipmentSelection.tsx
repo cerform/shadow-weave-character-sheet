@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CharacterSheet } from '@/types/character.d'; 
 import NavigationButtons from './NavigationButtons';
@@ -31,20 +30,9 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
   nextStep,
   prevStep
 }) => {
-  // Получаем список элементов как массив строк, независимо от того, в каком формате они хранятся
-  const getEquipmentAsStrings = (): string[] => {
-    if (!character.equipment) return [];
-    
-    // Если это массив объектов, извлекаем только имена
-    if (typeof character.equipment[0] === 'object' && character.equipment[0] !== null) {
-      return (character.equipment as { name: string; quantity: number }[]).map(item => item.name);
-    }
-    
-    // Иначе возвращаем как есть (это уже массив строк)
-    return character.equipment as string[];
-  };
-  
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(getEquipmentAsStrings());
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
+    character.equipment || []
+  );
   const [customItem, setCustomItem] = useState('');
   const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
   
@@ -87,36 +75,14 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
     }
     
     setSelectedEquipment(newEquipment);
-    
-    // Преобразуем выбранное снаряжение в формат, соответствующий текущему типу equipment
-    const formattedEquipment = formatEquipmentForUpdate(newEquipment);
-    updateCharacter({ equipment: formattedEquipment });
-  };
-  
-  // Преобразование массива строк в нужный формат в зависимости от текущей структуры
-  const formatEquipmentForUpdate = (equipmentItems: string[]) => {
-    if (!character.equipment || character.equipment.length === 0) {
-      // Если снаряжения нет, используем строковый формат
-      return equipmentItems;
-    }
-    
-    // Если текущий формат - массив объектов, сохраняем его
-    if (typeof character.equipment[0] === 'object' && character.equipment[0] !== null) {
-      return equipmentItems.map(name => ({ name, quantity: 1 }));
-    }
-    
-    // В противном случае используем строковый формат
-    return equipmentItems;
+    updateCharacter({ equipment: newEquipment });
   };
   
   const addCustomItem = () => {
     if (customItem.trim() !== '') {
       const newEquipment = [...selectedEquipment, customItem.trim()];
       setSelectedEquipment(newEquipment);
-      
-      // Преобразуем в нужный формат
-      const formattedEquipment = formatEquipmentForUpdate(newEquipment);
-      updateCharacter({ equipment: formattedEquipment });
+      updateCharacter({ equipment: newEquipment });
       setCustomItem('');
     }
   };

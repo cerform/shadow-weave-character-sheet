@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,35 +76,56 @@
   }
 }
 
+/* Добавляем стили для тем D&D */
 /* Базовые стили для различных тем */
 :root {
-  --theme-accent: #8B5A2B;
-  --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(0, 0, 0, 0.85);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(139, 90, 43, 0.8);
-  --background: #121212;
-  --foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #000000;
   --primary: #1a56db;
   --accent: #4c6ef5;
+  --card: #ffffff;
+  --card-foreground: #000000;
+}
+
+.theme-dark {
+  --background: #121212;
+  --foreground: #ffffff;
+  --primary: #4c6ef5;
+  --accent: #6366f1;
   --card: #1a1a1a;
   --card-foreground: #ffffff;
 }
 
-/* Тема по умолчанию */
+.theme-fantasy {
+  --background: #2c2a35;
+  --foreground: #e6d8b5;
+  --primary: #9d7e59;
+  --accent: #b69f7e;
+  --card: #353441;
+  --card-foreground: #e6d8b5;
+}
+
+.theme-cyber {
+  --background: #0c0c14;
+  --foreground: #00ffaa;
+  --primary: #00aaff;
+  --accent: #ff00aa;
+  --card: #14141e;
+  --card-foreground: #c8f5ff;
+}
+
+.theme-nature {
+  --background: #1d332a;
+  --foreground: #e5f5eb;
+  --primary: #5a9e7a;
+  --accent: #8cc474;
+  --card: #2a4438;
+  --card-foreground: #e5f5eb;
+}
+
+/* Анимация для плавных переходов тем */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
-  min-height: 100vh;
-  color: var(--theme-text-color, #FFFFFF) !important;
-  background-color: #121212;
-  background-image: url('/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-blend-mode: multiply;
 }
 
 /* Плавные переходы для элементов UI */
@@ -129,9 +151,9 @@ html, body {
   min-height: 100vh;
 }
 
-/* Стили для карточек - модифицируем для лучшей видимости на новом фоне */
+/* Стили для карточек */
 .card, [class*="bg-card"] {
-  background-color: var(--theme-card-background, rgba(0, 0, 0, 0.85)) !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
   border: 1px solid var(--theme-accent, #8B5A2B);
   color: var(--theme-text-color, #FFFFFF) !important;
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5));
@@ -157,8 +179,6 @@ html, body {
 button, .btn {
   text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.8);
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
-  background-color: var(--theme-button-background, rgba(139, 90, 43, 0.8)) !important;
-  color: var(--theme-button-text, #FFFFFF) !important;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
@@ -174,7 +194,6 @@ button:hover {
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
   color: var(--theme-text-color, #FFFFFF) !important;
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
-  z-index: 50 !important;
 }
 
 /* Улучшение внешнего вида диалогов */
@@ -184,18 +203,14 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.9) !important;
   border: 1px solid var(--theme-accent, #8B5A2B) !important;
   box-shadow: var(--theme-glow, 0 0 15px rgba(139, 90, 43, 0.5)) !important;
-  z-index: 50 !important;
 }
 
-/* Темы */
+/* Улучшение отображения для разных тем */
 .theme-warlock {
   --theme-accent: #9061F9;
   --theme-glow: 0 0 15px rgba(144, 97, 249, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(25, 15, 40, 0.95);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(144, 97, 249, 0.8);
 }
 
 .theme-wizard {
@@ -203,9 +218,6 @@ button:hover {
   --theme-glow: 0 0 15px rgba(59, 130, 246, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(15, 23, 42, 0.95);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(59, 130, 246, 0.8);
 }
 
 .theme-druid {
@@ -213,9 +225,6 @@ button:hover {
   --theme-glow: 0 0 15px rgba(16, 185, 129, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(15, 40, 25, 0.95);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(16, 185, 129, 0.8);
 }
 
 .theme-warrior {
@@ -223,9 +232,6 @@ button:hover {
   --theme-glow: 0 0 15px rgba(244, 63, 94, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(40, 15, 20, 0.95);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(244, 63, 94, 0.8);
 }
 
 .theme-bard {
@@ -233,9 +239,6 @@ button:hover {
   --theme-glow: 0 0 15px rgba(245, 158, 11, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(40, 30, 10, 0.95);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(245, 158, 11, 0.8);
 }
 
 .theme-default {
@@ -243,147 +246,23 @@ button:hover {
   --theme-glow: 0 0 15px rgba(139, 90, 43, 0.5);
   --theme-text-color: #FFFFFF;
   --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(0, 0, 0, 0.85);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(139, 90, 43, 0.8);
-}
-
-.theme-dark {
-  --theme-accent: #6366F1;
-  --theme-glow: 0 0 15px rgba(99, 102, 241, 0.5);
-  --theme-text-color: #FFFFFF;
-  --theme-muted-text-color: #DDDDDD;
-  --theme-card-background: rgba(0, 0, 0, 0.85);
-  --theme-button-text: #FFFFFF;
-  --theme-button-background: rgba(99, 102, 241, 0.8);
-}
-
-.theme-fantasy {
-  --theme-accent: #B69F7E;
-  --theme-glow: 0 0 15px rgba(182, 159, 126, 0.5);
-  --theme-text-color: #E6D8B5;
-  --theme-muted-text-color: #D0C4A6;
-  --theme-card-background: rgba(31, 29, 27, 0.95);
-  --theme-button-text: #E6D8B5;
-  --theme-button-background: rgba(182, 159, 126, 0.8);
-}
-
-.theme-cyber {
-  --theme-accent: #00FFAA;
-  --theme-glow: 0 0 15px rgba(0, 255, 170, 0.5);
-  --theme-text-color: #00FFAA;
-  --theme-muted-text-color: #00D699;
-  --theme-card-background: rgba(0, 20, 40, 0.95);
-  --theme-button-text: #000000;
-  --theme-button-background: rgba(0, 255, 170, 0.8);
-}
-
-.theme-nature {
-  --theme-accent: #8CC474;
-  --theme-glow: 0 0 15px rgba(140, 196, 116, 0.5);
-  --theme-text-color: #E5F5EB;
-  --theme-muted-text-color: #C2E0D0;
-  --theme-card-background: rgba(29, 51, 42, 0.95);
-  --theme-button-text: #E5F5EB;
-  --theme-button-background: rgba(140, 196, 116, 0.8);
 }
 
 /* Дополнительные стили для улучшения контраста */
-.bg-background, .app-container {
-  background-color: transparent !important;
-  color: var(--theme-text-color, #FFFFFF) !important;
+.bg-background, body, .app-container {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  background-image: url('/lovable-uploads/3678611a-a17a-4a81-8df0-c56c63cfcf0d.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .text-foreground {
-  color: var(--theme-text-color, #FFFFFF) !important;
+  color: #FFFFFF !important;
 }
 
 .text-muted-foreground {
-  color: var(--theme-muted-text-color, #DDDDDD) !important;
-}
-
-/* Добавляем стили для корректного отображения контента */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Исправление для загрузки контента */
-main {
-  flex: 1;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-}
-
-/* Фон по умолчанию для всех страниц */
-.page-container {
-  min-height: 100vh;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 1rem;
-  position: relative;
-}
-
-/* Дополнительные стили для обеспечения видимости текста и контента */
-h1, h2, h3, h4, h5, h6, p, span, div {
-  color: var(--theme-text-color, #FFFFFF);
-}
-
-/* Улучшение стилей для контейнеров */
-.container {
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  border-radius: 0.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-}
-
-/* Fallback стили для фона, если изображение не загружается */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  z-index: -1;
-}
-
-/* Улучшение видимости UI при отсутствии фонового изображения */
-.bg-card\/80, .bg-background\/80 {
-  background-color: rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(10px);
-}
-
-/* Стили для перетаскиваемой кнопки кубиков */
-.dice-button-container {
-  touch-action: none; /* Отключаем стандартное поведение касаний браузера */
-  user-select: none; /* Запрещаем выделение */
-}
-
-.dice-button-container.dragging {
-  opacity: 0.8;
-  cursor: grabbing;
-}
-
-/* Медиа-запрос для мобильных устройств */
-@media (max-width: 768px) {
-  .dice-button-container {
-    width: 70px;
-    height: 70px;
-  }
-  .dice-button-container button {
-    width: 70px !important;
-    height: 70px !important;
-  }
-  .dice-button-container button svg {
-    width: 40px !important;
-    height: 40px !important;
-  }
+  color: #DDDDDD !important;
 }

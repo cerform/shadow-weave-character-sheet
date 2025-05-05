@@ -1,138 +1,171 @@
-// Исправляем спеллы для всех классов, добавляя недостающее свойство known
-export const calculateAvailableSpellsByClassAndLevel = (className: string, level: number) => {
-  return getSpellSlotsByClass(className, level);
-};
 
-export const getSpellSlotsByClass = (className: string, level: number) => {
-  switch(className.toLowerCase()) {
-    case 'бард':
-    case 'bard':
-      return {
-        cantrips: 2 + (level >= 4 ? 1 : 0) + (level >= 10 ? 1 : 0),
-        known: Math.min(
-          4 + Math.ceil((level - 1) * (level < 11 ? 1 : 0.5)), 
-          22
-        ),
-        prepared: 0 // Барды не готовят заклинания
-      };
-    case 'жрец':
-    case 'cleric':
-      return { 
-        cantrips: Math.min(3 + Math.floor((level - 1) / 6), 5),
-        known: 0, // Жрецы знают все заклинания из своего списка
-        prepared: level + Math.max(1, getAbilityModifier('wisdom', 10)) // Примерное значение
-      };
-    case 'друид':
-    case 'druid':
-      return { 
-        cantrips: Math.min(2 + Math.floor((level - 1) / 4), 4),
-        known: 0, // Друиды знают все заклинания из своего списка
-        prepared: level + Math.max(1, getAbilityModifier('wisdom', 10)) // Примерное значение
-      };
-    case 'паладин':
-    case 'paladin':
-      return { 
-        cantrips: 0, // Паладины не имеют заговоров
-        known: 0, // Паладины знают все заклинания из своего списка
-        prepared: Math.floor(level / 2) + Math.max(1, getAbilityModifier('charisma', 10)) // Примерное значение
-      };
-    case 'рейнджер':
-    case 'ranger':
-      return { 
-        cantrips: 0, // Рейнджеры не имеют заговоров
-        known: Math.ceil(level / 2) + 1,
-        prepared: 0 // Рейнджеры не готовят заклинания
-      };
-    case 'чародей':
-    case 'sorcerer':
-      return { 
-        cantrips: Math.min(4 + Math.floor((level - 1) / 6), 6),
-        known: Math.min(
-          2 + Math.ceil((level - 1) * (level < 11 ? 1 : 0.5)), 
-          15
-        ),
-        prepared: 0 // Чародеи не готовят заклинания
-      };
-    case 'колдун':
-    case 'warlock':
-      return { 
-        cantrips: Math.min(2 + Math.floor((level - 1) / 6), 4),
-        known: Math.min(
-          2 + Math.ceil((level - 1) * (level < 10 ? 1 : 0.5)), 
-          15
-        ),
-        prepared: 0 // Колдуны не готовят заклинания
-      };
-    case 'волшебник':
-    case 'wizard':
-      return { 
-        cantrips: Math.min(3 + Math.floor((level - 1) / 6), 5),
-        known: 6 + (level * 2), // Примерное количество в книге заклинаний
-        prepared: level + Math.max(1, getAbilityModifier('intelligence', 10)) // Примерное значение
-      };
-    default:
-      return { 
-        cantrips: 0, 
-        known: 0,
-        prepared: 0 
-      };
-  }
-};
-
-export const parseComponents = (componentsString: string) => {
-  const components = {
-    verbal: false,
-    somatic: false,
-    material: false,
-    ritual: false,
+/**
+ * Parse spell components from the code string
+ * Component codes:
+ * В - Verbal
+ * С - Somatic
+ * М - Material
+ * Р - Ritual
+ * К - Concentration
+ */
+export const parseComponents = (componentCode: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+  concentration: boolean;
+} => {
+  return {
+    verbal: componentCode.includes('В') || componentCode.includes('V'),
+    somatic: componentCode.includes('С') || componentCode.includes('S'),
+    material: componentCode.includes('М') || componentCode.includes('M'),
+    ritual: componentCode.includes('Р') || componentCode.includes('R'),
+    concentration: componentCode.includes('К') || componentCode.includes('K')
   };
-
-  if (componentsString.includes('В')) {
-    components.verbal = true;
-  }
-  if (componentsString.includes('С')) {
-    components.somatic = true;
-  }
-  if (componentsString.includes('М')) {
-    components.material = true;
-  }
-  if (componentsString.includes('(Р)')) {
-    components.ritual = true;
-  }
-
-  return components;
 };
 
-export const processSpellBatch = (rawText: string) => {
-  const lines = rawText.split('\n');
-  const batchItems = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    const parts = line.split(';');
-    if (parts.length < 3) continue;
-
-    const name = parts[0].trim();
-    const level = parseInt(parts[1].trim(), 10);
-    const componentsString = parts[2].trim();
-
-    if (isNaN(level)) continue;
-
-    const components = parseComponents(componentsString);
-
-    batchItems.push({
-      name,
-      level,
-      components,
-    });
-  }
-
-  return batchItems;
+/**
+ * Build component string from boolean flags
+ */
+export const buildComponentString = (components: {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+}): string => {
+  let result = '';
+  if (components.verbal) result += 'В';
+  if (components.somatic) result += 'С';
+  if (components.material) result += 'М';
+  if (components.ritual) result += 'Р';
+  if (components.concentration) result += 'К';
+  return result || '';
 };
 
-// Вспомогательная функция для расчета модификатора характеристики
-function getAbilityModifier(ability: string, score: number): number {
-  return Math.floor((score - 10) / 2);
-}
+/**
+ * Получает строку с описанием компонентов заклинания на основе флагов
+ */
+export const getComponentsDescription = (components: {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materialComponents?: string;
+}): string => {
+  const parts = [];
+  
+  if (components.verbal) parts.push('В');
+  if (components.somatic) parts.push('С');
+  if (components.material) {
+    parts.push('М');
+    if (components.materialComponents) {
+      parts.push(`(${components.materialComponents})`);
+    }
+  }
+  
+  return parts.join(', ');
+};
+
+/**
+ * Вычисляет доступное количество заклинаний по уровню персонажа и классу
+ */
+export const calculateAvailableSpellsByClassAndLevel = (
+  characterClass: string,
+  characterLevel: number,
+  abilityScores: { [key: string]: number } = {}
+): { cantrips: number; spells: number } => {
+  // Значения по умолчанию
+  let cantrips = 0;
+  let spells = 0;
+  
+  // Получаем модификаторы характеристик
+  const wisModifier = Math.max(0, Math.floor((abilityScores.wisdom || 10) - 10) / 2);
+  const chaModifier = Math.max(0, Math.floor((abilityScores.charisma || 10) - 10) / 2);
+  const intModifier = Math.max(0, Math.floor((abilityScores.intelligence || 10) - 10) / 2);
+  
+  switch (characterClass) {
+    case "Бард":
+      // Заговоры для барда: 2 на 1 уровне, +1 на 10-м уровне
+      cantrips = characterLevel >= 10 ? 3 : 2;
+      // Известные заклинания для барда по уровням
+      const bardSpellsByLevel = [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22];
+      spells = bardSpellsByLevel[characterLevel] || 0;
+      break;
+      
+    case "Жрец":
+      // Заговоры для жреца: 3 на 1 уровне, +1 на 4-м и 10-м уровнях
+      if (characterLevel >= 10) cantrips = 5;
+      else if (characterLevel >= 4) cantrips = 4;
+      else cantrips = 3;
+      // Жрецы готовят заклинания: уровень + модификатор мудрости
+      spells = characterLevel + wisModifier;
+      break;
+      
+    case "Друид":
+      // Заговоры для друида: 2 на 1 уровне, +1 на 4-м и 10-м уровнях
+      if (characterLevel >= 10) cantrips = 4;
+      else if (characterLevel >= 4) cantrips = 3;
+      else cantrips = 2;
+      // Друиды готовят заклинания: уровень + модификатор мудрости
+      spells = characterLevel + wisModifier;
+      break;
+      
+    case "Волшебник":
+      // Заговоры для волшебника: 3 на 1 уровне, +1 на 4-м и 10-м уровнях
+      if (characterLevel >= 10) cantrips = 5;
+      else if (characterLevel >= 4) cantrips = 4;
+      else cantrips = 3;
+      // Волшебники работают иначе - они записывают в книгу заклинаний
+      spells = 6 + (characterLevel - 1) * 2;
+      break;
+      
+    case "Чародей":
+      // Заговоры для чародея: 4 на 1 уровне, +1 на 4-м и 10-м уровнях
+      if (characterLevel >= 10) cantrips = 6;
+      else if (characterLevel >= 4) cantrips = 5;
+      else cantrips = 4;
+      // Известные заклинания для чародея по уровням
+      const sorcererSpellsByLevel = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15];
+      spells = sorcererSpellsByLevel[characterLevel] || 0;
+      break;
+      
+    case "Колдун":
+    case "Чернокнижник":
+      // Заговоры для колдуна: 2 на 1 уровне, +1 на 4-м и 10-м уровнях
+      if (characterLevel >= 10) cantrips = 4;
+      else if (characterLevel >= 4) cantrips = 3;
+      else cantrips = 2;
+      // Известные заклинания для колдуна по уровням
+      const warlockSpellsByLevel = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15];
+      spells = warlockSpellsByLevel[characterLevel] || 0;
+      break;
+      
+    case "Паладин":
+      // Паладины не получают заговоры
+      cantrips = 0;
+      // Паладины получают заклинания со 2-го уровня
+      if (characterLevel < 2) spells = 0;
+      else {
+        // Половина уровня + модификатор Харизмы (минимум 1)
+        spells = Math.max(1, Math.floor(characterLevel / 2) + chaModifier);
+      }
+      break;
+      
+    case "Следопыт":
+      // Следопыты не получают заговоры
+      cantrips = 0;
+      // Следопыты получают заклинания со 2-го уровня
+      if (characterLevel < 2) spells = 0;
+      else {
+        // Половина уровня + модификатор Мудрости (минимум 1)
+        spells = Math.max(1, Math.floor(characterLevel / 2) + wisModifier);
+      }
+      break;
+      
+    default:
+      cantrips = 0;
+      spells = 0;
+  }
+  
+  return { cantrips, spells };
+};

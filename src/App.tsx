@@ -10,14 +10,6 @@ import { SocketProvider } from './contexts/SocketContext';
 import { UserThemeProvider } from './contexts/UserThemeContext';
 import './App.css';
 
-// Импорт тем
-import { themes } from '@/lib/themes';
-// Делаем темы доступными глобально
-if (typeof window !== 'undefined') {
-  (window as any).themes = themes;
-}
-
-// Импортируем страницы и компоненты
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
@@ -31,7 +23,6 @@ import CharactersListPage from './pages/CharactersListPage';
 import PlayBattlePage from './pages/PlayBattlePage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import CharacterViewPage from './pages/CharacterViewPage';
-import ProfilePage from './pages/ProfilePage'; 
 import NotFound from './pages/NotFound';
 
 import AppDiceButton from './AppDiceButton';
@@ -39,61 +30,29 @@ import AppDiceButton from './AppDiceButton';
 const App = () => {
   // При монтировании компонента устанавливаем дефолтную тему
   useEffect(() => {
-    // Инициализация основных процессов
-    console.log('Инициализация приложения...');
-    
-    // Предзагрузка фонового изображения
-    const preloadImage = new Image();
-    preloadImage.src = '/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png';
-    
     // Задаем дефолтную тему
     const savedTheme = localStorage.getItem('theme') || 'default';
     document.body.className = '';
     document.body.classList.add(`theme-${savedTheme}`);
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Проверяем наличие тем перед их использованием
-    const themesObj = themes;
-    
     // Применяем стили для текущей темы
-    const themeStyles = themesObj[savedTheme as keyof typeof themesObj] || themes.default;
-    
+    const themeStyles = themes[savedTheme as keyof typeof themes] || themes.default;
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
-    document.documentElement.style.setProperty('--theme-card-background', themeStyles.cardBackground);
-    document.documentElement.style.setProperty('--theme-button-text', themeStyles.buttonText || '#FFFFFF');
-    document.documentElement.style.setProperty('--theme-button-background', themeStyles.buttonBackground || 'rgba(139, 90, 43, 0.8)');
-    
-    console.log('Монтирование React приложения в DOM...');
-    
-    // Когда все загрузилось успешно
-    console.log('React приложение смонтировано успешно');
-    
-    console.log('Тема инициализирована:', savedTheme, themeStyles);
   }, []);
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-      <Router>
-        <AuthProvider>
-          <CharacterProvider>
-            <SessionProvider>
-              <UserThemeProvider>
+      <UserThemeProvider>
+        <Router>
+          <AuthProvider>
+            <CharacterProvider>
+              <SessionProvider>
                 <SocketProvider>
-                  <div 
-                    className="app-container min-h-screen w-full" 
-                    style={{
-                      backgroundImage: `url('/lovable-uploads/1bd8ff79-5758-4cfb-96cd-639139d33fa5.png')`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundAttachment: 'fixed',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                      backgroundBlendMode: 'multiply'
-                    }}
-                  >
+                  <div className="app-container">
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<AuthPage />} />
@@ -110,20 +69,22 @@ const App = () => {
                       <Route path="/characters" element={<CharactersListPage />} />
                       <Route path="/battle" element={<PlayBattlePage />} />
                       <Route path="/dm/battle" element={<PlayBattlePage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <AppDiceButton />
                     <Toaster />
                   </div>
                 </SocketProvider>
-              </UserThemeProvider>
-            </SessionProvider>
-          </CharacterProvider>
-        </AuthProvider>
-      </Router>
+              </SessionProvider>
+            </CharacterProvider>
+          </AuthProvider>
+        </Router>
+      </UserThemeProvider>
     </ThemeProvider>
   );
 };
 
 export default App;
+
+// Импорт тем
+import { themes } from '@/lib/themes';

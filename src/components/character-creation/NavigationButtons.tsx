@@ -7,9 +7,9 @@ import { Link } from 'react-router-dom';
 import HomeButton from '@/components/navigation/HomeButton';
 
 interface NavigationButtonsProps {
-  nextStep?: () => void;
-  prevStep?: () => void;
-  allowNext?: boolean;
+  nextStep: () => void;
+  prevStep: () => void;
+  allowNext: boolean;
   isFirstStep?: boolean;
   hideNextButton?: boolean;
   disableNext?: boolean; 
@@ -18,9 +18,9 @@ interface NavigationButtonsProps {
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  nextStep = () => {},
-  prevStep = () => {},
-  allowNext = true,
+  nextStep,
+  prevStep,
+  allowNext,
   isFirstStep = false,
   hideNextButton = false,
   disableNext,

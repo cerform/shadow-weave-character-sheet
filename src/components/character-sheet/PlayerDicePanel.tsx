@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,7 +24,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { getCurrentUserId } from '@/utils/authHelpers';
+import { getCurrentUid } from '@/utils/authHelpers';
 import { Dices } from 'lucide-react';
 
 interface PlayerDicePanelProps {
@@ -76,7 +77,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
       reason: useCustomReason ? rollReason : predefinedRollReasons.find(r => r.value === rollReason)?.label || 'Бросок',
       message: rollMessage,
       timestamp: now.toLocaleTimeString(),
-      userId: getCurrentUserId() || 'guest',
+      userId: getCurrentUid() || 'guest',
       characterName: characterName || 'Персонаж'
     };
     

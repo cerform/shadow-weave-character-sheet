@@ -1,92 +1,108 @@
-
-// If this file doesn't exist, we'll create it with the necessary types
-export interface Character {
-  id: string;
+export interface CharacterSpell {
+  id?: number;
   name: string;
-  race: string;
-  class?: string;
-  className?: string; // For backward compatibility
   level: number;
-  alignment?: string;
-  background?: string;
-  experiencePoints?: number;
-  
-  // Abilities - both short and long form for compatibility
-  abilities: CharacterAbilities;
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
-  
-  // Combat stats
-  armorClass?: number;
-  initiative?: number;
-  speed?: number;
-  maxHp?: number;
-  currentHp?: number;
-  temporaryHp?: number;
-  hitDice?: HitDice[];
-  deathSaves?: DeathSaves;
-  
-  // Skills and proficiencies
-  proficiencies?: CharacterProficiencies;
-  proficiencyBonus?: number;
-  savingThrows?: { [key: string]: boolean };
-  skills?: { [key: string]: SkillProficiency };
-  savingThrowProficiencies?: { [key: string]: boolean }; // Added for AbilitiesTab
-  
-  // Equipment and resources
-  equipment?: { name: string; quantity: number }[] | string[];
-  money?: Money;
-  
-  // Character details
-  personality?: string;
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
-  backstory?: string;
-  personalityTraits?: string; // Added for CharacterBackground
-  appearance?: string; // Adding appearance field
-  
-  // Spellcasting
-  spellcastingAbility?: string;
-  spellSaveDC?: number;
-  spellAttackBonus?: number;
-  spells?: CharacterSpell[];
-  spellSlots?: { [level: string]: { total: number; used: number; max: number } };
-  
-  // Features and traits
-  features?: Feature[];
-  racialFeatures?: Feature[];
-  backgroundFeatures?: Feature[];
-  feats?: Feature[]; // Added feats field
-  
-  // Meta properties
-  image?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  userId?: string;
-  
-  // Custom fields
-  notes?: string;
-  sorceryPoints?: {
-    current: number;
-    max: number;
-  };
-  inspiration?: boolean;
-  
-  // Session specific
-  isActive?: boolean;
-  connectedToSession?: boolean;
-  sessionId?: string;
+  description?: string;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  duration?: string;
+  prepared?: boolean;
+  // Добавим недостающие поля для совместимости с существующим кодом
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  higherLevels?: string;
+  classes?: string[] | string;
+  ritual?: boolean;
+  concentration?: boolean;
+  // Вместо прототипа, добавляем функцию как опциональное свойство
+  toString?: () => string;
+}
 
-  // Additional fields for character creation
-  gender?: string;
-  subrace?: string;
+export interface ClassFeature {
+  name: string;
+  description: string;
+  level: number;
+}
+
+export interface ClassLevel {
+  class: string;
+  level: number;
+  features?: ClassFeature[];
   subclass?: string;
-  abilityPointsUsed?: number;
+}
+
+// Константы для ограничений значений характеристик
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,      // Базовый максимум (уровни 1-9)
+  EPIC_CAP: 22,      // Эпический максимум (уровни 10-15)
+  LEGENDARY_CAP: 24  // Легендарный максимум (уровни 16+)
+} as const;
+
+// Интерфейс для очков чародея
+export interface SorceryPoints {
+  current: number;
+  max: number;
+}
+
+// Обновляем интерфейс MulticlassRequirements
+export interface MulticlassRequirements {
+  [key: string]: {
+    [key: string]: number;
+    description: string;
+  }
+}
+
+// Обновляем, чтобы требования к мультиклассам были более конкретными
+export interface ClassRequirement {
+  abilities: {[key: string]: number};
+  description: string;
+}
+
+export interface MulticlassRequirements {
+  [key: string]: ClassRequirement;
+}
+
+// Обновляем интерфейс CharacterSheet для использования в useCharacterCreation и генераторе PDF
+export interface CharacterSheet {
+  userId?: string;
+  id?: string;
+  img?: string;
+  name: string; // Обязательное поле
+  class?: string;
+  subclass?: string;
+  classes?: ClassLevel[];
+  additionalClasses?: ClassLevel[]; // Для мультиклассирования
+  className?: string; // Для обратной совместимости
+  level: number;
+  race?: string;
+  subrace?: string;
+  background: string;  // Теперь обязательное поле
+  alignment?: string;
+  experience?: number;
+  gender?: string; // Поле для гендера персонажа
+  appearance?: string; // Описание внешности персонажа
+  personalityTraits?: string; // Черты личности персонажа
+  ideals?: string; // Изменено с string[] на string
+  bonds?: string; // Изменено с string[] на string
+  flaws?: string; // Изменено с string[] на string
+  abilities?: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    // Для обратной совместимости добавляем новые имена
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
   stats?: {
     strength: number;
     dexterity: number;
@@ -95,157 +111,144 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  additionalClasses?: ClassLevel[];
-  
-  // Добавляем поле languages для устранения ошибки в useCharacterCreation
-  languages?: string[];
-  
-  // Adding username and isDM for User compatibility
-  username?: string;
-  isDM?: boolean;
+  skills?: {
+    [key: string]: {
+      proficient: boolean;
+      expertise: boolean;
+      bonus?: number;
+    }
+  };
+  savingThrows?: {
+    [key: string]: boolean;
+  };
+  proficiencies?: {
+    armor?: string[];
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
+  languages?: string[]; // Для обратной совместимости
+  spells?: CharacterSpell[];
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+  };
+  equipment?: string[];
+  features?: string[];
+  traits?: string[];
+  backstory: string;  // Теперь обязательное поле
+  xp?: number;
+  inspiration?: boolean;
+  maxHp?: number;  // Максимальные хиты
+  currentHp?: number;  // Текущие хиты
+  temporaryHp?: number; // Временные хиты
+  hitDice?: {  // Кубики хитов
+    total: number;  // Всего кубиков
+    used: number;   // Использовано кубиков
+    value: string;  // Тип кубика (например, "d8")
+  };
+  abilityPointsUsed?: number; // Отслеживание использованных очков характеристик
+  abilityBonuses?: { // Бонусы к характеристикам
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Константы для ограничения значений характеристик
-export const ABILITY_SCORE_CAPS = {
-  MIN: 3,
-  MAX: 20,
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
-};
-
-// Define Character abilities
-export interface CharacterAbilities {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-  
-  // Short forms for backward compatibility
-  STR?: number;
-  DEX?: number;
-  CON?: number;
-  INT?: number;
-  WIS?: number;
-  CHA?: number;
-}
-
-// Define Death Saves tracking
-export interface DeathSaves {
-  successes: number;
-  failures: number;
-}
-
-// Define Money tracking
-export interface Money {
-  copper?: number;
-  silver?: number;
-  electrum?: number;
-  gold?: number;
-  platinum?: number;
-}
-
-// Define Hit Dice
-export interface HitDice {
-  diceType: string;
-  total: number;
-  used: number;
-}
-
-// Define Spell Slots
-export interface SpellSlots {
-  [level: string]: {
+// Расширяем интерфейс для Character в контексте персонажей
+export interface Character {
+  id?: string;
+  userId?: string;
+  name: string;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string;
+  subclass?: string;
+  level: number;
+  abilities: {
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  proficiencies: string[];
+  equipment: string[];
+  spells: CharacterSpell[] | string[]; // Разрешаем оба типа для обратной совместимости
+  languages: string[];
+  gender: string;
+  alignment: string;
+  background: string;
+  backstory: string;  // Добавляем обязательное поле
+  appearance?: string;  // Добавляем
+  personalityTraits?: string;  // Добавляем
+  ideals?: string;  // Добавляем
+  bonds?: string;  // Добавляем
+  flaws?: string;  // Добавляем
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
     total: number;
     used: number;
-    max: number;
+    value: string;
   };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+    };
+  spellSlots?: {
+    [level: string]: {
+      max: number;
+      used: number;
+    };
+  };
+  sorceryPoints?: SorceryPoints;
+  createdAt?: string;
+  updatedAt?: string;
+  skillProficiencies?: {[skillName: string]: boolean};
+  savingThrowProficiencies?: {[ability: string]: boolean};
+  image?: string;
 }
 
-// Define Character Proficiencies
-export interface CharacterProficiencies {
-  weapons?: string[];
-  armor?: string[];
-  tools?: string[];
-  languages?: string[];
-  saves?: string[];
-  skills?: string[];
-}
-
-// Define Features
-export interface Feature {
-  name: string;
-  description: string;
-  source?: string;
-  level?: number;
-}
-
-// Define Skill Proficiency levels
-export interface SkillProficiency {
-  isProficient: boolean;
-  isExpertise?: boolean;
-  modifier?: number;
-}
-
-// Define Spell Data structure
-export interface SpellData {
-  id?: string | number;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string;
-  prepared?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  materialComponents?: string;
-  ritual?: boolean;
-  concentration?: boolean;
-  higherLevels?: string;
-  classes?: string[] | string;
-}
-
-// Define Character Spell structure
-export interface CharacterSpell extends SpellData {
-  prepared: boolean;
-  id?: string | number; // Обновлено: теперь id может быть строкой или числом
-}
-
-// Define Hit Point Event for damage log
+// Обновляем интерфейс для событий изменения хит-поинтов
 export interface HitPointEvent {
-  type: "damage" | "healing" | "temporary" | "heal" | "tempHP" | "temp" | "death-save";
-  value: number;
-  amount?: number; // Added for backward compatibility
-  source?: string;
-  timestamp: Date | number;
-  critical?: boolean;
-  description?: string;
-  id?: string;
-}
-
-// Define CharacterSheet type for compatibility with services
-export type CharacterSheet = Character;
-
-// Define ClassLevel for multiclassing
-export interface ClassLevel {
-  class: string;
-  level: number;
-  subclass?: string;
-}
-
-// Добавлены расширения для User
-export interface User {
   id: string;
-  email?: string;
-  displayName?: string;
-  photoURL?: string;
-  emailVerified?: boolean;
-  username?: string;
+  // Обновляем типы для совместимости с компонентом DamageLog
+  type: 'damage' | 'healing' | 'tempHP' | 'heal' | 'temp' | 'death-save';
+  amount: number;
+  source: string;
+  timestamp: Date;
+}
+
+// Добавляем интерфейс ResourcePanelProps для улучшения типизации
+export interface ResourcePanelProps {
+  character: Character | null;
+  onUpdate: (character: Partial<Character>) => void;
   isDM?: boolean;
-  themePreference?: string;
 }

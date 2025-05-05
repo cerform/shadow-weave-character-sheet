@@ -1,113 +1,144 @@
 
+import { db } from './firebase';
+import { collection, addDoc, doc, updateDoc, getDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
 import { CharacterSheet } from '@/types/character';
-import { getCurrentUserId } from '@/utils/authHelpers';
+import { auth } from './firebase';
 
-// Character service for offline mode
-const characterService = {
-  // Save a character
-  saveCharacter: async (character: CharacterSheet): Promise<{ id: string }> => {
-    try {
-      // Ensure character has an ID
-      const characterId = character.id || `char-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+/**
+ * Сохраняет персонажа в базу данных
+ * @param character Данные персонажа
+ * @returns Объект с id сохраненного персонажа
+ */
+export const saveCharacter = async (character: CharacterSheet): Promise<{id: string}> => {
+  try {
+    // Проверяем авторизацию
+    const currentUser = auth.currentUser;
+    if (!currentUser && !character.userId) {
+      throw new Error('Пользователь не авторизован');
+    }
+
+    // Если userId не установлен, берем из текущего пользователя
+    const userId = character.userId || currentUser?.uid;
+    
+    // Проверяем наличие id (для обновления существующего персонажа)
+    if (character.id) {
+      // Обновляем существующего персонажа
+      const characterRef = doc(db, 'characters', character.id);
       
-      // Ensure character has a userId
-      const characterWithUser = {
+      // Добавляем timestamp обновления и userId
+      const updatedCharacter = { 
+        ...character, 
+        updatedAt: new Date().toISOString(),
+        userId
+      };
+      
+      await updateDoc(characterRef, updatedCharacter);
+      console.log("Персонаж успешно обновлен:", character.id);
+      
+      return { id: character.id };
+    } else {
+      // Создаем нового персонажа
+      const characterData = { 
         ...character,
-        id: characterId,
-        userId: character.userId || getCurrentUserId(),
+        userId,
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       
-      // Get existing characters from localStorage
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      let characters = savedCharacters ? JSON.parse(savedCharacters) : [];
+      const docRef = await addDoc(collection(db, 'characters'), characterData);
+      console.log("Персонаж успешно создан с ID:", docRef.id);
       
-      // Update or add character
-      const existingIndex = characters.findIndex((c: CharacterSheet) => c.id === characterWithUser.id);
-      if (existingIndex !== -1) {
-        characters[existingIndex] = characterWithUser;
-      } else {
-        characters.push({
-          ...characterWithUser,
-          createdAt: new Date().toISOString()
-        });
-      }
-      
-      // Save back to localStorage
-      localStorage.setItem('dnd-characters', JSON.stringify(characters));
-      
-      // Set this as last selected character
-      localStorage.setItem('last-selected-character', characterId);
-      
-      return { id: characterId };
-    } catch (error) {
-      console.error('Error saving character:', error);
-      throw error;
+      return { id: docRef.id };
     }
-  },
-  
-  // Get a character by ID
-  getCharacterById: async (id: string): Promise<CharacterSheet> => {
-    try {
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      if (!savedCharacters) return Promise.reject('No characters found');
-      
-      const characters = JSON.parse(savedCharacters);
-      const character = characters.find((c: CharacterSheet) => c.id === id);
-      
-      if (!character) return Promise.reject(`Character with ID ${id} not found`);
-      
-      return character;
-    } catch (error) {
-      console.error('Error getting character by ID:', error);
-      throw error;
-    }
-  },
-  
-  // Get all characters for the current user
-  getCharactersByUserId: async (): Promise<CharacterSheet[]> => {
-    try {
-      const userId = getCurrentUserId();
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      if (!savedCharacters) return [];
-      
-      const characters = JSON.parse(savedCharacters);
-      // Filter by userId or return all in offline mode
-      return characters.filter((c: CharacterSheet) => !c.userId || c.userId === userId);
-    } catch (error) {
-      console.error('Error getting characters by user ID:', error);
-      return [];
-    }
-  },
-  
-  // Get all characters (alias for getCharactersByUserId)
-  getCharacters: async (): Promise<CharacterSheet[]> => {
-    return characterService.getCharactersByUserId();
-  },
-  
-  // Delete a character
-  deleteCharacter: async (id: string): Promise<boolean> => {
-    try {
-      const savedCharacters = localStorage.getItem('dnd-characters');
-      if (!savedCharacters) return false;
-      
-      const characters = JSON.parse(savedCharacters);
-      const filteredCharacters = characters.filter((c: CharacterSheet) => c.id !== id);
-      
-      localStorage.setItem('dnd-characters', JSON.stringify(filteredCharacters));
-      
-      // If this was the last selected character, remove that reference
-      const lastSelected = localStorage.getItem('last-selected-character');
-      if (lastSelected === id) {
-        localStorage.removeItem('last-selected-character');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting character:', error);
-      return false;
-    }
+  } catch (error) {
+    console.error('Ошибка при сохранении персонажа:', error);
+    throw new Error('Не удалось сохранить персонажа');
   }
 };
 
-export default characterService;
+/**
+ * Получает персонажа по его ID
+ * @param id ID персонажа
+ * @returns Данные персонажа или null
+ */
+export const getCharacterById = async (id: string): Promise<CharacterSheet | null> => {
+  try {
+    const characterRef = doc(db, 'characters', id);
+    const characterDoc = await getDoc(characterRef);
+    
+    if (characterDoc.exists()) {
+      const characterData = characterDoc.data() as CharacterSheet;
+      return { ...characterData, id: characterDoc.id };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Ошибка при получении персонажа:', error);
+    throw new Error('Не удалось получить персонажа');
+  }
+};
+
+/**
+ * Получает всех персонажей текущего пользователя
+ * @returns Массив персонажей
+ */
+export const getCharactersByUserId = async (): Promise<CharacterSheet[]> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('Пользователь не авторизован, возвращаем пустой список персонажей');
+      return [];
+    }
+
+    const userId = currentUser.uid;
+    console.log('Получение персонажей для пользователя:', userId);
+    
+    const charactersQuery = query(
+      collection(db, 'characters'),
+      where('userId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(charactersQuery);
+    const characters = querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id
+    } as CharacterSheet));
+
+    console.log('Получены персонажи:', characters.length);
+    return characters;
+  } catch (error) {
+    console.error('Ошибка при получении персонажей пользователя:', error);
+    throw new Error('Не удалось получить персонажей');
+  }
+};
+
+/**
+ * Получает всех персонажей (алиас для getCharactersByUserId)
+ * @returns Массив персонажей
+ */
+export const getCharacters = async (): Promise<CharacterSheet[]> => {
+  return getCharactersByUserId();
+};
+
+/**
+ * Удаляет персонажа по его ID
+ * @param id ID персонажа
+ */
+export const deleteCharacter = async (id: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'characters', id));
+    console.log('Персонаж успешно удален:', id);
+  } catch (error) {
+    console.error('Ошибка при удалении персонажа:', error);
+    throw new Error('Не удалось удалить персонажа');
+  }
+};
+
+// Для совместимости с предыдущим API
+export default {
+  saveCharacter,
+  getCharacterById,
+  getCharactersByUserId,
+  getCharacters,
+  deleteCharacter
+};

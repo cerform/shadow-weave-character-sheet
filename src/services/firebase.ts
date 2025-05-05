@@ -1,137 +1,140 @@
 
-// Импортируем необходимые типы из firebase
-import { Firestore, DocumentData, DocumentReference, CollectionReference } from "firebase/firestore";
-import { Auth, UserCredential } from "firebase/auth";
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser 
+} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Создаем мок для Firebase Auth, если реальный Firebase не используется
-const mockAuth: Partial<Auth> = {
-  currentUser: null,
-  onAuthStateChanged: (callback: (user: any) => void) => {
-    // Возвращаем функцию отписки
-    return () => {};
+// Конфигурация Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
+  authDomain: "shadow-char.firebaseapp.com",
+  projectId: "shadow-char",
+  storageBucket: "shadow-char.appspot.com", 
+  messagingSenderId: "815261687102",
+  appId: "1:815261687102:web:5497647ed6ff449a57e06f",
+  measurementId: "G-KQ3M1GQJX2"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Analytics only if supported (prevents errors in environments like SSR)
+const initializeAnalytics = async () => {
+  try {
+    if (await isSupported()) {
+      return getAnalytics(app);
+    }
+    return null;
+  } catch (error) {
+    console.warn("Analytics not initialized:", error);
+    return null;
   }
 };
 
-// Добавляем типизированные версии методов аутентификации
-const signInWithEmailAndPasswordMock = async (email: string, password: string): Promise<UserCredential> => {
-  throw new Error('Firebase Auth not initialized');
+// Initialize asynchronously but don't wait
+const analyticsPromise = initializeAnalytics();
+
+// Initialize other Firebase services immediately
+const firebaseAuth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Провайдеры аутентификации
+const googleProvider = new GoogleAuthProvider();
+
+// Функция для форматирования сообщений ошибок Firebase
+const formatFirebaseError = (error: any): string => {
+  const errorCode = error.code || '';
+  const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'текущий домен';
+  
+  // Карта пользовательских сообщений для известных ошибок
+  const errorMessages: {[key: string]: string} = {
+    'auth/user-not-found': 'Пользователь с таким email не найден.',
+    'auth/wrong-password': 'Неверный пароль. Пожалуйста, проверьте пароль и попробуйте еще раз.',
+    'auth/email-already-in-use': 'Этот email уже используется. Пожалуйста, используйте другой email или войдите в систему.',
+    'auth/weak-password': 'Пароль слишком слабый. Используйте более сложный пароль.',
+    'auth/invalid-email': 'Введен некорректный email.',
+    'auth/operation-not-allowed': 'Этот метод входа не включен. Пожалуйста, свяжитесь с администратором.',
+    'auth/account-exists-with-different-credential': 'Этот email уже связан с другим методом входа.',
+    'auth/unauthorized-domain': `Домен "${currentDomain}" не авторизован для аутентификации Firebase. Добавьте этот домен в список разрешенных в консоли Firebase (Authentication > Settings > Authorized domains).`,
+    'auth/popup-closed-by-user': 'Окно авторизации было закрыто до завершения процесса.',
+    'auth/cancelled-popup-request': 'Операция отменена из-за нового запроса входа.',
+    'auth/popup-blocked': 'Всплывающее окно авторизации заблокировано браузером.'
+  };
+  
+  // Возвращаем соответствующее сообщение для кода ошибки или стандартное сообщение
+  return errorMessages[errorCode] || error.message || 'Произошла неизвестная ошибка при аутентификации.';
 };
 
-const createUserWithEmailAndPasswordMock = async (email: string, password: string): Promise<UserCredential> => {
-  throw new Error('Firebase Auth not initialized');
-};
+// Функции для аутентификации
+const auth = {
+  // Текущий пользователь
+  currentUser: firebaseAuth.currentUser,
 
-const signOutMock = async () => {
-  return Promise.resolve();
-};
+  // Регистрация с Email и паролем
+  registerWithEmail: async (email: string, password: string): Promise<FirebaseUser | null> => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      return userCredential.user;
+    } catch (error: any) {
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при регистрации:', formattedError.message);
+      throw formattedError;
+    }
+  },
 
-const sendPasswordResetEmailMock = async (email: string) => {
-  throw new Error('Firebase Auth not initialized');
-};
+  // Вход с Email и паролем
+  loginWithEmail: async (email: string, password: string): Promise<FirebaseUser | null> => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+      return userCredential.user;
+    } catch (error: any) {
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при входе:', formattedError.message);
+      throw formattedError;
+    }
+  },
 
-// Явно добавляем методы к mockAuth
-Object.assign(mockAuth, {
-  signInWithEmailAndPassword: signInWithEmailAndPasswordMock,
-  createUserWithEmailAndPassword: createUserWithEmailAndPasswordMock,
-  signOut: signOutMock,
-  sendPasswordResetEmail: sendPasswordResetEmailMock,
-  // Добавляем дополнительные свойства для совместимости с типом Auth
-  app: {} as any,
-  name: 'auth-mock',
-  config: {
-    apiKey: 'mock',
-    apiHost: 'mock',
-    apiScheme: 'mock',
-    tokenApiHost: 'mock',
-    sdkClientVersion: 'mock'
+  // Вход через Google
+  loginWithGoogle: async (): Promise<FirebaseUser | null> => {
+    try {
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      const result = await signInWithPopup(firebaseAuth, googleProvider);
+      return result.user;
+    } catch (error: any) {
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при входе через Google:', formattedError);
+      throw formattedError;
+    }
+  },
+
+  // Выход из системы
+  logout: async (): Promise<void> => {
+    try {
+      await signOut(firebaseAuth);
+    } catch (error: any) {
+      const formattedError = { ...error, message: formatFirebaseError(error) };
+      console.error('Ошибка при выходе:', formattedError.message);
+      throw formattedError;
+    }
+  },
+
+  // Слушатель изменения состояния аутентификации
+  onAuthStateChanged: (callback: (user: FirebaseUser | null) => void) => {
+    return onAuthStateChanged(firebaseAuth, callback);
   }
-});
-
-// Создаем типизированные моки для Firestore
-const mockFirestore: Firestore = {
-  type: "firestore",
-  app: {} as any,
-  toJSON: () => ({}),
-  collection: () => ({
-    type: "collection",
-    id: "mock-collection",
-    path: "mock-path",
-    parent: null,
-    withConverter: () => ({} as any),
-    doc: () => ({
-      type: "document",
-      id: "mock-id",
-      path: "mock-path",
-      parent: {} as any,
-      withConverter: () => ({} as any),
-      collection: () => ({} as any),
-      firestore: {} as any,
-      converter: null,
-      get: async () => ({
-        exists: false,
-        data: () => null,
-        id: "mock-id",
-        ref: {} as any,
-        metadata: {} as any
-      }),
-      set: async () => {},
-      update: async () => {}
-    } as DocumentReference<DocumentData>),
-    where: () => ({
-      get: async () => ({
-        empty: true,
-        docs: [],
-        size: 0,
-        forEach: () => {},
-        docChanges: () => []
-      })
-    } as any),
-    add: async () => ({
-      id: 'mock-id'
-    } as any),
-    orderBy: () => ({} as any),
-    limit: () => ({} as any),
-    startAfter: () => ({} as any),
-    endBefore: () => ({} as any),
-    firestore: {} as any,
-    converter: null,
-  } as CollectionReference<DocumentData>)
-} as Firestore;
-
-const mockStorage = {
-  ref: () => ({
-    put: async () => ({
-      ref: {
-        getDownloadURL: async () => 'https://mock-url.com/image.jpg'
-      }
-    }),
-    delete: async () => {}
-  })
 };
 
-// Экспортируем моки в качестве сервисов Firebase
-export const auth = mockAuth as Auth;
-export const db = mockFirestore;
-export const storage = mockStorage;
-
-// Если доступен реальный Firebase, можно раскомментировать и использовать его
-// import { initializeApp } from "firebase/app";
-// import { getAuth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
-// import { getStorage } from "firebase/storage";
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
-//   authDomain: "shadow-char.firebaseapp.com",
-//   databaseURL: "https://shadow-char-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "shadow-char",
-//   storageBucket: "shadow-char.firebasestorage.app",
-//   messagingSenderId: "815261687102",
-//   appId: "1:815261687102:web:5497647ed6ff449a57e06f",
-//   measurementId: "G-KQ3M1GQJX2"
-// };
-
-// const app = initializeApp(firebaseConfig);
-// export const auth = getAuth(app);
-// export const db = getFirestore(app);
-// export const storage = getStorage(app);
+export { app, db, storage, auth, firebaseAuth, analyticsPromise };

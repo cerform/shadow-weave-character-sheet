@@ -1,66 +1,53 @@
-
 import { CharacterSpell } from '@/types/character';
 
+// Интерфейс для данных о заклинании
 export interface SpellData {
-  id?: string | number; // Обновлено: теперь id может быть строкой или числом
+  id?: string | number;
   name: string;
+  name_en?: string;
   level: number;
   school: string;
-  castingTime?: string;
-  range?: string;
-  components?: string;
-  duration?: string;
-  description?: string;
-  prepared?: boolean;
+  castingTime: string;
+  range: string;
+  components: string;
+  duration: string;
+  description: string | string[];
+  classes?: string[] | string;
+  source?: string;
+  isRitual?: boolean;
+  isConcentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  materialComponents?: string;
   ritual?: boolean;
   concentration?: boolean;
+  higherLevel?: string;
   higherLevels?: string;
-  classes?: string[] | string;
+  prepared?: boolean;
 }
 
-// Вспомогательная функция для проверки и коррекции полей SpellData
-export const validateSpellData = (data: Partial<SpellData>): SpellData => {
-  return {
-    id: data.id,
-    name: data.name || 'Неизвестное заклинание',
-    level: typeof data.level === 'number' ? data.level : 0,
-    school: data.school || 'Универсальная',
-    castingTime: data.castingTime || '1 действие',
-    range: data.range || 'На себя',
-    components: data.components || '',
-    duration: data.duration || 'Мгновенная',
-    description: data.description || 'Нет описания',
-    prepared: data.prepared ?? false,
-    verbal: data.verbal ?? false,
-    somatic: data.somatic ?? false,
-    material: data.material ?? false,
-    materialComponents: data.materialComponents,
-    ritual: data.ritual ?? false,
-    concentration: data.concentration ?? false,
-    higherLevels: data.higherLevels,
-    classes: data.classes || []
-  };
-};
-
-export const convertToSpellData = (spell: CharacterSpell): SpellData => {
-  return {
-    ...spell,
-    prepared: spell.prepared ?? false
-  };
-};
-
-export const convertToCharacterSpell = (spellData: SpellData): CharacterSpell => {
-  return {
-    ...spellData,
-    prepared: spellData.prepared ?? false,
-    castingTime: spellData.castingTime || '1 действие',
-    range: spellData.range || 'На себя',
-    components: spellData.components || '',
-    duration: spellData.duration || 'Мгновенная',
-    description: spellData.description || 'Нет описания'
-  } as CharacterSpell;
-};
+// Интерфейс для возвращаемого значения хука useSpellbook
+export interface UseSpellbookReturn {
+  filteredSpells: SpellData[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  activeLevel: number[];
+  selectedSpell: SpellData | null;
+  isModalOpen: boolean;
+  activeSchool: string[];
+  activeClass: string[];
+  currentTheme: any;
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  handleOpenSpell: (spell: SpellData) => void;
+  handleClose: () => void;
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+  getBadgeColor: (level: number) => string;
+  getSchoolBadgeColor: (school: string) => string;
+  formatClasses: (classes: string[] | string | undefined) => string;
+  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+}

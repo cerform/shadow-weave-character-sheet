@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -102,16 +103,10 @@ const LevelBasedFeatures: React.FC<LevelBasedFeaturesProps> = ({
     
     // Добавляем особенность в список особенностей персонажа
     const features = character.features || [];
-    const newFeature = {
-      name: `Увеличение характеристик (${
-        selectedAbilityIncreaseType === 'single_2' 
-          ? abilityIncreases.first.ability + ' +2' 
-          : abilityIncreases.first.ability + ' +1, ' + abilityIncreases.second.ability + ' +1'
-      })`,
-      description: `Увеличение характеристик на ${character.level} уровне`
-    };
+    features.push(`Увеличение характеристик (${selectedAbilityIncreaseType === 'single_2' ? 
+      abilityIncreases.first.ability + ' +2' : 
+      abilityIncreases.first.ability + ' +1, ' + abilityIncreases.second.ability + ' +1'})`);
     
-    features.push(newFeature);
     updateCharacter({ features });
     setShowAbilityIncreaseModal(false);
   };

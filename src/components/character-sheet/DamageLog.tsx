@@ -19,8 +19,8 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   useEffect(() => {
     // Сортируем события по времени (самые новые сверху)
     const sortedEvents = [...events].sort((a, b) => {
-      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
-      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
       return timeB - timeA;
     });
     
@@ -40,7 +40,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       return `-${amount}`;
     } else if (type === 'healing' || type === 'heal') {
       return `+${amount}`;
-    } else if (type === 'temporary' || type === 'tempHP' || type === 'temp') {
+    } else if (type === 'tempHP' || type === 'temp') {
       return `+${amount} (врем)`;
     } else {
       return `${amount}`;
@@ -55,7 +55,6 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       case 'healing':
       case 'heal':
         return 'text-emerald-500';
-      case 'temporary':
       case 'tempHP':
       case 'temp':
         return 'text-blue-400';
@@ -74,7 +73,6 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       case 'healing':
       case 'heal':
         return <Heart className="h-4 w-4 text-emerald-500" />;
-      case 'temporary':
       case 'tempHP':
       case 'temp':
         return <Shield className="h-4 w-4 text-blue-400" />;
@@ -86,7 +84,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   };
   
   // Форматирование временных меток (например, "5 минут назад")
-  const formatTimestamp = (timestamp: number | Date): string => {
+  const formatTimestamp = (timestamp: Date): string => {
     try {
       const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
       return formatDistance(date, new Date(), { 
@@ -107,15 +105,15 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
         <ScrollArea className="h-[200px] pr-4">
           <div className="px-4 pb-4 space-y-3">
             {displayEvents.map((event, index) => (
-              <div key={event.id || `event-${index}`} className="flex items-start gap-3 py-2">
+              <div key={event.id || index} className="flex items-start gap-3 py-2">
                 <div className="mt-1">
                   {getEventIcon(event.type)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{event.source || 'Неизвестный источник'}</span>
+                    <span className="font-medium">{event.source}</span>
                     <span className={`font-semibold ${getEventClass(event.type)}`}>
-                      {formatAmount(event.type, event.value || event.amount || 0)}
+                      {formatAmount(event.type, event.amount)}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">

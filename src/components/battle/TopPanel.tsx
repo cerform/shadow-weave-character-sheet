@@ -45,10 +45,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   fogOfWar = false,
 }) => {
   const navigate = useNavigate();
-  
-  // Функции-заглушки для NavigationButtons
-  const dummyPrevStep = () => navigate(-1);
-  const dummyNextStep = () => console.log("Next step clicked");
 
   return (
     <div className="flex justify-between items-center p-2 h-14">
@@ -191,15 +187,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <span>Раунд: {battleState.round}</span>
           )}
         </div>
-        
-        {/* Добавляем правильные пропсы для NavigationButtons */}
-        <div className="flex flex-row">
-          <NavigationButtons 
-            prevStep={dummyPrevStep} 
-            nextStep={dummyNextStep} 
-            className="ml-2" 
-          />
-        </div>
+        <NavigationButtons className="!flex-row" />
       </div>
     </div>
   );

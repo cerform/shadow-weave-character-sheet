@@ -1,31 +1,45 @@
 
-import { SpellData } from '@/types/character';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-// Валидация данных заклинания для обеспечения совместимости с типом SpellData
-export const validateSpellData = (spell: Partial<SpellData>): SpellData => {
-  // Обязательные поля
-  const validated: SpellData = {
-    name: spell.name || 'Неизвестное заклинание',
-    level: spell.level !== undefined ? spell.level : 0,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || 'В, С',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || 'Нет описания',
-    prepared: spell.prepared || false
+// Получение цветов для значков на основе текущей темы
+export const useSpellTheme = () => {
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+  
+  const getBadgeColor = (level: number) => {
+    // Цвета на основе выбранной темы
+    const levelColors: { [key: number]: string } = {
+      0: `bg-stone-800 text-white border border-${currentTheme.accent}`,
+      1: `bg-blue-900 text-white border border-${currentTheme.accent}`,
+      2: `bg-green-900 text-white border border-${currentTheme.accent}`,
+      3: `bg-yellow-900 text-white border border-${currentTheme.accent}`,
+      4: `bg-orange-900 text-white border border-${currentTheme.accent}`,
+      5: `bg-red-900 text-white border border-${currentTheme.accent}`,
+      6: `bg-purple-900 text-white border border-${currentTheme.accent}`,
+      7: `bg-pink-900 text-white border border-${currentTheme.accent}`,
+      8: `bg-indigo-900 text-white border border-${currentTheme.accent}`,
+      9: `bg-cyan-900 text-white border border-${currentTheme.accent}`,
+    };
+
+    return levelColors[level] || "bg-gray-800 text-white";
   };
 
-  // Необязательные поля
-  if (spell.id !== undefined) validated.id = spell.id;
-  if (spell.verbal !== undefined) validated.verbal = spell.verbal;
-  if (spell.somatic !== undefined) validated.somatic = spell.somatic;
-  if (spell.material !== undefined) validated.material = spell.material;
-  if (spell.materialComponents) validated.materialComponents = spell.materialComponents;
-  if (spell.concentration !== undefined) validated.concentration = spell.concentration;
-  if (spell.ritual !== undefined) validated.ritual = spell.ritual;
-  if (spell.higherLevels) validated.higherLevels = spell.higherLevels;
-  if (spell.classes) validated.classes = spell.classes;
+  const getSchoolBadgeColor = (school: string) => {
+    const schoolColors: { [key: string]: string } = {
+      'Преобразование': 'bg-blue-900 text-white',
+      'Воплощение': 'bg-red-900 text-white',
+      'Вызов': 'bg-orange-900 text-white',
+      'Прорицание': 'bg-purple-900 text-white',
+      'Очарование': 'bg-pink-900 text-white',
+      'Иллюзия': 'bg-indigo-900 text-white',
+      'Некромантия': 'bg-green-900 text-white',
+      'Ограждение': 'bg-yellow-900 text-white',
+    };
 
-  return validated;
+    return schoolColors[school] || "bg-gray-800 text-white";
+  };
+  
+  return { currentTheme, getBadgeColor, getSchoolBadgeColor };
 };

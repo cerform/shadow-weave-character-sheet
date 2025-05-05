@@ -1,14 +1,14 @@
+
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { useToast } from "@/hooks/use-toast";
-import { CharacterContext } from "@/contexts/CharacterContext";
+import { Character, CharacterContext } from "@/contexts/CharacterContext";
 import { auth } from "@/services/firebase";
 import characterService from "@/services/characterService";
 import { isOfflineMode } from "@/utils/authHelpers";
-import { Character } from '@/types/character.d';
 
 const CharacterViewPage = () => {
   const { id } = useParams<{ id: string }>();

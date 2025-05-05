@@ -1,21 +1,8 @@
-
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  addDoc, 
-  deleteDoc, 
-  setDoc, 
-  updateDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
 import { auth, db, storage } from './firebase';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/types/character';
+import { Character } from '@/contexts/CharacterContext';
 import characterService from './characterService';
 
 // Экспортируем сервис персонажей
@@ -49,23 +36,21 @@ export const sessionService = {
       };
       
       // Сохраняем сессию в Firestore
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      await setDoc(sessionDocRef, {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      await setDoc(sessionRef, {
         ...session,
         lastActivity: serverTimestamp()
       });
       
       // Добавляем сессию в список у пользователя
-      const usersRef = collection(db, 'users');
-      const userDocRef = doc(usersRef, uid);
-      const userSnap = await getDoc(userDocRef);
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const campaigns = userData.campaigns || [];
         
-        await updateDoc(userDocRef, {
+        await updateDoc(userRef, {
           campaigns: [...campaigns, sessionId]
         });
       }
@@ -89,8 +74,8 @@ export const sessionService = {
       const querySnapshot = await getDocs(q);
       
       const sessions: Session[] = [];
-      querySnapshot.forEach((docSnapshot) => {
-        sessions.push({ id: docSnapshot.id, ...docSnapshot.data() } as Session);
+      querySnapshot.forEach((doc) => {
+        sessions.push({ id: doc.id, ...doc.data() } as Session);
       });
       
       // TODO: получение сессий, где пользователь - игрок
@@ -105,9 +90,8 @@ export const sessionService = {
   // Получение сессии по ID
   getSessionById: async (sessionId: string): Promise<Session | null> => {
     try {
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      const sessionSnap = await getDoc(sessionDocRef);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
       if (sessionSnap.exists()) {
         return { id: sessionSnap.id, ...sessionSnap.data() } as Session;
@@ -128,8 +112,8 @@ export const sessionService = {
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        const docSnapshot = querySnapshot.docs[0];
-        return { id: docSnapshot.id, ...docSnapshot.data() } as Session;
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Session;
       }
       
       return null;
@@ -142,9 +126,8 @@ export const sessionService = {
   // Присоединение к сессии
   joinSession: async (sessionId: string, user: SessionUser): Promise<boolean> => {
     try {
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      const sessionSnap = await getDoc(sessionDocRef);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -165,7 +148,7 @@ export const sessionService = {
       }
       
       // Обновляем сессию
-      await updateDoc(sessionDocRef, {
+      await updateDoc(sessionRef, {
         users,
         updatedAt: new Date().toISOString()
       });
@@ -183,9 +166,8 @@ export const sessionService = {
     if (!uid) return false;
     
     try {
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      const sessionSnap = await getDoc(sessionDocRef);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -200,18 +182,17 @@ export const sessionService = {
       }
       
       // Удаляем сессию
-      await deleteDoc(sessionDocRef);
+      await deleteDoc(sessionRef);
       
       // Удаляем сессию из списка у пользователя
-      const usersRef = collection(db, 'users');
-      const userDocRef = doc(usersRef, uid);
-      const userSnap = await getDoc(userDocRef);
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const campaigns = userData.campaigns || [];
         
-        await updateDoc(userDocRef, {
+        await updateDoc(userRef, {
           campaigns: campaigns.filter((id: string) => id !== sessionId)
         });
       }
@@ -229,9 +210,8 @@ export const sessionService = {
     if (!uid) return null;
     
     try {
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      const sessionSnap = await getDoc(sessionDocRef);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
       if (!sessionSnap.exists()) {
         return null;
@@ -249,7 +229,7 @@ export const sessionService = {
       const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
       // Обновляем код в Firestore
-      await updateDoc(sessionDocRef, {
+      await updateDoc(sessionRef, {
         code: newCode,
         lastActivity: serverTimestamp()
       });
@@ -266,9 +246,8 @@ export const sessionService = {
     if (!uid) return false;
     
     try {
-      const sessionsRef = collection(db, 'sessions');
-      const sessionDocRef = doc(sessionsRef, sessionId);
-      const sessionSnap = await getDoc(sessionDocRef);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
       if (!sessionSnap.exists()) {
         return false;
@@ -295,7 +274,7 @@ export const sessionService = {
       notes.push(newNote);
       
       // Обновляем заметки в Firestore
-      await updateDoc(sessionDocRef, {
+      await updateDoc(sessionRef, {
         notes,
         lastActivity: serverTimestamp()
       });
@@ -311,28 +290,30 @@ export const sessionService = {
 // Функции для работы с хранилищем Firebase
 export const storageService = {
   // Загрузка изображения
-  uploadImage: async (file, path) => {
+  uploadImage: async (file: File, path: string): Promise<string | null> => {
+    const uid = getCurrentUid();
+    if (!uid) return null;
+    
     try {
-      const storageRef = null; // Replace with your Firebase storage implementation
-      // const storageRef = ref(storage, path);
-      // await uploadBytes(storageRef, file);
-      // return await getDownloadURL(storageRef);
-      return '';
+      const storageRef = ref(storage, `${path}/${uid}/${file.name}`);
+      await uploadBytes(storageRef, file);
+      
+      const downloadUrl = await getDownloadURL(storageRef);
+      return downloadUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      return '';
+      console.error("Ошибка при загрузке изображения:", error);
+      return null;
     }
   },
   
   // Удаление изображения
-  deleteImage: async (path) => {
+  deleteImage: async (url: string): Promise<boolean> => {
     try {
-      const storageRef = null; // Replace with your Firebase storage implementation
-      // const storageRef = ref(storage, path);
-      // await deleteObject(storageRef);
+      const imageRef = ref(storage, url);
+      await deleteObject(imageRef);
       return true;
     } catch (error) {
-      console.error('Error deleting image:', error);
+      console.error("Ошибка при удалении изображения:", error);
       return false;
     }
   }

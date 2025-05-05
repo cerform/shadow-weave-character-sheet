@@ -1,214 +1,430 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
-import { Book, ScrollText, UserPlus, Shield, Swords } from 'lucide-react';
-import MainNavigation from '@/components/main-navigation';
-import { useTheme } from '@/hooks/use-theme';
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { themes } from '@/lib/themes';
-import { adaptFirebaseUser } from '@/types/user';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import ThemeSelector from "@/components/ThemeSelector";
+import { useTheme } from "@/hooks/use-theme";
+import { useUserTheme } from "@/hooks/use-user-theme";
+import { themes } from "@/lib/themes";
+import PdfCharacterImport from "@/components/character-import/PdfCharacterImport";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCharacter } from "@/contexts/CharacterContext";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { currentUser, isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  const { activeTheme, currentThemeStyles } = useUserTheme();
+  const { activeTheme } = useUserTheme();
+  const { currentUser, isAuthenticated, logout } = useAuth();
+  const { characters, getUserCharacters, setCharacter, deleteCharacter } = useCharacter();
   
-  // Безопасно получаем тему
-  let currentTheme = themes.default; // Устанавливаем дефолтное значение
-  try {
-    // Сначала пробуем использовать тему из UserThemeContext
-    if (activeTheme && themes[activeTheme as keyof typeof themes]) {
-      currentTheme = themes[activeTheme as keyof typeof themes];
-    }
-    // Затем из ThemeContext, если activeTheme не определен
-    else if (theme && themes[theme as keyof typeof themes]) {
-      currentTheme = themes[theme as keyof typeof themes];
-    }
-  } catch (error) {
-    console.error('Ошибка при получении темы:', error);
-  }
+  // Используем тему из хука для получения стилей
+  const themeKey = (activeTheme || theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
-  // Адаптируем Firebase User для получения правильных полей
-  const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
+  const [pdfImportDialogOpen, setPdfImportDialogOpen] = useState(false);
+  const [userCharacters, setUserCharacters] = useState<any[]>([]);
+  const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
+  const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const handleNavigateToAuth = () => {
-    navigate('/auth');
-  };
-
-  const handleNavigateToCharacterCreation = () => {
-    navigate('/character-creation');
-  };
-
-  const handleNavigateToSheet = () => {
-    navigate('/sheet');
-  };
-
-  const handleNavigateToJoin = () => {
-    navigate('/join');
-  };
-
-  const handleNavigateToDM = () => {
-    navigate('/dm-dashboard');
-  };
-
-  const renderMainContent = () => {
-    if (isAuthenticated) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="h-24 w-24 rounded-full mb-4 bg-primary/10 hover:bg-primary/20"
-              onClick={handleNavigateToCharacterCreation}
-            >
-              <UserPlus size={36} />
-            </Button>
-            <h3 className="text-xl font-bold mb-2">Создать персонажа</h3>
-            <p className="text-muted-foreground">
-              Создайте нового персонажа, выбрав расу, класс и предысторию
-            </p>
-          </div>
-          
-          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="h-24 w-24 rounded-full mb-4 bg-primary/10 hover:bg-primary/20"
-              onClick={handleNavigateToSheet}
-            >
-              <ScrollText size={36} />
-            </Button>
-            <h3 className="text-xl font-bold mb-2">Лист персонажа</h3>
-            <p className="text-muted-foreground">
-              Просмотр и редактирование вашего активного персонажа
-            </p>
-          </div>
-          
-          <div className="bg-card/90 p-6 rounded-lg shadow-lg flex flex-col items-center text-center border border-border/50">
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="h-24 w-24 rounded-full mb-4 bg-primary/10 hover:bg-primary/20"
-              onClick={adaptedUser?.isDM ? handleNavigateToDM : handleNavigateToJoin}
-            >
-              {adaptedUser?.isDM ? <Shield size={36} /> : <Swords size={36} />}
-            </Button>
-            <h3 className="text-xl font-bold mb-2">
-              {adaptedUser?.isDM ? "Панель Мастера" : "Присоединиться к игре"}
-            </h3>
-            <p className="text-muted-foreground">
-              {adaptedUser?.isDM 
-                ? "Управляйте своими кампаниями и создавайте новые сессии" 
-                : "Присоединитесь к существующей игровой сессии с вашим персонажем"
-              }
-            </p>
-          </div>
-        </div>
-      );
+  // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      console.log("Index: Загружаем список персонажей");
+      
+      if (isLoadingCharacters) return; // Предотвращаем повторные запросы
+      
+      setIsLoadingCharacters(true);
+      
+      try {
+        // Запрашиваем персонажей только при изменении статуса авторизации
+        // или при первом рендере
+        const chars = await getUserCharacters();
+        
+        // Проверяем, что полученные данные являются массивом
+        if (Array.isArray(chars)) {
+          console.log("Index: Персонажи пользователя", chars);
+          setUserCharacters(chars);
+        } else {
+          console.error("Index: getUserCharacters вернул не массив:", chars);
+          setUserCharacters([]);
+        }
+      } catch (error) {
+        console.error("Index: Ошибка при получении персонажей:", error);
+        setUserCharacters([]);
+      } finally {
+        setIsLoadingCharacters(false);
+        setHasInitialized(true);
+      }
+    };
+    
+    // Загружаем персонажей только если пользователь авторизован и компонент еще не инициализирован
+    if (isAuthenticated && !hasInitialized) {
+      fetchCharacters();
     }
+  }, [isAuthenticated, getUserCharacters, hasInitialized, isLoadingCharacters]);
 
-    return (
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-card/90 p-6 rounded-lg shadow-lg text-center border border-border/50">
-          <h3 className="text-xl font-bold mb-4">Для игроков</h3>
-          <p className="text-muted-foreground mb-6">
-            Создавайте персонажей, управляйте их характеристиками и участвуйте в приключениях вместе с друзьями.
-          </p>
-          <Button onClick={handleNavigateToAuth}>Начать игру</Button>
-        </div>
-        <div className="bg-card/90 p-6 rounded-lg shadow-lg text-center border border-border/50">
-          <h3 className="text-xl font-bold mb-4">Для Мастеров</h3>
-          <p className="text-muted-foreground mb-6">
-            Создавайте и проводите игровые сессии, управляйте NPC, монстрами и многим другим.
-          </p>
-          <Button onClick={handleNavigateToAuth}>Стать Мастером</Button>
-        </div>
-      </div>
-    );
+  // Обработчик для принудительного обновления списка персонажей
+  const handleRefreshCharacters = useCallback(async () => {
+    setIsLoadingCharacters(true);
+    try {
+      const chars = await getUserCharacters();
+      if (Array.isArray(chars)) {
+        setUserCharacters(chars);
+      }
+    } catch (error) {
+      console.error("Ошибка при обновлении персонажей:", error);
+    } finally {
+      setIsLoadingCharacters(false);
+    }
+  }, [getUserCharacters]);
+
+  // Обновляем список после удаления персонажа
+  useEffect(() => {
+    if (!isLoadingCharacters && hasInitialized && Array.isArray(characters)) {
+      setUserCharacters(characters);
+    }
+  }, [characters, isLoadingCharacters, hasInitialized]);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // TODO: Implement character loading logic
+      console.log("Loading character from file:", file.name);
+    }
+  };
+
+  // Обработка выхода из аккаунта
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Выход выполнен успешно");
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+    }
+  };
+
+  // Загрузка выбранного персонажа
+  const loadCharacter = (character: any) => {
+    setCharacter(character);
+    navigate("/sheet");
+  };
+
+  // Функция для удаления персонажа
+  const handleDeleteCharacter = async (characterId: string) => {
+    try {
+      setDeletingCharacterId(characterId);
+      await deleteCharacter(characterId);
+      toast.success("Персонаж успешно удален");
+    } catch (error) {
+      console.error("Ошибка при удалении персонажа:", error);
+      toast.error("Не удалось удалить персонажа");
+    } finally {
+      setDeletingCharacterId(null);
+    }
+  };
+
+  // Динамические стили для карточек на основе текущей темы
+  const cardStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderColor: currentTheme.accent,
+    boxShadow: currentTheme.glow,
+    transition: 'all 0.3s ease'
   };
 
   return (
-    <div 
-      className="min-h-screen bg-gradient-to-b from-black/50 to-black/70"
-    >
-      <div className="container mx-auto px-4 py-6">
-        <header className="mb-10">
-          <div className="rounded-lg shadow-md p-4 bg-black/80 backdrop-blur-sm">
-            <MainNavigation />
+    <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
+      <div className="container px-4 py-8 mx-auto">
+        <header className="text-center mb-6">
+          <h1 className="text-4xl font-bold mb-2">Dungeons & Dragons 5e</h1>
+          <h2 className="text-2xl text-muted-foreground mb-4">Создай своего героя</h2>
+          <div className="flex justify-center">
+            <ThemeSelector />
           </div>
         </header>
-
-        <main>
-          <section className="text-center max-w-3xl mx-auto">
-            <h1 
-              className="text-4xl md:text-5xl font-extrabold mb-4"
-              style={{ 
-                color: currentTheme.accent || '#6366f1', 
-                textShadow: `0 0 10px ${currentTheme.glow || 'rgba(99, 102, 241, 0.5)'}` 
-              }}
-            >
-              D&D 5e Лист персонажа
-            </h1>
-            <p className="text-xl text-foreground/90 mb-8">
-              Создавайте персонажей, управляйте характеристиками и участвуйте в захватывающих приключениях вместе с друзьями
-            </p>
-            
-            {renderMainContent()}
-          </section>
-          
-          <section className="mt-20 py-10 rounded-lg bg-black/80 backdrop-blur-sm">
-            <div className="max-w-4xl mx-auto px-6">
-              <h2 className="text-3xl font-bold text-center mb-12">Особенности приложения</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-full bg-primary/10 mb-4">
-                    <ScrollText size={32} className="text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Интерактивный лист персонажа</h3>
-                  <p className="text-muted-foreground">
-                    Полностью интерактивный лист персонажа с автоматическим расчётом всех характеристик и бонусов
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-full bg-primary/10 mb-4">
-                    <Book size={32} className="text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Справочник заклинаний</h3>
-                  <p className="text-muted-foreground">
-                    Полный справочник заклинаний D&D 5e с удобной системой фильтрации и поиска
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-full bg-primary/10 mb-4">
-                    <Shield size={32} className="text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Режим Мастера</h3>
-                  <p className="text-muted-foreground">
-                    Инструменты для Мастера подземелий, включая управление кампаниями, NPC и монстрами
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 rounded-full bg-primary/10 mb-4">
-                    <Swords size={32} className="text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Игровые сессии</h3>
-                  <p className="text-muted-foreground">
-                    Присоединяйтесь к игровым сессиям вместе с друзьями и отслеживайте ход боя в реальном времени
-                  </p>
-                </div>
-              </div>
+        
+        {/* Секция авторизации */}
+        <div className="text-center mb-8">
+          {isAuthenticated ? (
+            <div className="flex flex-col items-center">
+              <Avatar className="h-16 w-16 mb-2">
+                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.username}`} />
+                <AvatarFallback>{currentUser?.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <p className="font-medium text-lg mb-1">
+                {currentUser?.username}
+                {currentUser?.isDM && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
+                    Мастер
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground mb-3">{currentUser?.email}</p>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
+                <LogOut className="h-3.5 w-3.5" />
+                Выйти
+              </Button>
             </div>
-          </section>
+          ) : (
+            <Button onClick={() => navigate("/auth")} className="flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Войти в аккаунт
+            </Button>
+          )}
+        </div>
+
+        <main className="max-w-6xl mx-auto">
+          {/* Заголовки разделов в одну строку с отступами */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mb-6">
+            <h3 className="text-2xl font-bold">Игрок</h3>
+            <h3 className="text-2xl font-bold mt-6 md:mt-0">Мастер Подземелий</h3>
+          </div>
+          
+          {/* Основная сетка карточек */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* Колонка игрока */}
+            <div className="grid grid-cols-1 gap-4">
+              <Card 
+                className="backdrop-blur-sm transition-shadow" 
+                style={cardStyle}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="size-5" />
+                    Персонаж
+                  </CardTitle>
+                  <CardDescription>
+                    Создайте или управляйте персонажами
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button asChild className="w-full gap-2">
+                    <Link to="/character-creation">
+                      <Plus className="size-4" />
+                      Создать персонажа
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
+                    <FileUp className="size-4" />
+                    Загрузить персонажа (JSON)
+                  </Button>
+                  <input
+                    type="file"
+                    id="character-file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setPdfImportDialogOpen(true)}
+                    className="w-full gap-2"
+                  >
+                    <FileUp className="size-4" />
+                    Импорт из PDF
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Swords className="size-5" />
+                    Играть
+                  </CardTitle>
+                  <CardDescription>
+                    Присоединяйтесь к игровым сессиям
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full">
+                    <Link to="/join">
+                      Присоединиться к сессии
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Колонка мастера */}
+            <div className="grid grid-cols-1 gap-4">
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="size-5" />
+                    Управление сессиями
+                  </CardTitle>
+                  <CardDescription>
+                    Создавайте и управляйте игровыми сессиями
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full">
+                    <Link to="/dm">
+                      Панель мастера
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Две отдельные карточки для Руководства и Книги заклинаний */}
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="size-5" />
+                    Руководство игрока
+                  </CardTitle>
+                  <CardDescription>
+                    Правила и описание мира D&D 5e
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full">
+                    <Link to="/handbook">
+                      Открыть руководство
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="backdrop-blur-sm transition-shadow"
+                style={cardStyle}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Book className="size-5" />
+                    Книга заклинаний
+                  </CardTitle>
+                  <CardDescription>
+                    Полный список заклинаний D&D 5e
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full">
+                    <Link to="/spellbook">
+                      Открыть книгу заклинаний
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Раздел "Недавние персонажи" */}
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              {isAuthenticated ? "Мои персонажи" : "Недавние персонажи"}
+            </h3>
+            
+            {isLoadingCharacters ? (
+              <div 
+                className="backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground"
+                style={cardStyle}
+              >
+                Загрузка персонажей...
+              </div>
+            ) : userCharacters && userCharacters.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userCharacters.map((char) => (
+                  <Card 
+                    key={char.id}
+                    className="backdrop-blur-sm hover:bg-card/40 transition-all"
+                    style={cardStyle}
+                  >
+                    <CardContent className="p-4 relative">
+                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => loadCharacter(char)}>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${char.name}`} />
+                          <AvatarFallback>{char.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h4 className="font-medium">{char.name}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {char.race}, {char.className} {char.level} уровня
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Кнопка удаления с диалогом подтверждения */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-2 right-2 opacity-70 hover:opacity-100 hover:bg-destructive/20"
+                            aria-label="Удалить персонажа"
+                          >
+                            <Trash size={16} className="text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Удалить персонажа?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Вы уверены, что хотите удалить персонажа {char.name}? Это действие нельзя отменить.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction 
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => handleDeleteCharacter(char.id)}
+                              disabled={deletingCharacterId === char.id}
+                            >
+                              {deletingCharacterId === char.id ? "Удаление..." : "Удалить"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div 
+                className="backdrop-blur-sm rounded-lg p-6 text-center text-muted-foreground"
+                style={cardStyle}
+              >
+                {isAuthenticated ? 
+                  "У вас пока нет сохраненных персонажей" : 
+                  "Создайте персонажа или войдите в аккаунт, чтобы увидеть своих персонажей"
+                }
+              </div>
+            )}
+          </div>
         </main>
 
-        <footer className="mt-20 py-6 text-center text-muted-foreground">
-          <p>© 2025 D&D 5e Character Sheet. Все права защищены.</p>
+        <footer className="text-center mt-12 text-sm text-muted-foreground">
+          <p>D&D 5e Character Sheet Creator © 2025</p>
         </footer>
       </div>
+
+      {/* Диалоговое окно для импорта PDF */}
+      <Dialog open={pdfImportDialogOpen} onOpenChange={setPdfImportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Импорт персонажа из PDF</DialogTitle>
+          </DialogHeader>
+          <PdfCharacterImport />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

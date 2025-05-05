@@ -32,11 +32,6 @@ export interface User {
   themePreference: string;
   isOnline: boolean;
   isDM: boolean;
-  username?: string;
-  email?: string;
-  displayName?: string;
-  photoURL?: string;
-  emailVerified?: boolean;
   character?: Character; // Добавляем персонажа к пользователю
 }
 
@@ -45,10 +40,8 @@ export interface Character {
   name: string;
   race: string;
   class: string;
-  className?: string; // Добавляем для обратной совместимости с Home.tsx
   level: number;
   avatarUrl?: string;
-  image?: string;
 }
 
 // Добавляем типы для хранения персонажей

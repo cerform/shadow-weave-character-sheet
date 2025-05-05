@@ -57,8 +57,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Исправляем проверку класса Details - без обращения к props.className
     const hasDetailsClass = className ? className.includes('Details') : false;
     
-    // Улучшаем подсветку для всех кнопок - типизируем style правильно
-    const customStyles: React.CSSProperties = {
+    // Улучшаем подсветку для всех кнопок
+    const style = {
+      ...props.style,
       color: variant === 'ghost' && hasDetailsClass
         ? '#FFFFFF' 
         : variant === 'default' 
@@ -70,27 +71,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       backgroundColor: variant === 'default' && !props.style?.backgroundColor 
         ? currentTheme.accent 
         : props.style?.backgroundColor,
-      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
-      position: 'relative',
-      transition: 'all 0.3s ease',
+      textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)", // Добавляем тень для всех кнопок
+      // Добавим эффекты при наведении через CSS переменные
+      '--hover-glow': `0 0 10px ${currentTheme.accent}80`,
+      '--hover-border-color': currentTheme.accent,
+      '--hover-bg-color': `${currentTheme.accent}30`,
     };
     
-    // Добавляем дополнительные классы для всех кнопок с подсветкой через классы вместо CSS переменных
+    // Добавляем дополнительные классы для всех кнопок, чтобы обеспечить подсветку
     const enhancedClasses = cn(
       baseClasses,
-      "hover:shadow-lg focus:shadow-lg",
-      variant === 'outline' && "hover:bg-opacity-30 hover:bg-accent",
-      "relative overflow-hidden"
+      "hover:shadow-[var(--hover-glow)] focus:shadow-[var(--hover-glow)]",
+      variant === 'outline' && "hover:border-[var(--hover-border-color)] hover:bg-[var(--hover-bg-color)]"
     );
-    
-    // Объединяем пользовательские стили с нашими
-    const mergedStyle = { ...props.style, ...customStyles };
     
     return (
       <Comp
         className={enhancedClasses}
         ref={ref}
-        style={mergedStyle}
+        style={style}
         {...props}
       />
     )

@@ -13,29 +13,27 @@ const AuthPage = () => {
   const returnPath = location.state?.returnPath || '/';
 
   return (
-    <div className="min-h-screen p-6 bg-black/60">
+    <div className={`min-h-screen p-6 bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
       <div className="container mx-auto">
         <Button 
           variant="outline" 
           onClick={() => navigate('/')} 
-          className="mb-8 bg-black/60 border-white/20 text-white hover:bg-black/80"
+          className="mb-8"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           На главную
         </Button>
         
         <div className="flex flex-col items-center justify-center max-w-md mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-center text-white">
+          <h1 className="text-3xl font-bold mb-6 text-center">
             Аутентификация
           </h1>
           
-          <p className="text-gray-300 mb-8 text-center">
+          <p className="text-muted-foreground mb-8 text-center">
             Войдите или зарегистрируйтесь, чтобы сохранять своих персонажей в облаке и иметь к ним доступ с любого устройства
           </p>
           
-          <div className="w-full bg-black/80 p-8 rounded-lg shadow-xl border border-white/10">
-            <AuthForm redirectTo={returnPath} />
-          </div>
+          <AuthForm redirectTo={returnPath} />
         </div>
       </div>
     </div>

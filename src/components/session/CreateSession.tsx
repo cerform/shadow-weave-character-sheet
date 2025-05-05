@@ -41,8 +41,8 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
     
     try {
       setIsCreating(true);
-      // Создаем сессию через SessionStore с правильными параметрами
-      const newSession = await createSession(sessionName, "Новая D&D сессия");
+      // Создаем сессию через SessionStore (асинхронно)
+      const newSession = await createSession(sessionName);
       
       if (newSession && newSession.code) {
         // Подключаемся к сокетам, если используются

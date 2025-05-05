@@ -1,59 +1,145 @@
-
 import { useState, useEffect } from 'react';
-import { CharacterSpell, SpellData } from '@/types/character';
-import { getSpellsByClass, getAllSpells } from '@/data/spells';
-import { validateSpellData } from './themeUtils';
+import { spells as allSpells } from '@/data/spells';
+import { SpellData, UseSpellbookReturn } from './types';
+import { 
+  filterSpellsBySearchTerm, 
+  filterSpellsByLevel, 
+  filterSpellsBySchool,
+  filterSpellsByClass,
+  extractClasses,
+  formatClasses,
+  convertToSpellData,
+  isString,
+  isStringArray
+} from './filterUtils';
+import { useSpellTheme } from './themeUtils';
+import { importSpellsFromText as importSpellsFromTextUtil } from './importUtils';
+import { CharacterSpell } from '@/types/character';
 
-// Адаптер для преобразования CharacterSpell в SpellData
-const adaptToSpellData = (spell: CharacterSpell): SpellData => {
-  return validateSpellData({
-    ...spell,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || 'Нет описания',
-    prepared: spell.prepared || false,
-  });
-};
+export * from './types';
+export { importSpellsFromTextUtil as importSpellsFromText };
 
-// Адаптер для преобразования SpellData обратно в CharacterSpell
-const adaptToCharacterSpell = (spellData: SpellData): CharacterSpell => {
-  return {
-    ...spellData,
-    prepared: spellData.prepared || false
-  };
-};
-
-export function useSpellbook(characterClass?: string) {
-  const [spells, setSpells] = useState<CharacterSpell[]>([]);
+export const useSpellbook = (): UseSpellbookReturn => {
+  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);
+  const [activeClass, setActiveClass] = useState<string[]>([]);
   
+  const { currentTheme, getBadgeColor, getSchoolBadgeColor } = useSpellTheme();
+  
+  // Извлечение уникальных классов из заклинаний
+  const allClasses = extractClasses(allSpells);
+
   useEffect(() => {
-    if (characterClass) {
-      const classSpells = getSpellsByClass(characterClass);
-      setSpells(classSpells.map(spell => ({...spell, prepared: false})));
+    // Преобразуем CharacterSpell[] в SpellData[]
+    if (allSpells && allSpells.length > 0) {
+      const convertedSpells: SpellData[] = allSpells.map(convertToSpellData);
+      setFilteredSpells(convertedSpells);
     } else {
-      const allSpells = getAllSpells();
-      setSpells(allSpells.map(spell => ({...spell, prepared: false})));
+      console.error('Не удалось загрузить заклинания из модуля');
+      setFilteredSpells([]);
     }
-  }, [characterClass]);
+  }, []);
 
-  const getSpellsByLevel = (level: number): CharacterSpell[] => {
-    return spells.filter(spell => spell.level === level);
+  useEffect(() => {
+    let result = [...allSpells];
+
+    // Фильтрация по поисковому запросу
+    result = filterSpellsBySearchTerm(result, searchTerm);
+
+    // Фильтрация по уровням
+    result = filterSpellsByLevel(result, activeLevel);
+
+    // Фильтрация по школам
+    result = filterSpellsBySchool(result, activeSchool);
+
+    // Фильтрация по классам
+    result = filterSpellsByClass(result, activeClass);
+
+    // Преобразуем CharacterSpell[] в SpellData[]
+    const convertedSpells: SpellData[] = result.map(convertToSpellData);
+    
+    setFilteredSpells(convertedSpells);
+  }, [searchTerm, activeLevel, activeSchool, activeClass]);
+
+  const handleOpenSpell = (spell: SpellData) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
   };
 
-  const getCantrips = (): CharacterSpell[] => {
-    return getSpellsByLevel(0);
+  const handleClose = () => {
+    setIsModalOpen(false);
   };
+
+  const toggleLevel = (level: number) => {
+    setActiveLevel(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+  };
+
+  const toggleSchool = (school: string) => {
+    setActiveSchool(prev => {
+      if (prev.includes(school)) {
+        return prev.filter(s => s !== school);
+      } else {
+        return [...prev, school];
+      }
+    });
+  };
+
+  const toggleClass = (className: string) => {
+    setActiveClass(prev => {
+      if (prev.includes(className)) {
+        return prev.filter(c => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+  };
+
+  const clearFilters = () => {
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setSearchTerm('');
+  };
+
+  const importSpells = (textData: string) => {
+    // Этот метод будет обновлять данные в data/spells
+  };
+
+  const allLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort();
+  const allSchools = Array.from(new Set(allSpells.map(spell => spell.school))).sort();
 
   return {
-    spells,
-    getSpellsByLevel,
-    getCantrips,
-    adaptToSpellData,
-    adaptToCharacterSpell
+    filteredSpells,
+    searchTerm,
+    setSearchTerm,
+    activeLevel,
+    selectedSpell,
+    isModalOpen,
+    activeSchool,
+    activeClass,
+    currentTheme,
+    allLevels,
+    allSchools,
+    allClasses,
+    handleOpenSpell,
+    handleClose,
+    toggleLevel,
+    toggleSchool,
+    toggleClass,
+    clearFilters,
+    getBadgeColor,
+    getSchoolBadgeColor,
+    formatClasses,
+    importSpellsFromText: importSpellsFromTextUtil
   };
-}
-
-export { adaptToSpellData, adaptToCharacterSpell };
+};
