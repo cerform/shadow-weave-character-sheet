@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileUp, Plus, Users, Book, BookOpen, User, Swords, Home, UserPlus, FileText, Crown, LogIn, LogOut, Trash } from "lucide-react";
@@ -138,6 +137,18 @@ const Index = () => {
     transition: 'all 0.3s ease'
   };
 
+  // Новые стили для кнопок, чтобы они соответствовали единому стилю
+  const accentButtonStyle = {
+    backgroundColor: `${currentTheme.accent}20`,
+    borderColor: currentTheme.accent,
+    color: currentTheme.textColor || '#FFFFFF',
+    boxShadow: `0 0 10px ${currentTheme.accent}40`,
+    transition: 'all 0.3s ease',
+  };
+  
+  // Стиль для hover-эффекта кнопок
+  const buttonHoverClass = "hover:bg-opacity-90 hover:shadow-lg hover:scale-105 transition-all duration-300";
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-background to-background/80 theme-${activeTheme || theme || 'default'}`}>
       <div className="container px-4 py-8 mx-auto">
@@ -204,14 +215,22 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button asChild className="w-full gap-2">
+                  <Button 
+                    asChild 
+                    className={`w-full gap-2 font-semibold relative overflow-hidden ${buttonHoverClass}`}
+                    style={accentButtonStyle}
+                  >
                     <Link to="/character-creation">
                       <Plus className="size-4" />
-                      Создать персонажа
+                      <span className="relative z-10">Создать персонажа</span>
                     </Link>
                   </Button>
                   
-                  <Button variant="outline" onClick={() => document.getElementById("character-file")?.click()} className="w-full gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById("character-file")?.click()} 
+                    className="w-full gap-2"
+                  >
                     <FileUp className="size-4" />
                     Загрузить персонажа (JSON)
                   </Button>
@@ -248,9 +267,13 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className={`w-full gap-2 font-semibold relative overflow-hidden ${buttonHoverClass}`}
+                    style={accentButtonStyle}
+                  >
                     <Link to="/join">
-                      Присоединиться к сессии
+                      <span className="relative z-10">Присоединиться к сессии</span>
                     </Link>
                   </Button>
                 </CardContent>
@@ -273,9 +296,13 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className={`w-full gap-2 font-semibold relative overflow-hidden ${buttonHoverClass}`}
+                    style={accentButtonStyle}
+                  >
                     <Link to="/dm">
-                      Панель мастера
+                      <span className="relative z-10">Панель мастера</span>
                     </Link>
                   </Button>
                 </CardContent>
@@ -296,9 +323,13 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className={`w-full gap-2 font-semibold relative overflow-hidden ${buttonHoverClass}`}
+                    style={accentButtonStyle}
+                  >
                     <Link to="/handbook">
-                      Открыть руководство
+                      <span className="relative z-10">Открыть руководство</span>
                     </Link>
                   </Button>
                 </CardContent>
@@ -318,7 +349,10 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button 
+                    asChild 
+                    className="w-full"
+                  >
                     <Link to="/spellbook">
                       Открыть книгу заклинаний
                     </Link>
