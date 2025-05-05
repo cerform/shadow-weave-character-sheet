@@ -13,8 +13,7 @@ import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import ThemeSelector from '@/components/ThemeSelector';
-import NavigationButtons from '@/components/ui/NavigationButtons';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+import AppDiceButton from '@/AppDiceButton';
 
 const HandbookPage: React.FC = () => {
   // Состояния для данных
@@ -95,7 +94,7 @@ const HandbookPage: React.FC = () => {
       default:
         return (
           <div 
-            className="p-6 text-gray-300"
+            className="p-6"
             style={{ color: currentTheme.textColor }}
           >
             Выберите категорию из справочника.
@@ -106,7 +105,7 @@ const HandbookPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gray-900 flex text-white"
+      className="min-h-screen flex"
       style={{ 
         background: `linear-gradient(to bottom, ${currentTheme.accent}20, ${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'})`,
         color: currentTheme.textColor 
@@ -124,11 +123,11 @@ const HandbookPage: React.FC = () => {
       />
       
       {/* Основное содержимое */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="container mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 
-              className="text-3xl font-bold text-purple-300"
+              className="text-3xl font-bold"
               style={{ color: currentTheme.accent }}
             >
               {activeSection === 'races' && 'Расы'}
@@ -136,17 +135,14 @@ const HandbookPage: React.FC = () => {
               {activeSection === 'backgrounds' && 'Предыстории'}
             </h1>
             
-            <div className="flex space-x-2">
-              <NavigationButtons />
-              <ThemeSelector />
-            </div>
+            <ThemeSelector />
           </div>
           
           {renderContent()}
         </div>
       </div>
       
-      <FloatingDiceButton />
+      <AppDiceButton />
     </div>
   );
 };

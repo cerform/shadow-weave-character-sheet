@@ -47,15 +47,15 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
   
   return (
     <div 
-      className="w-64 bg-gray-800 border-r border-gray-700 shrink-0 overflow-hidden h-screen flex flex-col"
+      className="w-64 shrink-0 overflow-hidden h-screen flex flex-col border-r"
       style={{ 
-        background: `${currentTheme.cardBackground}`, 
+        background: currentTheme.cardBackground, 
         borderColor: `${currentTheme.accent}30` 
       }}
     >
       <div className="p-4">
         <h2 
-          className="text-xl font-semibold mb-4 text-white"
+          className="text-xl font-semibold mb-4"
           style={{ color: currentTheme.textColor }}
         >
           Справочник D&D
@@ -63,14 +63,14 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
         
         <div className="relative mb-4">
           <Search 
-            className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" 
+            className="absolute left-2 top-2.5 h-4 w-4" 
             style={{ color: `${currentTheme.textColor}80` }}
           />
           <Input
             placeholder="Поиск..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 bg-gray-700 border-gray-600 text-gray-200"
+            className="pl-8"
             style={{ 
               background: 'rgba(0,0,0,0.2)', 
               borderColor: `${currentTheme.accent}30`,
@@ -81,7 +81,7 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1 h-6 w-6 p-0 text-gray-400 hover:text-white"
+              className="absolute right-1 top-1 h-6 w-6 p-0 hover:text-white"
               onClick={() => setSearchQuery('')}
               style={{ 
                 color: `${currentTheme.textColor}80`,
@@ -146,15 +146,12 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
         </div>
       </div>
       
-      <Separator 
-        className="bg-gray-700" 
-        style={{ background: `${currentTheme.accent}30` }}
-      />
+      <Separator style={{ background: `${currentTheme.accent}30` }} />
       
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 
-            className="text-sm font-medium text-gray-300 flex items-center"
+            className="text-sm font-medium flex items-center"
             style={{ color: currentTheme.textColor }}
           >
             <Filter size={14} className="mr-1" />
@@ -165,7 +162,7 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs text-gray-400 hover:text-white"
+              className="h-6 px-2 text-xs hover:text-white"
               onClick={clearSources}
               style={{ 
                 color: `${currentTheme.textColor}80`,
@@ -178,31 +175,37 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
         
         <ScrollArea className="h-[calc(100vh-240px)]">
           <div className="space-y-2 pr-2">
-            {sources.map((source) => (
-              <div 
-                key={source} 
-                className="flex items-center space-x-2"
-              >
-                <Checkbox
-                  id={`source-${source}`}
-                  checked={selectedSources.includes(source)}
-                  onCheckedChange={() => toggleSource(source)}
-                  className="border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                  style={{ 
-                    borderColor: `${currentTheme.accent}50`,
-                    ['--tw-bg-opacity' as any]: 'data-[state=checked]:1',
-                    background: `data-[state=checked]:${currentTheme.accent}`
-                  }}
-                />
-                <Label 
-                  htmlFor={`source-${source}`} 
-                  className="text-sm text-gray-300 cursor-pointer"
-                  style={{ color: currentTheme.textColor }}
+            {sources.map((source) => {
+              const isSelected = selectedSources.includes(source);
+              
+              return (
+                <div 
+                  key={source} 
+                  className="flex items-center space-x-2"
                 >
-                  {source === 'PHB' ? 'Книга игрока' : source}
-                </Label>
-              </div>
-            ))}
+                  <Checkbox
+                    id={`source-${source}`}
+                    checked={isSelected}
+                    onCheckedChange={() => toggleSource(source)}
+                    style={{ 
+                      borderColor: isSelected ? currentTheme.accent : `${currentTheme.accent}50`,
+                      backgroundColor: isSelected ? currentTheme.accent : 'transparent',
+                      boxShadow: isSelected ? `0 0 5px ${currentTheme.accent}` : 'none',
+                    }}
+                  />
+                  <Label 
+                    htmlFor={`source-${source}`} 
+                    className="text-sm cursor-pointer"
+                    style={{ 
+                      color: currentTheme.textColor,
+                      fontWeight: isSelected ? 'bold' : 'normal'
+                    }}
+                  >
+                    {source === 'PHB' ? 'Книга игрока' : source}
+                  </Label>
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
