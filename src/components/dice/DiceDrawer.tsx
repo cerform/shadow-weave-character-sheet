@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dices } from 'lucide-react';
+import { Dices, X } from 'lucide-react';
 import { 
   Drawer, 
   DrawerContent,
@@ -75,24 +75,25 @@ const DiceDrawer: React.FC = () => {
           </Button>
         </DrawerTrigger>
         <DrawerContent style={{ backgroundColor: 'rgba(15, 15, 15, 0.95)' }}>
-          <DrawerHeader>
-            <DrawerTitle style={{ color: currentTheme.textColor }}>Кубики</DrawerTitle>
-            <DrawerDescription style={{ color: `${currentTheme.textColor}80` }}>
-              Бросайте кубики и отслеживайте результаты
-            </DrawerDescription>
-          </DrawerHeader>
-          <ScrollArea className="h-[60vh] px-4">
+          <div className="flex justify-between items-center px-4 pt-4">
+            <DrawerHeader className="p-0">
+              <DrawerTitle style={{ color: currentTheme.textColor }}>Кубики</DrawerTitle>
+              <DrawerDescription style={{ color: `${currentTheme.textColor}80` }}>
+                Бросайте кубики и отслеживайте результаты
+              </DrawerDescription>
+            </DrawerHeader>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleCloseDrawer}
+              style={{ color: currentTheme.accent }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <ScrollArea className="h-[calc(100vh-120px)] px-4">
             <PlayerDicePanel />
           </ScrollArea>
-          <DrawerFooter>
-            <Button 
-              variant="outline" 
-              onClick={handleCloseDrawer}
-              style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
-            >
-              Закрыть
-            </Button>
-          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     );
@@ -118,26 +119,27 @@ const DiceDrawer: React.FC = () => {
       <SheetContent 
         side="right" 
         style={contentStyle}
-        className="w-[400px] sm:w-[540px] md:w-[600px] overflow-y-auto"
+        className="w-[350px] sm:w-[400px] md:w-[450px] overflow-y-auto"
       >
-        <SheetHeader>
-          <SheetTitle style={{ color: currentTheme.textColor }}>Кубики</SheetTitle>
-          <SheetDescription style={{ color: `${currentTheme.textColor}80` }}>
-            Бросайте кубики и отслеживайте результаты
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-180px)] px-4 py-6">
+        <div className="flex justify-between items-center mb-2">
+          <SheetHeader className="p-0">
+            <SheetTitle style={{ color: currentTheme.textColor }}>Кубики</SheetTitle>
+            <SheetDescription style={{ color: `${currentTheme.textColor}80` }}>
+              Бросайте кубики и отслеживайте результаты
+            </SheetDescription>
+          </SheetHeader>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleCloseDrawer}
+            style={{ color: currentTheme.accent }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <ScrollArea className="h-[calc(100vh-120px)] pr-4">
           <PlayerDicePanel />
         </ScrollArea>
-        <SheetFooter>
-          <Button 
-            variant="outline" 
-            onClick={handleCloseDrawer}
-            style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
-          >
-            Закрыть
-          </Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

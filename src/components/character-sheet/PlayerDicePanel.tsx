@@ -100,9 +100,12 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   };
   
   return (
-    <div className="space-y-4">
-      <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-        <div className="space-y-4">
+    <div className="space-y-3">
+      <Card 
+        className="p-3 bg-card/30 backdrop-blur-sm border-primary/20"
+        style={{ borderColor: `${currentTheme.accent}40` }}
+      >
+        <div className="space-y-3">
           {/* Выбор типа кубика */}
           <div className="grid grid-cols-6 gap-1">
             {['d4', 'd6', 'd8', 'd10', 'd12', 'd20'].map((dice) => (
@@ -110,7 +113,12 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                 key={dice}
                 size="sm"
                 variant={diceType === dice ? "default" : "outline"}
-                className="h-10 px-2 flex items-center justify-center"
+                className="h-9 px-1 flex items-center justify-center text-xs"
+                style={{ 
+                  backgroundColor: diceType === dice ? currentTheme.accent : 'rgba(0, 0, 0, 0.5)',
+                  borderColor: currentTheme.accent,
+                  color: diceType === dice ? '#000' : currentTheme.textColor
+                }}
                 onClick={() => handleDiceTypeChange(dice as any)}
               >
                 {dice}
@@ -118,10 +126,10 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             ))}
           </div>
           
-          {/* 3D кубик в центре - перемещён вверх */}
+          {/* 3D кубик в центре */}
           <div 
             className="mb-2 bg-black/70 rounded-lg overflow-hidden relative flex items-center justify-center" 
-            style={{ height: '220px' }}
+            style={{ height: '180px', border: `1px solid ${currentTheme.accent}40` }}
           >
             <DiceRoller3D 
               initialDice={diceType}
@@ -134,62 +142,64 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             />
           </div>
           
-          {/* Секция настройки броска - перемещена вниз */}
-          <div className="flex flex-wrap justify-between gap-2 mb-2">
-            {/* Диалог дополнительных настроек */}
-            <div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
-                      {showDetails ? 'Скрыть' : 'Опции'}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Дополнительные опции броска</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+          {/* Нижняя часть с контролами */}
+          <div className="flex flex-wrap justify-between gap-2 mb-1">
+            {/* Кнопка опций */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setShowDetails(!showDetails)}
+                    style={{ color: currentTheme.textColor, borderColor: currentTheme.accent }}
+                  >
+                    {showDetails ? 'Скрыть' : 'Опции'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Дополнительные опции броска</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             
-            {/* Количество кубиков и модификатор в одну строку */}
-            <div className="flex items-center gap-3">
-              {/* Количество кубиков */}
+            {/* Секция настройки броска - улучшенная компактная версия */}
+            <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
-                <Label className="text-sm whitespace-nowrap">Кол-во:</Label>
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="px-2 h-8 w-8" 
+                  className="p-0 h-8 w-8" 
                   onClick={() => setDiceCount(prev => Math.max(1, prev - 1))}
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
                 >
                   -
                 </Button>
-                <div className="flex items-center border bg-background/50 rounded px-2 min-w-[30px] justify-center">
-                  <span className="text-sm">{diceCount}</span>
+                <div className="flex items-center bg-background/50 rounded px-2 min-w-[40px] justify-center h-8" style={{ border: `1px solid ${currentTheme.accent}40` }}>
+                  <span className="text-sm">{diceCount}×</span>
                 </div>
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="px-2 h-8 w-8" 
+                  className="p-0 h-8 w-8" 
                   onClick={() => setDiceCount(prev => Math.min(10, prev + 1))}
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
                 >
                   +
                 </Button>
               </div>
               
-              {/* Модификатор броска */}
               <div className="flex items-center gap-1">
-                <Label className="text-sm whitespace-nowrap">Мод:</Label>
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="px-2 h-8 w-8" 
+                  className="p-0 h-8 w-8" 
                   onClick={() => setModifier(prev => Math.max(-20, prev - 1))}
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
                 >
                   -
                 </Button>
-                <div className="flex items-center border bg-background/50 rounded px-2 min-w-[40px] justify-center">
+                <div className="flex items-center bg-background/50 rounded px-2 min-w-[40px] justify-center h-8" style={{ border: `1px solid ${currentTheme.accent}40` }}>
                   <span className="text-sm" style={{ color: modifier > 0 ? '#4ade80' : modifier < 0 ? '#f87171' : 'inherit' }}>
                     {modifier >= 0 ? '+' : ''}{modifier}
                   </span>
@@ -197,8 +207,9 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="px-2 h-8 w-8" 
+                  className="p-0 h-8 w-8" 
                   onClick={() => setModifier(prev => Math.min(20, prev + 1))}
+                  style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}
                 >
                   +
                 </Button>
@@ -208,14 +219,15 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
             
           {/* Дополнительные настройки */}
           {showDetails && (
-            <div className="p-2 bg-background/50 rounded border">
+            <div className="p-2 bg-background/50 rounded border" style={{ borderColor: `${currentTheme.accent}40` }}>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="custom-reason">Своя причина броска</Label>
+                  <Label htmlFor="custom-reason" style={{ color: currentTheme.textColor }}>Своя причина броска</Label>
                   <Switch 
                     id="custom-reason" 
                     checked={useCustomReason} 
                     onCheckedChange={setUseCustomReason} 
+                    style={{ backgroundColor: useCustomReason ? currentTheme.accent : undefined }}
                   />
                 </div>
                 
@@ -225,15 +237,23 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                     placeholder="Причина броска..." 
                     value={rollReason} 
                     onChange={(e) => setRollReason(e.target.value)}
+                    style={{ borderColor: `${currentTheme.accent}40` }}
                   />
                 ) : (
                   <Select value={rollReason} onValueChange={setRollReason}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger 
+                      className="w-full" 
+                      style={{ borderColor: `${currentTheme.accent}40`, color: currentTheme.textColor }}
+                    >
                       <SelectValue placeholder="Выберите причину броска" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent style={{ backgroundColor: 'rgba(15, 15, 15, 0.95)', borderColor: currentTheme.accent }}>
                       {predefinedRollReasons.map((reason) => (
-                        <SelectItem key={reason.value} value={reason.value}>
+                        <SelectItem 
+                          key={reason.value} 
+                          value={reason.value}
+                          style={{ color: currentTheme.textColor }}
+                        >
                           {reason.label}
                         </SelectItem>
                       ))}
@@ -246,45 +266,61 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
                   placeholder="Сообщение (опционально)" 
                   value={rollMessage} 
                   onChange={(e) => setRollMessage(e.target.value)}
+                  style={{ borderColor: `${currentTheme.accent}40` }}
                 />
               </div>
             </div>
           )}
             
           {/* Кнопка броска - уменьшена */}
-          <div className="flex flex-col gap-2">
-            <Button 
-              className="w-full bg-primary/90 hover:bg-primary h-10 text-sm"
-              onClick={handleRoll}
-            >
-              <Dices className="mr-2" size={14} />
-              Бросить {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
-            </Button>
-          </div>
+          <Button 
+            className="w-full h-9 text-sm flex items-center justify-center"
+            onClick={handleRoll}
+            style={{ 
+              backgroundColor: currentTheme.accent, 
+              color: '#000', 
+              fontWeight: 'bold',
+              boxShadow: `0 0 10px ${currentTheme.accent}50`
+            }}
+          >
+            <Dices className="mr-2" size={14} />
+            БРОСИТЬ {diceCount}{diceType} {modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
+          </Button>
         </div>
       </Card>
       
       {/* История бросков */}
       {rollHistory.length > 0 && (
-        <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-          <h3 className="text-lg font-semibold mb-2">История бросков</h3>
-          <ScrollArea className="h-40">
+        <Card 
+          className="p-3 bg-card/30 backdrop-blur-sm border-primary/20"
+          style={{ borderColor: `${currentTheme.accent}40` }}
+        >
+          <h3 className="text-base font-semibold mb-2" style={{ color: currentTheme.textColor }}>История бросков</h3>
+          <ScrollArea className="h-32">
             <div className="space-y-2">
               {rollHistory.map((roll, index) => (
-                <div key={index} className="p-2 bg-background/40 rounded border border-primary/10">
+                <div 
+                  key={index} 
+                  className="p-2 bg-background/40 rounded border border-primary/10"
+                  style={{ borderColor: `${currentTheme.accent}30` }}
+                >
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="bg-primary/10">
+                    <Badge 
+                      variant="outline" 
+                      className="bg-primary/10"
+                      style={{ borderColor: currentTheme.accent, backgroundColor: `${currentTheme.accent}20` }}
+                    >
                       {roll.timestamp}
                     </Badge>
-                    <span className="text-sm font-medium">{roll.reason}</span>
+                    <span className="text-xs font-medium" style={{ color: currentTheme.textColor }}>{roll.reason}</span>
                   </div>
                   <div className="mt-1">
-                    <span className="font-bold">{roll.characterName}</span> бросил{' '}
+                    <span className="font-bold" style={{ color: currentTheme.textColor }}>{roll.characterName}</span> бросил{' '}
                     <span className="font-medium">{roll.diceCount}{roll.diceType}{roll.modifier !== 0 ? (roll.modifier > 0 ? `+${roll.modifier}` : roll.modifier) : ''}</span> ={' '}
                     <span className="font-bold text-lg" style={{ color: currentTheme.accent }}>{roll.total}</span>
                   </div>
                   {roll.message && (
-                    <div className="mt-1 text-sm italic">"{roll.message}"</div>
+                    <div className="mt-1 text-xs italic" style={{ color: `${currentTheme.textColor}90` }}>"{roll.message}"</div>
                   )}
                 </div>
               ))}
@@ -295,4 +331,3 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
     </div>
   );
 };
-

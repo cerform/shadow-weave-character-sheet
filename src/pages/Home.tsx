@@ -7,11 +7,16 @@ import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ProfilePreview from '@/components/home/ProfilePreview';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const Home = () => {
   const { currentUser, isAuthenticated } = useAuth();
   const isDM = currentUser?.isDM;
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const currentThemeId = theme || 'default';
+  const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -23,7 +28,13 @@ const Home = () => {
         <div className="container mx-auto max-w-7xl">
           <header className="flex justify-between items-center mb-12">
             <div>
-              <h1 className="font-philosopher text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-600">
+              <h1 
+                className="font-philosopher text-4xl md:text-5xl font-bold" 
+                style={{ 
+                  color: currentTheme.textColor,
+                  textShadow: `0 0 10px ${currentTheme.accent}80`
+                }}
+              >
                 Dungeons & Dragons 5e
               </h1>
               <p className="text-lg text-gray-300 mt-2">
@@ -40,23 +51,34 @@ const Home = () => {
             {/* Основные карточки */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Персонажи */}
-              <Card className="bg-blue-900/40 backdrop-blur-sm border-blue-500/30 shadow-lg overflow-hidden group hover:shadow-blue-500/20 transition-all duration-300">
+              <Card 
+                className="backdrop-blur-sm border-blue-500/30 shadow-lg overflow-hidden group hover:shadow-blue-500/20 transition-all duration-300"
+                style={{ backgroundColor: `${currentTheme.background}90`, borderColor: `${currentTheme.accent}40` }}
+              >
                 <CardHeader className="pb-4">
-                  <div className="rounded-full bg-blue-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <Users className="h-6 w-6 text-blue-400" />
+                  <div 
+                    className="rounded-full w-12 h-12 flex items-center justify-center mb-2"
+                    style={{ backgroundColor: `${currentTheme.accent}20` }}
+                  >
+                    <Users className="h-6 w-6" style={{ color: currentTheme.accent }} />
                   </div>
-                  <CardTitle className="text-xl text-white">Персонажи</CardTitle>
-                  <CardDescription className="text-gray-300">
+                  <CardTitle className="text-xl" style={{ color: currentTheme.textColor }}>Персонажи</CardTitle>
+                  <CardDescription style={{ color: `${currentTheme.textColor}80` }}>
                     Управление персонажами
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-sm text-gray-300">
+                <CardContent className="text-sm" style={{ color: `${currentTheme.textColor}90` }}>
                   <p>Просматривайте список ваших персонажей, редактируйте их характеристики и историю.</p>
                 </CardContent>
                 <CardFooter>
                   <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white btn-magic"
+                    className="w-full btn-magic"
                     onClick={() => handleNavigation('/characters')}
+                    style={{ 
+                      backgroundColor: currentTheme.accent,
+                      color: '#000',
+                      borderColor: currentTheme.accent
+                    }}
                   >
                     ПЕРЕЙТИ
                   </Button>
