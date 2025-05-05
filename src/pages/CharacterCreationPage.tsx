@@ -43,7 +43,7 @@ const CharacterCreationPage = () => {
   useEffect(() => {
     if (character.race) {
       const raceData = races.find(r => r.name === character.race);
-      setHasSubraces(!!(raceData?.subraces && raceData.subraces.length > 0));
+      setHasSubraces(!!(raceData?.subRaces && raceData.subRaces.length > 0));
     } else {
       setHasSubraces(false);
     }

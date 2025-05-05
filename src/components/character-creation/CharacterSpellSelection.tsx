@@ -13,8 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, Book, Plus, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import SpellDetailModal from '@/components/spellbook/SpellDetailModal';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
+import { normalizeSpells } from '@/utils/spellUtils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -23,19 +24,8 @@ interface CharacterSpellSelectionProps {
   prevStep: () => void;
 }
 
-interface SpellOption {
-  id?: string;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string;
-  classes: string[];
-  source?: string;
-}
+// Используем SpellData из типов для совместимости
+type SpellOption = SpellData;
 
 const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   character,
@@ -43,7 +33,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   nextStep,
   prevStep,
 }) => {
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(character.spells || []);
+  // Преобразуем массив заклинаний в нужный формат
+  const normalizedSpells = character.spells ? normalizeSpells(character.spells) : [];
+  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>(normalizedSpells);
   const [availableSpells, setAvailableSpells] = useState<SpellOption[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellOption[]>([]);
   const [activeTab, setActiveTab] = useState('0');
@@ -57,11 +49,14 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     
     if (character.className) {
       // Фильтруем заклинания по классу персонажа
-      const classSpells = allSpells.filter(spell => 
-        spell.classes.some(spellClass => 
+      const classSpells = allSpells.filter(spell => {
+        // Проверяем, что classes существует и является массивом
+        const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes].filter(Boolean);
+        return spellClasses.some(spellClass => 
+          spellClass && typeof spellClass === 'string' && 
           spellClass.toLowerCase().includes(character.className?.toLowerCase() || '')
-        )
-      );
+        );
+      });
       
       setAvailableSpells(classSpells);
       setFilteredSpells(classSpells.filter(spell => spell.level === parseInt(activeTab, 10)));
@@ -80,7 +75,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(spell => 
         spell.name.toLowerCase().includes(query) || 
-        spell.description.toLowerCase().includes(query)
+        (typeof spell.description === 'string' && spell.description.toLowerCase().includes(query))
       );
     }
     
@@ -142,18 +137,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       return;
     }
     
-    const newSpell: CharacterSpell = {
-      id: spell.id || `spell-${Date.now()}`,
-      name: spell.name,
-      level: spell.level,
-      description: spell.description,
-      castingTime: spell.castingTime,
-      school: spell.school,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      prepared: false
-    };
+    // Преобразуем SpellData в CharacterSpell
+    const newSpell = convertSpellDataToCharacterSpell(spell);
     
     const updatedSpells = [...selectedSpells, newSpell];
     setSelectedSpells(updatedSpells);
@@ -196,7 +181,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {selectedSpells.map((spell) => (
                 <div 
-                  key={spell.id} 
+                  key={spell.id || spell.name} 
                   className="flex justify-between items-center p-2 border border-border rounded-md bg-black/20"
                 >
                   <div className="flex items-center gap-2">
@@ -264,6 +249,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 {filteredSpells.length > 0 ? (
                   filteredSpells.map((spell) => {
                     const isSelected = selectedSpells.some(s => s.name === spell.name);
+                    const description = typeof spell.description === 'string' 
+                      ? spell.description 
+                      : Array.isArray(spell.description) 
+                        ? spell.description.join('\n') 
+                        : '';
                     
                     return (
                       <div 
@@ -276,7 +266,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                           <h4 className="font-medium">{spell.name}</h4>
                           <Badge>{spell.school}</Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{spell.description.split('.')[0]}.</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {description.split('.')[0]}.
+                        </p>
                         <div className="flex justify-between items-center mt-auto pt-2">
                           <TooltipProvider>
                             <Tooltip>
@@ -380,14 +372,24 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Классы</Label>
-                  <p>{selectedSpellDetails.classes.join(', ')}</p>
+                  <p>
+                    {Array.isArray(selectedSpellDetails.classes) 
+                      ? selectedSpellDetails.classes.join(', ') 
+                      : selectedSpellDetails.classes || 'Н/Д'}
+                  </p>
                 </div>
               </div>
               
               <div>
                 <Label className="text-muted-foreground">Описание</Label>
                 <ScrollArea className="h-[200px] w-full mt-2 pr-4">
-                  <p className="text-sm whitespace-pre-line">{selectedSpellDetails.description}</p>
+                  <p className="text-sm whitespace-pre-line">
+                    {typeof selectedSpellDetails.description === 'string' 
+                      ? selectedSpellDetails.description 
+                      : Array.isArray(selectedSpellDetails.description) 
+                        ? selectedSpellDetails.description.join('\n') 
+                        : 'Нет описания'}
+                  </p>
                 </ScrollArea>
               </div>
               

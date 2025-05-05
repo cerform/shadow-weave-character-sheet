@@ -31,11 +31,19 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
     // Загрузка доступных подрас для выбранной расы
     if (character.race) {
       const raceData = races.find(r => r.name === character.race);
-      if (raceData && raceData.subraces && raceData.subraces.length > 0) {
-        setAvailableSubraces(raceData.subraces);
+      if (raceData && raceData.subRaces && raceData.subRaceDetails) {
+        // Преобразуем строки подрас в объекты с описаниями
+        const subraceObjects = raceData.subRaces.map(subraceName => {
+          const details = raceData.subRaceDetails[subraceName] || {};
+          return {
+            name: subraceName,
+            description: details.description || `Подраса ${subraceName}`
+          };
+        });
+        setAvailableSubraces(subraceObjects);
         
         // Если подраса не была выбрана или не соответствует текущей расе, сбрасываем её
-        if (!selectedSubrace || !raceData.subraces.some(sr => sr.name === selectedSubrace)) {
+        if (!selectedSubrace || !raceData.subRaces.some(sr => sr === selectedSubrace)) {
           setSelectedSubrace('');
           updateCharacter({ subrace: '' });
         }

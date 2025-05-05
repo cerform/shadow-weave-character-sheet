@@ -20,11 +20,12 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[] | undefined)
     if (typeof spell === 'string') {
       // Создаем базовый объект CharacterSpell из строки
       return {
+        id: `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: spell,
         level: 0, // По умолчанию заговор
         description: '',
         // Добавляем другие обязательные поля с дефолтными значениями
-        school: '',
+        school: 'Универсальная',
         castingTime: '1 действие',
         range: 'Касание',
         components: '',
