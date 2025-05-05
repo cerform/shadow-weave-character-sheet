@@ -21,6 +21,7 @@ import HomeButton from "@/components/navigation/HomeButton";
 // Configuration
 import { steps } from "@/config/characterCreationSteps";
 import { ABILITY_SCORE_CAPS } from "@/types/character";
+import { races } from "@/data/races";
 
 const CharacterCreationPage = () => {
   const navigate = useNavigate();
@@ -35,6 +36,19 @@ const CharacterCreationPage = () => {
   // Расчет очков характеристик с учетом уровня
   const [adjustedAbilityScorePoints, setAdjustedAbilityScorePoints] = useState<number>(baseAbilityScorePoints);
   
+  // Проверяем наличие подрас для выбранной расы
+  const [hasSubraces, setHasSubraces] = useState<boolean>(false);
+  
+  // Обновляем флаг наличия подрас при изменении расы
+  useEffect(() => {
+    if (character.race) {
+      const raceData = races.find(r => r.name === character.race);
+      setHasSubraces(!!(raceData?.subraces && raceData.subraces.length > 0));
+    } else {
+      setHasSubraces(false);
+    }
+  }, [character.race]);
+  
   // Обновляем количество очков характеристик при изменении уровня
   useEffect(() => {
     const calculatedPoints = getAbilityScorePointsByLevel(baseAbilityScorePoints);
@@ -42,9 +56,10 @@ const CharacterCreationPage = () => {
     console.log(`Уровень: ${character.level}, доступные очки: ${calculatedPoints}`);
   }, [character.level, baseAbilityScorePoints, getAbilityScorePointsByLevel]);
   
-  // Обновляем конфигурацию хука useCreationStep с актуальной информацией о классе
+  // Обновляем конфигурацию хука useCreationStep с актуальной информацией о классе и подрасах
   const { currentStep, nextStep, prevStep, setCurrentStep, visibleSteps } = useCreationStep({
-    isMagicClass: isMagicClass()
+    isMagicClass: isMagicClass(),
+    hasSubraces: hasSubraces
   });
 
   // Определяем максимальное значение для характеристик на основе уровня
@@ -103,7 +118,7 @@ const CharacterCreationPage = () => {
 
         <div className="mb-8">
           <CreationStepDisplay 
-            steps={steps} 
+            steps={visibleSteps} 
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
             isMagicClass={isMagicClass()}

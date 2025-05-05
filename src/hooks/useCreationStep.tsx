@@ -4,6 +4,7 @@ import { steps, getCharacterSteps, getNextStepID, getPrevStepID } from '@/config
 
 interface UseCreationStepConfig {
   isMagicClass?: boolean;
+  hasSubraces?: boolean;
   characterClass?: string;
   character?: any;
 }
@@ -13,7 +14,8 @@ export const useCreationStep = (config?: UseCreationStepConfig) => {
   
   // Получаем отфильтрованные шаги на основе текущей конфигурации
   const visibleSteps = getCharacterSteps({
-    isMagicClass: config?.isMagicClass
+    isMagicClass: config?.isMagicClass,
+    hasSubraces: config?.hasSubraces
   });
 
   // Переход к следующему шагу с учетом фильтрации

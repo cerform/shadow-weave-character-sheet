@@ -3,64 +3,77 @@ export const steps = [
   {
     id: 0,
     name: "Раса",
-    description: "Выбор расы и подрасы персонажа"
+    description: "Выбор расы персонажа"
   },
   {
     id: 1,
+    name: "Подраса",
+    description: "Выбор подрасы персонажа, если доступно",
+    optional: true,
+    onlyFor: "hasSubraces"
+  },
+  {
+    id: 2,
     name: "Класс",
     description: "Выбор класса и специализации персонажа"
   },
   {
-    id: 2,
+    id: 3,
     name: "Уровень",
     description: "Выбор уровня и мультиклассирование"
   },
   {
-    id: 3,
+    id: 4,
     name: "Характеристики",
     description: "Распределение базовых характеристик"
   },
   {
-    id: 4,
+    id: 5,
     name: "Предыстория",
     description: "Выбор предыстории персонажа"
   },
   {
-    id: 5,
+    id: 6,
     name: "Здоровье",
     description: "Расчет очков здоровья персонажа"
   },
   {
-    id: 6,
+    id: 7,
     name: "Снаряжение",
     description: "Выбор начального снаряжения"
   },
   {
-    id: 7,
+    id: 8,
     name: "Детали",
     description: "Внешность, личность и связи"
   },
   {
-    id: 8,
+    id: 9,
     name: "Заклинания",
     description: "Выбор заклинаний для заклинателей",
     optional: true,
     onlyFor: "magic"
   },
   {
-    id: 9,
+    id: 10,
     name: "Завершение",
     description: "Проверка и финализация персонажа"
   }
 ];
 
 // Функция для получения видимых шагов на основе фильтрации
-export const getCharacterSteps = (config?: { isMagicClass?: boolean }) => {
+export const getCharacterSteps = (config?: { isMagicClass?: boolean, hasSubraces?: boolean }) => {
   return steps.filter(step => {
     // Фильтруем шаги заклинаний для немагических классов
-    if (step.id === 8 && step.onlyFor === "magic" && config?.isMagicClass === false) {
+    if (step.id === 9 && step.onlyFor === "magic" && config?.isMagicClass === false) {
       return false;
     }
+    
+    // Фильтруем шаг подрасы, если у выбранной расы нет подрас
+    if (step.id === 1 && step.onlyFor === "hasSubraces" && config?.hasSubraces === false) {
+      return false;
+    }
+    
     return true;
   });
 };

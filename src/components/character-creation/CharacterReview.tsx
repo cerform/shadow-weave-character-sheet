@@ -1,280 +1,174 @@
 
 import React, { useState } from 'react';
+import { Character } from '@/types/character';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import type { CharacterSheet, CharacterSpell } from "@/utils/characterImports";
-import { setCharacter } from '@/services/database';
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from 'react-router-dom';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { ArrowLeft, Check, Download, Eye } from 'lucide-react';
+import NavigationButtons from './NavigationButtons';
 
 interface CharacterReviewProps {
-  character: CharacterSheet;
+  character: Character;
   prevStep: () => void;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  updateCharacter: (updates: Partial<Character>) => void;
   setCurrentStep: (step: number) => void;
 }
 
 const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, updateCharacter, setCurrentStep }) => {
-  const { toast } = useToast();
-  const { currentUser } = useAuth();
+  const { saveCurrentCharacter } = useCharacter();
   const navigate = useNavigate();
-  const { setCharacter: setContextCharacter } = useCharacter();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveCharacter = async () => {
-    setIsSaving(true);
     try {
-      if (!currentUser) {
-        toast({
-          title: "Ошибка",
-          description: "Необходимо войти в аккаунт, чтобы сохранить персонажа.",
-          variant: "destructive",
-        });
-        navigate('/auth');
-        return;
-      }
-
-      // Ensure the character has a userId
-      if (!character.userId) {
-        updateCharacter({ userId: currentUser.uid });
-      }
-
-      // Ensure the character has an ID
-      if (!character.id) {
-        updateCharacter({ id: Date.now().toString() });
-      }
-
-      // Очистка полей с undefined перед сохранением
-      const cleanCharacter = { ...character };
+      setIsSaving(true);
+      await saveCurrentCharacter();
+      toast.success('Персонаж успешно сохранен');
       
-      // Исправление проблемы с abilityPointsUsed
-      if (cleanCharacter.abilityPointsUsed === undefined) {
-        delete cleanCharacter.abilityPointsUsed;
-      }
-      
-      // Очищаем другие возможные undefined поля
-      Object.keys(cleanCharacter).forEach(key => {
-        if (cleanCharacter[key] === undefined) {
-          delete cleanCharacter[key];
-        }
-      });
-
-      // Save the character to Firestore
-      await setCharacter(cleanCharacter);
-
-      // Update the character context
-      setContextCharacter(cleanCharacter);
-
-      toast({
-        title: "Успех",
-        description: "Персонаж успешно сохранен!",
-      });
-
-      navigate('/sheet');
-    } catch (error: any) {
-      console.error("Ошибка при сохранении персонажа:", error);
-      toast({
-        title: "Ошибка",
-        description: `Не удалось сохранить персонажа: ${error.message || 'Неизвестная ошибка'}`,
-        variant: "destructive",
-      });
+      // Предлагаем перейти в режим OBS для дальнейшего использования
+      navigate('/sheet?view=obs');
+    } catch (error) {
+      console.error('Ошибка при сохранении персонажа:', error);
+      toast.error('Не удалось сохранить персонажа');
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleViewCharacter = () => {
+    navigate('/sheet');
+  };
+
+  const exportCharacter = () => {
+    const characterData = JSON.stringify(character, null, 2);
+    const blob = new Blob([characterData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${character.name || 'character'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Персонаж экспортирован в JSON файл');
+  };
+
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold">Завершение создания персонажа</h2>
+        <p className="text-muted-foreground mt-2">
+          Проверьте информацию о персонаже перед сохранением
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Обзор персонажа</CardTitle>
-          <CardDescription>Просмотрите детали вашего персонажа перед сохранением.</CardDescription>
+          <CardTitle>Основная информация</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="flex items-center space-x-4 p-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${character.name}`} />
-                  <AvatarFallback>{character.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h4 className="font-semibold">{character.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {character.race}, {character.class}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Уровень</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.level}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Раса</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.race}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Класс</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.class}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Сила</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.strength}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Ловкость</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.dexterity}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Телосложение</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.constitution}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Интеллект</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.intelligence}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Мудрость</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.wisdom}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Харизма</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.abilities?.charisma}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Предыстория</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.background}
-                </p>
-              </CardContent>
-            </Card>
-
-             <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Мировоззрение</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.alignment}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Очки здоровья (HP)</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.maxHp}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary/20">
-              <CardContent className="space-y-1 p-4">
-                <h4 className="font-semibold">Имя игрока</h4>
-                <p className="text-sm text-muted-foreground">
-                  {character.playerName || 'Не указано'}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {character.spells && character.spells.length > 0 && (
-            <>
-              <Separator />
-              <Card className="border-2 border-primary/20">
-                <CardHeader>
-                  <CardTitle>Заклинания</CardTitle>
-                  <CardDescription>Список выбранных заклинаний</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-1 p-4">
-                  {character.spells.map((spell, index) => (
-                    <Badge key={index} variant="secondary">
-                      {typeof spell === 'string' ? spell : spell.name}
-                    </Badge>
-                  ))}
-                </CardContent>
-              </Card>
-            </>
-          )}
+        <CardContent>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <dt className="text-sm text-muted-foreground">Имя:</dt>
+              <dd className="font-medium">{character.name || 'Не указано'}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-sm text-muted-foreground">Раса:</dt>
+              <dd className="font-medium">{character.race} {character.subrace ? `(${character.subrace})` : ''}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-sm text-muted-foreground">Класс:</dt>
+              <dd className="font-medium">{character.className} {character.subclass ? `(${character.subclass})` : ''}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-sm text-muted-foreground">Уровень:</dt>
+              <dd className="font-medium">{character.level}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-sm text-muted-foreground">Предыстория:</dt>
+              <dd className="font-medium">{character.background || 'Не указана'}</dd>
+            </div>
+          </dl>
         </CardContent>
       </Card>
 
-      <div className="flex justify-between">
-        <Button variant="secondary" onClick={prevStep}>
-          Назад
+      <Card>
+        <CardHeader>
+          <CardTitle>Характеристики</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">СИЛ</div>
+              <div className="text-xl font-bold">{character.abilities?.strength || '-'}</div>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">ЛОВ</div>
+              <div className="text-xl font-bold">{character.abilities?.dexterity || '-'}</div>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">ТЕЛ</div>
+              <div className="text-xl font-bold">{character.abilities?.constitution || '-'}</div>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">ИНТ</div>
+              <div className="text-xl font-bold">{character.abilities?.intelligence || '-'}</div>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">МДР</div>
+              <div className="text-xl font-bold">{character.abilities?.wisdom || '-'}</div>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <div className="text-sm text-muted-foreground">ХАР</div>
+              <div className="text-xl font-bold">{character.abilities?.charisma || '-'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col space-y-4">
+        <Button 
+          onClick={handleSaveCharacter} 
+          className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+          disabled={isSaving}
+        >
+          <Check className="h-5 w-5" />
+          {isSaving ? 'Сохранение...' : 'Сохранить и перейти в режим OBS'}
         </Button>
-        <Button onClick={handleSaveCharacter} disabled={isSaving}>
-          {isSaving ? "Сохранение..." : "Сохранить персонажа"}
+        
+        <div className="grid grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            onClick={handleViewCharacter}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-5 w-5" />
+            Открыть лист персонажа
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={exportCharacter}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-5 w-5" />
+            Экспортировать в JSON
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <Button 
+          variant="outline" 
+          onClick={prevStep} 
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Вернуться назад
         </Button>
       </div>
     </div>

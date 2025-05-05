@@ -25,6 +25,7 @@ interface CreationStepDisplayProps {
   currentStep: number;
   setCurrentStep: (step: number) => void;
   isMagicClass?: boolean;
+  hasSubraces?: boolean;
 }
 
 const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
@@ -32,14 +33,10 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
   currentStep,
   setCurrentStep,
   isMagicClass = false,
+  hasSubraces = false,
 }) => {
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-
-  // Получаем видимые шаги с учетом фильтрации
-  const visibleSteps = getCharacterSteps({
-    isMagicClass
-  });
 
   return (
     <div className="relative w-full mb-8">
@@ -48,7 +45,7 @@ const CreationStepDisplay: React.FC<CreationStepDisplayProps> = ({
       
       {/* Шаги */}
       <div className="flex justify-between relative z-10">
-        {visibleSteps.map((step, index) => {
+        {steps.map((step, index) => {
           // Вычисляем, является ли шаг активным или завершенным
           const isActive = step.id === currentStep;
           const isCompleted = step.id < currentStep;

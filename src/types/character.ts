@@ -1,4 +1,3 @@
-
 // Define ability score caps to use across the application
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,
@@ -57,7 +56,7 @@ export interface Character {
   id?: string;
   userId?: string;
   name: string;
-  race: string;
+  race?: string;
   class?: string;
   className?: string;
   level: number;
@@ -171,7 +170,7 @@ export interface Character {
   };
   additionalClasses?: ClassLevel[];
   gender?: string;
-  subrace?: string;
+  subrace?: string; // Добавляем поле для подрасы
   abilityPointsUsed?: number;
   hitPoints?: {
     current: number;
