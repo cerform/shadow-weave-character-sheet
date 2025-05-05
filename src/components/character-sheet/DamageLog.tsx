@@ -115,7 +115,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{event.source || 'Неизвестный источник'}</span>
                     <span className={`font-semibold ${getEventClass(event.type)}`}>
-                      {formatAmount(event.type, event.amount)}
+                      {formatAmount(event.type, event.value || event.amount || 0)}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">

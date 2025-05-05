@@ -27,6 +27,12 @@ interface CharacterTabsProps {
 export const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) => {
   const [activeTab, setActiveTab] = useState("general");
   
+  // Mock onUpdate handler for components requiring it
+  const handleUpdate = (updates: any) => {
+    console.log('Character update requested:', updates);
+    // Реальный обработчик обновлений должен быть реализован в родительском компоненте
+  };
+  
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid grid-cols-4 md:grid-cols-8 mb-6">
@@ -84,11 +90,11 @@ export const CharacterTabs = ({ character, isDM = false }: CharacterTabsProps) =
       </TabsContent>
       
       <TabsContent value="spells">
-        <SpellsTab character={character} />
+        <SpellsTab character={character} onUpdate={handleUpdate} />
       </TabsContent>
       
       <TabsContent value="inventory">
-        <InventoryTab character={character} />
+        <InventoryTab character={character} onUpdate={handleUpdate} />
       </TabsContent>
       
       <TabsContent value="notes">

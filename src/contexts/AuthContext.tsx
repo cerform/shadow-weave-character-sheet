@@ -1,178 +1,114 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/services/firebase';
-import { isOfflineMode, setOfflineMode } from '@/utils/authHelpers';
-
-interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  isDM?: boolean;
-}
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 
 interface AuthContextProps {
   currentUser: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateUserProfile: (displayName: string) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
-  logout: () => Promise<void>;
-  updateUserProfile: (profile: Partial<User>) => Promise<void>;
-  enableOfflineMode: () => void;
-  disableOfflineMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
   currentUser: null,
-  isAuthenticated: false,
-  isLoading: true,
   login: async () => {},
   register: async () => {},
   logout: async () => {},
+  resetPassword: async () => {},
   updateUserProfile: async () => {},
-  enableOfflineMode: () => {},
-  disableOfflineMode: () => {}
+  isAuthenticated: false,
+  isLoading: true
 });
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Handle auth state changes
+
   useEffect(() => {
-    // Check if in offline mode
-    if (isOfflineMode()) {
-      // Create a mock user for offline mode
-      const offlineUser = {
-        uid: 'offline-user',
-        email: 'offline@example.com',
-        displayName: localStorage.getItem('offline-username') || 'Offline User',
-        photoURL: null,
-        isDM: true
-      };
-      
-      setCurrentUser(offlineUser);
-      setIsLoading(false);
-      return;
-    }
-    
-    // Otherwise listen for auth state changes
-    const unsubscribe = auth.onAuthStateChanged((user: any) => {
-      if (user) {
-        setCurrentUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          isDM: user.email?.includes('dm') || false
-        });
-      } else {
-        setCurrentUser(null);
-      }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
       setIsLoading(false);
     });
-    
+
     return unsubscribe;
   }, []);
-  
-  // Login function
-  const login = async (email: string, password: string) => {
+
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error('Ошибка при входе:', error);
       throw error;
     }
   };
-  
-  // Register function
-  const register = async (email: string, password: string, displayName: string) => {
+
+  const register = async (email: string, password: string): Promise<void> => {
     try {
-      await auth.createUserWithEmailAndPassword(email, password);
-      // Update profile
-      await updateUserProfile({ displayName });
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.error('Error registering:', error);
+      console.error('Ошибка при регистрации:', error);
       throw error;
     }
   };
-  
-  // Logout function
-  const logout = async () => {
+
+  const logout = async (): Promise<void> => {
     try {
-      await auth.signOut();
-      // Clear local auth data
-      localStorage.removeItem('currentUser');
-      // Redirect to home
-      window.location.href = '/';
+      await signOut(auth);
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Ошибка при выходе:', error);
       throw error;
     }
   };
-  
-  // Update user profile
-  const updateUserProfile = async (profile: Partial<User>) => {
+
+  const resetPassword = async (email: string): Promise<void> => {
     try {
-      if (isOfflineMode()) {
-        // Update offline user
-        if (profile.displayName) {
-          localStorage.setItem('offline-username', profile.displayName);
-        }
-        
-        setCurrentUser(curr => curr ? { ...curr, ...profile } : null);
-        return;
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Ошибка при сбросе пароля:', error);
+      throw error;
+    }
+  };
+
+  const updateUserProfile = async (displayName: string): Promise<void> => {
+    try {
+      if (currentUser) {
+        await updateProfile(currentUser, { displayName });
       }
-      
-      // Update auth user profile
-      // This would typically use updateProfile from firebase auth
-      // For now just update the local state
-      setCurrentUser(curr => curr ? { ...curr, ...profile } : null);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Ошибка при обновлении профиля:', error);
       throw error;
     }
   };
-  
-  // Enable offline mode
-  const enableOfflineMode = () => {
-    setOfflineMode(true);
-    
-    // Create an offline user
-    const offlineUser = {
-      uid: 'offline-user',
-      email: 'offline@example.com',
-      displayName: localStorage.getItem('offline-username') || 'Offline User',
-      photoURL: null,
-      isDM: true
-    };
-    
-    setCurrentUser(offlineUser);
-  };
-  
-  // Disable offline mode
-  const disableOfflineMode = () => {
-    setOfflineMode(false);
-    setCurrentUser(null); // Reset user, will trigger auth check
-  };
-  
-  const value = {
+
+  const value: AuthContextProps = {
     currentUser,
-    isAuthenticated: !!currentUser,
-    isLoading,
     login,
     register,
     logout,
+    resetPassword,
     updateUserProfile,
-    enableOfflineMode,
-    disableOfflineMode
+    isAuthenticated: !!currentUser,
+    isLoading
   };
-  
+
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

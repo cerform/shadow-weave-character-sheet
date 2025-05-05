@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, X, ChevronDown, ChevronUp, Sparkles, Bookmark, BookmarkCheck, Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CharacterSpell } from '@/types/character';
+import { CharacterSpell, Character } from '@/types/character';
 
 interface SpellsTabProps {
-  character: any;
+  character: Character | null;
   onUpdate: (updates: any) => void;
 }
 
@@ -21,7 +21,7 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
   const [expandedSpells, setExpandedSpells] = useState<string[]>([]);
 
   // Преобразуем строки или объекты заклинаний в объекты CharacterSpell
-  const normalizeSpells = (spells: any[]): CharacterSpell[] => {
+  const normalizeSpells = (spells: any[] | undefined): CharacterSpell[] => {
     if (!spells || !Array.isArray(spells)) return [];
     
     return spells.map(spell => {
@@ -29,6 +29,12 @@ export const SpellsTab = ({ character, onUpdate }: SpellsTabProps) => {
         return {
           name: spell,
           level: 0,
+          school: "Универсальная",
+          castingTime: "1 действие",
+          range: "На себя",
+          components: "-",
+          duration: "Мгновенная",  
+          description: "Нет описания",
           prepared: false
         };
       }

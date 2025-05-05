@@ -3,37 +3,52 @@ import React, { useState } from 'react';
 import { Character } from '@/types/character';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from 'sonner';
 
 interface NotesTabProps {
   character: Character | null;
 }
 
 export const NotesTab: React.FC<NotesTabProps> = ({ character }) => {
-  const { toast } = useToast();
-  const [notes, setNotes] = useState(character?.notes || "");
+  const [notes, setNotes] = useState(character?.notes || '');
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
   
-  const handleSaveNotes = () => {
-    // Здесь будет логика сохранения заметок
-    toast({
-      title: "Заметки сохранены",
-      description: "Ваши заметки были успешно сохранены",
-    });
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotes(e.target.value);
+    setUnsavedChanges(true);
+  };
+  
+  const saveNotes = () => {
+    // В реальном приложении здесь будет логика сохранения заметок
+    // через контекст или API
+    toast.success('Заметки сохранены');
+    setUnsavedChanges(false);
   };
   
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Заметки персонажа</h2>
-        <Button onClick={handleSaveNotes}>Сохранить</Button>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Заметки</h2>
+        <Button 
+          onClick={saveNotes} 
+          disabled={!unsavedChanges}
+          variant={unsavedChanges ? "default" : "outline"}
+        >
+          Сохранить
+        </Button>
       </div>
       
-      <Textarea 
-        placeholder="Добавьте здесь заметки о вашем персонаже, важные события, напоминания и т.д."
-        className="min-h-[400px]"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
+      <Card>
+        <CardContent className="p-4">
+          <Textarea 
+            value={notes} 
+            onChange={handleNotesChange} 
+            className="min-h-[400px]"
+            placeholder="Введите заметки для вашего персонажа..."
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

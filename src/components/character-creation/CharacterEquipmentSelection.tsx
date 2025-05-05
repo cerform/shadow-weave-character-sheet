@@ -87,14 +87,36 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
     }
     
     setSelectedEquipment(newEquipment);
-    updateCharacter({ equipment: newEquipment });
+    
+    // Преобразуем выбранное снаряжение в формат, соответствующий текущему типу equipment
+    const formattedEquipment = formatEquipmentForUpdate(newEquipment);
+    updateCharacter({ equipment: formattedEquipment });
+  };
+  
+  // Преобразование массива строк в нужный формат в зависимости от текущей структуры
+  const formatEquipmentForUpdate = (equipmentItems: string[]) => {
+    if (!character.equipment || character.equipment.length === 0) {
+      // Если снаряжения нет, используем строковый формат
+      return equipmentItems;
+    }
+    
+    // Если текущий формат - массив объектов, сохраняем его
+    if (typeof character.equipment[0] === 'object' && character.equipment[0] !== null) {
+      return equipmentItems.map(name => ({ name, quantity: 1 }));
+    }
+    
+    // В противном случае используем строковый формат
+    return equipmentItems;
   };
   
   const addCustomItem = () => {
     if (customItem.trim() !== '') {
       const newEquipment = [...selectedEquipment, customItem.trim()];
       setSelectedEquipment(newEquipment);
-      updateCharacter({ equipment: newEquipment });
+      
+      // Преобразуем в нужный формат
+      const formattedEquipment = formatEquipmentForUpdate(newEquipment);
+      updateCharacter({ equipment: formattedEquipment });
       setCustomItem('');
     }
   };

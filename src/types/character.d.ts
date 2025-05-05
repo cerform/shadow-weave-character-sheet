@@ -35,9 +35,10 @@ export interface Character {
   proficiencyBonus?: number;
   savingThrows?: { [key: string]: boolean };
   skills?: { [key: string]: SkillProficiency };
+  savingThrowProficiencies?: { [key: string]: boolean }; // Added for AbilitiesTab
   
   // Equipment and resources
-  equipment?: { name: string; quantity: number }[];
+  equipment?: { name: string; quantity: number }[] | string[];
   money?: Money;
   
   // Character details
@@ -46,13 +47,14 @@ export interface Character {
   bonds?: string;
   flaws?: string;
   backstory?: string;
+  personalityTraits?: string; // Added for CharacterBackground
   
   // Spellcasting
   spellcastingAbility?: string;
   spellSaveDC?: number;
   spellAttackBonus?: number;
   spells?: CharacterSpell[];
-  spellSlots?: SpellSlots;
+  spellSlots?: { [level: string]: { total: number; used: number; max: number } };
   
   // Features and traits
   features?: Feature[];
@@ -67,7 +69,10 @@ export interface Character {
   
   // Custom fields
   notes?: string;
-  sorceryPoints?: number;
+  sorceryPoints?: {
+    current: number;
+    max: number;
+  };
   inspiration?: boolean;
   
   // Session specific
@@ -136,6 +141,7 @@ export interface SpellSlots {
   [level: string]: {
     total: number;
     used: number;
+    max: number;
   };
 }
 
@@ -175,7 +181,7 @@ export interface SpellData {
   components: string;
   duration: string;
   description: string;
-  prepared: boolean;
+  prepared?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
@@ -193,12 +199,14 @@ export interface CharacterSpell extends SpellData {
 
 // Define Hit Point Event for damage log
 export interface HitPointEvent {
-  type: "damage" | "healing" | "temporary";
+  type: "damage" | "healing" | "temporary" | "heal" | "tempHP" | "temp" | "death-save";
   value: number;
+  amount?: number; // Added for backward compatibility
   source?: string;
   timestamp: Date | number;
   critical?: boolean;
   description?: string;
+  id?: string;
 }
 
 // Define CharacterSheet type for compatibility with services
