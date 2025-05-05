@@ -11,7 +11,14 @@ interface IconOnlyNavigationProps {
 }
 
 const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSelector = false }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  
+  // Create a toggleTheme function since it's not provided by the context
+  const toggleTheme = () => {
+    // Switch between dark and default themes
+    const newTheme = theme === 'dark' ? 'default' : 'dark';
+    setTheme(newTheme);
+  };
   
   return (
     <div className="flex items-center gap-2">
