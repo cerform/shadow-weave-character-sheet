@@ -15,6 +15,7 @@ import SpellFilterPanel from './SpellFilterPanel';
 import SpellImportModal from './SpellImportModal';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { SpellData } from '@/types/spells';
+import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
@@ -47,9 +48,12 @@ const SpellBookViewer: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showImport, setShowImport] = useState(false);
 
+  // Преобразуем CharacterSpell[] в SpellData[]
+  const spellsData: SpellData[] = convertCharacterSpellsToSpellData(filteredSpells);
+
   // Группировка заклинаний по уровням для отображения на вкладках
   const spellsByLevel = allLevels.reduce((acc, level) => {
-    acc[level] = filteredSpells.filter(spell => spell.level === level);
+    acc[level] = spellsData.filter(spell => spell.level === level);
     return acc;
   }, {} as Record<number, SpellData[]>);
 
@@ -149,10 +153,10 @@ const SpellBookViewer: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredSpells.length > 0 ? (
+              {spellsData.length > 0 ? (
                 <ScrollArea className="h-[60vh] pr-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredSpells.map(spell => (
+                    {spellsData.map(spell => (
                       <Card 
                         key={spell.name} 
                         className="spell-card hover:bg-accent/10 transition-all cursor-pointer"

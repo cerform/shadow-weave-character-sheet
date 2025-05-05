@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 import { spells } from '@/data/spells';
 
 export const useSpellbook = () => {
@@ -27,7 +27,7 @@ export const useSpellbook = () => {
   }, [allSpells]);
 
   const allSchools = useMemo(() => {
-    const schools = new Set(allSpells.map(spell => spell.school));
+    const schools = new Set(allSpells.map(spell => spell.school || 'Универсальная'));
     return Array.from(schools).filter(Boolean).sort();
   }, [allSpells]);
 
@@ -57,7 +57,7 @@ export const useSpellbook = () => {
       }
 
       // Фильтр по школе
-      if (activeSchool.length > 0 && !activeSchool.includes(spell.school)) {
+      if (activeSchool.length > 0 && !activeSchool.includes(spell.school || 'Универсальная')) {
         return false;
       }
 
@@ -149,7 +149,8 @@ export const useSpellbook = () => {
       "Ограждение": "#3b82f6",
       "Иллюзия": "#ec4899",
       "Некромантия": "#6b7280",
-      "Вызов": "#0ea5e9"
+      "Вызов": "#0ea5e9",
+      "Универсальная": "#6b7280"
     };
     return colors[school] || "#6b7280";
   }, []);
