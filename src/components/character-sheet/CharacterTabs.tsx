@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SpellsTab } from './tabs/SpellsTab';
-import { AbilitiesTab } from './tabs/AbilitiesTab';
-import { CombatTab } from './tabs/CombatTab';
-import { FeaturesTab } from './tabs/FeaturesTab';
-import { BackgroundTab } from './tabs/BackgroundTab';
-import { EquipmentTab } from './tabs/EquipmentTab';
-import { NotesTab } from './tabs/NotesTab';
+import SpellsTab from './tabs/SpellsTab';
+import AbilitiesTab from './tabs/AbilitiesTab';
+import CombatTab from './tabs/CombatTab';
+import FeaturesTab from './tabs/FeaturesTab';
+import BackgroundTab from './tabs/BackgroundTab';
+import EquipmentTab from './tabs/EquipmentTab';
+import NotesTab from './tabs/NotesTab';
 import { Character } from '@/types/character';
 
 interface CharacterTabsProps {
@@ -60,3 +60,5 @@ export const CharacterTabs: React.FC<CharacterTabsProps> = ({ activeTab, setActi
     </Tabs>
   );
 };
+
+export default CharacterTabs;

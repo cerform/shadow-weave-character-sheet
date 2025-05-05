@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CharacterSheet } from '@/types/character.d';
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +17,26 @@ export const useLevelFeatures = (character: CharacterSheet) => {
   const [availableFeatures, setAvailableFeatures] = useState<LevelFeature[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
+  
+  // Добавляем недостающие состояния
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([
+    "Общий", "Эльфийский", "Дварфский", "Гномий", "Орочий", "Гоблинский", "Драконий", "Гигантский", "Глубинная речь"
+  ]);
+  const [availableSkills, setAvailableSkills] = useState<string[]>([
+    "Акробатика", "Атлетика", "Магия", "Обман", "История", "Проницательность", 
+    "Запугивание", "Расследование", "Медицина", "Природа", "Восприятие", 
+    "Выступление", "Убеждение", "Религия", "Ловкость рук", "Скрытность", "Выживание"
+  ]);
+  const [availableTools, setAvailableTools] = useState<string[]>([
+    "Инструменты ремесленника", "Инструменты кузнеца", "Инструменты пивовара", 
+    "Воровские инструменты", "Набор травника", "Набор целителя", "Музыкальный инструмент"
+  ]);
+  const [availableWeaponTypes, setAvailableWeaponTypes] = useState<string[]>([
+    "Простое оружие", "Воинское оружие", "Импровизированное оружие"
+  ]);
+  const [availableArmorTypes, setAvailableArmorTypes] = useState<string[]>([
+    "Легкая броня", "Средняя броня", "Тяжелая броня", "Щиты"
+  ]);
 
   // Эффект для определения доступных функций на текущем уровне персонажа
   useEffect(() => {
@@ -81,7 +100,7 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     if (requiredSubclass && !character.subclass) {
       toast({
         title: "Не выбран архетип",
-        description: `Для вашего класса на текущем уровне необходимо выбрать архетип. Нажмите на кнопку "Детали" в разделе Архетип.`,
+        description: `Для вашего класса на текущем уровне необходимо выб��ать архетип. Нажмите на кнопку "Детали" в разделе Архетип.`,
         variant: "destructive"
       });
     }
@@ -103,6 +122,57 @@ export const useLevelFeatures = (character: CharacterSheet) => {
       title: "Особенность выбрана",
       description: `Вы выбрали: ${value}`,
     });
+  };
+
+  // Добавляем обработчики для взаимодействия с выбором навыков и характеристик
+  const handleLanguageSelection = (language: string, selected: boolean) => {
+    // Обработка выбора языка
+    if (selected) {
+      toast({
+        title: "Язык выбран",
+        description: `Вы выбрали язык: ${language}`,
+      });
+    }
+  };
+
+  const handleSkillSelection = (skill: string, selected: boolean) => {
+    // Обработка выбора навыка
+    if (selected) {
+      toast({
+        title: "Навык выбран",
+        description: `Вы выбрали навык: ${skill}`,
+      });
+    }
+  };
+
+  const handleToolSelection = (tool: string, selected: boolean) => {
+    // Обработка выбора инструмента
+    if (selected) {
+      toast({
+        title: "Инструмент выбран",
+        description: `Вы выбрали инструмент: ${tool}`,
+      });
+    }
+  };
+
+  const handleWeaponTypeSelection = (weaponType: string, selected: boolean) => {
+    // Обработка выбора типа оружия
+    if (selected) {
+      toast({
+        title: "Тип оружия выбран",
+        description: `Вы выбрали тип оружия: ${weaponType}`,
+      });
+    }
+  };
+
+  const handleArmorTypeSelection = (armorType: string, selected: boolean) => {
+    // Обработка выбора типа брони
+    if (selected) {
+      toast({
+        title: "Тип брони выбран",
+        description: `Вы выбрали тип брони: ${armorType}`,
+      });
+    }
   };
 
   // Получаем уровень на котором становится доступен подкласс для выбранного класса
@@ -204,6 +274,17 @@ export const useLevelFeatures = (character: CharacterSheet) => {
     selectedFeatures,
     selectFeature,
     getHitDiceInfo,
-    getSubclassLevel
+    getSubclassLevel,
+    // Return the newly added properties
+    availableLanguages,
+    availableSkills,
+    availableTools,
+    availableWeaponTypes,
+    availableArmorTypes,
+    handleLanguageSelection,
+    handleSkillSelection,
+    handleToolSelection,
+    handleWeaponTypeSelection,
+    handleArmorTypeSelection
   };
 };

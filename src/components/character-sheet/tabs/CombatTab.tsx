@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Character } from '@/types/character';
 
 interface CombatTabProps {
@@ -75,3 +77,5 @@ export const CombatTab: React.FC<CombatTabProps> = ({ character, onUpdate }) => 
     </div>
   );
 };
+
+export default CombatTab;

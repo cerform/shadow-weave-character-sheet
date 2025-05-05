@@ -1,17 +1,19 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { SpellSelectionModal } from './SpellSelectionModal';
+import SpellSelectionModal from './SpellSelectionModal';
 import { SpellSlotsPopover } from './SpellSlotsPopover';
-import { Search, Plus, BookOpen, Settings } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Input } from "@/components/ui/input";
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { convertCharacterSpellToSpellData } from '@/utils/spellHelpers';
 
 interface SpellPanelProps {
   character: Character;
@@ -30,8 +32,34 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
     setIsModalOpen(!isModalOpen);
   };
 
+  // Helper function to safely handle character spells that may be strings or CharacterSpell objects
+  const getSpellName = (spell: string | CharacterSpell): string => {
+    if (typeof spell === 'string') {
+      return spell;
+    }
+    return spell.name;
+  };
+
+  // Helper function to convert spell to SpellData
+  const convertSpell = (spell: string | CharacterSpell): SpellData => {
+    if (typeof spell === 'string') {
+      return {
+        id: spell,
+        name: spell,
+        level: 0,
+        school: 'Unknown',
+        castingTime: '1 action',
+        range: '30 feet',
+        components: '',
+        duration: 'Instantaneous',
+        description: ''
+      };
+    }
+    return convertCharacterSpellToSpellData(spell);
+  };
+
   const filteredSpells = character.spells?.filter(spell =>
-    spell.name.toLowerCase().includes(searchTerm.toLowerCase())
+    getSpellName(spell).toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const renderSpellSlotUse = (character: Character, level: number) => {
@@ -85,13 +113,13 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
           <div className="flex flex-col space-y-2">
             {filteredSpells.map((spell) => (
               <Button
-                key={spell.name}
+                key={getSpellName(spell)}
                 variant="secondary"
                 className="w-full justify-start"
-                onClick={() => onSpellClick && onSpellClick(spell)}
+                onClick={() => onSpellClick && onSpellClick(convertSpell(spell))}
                 style={{ color: currentTheme.textColor }}
               >
-                {spell.name}
+                {getSpellName(spell)}
               </Button>
             ))}
           </div>
@@ -104,7 +132,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
         )}
       </CardFooter>
       <SpellSelectionModal
-        isOpen={isModalOpen}
+        open={isModalOpen}
         onClose={toggleModal}
         character={character}
         onUpdate={onUpdate}

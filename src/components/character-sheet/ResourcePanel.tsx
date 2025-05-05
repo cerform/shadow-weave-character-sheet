@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Heart, Shield, Minus, Plus, Skull, RefreshCw } from 'lucide-react';
 
 interface ResourcePanelProps {
   character: Character | null;
