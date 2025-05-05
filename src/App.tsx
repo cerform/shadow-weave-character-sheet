@@ -10,6 +10,13 @@ import { SocketProvider } from './contexts/SocketContext';
 import { UserThemeProvider } from './contexts/UserThemeContext';
 import './App.css';
 
+// Импорт тем
+import { themes } from '@/lib/themes';
+// Делаем темы доступными глобально
+if (typeof window !== 'undefined') {
+  window.themes = themes;
+}
+
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
@@ -38,14 +45,22 @@ const App = () => {
     document.documentElement.setAttribute('data-theme', savedTheme);
 
     // Проверяем наличие тем перед их использованием
-    const themes = window.themes || {};
+    const themesObj = window.themes || {};
     
     // Применяем стили для текущей темы
-    const themeStyles = themes[savedTheme as keyof typeof themes] || { accent: '#6366f1', glow: 'rgba(99, 102, 241, 0.5)', textColor: '#ffffff', mutedTextColor: '#9ca3af' };
+    const themeStyles = themesObj[savedTheme as keyof typeof themesObj] || { 
+      accent: '#6366f1', 
+      glow: 'rgba(99, 102, 241, 0.5)', 
+      textColor: '#ffffff', 
+      mutedTextColor: '#9ca3af' 
+    };
+    
     document.documentElement.style.setProperty('--theme-accent', themeStyles.accent);
     document.documentElement.style.setProperty('--theme-glow', themeStyles.glow);
     document.documentElement.style.setProperty('--theme-text-color', themeStyles.textColor);
     document.documentElement.style.setProperty('--theme-muted-text-color', themeStyles.mutedTextColor);
+    
+    console.log('Тема инициализирована:', savedTheme, themeStyles);
   }, []);
 
   return (
@@ -90,8 +105,3 @@ const App = () => {
 };
 
 export default App;
-
-// Импорт тем
-import { themes } from '@/lib/themes';
-// Делаем темы доступными глобально
-window.themes = themes;

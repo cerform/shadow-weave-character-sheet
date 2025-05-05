@@ -15,9 +15,14 @@ const Index = () => {
   const { theme } = useTheme();
   
   // Безопасно получаем тему
-  const currentTheme = theme && themes[theme as keyof typeof themes] 
-    ? themes[theme as keyof typeof themes] 
-    : themes.default;
+  let currentTheme = themes.default; // Устанавливаем дефолтное значение
+  try {
+    if (theme && themes[theme as keyof typeof themes]) {
+      currentTheme = themes[theme as keyof typeof themes];
+    }
+  } catch (error) {
+    console.error('Ошибка при получении темы:', error);
+  }
   
   // Адаптируем Firebase User для получения правильных полей
   const adaptedUser = currentUser ? adaptFirebaseUser(currentUser) : null;
@@ -123,7 +128,7 @@ const Index = () => {
     <div 
       className="min-h-screen bg-gradient-to-b from-background to-background/80"
       style={{ 
-        backgroundImage: `url(/lovable-uploads/20c9f9c5-095b-4e58-95ab-fe1777117a9e.png)`, 
+        backgroundImage: `url(/lovable-uploads/d90bff13-0557-4a8e-b175-08ef1d5bffa8.png)`, 
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundBlendMode: 'overlay'
@@ -141,8 +146,8 @@ const Index = () => {
             <h1 
               className="text-4xl md:text-5xl font-extrabold mb-4"
               style={{ 
-                color: currentTheme.accent, 
-                textShadow: `0 0 10px ${currentTheme.glow}` 
+                color: currentTheme.accent || '#6366f1', 
+                textShadow: `0 0 10px ${currentTheme.glow || 'rgba(99, 102, 241, 0.5)'}` 
               }}
             >
               D&D 5e Лист персонажа
