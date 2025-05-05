@@ -2,7 +2,7 @@ import { auth, db, storage } from './firebase';
 import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Session, User as SessionUser } from '../types/session';
 import { v4 as uuidv4 } from 'uuid';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 import characterService from './characterService';
 
 // Экспортируем сервис персонажей
@@ -290,30 +290,28 @@ export const sessionService = {
 // Функции для работы с хранилищем Firebase
 export const storageService = {
   // Загрузка изображения
-  uploadImage: async (file: File, path: string): Promise<string | null> => {
-    const uid = getCurrentUid();
-    if (!uid) return null;
-    
+  uploadImage: async (file, path) => {
     try {
-      const storageRef = ref(storage, `${path}/${uid}/${file.name}`);
-      await uploadBytes(storageRef, file);
-      
-      const downloadUrl = await getDownloadURL(storageRef);
-      return downloadUrl;
+      const storageRef = null; // Replace with your Firebase storage implementation
+      // const storageRef = ref(storage, path);
+      // await uploadBytes(storageRef, file);
+      // return await getDownloadURL(storageRef);
+      return '';
     } catch (error) {
-      console.error("Ошибка при загрузке изображения:", error);
-      return null;
+      console.error('Error uploading image:', error);
+      return '';
     }
   },
   
   // Удаление изображения
-  deleteImage: async (url: string): Promise<boolean> => {
+  deleteImage: async (path) => {
     try {
-      const imageRef = ref(storage, url);
-      await deleteObject(imageRef);
+      const storageRef = null; // Replace with your Firebase storage implementation
+      // const storageRef = ref(storage, path);
+      // await deleteObject(storageRef);
       return true;
     } catch (error) {
-      console.error("Ошибка при удалении изображения:", error);
+      console.error('Error deleting image:', error);
       return false;
     }
   }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -153,6 +152,34 @@ const SpellBookViewer: React.FC = () => {
       </SheetContent>
     </Sheet>
   );
+
+  // Fix for type conversion errors
+  const convertToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+    return spells.map(spell => ({
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school || 'Неизвестная', // Ensure school is never undefined
+      description: spell.description,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+      higherLevels: spell.higherLevels,
+      classes: spell.classes,
+      prepared: spell.prepared || false,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material
+    }));
+  };
+
+  // Use the conversion function where needed
+  const handleSetSpellsData = (spells: CharacterSpell[]) => {
+    setSpellsData(convertToSpellData(spells));
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">

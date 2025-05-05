@@ -11,7 +11,7 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { firebaseAuth } from '@/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Character as SessionCharacter } from '@/types/session';
-import { Character } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 
 const JoinSessionPage = () => {
   const navigate = useNavigate();
@@ -177,7 +177,7 @@ const JoinSessionPage = () => {
         </Card>
         
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Код сессии предоставляет Мастер Подземелий</p>
+          <p>Код сес��ии предоставляет Мастер Подземелий</p>
         </div>
       </div>
     </div>

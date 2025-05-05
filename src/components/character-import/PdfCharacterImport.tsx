@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FileUp, Loader2, AlertCircle, Info } from 'lucide-react';
 import { extractCharacterDataFromPdf, convertExtractedDataToCharacter } from '@/utils/pdfImporter';
 import { useToast } from '@/components/ui/use-toast';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 

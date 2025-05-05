@@ -1,6 +1,6 @@
-
 import React, { useState, useContext } from 'react';
-import { Character, CharacterContext } from '@/contexts/CharacterContext';
+import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -29,7 +29,7 @@ interface CharacterSheetProps {
 }
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false }) => {
-  const { updateCharacter } = useContext(CharacterContext);
+  const { updateCharacter } = useCharacter();
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [showCombatDialog, setShowCombatDialog] = useState(false);
   const [sessionCode, setSessionCode] = useState('');
@@ -239,9 +239,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
           {/* Левая панель с ресурсами вверху */}
           <div className="md:col-span-3 space-y-4">
             <ResourcePanel 
-              currentHp={character?.currentHp || 0}
-              maxHp={character?.maxHp || 0}
-              onHpChange={handleHpChange}
+              character={character}
+              onUpdate={updateCharacter}
             />
             
             <StatsPanel character={character} />
@@ -256,6 +255,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, isDM = false
             <CharacterTabs 
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 
+              character={character}
+              onUpdate={updateCharacter}
             />
           </div>
           

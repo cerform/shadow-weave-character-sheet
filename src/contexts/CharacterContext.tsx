@@ -1,16 +1,17 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { Character } from '@/types/character';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
+import { Character, CharacterSpell, CharacterSheet } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/services/firebase';
 import characterService from '@/services/characterService';
 import { isOfflineMode } from '@/utils/authHelpers';
-import { CharacterSpell } from '@/types/character';
 
 interface CharacterContextProps {
   character: Character | null;
   setCharacter: (character: Character | null) => void;
   loading: boolean;
   updateCharacter: (updates: Partial<Character>) => void;
+  createNewCharacter?: (initialData: Omit<Character, 'id'>) => Promise<Character>;
+  deleteCharacter?: (characterId: string) => Promise<void>;
 }
 
 // Создаем контекст персонажа с значениями по умолчанию
@@ -22,6 +23,9 @@ const defaultCharacterContext: CharacterContextProps = {
 };
 
 export const CharacterContext = createContext<CharacterContextProps>(defaultCharacterContext);
+
+// Hook для использования контекста персонажа
+export const useCharacter = () => useContext(CharacterContext);
 
 // Создаем провайдер контекста персонажа
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,7 +45,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             prepared: false
           } as CharacterSpell;
         }
-        return spell;
+        return {
+          ...spell,
+          prepared: spell.prepared ?? false
+        };
       });
       
       return {
@@ -180,7 +187,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Если пользователь авторизован, также сохраняем в Firestore
     if (!isOfflineMode() && normalizedCharacter.userId) {
       try {
-        await characterService.saveCharacter(normalizedCharacter);
+        await characterService.saveCharacter(normalizedCharacter as unknown as CharacterSheet);
       } catch (error) {
         console.error('Ошибка при сохранении персонажа в Firestore:', error);
       }
@@ -223,7 +230,15 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Значения для контекста
   const contextValue = {
     character,
-    setCharacter: updateCharacter, // Используем нормализованную версию
+    setCharacter: (newCharacter: Character | null) => {
+      if (newCharacter) {
+        // Нормализуем заклинания перед установкой
+        const normalizedCharacter = normalizeCharacterSpells(newCharacter);
+        setCharacter(normalizedCharacter);
+      } else {
+        setCharacter(null);
+      }
+    },
     loading,
     updateCharacter: (updates: Partial<Character>) => {
       if (!character) return;
@@ -242,7 +257,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 prepared: false
               } as CharacterSpell;
             }
-            return spell;
+            return {
+              ...spell,
+              prepared: spell.prepared ?? false
+            };
           })
         };
       }
@@ -262,7 +280,18 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Если онлайн и есть userId, также сохраняем в Firestore
       if (!isOfflineMode() && updatedCharacter.userId) {
-        characterService.saveCharacter(updatedCharacter)
+        // Преобразуем для совместимости с CharacterSheet
+        const characterSheetData = {
+          ...updatedCharacter,
+          proficiencies: {
+            languages: updatedCharacter.languages || [],
+            weapons: [],
+            armor: [],
+            tools: []
+          }
+        } as unknown as CharacterSheet;
+        
+        characterService.saveCharacter(characterSheetData)
           .catch(error => {
             console.error('Ошибка при сохранении персонажа в Firestore:', error);
           });
@@ -279,3 +308,6 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     </CharacterContext.Provider>
   );
 };
+
+// Для обратной совместимости экспортируем Character и CharacterSpell из types/character.d.ts
+export { Character, CharacterSpell };

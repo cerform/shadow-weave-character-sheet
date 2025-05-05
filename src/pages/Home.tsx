@@ -522,7 +522,7 @@ const Home = () => {
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Download className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm font-medium">Перетащите JSON файл персонажа сюда</p>
+                      <p className="text-sm font-medium">Перетащите JSON файл персо��ажа сюда</p>
                       <p className="text-xs text-muted-foreground">или нажмите, чтобы выбрать файл</p>
                       <input
                         type="file"
@@ -795,7 +795,7 @@ const Home = () => {
                   <span>Книга заклинаний</span>
                 </CardTitle>
                 <CardDescription>
-                  Просмотр и поиск заклинаний D&D 5e
+                  Просмотр и поиск заклина��ий D&D 5e
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

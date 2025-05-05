@@ -37,11 +37,11 @@ export const useSpellbook = (): UseSpellbookReturn => {
   useEffect(() => {
     // Преобразуем в SpellData[] для совместимости
     if (allSpells && allSpells.length > 0) {
-      const convertedSpells: SpellData[] = allSpells.map(spell => ({
+      const spellDataArray: SpellData[] = allSpells.map(spell => ({
         ...convertToSpellData(spell),
         prepared: spell.prepared || false // Убедимся, что prepared существует
       }));
-      setFilteredSpells(convertedSpells);
+      setFilteredSpells(spellDataArray);
     } else {
       console.error('Не удалось загрузить заклинания из модуля');
       setFilteredSpells([]);
@@ -72,12 +72,12 @@ export const useSpellbook = (): UseSpellbookReturn => {
     }
 
     // Преобразуем в SpellData[] для совместимости
-    const convertedSpells: SpellData[] = result.map(spell => ({
+    const spellDataArray: SpellData[] = result.map(spell => ({
       ...convertToSpellData(spell),
       prepared: spell.prepared || false // Убедимся, что prepared существует
     }));
     
-    setFilteredSpells(convertedSpells);
+    setFilteredSpells(spellDataArray);
   }, [searchTerm, activeLevel, activeSchool, activeClass]);
 
   const handleOpenSpell = (spell: SpellData) => {

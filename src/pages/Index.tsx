@@ -31,7 +31,8 @@ const Index = () => {
   const [deletingCharacterId, setDeletingCharacterId] = useState<string | null>(null);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
-
+  const { character } = useCharacter();
+  
   // Загружаем персонажей пользователя только при монтировании компонента или изменении авторизации
   useEffect(() => {
     const fetchCharacters = async () => {

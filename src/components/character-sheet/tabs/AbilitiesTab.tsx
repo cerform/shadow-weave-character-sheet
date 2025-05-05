@@ -1,12 +1,12 @@
 import React from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from "@/components/ui/badge";
 
-export const AbilitiesTab = () => {
-  const { character } = useCharacter();
+export const AbilitiesTab: React.FC = () => {
+  const { character, updateCharacter } = useCharacter();
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
@@ -99,7 +99,8 @@ export const AbilitiesTab = () => {
 
   // Внутри render компонента:
   return (
-    <div className="space-y-6 pb-6">
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Характеристики</h2>
       {renderProficiencyBonusCard()}
       
       <Card 

@@ -1,12 +1,11 @@
-
 import React from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { CharacterContext, useCharacter } from '@/contexts/CharacterContext';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-export const FeaturesTab = () => {
-  const { character } = useCharacter();
+export const FeaturesTab: React.FC = () => {
+  const { character, updateCharacter } = useCharacter();
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
@@ -60,9 +59,8 @@ export const FeaturesTab = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold border-b border-primary/20 pb-2 mb-4">Особенности и умения</h3>
-      
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Особенности и черты</h2>
       <div className="space-y-6">
         <div className="p-4 bg-black/70 rounded-lg border border-primary/30 shadow-lg">
           <h4 className="font-semibold mb-3 flex items-center text-white">
