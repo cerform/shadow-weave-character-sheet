@@ -1,5 +1,5 @@
 
 import useSessionStore from "@/stores/sessionStore";
 
-// Re-export for easier imports
+// Re-export для простоты импорта
 export { useSessionStore };

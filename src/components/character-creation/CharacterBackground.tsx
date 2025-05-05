@@ -1,7 +1,7 @@
-
 import React, { useState } from "react";
 import NavigationButtons from "./NavigationButtons";
-import { CharacterSheet } from '@/types/character';
+import { Character } from '@/types/character';
+import type { CharacterSheet } from '@/utils/characterImports';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,7 +93,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
                 value={personalityTraits}
                 onChange={(e) => setPersonalityTraits(e.target.value)}
                 className="min-h-[80px]"
-                placeholder="Опишите черты характера вашего персонажа"
+                placeholder="Опишите черты характ��ра вашего персонажа"
               />
             </div>
 

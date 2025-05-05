@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { CharacterSheet } from "@/types/character.d";
+import { Character } from "@/types/character.d";
+import type { CharacterSheet } from '@/utils/characterImports';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";

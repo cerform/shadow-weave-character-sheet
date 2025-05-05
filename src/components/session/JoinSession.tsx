@@ -14,7 +14,7 @@ interface JoinSessionProps {
 const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
   const [roomCode, setRoomCode] = useState("");
   const [nickname, setNickname] = useState("");
-  const { joinSession } = useSessionStore();
+  const sessionStore = useSessionStore();
   const { toast } = useToast();
 
   const handleJoin = () => {
@@ -29,7 +29,9 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
     
     try {
       // Присоединяемся к сессии через SessionStore
-      const joined = joinSession(roomCode.trim().toUpperCase(), nickname);
+      const joined = sessionStore.joinSession ? 
+        sessionStore.joinSession(roomCode.trim().toUpperCase(), nickname) : 
+        false;
       
       if (!joined) {
         toast({
