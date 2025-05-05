@@ -20,17 +20,6 @@ interface AuthFormProps {
   redirectTo?: string;
 }
 
-// Интерфейс для расширенной ошибки аутентификации
-interface DetailedAuthError extends Error {
-  code?: string;
-  fullDetails?: any;
-  customData?: {
-    email?: string;
-    phoneNumber?: string;
-    tenantId?: string;
-  };
-}
-
 const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -221,8 +210,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
       checkPopupSupport();
       // После выполнения checkPopupSupport будет обновлено состояние popupSupported
       // Нам нужно проверить его значение после обновления
-      if (popupSupported === false) {
-        return; // выходим, если попапы заблокированы
+      if (popupSupported === null || popupSupported === false) {
+        return; // выходим, если попапы заблокированы или статус еще не определен
       }
     }
     
@@ -418,7 +407,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               {authError.code === 'auth/unauthorized-domain' && (
                 <div className="mt-3 text-sm">
                   <strong>Рекомендации:</strong>
-                  <p>Домен {window.location.origin} н�� авторизован в Firebase. 
+                  <p>Домен {window.location.origin} не авторизован в Firebase. 
                   Администратору необходимо добавить этот домен в список авторизованных доменов в консоли Firebase.</p>
                 </div>
               )}
@@ -692,14 +681,3 @@ const AuthForm: React.FC<AuthFormProps> = ({ redirectTo = '/' }) => {
               href="#"
               className="underline underline-offset-4 hover:text-primary"
             >
-              Политикой конфиденциальности
-            </a>
-            .
-          </p>
-        </CardFooter>
-      </Tabs>
-    </Card>
-  );
-};
-
-export default AuthForm;
