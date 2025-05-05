@@ -84,6 +84,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
 
   const handleSubraceSelect = (subraceName: string) => {
     setSelectedSubrace(subraceName);
+    // Автоматически сохраняем выбор подрасы
     updateCharacter({ subrace: subraceName });
   };
 

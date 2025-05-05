@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +9,8 @@ import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import { useCreationStep } from '@/hooks/useCreationStep';
 import { Step } from '@/types/characterCreation';
 import CharacterBasics from '@/components/character-creation/CharacterBasics';
-import CharacterRace from '@/components/character-creation/CharacterRace';
-import CharacterSubrace from '@/components/character-creation/CharacterSubrace';
+import CharacterRaceSelection from '@/components/character-creation/CharacterRaceSelection';
+import CharacterSubraceSelection from '@/components/character-creation/CharacterSubraceSelection';
 import CharacterClass from '@/components/character-creation/CharacterClass';
 import CharacterAbilities from '@/components/character-creation/CharacterAbilities';
 import CharacterBackground from '@/components/character-creation/CharacterBackground';
@@ -21,7 +22,6 @@ import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { createCharacter } from '@/lib/supabase';
 import { getCurrentUid } from '@/utils/authHelpers';
-import NavigationButtons from '@/components/character-creation/NavigationButtons';
 import ThemeSelector from '@/components/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
@@ -121,7 +121,8 @@ const CharacterCreationPage: React.FC = () => {
       case 'race':
         return !!character.race;
       case 'subrace':
-        return !hasSubraces || !!character.subrace;
+        // Автоматически разрешаем переход, если выбрана подраса или нет подрас
+        return !Boolean(subracesForRace?.length) || !!character.subrace;
       case 'class':
         return !!character.class;
       default:
@@ -129,16 +130,24 @@ const CharacterCreationPage: React.FC = () => {
     }
   };
 
-  const hasSubraces = Boolean(subracesForRace?.length);
-
   const renderStepContent = () => {
     switch (visibleSteps[currentStep]?.id) {
       case 'basics':
         return <CharacterBasics character={character} onUpdate={updateCharacter} />;
       case 'race':
-        return <CharacterRace races={races} character={character} onUpdate={updateCharacter} />;
+        return <CharacterRaceSelection 
+                character={character} 
+                updateCharacter={updateCharacter} 
+                nextStep={nextStep}
+                prevStep={prevStep}
+              />;
       case 'subrace':
-        return <CharacterSubrace subraces={subracesForRace} character={character} onUpdate={updateCharacter} />;
+        return <CharacterSubraceSelection 
+                character={character} 
+                updateCharacter={updateCharacter}
+                nextStep={nextStep}
+                prevStep={prevStep}
+              />;
       case 'class':
         return <CharacterClass classes={classes} character={character} onUpdate={updateCharacter} />;
       case 'abilities':
@@ -250,14 +259,49 @@ const CharacterCreationPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <NavigationButtons
-          allowNext={canProceedToNextStep()}
-          nextStep={currentStep < visibleSteps.length - 1 ? nextStep : handleSaveCharacter}
-          prevStep={prevStep}
-          isFirstStep={currentStep === 0}
-          nextLabel={currentStep < visibleSteps.length - 1 ? "Далее" : "Сохранить персонажа"}
-          disableNext={currentStep === visibleSteps.length - 1 && isLoading}
-        />
+        {/* Показываем кнопки навигации только для шагов, которые не имеют собственных кнопок */}
+        {['basics', 'class', 'abilities', 'background', 'equipment', 'spells', 'summary'].includes(visibleSteps[currentStep]?.id) && (
+          <div className="flex justify-between">
+            {currentStep > 0 && (
+              <Button 
+                onClick={prevStep} 
+                variant="outline"
+                style={{ 
+                  borderColor: currentTheme.accent,
+                  color: currentTheme.textColor 
+                }}
+              >
+                Назад
+              </Button>
+            )}
+            
+            <div className="ml-auto">
+              {currentStep < visibleSteps.length - 1 ? (
+                <Button 
+                  onClick={nextStep} 
+                  disabled={!canProceedToNextStep()}
+                  style={{ 
+                    backgroundColor: currentTheme.accent,
+                    color: '#FFFFFF'
+                  }}
+                >
+                  Далее
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSaveCharacter} 
+                  disabled={isLoading}
+                  style={{ 
+                    backgroundColor: currentTheme.accent,
+                    color: '#FFFFFF'
+                  }}
+                >
+                  Сохранить персонажа
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       
       <FloatingDiceButton />

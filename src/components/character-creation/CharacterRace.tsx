@@ -37,14 +37,14 @@ const CharacterRace: React.FC<CharacterRaceProps> = ({
       
       // Если выбираем расу впервые, сбрасываем выбранную подрасу
       if (character.race !== selectedRace) {        
-        // Обновляем персонажа
+        // Обновляем персонажа автоматически при выборе расы
         onUpdate({
           race: selectedRace,
           subrace: ''
         });
       }
     }
-  }, [selectedRace, races, character.race]);
+  }, [selectedRace, races, character.race, onUpdate]);
 
   const handleRaceSelect = (raceName: string) => {
     setSelectedRace(raceName);

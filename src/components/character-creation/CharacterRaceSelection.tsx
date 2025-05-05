@@ -2,13 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Character } from "@/types/character";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { races } from '@/data/races';
 import NavigationButtons from "./NavigationButtons";
 import SectionHeader from "@/components/ui/section-header";
 import { ScrollArea } from '@/components/ui/scroll-area'; 
-import { Badge } from '@/components/ui/badge';
 import { SelectionCard, SelectionCardBadge } from '@/components/ui/selection-card';
 
 interface CharacterRaceSelectionProps {
@@ -38,12 +35,6 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
   const handleRaceChange = (raceName: string) => {
     setSelectedRace(raceName);
     updateCharacter({ race: raceName, subrace: '' }); // Сбрасываем подрасу при смене расы
-  };
-
-  const handleNext = () => {
-    if (selectedRace) {
-      nextStep();
-    }
   };
 
   // Получаем описание расы
@@ -95,8 +86,8 @@ const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = ({
       </Card>
 
       <NavigationButtons
-        allowNext={!!selectedRace}
-        nextStep={handleNext}
+        allowNext={!!selectedRace} // Автоматически активируем кнопку, если есть выбор
+        nextStep={nextStep}
         prevStep={prevStep}
         isFirstStep={true}
       />
