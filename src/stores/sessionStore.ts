@@ -156,7 +156,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       }
       
       const sessionDoc = sessionsSnapshot.docs[0];
-      const sessionData = { id: sessionDoc.id, ...sessionDoc.data() };
+      const sessionData = { id: sessionDoc.id, ...sessionDoc.data() } as any;
       
       // Определяем ID игрока (авторизованный или временный)
       const user = auth.currentUser;
