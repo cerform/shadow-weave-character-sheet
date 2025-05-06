@@ -16,6 +16,7 @@ export const testLoadCharacters = async (): Promise<{
 }> => {
   try {
     // Проверяем, авторизован ли пользователь
+    console.log('testLoadCharacters: Проверка авторизации');
     if (!auth.currentUser) {
       console.log('testLoadCharacters: Пользователь не авторизован');
       return {
@@ -45,20 +46,20 @@ export const testLoadCharacters = async (): Promise<{
         return { ...data, id: doc.id } as Character;
       });
       
-      // Формируем отладочную информацию, избегая сложных объектов для клонирования
+      // Формируем отладочную информацию, используя только примитивные значения
       const debugInfo = {
         userId,
         authStatus: {
           isAuthenticated: !!auth.currentUser,
-          uid: auth.currentUser?.uid || null,
           email: auth.currentUser?.email || null
         },
         queryInfo: {
-          collection: 'characters',
-          whereCondition: ['userId', '==', userId]
+          collectionPath: 'characters',
+          whereField: 'userId',
+          whereValue: userId
         },
         resultsCount: snapshot.docs.length,
-        documentsIds: snapshot.docs.map(doc => doc.id)
+        documentIds: snapshot.docs.map(doc => doc.id)
       };
       
       return {
