@@ -1,6 +1,8 @@
 
 // Re-export for consistent imports across the app
 import useSessionStore from "@/stores/sessionStore";
-import { DMSession, Player, SessionProvider } from "@/contexts/SessionContext";
+import { SessionProvider } from "@/contexts/SessionContext";
+import type { DMSession, Player } from "@/contexts/SessionContext";
 
-export { useSessionStore, SessionProvider, DMSession, Player };
+export { useSessionStore, SessionProvider };
+export type { DMSession, Player };

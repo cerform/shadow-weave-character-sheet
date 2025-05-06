@@ -1,6 +1,7 @@
 
 export interface UserType {
   uid?: string;
+  id?: string; // Добавляем id для совместимости
   email: string;
   displayName?: string;
   username?: string;
@@ -12,16 +13,20 @@ export interface UserType {
   characterLevel?: string;
   characterBio?: string;
   characterGuild?: string;
+  role?: string; // Добавляем свойство role
   lastLogin?: Date;
   createdAt?: Date;
 }
 
 export interface AuthContextType {
   currentUser: UserType | null;
+  user: UserType | null; // Добавляем user как алиас для currentUser
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  register: (email: string, password: string, username?: string) => Promise<void>;
+  googleLogin: () => Promise<UserType | null>; // Добавляем googleLogin
+  register: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
+  signup: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
   error: string | null;
