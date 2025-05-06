@@ -96,6 +96,25 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
   }
 };
 
+// Функция saveCharacterToFirestore для совместимости
+export const saveCharacterToFirestore = async (character: Character, userId?: string): Promise<string> => {
+  try {
+    // Убедимся, что у персонажа есть ID пользователя
+    if (userId && !character.userId) {
+      character.userId = userId;
+    }
+    
+    // Используем существующую функцию saveCharacter
+    const savedCharacter = await saveCharacter(character);
+    
+    // Возвращаем ID сохраненного персонажа
+    return savedCharacter.id;
+  } catch (error) {
+    console.error('Error saving character to Firestore:', error);
+    throw error;
+  }
+};
+
 // Получение персонажа по ID
 export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
@@ -237,12 +256,26 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   }
 };
 
+// Добавляем функцию getAllCharacters для совместимости
+export const getAllCharacters = async (): Promise<Character[]> => {
+  const userId = getCurrentUid();
+  if (!userId) {
+    console.warn('getAllCharacters: Пользователь не авторизован');
+    return [];
+  }
+  
+  // Используем существующую функцию для получения персонажей текущего пользователя
+  return await getCharactersByUserId(userId);
+};
+
 // Экспортируем функции как дефолтный экспорт для совместимости
 const characterService = {
   saveCharacter,
+  saveCharacterToFirestore,
   getCharacter,
   deleteCharacter,
-  getCharactersByUserId
+  getCharactersByUserId,
+  getAllCharacters
 };
 
 export default characterService;

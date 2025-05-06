@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { ArrowLeft, Check, Download, Eye, Save } from 'lucide-react';
 import { saveCharacterToFirestore } from '@/services/characterService';
 import { getCurrentUid } from '@/utils/authHelpers';
-import NavigationButtons from './NavigationButtons';
 
 interface CharacterReviewProps {
   character: Character;

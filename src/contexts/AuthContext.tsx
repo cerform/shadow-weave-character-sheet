@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
-import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
+import { auth, firebaseAuth } from '@/services/firebase/auth';
+import { db } from '@/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 const defaultAuthContext: AuthContextType = {
   user: null,
@@ -111,7 +113,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Настройка слушателя изменения состояния аутентификации
     console.log("Setting up auth state listener");
-    const unsubscribe = firebaseAuth.onAuthStateChanged(async (authUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       setLoading(true);
       try {
         if (authUser) {
@@ -148,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting login with email:", email);
-      const userCredential = await firebaseAuth.loginWithEmail(email, password);
+      const userCredential = await auth.loginWithEmail(email, password);
       if (userCredential) {
         console.log("Login successful", userCredential);
         // Получаем дополнительные данные из Firestore
@@ -169,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting signup:", email, displayName, isDM);
-      const userCredential = await firebaseAuth.registerWithEmail(email, password);
+      const userCredential = await auth.registerWithEmail(email, password);
       if (userCredential) {
         console.log("Signup successful", userCredential);
         // Создаем объект пользователя с дополнительными данными
@@ -199,13 +201,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting logout");
-      await firebaseAuth.logout();
+      await auth.logout();
       setUser(null);
       console.log("Logout successful");
-      toast({
-        title: "Выход",
-        description: "Вы успешно вышли из системы"
-      });
+      toast.success("Вы успешно вышли из системы");
     } catch (err) {
       console.error("Logout error:", err);
       setError(err as Error);
@@ -220,7 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting Google login");
-      const userCredential = await firebaseAuth.loginWithGoogle();
+      const userCredential = await auth.loginWithGoogle();
       
       // Если был выполнен редирект, управление не дойдет до этой точки
       // Если попап был успешным, обрабатываем результат
@@ -245,10 +244,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Устанавливаем пользователя в контекст
         setUser(transformedUser);
         
-        toast({
-          title: "Вход выполнен",
-          description: "Вы успешно вошли через Google"
-        });
+        toast.success("Вы успешно вошли через Google");
         
         return transformedUser;
       }
@@ -258,11 +254,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err) {
       console.error("Google login error:", err);
       setError(err as Error);
-      toast({
-        title: "Ошибка входа",
-        description: (err as Error).message || "Не удалось войти через Google",
-        variant: "destructive"
-      });
+      toast.error("Не удалось войти через Google: " + (err as Error).message);
       throw err;
     } finally {
       setLoading(false);
@@ -290,10 +282,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await saveUserToFirestore(updatedUser);
       setUser(updatedUser);
       
-      toast({
-        title: "Профиль обновлен",
-        description: "Ваш профиль успешно обновлен"
-      });
+      toast.success("Ваш профиль успешно обновлен");
     } catch (err) {
       console.error("Profile update error:", err);
       setError(err as Error);

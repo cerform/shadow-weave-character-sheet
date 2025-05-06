@@ -12,8 +12,8 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { app } from './config';
-import { logAuthError, DetailedAuthError } from './error-utils';
+import { app } from '@/firebase';
+import { logAuthError } from './error-utils';
 
 // Initialize Firebase Auth
 export const firebaseAuth = getAuth(app);

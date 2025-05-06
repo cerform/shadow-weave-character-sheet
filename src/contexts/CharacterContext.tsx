@@ -1,8 +1,8 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { saveCharacter, getAllCharacters, deleteCharacter, getCharacter } from '@/services/characterService';
-import { Character, CharacterSpell } from '@/types/character';
-import { useToast } from '@/hooks/use-toast';
+import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters } from '@/services/characterService';
+import { Character } from '@/types/character';
+import { toast } from 'sonner';
 import { getCurrentUid } from '@/utils/authHelpers';
 
 export interface CharacterContextType {
@@ -36,7 +36,6 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
   
   // Функция для обновления частичных данных персонажа
   const updateCharacter = (updates: Partial<Character>) => {
@@ -73,10 +72,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       const savedChar = await saveCharacter(updatedCharacter);
       if (savedChar) {
         setCharacter({...updatedCharacter, id: savedChar.id});
-        toast({
-          title: "Персонаж сохранен",
-          description: `${savedChar.name || 'Персонаж'} успешно сохранен`,
-        });
+        toast.success(`${savedChar.name || 'Персонаж'} успешно сохранен`);
       }
       
       // Обновляем список персонажей
@@ -84,11 +80,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     } catch (error) {
       console.error('Ошибка при сохранении персонажа:', error);
       setError('Не удалось сохранить персонажа');
-      toast({
-        title: "Ошибка сохранения",
-        description: "Не удалось сохранить персонажа. Пожалуйста, попробуйте снова.",
-        variant: "destructive",
-      });
+      toast.error("Не удалось сохранить персонажа. Пожалуйста, попробуйте снова.");
     } finally {
       setLoading(false);
     }
@@ -106,11 +98,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       setError('Не удалось загрузить персонажей');
-      toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось загрузить список персонажей.",
-        variant: "destructive",
-      });
+      toast.error("Не удалось загрузить список персонажей.");
       return [];
     } finally {
       setLoading(false);
@@ -143,10 +131,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       await deleteCharacter(id);
       setCharacters(prev => prev.filter(char => char.id !== id));
       
-      toast({
-        title: "Персонаж удален",
-        description: "Персонаж успешно удален",
-      });
+      toast.success("Персонаж успешно удален");
       
       // Если удаляем текущего персонажа, сбрасываем его
       if (character && character.id === id) {
@@ -155,11 +140,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     } catch (error) {
       console.error('Ошибка при удалении персонажа:', error);
       setError('Не удалось удалить персонажа');
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить персонажа. Пожалуйста, попробуйте снова.",
-        variant: "destructive",
-      });
+      toast.error("Не удалось удалить персонажа. Пожалуйста, попробуйте снова.");
     } finally {
       setLoading(false);
     }

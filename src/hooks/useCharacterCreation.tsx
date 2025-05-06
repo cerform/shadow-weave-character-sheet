@@ -1,13 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
 import { saveCharacterToFirestore } from "@/services/characterService";
 
 export const useCharacterCreation = () => {
-  const { toast } = useToast();
   const defaultCharacter: Character = {
     id: "",
     name: "",
@@ -88,24 +86,17 @@ export const useCharacterCreation = () => {
             console.log("✅ Character auto-saved to Firestore with ID:", characterId);
             // Обновляем ID персонажа в локальном состоянии
             setCharacter(prev => ({...prev, id: characterId}));
-            toast({
-              title: "Персонаж сохранен",
-              description: "Ваш персонаж был автоматически сохранен",
-            });
+            toast.success("Ваш персонаж был автоматически сохранен");
           }
         } catch (error) {
           console.error("❌ Error during character auto-save:", error);
-          toast({
-            title: "Ошибка сохранения",
-            description: "Не удалось автоматически сохранить персонажа",
-            variant: "destructive",
-          });
+          toast.error("Не удалось автоматически сохранить персонажа");
         }
       }
     };
 
     autoSaveCharacter();
-  }, [characterReady, autoSaveEnabled, character, toast]);
+  }, [characterReady, autoSaveEnabled, character]);
 
   const updateCharacter = (updates: Partial<Character>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
@@ -265,11 +256,7 @@ export const useCharacterCreation = () => {
     }
     
     if (level + additionalLevels > 20) {
-      toast({
-        title: "Превышен максимальный уровень",
-        description: `Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнител��ных классах.`,
-        variant: "destructive"
-      });
+      toast.error(`Общий уровень персонажа не может прев��шать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
       return;
     }
     
@@ -282,11 +269,7 @@ export const useCharacterCreation = () => {
       
       console.log(`Уровень персонажа изменен на ${level}`);
     } else {
-      toast({
-        title: "Некорректный уровень",
-        description: "Уровень должен быть от 1 до 20",
-        variant: "destructive"
-      });
+      toast.error("Уровень должен быть от 1 до 20");
     }
   };
   
@@ -301,6 +284,11 @@ export const useCharacterCreation = () => {
     }
     
     return allClasses.filter(Boolean) as string[];
+  };
+  
+  // Функция для конвертации данных в тип Character
+  const convertToCharacter = (characterData: any): Character => {
+    return characterData as Character;
   };
 
   return { 
@@ -324,7 +312,8 @@ export const useCharacterCreation = () => {
   };
 };
 
-const getProficiencyBonus = (level: number): number => {
+// Вспомогательные функции для использования вне хука
+export const getProficiencyBonus = (level: number): number => {
   if (level < 5) return 2;
   if (level < 9) return 3;
   if (level < 13) return 4;
@@ -332,7 +321,7 @@ const getProficiencyBonus = (level: number): number => {
   return 6; // 17+ уровень
 };
 
-const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?: string, level?: number): string[] => {
+export const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?: string, level?: number): string[] => {
   if (!characterSubclass) return [];
   
   // Simple example implementation
@@ -341,12 +330,12 @@ const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?
   ];
 };
 
-const getClassFeatures = (characterClass: string, level: number): string[] => {
+export const getClassFeatures = (characterClass: string, level: number): string[] => {
   // Simple implementation
   return [];
 };
 
-const getRequiredXP = (level: number): number => {
+export const getRequiredXP = (level: number): number => {
   const xpByLevel = [
     0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
     85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
@@ -356,7 +345,7 @@ const getRequiredXP = (level: number): number => {
   return xpByLevel[adjustedLevel - 1];
 };
 
-const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): number => {
+export const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): number => {
   let totalPoints = basePoints;
   
   // Add level-based bonuses
@@ -367,6 +356,6 @@ const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): n
   return totalPoints;
 };
 
-const convertToCharacter = (characterData: any): Character => {
+export const convertToCharacter = (characterData: any): Character => {
   return characterData as Character;
 };
