@@ -11,7 +11,7 @@ export interface ClassData {
   skillCount: number;
   spellcasting?: {
     ability: string;
-    spellSlots?: Record<number, number[]>;
+    spellSlots?: Record<number | string, number[]>;
   };
   subclasses?: Record<string, SubclassData>;
   features?: Feature[]; // Добавляем поле features для более подробных описаний
