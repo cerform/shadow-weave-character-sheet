@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useToast } from '@/hooks/use-toast';
 import { convertToCharacter } from '@/utils/characterConverter';
+import { getCharacter } from '@/services/characterService';
 
 const CharacterViewPage = () => {
   const { character, setCharacter } = useCharacter();
@@ -27,12 +28,10 @@ const CharacterViewPage = () => {
       
       try {
         if (id) {
-          // Загружаем персонажа из localStorage
-          const storedCharacter = localStorage.getItem(`character_${id}`);
+          // Пытаемся загрузить персонажа из Firestore
+          const loadedCharacter = await getCharacter(id);
           
-          if (storedCharacter) {
-            const loadedCharacter = JSON.parse(storedCharacter);
-            
+          if (loadedCharacter) {
             // Преобразуем загруженные данные через конвертер
             const convertedCharacter = convertToCharacter(loadedCharacter);
             setCharacter(convertedCharacter);
@@ -41,8 +40,19 @@ const CharacterViewPage = () => {
             // Сохраняем последнего загруженного персонажа
             localStorage.setItem('last-selected-character', id);
           } else {
-            setError(`Персонаж с ID ${id} не найден.`);
-            navigate('/characters');
+            // Если не нашли в Firestore, пробуем в localStorage
+            const storedCharacter = localStorage.getItem(`character_${id}`);
+            
+            if (storedCharacter) {
+              const localCharacter = JSON.parse(storedCharacter);
+              const convertedCharacter = convertToCharacter(localCharacter);
+              setCharacter(convertedCharacter);
+              setProcessedCharacter(convertedCharacter);
+              localStorage.setItem('last-selected-character', id);
+            } else {
+              setError(`Персонаж с ID ${id} не найден.`);
+              navigate('/characters');
+            }
           }
         } else if (character) {
           // Если персонаж уже загружен в контекст, применяем конвертер
@@ -52,16 +62,26 @@ const CharacterViewPage = () => {
           const lastCharacterId = localStorage.getItem('last-selected-character');
           
           if (lastCharacterId) {
-            const storedCharacter = localStorage.getItem(`character_${lastCharacterId}`);
+            // Пытаемся загрузить из Firestore
+            const lastCharacter = await getCharacter(lastCharacterId);
             
-            if (storedCharacter) {
-              const loadedCharacter = JSON.parse(storedCharacter);
-              const convertedCharacter = convertToCharacter(loadedCharacter);
+            if (lastCharacter) {
+              const convertedCharacter = convertToCharacter(lastCharacter);
               setCharacter(convertedCharacter);
               setProcessedCharacter(convertedCharacter);
             } else {
-              setError("Последний выбранный персонаж не найден.");
-              navigate('/characters');
+              // Если не нашли, пробуем в localStorage
+              const storedCharacter = localStorage.getItem(`character_${lastCharacterId}`);
+              
+              if (storedCharacter) {
+                const loadedCharacter = JSON.parse(storedCharacter);
+                const convertedCharacter = convertToCharacter(loadedCharacter);
+                setCharacter(convertedCharacter);
+                setProcessedCharacter(convertedCharacter);
+              } else {
+                setError("Последний выбранный персонаж не найден.");
+                navigate('/characters');
+              }
             }
           } else {
             setError("Персонаж не выбран.");

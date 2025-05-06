@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +37,11 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             return;
           }
           
+          // Убедимся, что userId установлен перед сохранением
+          if (!character.userId) {
+            updateCharacter({ userId: uid });
+          }
+          
           const savedId = await saveCharacterToFirestore(character, uid);
           
           if (savedId) {
@@ -49,7 +53,11 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             toast.success('Персонаж успешно сохранен!');
             
             // Также обновляем персонажа в контексте
-            setCharacter({...character, id: savedId});
+            setCharacter({...character, id: savedId, userId: uid});
+            
+            // Сохраняем персонажа локально как резервную копию
+            localStorage.setItem(`character_${savedId}`, JSON.stringify({...character, id: savedId, userId: uid}));
+            localStorage.setItem('last-selected-character', savedId);
           }
         } catch (error) {
           console.error('❌ Ошибка при автосохранении персонажа:', error);
@@ -67,8 +75,17 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
     try {
       setIsSaving(true);
       
+      const uid = getCurrentUid();
+      if (!uid) {
+        toast.error('Необходимо войти для сохранения персонажа');
+        return;
+      }
+      
+      // Обновляем userId перед сохранением
+      const characterToSave = { ...character, userId: uid };
+      
       // Сначала устанавливаем персонажа в контексте
-      setCharacter(character);
+      setCharacter(characterToSave);
       
       // Затем сохраняем персонажа
       await saveCurrentCharacter();
@@ -88,6 +105,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   const handleViewCharacter = () => {
     if (characterId) {
       navigate(`/character/${characterId}`);
+    } else if (character.id) {
+      navigate(`/character/${character.id}`);
     } else {
       navigate('/characters');
     }

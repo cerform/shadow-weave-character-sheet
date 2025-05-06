@@ -3,30 +3,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 🧙‍♂️ Characters — доступ к своим или сессиям DM
-    match /characters/{charId} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == resource.data.userId ||        // игрок — владелец
-        request.auth.uid == get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.dmId // мастер сессии
-      );
-    }
-
-    // 🎲 Sessions — управление мастерской панелью
-    match /sessions/{sessionId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.dmId || request.auth.uid in resource.data.players);
-      allow write: if request.auth != null && request.auth.uid == resource.data.dmId;
-    }
-
-    // 👤 Users
+    // 👤 Пользователи: доступ только к себе
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 📖 Spells (readonly)
+    // ⚔️ Персонажи: пользователь может читать/писать только свои
+    match /characters/{characterId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // 🧙‍♂️ DM's данные (отдельная коллекция): только DM имеет доступ
+    match /DMs/{dmId} {
+      allow read, write: if request.auth != null && request.auth.uid == dmId;
+    }
+
+    // 📖 Заклинания: общедоступны для чтения, но нельзя менять
     match /spells/{spellId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if false;
+    }
+
+    // 🎮 Сессии: доступны любому авторизованному
+    match /sessions/{sessionId} {
+      allow read, write: if request.auth != null;
     }
   }
 }
