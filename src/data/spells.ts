@@ -33,6 +33,7 @@ export const getSpellsByClass = (className: string) => {
   // Получаем все возможные варианты названия класса
   const possibleClassNames = classNameMapping[lowerClassName] || [lowerClassName];
   
+  console.log(`Looking for spells for class: ${className}, possible names:`, possibleClassNames);
   // Фильтруем заклинания по классу
   return spells.filter((spell) => {
     if (!spell.classes) return false;
@@ -42,7 +43,8 @@ export const getSpellsByClass = (className: string) => {
       : spell.classes.map(c => typeof c === 'string' ? c.toLowerCase() : '');
     
     // Проверяем, есть ли хотя бы одно совпадение между возможными именами класса и классами заклинания
-    return spellClasses.some(cls => possibleClassNames.includes(cls));
+    const matches = spellClasses.some(cls => possibleClassNames.includes(cls));
+    return matches;
   });
 };
 

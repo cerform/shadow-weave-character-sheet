@@ -226,3 +226,81 @@ export const calculateAvailableSpellsByClassAndLevel = (
   
   return { maxSpellLevel, cantripsCount, knownSpells };
 };
+
+/**
+ * Проверяет, сколько заклинаний персонаж может подготовить
+ */
+export const getPreparedSpellsLimit = (character: Character): number => {
+  if (!character || !character.class) return 0;
+  
+  const className = character.class.toLowerCase();
+  let abilityModifier = 0;
+  
+  // Определяем модификатор способности в зависимости от класса
+  if (['жрец', 'друид', 'cleric', 'druid'].includes(className)) {
+    // Мудрость
+    const wisdom = character.abilities?.wisdom || character.wisdom || 10;
+    abilityModifier = Math.floor((wisdom - 10) / 2);
+  } else if (['волшебник', 'wizard'].includes(className)) {
+    // Интеллект
+    const intelligence = character.abilities?.intelligence || character.intelligence || 10;
+    abilityModifier = Math.floor((intelligence - 10) / 2);
+  } else if (['паладин', 'paladin'].includes(className)) {
+    // Харизма
+    const charisma = character.abilities?.charisma || character.charisma || 10;
+    abilityModifier = Math.floor((charisma - 10) / 2);
+  } else {
+    // Другие классы не используют подготовку заклинаний
+    return 0;
+  }
+  
+  // Формула: уровень класса + модификатор способности
+  const level = character.level || 1;
+  return Math.max(1, level + abilityModifier);
+};
+
+/**
+ * Проверяет, может ли персонаж подготовить ещё заклинания
+ */
+export const canPrepareMoreSpells = (character: Character): boolean => {
+  if (!character || !character.spells) return false;
+  
+  // Подсчитываем количество уже подготовленных заклинаний
+  const preparedCount = character.spells.filter(spell => {
+    if (typeof spell === 'string') return false;
+    return spell.prepared && spell.level > 0; // Заговоры не учитываются
+  }).length;
+  
+  // Получаем максимально возможное количество подготовленных заклинаний
+  const limit = getPreparedSpellsLimit(character);
+  
+  return preparedCount < limit;
+};
+
+/**
+ * Конвертирует массив CharacterSpell в массив SpellData
+ */
+export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertToSpellData(spell));
+};
+
+/**
+ * Для преобразования CharacterSpell[] в SpellData[] для типа State
+ */
+export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => ({
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || ['Нет описания'],
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
+  }));
+};
