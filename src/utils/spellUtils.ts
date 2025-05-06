@@ -92,7 +92,7 @@ export const calculateAvailableSpellsByClassAndLevel = (
 };
 
 // Функция для нормализации заклинаний (преобразует строки в объекты)
-export const normalizeSpells = (character: Character | any): any[] => {
+export const normalizeSpells = (character: Character): any[] => {
   if (!character || !character.spells) return [];
   
   return character.spells.map((spell: any) => {
@@ -170,7 +170,6 @@ export const canPrepareMoreSpells = (character: Character): boolean => {
   return preparedCount < preparedLimit;
 };
 
-// Новые функции для исправления ошибок
 // Функция convertToSpellData для преобразования CharacterSpell в SpellData
 export const convertToSpellData = (spell: any): SpellData => {
   return {
