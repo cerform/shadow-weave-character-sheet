@@ -5,47 +5,38 @@ service cloud.firestore {
 
     // 👤 Пользователи: доступ только к себе
     match /users/{userId} {
-      allow read, write: if request.auth != null
-                      && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     // ⚔️ Персонажи: пользователь может читать/писать только свои
     match /characters/{characterId} {
-      allow read:   if request.auth != null
-                  && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null
-                  && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null
-                          && resource.data.userId == request.auth.uid;
+      // Разрешаем чтение персонажа, если user.id совпадает с userId в документе
+      // Также разрешаем чтение всех персонажей текущему пользователю для отображения списка
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || request.auth.uid != null);
+      
+      // Для записи проверяем, что пользователь записывает свой userId
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && 
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.userId == request.auth.uid);
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    // 🧙‍♂️ DM's данные: только DM имеет доступ к своему документу
+    // 🧙‍♂️ DM's данные (отдельная коллекция): только DM имеет доступ
     match /DMs/{dmId} {
-      allow read, write: if request.auth != null
-                      && request.auth.uid == dmId;
+      allow read, write: if request.auth != null && request.auth.uid == dmId;
     }
 
-    // 📖 Заклинания: все могут читать, никто не может менять
+    // 📖 Заклинания: общедоступны для чтения, но нельзя менять
     match /spells/{spellId} {
-      allow read:  if true;
+      allow read: if true;
       allow write: if false;
     }
 
-    // 🎮 Сессии:
-    // - создание — только залогиненный хост
-    // - чтение — любой авторизованный (если нужна жёсткая фильтрация, см. комментарий ниже)
-    // - обновление и удаление — только хост
+    // 🎮 Сессии: доступны любому авторизованному
     match /sessions/{sessionId} {
-      allow create: if request.auth != null
-                  && request.auth.uid == request.resource.data.hostId;
-
-      allow read:   if request.auth != null;
-
-      allow update: if request.auth != null
-                  && request.auth.uid == resource.data.hostId;
-
-      allow delete: if request.auth != null
-                  && request.auth.uid == resource.data.hostId;
+      allow read, write: if request.auth != null;
     }
   }
 }

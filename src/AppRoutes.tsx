@@ -1,20 +1,143 @@
-
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import NotFoundPage from './pages/NotFoundPage';
-import CharacterEditPage from './pages/CharacterEditPage';
-import BattlePage from './pages/BattlePage';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Импортируем страницы
 import Home from './pages/Home';
+import NotFound from './pages/NotFound';
+import AuthPage from './pages/AuthPage';
+import SpellbookPage from './pages/SpellbookPage';
+import CharacterCreationPage from './pages/CharacterCreationPage';
+import ProfilePage from './pages/ProfilePage';
+import HandbookPage from './pages/HandbookPage';
+import CharacterSheetPage from './pages/CharacterSheetPage';
+import DMDashboardPage from './pages/DMDashboardPage';
+import PlayerDashboardPage from './pages/PlayerDashboardPage';
+import BattleScenePage from './pages/BattleScenePage';
+import CharactersListPage from './pages/CharactersListPage';
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import DebugPage from './pages/DebugPage';
+
+// Ленивая загрузка страниц, зависящих от WebSocket
+const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
+const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
+
+// Импорт хука для защиты маршрутов
+import { useProtectedRoute } from './hooks/use-auth';
+
+// Компонент Fallback для ленивой загрузки
+const LazyLoading = () => (
+  <div className="flex items-center justify-center h-screen w-full">
+    <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+  </div>
+);
+
+// Компонент для защиты маршрутов DM
+const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
+  const { loading, canAccessDMDashboard } = useProtectedRoute();
+  
+  if (loading) {
+    return <LazyLoading />;
+  }
+  
+  if (!canAccessDMDashboard) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Компонент для защиты маршрутов игрока
+const ProtectedPlayerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { loading, canAccessPlayerDashboard } = useProtectedRoute();
+  
+  if (loading) {
+    return <LazyLoading />;
+  }
+  
+  if (!canAccessPlayerDashboard) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Компонент для маршрутизации на основе роли
+const RoleBasedRedirect = () => {
+  const { loading, isDM, isPlayer } = useProtectedRoute();
+  
+  if (loading) {
+    return <LazyLoading />;
+  }
+  
+  if (isDM) {
+    return <Navigate to="/dm" replace />;
+  }
+  
+  if (isPlayer) {
+    return <Navigate to="/player" replace />;
+  }
+  
+  return <Navigate to="/auth" replace />;
+};
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/character/:id" element={<CharacterEditPage />} />
-      <Route path="/battle/:sessionId" element={<BattlePage />} />
-      <Route path="/new-home" element={<Home />} />
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/dashboard" element={<RoleBasedRedirect />} />
+      
+      {/* Маршруты DM с защитой */}
+      <Route path="/dm" element={
+        <ProtectedDMRoute>
+          <DMDashboardPage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/dm-session/:id" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <GameRoomPage />
+          </React.Suspense>
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle/:sessionId" element={
+        <ProtectedDMRoute>
+          <BattleScenePage />
+        </ProtectedDMRoute>
+      } />
+      
+      {/* Маршруты игрока с защитой */}
+      <Route path="/player" element={
+        <ProtectedPlayerRoute>
+          <PlayerDashboardPage />
+        </ProtectedPlayerRoute>
+      } />
+      <Route path="/join-session" element={
+        <ProtectedPlayerRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <JoinSessionPage />
+          </React.Suspense>
+        </ProtectedPlayerRoute>
+      } />
+      
+      {/* Перенаправление для исправленных URL */}
+      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
+      
+      {/* Добавляем маршрут для отладки */}
+      <Route path="/debug" element={<DebugPage />} />
+      
+      {/* Общедоступные маршруты */}
+      <Route path="/spellbook" element={<SpellbookPage />} />
+      <Route path="/character-creation" element={<CharacterCreationPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
+      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      <Route path="/characters" element={<CharactersListPage />} />
+      
+      {/* Перенаправления */}
+      <Route path="/sheet" element={<Navigate to="/characters" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

@@ -1,226 +1,129 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/use-auth';
-import { toast } from 'sonner';
-import { getSessionByKey, addParticipant, getSessionById } from '@/services/sessionService';
-import { getCharactersByUserId } from '@/services/characterService';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
-import { Session } from '@/types/session';
-import OBSLayout from '@/components/OBSLayout';
+import { useToast } from '@/hooks/use-toast';
+import { useSocket } from '@/contexts/SocketContext';
+import { ArrowLeft } from 'lucide-react';
 
-const JoinSessionPage = () => {
-  const { sessionId } = useParams<{ sessionId: string }>();
-  const [searchParams] = useSearchParams();
-  const sessionKey = searchParams.get('key') || '';
-  const { user } = useAuth();
+const JoinSessionPage: React.FC = () => {
   const navigate = useNavigate();
+  const [sessionCode, setSessionCode] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { setCharacter } = useCharacter();
+  const { toast } = useToast();
+  const { connect, isConnected, sessionData } = useSocket();
   
-  const [session, setSession] = useState<Session | null>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [manualKey, setManualKey] = useState(sessionKey);
-
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        if (!user) {
-          setError('Необходимо авторизоваться для присоединения к сессии');
-          return;
-        }
-
-        // Если есть sessionId, пытаемся загрузить сессию напрямую
-        if (sessionId) {
-          const fetchedSession = await getSessionById(sessionId);
-          
-          // Если есть ключ, проверяем его
-          if (sessionKey && fetchedSession) {
-            if (fetchedSession.sessionKey !== sessionKey) {
-              setError('Неверный ключ сессии');
-              setSession(null);
-              return;
-            }
-          }
-          
-          if (fetchedSession) {
-            setSession(fetchedSession);
-          } else {
-            setError('Сессия не найдена');
-            return;
-          }
-        }
-        // Если есть только ключ, ищем сессию по ключу
-        else if (sessionKey) {
-          const fetchedSession = await getSessionByKey(sessionKey);
-          if (fetchedSession) {
-            setSession(fetchedSession);
-            // Обновляем URL, чтобы включить ID сессии
-            navigate(`/join/${fetchedSession.id}?key=${sessionKey}`, { replace: true });
-          } else {
-            setError('Сессия не найдена по указанному ключу');
-            return;
-          }
-        }
-
-        // Загружаем персонажей пользователя
-        const userCharacters = await getCharactersByUserId(user.uid);
-        setCharacters(userCharacters);
-      } catch (err) {
-        console.error('Ошибка при загрузке данных:', err);
-        setError('Не удалось загрузить данные. Попробуйте позже.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [sessionId, sessionKey, user, navigate]);
-
-  const handleJoinWithKey = async () => {
-    if (!manualKey.trim()) {
-      toast.error('Пожалуйста, введите код сессии');
+    // Загружаем имя игрока из localStorage, если оно есть
+    const savedPlayerName = localStorage.getItem('player-name');
+    if (savedPlayerName) {
+      setPlayerName(savedPlayerName);
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (isConnected && sessionData) {
+      setIsConnecting(false);
+      toast({
+        title: "Успешно!",
+        description: `Вы подключились к сессии ${sessionData.name}`,
+      });
+      navigate('/character-sheet');
+    }
+  }, [isConnected, sessionData, navigate, toast]);
+  
+  const handleJoinSession = () => {
+    if (!sessionCode || !playerName) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, введите код сессии и имя игрока.",
+        variant: "destructive",
+      });
       return;
     }
-
+    
+    setIsConnecting(true);
+    
+    // Сохраняем имя игрока в localStorage
+    localStorage.setItem('player-name', playerName);
+    
+    // Retrieve character ID from localStorage
+    const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
+    
     try {
-      setLoading(true);
-      const fetchedSession = await getSessionByKey(manualKey);
-      if (fetchedSession) {
-        setSession(fetchedSession);
-        navigate(`/join/${fetchedSession.id}?key=${manualKey}`, { replace: true });
-      } else {
-        setError('Сессия не найдена по указанному ключу');
-      }
-    } catch (err) {
-      console.error('Ошибка при поиске сессии:', err);
-      setError('Не удалось найти сессию. Попробуйте другой код.');
-    } finally {
-      setLoading(false);
+      connect(sessionCode, playerName, lastSelectedCharacterId);
+      
+      // Store session info in localStorage
+      localStorage.setItem('active-session', JSON.stringify({
+        sessionCode,
+        playerName,
+        characterId: lastSelectedCharacterId
+      }));
+    } catch (error) {
+      console.error("Ошибка при подключении:", error);
+      setIsConnecting(false);
+      toast({
+        title: "Ошибка подключения",
+        description: "Не удалось подключиться к сессии. Проверьте код сессии и попробуйте снова.",
+        variant: "destructive",
+      });
     }
   };
-
-  const handleJoinSession = async (characterId: string, characterName: string) => {
-    if (!session || !user) {
-      toast.error('Ошибка при присоединении к сессии');
-      return;
-    }
-
-    try {
-      await addParticipant(session.id, user.uid, characterId, characterName);
-      toast.success(`Вы присоединились к сессии "${session.name}"`);
-      navigate(`/session/${session.id}`);
-    } catch (err) {
-      console.error('Ошибка при присоединении к сессии:', err);
-      toast.error('Не удалось присоединиться к сессии');
-    }
+  
+  const handleGoBack = () => {
+    navigate('/');
   };
-
-  if (!user) {
-    return (
-      <OBSLayout>
-        <div className="container mx-auto p-6 max-w-xl">
-          <Card className="bg-black/50 backdrop-blur-sm">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <p className="mb-4 text-center">Необходимо войти в аккаунт для присоединения к сессии</p>
-              <Button onClick={() => navigate('/auth', { state: { returnPath: location.pathname + location.search } })}>
-                Войти в аккаунт
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </OBSLayout>
-    );
-  }
 
   return (
-    <OBSLayout>
-      <div className="container mx-auto p-6 max-w-xl">
-        <Card className="bg-black/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Присоединиться к сессии</CardTitle>
-            {session && (
-              <CardDescription>Сессия: {session.name}</CardDescription>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {loading ? (
-              <div className="flex justify-center p-4">
-                <p>Загрузка данных...</p>
-              </div>
-            ) : error ? (
-              <>
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                  <p>{error}</p>
-                </div>
-                <div className="space-y-4">
-                  <p>Введите код сессии вручную:</p>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={manualKey} 
-                      onChange={(e) => setManualKey(e.target.value)}
-                      placeholder="Код сессии"
-                    />
-                    <Button onClick={handleJoinWithKey}>Найти</Button>
-                  </div>
-                </div>
-              </>
-            ) : !session ? (
-              <div className="space-y-4">
-                <p>Введите код сессии вручную:</p>
-                <div className="flex gap-2">
-                  <Input 
-                    value={manualKey} 
-                    onChange={(e) => setManualKey(e.target.value)}
-                    placeholder="Код сессии"
-                  />
-                  <Button onClick={handleJoinWithKey}>Найти</Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Выберите персонажа для сессии:</h3>
-                  {characters.length === 0 ? (
-                    <div className="text-center p-6 border border-dashed rounded-md">
-                      <p className="mb-4">У вас нет созданных персонажей</p>
-                      <Button onClick={() => navigate('/character-creation')}>
-                        Создать персонажа
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid gap-3">
-                      {characters.map((character) => (
-                        <Card key={character.id} className="overflow-hidden hover:bg-accent/20 cursor-pointer transition-all" onClick={() => handleJoinSession(character.id, character.name || 'Безымянный герой')}>
-                          <div className="p-4 flex justify-between items-center">
-                            <div>
-                              <h4 className="font-bold">{character.name || 'Безымянный герой'}</h4>
-                              <p className="text-sm text-gray-400">{character.race} {character.class}, Ур. {character.level || 1}</p>
-                            </div>
-                            <Button size="sm">Выбрать</Button>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="pt-4 flex justify-between">
-                  <Button variant="ghost" onClick={() => navigate('/')}>
-                    Отмена
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </OBSLayout>
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Присоединиться к сессии</CardTitle>
+          <CardDescription>Введите код сессии и имя игрока, чтобы присоединиться к игре.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="sessionCode">Код сессии</Label>
+            <Input
+              type="text"
+              id="sessionCode"
+              placeholder="XXXXXX"
+              value={sessionCode}
+              onChange={(e) => setSessionCode(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="playerName">Имя игрока</Label>
+            <Input
+              type="text"
+              id="playerName"
+              placeholder="Ваше имя"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+            />
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="ghost" onClick={handleGoBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Назад
+          </Button>
+          <Button 
+            onClick={handleJoinSession} 
+            disabled={isConnecting}
+          >
+            {isConnecting ? "Подключение..." : "Присоединиться"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 
