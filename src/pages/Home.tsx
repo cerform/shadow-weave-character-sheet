@@ -256,6 +256,11 @@ const Home = () => {
                 </div>
               </div>
             )}
+
+            {/* Добавьте в раздел с навигацией или там, где отображаются основные кнопки: */}
+            <Button variant="outline" asChild className="w-full mb-2">
+              <Link to="/test">Тест загрузки персонажей</Link>
+            </Button>
           </main>
         </div>
       </div>
