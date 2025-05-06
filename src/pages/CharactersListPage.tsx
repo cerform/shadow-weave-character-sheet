@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson, AlertCircle } from "lucide-react";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
