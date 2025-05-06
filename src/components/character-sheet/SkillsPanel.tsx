@@ -75,17 +75,34 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
       [skillKey]: {
         ...currentSkill,
         proficient: !currentSkill.proficient,
-        value: !currentSkill.proficient ? abilityMod + profBonus : abilityMod
+        value: !currentSkill.proficient ? abilityMod + profBonus : abilityMod,
+        bonus: !currentSkill.proficient ? abilityMod + profBonus : abilityMod
       }
     };
     
     // Обновляем персонажа
-    const updatedProficiencies = { 
-      ...character.proficiencies as any
+    let updatedProficiencies = { 
+      ...character.proficiencies
     };
     
+    // Проверяем тип proficiencies и обновляем соответственно
     if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
-      updatedProficiencies.skills = Object.keys(updatedSkills).filter(key => updatedSkills[key].proficient);
+      // Создаем массив навыков, если его нет
+      const skillsList = updatedProficiencies.skills || [];
+      
+      if (!currentSkill.proficient) {
+        // Добавляем навык в список владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: [...skillsList, skillKey]
+        };
+      } else {
+        // Удаляем навык из списка владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: skillsList.filter(skill => skill !== skillKey)
+        };
+      }
     }
     
     onUpdate({

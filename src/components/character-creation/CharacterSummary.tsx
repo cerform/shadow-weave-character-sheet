@@ -1,228 +1,125 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Character, CharacterSpell } from '@/types/character';
-import NavigationButtons from './NavigationButtons';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Character } from '@/types/character';
+import { Card, CardContent } from '@/components/ui/card';
+import { getAbilityModifierString } from '@/utils/abilityUtils';
 
 interface CharacterSummaryProps {
   character: Character;
-  onUpdate?: (updates: Partial<Character>) => void;
-  nextStep?: () => void;
-  prevStep?: () => void;
-  onSave?: () => void;
 }
 
-const CharacterSummary: React.FC<CharacterSummaryProps> = ({
-  character,
-  nextStep,
-  prevStep,
-  onSave
-}) => {
-  // Получаем модификатор характеристики
-  const getModifier = (score: number) => {
-    const mod = Math.floor((score - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
+const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
+  // Функция форматирования списков для отображения
+  const formatList = (list: string[] | undefined | null): string => {
+    if (!list || list.length === 0) return 'Нет';
+    return list.join(', ');
   };
 
-  // Форматируем список заклинаний для отображения
-  const formatSpells = (spells: (CharacterSpell | string)[] | undefined) => {
-    if (!spells || spells.length === 0) return "Нет заклинаний";
+  // Форматирование экипировки для отображения
+  const formatEquipment = () => {
+    if (!character.equipment) return 'Нет экипировки';
     
-    // Группируем заклинания по уровням
-    const spellsByLevel: Record<number, string[]> = {};
-    
-    spells.forEach((spell) => {
-      const spellLevel = typeof spell === 'string' ? 0 : (spell.level || 0);
-      if (!spellsByLevel[spellLevel]) {
-        spellsByLevel[spellLevel] = [];
+    // Обрабатываем оба возможных типа equipment
+    if (Array.isArray(character.equipment)) {
+      // Массив Item объектов
+      const names = character.equipment.map(item => item.name);
+      return names.length ? names.join(', ') : 'Нет экипировки';
+    } else {
+      // Объект с weapons, armor, items
+      const equipParts = [];
+      
+      if (character.equipment.weapons && character.equipment.weapons.length > 0) {
+        equipParts.push(`Оружие: ${character.equipment.weapons.join(', ')}`);
       }
       
-      const spellName = typeof spell === 'string' ? spell : spell.name;
-      spellsByLevel[spellLevel].push(spellName);
-    });
+      if (character.equipment.armor) {
+        equipParts.push(`Доспех: ${character.equipment.armor}`);
+      }
+      
+      if (character.equipment.items && character.equipment.items.length > 0) {
+        equipParts.push(`Предметы: ${character.equipment.items.join(', ')}`);
+      }
+      
+      return equipParts.length ? equipParts.join('; ') : 'Нет экипировки';
+    }
+  };
+
+  // Форматирование особенностей для отображения
+  const formatFeatures = () => {
+    if (!character.features) return 'Нет особенностей';
     
-    // Формируем строку с заклинаниями по уровням
-    return Object.entries(spellsByLevel)
-      .sort(([levelA], [levelB]) => parseInt(levelA) - parseInt(levelB))
-      .map(([level, spellNames]) => {
-        const levelName = level === '0' ? 'Заговоры' : `Уровень ${level}`;
-        return `${levelName}: ${spellNames.join(', ')}`;
-      })
-      .join('\n');
+    if (Array.isArray(character.features)) {
+      if (typeof character.features[0] === 'string') {
+        // Массив строк
+        return character.features.length ? character.features.join(', ') : 'Нет особенностей';
+      } else {
+        // Массив Feature объектов
+        const featureNames = character.features.map((feature: any) => feature.name);
+        return featureNames.length ? featureNames.join(', ') : 'Нет особенностей';
+      }
+    }
+    
+    return 'Нет особенностей';
   };
   
-  // Форматируем список снаряжения
-  const formatEquipment = () => {
-    if (!character.equipment) return "Нет снаряжения";
-    
-    if (Array.isArray(character.equipment)) {
-      if (typeof character.equipment[0] === 'string') {
-        return (character.equipment as string[]).join(', ');
-      } else {
-        return (character.equipment as any[]).map(item => item.name || item).join(', ');
-      }
-    }
-    
-    const equipment = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
-    const parts = [];
-    
-    if (equipment.weapons && equipment.weapons.length > 0) {
-      parts.push(`Оружие: ${equipment.weapons.join(', ')}`);
-    }
-    
-    if (equipment.armor) {
-      parts.push(`Броня: ${equipment.armor}`);
-    }
-    
-    if (equipment.items && equipment.items.length > 0) {
-      parts.push(`Предметы: ${equipment.items.join(', ')}`);
-    }
-    
-    return parts.length > 0 ? parts.join('\n') : "Нет снаряжения";
-  };
-
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Сводка персонажа</h2>
-      
-      <ScrollArea className="h-[500px] pr-4 pb-4">
-        <div className="space-y-6">
-          {/* Основная информация */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Основные данные</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <span className="font-medium">Имя:</span> {character.name}
-                </div>
-                <div>
-                  <span className="font-medium">Пол:</span> {character.gender}
-                </div>
-                <div>
-                  <span className="font-medium">Раса:</span> {character.race}
-                  {character.subrace && ` (${character.subrace})`}
-                </div>
-                <div>
-                  <span className="font-medium">Класс:</span> {character.class}
-                  {character.subclass && ` (${character.subclass})`}
-                </div>
-                <div>
-                  <span className="font-medium">Уровень:</span> {character.level}
-                </div>
-                <div>
-                  <span className="font-medium">Мировоззрение:</span> {character.alignment}
-                </div>
-                <div>
-                  <span className="font-medium">Предыстория:</span> {character.background}
-                </div>
+    <Card className="w-full">
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">{character.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {character.race} {character.subrace && `(${character.subrace})`}, {character.class || character.className}, {character.background}, {character.alignment}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-1">Характеристики:</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>СИЛ: {character.abilities?.strength || character.strength || '–'} ({getAbilityModifierString(character.abilities?.strength || character.strength)})</div>
+                <div>ЛОВ: {character.abilities?.dexterity || character.dexterity || '–'} ({getAbilityModifierString(character.abilities?.dexterity || character.dexterity)})</div>
+                <div>ТЕЛ: {character.abilities?.constitution || character.constitution || '–'} ({getAbilityModifierString(character.abilities?.constitution || character.constitution)})</div>
+                <div>ИНТ: {character.abilities?.intelligence || character.intelligence || '–'} ({getAbilityModifierString(character.abilities?.intelligence || character.intelligence)})</div>
+                <div>МДР: {character.abilities?.wisdom || character.wisdom || '–'} ({getAbilityModifierString(character.abilities?.wisdom || character.wisdom)})</div>
+                <div>ХАР: {character.abilities?.charisma || character.charisma || '–'} ({getAbilityModifierString(character.abilities?.charisma || character.charisma)})</div>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Характеристики */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Характеристики</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-                {character.abilities && Object.entries({
-                  "СИЛ": character.abilities.STR || character.abilities.strength,
-                  "ЛОВ": character.abilities.DEX || character.abilities.dexterity,
-                  "ТЕЛ": character.abilities.CON || character.abilities.constitution,
-                  "ИНТ": character.abilities.INT || character.abilities.intelligence,
-                  "МДР": character.abilities.WIS || character.abilities.wisdom,
-                  "ХАР": character.abilities.CHA || character.abilities.charisma
-                }).map(([name, value]) => (
-                  <div key={name} className="flex flex-col items-center border rounded p-3">
-                    <span className="font-bold">{name}</span>
-                    <span className="text-xl">{value}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {getModifier(value as number)}
-                    </span>
-                  </div>
-                ))}
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-1">Базовые параметры:</h4>
+              <div className="space-y-1 text-sm">
+                <div>КД: {character.armorClass || '–'}</div>
+                <div>Инициатива: {character.initiative || '–'}</div>
+                <div>Скорость: {character.speed || '–'}</div>
+                <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
+                <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
           
-          {/* Снаряжение */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Снаряжение и золото</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="whitespace-pre-line">{formatEquipment()}</div>
-                <div>
-                  <span className="font-medium">Золото:</span> {character.gold || 0} зм
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <h4 className="font-medium mb-1">Владения и навыки:</h4>
+            <p className="text-sm">
+              {character.proficiencies && typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && 
+                character.proficiencies.skills ? 
+                formatList(character.proficiencies.skills) : 
+                'Нет навыков'}
+            </p>
+          </div>
           
-          {/* Заклинания */}
-          {character.spells && character.spells.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Заклинания</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-line">{formatSpells(character.spells)}</div>
-              </CardContent>
-            </Card>
-          )}
+          <div>
+            <h4 className="font-medium mb-1">Экипировка:</h4>
+            <p className="text-sm">{formatEquipment()}</p>
+          </div>
           
-          {/* Личность */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Личность</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium mb-1">Черты характера:</h4>
-                  <p className="text-sm">{character.personalityTraits || "Не указано"}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">Идеалы:</h4>
-                  <p className="text-sm">{character.ideals || "Не указано"}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">Привязанности:</h4>
-                  <p className="text-sm">{character.bonds || "Не указано"}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">Слабости:</h4>
-                  <p className="text-sm">{character.flaws || "Не указано"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Предыстория */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>История персонажа</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-line">{character.backstory || "История персонажа не указана."}</p>
-            </CardContent>
-          </Card>
+          <div>
+            <h4 className="font-medium mb-1">Особенности:</h4>
+            <p className="text-sm">{formatFeatures()}</p>
+          </div>
         </div>
-      </ScrollArea>
-      
-      <NavigationButtons
-        allowNext={true}
-        nextStep={onSave || nextStep || (() => {})}
-        prevStep={prevStep || (() => {})}
-        isFirstStep={false}
-        nextLabel="Сохранить персонажа"
-      />
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
