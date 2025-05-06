@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson, AlertCircle, Loader2 } from "lucide-react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -12,13 +11,9 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { toast } from 'sonner';
 import { useCharacter } from '@/contexts/CharacterContext';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
-import LoadingState from '@/components/characters/LoadingState';
-import ErrorDisplay from '@/components/characters/ErrorDisplay';
-import CharactersTable from '@/components/characters/CharactersTable';
-import CharacterCards from '@/components/characters/CharacterCards';
-import CharactersHeader from '@/components/characters/CharactersHeader';
-import { getCurrentUid } from '@/utils/authHelpers';
-import { createTestCharacter } from '@/services/characterService';
+import CharacterCard from '@/components/character/CharacterCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,134 +22,25 @@ const CharactersListPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  // Используем контекст персонажей - ОБЯЗАТЕЛЬНО берем отсюда
-  const { 
-    characters, 
-    loading, 
-    error, 
-    refreshCharacters,
-    deleteCharacter
-  } = useCharacter();
+  // Используем контекст персонажей напрямую
+  const { characters, loading, error, refreshCharacters } = useCharacter();
   
-  // Выводим для отладки количество персонажей из контекста
-  console.log('CharactersListPage: Персонажи из контекста:', characters?.length || 0);
-  
-  const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
+  // State для управления UI
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const [creatingTest, setCreatingTest] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>({});
-  // Add local error state since we're using it
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   
-  // Загрузка персонажей при монтировании компонента
-  useEffect(() => {
-    console.log('CharactersListPage: Компонент загружен');
-    
-    if (isAuthenticated) {
-      console.log('CharactersListPage: Пользователь авторизован:', user);
-      loadCharacters();
-    } else {
-      console.log('CharactersListPage: Пользователь не авторизован');
-    }
-  }, [isAuthenticated, user]);
-
-  // При обновлении попыток загрузки - загружаем заново
-  useEffect(() => {
-    if (loadAttempts > 0) {
-      console.log(`CharactersListPage: Повторная загрузка персонажей (попытка ${loadAttempts})`);
-      loadCharacters();
-    }
-  }, [loadAttempts]);
-
-  // Функция загрузки персонажей через контекст
-  const loadCharacters = async () => {
+  // Функция загрузки персонажей
+  const handleRefresh = async () => {
     try {
-      console.log('CharactersListPage: Начинаем загрузку персонажей');
       setIsRefreshing(true);
-      
-      if (!isAuthenticated) {
-        console.log('CharactersListPage: Пользователь не авторизован, прерываем загрузку');
-        setDebugInfo(prev => ({...prev, authError: 'Пользователь не авторизован'}));
-        return;
-      }
-      
-      const userId = getCurrentUid();
-      console.log('CharactersListPage: ID пользователя:', userId);
-      
-      if (!userId) {
-        console.log('CharactersListPage: ID пользователя не найден');
-        setDebugInfo(prev => ({...prev, userIdError: 'ID пользователя не найден'}));
-        setLocalError('ID пользователя не найден');
-        return;
-      }
-      
-      setDebugInfo(prev => ({...prev, userId}));
-      
-      try {
-        // Непосредственно загружаем персонажей через контекст
-        await refreshCharacters();
-        console.log('CharactersListPage: После обновления, characters =', characters);
-        
-        // Проверяем количество персонажей после загрузки
-        if (!characters || characters.length === 0) {
-          console.log('CharactersListPage: Персонажи не найдены');
-          setDebugInfo(prev => ({...prev, noCharacters: true}));
-        } else {
-          console.log(`CharactersListPage: Загружено ${characters.length} персонажей`);
-          toast.success(`Персонажи успешно загружены (${characters.length})`);
-          setDebugInfo(prev => ({...prev, charactersLoaded: true, characterCount: characters.length}));
-        }
-      } catch (err) {
-        console.error('CharactersListPage: Внутренняя ошибка при загрузке персонажей:', err);
-        setDebugInfo(prev => ({...prev, refreshError: err}));
-        throw err;
-      }
-      
+      await refreshCharacters();
+      toast.success('Персонажи обновлены');
     } catch (err) {
-      console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
-      setDebugInfo(prev => ({...prev, loadError: err}));
-      toast.error('Ошибка при загрузке персонажей');
+      toast.error('Не удалось обновить список персонажей');
+      console.error('Ошибка при обновлении персонажей:', err);
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  // Функция удаления персонажа
-  const handleDeleteCharacter = async (id: string) => {
-    try {
-      console.log('CharactersListPage: Удаляем персонажа с ID:', id);
-      await deleteCharacter(id);
-      toast.success('Персонаж успешно удален');
-      return Promise.resolve();
-    } catch (err) {
-      console.error('Ошибка при удалении персонажа:', err);
-      toast.error('Не удалось удалить персонажа');
-      return Promise.reject(err);
-    }
-  };
-
-  // Функция для создания тестового персонажа
-  const handleCreateTestCharacter = async () => {
-    try {
-      setCreatingTest(true);
-      const newCharId = await createTestCharacter();
-      toast.success('Тестовый персонаж создан успешно');
-      console.log('Создан тестовый персонаж с ID:', newCharId);
-      
-      // Обновляем список персонажей после создания
-      await loadCharacters();
-    } catch (err) {
-      console.error('Ошибка при создании тестового персонажа:', err);
-      toast.error('Не удалось создать тестового персонажа');
-    } finally {
-      setCreatingTest(false);
-    }
-  };
-
-  // Повторная попытка загрузки
-  const handleRetry = () => {
-    setLoadAttempts(prev => prev + 1);
   };
 
   // Если пользователь не авторизован, предлагаем войти
@@ -199,151 +85,157 @@ const CharactersListPage: React.FC = () => {
         </div>
       }
     >
-      <div className="container mx-auto p-6 max-w-4xl">
-        <div className="grid grid-cols-1 gap-6">
-          {/* Верхняя панель - заголовок с кнопкой создания */}
-          <CharactersHeader 
-            username={user?.displayName || user?.username || ""} 
-            characterCount={characters?.length || 0} 
-          />
+      <div className="container mx-auto p-6 max-w-6xl">
+        {/* Верхняя панель */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: currentTheme.accent }}>
+            Персонажи пользователя {user?.displayName || user?.username || ""}
+          </h1>
+          <p className="text-muted-foreground">
+            {characters.length > 0 
+              ? `Всего персонажей: ${characters.length}` 
+              : "У вас пока нет персонажей"}
+          </p>
+        </div>
+        
+        {/* Навигация по страницам персонажей */}
+        <CharacterNavigation />
+        
+        {/* Панель управления */}
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+          <Button
+            onClick={() => navigate('/character-creation')}
+            className="gap-2"
+          >
+            <UserPlus size={16} />
+            Создать персонажа
+          </Button>
           
-          {/* Добавляем навигацию по страницам персонажей */}
-          <CharacterNavigation />
-          
-          {/* Панель управления отображением и создания персонажа */}
-          <div className="flex flex-wrap justify-between gap-3">
-            {/* Кнопки действий */}
-            <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
+            <div className="flex rounded-md overflow-hidden border">
               <Button
-                onClick={() => navigate('/character-creation')}
-                className="gap-2"
-                variant="default"
+                onClick={() => setDisplayMode('grid')}
+                size="sm"
+                variant={displayMode === 'grid' ? "default" : "ghost"}
+                className={`rounded-none ${displayMode === 'grid' ? "" : "bg-transparent"}`}
               >
-                <UserPlus size={16} />
-                Создать нового персонажа
+                <LayoutGrid size={16} />
               </Button>
-              
               <Button
-                onClick={handleCreateTestCharacter}
-                disabled={creatingTest}
-                variant="secondary" 
-                className="gap-2"
+                onClick={() => setDisplayMode('list')}
+                size="sm"
+                variant={displayMode === 'list' ? "default" : "ghost"}
+                className={`rounded-none ${displayMode === 'list' ? "" : "bg-transparent"}`}
               >
-                {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={16} />}
-                Создать тестового персонажа
+                <LayoutList size={16} />
               </Button>
             </div>
             
-            <div className="flex gap-2">
-              {/* Кнопки переключения режима */}
-              <div className="flex rounded-md overflow-hidden border">
-                <Button
-                  onClick={() => setDisplayMode('cards')}
-                  size="sm"
-                  variant={displayMode === 'cards' ? "default" : "ghost"}
-                  className={`rounded-none ${displayMode === 'cards' ? "" : "bg-transparent"}`}
-                  title="Режим карточек"
-                >
-                  <LayoutGrid size={16} />
-                </Button>
-                <Button
-                  onClick={() => setDisplayMode('table')}
-                  size="sm"
-                  variant={displayMode === 'table' ? "default" : "ghost"}
-                  className={`rounded-none ${displayMode === 'table' ? "" : "bg-transparent"}`}
-                  title="Режим таблицы"
-                >
-                  <LayoutList size={16} />
-                </Button>
-                <Button
-                  onClick={() => setDisplayMode('raw')}
-                  size="sm"
-                  variant={displayMode === 'raw' ? "default" : "ghost"}
-                  className={`rounded-none ${displayMode === 'raw' ? "" : "bg-transparent"}`}
-                  title="JSON данные"
-                >
-                  <FileJson size={16} />
-                </Button>
-              </div>
-              
-              <Button
-                onClick={loadCharacters}
-                size="sm"
-                variant="outline"
-                className="gap-2"
-                disabled={isRefreshing || loading}
-              >
-                <RefreshCw size={16} className={isRefreshing || loading ? "animate-spin" : ""} />
-                Обновить
-              </Button>
-            </div>
+            <Button
+              onClick={handleRefresh}
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              disabled={isRefreshing || loading}
+            >
+              <RefreshCw size={16} className={isRefreshing || loading ? "animate-spin" : ""} />
+              Обновить
+            </Button>
           </div>
+        </div>
 
-          {/* Расширенная отладочная информация */}
-          <Alert className="bg-blue-900/20 border-blue-500/50">
-            <AlertCircle className="h-4 w-4 text-blue-500" />
-            <AlertTitle className="text-blue-200">Отладочная информация о персонажах</AlertTitle>
-            <AlertDescription className="text-muted-foreground">
-              <div>Загрузка: {loading ? "Да" : "Нет"}</div>
-              <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
-              <div>Загружено персонажей из контекста: {characters?.length || 0}</div>
-              <div>Попыток загрузки: {loadAttempts}</div>
-              <div>ID пользователя: {getCurrentUid() || 'Не найден'}</div>
-              {error && <div className="text-red-400">Ошибка: {error}</div>}
-              {localError && <div className="text-red-400">Локальная ошибка: {localError}</div>}
-              <div className="mt-2">
-                <h4 className="font-semibold text-blue-300">Отладочные данные:</h4>
-                <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
+        {/* Состояние загрузки */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-4">
+                <Skeleton className="h-[240px] w-full rounded-lg" />
               </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Показ ошибки */}
+        {error && !loading && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>
+              {error}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                className="ml-4"
+              >
+                Повторить
+              </Button>
             </AlertDescription>
           </Alert>
-
-          {/* Загрузка */}
-          {loading && <LoadingState />}
-          
-          {/* Ошибка */}
-          {error && !loading && (
-            <ErrorDisplay 
-              errorMessage={error}
-              onRetry={handleRetry}
-            />
-          )}
-          
-          {/* Показ данных в выбранном режиме */}
-          {!loading && (
-            <>
-              {displayMode === 'raw' ? (
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <h2 className="text-lg font-bold mb-4">Данные персонажей (из контекста):</h2>
-                  <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
-                    {JSON.stringify(characters, null, 2)}
-                  </pre>
-                </div>
-              ) : displayMode === 'table' ? (
-                <CharactersTable 
-                  characters={characters || []}
-                  onDelete={handleDeleteCharacter}
-                />
-              ) : (
-                <div className="bg-transparent">
-                  <CharacterCards
-                    characters={characters || []}
-                    onDelete={handleDeleteCharacter}
+        )}
+        
+        {/* Отображение персонажей */}
+        {!loading && !error && (
+          <>
+            {/* Если нет персонажей */}
+            {characters.length === 0 && (
+              <div className="text-center p-10 border border-dashed rounded-lg">
+                <h3 className="text-xl font-medium mb-2">У вас пока нет персонажей</h3>
+                <p className="text-muted-foreground mb-6">
+                  Создайте своего первого персонажа, чтобы начать приключение
+                </p>
+                <Button onClick={() => navigate('/character-creation')}>
+                  Создать персонажа
+                </Button>
+              </div>
+            )}
+            
+            {/* Сетка персонажей */}
+            {characters.length > 0 && displayMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {characters.map(character => (
+                  <CharacterCard 
+                    key={character.id}
+                    character={character}
+                    onClick={() => navigate(`/character/${character.id}`)}
                   />
-                </div>
-              )}
-              
-              {/* Показываем информацию о количестве загруженных персонажей */}
-              {!loading && characters && characters.length > 0 && (
-                <div className="mt-2 text-center text-muted-foreground text-sm">
-                  Загружено персонажей из контекста: {characters.length}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Список персонажей */}
+            {characters.length > 0 && displayMode === 'list' && (
+              <div className="space-y-3">
+                {characters.map(character => (
+                  <div 
+                    key={character.id}
+                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-card/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/character/${character.id}`)}
+                  >
+                    <div>
+                      <h3 className="text-lg font-medium text-primary">{character.name || "Безымянный"}</h3>
+                      <div className="text-sm text-muted-foreground">
+                        {character.race || ''} {character.class || character.className || ''}
+                        {character.level ? ` (${character.level} уровень)` : ''}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/character/${character.id}`);
+                    }}>
+                      Открыть
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Дополнительная метка при отсутствии персонажей */}
+            {characters.length === 0 && (
+              <p className="text-center text-muted-foreground text-sm mt-8">
+                В вашей коллекции пока нет ни одного персонажа
+              </p>
+            )}
+          </>
+        )}
       </div>
     </OBSLayout>
   );
