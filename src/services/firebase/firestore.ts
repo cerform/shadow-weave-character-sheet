@@ -1,6 +1,6 @@
 
-import { getFirestore } from 'firebase/firestore';
-import { app } from './config';
+// Импортируем из нового местоположения
+import { db } from '@/lib/firebase';
 
-// Initialize Firestore
-export const db = getFirestore(app);
+// Экспортируем Firestore
+export { db };

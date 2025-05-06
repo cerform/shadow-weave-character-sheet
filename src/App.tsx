@@ -10,7 +10,7 @@ import { UserThemeProvider } from '@/contexts/UserThemeContext';
 import { CharacterProvider } from '@/contexts/CharacterContext';
 import AppRoutes from './AppRoutes';
 import './App.css';
-import { app } from '@/firebase';
+import { app } from '@/lib/firebase';
 
 // Создаем клиент запросов
 const queryClient = new QueryClient({

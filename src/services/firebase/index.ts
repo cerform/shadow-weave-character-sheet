@@ -1,9 +1,8 @@
 
-// Экспортируем внешний firebase.ts как единую точку входа,
-// переименовывая auth из @/firebase для избежания конфликта имен
-import { app, db, storage } from '@/firebase';
+// Экспортируем из нового местоположения
+import { app, db, storage } from '@/lib/firebase';
 import { getAuth } from 'firebase/auth';
-import { analyticsPromise, initializeAnalytics } from './config';
+import { analyticsPromise, initializeAnalytics } from '@/lib/firebase';
 
 // Экспортируем авторизацию из нашего сервиса
 export * from './auth';

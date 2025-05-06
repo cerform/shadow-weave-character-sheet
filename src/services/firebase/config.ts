@@ -1,25 +1,9 @@
 
-import { app } from '@/firebase';
-import { getAnalytics, isSupported } from "firebase/analytics";
+// Импортируем из нового местоположения
+import { app } from '@/lib/firebase';
 
-// Используем уже существующее приложение из firebase.ts
-// и добавляем инициализацию Analytics
-
-// Реэкспортируем app для внутренних сервисов
+// Экспортируем приложение для внутренних сервисов
 export { app };
 
-// Initialize Analytics only if supported (prevents errors in environments like SSR)
-export const initializeAnalytics = async () => {
-  try {
-    if (await isSupported()) {
-      return getAnalytics(app);
-    }
-    return null;
-  } catch (error) {
-    console.warn("Analytics not initialized:", error);
-    return null;
-  }
-};
-
-// Initialize asynchronously but don't wait
-export const analyticsPromise = initializeAnalytics();
+// Реэкспортируем инициализацию аналитики из нового модуля
+export { initializeAnalytics, analyticsPromise } from '@/lib/firebase';
