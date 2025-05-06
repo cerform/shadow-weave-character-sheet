@@ -28,9 +28,17 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
+    const authDebugInfo = isAuthenticated 
+      ? `Пользователь авторизован: ${user?.uid || user?.id || 'ID не найден'}`
+      : 'Пользователь не авторизован';
+    
+    setDebugInfo(authDebugInfo);
+    console.log(authDebugInfo);
+    
     if (isAuthenticated && user) {
       console.log('Authenticated user available:', user);
       console.log('User ID:', user.uid || user.id);
@@ -46,14 +54,41 @@ const CharactersListPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Loading characters for user:', user?.uid || user?.id);
-      // Используем импортированную функцию getCharactersByUserId
-      const fetchedCharacters = await getCharactersByUserId(user.uid || user.id);
-      setCharacters(fetchedCharacters);
-      console.log('Loaded characters:', fetchedCharacters);
+      // Собираем ID пользователя для отладки
+      const userId = user?.uid || user?.id;
+      console.log(`Loading characters for user: ${userId}`);
+      setDebugInfo(prev => `${prev}\nЗагрузка персонажей для ID: ${userId}`);
+      
+      // Тестируем обе функции загрузки для сравнения
+      try {
+        console.log("Загрузка через getAllCharacters()...");
+        const allChars = await getAllCharacters();
+        console.log(`getAllCharacters() вернул ${allChars.length} персонажей:`, allChars);
+        setDebugInfo(prev => `${prev}\ngetAllCharacters() вернул ${allChars.length} персонажей`);
+      } catch (err) {
+        console.error("Ошибка при вызове getAllCharacters():", err);
+        setDebugInfo(prev => `${prev}\nОшибка getAllCharacters(): ${err}`);
+      }
+      
+      try {
+        console.log(`Загрузка через getCharactersByUserId(${userId})...`);
+        const userChars = await getCharactersByUserId(userId || "");
+        console.log(`getCharactersByUserId() вернул ${userChars.length} персонажей:`, userChars);
+        setDebugInfo(prev => `${prev}\ngetCharactersByUserId() вернул ${userChars.length} персонажей`);
+        
+        // Сохраняем результат
+        setCharacters(userChars);
+      } catch (err) {
+        console.error("Ошибка при вызове getCharactersByUserId():", err);
+        setDebugInfo(prev => `${prev}\nОшибка getCharactersByUserId(): ${err}`);
+        throw err; // Перебрасываем ошибку для обработки в catch блоке ниже
+      }
+      
+      console.log('Finished loading characters');
     } catch (err) {
       console.error('Ошибка при загрузке персонажей:', err);
-      setError('Не удалось загрузить персонажей');
+      setError(`Не удалось загрузить персонажей: ${err}`);
+      setDebugInfo(prev => `${prev}\nОшибка загрузки: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -119,6 +154,14 @@ const CharactersListPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-6">
           {/* Верхняя панель - заголовок с кнопкой создания */}
           <CharactersHeader username={user?.displayName || user?.username || ""} />
+
+          {/* Отладочная информация - временно для выявления проблемы */}
+          {debugInfo && (
+            <div className="p-4 bg-amber-950 border border-amber-500 rounded text-amber-200 font-mono text-xs">
+              <div className="mb-2 font-semibold">Отладочная информация:</div>
+              <pre className="whitespace-pre-wrap">{debugInfo}</pre>
+            </div>
+          )}
 
           {/* Загрузка */}
           {loading && <LoadingState />}

@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
@@ -221,63 +220,31 @@ export const deleteCharacter = async (id: string): Promise<void> => {
   }
 };
 
-// Получение всех персонажей для текущего пользователя
+// Получение всех персонажей - без фильтрации по userId
 export const getAllCharacters = async (): Promise<Character[]> => {
   try {
-    const userId = getCurrentUid();
-    if (!userId) {
-      console.warn('No user ID available, returning characters from localStorage');
-      // Если нет ID пользователя, возвращаем из localStorage
-      const existingChars = localStorage.getItem('dnd-characters');
-      return existingChars ? JSON.parse(existingChars) : [];
-    }
+    console.log('Fetching ALL characters without userId filter');
     
-    console.log('Fetching characters for userId:', userId);
-    
-    // Получаем персонажей из Firestore с явным фильтром по userId
+    // Получаем персонажей из Firestore без фильтров
     const charactersCollection = collection(db, 'characters');
-    const q = query(charactersCollection, where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(charactersCollection);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log('Found character:', { id: doc.id, userId: data.userId });
       characters.push({
-        ...doc.data(),
+        ...data,
         id: doc.id
       } as Character);
     });
     
-    console.log('Found characters in Firestore:', characters.length, characters);
-    
-    // Если в Firestore нет персонажей, проверяем localStorage
-    if (characters.length === 0) {
-      console.log('No characters found in Firestore, checking localStorage');
-      const existingChars = localStorage.getItem('dnd-characters');
-      if (existingChars) {
-        const localChars = JSON.parse(existingChars);
-        // Фильтруем по userId
-        return localChars.filter(char => char.userId === userId);
-      }
-    }
+    console.log('Found total characters in Firestore:', characters.length);
     
     return characters;
   } catch (error) {
     console.error('Error getting all characters from Firestore:', error);
-    
-    // Возвращаем из localStorage как резервный вариант
-    try {
-      const existingChars = localStorage.getItem('dnd-characters');
-      const userId = getCurrentUid();
-      if (existingChars) {
-        const chars = JSON.parse(existingChars);
-        // Фильтруем по userId даже в локальном хранилище
-        return userId ? chars.filter(char => char.userId === userId) : chars;
-      }
-      return [];
-    } catch (localError) {
-      console.error('Error getting characters from localStorage:', localError);
-      return [];
-    }
+    return [];
   }
 };
 
@@ -291,6 +258,17 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   try {
     console.log('Getting characters for specific userId:', userId);
     const charactersCollection = collection(db, 'characters');
+    
+    // Сначала попробуем получить все документы для отладки
+    console.log('DEBUG: Проверка всех документов в коллекции characters');
+    const allDocsSnapshot = await getDocs(charactersCollection);
+    console.log(`В коллекции characters всего ${allDocsSnapshot.size} документов`);
+    allDocsSnapshot.forEach(doc => {
+      const data = doc.data();
+      console.log(`Документ ${doc.id}: userId = ${data.userId}`);
+    });
+    
+    // Теперь применяем фильтрацию по userId
     const q = query(charactersCollection, where('userId', '==', userId));
     
     console.log('Query parameters:', { 
