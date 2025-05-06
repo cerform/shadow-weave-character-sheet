@@ -1,61 +1,80 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { SessionProvider } from '@/contexts/SessionContext';
-import { UserThemeProvider } from '@/contexts/UserThemeContext';
-import { CharacterProvider } from '@/contexts/CharacterContext';
-import AppRoutes from './AppRoutes';
-import './App.css';
-import { app } from '@/lib/firebase';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import CharacterPage from './pages/CharacterPage';
+import CreateCharacterPage from './pages/CreateCharacterPage';
+import CharactersListPage from './pages/CharactersListPage';
+import DMPage from './pages/DMPage';
+import NotFoundPage from './pages/NotFoundPage';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from './contexts/AuthContext';
+import { CharacterProvider } from './contexts/CharacterContext';
+import { SpellbookProvider } from './contexts/SpellbookContext';
+import { UserThemeProvider } from '@/hooks/use-user-theme';
+import { ThemeProvider } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-// Создаем клиент запросов
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30000,
-    },
-  },
-});
+// Компонент для применения темы глобально
+const ThemeApplier = () => {
+  const { theme, themeStyles } = useTheme();
+  
+  useEffect(() => {
+    // Проверяем localStorage на наличие сохраненной темы
+    const savedTheme = localStorage.getItem('userTheme') || 
+                       localStorage.getItem('dnd-theme') || 
+                       localStorage.getItem('theme') || 
+                       'default';
+    
+    // Устанавливаем атрибуты для темы на корневом элементе
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Добавляем класс темы к body
+    document.body.className = '';
+    document.body.classList.add(`theme-${savedTheme}`);
+    
+    // Устанавливаем CSS-переменные для темы
+    const currentTheme = themes[savedTheme as keyof typeof themes] || themes.default;
+    document.documentElement.style.setProperty('--background', currentTheme.background);
+    document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
+    document.documentElement.style.setProperty('--primary', currentTheme.primary);
+    document.documentElement.style.setProperty('--accent', currentTheme.accent);
+    document.documentElement.style.setProperty('--text', currentTheme.textColor);
+    document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
+  }, [theme, themeStyles]);
+  
+  return null;
+};
 
 function App() {
-  // Добавляем эффект для отладки инициализации
-  useEffect(() => {
-    console.log('App.tsx: Инициализация приложения');
-    console.log('App.tsx: Firebase app name:', app.name);
-    console.log('App.tsx: Firebase app options:', app.options);
-    
-    // Обработка ошибок, которые могут произойти при инициализации
-    window.addEventListener('error', (event) => {
-      console.error('App.tsx: Глобальная ошибка:', event.error);
-    });
-    
-    return () => {
-      window.removeEventListener('error', () => {});
-    };
-  }, []);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <Router>
-          <AuthProvider>
-            <SessionProvider>
-              <UserThemeProvider>
-                <CharacterProvider>
-                  <AppRoutes />
-                  <Toaster />
-                </CharacterProvider>
-              </UserThemeProvider>
-            </SessionProvider>
-          </AuthProvider>
-        </Router>
+    <UserThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <CharacterProvider>
+            <SpellbookProvider>
+              <Router>
+                <ThemeApplier />
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/characters" element={<CharactersListPage />} />
+                  <Route path="/characters/:id" element={<CharacterPage />} />
+                  <Route path="/create" element={<CreateCharacterPage />} />
+                  <Route path="/dm" element={<DMPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+                <Toaster />
+              </Router>
+            </SpellbookProvider>
+          </CharacterProvider>
+        </AuthProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </UserThemeProvider>
   );
 }
 

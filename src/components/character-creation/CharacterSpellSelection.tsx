@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -190,9 +189,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       filtered = spellsToFilter.filter(spell => {
         const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
         
-        // Safe handling of school property with proper type checking
+        // Безопасная обработка свойства school с проверкой типа
         let schoolMatch = false;
-        if (spell.school && typeof spell.school === 'string') {
+        if (typeof spell.school === 'string') {
           schoolMatch = spell.school.toLowerCase().includes(searchTermLower);
         }
         

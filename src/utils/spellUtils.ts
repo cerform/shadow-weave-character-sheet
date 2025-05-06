@@ -207,8 +207,8 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
-    // Ensure classes is always a string array with proper conversion
     classes: (function() {
+      // Исправляем ошибку с типом
       if (!spell.classes) return [] as string[];
       if (typeof spell.classes === 'string') return [spell.classes];
       if (Array.isArray(spell.classes)) {
