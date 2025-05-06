@@ -56,7 +56,11 @@ const CharacterViewPage = () => {
             } else {
               console.error('CharacterViewPage: Персонаж не найден нигде');
               setError(`Персонаж с ID ${id} не найден.`);
-              toast.error(`Персонаж с ID ${id} не найден.`);
+              toast({
+                variant: "destructive",
+                title: "Ошибка",
+                description: `Персонаж с ID ${id} не найден.`
+              });
               // Не перенаправляем сразу, позволяя пользователю увидеть ошибку
             }
           }
@@ -74,7 +78,11 @@ const CharacterViewPage = () => {
             return;
           } else {
             setError("Персонаж не выбран.");
-            toast.error("Персонаж не выбран.");
+            toast({
+              variant: "destructive",
+              title: "Внимание", 
+              description: "Персонаж не выбран."
+            });
             // Даем время увидеть ошибку перед перенаправлением
             setTimeout(() => navigate('/characters'), 2000);
           }
@@ -82,7 +90,11 @@ const CharacterViewPage = () => {
       } catch (err) {
         console.error('Ошибка при загрузке персонажа:', err);
         setError("Ошибка при загрузке персонажа.");
-        toast.error("Ошибка при загрузке персонажа.");
+        toast({
+          variant: "destructive", 
+          title: "Ошибка",
+          description: "Ошибка при загрузке персонажа."
+        });
       } finally {
         setLoading(false);
       }
