@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import NavigationButtons from "./NavigationButtons";
 import { useToast } from "@/hooks/use-toast";
 import SectionHeader from "@/components/ui/section-header";
-import { getClassDetails } from "@/data/classes";
+import { getClassDetails } from "@/data/classes/index";
 
 // Базовые категории снаряжения
 const EQUIPMENT_CATEGORIES = {
