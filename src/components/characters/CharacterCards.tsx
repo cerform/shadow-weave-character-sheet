@@ -83,7 +83,7 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete })
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Архетип:</span>
-                <span>{character.subclass || character.archetype || '—'}</span>
+                <span>{character.subclass || '—'}</span>
               </div>
             </div>
           </CardContent>
