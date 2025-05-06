@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -127,7 +128,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
             <HPBar
               currentHp={character.currentHp || 0}
               maxHp={character.maxHp || 1}
-              temporaryHp={character.temporaryHp || 0}
+              temporaryHp={character.tempHp || character.temporaryHp || 0}
               onUpdate={(hp) => handleUpdateCharacter(hp)}
             />
           </div>

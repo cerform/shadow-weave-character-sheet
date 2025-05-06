@@ -38,6 +38,7 @@ export interface Character {
     proficient: boolean;
     expertise?: boolean;
     value?: number;
+    bonus?: number;
   }>;
   hitPoints?: {
     current: number;
@@ -47,6 +48,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
+  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -58,7 +60,7 @@ export interface Character {
     armor?: string[];
   } | string[];
   equipment?: Item[];
-  features?: Feature[];
+  features?: Feature[] | string[];
   spells?: CharacterSpell[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
@@ -112,6 +114,33 @@ export interface Character {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
+  initiative?: string | number;
+  lastDiceRoll?: {
+    diceType: string;
+    count: number;
+    modifier: number;
+    rolls: number[];
+    total: number;
+    label: string;
+    timestamp: string;
+  };
+  hitDice?: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
+  };
+  resources?: Record<string, {
+    max: number;
+    used: number;
+    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
+  }>;
+  sorceryPoints?: {
+    max: number;
+    current: number;
+  };
+  notes?: string;
+  skillProficiencies?: Record<string, boolean>;
 }
 
 export interface CharacterSpell {
@@ -165,3 +194,25 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24
 };
+
+// Add HitPointEvent for DamageLog
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  amount: number;
+  source?: string;
+  timestamp: number | Date;
+  previousHP?: number;
+  newHP?: number;
+}
+
+// Add LevelFeature interface for useLevelFeatures hook
+export interface LevelFeature {
+  id: string;
+  level: number;
+  name: string;
+  description: string;
+  type: string;
+  class?: string;
+  required?: boolean;
+}

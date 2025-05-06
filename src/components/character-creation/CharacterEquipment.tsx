@@ -22,7 +22,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({
 }) => {
   // Инициализируем оборудование с учетом возможных форматов данных
   const initialWeapons: string[] = [];
-  const initialArmor: string = '';
+  let initialArmorValue: string = '';
   const initialItems: string[] = [];
   
   // Проверяем формат оборудования и извлекаем данные
@@ -34,8 +34,8 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({
           initialWeapons.push(item.name);
         } else if (item.type === 'armor') {
           // Берем только первую броню в список
-          if (!initialArmor) {
-            initialArmor = item.name;
+          if (!initialArmorValue) {
+            initialArmorValue = item.name;
           }
         } else {
           initialItems.push(item.name);
@@ -45,13 +45,13 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({
       // Если это объект с weapons, armor, items
       const equip = character.equipment as any;
       if (equip.weapons) initialWeapons.push(...equip.weapons);
-      if (equip.armor) initialArmor = equip.armor;
+      if (equip.armor) initialArmorValue = equip.armor;
       if (equip.items) initialItems.push(...equip.items);
     }
   }
 
   const [weapons, setWeapons] = useState<string[]>(initialWeapons);
-  const [armor, setArmor] = useState<string>(initialArmor);
+  const [armor, setArmor] = useState<string>(initialArmorValue);
   const [items, setItems] = useState<string[]>(initialItems);
   const [gold, setGold] = useState<number>(character.gold || 0);
   

@@ -73,7 +73,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
                 <span style={{ color: currentTheme.textColor }}>{skillName}</span>
                 <span style={{ color: currentTheme.textColor }}>
                   {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
-                  {typeof skillValue === 'object' && skillValue.bonus ? (skillValue.bonus >= 0 ? `+${skillValue.bonus}` : skillValue.bonus) : ''}
+                  {typeof skillValue === 'object' && skillValue.value ? (skillValue.value >= 0 ? `+${skillValue.value}` : skillValue.value) : ''}
                 </span>
               </div>
             ))}
