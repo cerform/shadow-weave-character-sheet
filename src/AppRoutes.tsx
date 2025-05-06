@@ -1,46 +1,19 @@
+
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import CharactersListPage from './pages/CharactersListPage';
-import CharacterSheetPage from './pages/CharacterSheetPage';
-import CharacterCreationPage from './pages/CharacterCreationPage';
+import { Route, Routes } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
 import CharacterEditPage from './pages/CharacterEditPage';
 import BattlePage from './pages/BattlePage';
-import AuthPage from './pages/AuthPage';
-import HomePage from './pages/HomePage';
-import PlayerSessionPage from './pages/PlayerSessionPage';
-import GameRoomPage from './pages/GameRoomPage';
-import NotFoundPage from './pages/NotFoundPage';
-/* Добавляем импорты для новых страниц сессий */
-import CreateSessionPage from "./pages/CreateSessionPage";
-import JoinSessionPage from "./pages/JoinSessionPage";
-import SessionPage from "./pages/SessionPage";
-import DMSessionPage from "./pages/DMSessionPage";
-import DMDashboardPage from "./pages/DMDashboardPage";
+import Home from './pages/Home';
 
-const AppRoutes = () => {
+const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Основные маршруты */}
       <Route path="/" element={<HomePage />} />
-      <Route path="/characters" element={<CharactersListPage />} />
-      <Route path="/character-sheet" element={<CharacterSheetPage />} />
-      <Route path="/character-creation" element={<CharacterCreationPage />} />
-      <Route path="/character-edit/:id" element={<CharacterEditPage />} />
-      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      <Route path="/character/:id" element={<CharacterEditPage />} />
       <Route path="/battle/:sessionId" element={<BattlePage />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/session" element={<PlayerSessionPage />} />
-      <Route path="/game-room/:roomCode" element={<GameRoomPage />} />
-      
-      {/* Маршруты сессий */}
-      <Route path="/create-session" element={<CreateSessionPage />} />
-      <Route path="/join/:sessionId" element={<JoinSessionPage />} />
-      <Route path="/join" element={<JoinSessionPage />} />
-      <Route path="/session/:sessionId" element={<SessionPage />} />
-      <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
-      <Route path="/dm-dashboard" element={<DMDashboardPage />} />
-      
-      {/* Другие маршруты и 404 */}
+      <Route path="/new-home" element={<Home />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
