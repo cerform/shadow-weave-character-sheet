@@ -6,6 +6,7 @@ import useSessionStore from "../stores/sessionStore";
 interface ThemeContextType {
   theme: string;
   setTheme: (theme: string) => void;
+  themeStyles: Theme;
   currentTheme: Theme;
   activeTheme: string; // Добавляем активную тему для совместимости с useUserTheme
 }
@@ -13,6 +14,7 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType>({
   theme: 'default',
   setTheme: () => {},
+  themeStyles: themes.default,
   currentTheme: themes.default,
   activeTheme: 'default'
 });
@@ -31,6 +33,7 @@ export const ThemeProvider = ({ children }: {children: React.ReactNode}) => {
   
   // Получаем объект темы
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const themeStyles = currentTheme; // Добавляем для совместимости
   
   // Сохраняем выбранную тему в localStorage при изменении
   useEffect(() => {
@@ -65,7 +68,8 @@ export const ThemeProvider = ({ children }: {children: React.ReactNode}) => {
     <ThemeContext.Provider value={{ 
       theme, 
       setTheme: handleSetTheme, 
-      currentTheme, 
+      currentTheme,
+      themeStyles: currentTheme,
       activeTheme: theme 
     }}>
       {children}
