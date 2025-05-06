@@ -46,7 +46,7 @@ const CharactersListPage: React.FC = () => {
       setError(null);
       
       console.log('Loading characters for user:', user?.uid || user?.id);
-      const fetchedCharacters = await getAllCharacters();
+      const fetchedCharacters = await getCharactersByUserId(user.uid);
       setCharacters(fetchedCharacters);
       console.log('Loaded characters:', fetchedCharacters);
     } catch (err) {
