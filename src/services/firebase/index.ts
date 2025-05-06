@@ -1,7 +1,6 @@
 
 // Экспортируем из нового местоположения
 import { app, db, storage } from '@/lib/firebase';
-import { getAuth } from 'firebase/auth';
 import { analyticsPromise, initializeAnalytics } from '@/lib/firebase';
 
 // Экспортируем авторизацию из нашего сервиса
