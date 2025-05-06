@@ -29,6 +29,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
         {/* Панель информации о заклинаниях */}
         <SpellCastingPanel
           character={character}
+          onUpdate={onUpdate}
         />
 
         {/* Вкладки для кантипов и заклинаний по уровням */}
@@ -46,6 +47,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
           <TabsContent value="cantrips" className="mt-2">
             <SpellPanel
               character={character}
+              onUpdate={updateSpells}
             />
           </TabsContent>
 
@@ -53,6 +55,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
             <TabsContent key={level} value={`level-${level}`} className="mt-2">
               <SpellPanel
                 character={character}
+                onUpdate={updateSpells}
               />
             </TabsContent>
           ))}

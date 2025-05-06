@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
@@ -39,12 +38,16 @@ const useLevelUp = () => {
       // Обновляем ячейки заклинаний
       updates.spellSlots = calculateSpellSlotsForLevel(newLevel, character.class.toLowerCase());
       
-      // Добавляем спеллкастинг, если его нет
+      // Добавляем spellcasting, если его нет
       if (!character.spellcasting) {
+        const ability = getSpellcastingAbilityForClass(character.class.toLowerCase());
+        const modifier = getSpellcastingModifier(character);
+        const profBonus = character.proficiencyBonus || 2;
+        
         updates.spellcasting = {
-          ability: getSpellcastingAbilityForClass(character.class.toLowerCase()),
-          spellSaveDC: 8 + getSpellcastingModifier(character) + (character.proficiencyBonus || 2),
-          spellAttackBonus: getSpellcastingModifier(character) + (character.proficiencyBonus || 2),
+          ability: ability,
+          spellSaveDC: 8 + modifier + profBonus,
+          spellAttackBonus: modifier + profBonus,
           preparedSpellsLimit: getPreparedSpellsLimit(character)
         };
       }
@@ -108,53 +111,54 @@ function getSpellcastingAbilityForClass(classType: string): string {
   return 'INT';
 }
 
+// Fix the half-caster spell slots
 function calculateSpellSlotsForLevel(level: number, classType: string): Record<number, { max: number; used: number }> {
   // Базовая таблица ячеек заклинаний полного заклинателя (волшебник, жрец и т.д.)
   const fullCasterSlots = {
-    1: { 1: 2 },
-    2: { 1: 3 },
-    3: { 1: 4, 2: 2 },
-    4: { 1: 4, 2: 3 },
-    5: { 1: 4, 2: 3, 3: 2 },
-    6: { 1: 4, 2: 3, 3: 3 },
-    7: { 1: 4, 2: 3, 3: 3, 4: 1 },
-    8: { 1: 4, 2: 3, 3: 3, 4: 2 },
-    9: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
-    10: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 },
-    11: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
-    12: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
-    13: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
-    14: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
-    15: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
-    16: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
-    17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1 },
-    18: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 1, 7: 1, 8: 1, 9: 1 },
-    19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 },
-    20: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 2, 8: 1, 9: 1 }
+    1: { 1: { max: 2, used: 0 } },
+    2: { 1: { max: 3, used: 0 } },
+    3: { 1: { max: 4, used: 0 }, 2: { max: 2, used: 0 } },
+    4: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 } },
+    5: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 2, used: 0 } },
+    6: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 } },
+    7: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 1, used: 0 } },
+    8: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 2, used: 0 } },
+    9: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 1, used: 0 } },
+    10: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 } },
+    11: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 } },
+    12: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 } },
+    13: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 } },
+    14: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 } },
+    15: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 }, 8: { max: 1, used: 0 } },
+    16: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 }, 8: { max: 1, used: 0 } },
+    17: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 }, 8: { max: 1, used: 0 }, 9: { max: 1, used: 0 } },
+    18: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 3, used: 0 }, 6: { max: 1, used: 0 }, 7: { max: 1, used: 0 }, 8: { max: 1, used: 0 }, 9: { max: 1, used: 0 } },
+    19: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 3, used: 0 }, 6: { max: 2, used: 0 }, 7: { max: 1, used: 0 }, 8: { max: 1, used: 0 }, 9: { max: 1, used: 0 } },
+    20: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 3, used: 0 }, 6: { max: 2, used: 0 }, 7: { max: 2, used: 0 }, 8: { max: 1, used: 0 }, 9: { max: 1, used: 0 } }
   };
   
   // Half-casters like паладин and следопыт
   const halfCasterSlots = {
     1: {},
-    2: { 1: 2 },
-    3: { 1: 3 },
-    4: { 1: 3 },
-    5: { 1: 4, 2: 2 },
-    6: { 1: 4, 2: 2 },
-    7: { 1: 4, 2: 3 },
-    8: { 1: 4, 2: 3 },
-    9: { 1: 4, 2: 3, 3: 2 },
-    10: { 1: 4, 2: 3, 3: 2 },
-    11: { 1: 4, 2: 3, 3: 3 },
-    12: { 1: 4, 2: 3, 3: 3 },
-    13: { 1: 4, 2: 3, 3: 3, 4: 1 },
-    14: { 1: 4, 2: 3, 3: 3, 4: 1 },
-    15: { 1: 4, 2: 3, 3: 3, 4: 2 },
-    16: { 1: 4, 2: 3, 3: 3, 4: 2 },
-    17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
-    18: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
-    19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 },
-    20: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 }
+    2: { 1: { max: 2, used: 0 } },
+    3: { 1: { max: 3, used: 0 } },
+    4: { 1: { max: 3, used: 0 } },
+    5: { 1: { max: 4, used: 0 }, 2: { max: 2, used: 0 } },
+    6: { 1: { max: 4, used: 0 }, 2: { max: 2, used: 0 } },
+    7: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 } },
+    8: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 } },
+    9: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 2, used: 0 } },
+    10: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 2, used: 0 } },
+    11: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 } },
+    12: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 } },
+    13: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 1, used: 0 } },
+    14: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 1, used: 0 } },
+    15: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 2, used: 0 } },
+    16: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 2, used: 0 } },
+    17: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 1, used: 0 } },
+    18: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 1, used: 0 } },
+    19: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 } },
+    20: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 2, used: 0 } }
   };
   
   let slots = fullCasterSlots;
@@ -162,14 +166,8 @@ function calculateSpellSlotsForLevel(level: number, classType: string): Record<n
     slots = halfCasterSlots;
   }
   
-  const levelSlots = slots[level as keyof typeof slots] || {};
-  const result: Record<number, { max: number; used: number }> = {};
-  
-  for (const [slotLevel, count] of Object.entries(levelSlots)) {
-    result[Number(slotLevel)] = { max: count, used: 0 };
-  }
-  
-  return result;
+  const levelKey = level as keyof typeof slots;
+  return slots[levelKey] || {};
 }
 
 function getPreparedSpellsLimit(character: Character): number {

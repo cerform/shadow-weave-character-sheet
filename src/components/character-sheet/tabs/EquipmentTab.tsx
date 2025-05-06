@@ -9,11 +9,11 @@ import { classData } from '@/data/classes/index';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { isItem } from '@/utils/itemUtils';
+import { isItem, getItemDisplayText } from '@/utils/itemUtils';
 
 interface EquipmentTabProps {
   character: Character;
-  equipment?: string[] | Item[];
+  equipment?: string[] | Item[] | (string | Item)[];
   onUpdate: (updates: Partial<Character>) => void;
 }
 
@@ -83,7 +83,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     }
     
     // Набор приключенца всегда доступен
-    baseEquipment.push('Набор путешественника', 'Набор исследователя подземелий');
+    baseEquipment.push('Набор пу��ешественника', 'Набор исследователя подземелий');
     
     // Дополнительное снаряжение в зависимости от уровня
     if (character.level && character.level >= 5) {
@@ -124,7 +124,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
       updatedEquipment = [newItem];
     }
     
-    onUpdate({ equipment: updatedEquipment });
+    onUpdate({ equipment: updatedEquipment as any });
     setNewItem('');
   };
   
@@ -149,7 +149,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
       updatedEquipment = [item];
     }
     
-    onUpdate({ equipment: updatedEquipment });
+    onUpdate({ equipment: updatedEquipment as any });
   };
   
   // Удаление предмета
@@ -169,13 +169,13 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     const updatedEquipment = [...currentEquipment];
     updatedEquipment.splice(index, 1);
     
-    onUpdate({ equipment: updatedEquipment });
+    onUpdate({ equipment: updatedEquipment as any });
   };
   
   // Получаем список предметов для отображения
   const getEquipmentList = (): (string | Item)[] => {
     if (equipment && equipment.length > 0) {
-      return equipment;
+      return equipment as (string | Item)[];
     }
     
     if (Array.isArray(character.equipment)) {
@@ -235,7 +235,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
                       key={index}
                       className="flex justify-between items-center p-2 bg-muted rounded-md"
                     >
-                      <span>{item}</span>
+                      <span>{isItem(item) ? getItemDisplayText(item) : item}</span>
                       <Button
                         variant="ghost"
                         size="icon"

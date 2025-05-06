@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -91,26 +90,10 @@ export interface Character {
   appearance?: string;
   backstory?: string;
   notes?: string;
-  raceFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  classFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  backgroundFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  feats?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
+  raceFeatures?: Feature[];
+  classFeatures?: Feature[];
+  backgroundFeatures?: Feature[];
+  feats?: Feature[];
   gender?: string;
   userId?: string;
   abilityPointsUsed?: number;
@@ -170,12 +153,9 @@ export interface Character {
     cantripsKnown?: number;
     preparedSpellsLimit?: number; // Добавляем недостающее свойство
   };
-  additionalClasses?: Array<{
-    class: string;
-    level: number;
-    subclass?: string;
-  }>;
+  additionalClasses?: string[];
   languages?: string[];
+  preparedSpellsLimit?: number;
 }
 
 export interface CharacterSpell {
@@ -214,9 +194,9 @@ export interface Item {
 
 export interface Feature {
   name: string;
-  source: string;
   description: string;
   level?: number;
+  source?: string;
 }
 
 export interface PlayerCharacter extends Character {
@@ -233,7 +213,7 @@ export const ABILITY_SCORE_CAPS = {
 // Add HitPointEvent for DamageLog
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  type: 'damage' | 'healing' | 'temp' | 'healing' | 'tempHP' | 'death-save';
   amount: number;
   source?: string;
   timestamp: number | Date;

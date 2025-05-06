@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
@@ -140,18 +139,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
     onRemoveCondition(tokenId, conditionIndex);
   };
   
-  // Фиксируем все числовые преобразования
+  // Fix number conversions
   const handleOnRemoveLight = (id: string) => {
-    onRemoveLightSource(Number(id));
+    onRemoveLightSource(parseInt(id, 10));
   };
   
   const handleOnAttachLight = (lightId: string, tokenId?: string) => {
-    onAttachLightToToken(Number(lightId), tokenId ? Number(tokenId) : undefined);
+    onAttachLightToToken(parseInt(lightId, 10), tokenId ? parseInt(tokenId, 10) : undefined);
   };
   
-  const handleCharacterUpdate = () => {
-    // This is just a dummy function for DicePanel
-    console.log('Character update called from RightPanel');
+  // Dummy function for character updates
+  const handleCharacterUpdate = (updates: Partial<Character>) => {
+    console.log('Character update called from RightPanel', updates);
   };
 
   return (

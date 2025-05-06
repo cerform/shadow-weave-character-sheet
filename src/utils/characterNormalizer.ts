@@ -1,81 +1,132 @@
-
 import { Character } from '@/types/character';
 
-/**
- * Нормализует данные персонажа, исправляя распространенные проблемы
- * @param character Исходный объект персонажа
- * @returns Нормализованные данные персонажа
- */
-export function normalizeCharacterData(character: Character): Character {
-  if (!character) return character;
-  
-  // Создаем копию объекта для модификации
-  const normalized: Character = { ...character };
-  
-  // Убедимся, что обязательные поля существуют
-  normalized.name = normalized.name || 'Безымянный персонаж';
-  normalized.level = normalized.level ?? 1;
-  normalized.experience = normalized.experience ?? 0;
-  
-  // Разрешаем несоответствия между полями класса
-  if (normalized.class && !normalized.className) {
-    normalized.className = normalized.class;
-  } else if (!normalized.class && normalized.className) {
-    normalized.class = normalized.className;
-  }
-  
-  // Нормализация данных о характеристиках
-  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-  
-  // Проверяем существование объекта stats
-  if (!normalized.stats) {
-    normalized.stats = {};
-  }
-  
-  // Проходим по всем характеристикам
-  abilities.forEach(ability => {
-    // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
-      normalized.stats[ability] = normalized[ability];
-    } 
-    // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-    
-    // Если значения различаются, приоритет у поля stats
-    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-  });
-  
-  // Убедимся, что массивы инициализированы
-  if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
-  if (!Array.isArray(normalized.features)) normalized.features = [];
-  if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  if (!Array.isArray(normalized.languages)) normalized.languages = [];
-  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
-  
-  // Проверяем наличие userId
-  if (!normalized.userId) {
-    console.warn(`Персонаж '${normalized.name}' не имеет userId`);
-  }
-  
-  return normalized;
+interface AbilityScores {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+}
+
+interface Skills {
+  [key: string]: {
+    ability: string;
+    proficient: boolean;
+    bonus?: number;
+  };
+}
+
+interface Money {
+  cp?: number;
+  sp?: number;
+  ep?: number;
+  gp?: number;
+  pp?: number;
 }
 
 /**
- * Нормализует массив персонажей
- * @param characters Массив персонажей
- * @returns Нормализованный массив персонажей
+ * Нормализует объект персонажа, заполняя отсутствующие поля значениями по умолчанию.
+ * @param character - Объект персонажа для нормализации.
+ * @returns - Нормализованный объект персонажа или null, если входной объект равен null.
  */
-export function normalizeCharacters(characters: Character[]): Character[] {
-  if (!Array.isArray(characters)) {
-    console.error('normalizeCharacters: не массив', characters);
-    return [];
-  }
+export const normalizeCharacter = (character: Character) => {
+  if (!character) return null;
   
-  return characters
-    .filter(char => char !== null && char !== undefined)
-    .map(normalizeCharacterData);
+  // Ensure required objects exist
+  const normalizedChar: Character = {
+    ...character,
+    abilities: character.abilities || {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    skills: character.skills || {},
+    equipment: character.equipment || [],
+    money: character.money || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
+    level: character.level || 1,
+    maxHp: character.maxHp || 1,
+    currentHp: character.currentHp || 1,
+    tempHp: character.tempHp || 0,
+    armorClass: character.armorClass || 10,
+    initiative: character.initiative || 0,
+    speed: character.speed || 30,
+    conditions: character.conditions || [],
+    inspiration: character.inspiration || false,
+    deathSaves: character.deathSaves || {
+      successes: 0,
+      failures: 0
+    },
+    spellSlots: character.spellSlots || {},
+    spells: character.spells || [],
+    notes: character.notes || '',
+    characterAppearance: character.characterAppearance || '',
+    characterBackstory: character.characterBackstory || '',
+    alignment: character.alignment || 'neutral',
+    raceFeatures: character.raceFeatures || [],
+    classFeatures: character.classFeatures || [],
+    backgroundFeatures: character.backgroundFeatures || [],
+    feats: character.feats || [],
+    additionalClasses: character.additionalClasses || [],
+    preparedSpellsLimit: character.preparedSpellsLimit || 0
+  };
+  
+  return normalizedChar;
+};
+
+/**
+ * Проверяет, является ли переданный объект валидным объектом способностей.
+ * @param obj - Объект для проверки.
+ * @returns - True, если объект является валидным объектом способностей, иначе false.
+ */
+function isValidAbilityScores(obj: any): obj is AbilityScores {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.strength === 'number' &&
+    typeof obj.dexterity === 'number' &&
+    typeof obj.constitution === 'number' &&
+    typeof obj.intelligence === 'number' &&
+    typeof obj.wisdom === 'number' &&
+    typeof obj.charisma === 'number'
+  );
+}
+
+/**
+ * Проверяет, является ли переданный объект валидным объектом навыков.
+ * @param obj - Объект для проверки.
+ * @returns - True, если объект является валидным объектом навыков, иначе false.
+ */
+function isValidSkills(obj: any): obj is Skills {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    Object.values(obj).every(
+      (skill) =>
+        typeof skill === 'object' &&
+        skill !== null &&
+        typeof skill.ability === 'string' &&
+        typeof skill.proficient === 'boolean'
+    )
+  );
+}
+
+/**
+ * Проверяет, является ли переданный объект валидным объектом денег.
+ * @param obj - Объект для проверки.
+ * @returns - True, если объект является валидным объектом денег, иначе false.
+ */
+function isValidMoney(obj: any): obj is Money {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    (obj.cp === undefined || typeof obj.cp === 'number') &&
+    (obj.sp === undefined || typeof obj.sp === 'number') &&
+    (obj.ep === undefined || typeof obj.ep === 'number') &&
+    (obj.gp === undefined || typeof obj.gp === 'number') &&
+    (obj.pp === undefined || typeof obj.pp === 'number')
+  );
 }

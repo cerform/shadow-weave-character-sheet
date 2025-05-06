@@ -37,7 +37,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
           <h3 className="text-lg font-semibold">Оружие</h3>
           <ul className="list-disc pl-5">
             {getWeapons().map((weapon, index) => (
-              <li key={index}>{isItem(weapon) ? weapon.name : weapon}</li>
+              <li key={index}>{getItemDisplayText(weapon)}</li>
             ))}
           </ul>
         </div>
@@ -52,7 +52,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
         <h3 className="text-lg font-semibold">Предметы</h3>
         <ul className="list-disc pl-5">
           {getItems().map((item, index) => (
-            <li key={index}>{isItem(item) ? getItemDisplayText(item) : item}</li>
+            <li key={index}>{getItemDisplayText(item)}</li>
           ))}
         </ul>
       </div>

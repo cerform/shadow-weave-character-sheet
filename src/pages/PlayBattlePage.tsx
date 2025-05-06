@@ -8,7 +8,7 @@ import BattleTabs from "@/components/battle/BattleTabs";
 import MapControls from "@/components/battle/MapControls";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { X, ZoomIn, ZoomOut, Scale, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -328,71 +328,44 @@ const PlayBattlePage = () => {
   };
 
   // Функция добавления источника света
-  const handleAddLight = (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
-    if (!isDM) {
-      toast({
-        title: "Недостаточно прав",
-        description: "Только DM может добавлять источники света",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleAddLight = (type: string, radius: number, color: string, attached: boolean = false) => {
+    // Create light with proper position property
+    const newLight: Omit<LightSource, "id"> = {
+      position: {
+        x: 250,
+        y: 250
+      },
+      radius,
+      color,
+      type,
+      intensity: 1.0,
+      enabled: true
+    };
     
-    const lightRadius = type === 'torch' ? 6 :
-                       type === 'lantern' ? 10 :
-                       type === 'daylight' ? 30 : 8;
-    
-    const lightColor = color || (
-      type === 'torch' ? '#FF6A00' :
-      type === 'lantern' ? '#FFD700' :
-      type === 'daylight' ? '#FFFFFF' : '#4287f5'
-    );
-    
-    const lightIntensity = intensity || (
-      type === 'torch' ? 0.7 :
-      type === 'lantern' ? 0.8 :
-      type === 'daylight' ? 0.95 : 0.7
-    );
-
-    // Определяем позицию для нового источника света
-    // Если выбран токен, прикрепляем свет к нему
-    let position = { x: 200, y: 200 }; // дефолтное положение
-    let attachedTokenId = undefined;
-    
-    if (selectedTokenId) {
-      const selectedToken = tokens.find(t => t.id === selectedTokenId);
-      if (selectedToken) {
-        position = { x: selectedToken.x, y: selectedToken.y };
-        attachedTokenId = selectedToken.id;
+    if (attached && selectedTokenId) {
+      newLight.attachedToTokenId = selectedTokenId;
+      
+      // If attached to a token, use the token's position
+      const token = tokens.find(t => t.id === selectedTokenId);
+      if (token) {
+        newLight.position = {
+          x: token.x,
+          y: token.y
+        };
       }
     }
     
-    // Создаем новый источник света
-    const newLight: Omit<LightSource, "id"> = {
-      type,
-      x: position.x,
-      y: position.y,
-      radius: lightRadius,
-      color: lightColor,
-      intensity: lightIntensity,
-      attachedToTokenId: attachedTokenId
-    };
-    
-    // Добавляем источник света в хранилище
     addLightSource(newLight);
-    
-    // Устанавливаем динамическое освещение, если оно еще не включено
-    if (!mapSettings.isDynamicLighting) {
-      setDynamicLighting(true);
-    }
-    
-    toast({
-      title: `Добавлен источник света: ${type}`,
-      description: type === 'daylight' ? 'Карта освещена полностью' : 
-                  `Радиус освещения: ${lightRadius} клеток`,
+  };
+  
+  // Fix token setting
+  const handleSetTokens = (newTokens: Token[]) => {
+    // Convert the function from a setState style function to a direct value setter
+    newTokens.forEach(token => {
+      addToken(token);
     });
   };
-
+  
   // Создаем панель управления картой для правой части
   const mapControlPanel = (
     <div className="space-y-4">

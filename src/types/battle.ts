@@ -1,4 +1,3 @@
-
 import { Character } from './character';
 
 export interface Token {
@@ -75,8 +74,8 @@ export interface DicePanelProps {
 
 // Обновляем типы для компонентов боя
 export interface LightSource {
-  id: string;
-  position: { x: number; y: number }; // Добавляем position вместо x и y
+  id: string; // Note: Keep this as string for compatibility
+  position: { x: number; y: number };
   radius: number;
   color?: string;
   intensity?: number;

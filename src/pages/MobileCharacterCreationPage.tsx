@@ -1,35 +1,37 @@
-
 import React, { useState } from 'react';
 import { Character } from '@/types/character';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  CharacterRaceSelectionProps, 
-  CharacterSubraceSelectionProps,
-  CharacterClassSelectionProps,
-  CharacterLevelSelectionProps,
-  CharacterAbilityScoresProps,
-  CharacterBackgroundProps,
-  CharacterHitPointsCalculatorProps,
-  CharacterBasicInfoProps,
-  CharacterSpellSelectionProps
-} from '@/types/battle';
 
-// Импортируем компоненты выбора расы, класса и т.д.
-const CharacterRaceSelection: React.FC<CharacterRaceSelectionProps> = () => <div>Race Selection</div>;
-const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = () => <div>Subrace Selection</div>;
-const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = () => <div>Class Selection</div>;
-const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = () => <div>Level Selection</div>;
-const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = () => <div>Ability Scores</div>;
+// Обновляем интерфейсы
+interface CharacterComponentProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+// Используем общий интерфейс для всех компонентов выбора персонажа
+const CharacterRaceSelection: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Race Selection</div>;
+const CharacterSubraceSelection: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Subrace Selection</div>;
+const CharacterClassSelection: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Class Selection</div>;
+const CharacterLevelSelection: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Level Selection</div>;
+const CharacterAbilityScores: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Ability Scores</div>;
+const CharacterHitPointsCalculator: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Hit Points</div>;
+const CharacterBasicInfo: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Basic Info</div>;
+const CharacterSpellSelection: React.FC<CharacterComponentProps> = ({ character, onUpdate }) => <div>Spell Selection</div>;
+
+// Расширенный интерфейс для компонента с дополнительными свойствами
+interface CharacterBackgroundProps extends CharacterComponentProps {
+  nextStep: () => void;
+  prevStep: () => void;
+  backgrounds: any[];
+}
+
 const CharacterBackground: React.FC<CharacterBackgroundProps> = () => <div>Background</div>;
-const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> = () => <div>Hit Points</div>;
-const CharacterBasicInfo: React.FC<CharacterBasicInfoProps> = () => <div>Basic Info</div>;
-const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = () => <div>Spell Selection</div>;
 
 const MobileCharacterCreationPage: React.FC = () => {
-  const { character, updateCharacter, saveCurrentCharacter, isLoading } = useCharacter();
+  const { character, updateCharacter, saveCurrentCharacter } = useCharacter();
   const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState('race');
   

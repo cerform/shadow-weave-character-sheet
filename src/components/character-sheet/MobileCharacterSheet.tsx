@@ -11,7 +11,7 @@ import CharacterExportPDF from './CharacterExportPDF';
 import DicePanel from './DicePanel';
 import RestPanel from './RestPanel';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { isItem } from '@/utils/characterUtils';
+import { isItem, getItemName, getItemType, getItemQuantity } from '@/utils/itemUtils';
 
 interface MobileCharacterSheetProps {
   character: Character;
@@ -59,11 +59,103 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
       return (
         <div key={item.name}>
           <span>{item.name}</span>
-          <span>{item.type}</span>
+          <span>{getItemType(item)}</span>
         </div>
       );
     } else {
       return <div key={item}>{item}</div>;
+    }
+  };
+  
+  // Вспомогательные функции
+  function getModifier(value: number): string {
+    const mod = Math.floor((value - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  }
+  
+  function isMagicClass(character: Character): boolean {
+    const magicClasses = ['Бард', 'Волшебник', 'Друид', 'Жрец', 'Колдун', 'Паладин', 'Следопыт', 'Чародей'];
+    return magicClasses.includes(character.class || '');
+  }
+  
+  function renderEquipmentItems(character: Character, type: 'weapons' | 'armor' | 'items'): JSX.Element | JSX.Element[] {
+    if (!character.equipment) {
+      return <li>Нет предметов</li>;
+    }
+    
+    // Если equipment - массив
+    if (Array.isArray(character.equipment)) {
+      if (type === 'armor') {
+        const armorItem = character.equipment.find(item => isItem(item) && getItemType(item) === 'armor');
+        return armorItem ? <div>{getItemName(armorItem)}</div> : <div>Нет доспехов</div>;
+      } else {
+        const items = character.equipment.filter(item => {
+          if (type === 'weapons') return isItem(item) && getItemType(item) === 'weapon';
+          if (type === 'items') return !isItem(item) || (getItemType(item) !== 'weapon' && getItemType(item) !== 'armor');
+          return false;
+        });
+        
+        return (
+          <>
+            {items.length > 0 ? (
+              items.map((item, idx) => (
+                <li key={idx} className="flex justify-between items-center py-1 border-b border-border/30 last:border-0">
+                  <div>
+                    {isItem(item) ? (
+                      <>
+                        <span className="font-medium">{getItemName(item)}</span>
+                        <span className="text-xs text-muted-foreground ml-1">({getItemType(item)})</span>
+                        {getItemQuantity(item) > 1 && <span className="text-xs ml-1">x{getItemQuantity(item)}</span>}
+                      </>
+                    ) : (
+                      <span>{item}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs">Количество:</span>
+                    <span className="text-lg font-bold">{isItem(item) ? getItemQuantity(item) : 1}</span>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li>Нет предметов</li>
+            )}
+          </>
+        );
+      }
+    } else {
+      // Если equipment - объект с weapons, armor и items
+      const equipment = character.equipment as {
+        weapons?: string[];
+        armor?: string;
+        items?: string[];
+      };
+      
+      if (type === 'armor') {
+        return equipment.armor ? <div>{equipment.armor}</div> : <div>Нет доспехов</div>;
+      } else if (type === 'weapons' && equipment.weapons) {
+        return (
+          <>
+            {equipment.weapons.length > 0 ? (
+              equipment.weapons.map((weapon, i) => <li key={i}>{weapon}</li>)
+            ) : (
+              <li>Нет оружия</li>
+            )}
+          </>
+        );
+      } else if (type === 'items' && equipment.items) {
+        return (
+          <>
+            {equipment.items.length > 0 ? (
+              equipment.items.map((item, i) => <li key={i}>{item}</li>)
+            ) : (
+              <li>Нет предметов</li>
+            )}
+          </>
+        );
+      }
+      
+      return <li>Нет предметов</li>;
     }
   };
   
@@ -272,98 +364,6 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
       </Tabs>
     </div>
   );
-  
-  // Вспомогательные функции
-  function getModifier(value: number): string {
-    const mod = Math.floor((value - 10) / 2);
-    return mod >= 0 ? `+${mod}` : `${mod}`;
-  }
-  
-  function isMagicClass(character: Character): boolean {
-    const magicClasses = ['Бард', 'Волшебник', 'Друид', 'Жрец', 'Колдун', 'Паладин', 'Следопыт', 'Чародей'];
-    return magicClasses.includes(character.class || '');
-  }
-  
-  function renderEquipmentItems(character: Character, type: 'weapons' | 'armor' | 'items'): JSX.Element | JSX.Element[] {
-    if (!character.equipment) {
-      return <li>Нет предметов</li>;
-    }
-    
-    // Если equipment - массив объектов Item
-    if (Array.isArray(character.equipment)) {
-      if (type === 'armor') {
-        const armorItem = character.equipment.find(item => item.type === 'armor');
-        return armorItem ? <div>{armorItem.name}</div> : <div>Нет доспехов</div>;
-      } else {
-        const items = character.equipment.filter(item => {
-          if (type === 'weapons') return item.type === 'weapon';
-          if (type === 'items') return item.type !== 'weapon' && item.type !== 'armor';
-          return false;
-        });
-        
-        return (
-          <>
-            {items.length > 0 ? (
-              items.map((item, idx) => (
-                <li key={idx} className="flex justify-between items-center py-1 border-b border-border/30 last:border-0">
-                  <div>
-                    {isItem(item) ? (
-                      <>
-                        <span className="font-medium">{item.name}</span>
-                        {item.type && <span className="text-xs text-muted-foreground ml-1">({item.type})</span>}
-                        {item.quantity > 1 && <span className="text-xs ml-1">x{item.quantity}</span>}
-                      </>
-                    ) : (
-                      <span>{item}</span>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-xs">Количество:</span>
-                    <span className="text-lg font-bold">{item.quantity || 1}</span>
-                  </div>
-                </li>
-              ))
-            ) : (
-              <li>Нет предметов</li>
-            )}
-          </>
-        );
-      }
-    } else {
-      // Если equipment - объект с weapons, armor и items
-      const equipment = character.equipment as {
-        weapons?: string[];
-        armor?: string;
-        items?: string[];
-      };
-      
-      if (type === 'armor') {
-        return equipment.armor ? <div>{equipment.armor}</div> : <div>Нет доспехов</div>;
-      } else if (type === 'weapons' && equipment.weapons) {
-        return (
-          <>
-            {equipment.weapons.length > 0 ? (
-              equipment.weapons.map((weapon, i) => <li key={i}>{weapon}</li>)
-            ) : (
-              <li>Нет оружия</li>
-            )}
-          </>
-        );
-      } else if (type === 'items' && equipment.items) {
-        return (
-          <>
-            {equipment.items.length > 0 ? (
-              equipment.items.map((item, i) => <li key={i}>{item}</li>)
-            ) : (
-              <li>Нет предметов</li>
-            )}
-          </>
-        );
-      }
-      
-      return <li>Нет предметов</li>;
-    }
-  }
 };
 
 export default MobileCharacterSheet;
