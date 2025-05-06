@@ -15,7 +15,7 @@ import {
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { app } from "@/services/firebase";
+import { app, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogIn, UserPlus, LogOut } from "lucide-react";
@@ -26,10 +26,8 @@ import { toast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/hooks/use-auth';
-import { db as firebaseDb } from "@/firebase"; // Rename db to firebaseDb to avoid conflict
 
 const auth = getAuth(app);
-// Removed the duplicate db declaration and use firebaseDb instead
 
 const FirebaseAuthForm: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -63,7 +61,7 @@ const FirebaseAuthForm: React.FC = () => {
 
   const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
     try {
-      const userDoc = doc(firebaseDb, "users", uid);
+      const userDoc = doc(db, "users", uid);
       const snapshot = await getDoc(userDoc);
       
       if (!snapshot.exists()) {

@@ -1,5 +1,5 @@
 
-import { db } from '@/services/firebase/firestore';
+import { db } from '@/lib/firebase';
 import { collection, query, getDocs, where } from 'firebase/firestore';
 import { getCurrentUid } from './authHelpers';
 

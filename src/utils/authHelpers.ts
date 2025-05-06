@@ -1,5 +1,5 @@
 
-import { auth } from "@/firebase";
+import { auth } from "@/lib/firebase";
 
 /**
  * Получает ID текущего пользователя, если он аутентифицирован
