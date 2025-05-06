@@ -181,14 +181,65 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       return;
     }
     
+    // Добавляем заклинание в контекст только если его еще нет
     if (!selectedSpells.some(s => s.id === spell.id || s.name === spell.name)) {
-      setSelectedSpells([...selectedSpells, spell]);
+      const updatedSelectedSpells = [...selectedSpells, spell];
+      setSelectedSpells(updatedSelectedSpells);
+      
+      // Также добавляем заклинание в персонажа, если есть доступ к updateCharacter
+      if (character && updateCharacter) {
+        // Преобразуем SpellData в CharacterSpell
+        const characterSpell: CharacterSpell = {
+          id: spell.id.toString(),
+          name: spell.name,
+          level: spell.level,
+          school: spell.school,
+          castingTime: spell.castingTime,
+          range: spell.range,
+          components: spell.components,
+          duration: spell.duration,
+          description: spell.description,
+          classes: spell.classes,
+          prepared: true // По умолчанию заклинания подготовлены
+        };
+        
+        // Добавляем заклинание к списку заклинаний персонажа
+        const updatedSpells = [...(character.spells || []), characterSpell];
+        updateCharacter({ spells: updatedSpells });
+        
+        toast({
+          title: "Заклинание добавлено",
+          description: `Заклинание "${spell.name}" добавлено в список известных заклинаний`,
+        });
+      }
     }
   };
 
   // Удаление заклинания
   const removeSpell = (spellId: string) => {
+    // Удаляем из контекста
     setSelectedSpells(selectedSpells.filter(spell => spell.id !== spellId && spell.id !== `spell-${spellId}`));
+    
+    // Также удаляем из персонажа, если есть доступ к updateCharacter
+    if (character && character.spells && updateCharacter) {
+      const spellName = selectedSpells.find(s => s.id === spellId || s.id === `spell-${spellId}`)?.name;
+      
+      if (spellName) {
+        const updatedSpells = character.spells.filter(spell => {
+          if (typeof spell === 'string') {
+            return spell !== spellName;
+          }
+          return spell.id !== spellId && spell.name !== spellName;
+        });
+        
+        updateCharacter({ spells: updatedSpells });
+        
+        toast({
+          title: "Заклинание удалено",
+          description: `Заклинание "${spellName}" удалено из списка известных заклинаний`,
+        });
+      }
+    }
   };
   
   // Проверка доступности заклинания для класса
@@ -253,7 +304,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (!character) return;
     
     const characterSpells: CharacterSpell[] = selectedSpells.map(spell => ({
-      id: spell.id,
+      id: spell.id.toString(),
       name: spell.name,
       level: spell.level,
       school: spell.school,

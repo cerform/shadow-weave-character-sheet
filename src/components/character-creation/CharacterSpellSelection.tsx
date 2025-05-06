@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
+import { useToast } from '@/hooks/use-toast';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -40,6 +41,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   const { selectedSpells, availableSpells: contextAvailableSpells, addSpell, removeSpell, getSpellLimits, getSelectedSpellCount, saveCharacterSpells, loadSpellsForCharacter } = useSpellbook();
+  const { toast } = useToast();
   
   // Use props or derived values
   const effectiveLevel = level || character.level || 1;
@@ -197,11 +199,76 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const handleSpellChange = (spell: SpellData, adding: boolean) => {
     if (propOnSpellChange) {
       propOnSpellChange(spell, adding);
+      return;
+    }
+    
+    if (adding) {
+      // Проверяем лимиты заклинаний
+      const spellCounts = getSelectedSpellCount();
+      const limits = spellLimits();
+      
+      if (spell.level === 0 && spellCounts.cantrips >= limits.cantripsCount) {
+        toast({
+          title: "Лимит заговоров",
+          description: "Вы достигли максимального количества известных заговоров",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (spell.level > 0 && spellCounts.spells >= limits.knownSpells) {
+        toast({
+          title: "Лимит заклинаний",
+          description: "Вы достигли максимального количества известных заклинаний",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Добавляем заклинание в контекст
+      addSpell(spell);
+      
+      // Также добавляем заклинание прямо в персонажа
+      const updatedSpells = [...(character.spells || [])];
+      updatedSpells.push({
+        id: spell.id,
+        name: spell.name,
+        level: spell.level,
+        school: spell.school,
+        castingTime: spell.castingTime,
+        range: spell.range,
+        components: spell.components,
+        duration: spell.duration,
+        description: spell.description,
+        classes: spell.classes,
+        prepared: true // По умолчанию заклинания подготовлены
+      });
+      
+      updateCharacter({ spells: updatedSpells });
+      
+      toast({
+        title: "Заклинание изучено",
+        description: `Заклинание "${spell.name}" добавлено в список известных заклинаний`,
+        variant: "default"
+      });
     } else {
-      if (adding) {
-        addSpell(spell);
-      } else {
-        removeSpell(spell.id.toString());
+      // Удаляем заклинание из контекста
+      removeSpell(spell.id.toString());
+      
+      // Также удаляем заклинание из персонажа
+      if (character.spells) {
+        const updatedSpells = character.spells.filter(s => {
+          if (typeof s === 'string') return s !== spell.name;
+          return s.id !== spell.id && s.name !== spell.name;
+        });
+        
+        updateCharacter({ spells: updatedSpells });
+        
+        toast({
+          title: "Заклинание забыто",
+          description: `Заклинание "${spell.name}" удалено из списка известных заклинаний`,
+          variant: "default"
+        });
       }
     }
   };

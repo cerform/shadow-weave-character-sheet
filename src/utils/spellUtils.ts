@@ -304,3 +304,4 @@ export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => 
     concentration: spell.concentration || false
   }));
 };
+
