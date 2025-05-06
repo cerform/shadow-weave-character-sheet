@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { auth } from '@/services/firebase';
+import { firebaseAuth } from '@/services/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/services/firebase/firestore';
 import { collection, getDocs } from 'firebase/firestore';
@@ -17,7 +17,7 @@ const FirebaseDebugger: React.FC = () => {
   // Получаем информацию о текущем пользователе
   useEffect(() => {
     const getCurrentUser = () => {
-      const currentUser = auth.currentUser;
+      const currentUser = firebaseAuth.currentUser;
       if (currentUser) {
         setUserInfo(
           JSON.stringify(

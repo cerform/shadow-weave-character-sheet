@@ -35,7 +35,7 @@ googleProvider.setCustomParameters({
 });
 
 // Функции для аутентификации
-const auth = {
+export const auth = {
   // Текущий пользователь
   currentUser: firebaseAuth.currentUser,
 
@@ -104,4 +104,5 @@ const auth = {
   }
 };
 
-export { auth };
+// Экспортируем отдельно инстанс auth из Firebase для обратной совместимости
+export { firebaseAuth as auth }; 
