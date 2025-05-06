@@ -69,10 +69,10 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = await saveCharacter(updatedCharacter);
-      if (savedChar) {
-        setCharacter({...updatedCharacter, id: savedChar.id});
-        toast.success(`${savedChar.name || 'Персонаж'} успешно сохранен`);
+      const savedCharId = await saveCharacter(updatedCharacter);
+      if (savedCharId) {
+        setCharacter({...updatedCharacter, id: savedCharId});
+        toast.success(`${updatedCharacter.name || 'Персонаж'} успешно сохранен`);
       }
       
       // Обновляем список персонажей

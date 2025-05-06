@@ -65,7 +65,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 };
 
 // Получение персонажа по ID
-export const getCharacterById = async (id: string): Promise<Character | null> => {
+export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
     const docRef = doc(db, 'characters', id);
     const docSnap = await getDoc(docRef);
@@ -135,6 +135,46 @@ export const saveCharacter = async (character: Character): Promise<string> => {
     }
   } catch (error) {
     console.error('Ошибка при сохранении персонажа:', error);
+    throw error;
+  }
+};
+
+// Новая функция saveCharacterToFirestore, которая используется в нескольких файлах
+export const saveCharacterToFirestore = async (character: Character, userId: string): Promise<string> => {
+  try {
+    // Убедимся, что у персонажа есть имя
+    if (!character.name) {
+      character.name = "Безымянный герой";
+    }
+    
+    // Добавление дат создания/обновления и userId
+    const now = new Date().toISOString();
+    const characterData = {
+      ...character,
+      userId,
+      updatedAt: now
+    };
+    
+    // Если это новый персонаж, добавляем дату создания
+    if (!character.createdAt) {
+      characterData.createdAt = now;
+    }
+    
+    // Обновление существующего персонажа
+    if (character.id) {
+      const characterRef = doc(db, 'characters', character.id);
+      await setDoc(characterRef, characterData, { merge: true });
+      console.log(`Персонаж ${character.id} обновлен через saveCharacterToFirestore`);
+      return character.id;
+    } 
+    // Создание нового персонажа
+    else {
+      const docRef = await addDoc(collection(db, 'characters'), characterData);
+      console.log(`Новый персонаж создан с ID: ${docRef.id} через saveCharacterToFirestore`);
+      return docRef.id;
+    }
+  } catch (error) {
+    console.error('Ошибка при сохранении персонажа в Firestore:', error);
     throw error;
   }
 };
