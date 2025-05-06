@@ -6,10 +6,11 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUid } from '@/utils/authHelpers';
 import { Character } from '@/types/character';
+import { testLoadCharacters, getCurrentUserDetails } from '@/services/firebase/firestore-test';
 
 const TestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,9 +29,9 @@ const TestPage: React.FC = () => {
     try {
       setResults(prev => ({ ...prev, connection: 'Тестирование соединения...' }));
       
-      // Проверяем, можем ли получить хотя бы один документ из любой коллекции
+      // Проверяем, можем ли получить хотя бы один документ из коллекции tests
       const testCollectionRef = collection(db, 'tests');
-      const testQuery = await getDocs(testCollectionRef);
+      const testQuery = await getDocs(query(testCollectionRef));
       
       setResults(prev => ({ 
         ...prev, 
@@ -52,10 +53,10 @@ const TestPage: React.FC = () => {
     
     try {
       // Проверяем текущую авторизацию
-      const uid = getCurrentUid();
+      const userDetails = getCurrentUserDetails();
       const currentAuth = { 
         isAuthenticated, 
-        uid, 
+        uid: userDetails.uid, 
         user: user ? {
           id: user.id || user.uid,
           email: user.email,
@@ -72,7 +73,7 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // Тест загрузки персонажей напрямую из Firestore
+  // Тест загрузки персонажей с новыми правилами безопасности
   const testCharacters = async () => {
     setLoading(true);
     setError(null);
@@ -81,40 +82,31 @@ const TestPage: React.FC = () => {
     try {
       setResults(prev => ({ ...prev, characters: 'Загрузка персонажей...' }));
       
-      // Получаем ID пользователя
-      const userId = user?.uid || user?.id;
+      // Используем новую утилиту для тестирования
+      const result = await testLoadCharacters();
       
-      if (!userId) {
-        throw new Error('ID пользователя отсутствует');
+      // Обновляем состояние на основе результата
+      if (result.success) {
+        setCharacters(result.characters);
+        setResults(prev => ({ 
+          ...prev, 
+          characters: result.message,
+          charactersData: result.characters.map(char => ({
+            id: char.id,
+            name: char.name,
+            className: char.className || char.class,
+            userId: char.userId
+          })),
+          debug: result.debug
+        }));
+      } else {
+        setError(result.message);
+        setResults(prev => ({ 
+          ...prev, 
+          characters: `ОШИБКА: ${result.message}`,
+          debug: result.debug
+        }));
       }
-      
-      // Получаем персонажей
-      const charactersCollection = collection(db, 'characters');
-      const charactersQuery = query(charactersCollection, where('userId', '==', userId));
-      
-      console.log('Тестовый запрос персонажей для пользователя:', userId);
-      
-      const snapshot = await getDocs(charactersQuery);
-      
-      console.log(`Получено документов: ${snapshot.size}`);
-      
-      const loadedCharacters = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Character[];
-      
-      setCharacters(loadedCharacters);
-      
-      setResults(prev => ({ 
-        ...prev, 
-        characters: `Персонажей загружено: ${loadedCharacters.length}`,
-        charactersData: loadedCharacters.map(char => ({
-          id: char.id,
-          name: char.name,
-          className: char.className || char.class,
-          userId: char.userId
-        }))
-      }));
     } catch (err) {
       console.error('Ошибка загрузки персонажей:', err);
       setError(`Ошибка загрузки персонажей: ${err}`);
@@ -196,6 +188,15 @@ const TestPage: React.FC = () => {
                       </pre>
                     </div>
                   )}
+                  
+                  {results.debug && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Отладочная информация:</h4>
+                      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
+                        {JSON.stringify(results.debug, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -232,7 +233,10 @@ const TestPage: React.FC = () => {
             <li>Убедитесь, что вы авторизованы в системе</li>
             <li>Проверьте, что у вас есть персонажи в коллекции 'characters'</li>
             <li>Проверьте, что у персонажей правильно указан userId, совпадающий с вашим id</li>
-            <li>Если персонажи не загружаются, проверьте правила безопасности Firestore</li>
+            <li>
+              <strong>Новые правила безопасности:</strong> Для запросов списка персонажей (list) 
+              теперь требуется явный фильтр where('userId', '==', request.auth.uid)
+            </li>
           </ul>
         </CardContent>
       </Card>
