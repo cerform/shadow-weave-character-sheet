@@ -23,75 +23,60 @@ const CharacterViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Функция загрузки персонажа
+  const loadCharacter = async () => {
+    if (!id) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('CharacterViewPage: Загрузка персонажа по ID:', id);
+      
+      // Пытаемся загрузить персонажа через контекст
+      const loadedCharacter = await getCharacterById(id);
+      
+      if (loadedCharacter) {
+        console.log('CharacterViewPage: Персонаж найден:', loadedCharacter.name);
+        // Преобразуем загруженные данные через конвертер
+        const convertedCharacter = convertToCharacter(loadedCharacter);
+        setCharacter(convertedCharacter);
+        setProcessedCharacter(convertedCharacter);
+        
+        // Сохраняем последнего загруженного персонажа
+        localStorage.setItem('last-selected-character', id);
+      } else {
+        console.log('CharacterViewPage: Персонаж с ID не найден:', id);
+        
+        // Проверяем локальное хранилище
+        const storedCharacter = localStorage.getItem(`character_${id}`);
+        
+        if (storedCharacter) {
+          console.log('CharacterViewPage: Персонаж найден в localStorage');
+          const localCharacter = JSON.parse(storedCharacter);
+          const convertedCharacter = convertToCharacter(localCharacter);
+          setCharacter(convertedCharacter);
+          setProcessedCharacter(convertedCharacter);
+          localStorage.setItem('last-selected-character', id);
+        } else {
+          console.error('CharacterViewPage: Персонаж не найден нигде');
+          setError(`Персонаж с ID ${id} не найден.`);
+          toast.error(`Персонаж с ID ${id} не найден.`);
+        }
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке персонажа:', err);
+      setError("Ошибка при загрузке персонажа.");
+      toast.error("Ошибка при загрузке персонажа.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Загрузка персонажа при монтировании компонента или изменении ID
   useEffect(() => {
-    const loadCharacter = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        if (id) {
-          console.log('CharacterViewPage: Загрузка персонажа по ID:', id);
-          
-          // Пытаемся загрузить персонажа через контекст
-          const loadedCharacter = await getCharacterById(id);
-          
-          if (loadedCharacter) {
-            console.log('CharacterViewPage: Персонаж найден:', loadedCharacter.name);
-            // Преобразуем загруженные данные через конвертер
-            const convertedCharacter = convertToCharacter(loadedCharacter);
-            setCharacter(convertedCharacter);
-            setProcessedCharacter(convertedCharacter);
-            
-            // Сохраняем последнего загруженного персонажа
-            localStorage.setItem('last-selected-character', id);
-          } else {
-            console.log('CharacterViewPage: Персонаж с ID не найден:', id);
-            
-            // Проверяем локальное хранилище
-            const storedCharacter = localStorage.getItem(`character_${id}`);
-            
-            if (storedCharacter) {
-              console.log('CharacterViewPage: Персонаж найден в localStorage');
-              const localCharacter = JSON.parse(storedCharacter);
-              const convertedCharacter = convertToCharacter(localCharacter);
-              setCharacter(convertedCharacter);
-              setProcessedCharacter(convertedCharacter);
-              localStorage.setItem('last-selected-character', id);
-            } else {
-              console.error('CharacterViewPage: Персонаж не найден нигде');
-              setError(`Персонаж с ID ${id} не найден.`);
-              toast.error(`Персонаж с ID ${id} не найден.`);
-            }
-          }
-        } else if (character) {
-          // Если персонаж уже загружен в контекст, применяем конвертер
-          setProcessedCharacter(convertToCharacter(character));
-        } else {
-          // Проверяем, есть ли сохраненный последний персонаж
-          const lastCharacterId = localStorage.getItem('last-selected-character');
-          
-          if (lastCharacterId) {
-            console.log('CharacterViewPage: Загрузка последнего выбранного персонажа:', lastCharacterId);
-            // Перенаправляем на страницу с конкретным ID
-            navigate(`/character/${lastCharacterId}`);
-            return;
-          } else {
-            setError("Персонаж не выбран.");
-            toast.error("Персонаж не выбран.");
-          }
-        }
-      } catch (err) {
-        console.error('Ошибка при загрузке персонажа:', err);
-        setError("Ошибка при загрузке персонажа.");
-        toast.error("Ошибка при загрузке персонажа.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     loadCharacter();
-  }, [id, navigate, getCharacterById, setCharacter, character]);
+  }, [id]);
 
   // Обработчик обновления персонажа
   const handleUpdateCharacter = (updates: Partial<Character>) => {
@@ -156,7 +141,7 @@ const CharacterViewPage = () => {
           <div className="flex gap-4 justify-center">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/characters')}
+              onClick={() => navigate('/')}
             >
               Вернуться к списку персонажей
             </Button>
@@ -178,7 +163,7 @@ const CharacterViewPage = () => {
         <h2 className="text-xl font-semibold mb-4">Персонаж не выбран</h2>
         <Button 
           className="mr-2"
-          onClick={() => navigate('/characters')}
+          onClick={() => navigate('/')}
         >
           Перейти к списку персонажей
         </Button>
@@ -205,7 +190,7 @@ const CharacterViewPage = () => {
           <div className="flex justify-between items-center mb-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/characters')}
+              onClick={() => navigate('/')}
               className="gap-2"
             >
               <ArrowLeft size={16} />

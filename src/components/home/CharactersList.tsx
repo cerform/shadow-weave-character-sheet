@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
@@ -13,6 +13,7 @@ import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
 
 const CharactersList: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const { getUserCharacters, loading: contextLoading, refreshCharacters } = useCharacter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,11 @@ const CharactersList: React.FC = () => {
       console.error('Ошибка при запуске диагностики:', error);
       toast.error('Не удалось выполнить диагностику');
     }
+  };
+  
+  // Функция для открытия персонажа
+  const handleOpenCharacter = (id: string) => {
+    navigate(`/character/${id}`);
   };
 
   // Эффект для загрузки персонажей при монтировании и изменении статуса аутентификации
@@ -186,11 +192,11 @@ const CharactersList: React.FC = () => {
               <p>Раса: {character.race || '—'}</p>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" asChild>
-                <Link to={`/character/${character.id}`}>Открыть</Link>
+              <Button variant="outline" onClick={() => handleOpenCharacter(character.id)}>
+                Открыть
               </Button>
-              <Button asChild>
-                <Link to={`/character/${character.id}`}>Играть</Link>
+              <Button onClick={() => handleOpenCharacter(character.id)}>
+                Играть
               </Button>
             </CardFooter>
           </Card>

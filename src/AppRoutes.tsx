@@ -10,7 +10,7 @@ import SpellbookPage from './pages/SpellbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
 import ProfilePage from './pages/ProfilePage';
 import HandbookPage from './pages/HandbookPage';
-import CharacterSheetPage from './pages/CharacterSheetPage';
+import CharacterViewPage from './pages/CharacterViewPage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
@@ -138,7 +138,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/character-creation" element={<CharacterCreationPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/handbook" element={<HandbookPage />} />
-      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      <Route path="/character/:id" element={<CharacterViewPage />} />
+      <Route path="/characters" element={<Home />} />
       
       {/* Маршрут для неизвестных путей */}
       <Route path="*" element={<NotFound />} />
