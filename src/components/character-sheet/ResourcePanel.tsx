@@ -65,7 +65,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     const healing = Math.max(1, roll + constitutionMod);
     
     // Обновляем здоровье и количество использованных костей хитов
-    const newHp = Math.min(character.maxHp, character.currentHp + healing);
+    const newHp = Math.min(character.maxHp || 0, (character.currentHp || 0) + healing);
     const newHitDice = {
       ...hitDice,
       used: hitDice.used + 1,
@@ -97,7 +97,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     };
     
     // Восстанавливаем ресурсы, если у них есть свойство recoveryType === 'shortRest'
-    const updatedResources = { ...character.resources };
+    const updatedResources = { ...(character.resources || {}) };
     if (updatedResources) {
       Object.keys(updatedResources).forEach(key => {
         const resource = updatedResources[key];
@@ -124,7 +124,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
   // Обработчик продолжительного отдыха
   const handleLongRest = () => {
     // Восстанавливаем все хиты
-    const newHp = character.maxHp;
+    const newHp = character.maxHp || 0;
     
     // Восстанавливаем кости хитов (половина от общего количества, минимум 1)
     const { hitDice } = getHitDiceInfo();
@@ -138,7 +138,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     };
     
     // Восстанавливаем все ресурсы
-    const updatedResources = { ...character.resources };
+    const updatedResources = { ...(character.resources || {}) };
     if (updatedResources) {
       Object.keys(updatedResources).forEach(key => {
         updatedResources[key] = {

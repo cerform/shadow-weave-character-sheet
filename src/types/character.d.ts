@@ -58,10 +58,15 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
+    skills?: string[];
   } | string[];
-  equipment?: Item[];
+  equipment?: Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   features?: Feature[] | string[];
-  spells?: CharacterSpell[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -82,6 +87,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
+  notes?: string;
   raceFeatures?: {
     name: string;
     description: string;
@@ -139,8 +145,6 @@ export interface Character {
     max: number;
     current: number;
   };
-  notes?: string;
-  skillProficiencies?: Record<string, boolean>;
 }
 
 export interface CharacterSpell {

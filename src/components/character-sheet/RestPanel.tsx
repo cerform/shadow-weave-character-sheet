@@ -112,7 +112,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
     
     // Обновляем состояние персонажа
     onUpdate({
-      currentHp: character.maxHp, // Полное исцеление
+      currentHp: character.maxHp || 0, // Полное исцеление
       temporaryHp: 0,             // Сбрасываем временные хиты
       resources: updatedResources,
       hitDice: updatedHitDice,

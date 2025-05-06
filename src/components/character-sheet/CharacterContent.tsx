@@ -47,7 +47,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Инициатива:</span>
               <span style={{ color: currentTheme.textColor }}>
-                {character.initiative || '+0'}
+                {character.initiative !== undefined ? character.initiative : '+0'}
               </span>
             </div>
             
@@ -73,7 +73,8 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
                 <span style={{ color: currentTheme.textColor }}>{skillName}</span>
                 <span style={{ color: currentTheme.textColor }}>
                   {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
-                  {typeof skillValue === 'object' && skillValue.value ? (skillValue.value >= 0 ? `+${skillValue.value}` : skillValue.value) : ''}
+                  {typeof skillValue === 'object' && 'value' in skillValue ? (skillValue.value !== undefined && skillValue.value >= 0 ? `+${skillValue.value}` : skillValue.value) : ''}
+                  {typeof skillValue === 'object' && 'bonus' in skillValue ? (skillValue.bonus !== undefined && skillValue.bonus >= 0 ? `+${skillValue.bonus}` : skillValue.bonus) : ''}
                 </span>
               </div>
             ))}

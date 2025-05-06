@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 
 interface CharacterExportPDFProps {
   character: Character;
@@ -60,7 +60,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         head: [['КД', 'Инициатива', 'Скорость', 'Текущие ХП', 'Макс. ХП']],
         body: [[
           character.armorClass || 10,
-          character.initiative || '+0',
+          character.initiative !== undefined ? character.initiative : '+0',
           character.speed || '30 фт',
           character.currentHp || 0,
           character.maxHp || 0
@@ -77,9 +77,14 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
           
           if (typeof value === 'number') {
             displayValue = value >= 0 ? `+${value}` : `${value}`;
-          } else if (typeof value === 'object' && value !== null && 'bonus' in value) {
-            const bonus = value.bonus || 0;
-            displayValue = bonus >= 0 ? `+${bonus}` : `${bonus}`;
+          } else if (typeof value === 'object' && value !== null) {
+            if ('bonus' in value && value.bonus !== undefined) {
+              const bonus = value.bonus;
+              displayValue = typeof bonus === 'number' && bonus >= 0 ? `+${bonus}` : `${bonus}`;
+            } else if ('value' in value && value.value !== undefined) {
+              const val = value.value;
+              displayValue = typeof val === 'number' && val >= 0 ? `+${val}` : `${val}`;
+            }
           }
           
           return [name, displayValue];
@@ -98,23 +103,40 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       }
       
       // Add equipment
-      let equipmentList: string[] = [];
+      const processedEquipment: string[] = [];
       
       if (character.equipment) {
         if (Array.isArray(character.equipment)) {
-          equipmentList = character.equipment;
-        } else if (typeof character.equipment === 'object') {
-          if (character.equipment.weapons) equipmentList = equipmentList.concat(character.equipment.weapons);
-          if (character.equipment.armor) equipmentList.push(character.equipment.armor);
-          if (character.equipment.items) equipmentList = equipmentList.concat(character.equipment.items);
+          if (character.equipment.length > 0) {
+            if (typeof character.equipment[0] === 'string') {
+              processedEquipment.push(...character.equipment as string[]);
+            } else {
+              // Если это массив объектов Item
+              processedEquipment.push(...(character.equipment as Item[]).map(item => 
+                `${item.name} (${item.quantity})`
+              ));
+            }
+          }
+        } else {
+          // Если это объект с оружием, броней и предметами
+          const equipment = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
+          if (equipment.weapons && equipment.weapons.length > 0) {
+            processedEquipment.push(`Оружие: ${equipment.weapons.join(', ')}`);
+          }
+          if (equipment.armor) {
+            processedEquipment.push(`Броня: ${equipment.armor}`);
+          }
+          if (equipment.items && equipment.items.length > 0) {
+            processedEquipment.push(`Предметы: ${equipment.items.join(', ')}`);
+          }
         }
       }
       
-      if (equipmentList.length > 0) {
+      if (processedEquipment.length > 0) {
         autoTable(doc, {
           startY: yPosition,
           head: [['Снаряжение']],
-          body: equipmentList.map(item => [item]),
+          body: processedEquipment.map(item => [item]),
         });
         
         // Update position after table
@@ -123,10 +145,16 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add features
       if (character.features && character.features.length > 0) {
+        const featuresArray = Array.isArray(character.features) 
+          ? (typeof character.features[0] === 'string' 
+              ? character.features 
+              : (character.features as any[]).map(f => f.name || f.toString()))
+          : [];
+          
         autoTable(doc, {
           startY: yPosition,
           head: [['Особенности и черты']],
-          body: character.features.map(feature => [feature]),
+          body: featuresArray.map(feature => [feature]),
         });
         
         // Update position after table
@@ -135,12 +163,16 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add spells
       if (character.spells && character.spells.length > 0) {
+        const spellsArray = Array.isArray(character.spells)
+          ? (typeof character.spells[0] === 'string'
+              ? character.spells as string[]
+              : (character.spells as any[]).map(s => s.name || s.toString()))
+          : [];
+            
         autoTable(doc, {
           startY: yPosition,
           head: [['Заклинания']],
-          body: character.spells.map(spell => [
-            typeof spell === 'string' ? spell : spell.name
-          ]),
+          body: spellsArray.map(spell => [spell]),
         });
         
         // Update position after table

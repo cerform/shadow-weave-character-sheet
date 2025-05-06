@@ -57,22 +57,26 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({
     if (!character.equipment) return "Нет снаряжения";
     
     if (Array.isArray(character.equipment)) {
-      return character.equipment.join(', ');
+      if (typeof character.equipment[0] === 'string') {
+        return (character.equipment as string[]).join(', ');
+      } else {
+        return (character.equipment as any[]).map(item => item.name || item).join(', ');
+      }
     }
     
-    const { weapons, armor, items } = character.equipment;
+    const equipment = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
     const parts = [];
     
-    if (weapons && weapons.length > 0) {
-      parts.push(`Оружие: ${weapons.join(', ')}`);
+    if (equipment.weapons && equipment.weapons.length > 0) {
+      parts.push(`Оружие: ${equipment.weapons.join(', ')}`);
     }
     
-    if (armor) {
-      parts.push(`Броня: ${armor}`);
+    if (equipment.armor) {
+      parts.push(`Броня: ${equipment.armor}`);
     }
     
-    if (items && items.length > 0) {
-      parts.push(`Предметы: ${items.join(', ')}`);
+    if (equipment.items && equipment.items.length > 0) {
+      parts.push(`Предметы: ${equipment.items.join(', ')}`);
     }
     
     return parts.length > 0 ? parts.join('\n') : "Нет снаряжения";

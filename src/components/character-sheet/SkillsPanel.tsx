@@ -80,12 +80,17 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     };
     
     // Обновляем персонажа
+    const updatedProficiencies = { 
+      ...character.proficiencies as any
+    };
+    
+    if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
+      updatedProficiencies.skills = Object.keys(updatedSkills).filter(key => updatedSkills[key].proficient);
+    }
+    
     onUpdate({
       skills: updatedSkills,
-      proficiencies: { 
-        ...character.proficiencies as Record<string, string[]>,
-        skills: Object.keys(updatedSkills).filter(key => updatedSkills[key].proficient)
-      }
+      proficiencies: updatedProficiencies
     });
     
     // Показываем уведомление

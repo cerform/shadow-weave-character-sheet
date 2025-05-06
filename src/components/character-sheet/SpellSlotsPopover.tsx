@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -127,44 +126,49 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
     
     toast({
       title: "Слот создан",
-      description: `Создан дополнительный слот ${level}-го уровня. Потрачено ${pointCost} очков колдовства`
+      description: `Создан дополнительный слот ${level}-го уровня за ${pointCost} очков колдовства`
     });
   };
   
-  // Преобразование слота в очки колдовства
-  const convertSlotToSorceryPoints = () => {
+  // Конвертация слотов заклинаний в очки колдовства (только для чародеев)
+  const convertSpellSlotToSorceryPoints = () => {
     if (character.class !== "Чародей" || !character.sorceryPoints) {
       toast({
         title: "Невозможно",
-        description: "Только чародеи могут преобразовывать слоты в очки колдовства",
+        description: "Только чародеи могут превращать слоты в очки колдовства",
         variant: "destructive"
       });
       return;
     }
     
-    if (availableSlots <= 0) {
+    if (!character.spellSlots || !character.spellSlots[level]) {
       toast({
-        title: "Нет доступных слотов",
-        description: "Все слоты этого уровня уже использованы",
+        title: "Ошибка",
+        description: "Слоты заклинаний не определены",
         variant: "destructive"
       });
       return;
     }
     
-    // Количество очков, получаемых за слот
-    const pointsGained = level;
+    if (slotInfo.used >= slotInfo.max || slotInfo.max <= 0) {
+      toast({
+        title: "Невозможно конвертировать слот",
+        description: "Нет доступных слотов этого уровня",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Преобразуем слот
+    // Количество получаемых очков колдовства равно уровню слота
+    const gainedPoints = level;
+    
     const newSpellSlots = { ...character.spellSlots };
     const newSorceryPoints = { 
       ...character.sorceryPoints, 
-      current: Math.min(
-        character.sorceryPoints.max,
-        character.sorceryPoints.current + pointsGained
-      )
+      current: Math.min(character.sorceryPoints.max, character.sorceryPoints.current + gainedPoints) 
     };
     
-    // Помечаем слот как использованный
+    // Используем слот заклинания
     newSpellSlots[level] = { 
       ...slotInfo, 
       used: slotInfo.used + 1 
@@ -176,11 +180,11 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
     });
     
     toast({
-      title: "Слот преобразован",
-      description: `Слот ${level}-го уровня преобразован в ${pointsGained} очков колдовства`
+      title: "Слот конвертирован",
+      description: `Получено ${gainedPoints} очков колдовства за слот ${level}-го уровня`
     });
   };
-
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -234,7 +238,7 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={convertSlotToSorceryPoints}
+                    onClick={convertSpellSlotToSorceryPoints}
                     disabled={availableSlots <= 0}
                   >
                     Слот → {level} ОК
