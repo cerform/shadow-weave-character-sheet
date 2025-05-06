@@ -21,18 +21,15 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Получаем класс персонажа из разных возможных полей
+  // Получаем класс персонажа из разных возможных полей с безопасной проверкой
   const getCharacterClass = (): string => {
-    if (character.className && typeof character.className === 'string') 
-      return character.className;
-    
-    if (character.class && typeof character.class === 'string') 
-      return character.class;
-    
-    return '';
+    const classValue = character.className || character.class;
+    return typeof classValue === 'string' && classValue.trim() !== ''
+      ? classValue
+      : 'Неизвестный класс';
   };
   
-  // Получаем уровень персонажа
+  // Получаем уровень персонажа с безопасным значением по умолчанию
   const getCharacterLevel = (): string => {
     if (character.level) {
       return `${character.level} уровень`;
@@ -40,11 +37,13 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     return '1 уровень';
   };
 
-  // Формируем заголовок карточки
+  // Формируем заголовок карточки с безопасным значением по умолчанию
   const characterTitle = character.name || 'Безымянный персонаж';
 
-  // Формируем подзаголовок карточки
-  const characterSubtitle = `${character.race || ''} ${getCharacterClass()}`;
+  // Формируем подзаголовок карточки с безопасными значениями
+  const raceValue = character.race || 'Неизвестная раса';
+  const classValue = getCharacterClass();
+  const characterSubtitle = `${raceValue} ${classValue}`;
 
   return (
     <Card 
@@ -82,14 +81,21 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
               {character.alignment && (
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">Мировоззрение:</span>
-                  <span className="font-medium">{character.alignment}</span>
+                  <span className="font-medium">{character.alignment || 'Не указано'}</span>
                 </div>
               )}
               
               {character.background && (
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">Предыстория:</span>
-                  <span className="font-medium">{character.background}</span>
+                  <span className="font-medium">{character.background || 'Без предыстории'}</span>
+                </div>
+              )}
+              
+              {character.subclass && (
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Архетип:</span>
+                  <span className="font-medium">{character.subclass}</span>
                 </div>
               )}
             </div>

@@ -13,14 +13,11 @@ export const CharacterHeader = ({ character, onUpdate }: CharacterHeaderProps) =
   const getCharacterClass = (): string => {
     if (!character) return '—';
     
-    // Проверяем все возможные места хранения класса
-    if (character.className && typeof character.className === 'string') 
-      return character.className;
-    
-    if (character.class && typeof character.class === 'string') 
-      return character.class;
-    
-    return '—';
+    // Проверяем все возможные места хранения класса с безопасным доступом
+    const classValue = character.className || character.class;
+    return typeof classValue === 'string' && classValue.trim() !== ''
+      ? classValue
+      : 'Неизвестный класс';
   };
 
   return (
