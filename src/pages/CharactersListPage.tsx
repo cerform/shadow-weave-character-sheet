@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import CharactersTable from '@/components/characters/CharactersTable';
 import EmptyState from '@/components/characters/EmptyState';
 import CharactersHeader from '@/components/characters/CharactersHeader';
+import { testLoadCharacters } from '@/services/firebase/firestore-test';
 
 // Интерфейс для отладочной информации с нужными полями
 interface DebugInfo {
@@ -52,8 +54,9 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('table');
+  const [displayMode, setDisplayMode] = useState<'table' | 'raw' | 'test'>('table');
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [testResults, setTestResults] = useState<any>(null);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -129,6 +132,32 @@ const CharactersListPage: React.FC = () => {
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       setError(`Не удалось загрузить персонажей: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция для запуска тестовой загрузки персонажей
+  const runTestLoad = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setDisplayMode('test');
+      
+      console.log('Запускаем тестовую загрузку персонажей...');
+      const result = await testLoadCharacters();
+      
+      setTestResults(result);
+      
+      if (result.success && result.characters.length > 0) {
+        setCharacters(result.characters);
+        toast.success(`Тестовая загрузка успешна: ${result.characters.length} персонажей`);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      console.error('Ошибка при тестовой загрузке:', err);
+      setError(`Ошибка при тестовой загрузке: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -212,19 +241,28 @@ const CharactersListPage: React.FC = () => {
           {/* Панель управления отображением */}
           <div className="flex justify-end gap-3">
             <Button
-              onClick={toggleDisplayMode}
+              onClick={() => setDisplayMode(mode => mode === 'raw' ? 'table' : 'raw')}
               size="sm"
             >
               {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
             </Button>
             
             <Button
-              onClick={forceRefresh}
+              onClick={runTestLoad}
+              size="sm"
+              className="gap-2"
+              variant="secondary"
+            >
+              Тестовая загрузка
+            </Button>
+            
+            <Button
+              onClick={loadCharacters}
               size="sm"
               variant="outline"
               className="gap-2"
             >
-              <RefreshCw size={16} className="animate-spin" />
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               Обновить
             </Button>
           </div>
@@ -259,10 +297,20 @@ const CharactersListPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+              ) : displayMode === 'test' ? (
+                <div className="p-4 bg-black/20 rounded-lg">
+                  <h2 className="text-lg font-bold mb-4">Результаты тестовой загрузки:</h2>
+                  
+                  {testResults && (
+                    <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
+                      {JSON.stringify(testResults, null, 2)}
+                    </pre>
+                  )}
+                </div>
               ) : (
                 <CharactersTable 
                   characters={characters}
-                  onDelete={handleDeleteCharacter}
+                  onDelete={deleteCharacter}
                 />
               )}
             </>
