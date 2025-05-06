@@ -117,7 +117,7 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
                     <div key={ability} className="flex flex-col items-center p-2 border rounded-lg">
                       <span className="text-xs uppercase">{ability.substring(0, 3)}</span>
                       <span className="text-lg font-bold">
-                        {character[ability as keyof Character] || 10}
+                        {character[ability as keyof Character] as number || 10}
                       </span>
                       <span className="text-xs">
                         {getModifier(character[ability as keyof Character] as number || 10)}
@@ -137,7 +137,7 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
                       <span>{name}</span>
                       <span className="font-medium">
                         {typeof skill === 'object' && 'bonus' in skill 
-                          ? (skill.bonus && skill.bonus > 0 ? `+${skill.bonus}` : skill.bonus) 
+                          ? (skill.bonus && skill.bonus > 0 ? `+${skill.bonus}` : String(skill.bonus)) 
                           : ''}
                       </span>
                     </div>
@@ -189,8 +189,20 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
                     {character.spells && Array.isArray(character.spells) && character.spells.length > 0 ? (
                       character.spells.map((spell, index) => (
                         <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{typeof spell === 'string' ? spell : spell.name}</div>
-                          <div className="text-xs">Уровень: {typeof spell === 'string' ? '?' : spell.level}</div>
+                          <div className="font-medium">
+                            {typeof spell === 'string' 
+                              ? spell 
+                              : 'name' in spell 
+                                ? spell.name 
+                                : 'Неизвестное заклинание'}
+                          </div>
+                          <div className="text-xs">
+                            Уровень: {typeof spell === 'string' 
+                              ? '?' 
+                              : 'level' in spell 
+                                ? spell.level 
+                                : '?'}
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -259,7 +271,7 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
     return magicClasses.includes(character.class || '');
   }
   
-  function renderEquipmentItems(character: Character, type: 'weapons' | 'armor' | 'items'): JSX.Element {
+  function renderEquipmentItems(character: Character, type: 'weapons' | 'armor' | 'items'): JSX.Element | JSX.Element[] {
     if (!character.equipment) {
       return <li>Нет предметов</li>;
     }

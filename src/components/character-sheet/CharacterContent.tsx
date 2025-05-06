@@ -27,6 +27,17 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
   
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Функция для безопасного отображения инициативы
+  const displayInitiative = () => {
+    if (character.initiative !== undefined) {
+      if (typeof character.initiative === 'number') {
+        return character.initiative >= 0 ? `+${character.initiative}` : `${character.initiative}`;
+      }
+      return character.initiative;
+    }
+    return '+0';
+  };
+
   // Отображаем разное содержимое в зависимости от выбранной секции
   if (section === 'resources') {
     return (
@@ -54,7 +65,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Инициатива:</span>
               <span style={{ color: currentTheme.textColor }}>
-                {character.initiative !== undefined ? character.initiative : '+0'}
+                {displayInitiative()}
               </span>
             </div>
             
@@ -82,10 +93,10 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
                   {typeof skillValue === 'number' && (skillValue >= 0 ? `+${skillValue}` : `${skillValue}`)}
                   {typeof skillValue === 'object' && 'value' in skillValue && 
                     (skillValue.value !== undefined && typeof skillValue.value === 'number' && skillValue.value >= 0 ? 
-                      `+${skillValue.value}` : skillValue.value)}
+                      `+${skillValue.value}` : String(skillValue.value))}
                   {typeof skillValue === 'object' && 'bonus' in skillValue && 
                     (skillValue.bonus !== undefined && typeof skillValue.bonus === 'number' && skillValue.bonus >= 0 ? 
-                      `+${skillValue.bonus}` : skillValue.bonus)}
+                      `+${skillValue.bonus}` : String(skillValue.bonus))}
                 </span>
               </div>
             ))}

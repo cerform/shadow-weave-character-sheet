@@ -1,10 +1,11 @@
+
 export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;  // Добавляем поле subrace
+  subrace?: string;
   class?: string;
-  className?: string; // Добавляем альтернатив��ое поле className
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -17,7 +18,7 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
-    // Добавляем алиасы для удобства
+    // Алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -25,7 +26,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  // Добавляем поле stats для обратной совместимости
+  // Альтернативное поле stats для обратной совместимости
   stats?: {
     strength: number;
     dexterity: number;
@@ -38,16 +39,18 @@ export interface Character {
     proficient: boolean;
     expertise?: boolean;
     value?: number;
+    bonus?: number;
   }>;
   hitPoints?: {
     current: number;
     maximum: number;
     temporary: number;
   };
-  // Добавляем алиасы для hitPoints
+  // Алиасы для hitPoints
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
+  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -57,10 +60,16 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
+    skills?: string[];
   } | string[];
-  equipment?: Item[];
-  features?: string[];
-  spells?: CharacterSpell[];
+  // Поддержка обоих типов equipment
+  equipment?: Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
+  features?: Feature[] | string[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -69,7 +78,6 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Добавляем поля для gold
   gold?: number;
   deathSaves?: {
     successes: number;
@@ -82,7 +90,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
+  notes?: string;
   raceFeatures?: {
     name: string;
     description: string;
@@ -103,29 +111,45 @@ export interface Character {
     description: string;
     level?: number;
   }[];
-  currency?: {
-    cp?: number;
-    sp?: number;
-    ep?: number;
-    gp?: number;
-    pp?: number;
-  };
-  // Added properties for timestamps
+  gender?: string;
+  userId?: string;
+  abilityPointsUsed?: number;
   updatedAt?: string;
   createdAt?: string;
-  // Added property for character image
   image?: string;
-  // Пользовательские поля
-  gender?: string; // Добавляем поле gender
-  userId?: string; // Добавляем поле userId для связи с пользователем
-  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
-  // Добавляем поля для обратной совместимости
+  // Алиасы для характеристик
   strength?: number;
   dexterity?: number;
   constitution?: number;
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
+  // Добавляем недостающие свойства
+  initiative?: string | number;
+  lastDiceRoll?: {
+    diceType: string;
+    count: number;
+    modifier: number;
+    rolls: number[];
+    total: number;
+    label: string;
+    timestamp: string;
+  };
+  hitDice?: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
+  };
+  resources?: Record<string, {
+    max: number;
+    used: number;
+    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
+  }>;
+  sorceryPoints?: {
+    max: number;
+    current: number;
+  };
 }
 
 export interface CharacterSpell {
@@ -136,7 +160,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;

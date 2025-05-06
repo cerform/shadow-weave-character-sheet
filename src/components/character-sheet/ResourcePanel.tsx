@@ -21,13 +21,15 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     
     if (totalHitDice <= usedHitDice) return;
     
-    // Обновляем количество использованных костей
-    onUpdate({
+    // Обновляем количество использованных костей с типизированным обновлением
+    const updates: Partial<Character> = {
       hitDice: {
         ...character.hitDice,
         used: usedHitDice + 1
       }
-    });
+    };
+    
+    onUpdate(updates);
   };
   
   // Восстановление костей хитов
@@ -38,13 +40,15 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     
     if (usedHitDice <= 0) return;
     
-    // Обновляем количество использованных костей
-    onUpdate({
+    // Обновляем количество использованных костей с типизированным обновлением
+    const updates: Partial<Character> = {
       hitDice: {
         ...character.hitDice,
         used: usedHitDice - 1
       }
-    });
+    };
+    
+    onUpdate(updates);
   };
   
   // Изменение значения ресурса
@@ -57,8 +61,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     // Проверка на допустимые границы
     const newValue = Math.max(0, Math.min(value, resourceData.max || 0));
     
-    // Обновляем значение ресурса
-    onUpdate({
+    // Обновляем значение ресурса с типизированным обновлением
+    const updates: Partial<Character> = {
       resources: {
         ...character.resources,
         [resourceKey]: {
@@ -66,14 +70,19 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
           used: newValue
         }
       }
-    });
+    };
+    
+    onUpdate(updates);
   };
   
   // Использование временных хитов
   const setTemporaryHitPoints = (value: number) => {
-    onUpdate({
+    const updates: Partial<Character> = {
+      tempHp: value,
       temporaryHp: value
-    });
+    };
+    
+    onUpdate(updates);
   };
   
   // Отображение костей хитов
@@ -157,7 +166,9 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
         <h3 className="text-sm font-medium">Ресурсы</h3>
         
         {Object.entries(character.resources).map(([key, resource]) => {
-          const { max = 0, used = 0 } = resource || {};
+          if (!resource) return null;
+          
+          const { max = 0, used = 0 } = resource;
           const available = max - used;
           const percentage = max > 0 ? (available / max) * 100 : 0;
           

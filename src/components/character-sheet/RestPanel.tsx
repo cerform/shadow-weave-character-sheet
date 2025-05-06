@@ -29,10 +29,12 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
       });
     }
     
-    // Обновляем персонажа
-    onUpdate({
+    // Обновляем персонажа с типизированным обновлением
+    const updates: Partial<Character> = {
       resources: updatedResources
-    });
+    };
+    
+    onUpdate(updates);
     
     toast({
       title: "Короткий отдых",
@@ -57,13 +59,15 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
     // Восстанавливаем здоровье
     const maxHp = character.maxHp || 0;
     
-    // Обновляем персонажа
-    onUpdate({
+    // Обновляем персонажа с типизированным обновлением
+    const updates: Partial<Character> = {
       resources: updatedResources,
       currentHp: maxHp,
       tempHp: 0,
       temporaryHp: 0,
-    });
+    };
+    
+    onUpdate(updates);
     
     toast({
       title: "Длительный отдых",

@@ -1,25 +1,74 @@
 
-export interface VisibleArea {
-  x: number;
-  y: number;
-  radius: number;
-  tokenId: number;
-}
+import { Character } from './character';
 
-// Добавляем привязку к SessionStore
-export interface TokenOwner {
-  userId: string;
-  userName: string;
-}
-
-// Тип для источника света
-export interface LightSource {
+export interface Token {
   id: number;
-  type: 'torch' | 'lantern' | 'daylight' | 'custom';
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
-  intensity: number;
-  attachedToTokenId?: number;
+  characterId?: string;
+  name: string;
+  type: 'player' | 'monster' | 'npc';
+  hp: {
+    current: number;
+    max: number;
+    temp?: number;
+  };
+  initiative?: number;
+  position: {
+    x: number;
+    y: number;
+  };
+  size: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
+  color?: string;
+  conditions?: string[];
+  image?: string;
+  isVisible?: boolean;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export interface BattleMap {
+  id: string;
+  name: string;
+  background?: string;
+  grid?: {
+    enabled: boolean;
+    size: number;
+    color: string;
+    opacity: number;
+  };
+  tokens: Token[];
+  size: {
+    width: number;
+    height: number;
+  };
+  fog?: {
+    enabled: boolean;
+    areas: Array<{
+      type: 'rectangle' | 'circle' | 'polygon';
+      points: Array<{x: number, y: number}>;
+      revealed: boolean;
+    }>;
+  };
+  annotations?: Array<{
+    id: string;
+    type: 'text' | 'line' | 'arrow' | 'circle' | 'rectangle';
+    position: {
+      x: number;
+      y: number;
+    };
+    text?: string;
+    color: string;
+    size: number;
+    points?: Array<{x: number, y: number}>;
+  }>;
+  lastUpdated?: string;
+}
+
+export interface DicePanelProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+  compactMode?: boolean;
+  isDM?: boolean;
+  tokens?: Token[];
+  selectedTokenId?: number;
+  onSelectToken?: (id: number) => void;
 }

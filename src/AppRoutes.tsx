@@ -22,9 +22,26 @@ const NotFoundPage = () => <div>Страница не найдена</div>;
 const DMPage = () => <div>Страница мастера</div>;
 const BattleMap = () => <div>Карта боя</div>;
 
+// Добавим интерфейс для User
+interface User {
+  id: string;
+  email?: string;
+  displayName?: string;
+  role?: 'user' | 'dm' | 'admin';
+}
+
+// Обновляем типы для хука useAuth
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, displayName: string) => Promise<void>;
+}
+
 // Простой компонент для защиты маршрутов
-const RequireAuth = ({ children, requireDM }) => {
-  const { isAuthenticated, user } = useAuth();
+const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
+  const { isAuthenticated, user } = useAuth() as AuthContextType;
   
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
@@ -75,9 +92,7 @@ const AppRoutes = () => {
       {/* Используем компонент-обертку для передачи пропсов */}
       <Route 
         path="/character-sheet/:id" 
-        element={
-          <CharacterSheetWrapper isMobile={isMobile} />
-        } 
+        element={<CharacterSheetPage />} 
       />
       
       <Route path="/characters" element={<CharactersPage />} />
@@ -118,17 +133,6 @@ const AppRoutes = () => {
       {/* Fallback маршрут */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  );
-};
-
-// Компонент-обертка для передачи пропсов в CharacterSheetPage
-const CharacterSheetWrapper = ({ isMobile }) => {
-  return (
-    <CharacterSheetPage 
-      renderMobileVersion={(character, onUpdate) => 
-        isMobile ? <MobileCharacterSheet character={character} onUpdate={onUpdate} /> : null
-      }
-    />
   );
 };
 

@@ -48,10 +48,11 @@ const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
       timestamp: new Date().toISOString()
     };
     
-    // Обновляем персонажа
-    onUpdate({
+    // Обновляем персонажа с помощью типизированного обновления
+    const update: Partial<Character> = {
       lastDiceRoll: rollResult
-    });
+    };
+    onUpdate(update);
     
     // Показываем результат
     toast({
@@ -68,11 +69,19 @@ const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
       const dexMod = Math.floor((character.dexterity ? Number(character.dexterity) - 10 : 0) / 2);
       
       // Используем сохраненный модификатор инициативы, если он есть
-      const initiativeMod = character.initiative ? 
-        (typeof character.initiative === 'number' ? character.initiative : 
-         typeof character.initiative === 'string' && character.initiative.startsWith('+') ? 
-         parseInt(character.initiative.slice(1), 10) : parseInt(character.initiative, 10) || 0) : 
-        dexMod;
+      let initiativeMod = dexMod;
+      
+      if (character.initiative !== undefined) {
+        if (typeof character.initiative === 'number') {
+          initiativeMod = character.initiative;
+        } else if (typeof character.initiative === 'string') {
+          if (character.initiative.startsWith('+')) {
+            initiativeMod = parseInt(character.initiative.slice(1), 10) || dexMod;
+          } else {
+            initiativeMod = parseInt(character.initiative, 10) || dexMod;
+          }
+        }
+      }
       
       return rollDice('d20', 1, initiativeMod, 'Инициатива');
     }},
