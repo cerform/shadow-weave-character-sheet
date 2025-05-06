@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -130,7 +129,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                       {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {spellList.map(spell => (
+                      {spellList.map((spell: CharacterSpell) => (
                         <div 
                           key={`all-${spell.name}`} 
                           className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
@@ -216,7 +215,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
               .map(([level, spellList]) => (
                 <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {spellList.map(spell => (
+                    {spellList.map((spell: CharacterSpell) => (
                       <div 
                         key={`level-spell-${spell.name}`} 
                         className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"

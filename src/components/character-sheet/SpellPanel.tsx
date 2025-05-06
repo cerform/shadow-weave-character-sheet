@@ -167,7 +167,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
                 {level === "0" ? "Заговоры" : `${level}-й уровень`}
               </h3>
               <div className="flex flex-col space-y-1">
-                {spells.map((spell) => (
+                {Array.isArray(spells) && spells.map((spell) => (
                   <TooltipProvider key={`spell-${spell.id || spell.name}-${Math.random()}`}>
                     <Tooltip>
                       <TooltipTrigger asChild>

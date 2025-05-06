@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -94,6 +93,9 @@ export const calculateAvailableSpellsByClassAndLevel = (
 // Функция для нормализации заклинаний (преобразует строки в объекты)
 export const normalizeSpells = (character: Character): any[] => {
   if (!character || !character.spells) return [];
+  
+  // Проверяем, что character.spells - это массив
+  if (!Array.isArray(character.spells)) return [];
   
   return character.spells.map((spell: any) => {
     if (typeof spell === 'string') {

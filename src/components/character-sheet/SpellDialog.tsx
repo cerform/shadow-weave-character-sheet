@@ -43,7 +43,7 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
     if (!onUpdate || !character.spells) return;
     
     const normalizedSpells = normalizeSpells(character);
-    const updatedSpells = normalizedSpells.map(s => {
+    const updatedSpells = normalizedSpells.map((s: CharacterSpell) => {
       if (s.name === spell.name) {
         return { ...s, prepared: !s.prepared };
       }
