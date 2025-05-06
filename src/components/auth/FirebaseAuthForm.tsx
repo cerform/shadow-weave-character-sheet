@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   getAuth,
@@ -26,13 +25,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useAuth } from '@/hooks/use-auth';
 
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 const FirebaseAuthForm: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -41,33 +40,22 @@ const FirebaseAuthForm: React.FC = () => {
   const [role, setRole] = useState<"player" | "dm">("player");
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { isAuthenticated, currentUser } = useAuth();
   
   // Получаем текущую тему
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Проверяем состояние аутентификации при монтировании и изменении
   useEffect(() => {
-    console.log("Firebase Auth Form mounted");
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      console.log("Auth state changed in FirebaseAuthForm:", currentUser?.email);
-      if (currentUser) {
-        // Создаем профиль пользователя, если его нет
-        await ensureUserProfile(currentUser.uid, currentUser.email, currentUser.displayName);
-        setUser(currentUser);
-        
-        // Перенаправляем на главную страницу при успешной авторизации
-        console.log("User is logged in, redirecting to home");
-        toast({
-          title: "Вход выполнен",
-          description: `Добро пожаловать, ${currentUser.email}`
-        });
-        navigate('/');
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
+    console.log("Firebase Auth Form - Auth state:", { isAuthenticated, currentUser });
+    
+    // Если пользователь уже авторизован, перенаправляем на главную
+    if (isAuthenticated && currentUser) {
+      console.log("User is authenticated, redirecting to home");
+      navigate('/');
+    }
+  }, [isAuthenticated, currentUser, navigate]);
 
   const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
     try {
@@ -117,8 +105,10 @@ const FirebaseAuthForm: React.FC = () => {
           : `Ваш аккаунт успешно создан в роли ${role === "dm" ? "Мастера" : "Игрока"}`
       });
       
-      // Перенаправляем на главную после успешной авторизации
-      navigate('/');
+      // Добавляем небольшую задержку перед перенаправлением, чтобы состояние успело обновиться
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
     } catch (err: any) {
       setError(err.message);
       toast({
@@ -144,8 +134,10 @@ const FirebaseAuthForm: React.FC = () => {
         description: `Добро пожаловать, ${user.displayName || user.email}`
       });
       
-      // Перенаправляем на главную после успешной авторизации
-      navigate('/');
+      // Добавляем небольшую задержку перед перенаправлением, чтобы состояние успело обновиться
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
     } catch (err: any) {
       setError("Google авторизация не удалась: " + err.message);
       toast({
@@ -175,10 +167,10 @@ const FirebaseAuthForm: React.FC = () => {
     }
   };
 
-  if (user) {
+  if (isAuthenticated && currentUser) {
     return (
       <div className="p-6 text-center rounded-lg border border-accent bg-card/50 backdrop-blur-sm">
-        <p className="mb-4 text-lg">✅ Добро пожаловать, <span className="font-bold">{user.email}</span></p>
+        <p className="mb-4 text-lg">✅ Добро пожаловать, <span className="font-bold">{currentUser.email}</span></p>
         <Button 
           onClick={handleLogout} 
           variant="destructive"

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
@@ -124,12 +123,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(transformedUser);
           // Сохраняем пользователя в Firestore (создаем или обновляем)
           await saveUserToFirestore(transformedUser);
-          
-          // Показываем уведомление об успешном входе
-          toast({
-            title: "Вход выполнен",
-            description: `Вы успешно вошли в систему`
-          });
         } else {
           console.log("Auth state changed: User logged out");
           // Пользователь не авторизован
