@@ -10,8 +10,10 @@ service cloud.firestore {
 
     // ⚔️ Персонажи: пользователь может читать/писать только свои
     match /characters/{characterId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow write: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
     }
 
     // 🧙‍♂️ DM's данные (отдельная коллекция): только DM имеет доступ
