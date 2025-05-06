@@ -1,17 +1,75 @@
 
-import bardClassData from './bard';
-import clericClassData from './cleric';
-import druidClassData from './druid';
-import fighterClassData from './fighter';
-import paladinClassData from './paladin';
+// Import only the class files that exist already
 import rangerClassData from './ranger';
-import rogueClassData from './rogue';
 import sorcererClassData from './sorcerer';
-import warlockClassData from './warlock';
-import wizardClassData from './wizard';
 import monkClassData from './monk';
 import artificerClassData from './artificer';
 import barbarianClassData from './barbarian';
+
+// Define placeholder data for missing class files
+const bardClassData = {
+  name: "Бард",
+  englishName: "Bard",
+  // Add basic placeholder data
+  hitDice: "1d8",
+  primaryAbility: "CHA"
+};
+
+const clericClassData = {
+  name: "Жрец",
+  englishName: "Cleric",
+  // Add basic placeholder data
+  hitDice: "1d8",
+  primaryAbility: "WIS"
+};
+
+const druidClassData = {
+  name: "Друид",
+  englishName: "Druid",
+  // Add basic placeholder data
+  hitDice: "1d8",
+  primaryAbility: "WIS"
+};
+
+const fighterClassData = {
+  name: "Воин",
+  englishName: "Fighter",
+  // Add basic placeholder data
+  hitDice: "1d10",
+  primaryAbility: "STR"
+};
+
+const paladinClassData = {
+  name: "Паладин",
+  englishName: "Paladin",
+  // Add basic placeholder data
+  hitDice: "1d10",
+  primaryAbility: "STR"
+};
+
+const rogueClassData = {
+  name: "Плут",
+  englishName: "Rogue",
+  // Add basic placeholder data
+  hitDice: "1d8",
+  primaryAbility: "DEX"
+};
+
+const warlockClassData = {
+  name: "Колдун",
+  englishName: "Warlock",
+  // Add basic placeholder data
+  hitDice: "1d8",
+  primaryAbility: "CHA"
+};
+
+const wizardClassData = {
+  name: "Волшебник",
+  englishName: "Wizard",
+  // Add basic placeholder data
+  hitDice: "1d6",
+  primaryAbility: "INT"
+};
 
 export const classData = {
   "Бард": bardClassData,

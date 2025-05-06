@@ -1,22 +1,24 @@
 
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import CharacterPage from './pages/CharacterPage';
-import CreateCharacterPage from './pages/CreateCharacterPage';
-import CharactersListPage from './pages/CharactersListPage';
-import DMPage from './pages/DMPage';
-import NotFoundPage from './pages/NotFoundPage';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { SpellbookProvider } from './contexts/SpellbookContext';
 import { UserThemeProvider } from '@/hooks/use-user-theme';
-import { ThemeProvider } from '@/hooks/use-theme';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+
+// Placeholder pages for now - these will be created later
+const HomePage = () => <div>Home Page</div>;
+const LoginPage = () => <div>Login Page</div>;
+const RegisterPage = () => <div>Register Page</div>;
+const CharacterPage = () => <div>Character Page</div>;
+const CreateCharacterPage = () => <div>Create Character Page</div>;
+const CharactersListPage = () => <div>Characters List Page</div>;
+const DMPage = () => <div>DM Page</div>;
+const NotFoundPage = () => <div>Not Found Page</div>;
 
 // Компонент для применения темы глобально
 const ThemeApplier = () => {
