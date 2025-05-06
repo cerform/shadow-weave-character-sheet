@@ -1,8 +1,9 @@
 
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase/firestore'; // Исправляем путь импорта
+import { db } from '@/lib/firebase'; // Используем центральный экземпляр db
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
+import { auth } from '@/lib/firebase'; // Импортируем auth из центрального места
 
 /**
  * Получение всех персонажей
@@ -36,10 +37,16 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   try {
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
       console.error('getCharactersByUserId: Некорректный userId:', userId);
-      return [];
+      throw new Error('Некорректный ID пользователя');
     }
     
     console.log('getCharactersByUserId: Запрос персонажей для пользователя:', userId);
+    
+    // Проверяем, что пользователь авторизован
+    if (!auth.currentUser) {
+      console.error('getCharactersByUserId: Пользователь не авторизован!');
+      throw new Error('Пользователь не авторизован');
+    }
     
     // Явно преобразуем в строку и используем trim для удаления пробелов
     const userIdString = String(userId).trim();
