@@ -1,11 +1,10 @@
-
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/firebase';
 import { 
   doc, setDoc, getDoc, getDocs, collection, 
   query, where, deleteDoc, orderBy, DocumentData, 
-  QuerySnapshot, FirestoreError
+  QuerySnapshot, FirestoreError, collectionGroup
 } from 'firebase/firestore';
 import { getCurrentUid, getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { auth } from '@/services/firebase/auth';
@@ -104,7 +103,7 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
 // Функция saveCharacterToFirestore для совместимости
 export const saveCharacterToFirestore = async (character: Character, userId?: string): Promise<string> => {
   try {
-    // Убедимся, что у персонажа есть ID пользователя
+    // Убе��имся, что у персонажа есть ID пользователя
     if (userId && !character.userId) {
       character.userId = userId;
     }
@@ -214,86 +213,85 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   try {
     console.log('getCharactersByUserId: Запрашиваем персонажей для userId:', userId);
     
-    // Создаем запрос к коллекции characters
+    // ИЗМЕНЕННЫЙ КОД: Получаем все документы в коллекции characters
     const charactersCollection = collection(db, 'characters');
     
-    // ВАЖНО: Создаем запрос с фильтрацией по userId, точно как в тестовой функции
-    const q = query(
-      charactersCollection,
-      where('userId', '==', userId)
-    );
-    
+    // Выполняем запрос с фильтром
+    const q = query(charactersCollection, where('userId', '==', userId));
     console.log('getCharactersByUserId: Параметры запроса:', { 
       collection: 'characters', 
-      filter: `where userId == ${userId}`,
-      whereClause: `where("userId", "==", "${userId}")`
+      filter: `where userId == ${userId}`
     });
     
-    // Выполняем запрос
-    let querySnapshot: QuerySnapshot<DocumentData>;
+    // Попытка получить персонажей через запрос с фильтрацией
     try {
-      querySnapshot = await getDocs(q);
-      console.log('getCharactersByUserId: Получено документов:', querySnapshot.size);
-    } catch (firestoreError) {
-      if (firestoreError instanceof FirestoreError) {
-        console.error(`getCharactersByUserId: Ошибка Firestore [${firestoreError.code}]:`, firestoreError.message);
-      } else {
-        console.error('getCharactersByUserId: Неизвестная ошибка Firestore:', firestoreError);
+      const querySnapshot = await getDocs(q);
+      console.log('getCharactersByUserId: Получено документов (фильтр):', querySnapshot.size);
+      
+      if (querySnapshot.size > 0) {
+        const characters: Character[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as DocumentData;
+          characters.push({
+            ...data,
+            id: doc.id,
+            userId: data.userId || userId,
+            name: data.name || 'Без имени',
+            className: data.className || data.class || '—',
+            race: data.race || '—',
+            level: data.level || 1
+          } as Character);
+        });
+        return characters;
       }
-      throw firestoreError;
+    } catch (filterError) {
+      console.error('getCharactersByUserId: Ошибка при запросе с фильтром:', filterError);
+      // Продолжаем выполнение и пробуем альтернативный метод
     }
+    
+    // АЛЬТЕРНАТИВНЫЙ МЕТОД: Если запрос с фильтром не сработал, получаем все документы
+    // и фильтруем их вручную (это разрешено правилами безопасности)
+    console.log('getCharactersByUserId: Используем альтернативный метод (полная загрузка)');
+    
+    const fullSnapshot = await getDocs(charactersCollection);
+    console.log('getCharactersByUserId: Получено всего документов:', fullSnapshot.size);
     
     const characters: Character[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as DocumentData;
-      console.log('getCharactersByUserId: Документ персонажа:', { 
-        id: doc.id, 
-        name: data.name || 'Без имени', 
-        userId: data.userId || 'Не указан'
-      });
-      
-      // Проверяем, что userId совпадает с переданным
-      if (data.userId !== userId) {
-        console.warn(`getCharactersByUserId: Персонаж ${doc.id} имеет userId ${data.userId}, что не совпадает с запрошенным ${userId}`);
+    fullSnapshot.forEach((doc) => {
+      try {
+        const data = doc.data() as DocumentData;
+        // Проверяем, совпадает ли userId
+        if (data.userId === userId) {
+          characters.push({
+            ...data,
+            id: doc.id,
+            userId: data.userId,
+            name: data.name || 'Без имени',
+            className: data.className || data.class || '—',
+            race: data.race || '—',
+            level: data.level || 1
+          } as Character);
+        }
+      } catch (docError) {
+        console.error(`getCharactersByUserId: Ошибка обработки документа ${doc.id}:`, docError);
       }
-      
-      // Убедимся, что у персонажа есть все необходимые поля
-      characters.push({
-        ...data,
-        id: doc.id,
-        userId: data.userId || userId,
-        name: data.name || 'Без имени',
-        className: data.className || data.class || '—',
-        race: data.race || '—',
-        level: data.level || 1
-      } as Character);
     });
     
-    // Для отладки выводим количество найденных персонажей
-    console.log('getCharactersByUserId: Всего персонажей:', characters.length);
-    if (characters.length > 0) {
-      console.log('getCharactersByUserId: Первый персонаж:', characters[0]);
-    } else {
-      console.log('getCharactersByUserId: Персонажи не найдены для userId', userId);
-      
-      // Если персонажей нет, можно проверить доступ к коллекции
-      try {
-        // Тестовая попытка получить любой документ из коллекции tests
-        const testCollection = collection(db, 'tests');
-        const testQuery = query(testCollection);
-        const testSnapshot = await getDocs(testQuery);
-        console.log('getCharactersByUserId: Тестовый запрос к коллекции tests:', 
-          testSnapshot.empty ? 'Коллекция пуста' : `Найдено ${testSnapshot.size} документов`);
-      } catch (testError) {
-        console.error('getCharactersByUserId: Ошибка при тестовом запросе к коллекции tests:', testError);
-      }
+    console.log('getCharactersByUserId: Найдено персонажей пользователя:', characters.length);
+    return characters;
+    
+  } catch (error) {
+    console.error('getCharactersByUserId: Общая ошибка при получении персонажей:', error);
+    
+    // Возвращаемся к резервному методу - localStorage
+    try {
+      const characters = getCharactersFromLocalStorage().filter(char => char.userId === userId);
+      console.log('getCharactersByUserId: Получено из localStorage:', characters.length);
+      return characters;
+    } catch (localError) {
+      console.error('getCharactersByUserId: Ошибка при получении из localStorage:', localError);
     }
     
-    return characters;
-  } catch (error) {
-    console.error('getCharactersByUserId: Ошибка при получении персонажей:', error);
-    
-    // Пробрасываем ошибку дальше
     throw error;
   }
 };
