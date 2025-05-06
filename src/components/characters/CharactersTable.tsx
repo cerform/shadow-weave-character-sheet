@@ -40,7 +40,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   // Функция для отображения класса персонажа с учетом разных форматов данных
   const getCharacterClass = (character: Character): string => {
     // Проверяем различные поля, где может храниться класс
-    return character.className || character.class || character.characterClass || '—';
+    return character.className || character.class || '—';
   };
 
   // Функция для форматирования уровня персонажа
