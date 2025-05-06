@@ -40,8 +40,12 @@ export interface Character {
   name: string;
   race: string;
   class: string;
+  className?: string; // Добавляем альтернативное поле для совместимости
   level: number;
   avatarUrl?: string;
+  userId?: string; // Добавляем ID пользователя
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Добавляем типы для хранения персонажей

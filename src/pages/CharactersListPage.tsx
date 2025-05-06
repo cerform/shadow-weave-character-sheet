@@ -28,6 +28,7 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(true); // Добавляем для отладки
 
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -91,6 +92,11 @@ const CharactersListPage: React.FC = () => {
     }
   };
 
+  // Переключатель отладочного режима
+  const toggleDebug = () => {
+    setShowDebug(!showDebug);
+  };
+
   // Если пользователь не авторизован, предлагаем войти
   if (!isAuthenticated) {
     return (
@@ -137,6 +143,28 @@ const CharactersListPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-6">
           {/* Верхняя панель - заголовок с кнопкой создания */}
           <CharactersHeader username={user?.displayName || user?.username || ""} />
+          
+          {/* Отладка - кнопка для переключения */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={toggleDebug}
+              size="sm"
+            >
+              {showDebug ? "Скрыть отладку" : "Показать отладку"}
+            </Button>
+          </div>
+          
+          {/* Отладочная информация */}
+          {showDebug && !loading && !error && characters.length > 0 && (
+            <div className="bg-black/20 p-4 rounded-lg">
+              <h2 className="text-lg font-bold mb-2">🛠 Debug: Данные из Firestore</h2>
+              <p className="mb-2">Количество персонажей: {characters.length}</p>
+              <div className="overflow-auto max-h-60">
+                <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(characters, null, 2)}</pre>
+              </div>
+            </div>
+          )}
 
           {/* Загрузка */}
           {loading && <LoadingState />}

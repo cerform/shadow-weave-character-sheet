@@ -17,8 +17,12 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Отладочная информация в консоль
+  console.log('CharactersTable получил personages:', characters);
+
   // Функция открытия персонажа
   const handleViewCharacter = (id: string) => {
+    console.log(`Открываем персонажа с ID: ${id}`);
     // Сохраняем ID последнего выбранного персонажа
     localStorage.setItem('last-selected-character', id);
     navigate(`/character/${id}`);
@@ -46,9 +50,24 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   // Функция для форматирования уровня персонажа
   const getCharacterLevel = (character: Character): string => {
     const level = character.level;
-    if (!level) return '1'; // По умолчанию 1 уровень
+    if (!level && level !== 0) return '1'; // По умолчанию 1 уровень
     return String(level);
   };
+
+  // Если нет персонажей, показываем сообщение
+  if (!characters || characters.length === 0) {
+    return (
+      <Card className="bg-black/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle>Список персонажей</CardTitle>
+          <CardDescription>У вас пока нет персонажей</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Создайте своего первого персонажа, нажав на кнопку выше</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
@@ -70,7 +89,9 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
           <TableBody>
             {characters.map((character) => (
               <TableRow key={character.id}>
-                <TableCell className="font-medium">{character.name || 'Без имени'}</TableCell>
+                <TableCell className="font-medium text-primary">
+                  {character.name || 'Без имени'}
+                </TableCell>
                 <TableCell>{getCharacterClass(character)}</TableCell>
                 <TableCell>{character.race || '—'}</TableCell>
                 <TableCell>{getCharacterLevel(character)}</TableCell>
@@ -86,7 +107,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => navigate(`/character-edit/${character.id}`)}
+                    onClick={() => navigate(`/character/${character.id}`)}
                     title="Редактировать"
                   >
                     <Edit size={16} />
