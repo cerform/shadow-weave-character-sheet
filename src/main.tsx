@@ -10,8 +10,15 @@ import '@fontsource/cormorant/700.css'
 import '@fontsource/philosopher/400.css'
 import '@fontsource/philosopher/700.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// Оборачиваем рендеринг приложения в try-catch для отлова ошибок инициализации
+try {
+  console.log('main.tsx: Рендеринг корневого компонента');
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+  console.log('main.tsx: Рендеринг успешно выполнен');
+} catch (error) {
+  console.error('Ошибка при инициализации приложения:', error);
+}

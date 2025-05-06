@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
@@ -84,6 +85,8 @@ const RoleBasedRedirect = () => {
 };
 
 const AppRoutes: React.FC = () => {
+  console.log('AppRoutes: Инициализация маршрутов');
+  
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -148,6 +151,8 @@ const AppRoutes: React.FC = () => {
       {/* Перенаправления */}
       <Route path="/sheet" element={<Navigate to="/characters" replace />} />
       <Route path="/recent" element={<Navigate to="/recent-characters" replace />} />
+      
+      {/* Маршрут для неизвестных путей */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
