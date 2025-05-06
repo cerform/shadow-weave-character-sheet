@@ -305,3 +305,25 @@ export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => 
   }));
 };
 
+/**
+ * Группирует заклинания по уровням
+ * @param spells Массив заклинаний
+ * @returns Объект с ключами-уровнями и массивами заклинаний
+ */
+export const groupSpellsByLevel = (spells: SpellData[]): Record<number, SpellData[]> => {
+  return spells.reduce((grouped: Record<number, SpellData[]>, spell) => {
+    const level = spell.level;
+    if (!grouped[level]) {
+      grouped[level] = [];
+    }
+    grouped[level].push(spell);
+    return grouped;
+  }, {});
+};
+
+/**
+ * Получает уникальные уровни из массива заклинаний, отсортированные по возрастанию
+ */
+export const getUniqueSpellLevels = (spells: SpellData[]): number[] => {
+  return [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
+};

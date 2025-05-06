@@ -15,6 +15,7 @@ import { Character } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -50,6 +51,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [internalAvailableSpells, setInternalAvailableSpells] = useState<SpellData[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
@@ -160,25 +162,31 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
     console.log(`Filtering ${spellsToFilter.length} spells with search term: '${searchTerm}'`);
     
-    if (!searchTerm) {
-      setFilteredSpells(spellsToFilter);
-      return;
+    let filtered = spellsToFilter;
+    
+    // Фильтрация по поисковому запросу, если он есть
+    if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
+      filtered = spellsToFilter.filter(spell => {
+        const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
+        const schoolMatch = spell.school?.toLowerCase().includes(searchTermLower) || false;
+        const descMatch = Array.isArray(spell.description) 
+          ? spell.description.join(' ').toLowerCase().includes(searchTermLower)
+          : (spell.description || '').toLowerCase().includes(searchTermLower);
+        
+        return nameMatch || schoolMatch || descMatch;
+      });
     }
     
-    const searchTermLower = searchTerm.toLowerCase();
-    const filtered = spellsToFilter.filter(spell => {
-      const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
-      const schoolMatch = spell.school?.toLowerCase().includes(searchTermLower) || false;
-      const descMatch = Array.isArray(spell.description) 
-        ? spell.description.join(' ').toLowerCase().includes(searchTermLower)
-        : (spell.description || '').toLowerCase().includes(searchTermLower);
-      
-      return nameMatch || schoolMatch || descMatch;
-    });
+    // Фильтрация по выбранному уровню (вкладке)
+    if (activeTab !== 'all') {
+      const level = activeTab === 'cantrips' ? 0 : Number(activeTab);
+      filtered = filtered.filter(spell => spell.level === level);
+    }
     
     console.log(`Filter results: ${filtered.length} spells match criteria`);
     setFilteredSpells(filtered);
-  }, [spellsToFilter, searchTerm]);
+  }, [spellsToFilter, searchTerm, activeTab]);
 
   // Обработчик изменения поискового запроса
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,6 +287,23 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (nextStep) nextStep();
   };
 
+  // Получаем уникальные уровни заклинаний для создания вкладок
+  const spellLevels = useMemo(() => {
+    if (!spellsToFilter || spellsToFilter.length === 0) return [];
+    return [...new Set(spellsToFilter.map(spell => spell.level))].sort((a, b) => a - b);
+  }, [spellsToFilter]);
+
+  // Группировка заклинаний по уровням для меток на вкладках
+  const spellCountsByLevel = useMemo(() => {
+    if (!spellsToFilter || spellsToFilter.length === 0) return {};
+    
+    return spellsToFilter.reduce((acc: Record<number, number>, spell) => {
+      const level = spell.level;
+      acc[level] = (acc[level] || 0) + 1;
+      return acc;
+    }, {});
+  }, [spellsToFilter]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="mb-4">
@@ -292,7 +317,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <input
           type="text"
           placeholder="Поиск заклинаний..."
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded mb-4"
           onChange={handleSearchChange}
           style={{
             backgroundColor: currentTheme.cardBackground,
@@ -300,6 +325,22 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             color: currentTheme.textColor
           }}
         />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full mb-4 flex flex-wrap">
+            <TabsTrigger value="all">
+              Все ({spellsToFilter.length})
+            </TabsTrigger>
+            <TabsTrigger value="cantrips">
+              Заговоры ({spellCountsByLevel[0] || 0})
+            </TabsTrigger>
+            {spellLevels.filter(level => level > 0).map(level => (
+              <TabsTrigger key={`level-${level}`} value={String(level)}>
+                {level} уровень ({spellCountsByLevel[level] || 0})
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       <ScrollArea className="flex-1">
@@ -326,7 +367,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                   <CardContent className="flex items-center justify-between p-3">
                     <div style={{color: currentTheme.textColor}}>
                       <div className="font-medium">{spell.name}</div>
-                      <div className="text-xs">{spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}</div>
+                      <div className="text-xs">
+                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                      </div>
                     </div>
                     <Button
                       variant={isAdded ? "default" : "outline"}
