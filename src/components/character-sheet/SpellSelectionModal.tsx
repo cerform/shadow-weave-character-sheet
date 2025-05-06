@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,9 @@ import { Search, Check } from 'lucide-react';
 import { Character, CharacterSpell } from '@/types/character';
 import { fetchSpells } from '@/services/spellService';
 import { useToast } from '@/hooks/use-toast';
-import { getPreparedSpellsLimit, canPrepareMoreSpells } from '@/utils/spellUtils';
+import { getPreparedSpellsLimit, canPrepareMoreSpells, filterSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
+import { spells as allSpells } from '@/data/spells';
+import { SpellData } from '@/types/spells';
 
 interface SpellSelectionModalProps {
   open: boolean;
@@ -53,13 +56,57 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     return spell.prepared && spell.level > 0; // Заговоры не учитываются
   }).length || 0;
 
+  // Получаем максимальный уровень заклинаний доступный персонажу
+  const maxSpellLevel = useMemo(() => {
+    return getMaxSpellLevel(character.class || '', character.level || 1);
+  }, [character.class, character.level]);
+
   // Загружаем заклинания
   useEffect(() => {
-    async function loadSpells() {
+    if (open) {
       try {
-        const spellData = await fetchSpells();
-        setSpells(spellData);
-        setFilteredSpells(spellData);
+        // Получаем все заклинания
+        const availableSpells = allSpells.map(spell => ({
+          id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+          name: spell.name,
+          level: spell.level,
+          school: spell.school || 'Универсальная',
+          castingTime: spell.castingTime || '1 действие',
+          range: spell.range || 'На себя',
+          components: spell.components || '',
+          duration: spell.duration || 'Мгновенная',
+          description: spell.description || 'Нет описания',
+          classes: spell.classes || [],
+          ritual: spell.ritual || false,
+          concentration: spell.concentration || false
+        }));
+        
+        // Фильтруем заклинания по классу и уровню, если указан класс персонажа
+        const characterClass = character.class;
+        
+        if (characterClass) {
+          const filteredByClass = availableSpells.filter(spell => {
+            const isClassSpell = typeof spell.classes === 'string'
+              ? spell.classes.toLowerCase() === characterClass.toLowerCase() || 
+                (characterClass.toLowerCase() === 'жрец' && spell.classes.toLowerCase() === 'cleric') ||
+                (characterClass.toLowerCase() === 'волшебник' && spell.classes.toLowerCase() === 'wizard')
+              : Array.isArray(spell.classes) && spell.classes.some(cls => 
+                  cls.toLowerCase() === characterClass.toLowerCase() ||
+                  (characterClass.toLowerCase() === 'жрец' && cls.toLowerCase() === 'cleric') ||
+                  (characterClass.toLowerCase() === 'волшебник' && cls.toLowerCase() === 'wizard')
+                );
+            
+            const isLevelValid = spell.level <= maxSpellLevel;
+            
+            return isClassSpell && isLevelValid;
+          });
+          
+          setSpells(filteredByClass);
+          setFilteredSpells(filteredByClass);
+        } else {
+          setSpells(availableSpells);
+          setFilteredSpells(availableSpells);
+        }
       } catch (error) {
         console.error('Ошибка при загрузке заклинаний:', error);
         toast({
@@ -69,20 +116,19 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         });
       }
     }
-    
-    if (open) {
-      loadSpells();
-    }
-  }, [open, toast]);
+  }, [open, character.class, maxSpellLevel, toast]);
 
   // Фильтруем заклинания при изменении параметров поиска
   useEffect(() => {
-    let result = spells;
+    let result = [...spells];
     
     // Фильтр по поисковому запросу
     if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
       result = result.filter(spell => 
-        spell.name.toLowerCase().includes(searchTerm.toLowerCase())
+        spell.name.toLowerCase().includes(searchTermLower) ||
+        (spell.school && spell.school.toLowerCase().includes(searchTermLower)) ||
+        (typeof spell.description === 'string' && spell.description.toLowerCase().includes(searchTermLower))
       );
     }
     
@@ -94,20 +140,27 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     // Фильтр по школе
     if (selectedSchool) {
       result = result.filter(spell => 
-        spell.school?.toLowerCase() === selectedSchool.toLowerCase()
+        spell.school && spell.school.toLowerCase() === selectedSchool.toLowerCase()
       );
     }
     
     // Фильтр по классу
     if (selectedClass) {
+      const selectedClassLower = selectedClass.toLowerCase();
       result = result.filter(spell => {
         if (!spell.classes) return false;
+        
         if (typeof spell.classes === 'string') {
-          return spell.classes.toLowerCase().includes(selectedClass.toLowerCase());
+          return spell.classes.toLowerCase().includes(selectedClassLower);
         }
-        return spell.classes.some(cls => 
-          cls.toLowerCase().includes(selectedClass.toLowerCase())
-        );
+        
+        if (Array.isArray(spell.classes)) {
+          return spell.classes.some(cls => 
+            typeof cls === 'string' && cls.toLowerCase().includes(selectedClassLower)
+          );
+        }
+        
+        return false;
       });
     }
     
@@ -172,7 +225,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     if (!character.spells) return;
     
     // Проверяем, можно ли подготовить еще заклинания
-    if (!spell.prepared && !canPrepareMoreSpells(character)) {
+    if (!spell.prepared && spell.level > 0 && !canPrepareMoreSpells(character)) {
       toast({
         title: "Лимит подготовленных заклинаний",
         description: `Вы не можете подготовить больше заклинаний. Максимум: ${preparedSpellsLimit}`,
@@ -231,6 +284,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                 key={`level-${level}`} 
                 value={`level-${level}`}
                 onClick={() => setSelectedLevel(level)}
+                disabled={level > maxSpellLevel}
               >
                 {level}
               </TabsTrigger>

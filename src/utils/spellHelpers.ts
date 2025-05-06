@@ -1,6 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
@@ -62,7 +62,7 @@ export const getSpellLevel = (spell: CharacterSpell | string): number => {
 /**
  * Преобразует CharacterSpell к SpellData
  */
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
   return {
     id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
@@ -72,7 +72,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     range: spell.range || 'На себя',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: spell.description || ['Нет описания'],
+    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
     classes: spell.classes || [],
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
@@ -90,4 +90,33 @@ export const getSpellLevelName = (level: number): string => {
   if (level === 3) return "3-й уровень";
   if (level >= 4) return `${level}-й уровень`;
   return `${level} уровень`;
+};
+
+/**
+ * Проверяет, соответствует ли заклинание классу персонажа
+ */
+export const isSpellAvailableForClass = (spell: SpellData, characterClass: string): boolean => {
+  if (!characterClass || !spell.classes) return false;
+  
+  const characterClassLower = characterClass.toLowerCase();
+  
+  let spellClasses: string[] = [];
+  if (typeof spell.classes === 'string') {
+    spellClasses = [spell.classes.toLowerCase()];
+  } else if (Array.isArray(spell.classes)) {
+    spellClasses = spell.classes.map(c => c.toLowerCase());
+  }
+  
+  // Проверяем соответствие класса
+  return spellClasses.some(cls => 
+    cls === characterClassLower ||
+    (characterClassLower === 'жрец' && cls === 'cleric') ||
+    (characterClassLower === 'волшебник' && cls === 'wizard') ||
+    (characterClassLower === 'друид' && cls === 'druid') ||
+    (characterClassLower === 'бард' && cls === 'bard') ||
+    (characterClassLower === 'колдун' && cls === 'warlock') ||
+    (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+    (characterClassLower === 'паладин' && cls === 'paladin') ||
+    (characterClassLower === 'следопыт' && cls === 'ranger')
+  );
 };

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -31,27 +32,39 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Получаем модификатор способности для заклинаний
+  const abilityModifier = character ? getSpellcastingAbilityModifier(character) : 0;
+
   // Вычисляем доступные заклинания
   const { maxSpellLevel, cantripsCount, knownSpells } = calculateAvailableSpellsByClassAndLevel(
     characterClass, 
-    level
+    level,
+    abilityModifier
   );
 
-  // Функция для фильтрации заклинаний по поисковому запросу
+  // Функция для фильтрации заклинаний по поисковому запросу и классу/уровню
   const filterSpells = useCallback(() => {
     if (!availableSpells) return;
 
-    let filtered = availableSpells.filter(spell => {
-      const searchTermLower = searchTerm.toLowerCase();
-      return (
-        spell.name.toLowerCase().includes(searchTermLower) ||
-        spell.school.toLowerCase().includes(searchTermLower) ||
-        (typeof spell.description === 'string' ? spell.description.toLowerCase().includes(searchTermLower) : spell.description.join('').toLowerCase().includes(searchTermLower))
-      );
-    });
-
-    setFilteredSpells(filtered);
-  }, [availableSpells, searchTerm]);
+    // Фильтруем по классу и уровню
+    let classFiltered = filterSpellsByClassAndLevel(availableSpells, characterClass, level);
+    
+    // Дополнительно фильтруем по поисковому запросу
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      classFiltered = classFiltered.filter(spell => {
+        return (
+          spell.name.toLowerCase().includes(searchLower) ||
+          spell.school.toLowerCase().includes(searchLower) ||
+          (Array.isArray(spell.description) ? 
+            spell.description.join(' ').toLowerCase().includes(searchLower) : 
+            String(spell.description).toLowerCase().includes(searchLower))
+        );
+      });
+    }
+    
+    setFilteredSpells(classFiltered);
+  }, [availableSpells, characterClass, level, searchTerm]);
 
   useEffect(() => {
     filterSpells();
@@ -64,7 +77,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Проверяем, изучено ли заклинание
   const isSpellKnown = (spell: SpellData) => {
-    return character.spells && character.spells.some(s => s.id === spell.id);
+    return character.spells && character.spells.some(s => {
+      if (typeof s === 'string') return s === spell.name;
+      return s.id === spell.id || s.name === spell.name;
+    });
   };
 
   // Обработчик добавления/удаления заклинания
@@ -97,29 +113,30 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="space-y-2">
-          {filteredSpells.map((spell) => (
-            <Card key={spell.id} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
-              <CardContent className="flex items-center justify-between p-3">
-                <div style={{color: currentTheme.textColor}}>
-                  {spell.name} ({spell.school}, {spell.level === 0 ? 'Заговор' : spell.level})
-                </div>
-                <Badge
-                  variant="outline"
-                  onClick={() => handleSpellChange(spell, !isSpellKnown(spell))}
-                  style={{
-                    backgroundColor: isSpellKnown(spell) ? currentTheme.background : currentTheme.accent,
-                    color: isSpellKnown(spell) ? currentTheme.accent : currentTheme.textColor,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {isSpellKnown(spell) ? 'Известно' : 'Изучить'}
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-          {filteredSpells.length === 0 && (
+          {filteredSpells.length > 0 ? (
+            filteredSpells.map((spell) => (
+              <Card key={spell.id} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
+                <CardContent className="flex items-center justify-between p-3">
+                  <div style={{color: currentTheme.textColor}}>
+                    {spell.name} ({spell.school}, {spell.level === 0 ? 'Заговор' : spell.level})
+                  </div>
+                  <Badge
+                    variant="outline"
+                    onClick={() => handleSpellChange(spell, !isSpellKnown(spell))}
+                    style={{
+                      backgroundColor: isSpellKnown(spell) ? currentTheme.background : currentTheme.accent,
+                      color: isSpellKnown(spell) ? currentTheme.accent : currentTheme.textColor,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSpellKnown(spell) ? 'Известно' : 'Изучить'}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
             <div className="text-center py-4 text-muted-foreground">
-              Заклинания не найдены.
+              {searchTerm ? 'Заклинания по запросу не найдены.' : 'Нет доступных заклинаний для данного класса и уровня.'}
             </div>
           )}
         </div>

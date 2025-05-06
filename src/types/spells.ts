@@ -21,6 +21,7 @@ export interface SpellData {
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  source?: string;
 }
 
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
@@ -39,6 +40,34 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
         [spell.description] : 
       ['Нет описания'],
     classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    materials: spell.materials
+  };
+};
+
+// Эта функция для преобразования массива заклинаний
+export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+};
+
+// Функция для преобразования SpellData обратно в CharacterSpell
+export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+  return {
+    id: spell.id.toString(),
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description.join('\n'),
+    classes: typeof spell.classes === 'string' ? spell.classes : spell.classes.join(', '),
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
