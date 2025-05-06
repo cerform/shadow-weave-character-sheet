@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
@@ -9,12 +8,13 @@ import { themes } from '@/lib/themes';
 import { toast } from 'sonner';
 import { convertToCharacter } from '@/utils/characterConverter';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ArrowLeft, RefreshCw, Trash2 } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import InfoMessage from '@/components/ui/InfoMessage';
 
 const CharacterViewPage = () => {
-  const { character, setCharacter, getCharacterById } = useCharacter();
+  const { character, setCharacter, getCharacterById, deleteCharacter } = useCharacter();
   const [processedCharacter, setProcessedCharacter] = useState<Character | null>(null);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ const CharacterViewPage = () => {
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Функция загрузки персонажа
   const loadCharacter = async () => {
@@ -121,6 +122,24 @@ const CharacterViewPage = () => {
     }
   };
 
+  // Функция для удаления персонажа
+  const handleDeleteCharacter = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      await deleteCharacter(id);
+      toast.success('Персонаж успешно удален');
+      navigate('/');
+    } catch (err) {
+      console.error('Ошибка при удалении персонажа:', err);
+      toast.error('Не удалось удалить персонажа');
+    } finally {
+      setLoading(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -197,16 +216,28 @@ const CharacterViewPage = () => {
               К списку персонажей
             </Button>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={reloadCharacter}
-              disabled={loading}
-              className="gap-2"
-            >
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-              Обновить данные
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={reloadCharacter}
+                disabled={loading}
+                className="gap-2"
+              >
+                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                Обновить данные
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                className="gap-2"
+              >
+                <Trash2 size={16} />
+                Удалить
+              </Button>
+            </div>
           </div>
           
           {processedCharacter.id && (
@@ -221,6 +252,27 @@ const CharacterViewPage = () => {
             character={processedCharacter} 
             onUpdate={handleUpdateCharacter}
           />
+
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удаление персонажа</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Вы уверены, что хотите удалить персонажа "{processedCharacter.name}"? 
+                  Это действие нельзя отменить.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteCharacter}
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </ErrorBoundary>
