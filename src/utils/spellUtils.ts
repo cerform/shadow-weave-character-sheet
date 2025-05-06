@@ -1,3 +1,4 @@
+
 import { Character, CharacterSpell } from "@/types/character";
 import { SpellData } from "@/types/spells";
 
@@ -206,7 +207,7 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
-    // Ensure classes is always a string array
+    // Ensure classes is always a string array with proper conversion
     classes: (function() {
       if (!spell.classes) return [] as string[];
       if (typeof spell.classes === 'string') return [spell.classes];

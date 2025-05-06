@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -75,7 +76,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
           name: spell.name,
           level: spell.level,
-          school: spell.school || 'н����версальня',
+          school: spell.school || 'Универсальная',
           castingTime: spell.castingTime || '1 действие',
           range: spell.range || 'На себя',
           components: spell.components || '',
