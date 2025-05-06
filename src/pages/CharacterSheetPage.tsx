@@ -6,8 +6,8 @@ import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import MobileCharacterSheet from '@/components/character-sheet/MobileCharacterSheet';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data service
-import { getCharacterById } from '@/services/characterService';
+// Correct import from service
+import { getCharacter } from '@/services/characterService';
 
 interface CharacterSheetPageProps {
   // No renderMobileVersion prop here
@@ -43,7 +43,8 @@ const CharacterSheetPage: React.FC<CharacterSheetPageProps> = () => {
       }
       
       try {
-        const data = await getCharacterById(id);
+        // Use the correct function
+        const data = await getCharacter(id);
         setCharacter(data);
       } catch (error) {
         setError('Error loading character');
