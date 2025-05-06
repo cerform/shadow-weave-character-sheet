@@ -1,14 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Loader2, Info, Database, User, Shield, CheckCircle, AlertCircle, FileText, Users, RefreshCw } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/lib/firebase'; // Используем централизованный импорт
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentUid } from '@/utils/authHelpers';
 import { Character } from '@/types/character';
 import { testLoadCharacters, getCurrentUserDetails } from '@/services/firebase/firestore-test';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -31,7 +27,6 @@ const TestPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('characters');
-  const [testCollection, setTestCollection] = useState<any>(null);
   const { getUserCharacters: refreshCharactersContext, deleteCharacter } = useCharacter();
   
   const { theme } = useTheme();
@@ -39,7 +34,6 @@ const TestPage: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   // Загружаем персонажей при монтировании компонента
-  // Добавляем зависимость от authLoading, чтобы запускать загрузку, когда завершится проверка аутентификации
   useEffect(() => {
     // Если процесс проверки авторизации все еще идет, не запускаем загрузку персонажей
     if (authLoading) {
@@ -62,16 +56,13 @@ const TestPage: React.FC = () => {
     setError(null);
     
     try {
-      // Проверяем текущую авторизацию
+      // Проверяем текущую авторизацию - получаем только простые данные
       const userDetails = getCurrentUserDetails();
       const currentAuth = { 
         isAuthenticated, 
-        uid: userDetails.uid, 
-        user: user ? {
-          id: user.id || user.uid,
-          email: user.email,
-          displayName: user.displayName,
-        } : null 
+        uid: userDetails.uid,
+        email: userDetails.email,
+        displayName: userDetails.displayName
       };
       
       setResults(prev => ({ ...prev, auth: currentAuth }));
@@ -492,4 +483,3 @@ service cloud.firestore {
 };
 
 export default TestPage;
-
