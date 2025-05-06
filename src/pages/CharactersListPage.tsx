@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { auth } from '@/services/firebase/auth'; // Добавляем импорт auth
+import CharacterNavigation from '@/components/characters/CharacterNavigation';
 
 // Import our components
 import LoadingState from '@/components/characters/LoadingState';
@@ -198,6 +198,9 @@ const CharactersListPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-6">
           {/* Верхняя панель - заголовок с кнопкой создания */}
           <CharactersHeader username={user?.displayName || user?.username || ""} />
+          
+          {/* Добавляем навигацию по страницам персонажей */}
+          <CharacterNavigation />
           
           {/* Панель управления отображением */}
           <div className="flex justify-end gap-3">

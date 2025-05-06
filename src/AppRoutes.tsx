@@ -15,6 +15,7 @@ import DMDashboardPage from './pages/DMDashboardPage';
 import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
 import CharactersListPage from './pages/CharactersListPage';
+import RecentCharactersPage from './pages/RecentCharactersPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
 import TestPage from './pages/TestPage';
@@ -143,9 +144,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/character/:id" element={<CharacterSheetPage />} />
       <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/recent-characters" element={<RecentCharactersPage />} />
       
       {/* Перенаправления */}
       <Route path="/sheet" element={<Navigate to="/characters" replace />} />
+      <Route path="/recent" element={<Navigate to="/recent-characters" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
