@@ -94,8 +94,9 @@ const AppRoutes: React.FC = () => {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
-      {/* Добавляем тестовую страницу */}
+      {/* Тестовые страницы */}
       <Route path="/test" element={<TestPage />} />
+      <Route path="/test-characters" element={<TestPage />} />
       
       {/* Добавляем страницу заклинаний D&D */}
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
