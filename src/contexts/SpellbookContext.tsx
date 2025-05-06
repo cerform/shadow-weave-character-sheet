@@ -5,6 +5,7 @@ import { CharacterSpell } from '@/types/character';
 import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
+import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 
 interface SpellbookContextType {
   selectedSpells: SpellData[];
@@ -41,9 +42,18 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Загружаем доступные заклинания для класса персонажа
   useEffect(() => {
     if (character && character.class) {
-      const allSpells = getAllSpells();
+      console.log("Loading spells for class:", character.class, "level:", character.level);
       
-      // Фильтруем заклинания для класса персонажа
+      const allSpells = getAllSpells();
+      const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(
+        character.class, 
+        character.level || 1,
+        getModifierForClass(character)
+      );
+      
+      console.log("Max spell level calculated:", maxSpellLevel);
+      
+      // Фильтруем заклинания для класса персонажа и уровня
       const classSpells = allSpells.filter(spell => {
         if (!spell.classes) return false;
         
@@ -52,13 +62,19 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
           : spell.classes;
           
         // Проверяем, доступно ли заклинание для класса персонажа
-        return spellClasses.some(cls => 
+        const isForClass = spellClasses.some(cls => 
           cls.toLowerCase() === character.class?.toLowerCase()
         );
+        
+        // Проверяем, не превышает ли уровень заклинания максимальный доступный уровень
+        const isLevelAvailable = spell.level <= maxSpellLevel;
+        
+        return isForClass && isLevelAvailable;
       });
       
       // Преобразуем CharacterSpell[] в SpellData[]
       setAvailableSpells(convertSpellArray(classSpells));
+      console.log(`Found ${classSpells.length} spells for ${character.class}`);
       
       // Если у персонажа уже есть заклинания, загружаем их
       if (character.spells && character.spells.length > 0) {
@@ -66,7 +82,25 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         setSelectedSpells(convertSpellArray(character.spells));
       }
     }
-  }, [character]);
+  }, [character?.class, character?.level]);
+
+  // Получаем модификатор характеристики для класса
+  const getModifierForClass = (character: any): number => {
+    if (!character || !character.abilities) return 3; // По умолчанию +3
+    
+    const classLower = character.class?.toLowerCase();
+    
+    if (['жрец', 'друид'].includes(classLower)) {
+      // Мудрость
+      return Math.floor((character.wisdom - 10) / 2);
+    } else if (['волшебник', 'маг'].includes(classLower)) {
+      // Интеллект
+      return Math.floor((character.intelligence - 10) / 2);
+    } else {
+      // Харизма (бард, колдун, чародей, паладин)
+      return Math.floor((character.charisma - 10) / 2);
+    }
+  };
 
   // Добавление заклинания
   const addSpell = (spell: SpellData) => {
@@ -106,50 +140,15 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   
   // Получение лимитов заклинаний для текущего уровня и класса
   const getSpellLimits = () => {
-    if (!character) return { cantrips: 0, spells: 0 };
+    if (!character || !character.class) return { cantrips: 0, spells: 0 };
     
-    // Базовые значения по умолчанию
-    const limits = { cantrips: 0, spells: 0 };
+    const { cantripsCount, knownSpells } = calculateAvailableSpellsByClassAndLevel(
+      character.class, 
+      character.level || 1,
+      getModifierForClass(character)
+    );
     
-    const characterClass = character.class?.toLowerCase();
-    const level = character.level || 1;
-    
-    // Количество заговоров для разных классов
-    if (characterClass === 'бард') {
-      if (level >= 1) limits.cantrips = 2;
-      if (level >= 4) limits.cantrips = 3;
-      if (level >= 10) limits.cantrips = 4;
-    } else if (characterClass === 'жрец' || characterClass === 'друид') {
-      if (level >= 1) limits.cantrips = 3;
-      if (level >= 4) limits.cantrips = 4;
-      if (level >= 10) limits.cantrips = 5;
-    } else if (characterClass === 'волшебник') {
-      if (level >= 1) limits.cantrips = 3;
-      if (level >= 4) limits.cantrips = 4;
-      if (level >= 10) limits.cantrips = 5;
-    } else if (characterClass === 'колдун') {
-      if (level >= 1) limits.cantrips = 2;
-      if (level >= 4) limits.cantrips = 3;
-      if (level >= 10) limits.cantrips = 4;
-    } else if (characterClass === 'чародей') {
-      if (level >= 1) limits.cantrips = 4;
-      if (level >= 4) limits.cantrips = 5;
-      if (level >= 10) limits.cantrips = 6;
-    }
-    
-    // Количество заклинаний (разное для разных классов)
-    if (characterClass === 'бард') {
-      limits.spells = level + 2;
-    } else if (characterClass === 'колдун') {
-      limits.spells = Math.min(level + 1, 15);
-    } else if (characterClass === 'чародей') {
-      limits.spells = level + 1;
-    } else if (characterClass === 'следопыт' || characterClass === 'паладин') {
-      // Для паладина и следопыта используется формула
-      limits.spells = Math.floor((level / 2) + character.abilities?.WIS || 0);
-    }
-    
-    return limits;
+    return { cantrips: cantripsCount, spells: knownSpells };
   };
   
   // Получение текущего количества выбранных заклинаний по типам

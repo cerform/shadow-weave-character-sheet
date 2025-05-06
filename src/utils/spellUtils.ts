@@ -1,3 +1,4 @@
+
 import { SpellData } from "@/types/spells";
 import { CharacterSpell, Character } from "@/types/character";
 
@@ -5,8 +6,11 @@ import { CharacterSpell, Character } from "@/types/character";
  * Вычисляет максимальный уровень заклинаний, доступный персонажу
  */
 export const getMaxSpellLevel = (className: string, level: number): number => {
+  // Переводим название класса в нижний регистр для совместимости
+  const classNameLower = className.toLowerCase();
+  
   // Полные заклинатели
-  if (['Маг', 'Чародей', 'Волшебник', 'Друид', 'Жрец', 'Бард'].includes(className)) {
+  if (['маг', 'чародей', 'волшебник', 'друид', 'жрец', 'бард'].includes(classNameLower)) {
     if (level >= 17) return 9;
     else if (level >= 15) return 8;
     else if (level >= 13) return 7;
@@ -18,15 +22,24 @@ export const getMaxSpellLevel = (className: string, level: number): number => {
     else if (level >= 1) return 1;
   }
   // Полу-заклинатели
-  else if (['Паладин', 'Следопыт', 'Искусственник'].includes(className)) {
+  else if (['паладин', 'следопыт', 'искусственник'].includes(classNameLower)) {
     if (level >= 17) return 5;
     else if (level >= 13) return 4;
     else if (level >= 9) return 3;
     else if (level >= 5) return 2;
     else if (level >= 2) return 1;
   }
-  // Частичные заклинатели
-  else if (['Воин (Мистический рыцарь)', 'Плут (Мистический ловкач)', 'Монах (Путь четырех стихий)'].includes(className)) {
+  // Частичные заклинатели и особый случай для колдуна
+  else if (['колдун'].includes(classNameLower)) {
+    if (level >= 17) return 5;
+    else if (level >= 11) return 5;
+    else if (level >= 9) return 5;
+    else if (level >= 7) return 4;
+    else if (level >= 5) return 3;
+    else if (level >= 3) return 2;
+    else if (level >= 1) return 1;
+  }
+  else if (['воин (мистический рыцарь)', 'плут (мистический ловкач)', 'монах (путь четырех стихий)'].includes(classNameLower)) {
     if (level >= 19) return 4;
     else if (level >= 13) return 3;
     else if (level >= 7) return 2;
@@ -47,6 +60,9 @@ export const calculateKnownSpells = (className: string, level: number, modifierB
   spells: number;   // Alias for knownSpells
   maxSpellLevel: number; // Alias for maxLevel
 } => {
+  // Переводим название класса в нижний регистр для совместимости
+  const classNameLower = className.toLowerCase();
+  
   const maxLevel = getMaxSpellLevel(className, level);
   
   const result = {
@@ -59,32 +75,52 @@ export const calculateKnownSpells = (className: string, level: number, modifierB
   };
 
   // Определение количества заговоров
-  if (['Бард', 'Друид', 'Жрец', 'Чародей', 'Маг', 'Волшебник'].includes(className)) {
+  if (['бард'].includes(classNameLower)) {
+    if (level >= 10) result.cantripsCount = 4;
+    else if (level >= 4) result.cantripsCount = 3;
+    else result.cantripsCount = 2;
+  } else if (['друид', 'жрец', 'чародей', 'маг', 'волшебник'].includes(classNameLower)) {
     if (level >= 10) result.cantripsCount = 5;
     else if (level >= 4) result.cantripsCount = 4;
     else result.cantripsCount = 3;
-  } else if (['Следопыт', 'Искусственник'].includes(className)) {
+  } else if (['колдун'].includes(classNameLower)) {
+    if (level >= 10) result.cantripsCount = 4;
+    else if (level >= 4) result.cantripsCount = 3;
+    else result.cantripsCount = 2;
+  } else if (['следопыт', 'искусственник'].includes(classNameLower)) {
     result.cantripsCount = 0; // Нет заговоров
-  } else if (['Воин (Мистический рыцарь)', 'Плут (Мистический ловкач)'].includes(className)) {
+  } else if (['воин (мистический рыцарь)', 'плут (мистический ловкач)'].includes(classNameLower)) {
     if (level >= 10) result.cantripsCount = 3;
     else result.cantripsCount = 2;
-  } else if (className === 'Паладин') {
+  } else if (classNameLower === 'паладин') {
     result.cantripsCount = 0; // Паладины не имеют заговоров
   }
 
   // Определение количества известных заклинаний
-  if (className === 'Бард') {
+  if (classNameLower === 'бард') {
     result.knownSpells = Math.min(22, level + 3);
-  } else if (className === 'Чародей') {
+  } else if (classNameLower === 'чародей') {
     result.knownSpells = Math.min(15, level + 1);
-  } else if (className === 'Волшебник' || className === 'Жрец' || className === 'Друид') {
+  } else if (classNameLower === 'колдун') {
+    // Специальный расчет для колдуна
+    if (level === 1) result.knownSpells = 2;
+    else if (level === 2) result.knownSpells = 3;
+    else if (level === 3) result.knownSpells = 4;
+    else if (level === 4) result.knownSpells = 5;
+    else if (level === 5) result.knownSpells = 6;
+    else if (level === 6) result.knownSpells = 7;
+    else if (level === 7) result.knownSpells = 8;
+    else if (level === 8) result.knownSpells = 9;
+    else if (level === 9) result.knownSpells = 10;
+    else if (level >= 10) result.knownSpells = 10 + Math.floor((level - 10) / 2) + 1;
+  } else if (['волшебник', 'жрец', 'друид'].includes(classNameLower)) {
     // Для этих классов используется формула: уровень + модификатор способности
     result.knownSpells = level + modifierBonus;
-  } else if (className === 'Следопыт') {
+  } else if (classNameLower === 'следопыт') {
     if (level >= 2) {
       result.knownSpells = Math.min(11, Math.floor(level / 2) + 1);
     }
-  } else if (className === 'Паладин') {
+  } else if (classNameLower === 'паладин') {
     if (level >= 2) {
       // Для паладинов: уровень / 2 + модификатор харизмы
       result.knownSpells = Math.floor(level / 2) + modifierBonus;
