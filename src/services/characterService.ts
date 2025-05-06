@@ -252,13 +252,18 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
         userId: data.userId || 'Не указан'
       });
       
+      // Проверяем, что userId совпадает с переданным
+      if (data.userId !== userId) {
+        console.warn(`getCharactersByUserId: Персонаж ${doc.id} имеет userId ${data.userId}, что не совпадает с запрошенным ${userId}`);
+      }
+      
       // Убедимся, что у персонажа есть все необходимые поля
       characters.push({
         ...data,
         id: doc.id,
         userId: data.userId || userId,
         name: data.name || 'Без имени',
-        className: data.class || data.className || '—',
+        className: data.className || data.class || '—',
         race: data.race || '—',
         level: data.level || 1
       } as Character);
@@ -268,41 +273,83 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     console.log('getCharactersByUserId: Всего персонажей:', characters.length);
     if (characters.length > 0) {
       console.log('getCharactersByUserId: Первый персонаж:', characters[0]);
+    } else {
+      console.log('getCharactersByUserId: Персонажи не найдены для userId', userId);
+      
+      // Если персонажей нет, можно проверить доступ к коллекции
+      try {
+        // Тестовая попытка получить любой документ из коллекции tests
+        const testCollection = collection(db, 'tests');
+        const testQuery = query(testCollection);
+        const testSnapshot = await getDocs(testQuery);
+        console.log('getCharactersByUserId: Тестовый запрос к коллекции tests:', 
+          testSnapshot.empty ? 'Коллекция пуста' : `Найдено ${testSnapshot.size} документов`);
+      } catch (testError) {
+        console.error('getCharactersByUserId: Ошибка при тестовом запросе к коллекции tests:', testError);
+      }
     }
     
     return characters;
   } catch (error) {
     console.error('getCharactersByUserId: Ошибка при получении персонажей:', error);
     
-    // Пробуем получить из localStorage как резервный вариант
-    try {
-      console.log('getCharactersByUserId: Пробуем получить персонажей из localStorage');
-      const existingChars = localStorage.getItem('dnd-characters');
-      if (existingChars) {
-        const allChars: Character[] = JSON.parse(existingChars);
-        const userChars = allChars.filter(char => char.userId === userId);
-        console.log('getCharactersByUserId: Fallback - найдено персонажей в localStorage:', userChars.length);
-        return userChars;
-      }
-    } catch (localError) {
-      console.error('Error getting characters from localStorage:', localError);
-    }
-    
     // Пробрасываем ошибку дальше
     throw error;
   }
 };
 
-// Добавляем функцию getAllCharacters для совместимости
+// Добавляем функцию получения всех персонажей
 export const getAllCharacters = async (): Promise<Character[]> => {
-  const userId = getCurrentUid();
-  if (!userId) {
-    console.warn('getAllCharacters: Пользователь не авторизован');
+  try {
+    const userId = getCurrentUid();
+    if (!userId) {
+      console.warn('getAllCharacters: Пользователь не авторизован');
+      return [];
+    }
+    
+    console.log('getAllCharacters: Получение персонажей для userId:', userId);
+    
+    // Используем существующую функцию для получения персонажей текущего пользователя
+    return await getCharactersByUserId(userId);
+  } catch (error) {
+    console.error('getAllCharacters: Ошибка при получении персонажей:', error);
     return [];
   }
-  
-  // Используем существующую функцию для получения персонажей текущего пользователя
-  return await getCharactersByUserId(userId);
+};
+
+// Отдельная функция для резервной загрузки персонажей (в случае проблем с Firestore)
+export const getCharactersFromLocalStorage = (): Character[] => {
+  try {
+    console.log('getCharactersFromLocalStorage: Попытка загрузить персонажей из localStorage');
+    
+    // Пытаемся получить из localStorage как резервный вариант
+    const existingChars = localStorage.getItem('dnd-characters');
+    if (!existingChars) {
+      console.log('getCharactersFromLocalStorage: В localStorage нет персонажей');
+      return [];
+    }
+    
+    const allCharacters = JSON.parse(existingChars) as Character[];
+    if (!Array.isArray(allCharacters)) {
+      console.warn('getCharactersFromLocalStorage: Данные из localStorage не являются массивом');
+      return [];
+    }
+    
+    const userId = getCurrentUid();
+    if (!userId) {
+      console.warn('getCharactersFromLocalStorage: Пользователь не авторизован, возвращаем все персонажи из localStorage');
+      return allCharacters;
+    }
+    
+    // Фильтруем персонажей текущего пользователя
+    const userCharacters = allCharacters.filter(char => char.userId === userId);
+    console.log('getCharactersFromLocalStorage: Найдено персонажей в localStorage:', userCharacters.length);
+    
+    return userCharacters;
+  } catch (localError) {
+    console.error('getCharactersFromLocalStorage: Ошибка при загрузке из localStorage:', localError);
+    return [];
+  }
 };
 
 // Экспортируем функции как дефолтный экспорт для совместимости
@@ -312,7 +359,8 @@ const characterService = {
   getCharacter,
   deleteCharacter,
   getCharactersByUserId,
-  getAllCharacters
+  getAllCharacters,
+  getCharactersFromLocalStorage
 };
 
 export default characterService;
