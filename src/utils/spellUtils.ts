@@ -211,7 +211,7 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     classes: (function() {
       if (!spell.classes) return [] as string[];
       if (typeof spell.classes === 'string') return [spell.classes];
-      return Array.isArray(spell.classes) ? (spell.classes as string[]) : [];
+      return Array.isArray(spell.classes) ? spell.classes.map(c => String(c)) : [];
     })(),
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
