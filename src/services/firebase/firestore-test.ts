@@ -30,7 +30,7 @@ export const testLoadCharacters = async (): Promise<{
       };
     }
     
-    // Создаем запрос с фильтром userId для соблюдения правил безопасности
+    // Создаем запрос с обязательным фильтром userId для соблюдения правил безопасности
     const charactersCollection = collection(db, 'characters');
     const charactersQuery = query(
       charactersCollection, 
@@ -39,7 +39,8 @@ export const testLoadCharacters = async (): Promise<{
     
     debug.query = {
       collection: 'characters',
-      filter: `userId == ${userId}`
+      filter: `userId == ${userId}`,
+      whereClause: 'where("userId", "==", userId)'
     };
     
     // Выполняем запрос

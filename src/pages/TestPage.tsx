@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/firebase';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUid } from '@/utils/authHelpers';
 import { Character } from '@/types/character';
 import { testLoadCharacters, getCurrentUserDetails } from '@/services/firebase/firestore-test';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const TestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,8 +21,9 @@ const TestPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeTest, setActiveTest] = useState<string>('auth');
+  const [testCollection, setTestCollection] = useState<any>(null);
   
-  // Тест соединения с Firebase
+  // Тест соединения с Firebase - тестирует коллекцию tests
   const testFirebaseConnection = async () => {
     setLoading(true);
     setError(null);
@@ -29,14 +31,39 @@ const TestPage: React.FC = () => {
     try {
       setResults(prev => ({ ...prev, connection: 'Тестирование соединения...' }));
       
-      // Проверяем, можем ли получить хотя бы один документ из коллекции tests
+      // Сначала проверяем с коллекцией tests, которая должна быть доступна для чтения
       const testCollectionRef = collection(db, 'tests');
-      const testQuery = await getDocs(query(testCollectionRef));
+      const testQuery = query(testCollectionRef, limit(1));
       
-      setResults(prev => ({ 
-        ...prev, 
-        connection: `Соединение работает! Получено документов: ${testQuery.size}` 
-      }));
+      try {
+        const testSnap = await getDocs(testQuery);
+        setTestCollection({
+          exists: !testSnap.empty,
+          count: testSnap.size,
+          data: testSnap.empty ? null : testSnap.docs[0].data()
+        });
+        
+        setResults(prev => ({ 
+          ...prev, 
+          connection: `Соединение работает! Collection 'tests': ${testSnap.size} документов`
+        }));
+      } catch (testError) {
+        console.error('Ошибка при чтении коллекции tests:', testError);
+        
+        // Если tests недоступна, пробуем spells (которая должна быть доступна для чтения всем)
+        try {
+          const spellsRef = collection(db, 'spells');
+          const spellsQuery = query(spellsRef, limit(1));
+          const spellsSnap = await getDocs(spellsQuery);
+          
+          setResults(prev => ({ 
+            ...prev, 
+            connection: `Соединение работает! Collection 'spells': ${spellsSnap.size} документов`
+          }));
+        } catch (spellsError) {
+          throw new Error(`Не удалось прочитать ни 'tests', ни 'spells': ${spellsError}`);
+        }
+      }
     } catch (err) {
       console.error('Ошибка соединения с Firebase:', err);
       setError(`Ошибка соединения с Firebase: ${err}`);
@@ -128,6 +155,19 @@ const TestPage: React.FC = () => {
         <Button variant="outline" onClick={() => navigate('/')}>Назад на главную</Button>
       </div>
 
+      {!isAuthenticated && (
+        <Alert variant="destructive" className="mb-6">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Вы не авторизованы</AlertTitle>
+          <AlertDescription>
+            Для работы с персонажами необходимо авторизоваться.
+            <Button variant="outline" onClick={() => navigate('/auth')} className="ml-4">
+              Авторизоваться
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Панель тестов</CardTitle>
@@ -211,6 +251,15 @@ const TestPage: React.FC = () => {
                 <div className="p-4 bg-black/20 rounded-lg">
                   <h3 className="font-medium mb-2">Статус соединения:</h3>
                   <p>{results.connection || 'Нет данных'}</p>
+                  
+                  {testCollection && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Тестовая коллекция:</h4>
+                      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
+                        {JSON.stringify(testCollection, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -226,7 +275,7 @@ const TestPage: React.FC = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Советы по отладке</CardTitle>
+          <CardTitle>Советы по отладке Firestore Rules</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="list-disc pl-5 space-y-2">
@@ -234,9 +283,16 @@ const TestPage: React.FC = () => {
             <li>Проверьте, что у вас есть персонажи в коллекции 'characters'</li>
             <li>Проверьте, что у персонажей правильно указан userId, совпадающий с вашим id</li>
             <li>
-              <strong>Новые правила безопасности:</strong> Для запросов списка персонажей (list) 
-              теперь требуется явный фильтр where('userId', '==', request.auth.uid)
+              <strong>Firestore Rules для списка документов:</strong><br/>
+              <code className="bg-black/30 p-1 rounded">
+                allow list: if request.auth != null && request.query.where('userId', '==', request.auth.uid);
+              </code>
             </li>
+            <li>
+              <strong>Это значит:</strong> для запросов списка персонажей (list) 
+              нужен явный фильтр where('userId', '==', userId)
+            </li>
+            <li>Проверьте в консоли, что запрос содержит этот фильтр</li>
           </ul>
         </CardContent>
       </Card>
