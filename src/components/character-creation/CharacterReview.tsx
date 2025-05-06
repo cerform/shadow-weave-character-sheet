@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,16 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   const [isSaving, setIsSaving] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
   const [characterId, setCharacterId] = useState<string | null>(null);
+  const saveAttemptedRef = useRef(false);
 
   // Автоматическое сохранение персонажа при попадании на экран завершения (один раз)
   useEffect(() => {
     const autoSaveCharacter = async () => {
-      // Проверяем, был ли уже выполнен автосейв для предотвращения повторных запросов
-      if (!autoSaved && character.name && character.race && character.class && !isSaving && !character.id) {
+      // Проверяем, был ли уже выполнен автосейв или попытка сохранения
+      if (!autoSaved && !saveAttemptedRef.current && character.name && character.race && character.class && !isSaving) {
         try {
           console.log('Начинаем автоматическое сохранение персонажа...');
+          saveAttemptedRef.current = true; // Устанавливаем флаг попытки сохранения
           setIsSaving(true);
           
           const uid = getCurrentUid();
@@ -41,12 +43,9 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             return;
           }
           
-          // Убедимся, что у персонажа нет дублирующегося ID
-          if (character.id === undefined) {
-            console.log('ID персонажа не установлен, будет сгенерирован новый');
-          } else {
+          // Если ID уже есть, не создаем дубликат
+          if (character.id) {
             console.log('ID персонажа уже существует:', character.id);
-            // Если ID уже есть, не нужно создавать новый
             setAutoSaved(true);
             setCharacterId(character.id);
             setIsSaving(false);
@@ -72,8 +71,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             // Также обновляем персонажа в контексте
             setCharacter({...character, id: savedId, userId: uid});
             
-            // Сохраняем персонажа локально как резервную копию
-            localStorage.setItem(`character_${savedId}`, JSON.stringify({...character, id: savedId, userId: uid}));
+            // Сохраняем последний выбранный персонаж
             localStorage.setItem('last-selected-character', savedId);
           }
         } catch (error) {
@@ -194,6 +192,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
               <dt className="text-sm text-muted-foreground">Предыстория:</dt>
               <dd className="font-medium">{character.background || 'Не указана'}</dd>
             </div>
+            {character.id && (
+              <div className="space-y-1">
+                <dt className="text-sm text-muted-foreground">ID персонажа:</dt>
+                <dd className="font-medium text-xs text-muted-foreground">{character.id}</dd>
+              </div>
+            )}
           </dl>
         </CardContent>
       </Card>

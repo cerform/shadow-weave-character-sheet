@@ -1,12 +1,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Loader2, AlertCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Character } from '@/types/character';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import { toast } from 'sonner';
 import CharacterCard from '@/components/character/CharacterCard';
 import EmptyState from './EmptyState';
@@ -20,10 +17,7 @@ interface CharacterCardsProps {
 const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, loading = false }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
+  
   // Функция открытия персонажа
   const handleViewCharacter = (id: string) => {
     console.log('CharacterCards: Открываю персонажа с ID:', id);
@@ -49,6 +43,7 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
   if (loading) {
     return (
       <div className="text-center p-10 bg-black/20 rounded-lg animate-pulse">
+        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
         <p className="text-muted-foreground">Загрузка персонажей...</p>
       </div>
     );

@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson } from "lucide-react";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson, AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { getCharactersByUserId, deleteCharacter } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
-import { getCurrentUserIdExtended } from '@/utils/authHelpers';
+import { useCharacter } from '@/contexts/CharacterContext';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import LoadingState from '@/components/characters/LoadingState';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
@@ -21,14 +21,21 @@ import CharactersHeader from '@/components/characters/CharactersHeader';
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, currentUser } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Используем контекст персонажей
+  const { 
+    characters, 
+    loading, 
+    error, 
+    getUserCharacters, 
+    deleteCharacter,
+    refreshCharacters
+  } = useCharacter();
+  
   const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -41,54 +48,26 @@ const CharactersListPage: React.FC = () => {
       loadCharacters();
     } else {
       console.log('CharactersListPage: Пользователь не авторизован');
-      setLoading(false);
     }
   }, [isAuthenticated, user]);
 
   // Функция загрузки персонажей
   const loadCharacters = async () => {
     try {
-      setLoading(true);
+      console.log('CharactersListPage: Начинаем загрузку персонажей');
       setIsRefreshing(true);
-      setError(null);
       
-      // Получаем ID пользователя 
-      const userId = user?.uid || user?.id || getCurrentUserIdExtended();
-      console.log('CharactersListPage: Загрузка персонажей для пользователя:', userId);
-      
-      if (!userId) {
-        console.error('CharactersListPage: ID пользователя отсутствует');
-        setError('ID пользователя отсутствует');
-        setLoading(false);
-        setIsRefreshing(false);
+      if (!isAuthenticated) {
+        console.log('CharactersListPage: Пользователь не авторизован, прерываем загрузку');
         return;
       }
       
-      try {
-        // Используем функцию из сервиса для загрузки персонажей
-        const fetchedCharacters = await getCharactersByUserId(userId);
-        
-        // Фильтруем некорректные данные
-        const validCharacters = fetchedCharacters.filter(char => {
-          if (!char || !char.id) {
-            console.warn('Некорректный персонаж в результате запроса:', char);
-            return false;
-          }
-          return true;
-        });
-        
-        setCharacters(validCharacters);
-        toast.success(`Загружено персонажей: ${validCharacters.length}`);
-      } catch (fetchError) {
-        console.error('CharactersListPage: Ошибка при загрузке персонажей:', fetchError);
-        setError(`Не удалось загрузить персонажей: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
-      }
+      await refreshCharacters();
+      toast.success(`Персонажи успешно загружены`);
     } catch (err) {
-      console.error('CharactersListPage: Общая ошибка при загрузке персонажей:', err);
-      setError(`Не удалось загрузить персонажей: ${err instanceof Error ? err.message : String(err)}`);
+      console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       toast.error('Ошибка при загрузке персонажей');
     } finally {
-      setLoading(false);
       setIsRefreshing(false);
     }
   };
@@ -98,9 +77,6 @@ const CharactersListPage: React.FC = () => {
     try {
       console.log('CharactersListPage: Удаляем персонажа с ID:', id);
       await deleteCharacter(id);
-      
-      // Обновляем список персонажей
-      setCharacters(prevChars => prevChars.filter(char => char.id !== id));
       toast.success('Персонаж успешно удален');
       return Promise.resolve();
     } catch (err) {
@@ -219,13 +195,25 @@ const CharactersListPage: React.FC = () => {
                 size="sm"
                 variant="outline"
                 className="gap-2"
-                disabled={isRefreshing}
+                disabled={isRefreshing || loading}
               >
-                <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+                <RefreshCw size={16} className={isRefreshing || loading ? "animate-spin" : ""} />
                 Обновить
               </Button>
             </div>
           </div>
+
+          {/* Информационная панель для отладки */}
+          <Alert variant="outline" className="bg-blue-900/20 border-blue-500/50">
+            <AlertCircle className="h-4 w-4 text-blue-500" />
+            <AlertTitle className="text-blue-200">Статус загрузки персонажей</AlertTitle>
+            <AlertDescription className="text-muted-foreground">
+              <div>Загрузка: {loading ? "Да" : "Нет"}</div>
+              <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
+              <div>Загружено персонажей: {characters.length}</div>
+              {error && <div className="text-red-400">Ошибка: {error}</div>}
+            </AlertDescription>
+          </Alert>
 
           {/* Загрузка */}
           {loading && <LoadingState />}
@@ -239,7 +227,7 @@ const CharactersListPage: React.FC = () => {
           )}
           
           {/* Показ данных в выбранном режиме */}
-          {!loading && !error && (
+          {!loading && (
             <>
               {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
@@ -263,7 +251,7 @@ const CharactersListPage: React.FC = () => {
               )}
               
               {/* Показываем информацию о количестве загруженных персонажей */}
-              {!loading && !error && characters && characters.length > 0 && (
+              {!loading && characters.length > 0 && (
                 <div className="mt-2 text-center text-muted-foreground text-sm">
                   Загружено персонажей: {characters.length}
                 </div>

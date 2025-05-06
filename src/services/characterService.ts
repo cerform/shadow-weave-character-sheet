@@ -18,10 +18,12 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     
     const characters = snapshot.docs.map(doc => {
       const data = doc.data();
-      return {
+      const characterData = {
         id: doc.id,
         ...data,
       } as Character;
+      console.log(`Загружен персонаж: ${characterData.name || 'Безымянный'} с ID: ${characterData.id}`);
+      return characterData;
     });
     
     console.log(`Получено ${characters.length} персонажей`);
@@ -32,7 +34,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   }
 };
 
-// Получение всех персонажей (запасной метод)
+// Получение всех персонажей пользователя
 export const getAllCharacters = async (): Promise<Character[]> => {
   try {
     console.log('Загрузка всех персонажей');
@@ -43,21 +45,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
       return [];
     }
     
-    const charactersCollection = collection(db, 'characters');
-    const snapshot = await getDocs(charactersCollection);
-    
-    const characters = snapshot.docs
-      .map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-        } as Character;
-      })
-      .filter(char => char.userId === userId);
-    
-    console.log(`Получено ${characters.length} персонажей (общий метод)`);
-    return characters;
+    return await getCharactersByUserId(userId);
   } catch (error) {
     console.error('Ошибка при получении всех персонажей:', error);
     throw error;
@@ -102,52 +90,38 @@ export const deleteCharacter = async (id: string): Promise<void> => {
 // Сохранение персонажа
 export const saveCharacter = async (character: Character): Promise<string> => {
   try {
-    // Проверяем, существует ли уже персонаж с таким id и userId
-    if (character.id) {
-      // Если у персонажа есть id, проверим, существует ли он уже в базе данных
-      const existingCharacter = await getCharacter(character.id);
-      
-      if (existingCharacter) {
-        console.log(`Обновление существующего персонажа с ID ${character.id}`);
-      } else {
-        console.log(`Персонаж с ID ${character.id} не найден в базе, создаем новый`);
-      }
-    }
-    
-    // Убедимся, что у персонажа есть имя
-    if (!character.name) {
-      character.name = "Безымянный герой";
-    }
-    
-    // Добавление дат создания/обновления
+    // Проверяем существование персонажа
     const now = new Date().toISOString();
+    let characterToSave = { ...character, updatedAt: now };
     
-    // Обновление существующего персонажа
-    if (character.id) {
-      const characterRef = doc(db, 'characters', character.id);
-      await setDoc(characterRef, { 
-        ...character, 
-        updatedAt: now
-      }, { merge: true });
-      console.log(`Персонаж ${character.id} обновлен`);
-      return character.id;
-    } 
-    // Создание нового персонажа
-    else {
-      // Получаем userID
+    // Убедимся, что у персонажа есть ID пользователя
+    if (!characterToSave.userId) {
       const userId = getCurrentUserIdExtended();
       if (!userId) {
         throw new Error('ID пользователя не найден');
       }
+      characterToSave.userId = userId;
+    }
+    
+    // Если у персонажа уже есть ID
+    if (characterToSave.id) {
+      console.log(`Обновление существующего персонажа с ID ${characterToSave.id}`);
+      const characterRef = doc(db, 'characters', characterToSave.id);
+      await setDoc(characterRef, characterToSave, { merge: true });
+      return characterToSave.id;
+    } 
+    // Создание нового персонажа
+    else {
+      console.log('Создание нового персонажа');
+      // Для нового персонажа добавляем дату создания
+      characterToSave.createdAt = now;
       
-      const characterData = {
-        ...character,
-        userId,
-        createdAt: now,
-        updatedAt: now
-      };
+      // Убедимся, что у персонажа есть имя
+      if (!characterToSave.name) {
+        characterToSave.name = "Безымянный герой";
+      }
       
-      const docRef = await addDoc(collection(db, 'characters'), characterData);
+      const docRef = await addDoc(collection(db, 'characters'), characterToSave);
       console.log(`Новый персонаж создан с ID: ${docRef.id}`);
       return docRef.id;
     }
@@ -160,50 +134,34 @@ export const saveCharacter = async (character: Character): Promise<string> => {
 // Функция saveCharacterToFirestore для использования в других файлах
 export const saveCharacterToFirestore = async (character: Character, userId: string): Promise<string> => {
   try {
-    // Если у персонажа уже есть ID, проверим существует ли он в базе
-    if (character.id) {
-      const existingCharacter = await getCharacter(character.id);
-      if (existingCharacter) {
-        console.log(`Обновляем существующий персонаж с ID: ${character.id}`);
-        const characterRef = doc(db, 'characters', character.id);
-        await setDoc(characterRef, { 
-          ...character,
-          userId,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-        return character.id;
-      }
+    // Подготавливаем данные персонажа
+    let characterToSave = { ...character, userId };
+    
+    // Добавляем дату обновления
+    characterToSave.updatedAt = new Date().toISOString();
+    
+    // Если персонаж новый, добавляем дату создания
+    if (!characterToSave.createdAt) {
+      characterToSave.createdAt = characterToSave.updatedAt;
     }
-  
+    
     // Убедимся, что у персонажа есть имя
-    if (!character.name) {
-      character.name = "Безымянный герой";
+    if (!characterToSave.name) {
+      characterToSave.name = "Безымянный герой";
     }
     
-    // Добавление дат создания/обновления и userId
-    const now = new Date().toISOString();
-    const characterData = {
-      ...character,
-      userId,
-      updatedAt: now
-    };
-    
-    // Если это новый персонаж, добавляем дату создания
-    if (!character.createdAt) {
-      characterData.createdAt = now;
-    }
-    
-    // Обновление существующего персонажа
-    if (character.id) {
-      const characterRef = doc(db, 'characters', character.id);
-      await setDoc(characterRef, characterData, { merge: true });
-      console.log(`Персонаж ${character.id} обновлен через saveCharacterToFirestore`);
-      return character.id;
+    // Если у персонажа уже есть ID
+    if (characterToSave.id) {
+      console.log(`saveCharacterToFirestore: Обновление персонажа с ID ${characterToSave.id}`);
+      const characterRef = doc(db, 'characters', characterToSave.id);
+      await setDoc(characterRef, characterToSave, { merge: true });
+      return characterToSave.id;
     } 
     // Создание нового персонажа
     else {
-      const docRef = await addDoc(collection(db, 'characters'), characterData);
-      console.log(`Новый персонаж создан с ID: ${docRef.id} через saveCharacterToFirestore`);
+      console.log('saveCharacterToFirestore: Создание нового персонажа');
+      const docRef = await addDoc(collection(db, 'characters'), characterToSave);
+      console.log(`saveCharacterToFirestore: Новый персонаж создан с ID: ${docRef.id}`);
       return docRef.id;
     }
   } catch (error) {

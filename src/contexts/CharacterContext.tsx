@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters } from '@/services/characterService';
+import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters, getCharactersByUserId } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUid } from '@/utils/authHelpers';
@@ -16,6 +16,7 @@ export interface CharacterContextType {
   loading: boolean;
   error: string | null;
   getCharacterById: (id: string) => Promise<Character | null>;
+  refreshCharacters: () => Promise<void>;
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
@@ -29,6 +30,7 @@ export const CharacterContext = createContext<CharacterContextType>({
   loading: false,
   error: null,
   getCharacterById: async () => null,
+  refreshCharacters: async () => {},
 });
 
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
@@ -43,6 +45,11 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       if (!prev) return prev;
       return { ...prev, ...updates };
     });
+  };
+  
+  // Функция для принудительного обновления списка персонажей
+  const refreshCharacters = async () => {
+    await getUserCharacters();
   };
   
   // Функция для сохранения персонажа
@@ -94,15 +101,30 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     }
   };
   
-  // Получаем список персонажей
+  // Получаем список персонажей пользователя
   const getUserCharacters = async () => {
     try {
+      console.log('CharacterContext: Получение персонажей пользователя');
       setLoading(true);
       setError(null);
       
-      const fetchedCharacters = await getAllCharacters();
-      setCharacters(fetchedCharacters);
-      return fetchedCharacters;
+      // Получаем userId текущего пользователя
+      const userId = getCurrentUid();
+      if (!userId) {
+        console.error('CharacterContext: ID пользователя не найден');
+        setError('ID пользователя не найден');
+        return [];
+      }
+      
+      // Получаем персонажей конкретного пользователя
+      const fetchedCharacters = await getCharactersByUserId(userId);
+      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей`);
+      
+      // Фильтруем невалидные персонажи
+      const validCharacters = fetchedCharacters.filter(char => char !== null && char.id);
+      setCharacters(validCharacters);
+      
+      return validCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       setError('Не удалось загрузить персонажей');
@@ -116,10 +138,19 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Получение персонажа по ID
   const getCharacterById = async (id: string) => {
     try {
+      console.log('CharacterContext: Получение персонажа по ID:', id);
       setLoading(true);
       setError(null);
       
       const fetchedCharacter = await getCharacter(id);
+      
+      // Проверяем валидность полученного персонажа
+      if (!fetchedCharacter || !fetchedCharacter.id) {
+        console.log('CharacterContext: Персонаж не найден или не валиден');
+        return null;
+      }
+      
+      console.log('CharacterContext: Персонаж получен успешно:', fetchedCharacter.name);
       return fetchedCharacter;
     } catch (error) {
       console.error('Ошибка при получении персонажа:', error);
@@ -133,6 +164,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // Удаление персонажа
   const handleDeleteCharacter = async (id: string) => {
     try {
+      console.log('CharacterContext: Удаление персонажа с ID:', id);
       setLoading(true);
       setError(null);
       
@@ -157,9 +189,16 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   // При инициализации получаем список персонажей
   useEffect(() => {
     const loadCharacters = async () => {
+      console.log('CharacterContext: Начальная загрузка персонажей');
       await getUserCharacters();
     };
-    loadCharacters();
+    
+    const userId = getCurrentUid();
+    if (userId) {
+      loadCharacters();
+    } else {
+      console.log('CharacterContext: Пользователь не авторизован, персонажи не загружаются');
+    }
   }, []);
   
   return (
@@ -174,7 +213,8 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         getCharacterById,
         deleteCharacter: handleDeleteCharacter,
         loading,
-        error
+        error,
+        refreshCharacters
       }}
     >
       {children}
