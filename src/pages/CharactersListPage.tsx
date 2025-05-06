@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { useCharacter } from '@/contexts/CharacterContext';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
@@ -27,15 +27,17 @@ const CharactersListPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  // Используем контекст персонажей
+  // Используем контекст персонажей - ОБЯЗАТЕЛЬНО берем отсюда
   const { 
     characters, 
     loading, 
     error, 
-    getUserCharacters, 
-    deleteCharacter,
-    refreshCharacters
+    refreshCharacters,
+    deleteCharacter
   } = useCharacter();
+  
+  // Выводим для отладки количество персонажей из контекста
+  console.log('CharactersListPage: Персонажи из контекста:', characters?.length || 0);
   
   const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -65,7 +67,7 @@ const CharactersListPage: React.FC = () => {
     }
   }, [loadAttempts]);
 
-  // Функция загрузки персонажей
+  // Функция загрузки персонажей через контекст
   const loadCharacters = async () => {
     try {
       console.log('CharactersListPage: Начинаем загрузку персонажей');
@@ -92,10 +94,7 @@ const CharactersListPage: React.FC = () => {
       try {
         // Непосредственно загружаем персонажей через контекст
         await refreshCharacters();
-        
-        // Получаем обновленное значение characters из контекста
         console.log('CharactersListPage: После обновления, characters =', characters);
-        setDebugInfo(prev => ({...prev, characters, charactersLength: characters?.length || 0}));
         
         // Проверяем количество персонажей после загрузки
         if (!characters || characters.length === 0) {
@@ -104,7 +103,7 @@ const CharactersListPage: React.FC = () => {
         } else {
           console.log(`CharactersListPage: Загружено ${characters.length} персонажей`);
           toast.success(`Персонажи успешно загружены (${characters.length})`);
-          setDebugInfo(prev => ({...prev, charactersLoaded: true}));
+          setDebugInfo(prev => ({...prev, charactersLoaded: true, characterCount: characters.length}));
         }
       } catch (err) {
         console.error('CharactersListPage: Внутренняя ошибка при загрузке персонажей:', err);
@@ -287,18 +286,15 @@ const CharactersListPage: React.FC = () => {
             <AlertDescription className="text-muted-foreground">
               <div>Загрузка: {loading ? "Да" : "Нет"}</div>
               <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
-              <div>Загружено персонажей: {characters?.length || 0}</div>
+              <div>Загружено персонажей из контекста: {characters?.length || 0}</div>
               <div>Попыток загрузки: {loadAttempts}</div>
               <div>ID пользователя: {getCurrentUid() || 'Не найден'}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
-              {localError && <div className="text-red-400">Ошибка: {localError}</div>}
+              {localError && <div className="text-red-400">Локальная ошибка: {localError}</div>}
               <div className="mt-2">
                 <h4 className="font-semibold text-blue-300">Отладочные данные:</h4>
                 <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
                   {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-                <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
-                  {JSON.stringify(characters, null, 2)}
                 </pre>
               </div>
             </AlertDescription>
@@ -320,7 +316,7 @@ const CharactersListPage: React.FC = () => {
             <>
               {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
-                  <h2 className="text-lg font-bold mb-4">Данные персонажей:</h2>
+                  <h2 className="text-lg font-bold mb-4">Данные персонажей (из контекста):</h2>
                   <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
                     {JSON.stringify(characters, null, 2)}
                   </pre>
@@ -342,7 +338,7 @@ const CharactersListPage: React.FC = () => {
               {/* Показываем информацию о количестве загруженных персонажей */}
               {!loading && characters && characters.length > 0 && (
                 <div className="mt-2 text-center text-muted-foreground text-sm">
-                  Загружено персонажей: {characters.length}
+                  Загружено персонажей из контекста: {characters.length}
                 </div>
               )}
             </>

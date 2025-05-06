@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { UserThemeProvider } from '@/contexts/UserThemeContext';
+import { CharacterProvider } from '@/contexts/CharacterContext';
 import AppRoutes from './AppRoutes';
 import './App.css';
 
@@ -21,8 +22,10 @@ function App() {
           <AuthProvider>
             <SessionProvider>
               <UserThemeProvider>
-                <AppRoutes />
-                <Toaster />
+                <CharacterProvider>
+                  <AppRoutes />
+                  <Toaster />
+                </CharacterProvider>
               </UserThemeProvider>
             </SessionProvider>
           </AuthProvider>

@@ -9,6 +9,7 @@ import { createTestCharacter } from '@/services/characterService';
 import InfoMessage from '@/components/ui/InfoMessage';
 import { useAuth } from '@/hooks/use-auth';
 import { getCurrentUid } from '@/utils/authHelpers';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 interface CharacterCardsProps {
   characters: Character[];
@@ -19,6 +20,7 @@ interface CharacterCardsProps {
 const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, loading = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { characters: contextCharacters } = useCharacter(); // Добавляем доступ к контексту для сравнения
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [creatingTest, setCreatingTest] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
@@ -42,14 +44,17 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
           userId: characters[0].userId,
           userIdType: typeof characters[0].userId
         } : null
-      } : null
+      } : null,
+      contextCharacters: contextCharacters ? {
+        count: contextCharacters.length,
+        isArray: Array.isArray(contextCharacters)
+      } : "Контекст не доступен"
     });
-  }, [user, characters]);
+  }, [user, characters, contextCharacters]);
   
   // Отладочный вывод
-  console.log("CharacterCards: получены персонажи:", characters);
-  console.log("CharacterCards: тип данных:", typeof characters);
-  console.log("CharacterCards: это массив?", Array.isArray(characters));
+  console.log("CharacterCards: получены персонажи как пропсы:", characters);
+  console.log("CharacterCards: персонажи из контекста:", contextCharacters);
   
   // Функция создания тестового персонажа
   const handleCreateTestCharacter = async () => {

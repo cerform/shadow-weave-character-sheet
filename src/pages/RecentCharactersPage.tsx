@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,10 @@ const RecentCharactersPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
+  // Используем контекст персонажей
   const { characters, loading, error, refreshCharacters } = useCharacter();
+  console.log('RecentCharactersPage: Персонажи из контекста:', characters?.length || 0);
+  
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentCharacters, setRecentCharacters] = useState<Character[]>([]);
   
@@ -61,6 +65,8 @@ const RecentCharactersPage: React.FC = () => {
   
   // При изменении списка персонажей обновляем недавних
   useEffect(() => {
+    console.log('RecentCharactersPage: Обновление списка персонажей, текущее количество:', characters.length);
+    
     if (characters.length > 0) {
       // Сортировка по дате обновления/создания (сначала новые)
       const sortedCharacters = [...characters].sort((a, b) => {
@@ -70,18 +76,19 @@ const RecentCharactersPage: React.FC = () => {
       });
       
       // Берём только 6 последних персонажей
-      setRecentCharacters(sortedCharacters.slice(0, 6));
-      console.log(`RecentCharactersPage: Получено ${sortedCharacters.length} персонажей, отображаем ${recentCharacters.length}`);
+      const recent = sortedCharacters.slice(0, 6);
+      setRecentCharacters(recent);
+      console.log(`RecentCharactersPage: Получено ${sortedCharacters.length} персонажей, отображаем ${recent.length}`);
     } else {
       setRecentCharacters([]);
     }
   }, [characters]);
   
-  // Функция загрузки персонажей
+  // Функция загрузки персонажей через контекст
   const loadCharacters = async () => {
     try {
       setIsRefreshing(true);
-      console.log('RecentCharactersPage: Загружа��м персонажей');
+      console.log('RecentCharactersPage: Загружаем персонажей через контекст');
       
       await refreshCharacters();
       toast.success('Персонажи успешно загружены');
@@ -156,6 +163,17 @@ const RecentCharactersPage: React.FC = () => {
               <RefreshCw size={16} className={loading || isRefreshing ? "animate-spin" : ""} />
               Обновить
             </Button>
+          </div>
+
+          {/* Отладочная информация */}
+          <div className="mb-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
+            <h3 className="text-blue-200 font-medium mb-2">Отладочная информация</h3>
+            <div className="text-sm text-muted-foreground">
+              <div>Загрузка: {loading ? "Да" : "Нет"}</div>
+              <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
+              <div>Персонажей в контексте: {characters?.length || 0}</div>
+              <div>Отображаем персонажей: {recentCharacters?.length || 0}</div>
+            </div>
           </div>
 
           {/* Информационная панель */}
