@@ -18,7 +18,7 @@ const firebaseConfig = {
 };
 
 // Инициализация Firebase
-console.log('Инициализация Firebase');
+console.log('firebase.ts: Инициализация Firebase');
 export const app = initializeApp(firebaseConfig);
 
 // Инициализация сервисов Firebase
@@ -43,8 +43,8 @@ export const initializeAnalytics = async () => {
 export const analyticsPromise = initializeAnalytics();
 
 // Проверка инициализации Firebase
-console.log('Firebase инициализирован:', app.name);
-console.log('Firestore доступен:', !!db);
-console.log('Auth доступен:', !!auth);
+console.log('firebase.ts: Firebase инициализирован:', app.name);
+console.log('firebase.ts: Firestore доступен:', !!db);
+console.log('firebase.ts: Auth доступен:', !!auth);
 
 export default app;

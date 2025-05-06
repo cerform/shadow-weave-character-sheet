@@ -25,8 +25,18 @@ const queryClient = new QueryClient({
 function App() {
   // Добавляем эффект для отладки инициализации
   useEffect(() => {
-    console.log('App: Инициализация приложения');
-    console.log('Firebase app initialized:', app.name);
+    console.log('App.tsx: Инициализация приложения');
+    console.log('App.tsx: Firebase app name:', app.name);
+    console.log('App.tsx: Firebase app options:', app.options);
+    
+    // Обработка ошибок, которые могут произойти при инициализации
+    window.addEventListener('error', (event) => {
+      console.error('App.tsx: Глобальная ошибка:', event.error);
+    });
+    
+    return () => {
+      window.removeEventListener('error', () => {});
+    };
   }, []);
 
   return (
