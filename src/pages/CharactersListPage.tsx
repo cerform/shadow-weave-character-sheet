@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -123,15 +122,17 @@ const CharactersListPage: React.FC = () => {
       
       // Добавляем немного отладочной информации
       if (fetchedCharacters.length > 0) {
-        console.log('Первый персонаж:', fetchedCharacters[0]);
+        console.log('CharactersListPage: Первый персонаж:', fetchedCharacters[0]);
       } else {
-        console.log('Персонажи не найдены');
+        console.log('CharactersListPage: Персонажи не найдены');
       }
       
       setCharacters(fetchedCharacters);
+      toast.success(`Загружено персонажей: ${fetchedCharacters.length}`);
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       setError(`Не удалось загрузить персонажей: ${err}`);
+      toast.error('Ошибка при загрузке персонажей');
     } finally {
       setLoading(false);
     }
@@ -144,7 +145,7 @@ const CharactersListPage: React.FC = () => {
       setError(null);
       setDisplayMode('test');
       
-      console.log('Запускаем тестовую загрузку персонажей...');
+      console.log('CharactersListPage: Запускаем тестовую загрузку персонажей...');
       const result = await testLoadCharacters();
       
       setTestResults(result);
@@ -153,11 +154,12 @@ const CharactersListPage: React.FC = () => {
         setCharacters(result.characters);
         toast.success(`Тестовая загрузка успешна: ${result.characters.length} персонажей`);
       } else {
-        toast.error(result.message);
+        toast.error(result.message || 'Ошибка при тестовой загрузке');
       }
     } catch (err) {
-      console.error('Ошибка при тестовой загрузке:', err);
+      console.error('CharactersListPage: Ошибка при тестовой загрузке:', err);
       setError(`Ошибка при тестовой загрузке: ${err}`);
+      toast.error('Ошибка при тестовой загрузке');
     } finally {
       setLoading(false);
     }
@@ -182,9 +184,13 @@ const CharactersListPage: React.FC = () => {
     setDisplayMode(mode => (mode === 'table' ? 'raw' : 'table'));
   };
   
-  // Новая функция принудительного обновления
+  // Новая функция принудительного обновления с дополнительной диагностикой
   const forceRefresh = () => {
     toast.info('Обновляем список персонажей...');
+    console.log('CharactersListPage: Принудительное обновление списка персонажей');
+    console.log('CharactersListPage: Текущий пользователь:', user);
+    console.log('CharactersListPage: Firebase auth currentUser:', auth.currentUser);
+    
     loadCharacters();
   };
 
@@ -257,7 +263,7 @@ const CharactersListPage: React.FC = () => {
             </Button>
             
             <Button
-              onClick={loadCharacters}
+              onClick={forceRefresh}
               size="sm"
               variant="outline"
               className="gap-2"

@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/firebase';
@@ -203,31 +204,38 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   }
   
   try {
-    console.log('Getting characters for user:', userId);
+    console.log('getCharactersByUserId: Запрашиваем персонажей для userId:', userId);
+    
+    // Создаем запрос к коллекции characters
     const charactersCollection = collection(db, 'characters');
     
-    // Создаем запрос с фильтрацией по userId - строго как в тестовой функции
+    // ВАЖНО: Используем точно такой же формат запроса, как в тестовой функции
+    // Создаем запрос с фильтрацией по userId
     const q = query(
       charactersCollection,
       where('userId', '==', userId)
     );
     
-    console.log('Query parameters:', { 
+    console.log('getCharactersByUserId: Параметры запроса:', { 
       collection: 'characters', 
       filter: `where userId == ${userId}`,
       whereClause: `where("userId", "==", "${userId}")`
     });
     
-    // Используем тот же метод, что и в тестовой функции
+    // Выполняем запрос
     const querySnapshot = await getDocs(q);
     
-    console.log('Query returned documents count:', querySnapshot.size);
-    console.log('Query snapshot empty?', querySnapshot.empty);
+    console.log('getCharactersByUserId: Получено документов:', querySnapshot.size);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data() as DocumentData;
-      console.log('Character document:', { id: doc.id, name: data.name, userId: data.userId });
+      console.log('getCharactersByUserId: Документ персонажа:', { 
+        id: doc.id, 
+        name: data.name || 'Без имени', 
+        userId: data.userId || 'Не указан'
+      });
+      
       characters.push({
         ...data,
         id: doc.id,
@@ -238,16 +246,15 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       } as Character);
     });
     
-    console.log('Found characters for userId:', characters.length);
-    
-    // Для отладки выводим в консоль первого найденного персонажа
+    // Для отладки выводим количество найденных персонажей
+    console.log('getCharactersByUserId: Всего персонажей:', characters.length);
     if (characters.length > 0) {
-      console.log('First character:', characters[0]);
+      console.log('getCharactersByUserId: Первый персонаж:', characters[0]);
     }
     
     return characters;
   } catch (error) {
-    console.error('Error getting characters by userId:', error);
+    console.error('getCharactersByUserId: Ошибка при получении персонажей:', error);
     
     // Пробуем получить из localStorage как резервный вариант
     try {
@@ -255,7 +262,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       if (existingChars) {
         const allChars: Character[] = JSON.parse(existingChars);
         const userChars = allChars.filter(char => char.userId === userId);
-        console.log('Fallback: Found characters in localStorage:', userChars.length);
+        console.log('getCharactersByUserId: Fallback - найдено персонажей в localStorage:', userChars.length);
         return userChars;
       }
     } catch (localError) {
