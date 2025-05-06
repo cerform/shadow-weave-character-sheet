@@ -2,7 +2,11 @@
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/firebase';
-import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, orderBy, DocumentData } from 'firebase/firestore';
+import { 
+  doc, setDoc, getDoc, getDocs, collection, 
+  query, where, deleteDoc, orderBy, DocumentData, 
+  QuerySnapshot, FirestoreError
+} from 'firebase/firestore';
 import { getCurrentUid, getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { auth } from '@/services/firebase/auth';
 
@@ -166,6 +170,7 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
 // Удаление персонажа
 export const deleteCharacter = async (id: string): Promise<void> => {
   try {
+    console.log('deleteCharacter: Удаление персонажа с ID:', id);
     // Удаляем из Firestore
     const charRef = doc(db, 'characters', id);
     await deleteDoc(charRef);
@@ -193,6 +198,9 @@ export const deleteCharacter = async (id: string): Promise<void> => {
       console.error('Error deleting character from localStorage:', localError);
       throw localError;
     }
+    
+    // Пробрасываем ошибку дальше, чтобы UI мог обработать её
+    throw error;
   }
 };
 
@@ -222,9 +230,18 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     });
     
     // Выполняем запрос
-    const querySnapshot = await getDocs(q);
-    
-    console.log('getCharactersByUserId: Получено документов:', querySnapshot.size);
+    let querySnapshot: QuerySnapshot<DocumentData>;
+    try {
+      querySnapshot = await getDocs(q);
+      console.log('getCharactersByUserId: Получено документов:', querySnapshot.size);
+    } catch (firestoreError) {
+      if (firestoreError instanceof FirestoreError) {
+        console.error(`getCharactersByUserId: Ошибка Firestore [${firestoreError.code}]:`, firestoreError.message);
+      } else {
+        console.error('getCharactersByUserId: Неизвестная ошибка Firestore:', firestoreError);
+      }
+      throw firestoreError;
+    }
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
@@ -271,7 +288,8 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       console.error('Error getting characters from localStorage:', localError);
     }
     
-    return [];
+    // Пробрасываем ошибку дальше
+    throw error;
   }
 };
 
