@@ -197,6 +197,18 @@ export const normalizeSpells = (character: Character): CharacterSpell[] => {
  * Преобразует CharacterSpell в SpellData
  */
 export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  // Ensure classes is always a string array
+  let classesArray: string[];
+  if (!spell.classes) {
+    classesArray = [];
+  } else if (typeof spell.classes === 'string') {
+    classesArray = [spell.classes];
+  } else if (Array.isArray(spell.classes)) {
+    classesArray = spell.classes.map(c => String(c));
+  } else {
+    classesArray = [];
+  }
+  
   return {
     id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
@@ -207,15 +219,7 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
-    classes: (function() {
-      // Ensure classes is always a string array
-      if (!spell.classes) return [] as string[];
-      if (typeof spell.classes === 'string') return [spell.classes];
-      if (Array.isArray(spell.classes)) {
-        return spell.classes.map(c => String(c));
-      }
-      return [] as string[];
-    })(),
+    classes: classesArray,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
     prepared: spell.prepared || false,
