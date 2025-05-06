@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -11,8 +10,9 @@ interface SelectionCardProps {
   titleClassName?: string
   descriptionClassName?: string
   children?: React.ReactNode
-  badges?: React.ReactNode // Adding badges prop
-  style?: React.CSSProperties // Добавляем поддержку для стилей
+  badges?: React.ReactNode 
+  actionButtons?: React.ReactNode // Добавляем поддержку кнопок действий
+  style?: React.CSSProperties 
 }
 
 export function SelectionCard({
@@ -24,8 +24,9 @@ export function SelectionCard({
   titleClassName,
   descriptionClassName,
   children,
-  badges, // Adding badges prop
-  style // Добавляем поддержку для стилей
+  badges,
+  actionButtons, // Добавляем поддержку кнопок действий
+  style
 }: SelectionCardProps) {
   return (
     <div
@@ -37,7 +38,7 @@ export function SelectionCard({
         className
       )}
       onClick={onClick}
-      style={style} // Применяем стили
+      style={style}
     >
       <div className="flex justify-between items-start mb-1">
         <h3 className={cn(
@@ -66,6 +67,13 @@ export function SelectionCard({
       )}
       
       {children}
+
+      {/* Отображаем кнопки действий, если они предоставлены */}
+      {actionButtons && (
+        <div className="flex justify-end mt-2">
+          {actionButtons}
+        </div>
+      )}
 
       {selected && (
         <div className="absolute inset-0 rounded-lg border-2 border-primary animate-pulse pointer-events-none" />
