@@ -1,3 +1,4 @@
+
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { getCharacter } from "@/services/characterService";

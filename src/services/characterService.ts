@@ -67,11 +67,17 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 // Получение персонажа по ID
 export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
+    console.log('Получение персонажа с ID:', id);
     const docRef = doc(db, 'characters', id);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Character;
+      const characterData = { 
+        id: docSnap.id, 
+        ...docSnap.data() 
+      } as Character;
+      console.log('Персонаж найден:', characterData.name);
+      return characterData;
     } else {
       console.log('Персонаж не найден');
       return null;
@@ -139,7 +145,7 @@ export const saveCharacter = async (character: Character): Promise<string> => {
   }
 };
 
-// Новая функция saveCharacterToFirestore, которая используется в нескольких файлах
+// Функция saveCharacterToFirestore для использования в других файлах
 export const saveCharacterToFirestore = async (character: Character, userId: string): Promise<string> => {
   try {
     // Убедимся, что у персонажа есть имя
