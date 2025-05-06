@@ -191,7 +191,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         
         // Безопасная обработка свойства school с проверкой типа
         let schoolMatch = false;
-        if (typeof spell.school === 'string') {
+        if (spell.school && typeof spell.school === 'string') {
           schoolMatch = spell.school.toLowerCase().includes(searchTermLower);
         }
         
