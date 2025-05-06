@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,7 @@ import {
   LogOut, 
   Calendar, 
   Sword
-} from 'lucide-react';
+} from '@/lucide-icons';
 
 const PlayerDashboardPage: React.FC = () => {
   const navigate = useNavigate();

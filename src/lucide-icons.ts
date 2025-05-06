@@ -1,9 +1,9 @@
 
 import {
-  FileText, Gamepad, Dice6, Map, Video, Smile, NoteText, LogOut,
+  FileText, Gamepad, Dice6, Map, Video, Smile, LogOut,
   Calendar, Sword, Shield, ArrowLeft, ArrowRight, Users, Zap, Tag,
   Settings, Edit, Trash2, Plus, Minus, Check, X, LogIn, PlusCircle, 
-  Clock, UserPlus, Send
+  Clock, UserPlus, Send, FileText as NoteText
 } from 'lucide-react';
 
 export {
