@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,25 +25,38 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   const [autoSaved, setAutoSaved] = useState(false);
   const [characterId, setCharacterId] = useState<string | null>(null);
 
-  // Автоматическое сохранение персонажа при попадании на экран завершения
+  // Автоматическое сохранение персонажа при попадании на экран завершения (один раз)
   useEffect(() => {
     const autoSaveCharacter = async () => {
-      if (!autoSaved && character.name && character.race && character.class) {
+      // Проверяем, был ли уже выполнен автосейв для предотвращения повторных запросов
+      if (!autoSaved && character.name && character.race && character.class && !isSaving) {
         try {
+          console.log('Начинаем автоматическое сохранение персонажа...');
           setIsSaving(true);
+          
           const uid = getCurrentUid();
           
           if (!uid) {
             toast.error('Необходимо войти для сохранения персонажа');
+            setIsSaving(false);
             return;
           }
           
-          // Убедимся, что userId установлен перед сохранением
-          if (!character.userId) {
-            updateCharacter({ userId: uid });
+          // Убедимся, что у персонажа нет дублирующегося ID
+          if (character.id === undefined) {
+            console.log('ID персонажа не установлен, будет сгенерирован новый');
+          } else {
+            console.log('ID персонажа уже существует:', character.id);
           }
           
-          const savedId = await saveCharacterToFirestore(character, uid);
+          // Убедимся, что userId установлен перед сохранением
+          const characterToSave = {
+            ...character,
+            userId: uid,
+            // Не добавляем новый id, если он уже установлен
+          };
+          
+          const savedId = await saveCharacterToFirestore(characterToSave, uid);
           
           if (savedId) {
             console.log('✅ Персонаж автоматически сохранен с ID:', savedId);
@@ -69,7 +83,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
     };
     
     autoSaveCharacter();
-  }, [character, autoSaved, updateCharacter, setCharacter]);
+  }, [character, autoSaved, updateCharacter, setCharacter, isSaving]);
 
   const handleSaveCharacter = async () => {
     try {
@@ -92,8 +106,12 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       
       toast.success('Персонаж успешно сохранен');
       
-      // Предлагаем перейти в режим OBS для дальнейшего использования
-      navigate('/sheet?view=obs');
+      // Перенаправляем на страницу персонажа
+      if (characterId || character.id) {
+        navigate(`/character/${characterId || character.id}`);
+      } else {
+        navigate('/characters');
+      }
     } catch (error) {
       console.error('Ошибка при сохранении персонажа:', error);
       toast.error('Не удалось сохранить персонажа');

@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
@@ -46,9 +47,14 @@ const saveCharacterToLocalStorage = (character: Character): Character => {
 // Сохранение персонажа в Firestore
 export const saveCharacter = async (character: Character): Promise<Character> => {
   try {
+    console.log('saveCharacter: Начало сохранения персонажа', character);
+    
     // Генерируем ID если отсутствует
     if (!character.id) {
       character = { ...character, id: uuidv4() };
+      console.log('saveCharacter: Сгенерирован новый ID:', character.id);
+    } else {
+      console.log('saveCharacter: Используется существующий ID:', character.id);
     }
     
     // Добавляем метаданные
@@ -62,6 +68,7 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
     const userId = getCurrentUid();
     if (userId && !character.userId) {
       character.userId = userId;
+      console.log('saveCharacter: Добавлен ID пользователя:', userId);
     }
     
     // Очищаем объект от undefined значений
@@ -72,10 +79,22 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
     });
     
     try {
-      // Сначала пробуем сохранить в Firestore
+      // Сначала проверим, существует ли уже документ с таким ID
+      if (character.id) {
+        const docRef = doc(db, 'characters', character.id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          console.log('saveCharacter: Обновление существующего документа:', character.id);
+        } else {
+          console.log('saveCharacter: Создание нового документа с указанным ID:', character.id);
+        }
+      }
+      
+      // Сохраняем в Firestore
       const characterRef = doc(db, 'characters', character.id);
       await setDoc(characterRef, character);
-      console.log('Character saved to Firestore', character.id);
+      console.log('saveCharacter: Персонаж успешно сохранен в Firestore:', character.id);
     } catch (firestoreError) {
       console.error('Firestore save failed, using localStorage as fallback', firestoreError);
       // Сохраняем локально как резервный вариант
@@ -89,9 +108,14 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
   }
 };
 
-// Автоматическое сохранение персонажа в Firestore без указания ID
+// Автоматическое сохранение персонажа в Firestore
 export const saveCharacterToFirestore = async (characterData: Character, userId?: string): Promise<string | null> => {
   try {
+    console.log('saveCharacterToFirestore: Начало сохранения', { 
+      hasId: !!characterData.id,
+      name: characterData.name 
+    });
+    
     // Получаем ID пользователя, если он не передан
     const uid = userId || getCurrentUid();
     if (!uid) {
@@ -115,13 +139,23 @@ export const saveCharacterToFirestore = async (characterData: Character, userId?
       }
     });
     
-    // Если нет ID, создаем новый документ
+    // Проверяем, существует ли уже персонаж
     let docRef;
-    if (!characterToSave.id) {
-      characterToSave.id = uuidv4();
+    if (characterToSave.id) {
+      console.log('saveCharacterToFirestore: Проверка существования персонажа с ID:', characterToSave.id);
       docRef = doc(db, 'characters', characterToSave.id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        console.log('saveCharacterToFirestore: Персонаж существует, обновляем');
+      } else {
+        console.log('saveCharacterToFirestore: Персонаж не найден, создаем новый');
+      }
+      
       await setDoc(docRef, characterToSave);
     } else {
+      console.log('saveCharacterToFirestore: Создание нового персонажа с генерацией ID');
+      characterToSave.id = uuidv4();
       docRef = doc(db, 'characters', characterToSave.id);
       await setDoc(docRef, characterToSave);
     }
@@ -138,6 +172,9 @@ export const saveCharacterToFirestore = async (characterData: Character, userId?
     // Пробуем сохранить локально
     try {
       const character = { ...characterData, userId: userId || getCurrentUid() || 'unknown' };
+      if (!character.id) {
+        character.id = uuidv4();
+      }
       saveCharacterToLocalStorage(character);
       return character.id || null;
     } catch (localError) {
@@ -150,11 +187,14 @@ export const saveCharacterToFirestore = async (characterData: Character, userId?
 // Получение персонажа по ID
 export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
+    console.log('getCharacter: Запрос персонажа по ID:', id);
+    
     // Пробуем получить из Firestore
     const charRef = doc(db, 'characters', id);
     const charSnapshot = await getDoc(charRef);
     
     if (charSnapshot.exists()) {
+      console.log('getCharacter: Персонаж найден в Firestore');
       return charSnapshot.data() as Character;
     }
     
@@ -164,9 +204,13 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
     if (existingChars) {
       const characters: Character[] = JSON.parse(existingChars);
       const character = characters.find(char => char.id === id);
+      if (character) {
+        console.log('getCharacter: Персонаж найден в localStorage');
+      }
       return character || null;
     }
     
+    console.log('getCharacter: Персонаж не найден');
     return null;
   } catch (error) {
     console.error('Error getting character:', error);

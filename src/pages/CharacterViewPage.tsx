@@ -28,10 +28,12 @@ const CharacterViewPage = () => {
       
       try {
         if (id) {
+          console.log('CharacterViewPage: Загрузка персонажа по ID:', id);
           // Пытаемся загрузить персонажа из Firestore
           const loadedCharacter = await getCharacter(id);
           
           if (loadedCharacter) {
+            console.log('CharacterViewPage: Персонаж найден:', loadedCharacter.name);
             // Преобразуем загруженные данные через конвертер
             const convertedCharacter = convertToCharacter(loadedCharacter);
             setCharacter(convertedCharacter);
@@ -40,18 +42,22 @@ const CharacterViewPage = () => {
             // Сохраняем последнего загруженного персонажа
             localStorage.setItem('last-selected-character', id);
           } else {
+            console.log('CharacterViewPage: Персонаж с ID не найден в Firestore:', id);
             // Если не нашли в Firestore, пробуем в localStorage
             const storedCharacter = localStorage.getItem(`character_${id}`);
             
             if (storedCharacter) {
+              console.log('CharacterViewPage: Персонаж найден в localStorage');
               const localCharacter = JSON.parse(storedCharacter);
               const convertedCharacter = convertToCharacter(localCharacter);
               setCharacter(convertedCharacter);
               setProcessedCharacter(convertedCharacter);
               localStorage.setItem('last-selected-character', id);
             } else {
+              console.error('CharacterViewPage: Персонаж не найден нигде');
               setError(`Персонаж с ID ${id} не найден.`);
-              navigate('/characters');
+              toast.error(`Персонаж с ID ${id} не найден.`);
+              // Не перенаправляем сразу, позволяя пользователю увидеть ошибку
             }
           }
         } else if (character) {
@@ -62,43 +68,28 @@ const CharacterViewPage = () => {
           const lastCharacterId = localStorage.getItem('last-selected-character');
           
           if (lastCharacterId) {
-            // Пытаемся загрузить из Firestore
-            const lastCharacter = await getCharacter(lastCharacterId);
-            
-            if (lastCharacter) {
-              const convertedCharacter = convertToCharacter(lastCharacter);
-              setCharacter(convertedCharacter);
-              setProcessedCharacter(convertedCharacter);
-            } else {
-              // Если не нашли, пробуем в localStorage
-              const storedCharacter = localStorage.getItem(`character_${lastCharacterId}`);
-              
-              if (storedCharacter) {
-                const loadedCharacter = JSON.parse(storedCharacter);
-                const convertedCharacter = convertToCharacter(loadedCharacter);
-                setCharacter(convertedCharacter);
-                setProcessedCharacter(convertedCharacter);
-              } else {
-                setError("Последний выбранный персонаж не найден.");
-                navigate('/characters');
-              }
-            }
+            console.log('CharacterViewPage: Загрузка последнего выбранного персонажа:', lastCharacterId);
+            // Перенаправляем на страницу с конкретным ID
+            navigate(`/character/${lastCharacterId}`);
+            return;
           } else {
             setError("Персонаж не выбран.");
-            navigate('/characters');
+            toast.error("Персонаж не выбран.");
+            // Даем время увидеть ошибку перед перенаправлением
+            setTimeout(() => navigate('/characters'), 2000);
           }
         }
       } catch (err) {
         console.error('Ошибка при загрузке персонажа:', err);
         setError("Ошибка при загрузке персонажа.");
-        navigate('/characters');
+        toast.error("Ошибка при загрузке персонажа.");
       } finally {
         setLoading(false);
       }
     };
     
     loadCharacter();
-  }, [id, character, setCharacter, navigate, toast]);
+  }, [id, navigate, toast, setCharacter]);
 
   // Обработчик обновления персонажа
   const handleUpdateCharacter = (updates: Partial<Character>) => {
