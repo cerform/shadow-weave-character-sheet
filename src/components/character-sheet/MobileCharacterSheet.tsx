@@ -189,8 +189,8 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
                     {character.spells && Array.isArray(character.spells) && character.spells.length > 0 ? (
                       character.spells.map((spell, index) => (
                         <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{spell.name}</div>
-                          <div className="text-xs">Уровень: {spell.level}</div>
+                          <div className="font-medium">{typeof spell === 'string' ? spell : spell.name}</div>
+                          <div className="text-xs">Уровень: {typeof spell === 'string' ? '?' : spell.level}</div>
                         </div>
                       ))
                     ) : (
@@ -264,6 +264,7 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
       return <li>Нет предметов</li>;
     }
     
+    // Если equipment - массив объектов Item
     if (Array.isArray(character.equipment)) {
       if (type === 'armor') {
         const armorItem = character.equipment.find(item => item.type === 'armor');
@@ -286,6 +287,7 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
         );
       }
     } else {
+      // Если equipment - объект с weapons, armor и items
       const equipment = character.equipment as {
         weapons?: string[];
         armor?: string;

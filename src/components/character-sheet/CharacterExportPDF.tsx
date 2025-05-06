@@ -112,9 +112,9 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
               processedEquipment.push(...(character.equipment as unknown as string[]));
             } else {
               // Если это массив объектов Item
-              processedEquipment.push(...(character.equipment as Item[]).map(item => 
-                `${item.name} (${item.quantity})`
-              ));
+              character.equipment.forEach((item: Item) => {
+                processedEquipment.push(`${item.name} (${item.quantity})`);
+              });
             }
           }
         } else {
@@ -145,11 +145,17 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add features
       if (character.features && character.features.length > 0) {
-        const featuresArray = Array.isArray(character.features) 
-          ? (typeof character.features[0] === 'string' 
-              ? character.features 
-              : (character.features as any[]).map(f => f.name || f.toString()))
-          : [];
+        const featuresArray: string[] = [];
+        
+        if (Array.isArray(character.features)) {
+          character.features.forEach(feature => {
+            if (typeof feature === 'string') {
+              featuresArray.push(feature);
+            } else if (feature && typeof feature === 'object' && 'name' in feature) {
+              featuresArray.push(feature.name);
+            }
+          });
+        }
           
         autoTable(doc, {
           startY: yPosition,
@@ -163,11 +169,17 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add spells
       if (character.spells && character.spells.length > 0) {
-        const spellsArray = Array.isArray(character.spells)
-          ? (typeof character.spells[0] === 'string'
-              ? character.spells as string[]
-              : (character.spells as CharacterSpell[]).map(s => s.name))
-          : [];
+        const spellsArray: string[] = [];
+        
+        if (Array.isArray(character.spells)) {
+          character.spells.forEach(spell => {
+            if (typeof spell === 'string') {
+              spellsArray.push(spell);
+            } else if (spell && typeof spell === 'object' && 'name' in spell) {
+              spellsArray.push(spell.name);
+            }
+          });
+        }
             
         autoTable(doc, {
           startY: yPosition,
