@@ -35,7 +35,7 @@ const ExtendedDebugger: React.FC<ExtendedDebuggerProps> = ({
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL,
-      providerId: user.providerId,
+      // Удаляем обращение к отсутствующему свойству providerId
     } : null,
     currentUid,
     uidMatch: user && currentUid ? user.uid === currentUid : false,
