@@ -1,23 +1,32 @@
 
-import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/types/character';
 
-// Добавляем вспомогательную функцию для расчета модификатора
-export const getModifierFromAbilityScore = (score: number): number => {
+/**
+ * Вычисляет бонус мастерства на основе уровня
+ */
+export const calculateProficiencyBonus = (level: number): number => {
+  if (level < 1) return 2;
+  return Math.floor((level - 1) / 4) + 2;
+};
+
+/**
+ * Получает модификатор характеристики на основе значения
+ */
+export const getAbilityModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
 
-// Добавляем функцию для получения числового модификатора
-export const getNumericModifier = (score: number): number => {
-  return Math.floor((score - 10) / 2);
-};
-
+/**
+ * Создаёт персонажа по умолчанию
+ */
 export const createDefaultCharacter = (): Character => {
+  const id = Date.now().toString();
+  
   return {
-    id: uuidv4(),
+    id,
     name: 'Новый персонаж',
-    race: 'Человек',
-    class: 'Воин',
+    race: '',
+    class: '',
     level: 1,
     experience: 0,
     strength: 10,
@@ -28,89 +37,56 @@ export const createDefaultCharacter = (): Character => {
     charisma: 10,
     maxHp: 10,
     currentHp: 10,
-    armorClass: 10,
-    initiative: 0,
-    speed: 30,
     proficiencyBonus: 2,
+    skillProficiencies: [],
+    expertise: [],
+    savingThrowProficiencies: [],
     skills: {},
-    savingThrows: {},
-    equipment: [],
-    features: [],
     spells: [],
-    hitDice: { total: 1, used: 0, dieType: 'd8', value: '1d8' },
-    resources: {},
-    proficiencies: [],
-    languages: ['Общий'],
-    gold: 0,
-    abilities: {
-      STR: 10,
-      DEX: 10,
-      CON: 10,
-      INT: 10,
-      WIS: 10,
-      CHA: 10,
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    // Добавляем новые поля для устранения ошибок типизации
-    notes: '',
-    sorceryPoints: {
-      max: 0,
-      current: 0
-    },
-    appearance: ''
+    features: []
   };
 };
 
-export function calculateModifier(ability: number): string {
-  const mod = Math.floor((ability - 10) / 2);
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
+/**
+ * Получает модификатор характеристики персонажа
+ */
+export const getCharacterAbilityModifier = (character: Character, ability: string): number => {
+  const abilityScore = character[ability.toLowerCase() as keyof Character] as number || 10;
+  return getAbilityModifier(abilityScore);
+};
 
-export const isMagicClass = (className: string): boolean => {
-  const magicClasses = [
-    'wizard', 'волшебник',
-    'sorcerer', 'чародей',
-    'warlock', 'колдун',
-    'bard', 'бард',
-    'cleric', 'жрец',
-    'druid', 'друид',
-    'ranger', 'следопыт',
-    'paladin', 'паладин'
-  ];
+/**
+ * Вычисляет бонус атаки оружия
+ */
+export const calculateAttackBonus = (
+  character: Character, 
+  weaponType: 'melee' | 'ranged' | 'finesse' | 'spell', 
+  isProficient: boolean = false
+): number => {
+  let abilityModifier = 0;
   
-  return magicClasses.includes(className.toLowerCase());
-};
-
-// Вспомогательная функция для работы с заклинаниями
-export const isCharacterSpellObject = (spell: any): spell is any => {
-  return typeof spell === 'object' && spell !== null;
-};
-
-// Вспомогательная функция для получения уровня заклинания
-export const getSpellLevel = (spell: any): number => {
-  if (typeof spell === 'string') {
-    return 0; // По умолчанию заговоры
+  if (weaponType === 'melee') {
+    abilityModifier = getAbilityModifier(character.strength || 10);
+  } else if (weaponType === 'ranged') {
+    abilityModifier = getAbilityModifier(character.dexterity || 10);
+  } else if (weaponType === 'finesse') {
+    // Для finesse weapons используем лучший модификатор
+    const strMod = getAbilityModifier(character.strength || 10);
+    const dexMod = getAbilityModifier(character.dexterity || 10);
+    abilityModifier = Math.max(strMod, dexMod);
+  } else if (weaponType === 'spell') {
+    // Для заклинаний используем основную характеристику заклинателя
+    const classLower = character.class?.toLowerCase() || '';
+    
+    if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
+      abilityModifier = getAbilityModifier(character.wisdom || 10);
+    } else if (['волшебник', 'wizard'].includes(classLower)) {
+      abilityModifier = getAbilityModifier(character.intelligence || 10);
+    } else {
+      abilityModifier = getAbilityModifier(character.charisma || 10);
+    }
   }
-  return spell.level || 0;
-};
-
-// Вспомогательная функция для проверки, подготовлено ли заклинание
-export const isSpellPrepared = (spell: any): boolean => {
-  if (typeof spell === 'string') {
-    return false;
-  }
-  return !!spell.prepared;
+  
+  const profBonus = isProficient ? calculateProficiencyBonus(character.level || 1) : 0;
+  return abilityModifier + profBonus;
 };

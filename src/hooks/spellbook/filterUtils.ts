@@ -8,13 +8,22 @@ export const filterBySearchTerm = (spells: SpellData[], searchTerm: string): Spe
   if (!searchTerm) return spells;
   
   const searchLower = searchTerm.toLowerCase();
-  return spells.filter(spell => 
-    spell.name.toLowerCase().includes(searchLower) ||
-    (spell.school && spell.school.toLowerCase().includes(searchLower)) ||
-    (Array.isArray(spell.description) ? 
-      spell.description.join(' ').toLowerCase().includes(searchLower) : 
-      String(spell.description).toLowerCase().includes(searchLower))
-  );
+  return spells.filter(spell => {
+    const nameMatch = spell.name.toLowerCase().includes(searchLower);
+    
+    const schoolMatch = spell.school && spell.school.toLowerCase().includes(searchLower);
+    
+    let descMatch = false;
+    if (spell.description) {
+      if (Array.isArray(spell.description)) {
+        descMatch = spell.description.join(' ').toLowerCase().includes(searchLower);
+      } else {
+        descMatch = String(spell.description).toLowerCase().includes(searchLower);
+      }
+    }
+    
+    return nameMatch || schoolMatch || descMatch;
+  });
 };
 
 /**

@@ -1,4 +1,3 @@
-
 export interface Character {
   id: string;
   name: string;
@@ -100,18 +99,23 @@ export interface Character {
     max: number;
     current: number;
   };
-  skillProficiencies?: {
-    [skillName: string]: boolean;
-  };
-  createdAt?: string;
-  updatedAt?: string;
-  image?: string;
-  // Добавляем недостающие свойства из ошибок
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: { [key: string]: number };
+  savingThrowProficiencies?: string[];
   feats?: {
     name: string;
     description: string;
   }[];
   classFeatures?: {
+    name: string;
+    description: string;
+  }[];
+  raceFeatures?: {
+    name: string;
+    description: string;
+  }[];
+  backgroundFeatures?: {
     name: string;
     description: string;
   }[];
