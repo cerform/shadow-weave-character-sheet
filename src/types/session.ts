@@ -38,12 +38,12 @@ export interface User {
 export interface Character {
   id: string;
   name: string;
-  race: string;
-  class: string;
-  className?: string; // Добавляем альтернативное поле для совместимости
+  race?: string;
+  class?: string;
+  className?: string; // Поддерживаем оба варианта - class и className
   level: number;
   avatarUrl?: string;
-  userId?: string; // Добавляем ID пользователя
+  userId?: string;
   createdAt?: string;
   updatedAt?: string;
 }

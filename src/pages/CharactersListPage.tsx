@@ -29,6 +29,9 @@ const CharactersListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(true); // Добавляем для отладки
+  
+  // Добавляем режимы отображения данных
+  const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('raw');
 
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -92,9 +95,9 @@ const CharactersListPage: React.FC = () => {
     }
   };
 
-  // Переключатель отладочного режима
-  const toggleDebug = () => {
-    setShowDebug(!showDebug);
+  // Переключатель режимов отображения
+  const toggleDisplayMode = () => {
+    setDisplayMode(mode => (mode === 'table' ? 'raw' : 'table'));
   };
 
   // Если пользователь не авторизован, предлагаем войти
@@ -144,11 +147,18 @@ const CharactersListPage: React.FC = () => {
           {/* Верхняя панель - заголовок с кнопкой создания */}
           <CharactersHeader username={user?.displayName || user?.username || ""} />
           
-          {/* Отладка - кнопка для переключения */}
-          <div className="flex justify-end">
+          {/* Панель управления отображением */}
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={toggleDisplayMode}
+              size="sm"
+            >
+              {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
+            </Button>
+            
             <Button
               variant="outline"
-              onClick={toggleDebug}
+              onClick={() => setShowDebug(!showDebug)}
               size="sm"
             >
               {showDebug ? "Скрыть отладку" : "Показать отладку"}
@@ -177,12 +187,23 @@ const CharactersListPage: React.FC = () => {
             />
           )}
           
-          {/* Список персонажей */}
+          {/* Режим отображения: или таблица, или сырые данные */}
           {!loading && !error && characters.length > 0 && (
-            <CharactersTable 
-              characters={characters}
-              onDelete={handleDeleteCharacter}
-            />
+            <>
+              {displayMode === 'table' ? (
+                <CharactersTable 
+                  characters={characters}
+                  onDelete={handleDeleteCharacter}
+                />
+              ) : (
+                <div className="p-4 bg-black/20 rounded-lg">
+                  <h2 className="text-lg font-bold mb-4">Сырые данные персонажей:</h2>
+                  <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-100/20 rounded">
+                    {JSON.stringify(characters, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </>
           )}
 
           {/* Пустое состояние */}
