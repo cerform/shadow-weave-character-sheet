@@ -47,13 +47,10 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   // Функция для отображения класса персонажа с учетом разных форматов данных
   const getCharacterClass = (character: Character): string => {
     // Проверяем различные поля, где может храниться класс
-    if (character.className && typeof character.className === 'string') 
-      return character.className;
-    
-    if (character.class && typeof character.class === 'string') 
-      return character.class;
-      
-    return '—';
+    const classValue = character.className || character.class;
+    return typeof classValue === 'string' && classValue.trim() !== ''
+      ? classValue
+      : '—';
   };
 
   // Функция для форматирования уровня персонажа
@@ -78,6 +75,8 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     );
   }
 
+  console.log('CharactersTable: Рендеринг таблицы с персонажами:', characters);
+
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
       <CardHeader>
@@ -98,7 +97,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
           <TableBody>
             {characters.map((character) => {
               // Проверка наличия ID у персонажа
-              if (!character.id) {
+              if (!character || !character.id) {
                 console.warn('CharactersTable: Персонаж без ID', character);
                 return null;
               }

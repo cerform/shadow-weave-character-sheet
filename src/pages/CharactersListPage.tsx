@@ -15,6 +15,8 @@ import CharacterCard from '@/components/character/CharacterCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ErrorBoundary from '@/components/ErrorBoundary';
+import CharactersTable from '@/components/characters/CharactersTable';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const CharactersListPage: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   // Используем контекст персонажей напрямую
-  const { characters, loading, error, refreshCharacters } = useCharacter();
+  const { characters, loading, error, refreshCharacters, deleteCharacter } = useCharacter();
   
   // State для управления UI
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,6 +87,10 @@ const CharactersListPage: React.FC = () => {
     );
   }
 
+  // Проверка наличия персонажей в контексте
+  const hasCharacters = Array.isArray(characters) && characters.length > 0;
+  console.log('CharactersListPage: hasCharacters:', hasCharacters);
+
   return (
     <ErrorBoundary>
       <OBSLayout
@@ -117,7 +123,7 @@ const CharactersListPage: React.FC = () => {
               Персонажи пользователя {user?.displayName || user?.username || ""}
             </h1>
             <p className="text-muted-foreground">
-              {characters && characters.length > 0 
+              {hasCharacters
                 ? `Всего персонажей: ${characters.length}` 
                 : "У вас пока нет персонажей"}
             </p>
@@ -133,7 +139,7 @@ const CharactersListPage: React.FC = () => {
               <div>Авторизован: {isAuthenticated ? "Да" : "Нет"}</div>
               <div>ID пользователя: {user?.uid || "Не определен"}</div>
               <div>Загрузка: {loading ? "Да" : "Нет"}</div>
-              <div>Персонажей: {characters ? characters.length : 0}</div>
+              <div>Персонажей: {Array.isArray(characters) ? characters.length : 'Нет данных'}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
             </div>
           </div>
@@ -194,26 +200,17 @@ const CharactersListPage: React.FC = () => {
           
           {/* Показ ошибки */}
           {error && !loading && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertDescription>
-                {error}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRefresh}
-                  className="ml-4"
-                >
-                  Повторить
-                </Button>
-              </AlertDescription>
-            </Alert>
+            <ErrorDisplay 
+              errorMessage={error}
+              onRetry={handleRefresh}
+            />
           )}
           
           {/* Отображение персонажей */}
           {!loading && !error && (
             <>
               {/* Если нет персонажей */}
-              {(!characters || characters.length === 0) && (
+              {!hasCharacters && (
                 <div className="text-center p-10 border border-dashed rounded-lg">
                   <h3 className="text-xl font-medium mb-2">У вас пока нет персонажей</h3>
                   <p className="text-muted-foreground mb-6">
@@ -225,8 +222,8 @@ const CharactersListPage: React.FC = () => {
                 </div>
               )}
               
-              {/* Сетка персонажей */}
-              {characters && characters.length > 0 && displayMode === 'grid' && (
+              {/* Отображение в режиме сетки */}
+              {hasCharacters && displayMode === 'grid' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {characters.map((character) => {
                     if (!character || !character.id) {
@@ -245,42 +242,12 @@ const CharactersListPage: React.FC = () => {
                 </div>
               )}
               
-              {/* Список персонажей */}
-              {characters && characters.length > 0 && displayMode === 'list' && (
-                <div className="space-y-3">
-                  {characters.map((character) => {
-                    if (!character || !character.id) return null;
-                    
-                    return (
-                      <div 
-                        key={character.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-card/50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/character/${character.id}`)}
-                      >
-                        <div>
-                          <h3 className="text-lg font-medium text-primary">{character.name || "Безымянный"}</h3>
-                          <div className="text-sm text-muted-foreground">
-                            {character.race || ''} {character.class || character.className || ''}
-                            {character.level ? ` (${character.level} уровень)` : ''}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/character/${character.id}`);
-                        }}>
-                          Открыть
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {/* Дополнительная метка при отсутствии персонажей */}
-              {(!characters || characters.length === 0) && (
-                <p className="text-center text-muted-foreground text-sm mt-8">
-                  В вашей коллекции пока нет ни одного персонажа
-                </p>
+              {/* Отображение в режиме списка */}
+              {hasCharacters && displayMode === 'list' && (
+                <CharactersTable 
+                  characters={characters} 
+                  onDelete={deleteCharacter}
+                />
               )}
             </>
           )}
