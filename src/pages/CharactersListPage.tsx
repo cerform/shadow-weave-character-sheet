@@ -2,45 +2,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson, Bug, AlertCircle } from "lucide-react";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { getCharactersByUserId, deleteCharacter, getAllCharacters } from '@/services/characterService';
+import { getCharactersByUserId, deleteCharacter } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
-import { getCurrentUserIdExtended, getCurrentUid } from '@/utils/authHelpers';
-import { getAuth } from 'firebase/auth';
+import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import LoadingState from '@/components/characters/LoadingState';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import CharactersTable from '@/components/characters/CharactersTable';
 import CharacterCards from '@/components/characters/CharacterCards';
 import CharactersHeader from '@/components/characters/CharactersHeader';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; 
-import EmptyState from '@/components/characters/EmptyState';
-
-// Интерфейс для диагностической информации
-interface DiagnosticInfo {
-  userId: string | null;
-  currentAuth: {
-    uid: string | null;
-    email: string | null;
-    isAuthenticated: boolean;
-  };
-  userState: {
-    uid?: string | null;
-    id?: string | null;
-    email?: string | null;
-    displayName?: string | null;
-  };
-  localStorage: {
-    authUser: any;
-    lastSelectedCharacter: string | null;
-  };
-}
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,16 +29,12 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw' | 'debug'>('cards');
-  const [diagnosticInfo, setDiagnosticInfo] = useState<DiagnosticInfo | null>(null);
+  const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
     console.log('CharactersListPage: Компонент загружен');
-    
-    // Собираем диагностическую информацию
-    collectDiagnosticInfo();
     
     if (isAuthenticated) {
       console.log('CharactersListPage: Пользователь авторизован:', user);
@@ -72,52 +45,6 @@ const CharactersListPage: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-  // Функция для сбора диагностической информации
-  const collectDiagnosticInfo = () => {
-    try {
-      // Получаем Firebase Auth
-      const firebaseAuth = getAuth();
-      
-      // Локальное хранилище
-      let localStorageAuth = null;
-      let lastSelectedCharacter = null;
-      try {
-        const authUserStr = localStorage.getItem('authUser');
-        if (authUserStr) {
-          localStorageAuth = JSON.parse(authUserStr);
-        }
-        lastSelectedCharacter = localStorage.getItem('last-selected-character');
-      } catch (e) {
-        console.error('Ошибка при чтении из localStorage:', e);
-      }
-      
-      const diagnostic: DiagnosticInfo = {
-        userId: getCurrentUid() || getCurrentUserIdExtended(),
-        currentAuth: {
-          uid: firebaseAuth.currentUser?.uid || null,
-          email: firebaseAuth.currentUser?.email || null,
-          isAuthenticated: !!firebaseAuth.currentUser
-        },
-        userState: {
-          uid: user?.uid || null,
-          id: user?.id || null,
-          email: user?.email || null,
-          displayName: user?.displayName || null
-        },
-        localStorage: {
-          authUser: localStorageAuth,
-          lastSelectedCharacter
-        }
-      };
-      
-      setDiagnosticInfo(diagnostic);
-      console.log('CharactersListPage: Диагностика:', diagnostic);
-      
-    } catch (err) {
-      console.error('Ошибка при сборе диагностической информации:', err);
-    }
-  };
-
   // Функция загрузки персонажей
   const loadCharacters = async () => {
     try {
@@ -125,7 +52,7 @@ const CharactersListPage: React.FC = () => {
       setIsRefreshing(true);
       setError(null);
       
-      // Получаем ID пользователя несколькими способами для надежности
+      // Получаем ID пользователя 
       const userId = user?.uid || user?.id || getCurrentUserIdExtended();
       console.log('CharactersListPage: Загрузка персонажей для пользователя:', userId);
       
@@ -138,39 +65,20 @@ const CharactersListPage: React.FC = () => {
       }
       
       try {
-        // Используем обе функции для загрузки персонажей
-        console.log('CharactersListPage: Пробуем загрузить напрямую через getCharactersByUserId');
+        // Используем функцию из сервиса для загрузки персонажей
         const fetchedCharacters = await getCharactersByUserId(userId);
         
-        // Если первый метод не вернул персонажей, используем запасной
-        if (!fetchedCharacters || fetchedCharacters.length === 0) {
-          console.log('CharactersListPage: Персонажи не найдены, пробуем через getAllCharacters');
-          // Попытка загрузить через getAllCharacters
-          const allCharacters = await getAllCharacters();
-          
-          if (allCharacters && allCharacters.length > 0) {
-            console.log('CharactersListPage: Найдены персонажи через getAllCharacters:', allCharacters.length);
-            setCharacters(allCharacters);
-            toast.success(`Загружено персонажей: ${allCharacters.length}`);
-          } else {
-            console.log('CharactersListPage: Персонажи не найдены обоими методами');
-            setCharacters([]);
+        // Фильтруем некорректные данные
+        const validCharacters = fetchedCharacters.filter(char => {
+          if (!char || !char.id) {
+            console.warn('Некорректный персонаж в результате запроса:', char);
+            return false;
           }
-        } else {
-          console.log('CharactersListPage: Получено персонажей через getCharactersByUserId:', fetchedCharacters.length);
-          
-          // Фильтруем некорректные данные
-          const validCharacters = fetchedCharacters.filter(char => {
-            if (!char || !char.id) {
-              console.warn('Некорректный персонаж в результате запроса:', char);
-              return false;
-            }
-            return true;
-          });
-          
-          setCharacters(validCharacters);
-          toast.success(`Загружено персонажей: ${validCharacters.length}`);
-        }
+          return true;
+        });
+        
+        setCharacters(validCharacters);
+        toast.success(`Загружено персонажей: ${validCharacters.length}`);
       } catch (fetchError) {
         console.error('CharactersListPage: Ошибка при загрузке персонажей:', fetchError);
         setError(`Не удалось загрузить персонажей: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
@@ -206,22 +114,9 @@ const CharactersListPage: React.FC = () => {
   const cycleDisplayMode = () => {
     if (displayMode === 'table') setDisplayMode('cards');
     else if (displayMode === 'cards') setDisplayMode('raw');
-    else if (displayMode === 'raw') setDisplayMode('debug');
     else setDisplayMode('table');
   };
   
-  // Принудительное обновление с дополнительной диагностикой
-  const forceRefresh = () => {
-    toast.info('Обновляем список персонажей...');
-    console.log('CharactersListPage: Принудительное обновление списка персонажей');
-    
-    // Обновляем диагностическую информацию
-    collectDiagnosticInfo();
-    
-    // Загружаем персонажей
-    loadCharacters();
-  };
-
   // Если пользователь не авторизован, предлагаем войти
   if (!isAuthenticated) {
     return (
@@ -267,7 +162,10 @@ const CharactersListPage: React.FC = () => {
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="grid grid-cols-1 gap-6">
           {/* Верхняя панель - заголовок с кнопкой создания */}
-          <CharactersHeader username={user?.displayName || user?.username || ""} />
+          <CharactersHeader 
+            username={user?.displayName || user?.username || ""} 
+            characterCount={characters.length}
+          />
           
           {/* Добавляем навигацию по страницам персонажей */}
           <CharacterNavigation />
@@ -314,19 +212,10 @@ const CharactersListPage: React.FC = () => {
                 >
                   <FileJson size={16} />
                 </Button>
-                <Button
-                  onClick={() => setDisplayMode('debug')}
-                  size="sm"
-                  variant={displayMode === 'debug' ? "default" : "ghost"}
-                  className={`rounded-none ${displayMode === 'debug' ? "" : "bg-transparent"}`}
-                  title="Диагностика"
-                >
-                  <Bug size={16} />
-                </Button>
               </div>
               
               <Button
-                onClick={forceRefresh}
+                onClick={loadCharacters}
                 size="sm"
                 variant="outline"
                 className="gap-2"
@@ -337,17 +226,6 @@ const CharactersListPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          
-          {/* Информационное сообщение для отладки */}
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Информация о пользователе</AlertTitle>
-            <AlertDescription>
-              User ID: {user?.uid || user?.id || '<нет>'} | 
-              Auth: {isAuthenticated ? 'Да' : 'Нет'} | 
-              Метод: getCharactersByUserId с where фильтром
-            </AlertDescription>
-          </Alert>
 
           {/* Загрузка */}
           {loading && <LoadingState />}
@@ -360,13 +238,8 @@ const CharactersListPage: React.FC = () => {
             />
           )}
           
-          {/* Пустое состояние */}
-          {!loading && !error && characters.length === 0 && (
-            <EmptyState />
-          )}
-          
           {/* Показ данных в выбранном режиме */}
-          {!loading && !error && characters.length > 0 && (
+          {!loading && !error && (
             <>
               {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
@@ -374,41 +247,6 @@ const CharactersListPage: React.FC = () => {
                   <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
                     {JSON.stringify(characters, null, 2)}
                   </pre>
-                </div>
-              ) : displayMode === 'debug' ? (
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <h2 className="text-lg font-bold mb-4">Диагностическая информация:</h2>
-                  
-                  <div className="space-y-4">
-                    {/* Информация о пользователе */}
-                    <div>
-                      <h3 className="text-md font-semibold mb-2">Пользователь:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong>user?.uid:</strong> {user?.uid || '<нет>'}
-                        </div>
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong>user?.id:</strong> {user?.id || '<нет>'}
-                        </div>
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong>getCurrentUid():</strong> {getCurrentUid() || '<нет>'}
-                        </div>
-                        <div className="bg-black/30 p-2 rounded">
-                          <strong>getCurrentUserIdExtended():</strong> {getCurrentUserIdExtended() || '<нет>'}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Детальная информация */}
-                    {diagnosticInfo && (
-                      <div>
-                        <h3 className="text-md font-semibold mb-2">Полная диагностика:</h3>
-                        <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded text-xs">
-                          {JSON.stringify(diagnosticInfo, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ) : displayMode === 'table' ? (
                 <CharactersTable 

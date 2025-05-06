@@ -11,7 +11,7 @@ interface ErrorDisplayProps {
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ errorMessage, onRetry }) => {
   return (
-    <Card className="bg-black/40 backdrop-blur-sm border-destructive/20">
+    <Card className="bg-gradient-to-br from-gray-800 to-black backdrop-blur-sm border border-destructive/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <AlertTriangle className="h-5 w-5" />

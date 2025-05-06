@@ -15,7 +15,7 @@ const LoadingState: React.FC = () => {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {[...Array(3)].map((_, index) => (
-          <Card key={index} className="overflow-hidden bg-black/40 backdrop-blur-sm">
+          <Card key={index} className="overflow-hidden border border-primary/20 bg-gradient-to-br from-gray-800 to-black backdrop-blur-sm">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <Skeleton className="h-6 w-40" />
