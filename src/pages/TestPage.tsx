@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Info } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Loader2, Info, Database, User, Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/firebase';
@@ -12,6 +12,10 @@ import { getCurrentUid } from '@/utils/authHelpers';
 import { Character } from '@/types/character';
 import { testLoadCharacters, getCurrentUserDetails } from '@/services/firebase/firestore-test';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { SelectionCard } from '@/components/ui/selection-card';
+import { Badge } from "@/components/ui/badge";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 const TestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +26,10 @@ const TestPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTest, setActiveTest] = useState<string>('auth');
   const [testCollection, setTestCollection] = useState<any>(null);
+  
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
   // Тест соединения с Firebase - тестирует коллекцию tests
   const testFirebaseConnection = async () => {
@@ -148,151 +156,318 @@ const TestPage: React.FC = () => {
     testAuth();
   }, [isAuthenticated, user]);
   
+  // Отображение результатов в зависимости от выбранной вкладки
+  const renderResults = () => {
+    switch(activeTest) {
+      case 'auth':
+        return (
+          <div className="space-y-4">
+            <Card className="overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="bg-primary/10 pb-3">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <User size={18} />
+                  Статус аутентификации
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {results.auth ? (
+                  <div>
+                    <div className="mb-3 flex items-center">
+                      <Badge variant={results.auth.isAuthenticated ? "success" : "destructive"} className="mr-2">
+                        {results.auth.isAuthenticated ? "Авторизован" : "Не авторизован"}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        ID: {results.auth.uid || 'Отсутствует'}
+                      </span>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-3 bg-black/40 rounded border border-primary/10">
+                      {JSON.stringify(results.auth, null, 2)}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Info className="mx-auto h-10 w-10 mb-3 opacity-50" />
+                    <p>Запустите тест для просмотра данных</p>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="bg-primary/5 flex justify-end pt-3 border-t border-primary/10">
+                <Button 
+                  onClick={testAuth} 
+                  disabled={loading} 
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <User size={16} />}
+                  Проверить аутентификацию
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        );
+        
+      case 'characters':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Персонажи пользователя</h3>
+              <Button 
+                onClick={testCharacters} 
+                disabled={loading} 
+                variant="secondary"
+                className="gap-2"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle size={16} />}
+                Загрузить персонажей
+              </Button>
+            </div>
+
+            {results.characters && (
+              <Alert variant={results.characters.includes('ОШИБКА') ? 'destructive' : 'default'} className="mb-4">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Результат</AlertTitle>
+                <AlertDescription>
+                  {results.characters}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {characters.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {characters.map(char => (
+                  <SelectionCard
+                    key={char.id}
+                    title={char.name || 'Без имени'}
+                    description={`${char.className || char.class || 'Без класса'} - ${char.race || 'Раса не указана'}`}
+                    selected={false}
+                    className="cursor-default hover:scale-[1.02] transition"
+                    badges={
+                      <>
+                        <Badge variant="secondary" className="bg-primary/20">
+                          Уровень {char.level || 1}
+                        </Badge>
+                      </>
+                    }
+                    onClick={() => navigate(`/character/${char.id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-card/20 border-dashed border-primary/20">
+                <CardContent className="text-center py-12">
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Загрузка персонажей...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <AlertCircle className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">Персонажи не найдены</p>
+                      <Button 
+                        onClick={testCharacters}
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                      >
+                        Попробовать загрузить
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {results.charactersData && (
+              <Card className="overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
+                <CardHeader className="bg-primary/10 pb-2">
+                  <CardTitle className="flex items-center gap-2 text-primary text-sm">
+                    <Database size={16} />
+                    Данные персонажей
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-3">
+                  <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-80 p-3 bg-black/40 rounded border border-primary/10">
+                    {JSON.stringify(results.charactersData, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+
+            {results.debug && (
+              <Card className="overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
+                <CardHeader className="bg-primary/10 pb-2">
+                  <CardTitle className="flex items-center gap-2 text-primary text-sm">
+                    <AlertCircle size={16} />
+                    Отладочная информация
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-3">
+                  <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-80 p-3 bg-black/40 rounded border border-primary/10">
+                    {JSON.stringify(results.debug, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+        
+      case 'connection':
+        return (
+          <div className="space-y-4">
+            <Card className="overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="bg-primary/10 pb-3">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Database size={18} />
+                  Статус соединения
+                </CardTitle>
+                <CardDescription>
+                  Проверка соединения с базой данных Firebase
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {results.connection ? (
+                  <Alert variant={results.connection.includes('ОШИБКА') ? 'destructive' : 'default'}>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Результат</AlertTitle>
+                    <AlertDescription>
+                      {results.connection}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Database className="mx-auto h-10 w-10 mb-3 opacity-50" />
+                    <p>Запустите тест для проверки соединения</p>
+                  </div>
+                )}
+
+                {testCollection && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Тестовая коллекция:</h4>
+                    <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-80 p-3 bg-black/40 rounded border border-primary/10">
+                      {JSON.stringify(testCollection, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="bg-primary/5 flex justify-end pt-3 border-t border-primary/10">
+                <Button 
+                  onClick={testFirebaseConnection} 
+                  disabled={loading} 
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database size={16} />}
+                  Проверить соединение с Firebase
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+  
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Тест загрузки персонажей</h1>
-        <Button variant="outline" onClick={() => navigate('/')}>Назад на главную</Button>
-      </div>
+      <Card className="bg-gradient-to-br from-gray-800/60 to-black/80 border-primary/20 backdrop-blur-md mb-6">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-bold text-white">
+              Тест загрузки персонажей
+            </CardTitle>
+            <Button variant="outline" onClick={() => navigate('/')} className="border-white/20 hover:bg-white/10">
+              Назад на главную
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-white/80">Инструмент для отладки и тестирования функций приложения</p>
+        </CardContent>
+      </Card>
 
       {!isAuthenticated && (
-        <Alert variant="destructive" className="mb-6">
-          <Info className="h-4 w-4" />
+        <Alert variant="destructive" className="mb-6 bg-red-900/30 border border-red-700/50">
+          <AlertCircle className="h-4 w-4" />
           <AlertTitle>Вы не авторизованы</AlertTitle>
-          <AlertDescription>
+          <AlertDescription className="flex flex-wrap gap-2 items-center">
             Для работы с персонажами необходимо авторизоваться.
-            <Button variant="outline" onClick={() => navigate('/auth')} className="ml-4">
+            <Button variant="secondary" onClick={() => navigate('/auth')} className="ml-auto">
               Авторизоваться
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
-      <Card className="mb-6">
-        <CardHeader>
+      <Card className="mb-6 border-primary/20 bg-card/30 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-primary/10 pb-3">
           <CardTitle>Панель тестов</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Tabs value={activeTest} onValueChange={setActiveTest} className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="auth">Аутентификация</TabsTrigger>
-              <TabsTrigger value="characters">Персонажи</TabsTrigger>
-              <TabsTrigger value="connection">Соединение</TabsTrigger>
+            <TabsList className="mb-6 w-full justify-start bg-black/20">
+              <TabsTrigger value="auth" className="data-[state=active]:bg-primary/30">
+                <div className="flex items-center gap-2">
+                  <User size={16} />
+                  Аутентификация
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="characters" className="data-[state=active]:bg-primary/30">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  Персонажи
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="connection" className="data-[state=active]:bg-primary/30">
+                <div className="flex items-center gap-2">
+                  <Database size={16} />
+                  Соединение
+                </div>
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="auth">
-              <div className="space-y-4">
-                <Button onClick={testAuth} disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Проверить аутентификацию
-                </Button>
-                
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <h3 className="font-medium mb-2">Статус аутентификации:</h3>
-                  <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
-                    {results.auth ? JSON.stringify(results.auth, null, 2) : 'Нет данных'}
-                  </pre>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="characters">
-              <div className="space-y-4">
-                <Button onClick={testCharacters} disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Загрузить персонажей
-                </Button>
-                
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <h3 className="font-medium mb-2">Результат загрузки:</h3>
-                  <p>{results.characters || 'Нет данных'}</p>
-                  
-                  {characters.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="font-medium mb-2">Список персонажей:</h4>
-                      <div className="grid gap-2">
-                        {characters.map(char => (
-                          <div key={char.id} className="p-2 bg-black/30 rounded">
-                            {char.name || 'Без имени'} ({char.className || char.class || 'Без класса'})
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {results.charactersData && (
-                    <div className="mt-4">
-                      <h4 className="font-medium mb-2">Данные персонажей:</h4>
-                      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
-                        {JSON.stringify(results.charactersData, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                  
-                  {results.debug && (
-                    <div className="mt-4">
-                      <h4 className="font-medium mb-2">Отладочная информация:</h4>
-                      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
-                        {JSON.stringify(results.debug, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="connection">
-              <div className="space-y-4">
-                <Button onClick={testFirebaseConnection} disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Проверить соединение с Firebase
-                </Button>
-                
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <h3 className="font-medium mb-2">Статус соединения:</h3>
-                  <p>{results.connection || 'Нет данных'}</p>
-                  
-                  {testCollection && (
-                    <div className="mt-4">
-                      <h4 className="font-medium mb-2">Тестовая коллекция:</h4>
-                      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96 p-2 bg-black/40 rounded">
-                        {JSON.stringify(testCollection, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <TabsContent value={activeTest}>
+              {renderResults()}
             </TabsContent>
           </Tabs>
           
           {error && (
             <div className="mt-4 p-3 bg-red-900/30 border border-red-700 text-red-200 rounded">
-              <strong>Ошибка:</strong> {error}
+              <strong className="flex items-center gap-2">
+                <AlertCircle size={16} />
+                Ошибка:
+              </strong> 
+              <p className="mt-1">{error}</p>
             </div>
           )}
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Советы по отладке Firestore Rules</CardTitle>
+      <Card className="border-primary/20 bg-card/30 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-primary/10 pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Shield size={18} className="text-primary" />
+            Советы по отладке Firestore Rules
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Убедитесь, что вы авторизованы в системе</li>
-            <li>Проверьте, что у вас есть персонажи в коллекции 'characters'</li>
-            <li>Проверьте, что у персонажей правильно указан userId, совпадающий с вашим id</li>
-            <li>
+        <CardContent className="pt-4">
+          <ul className="space-y-3 list-disc pl-5">
+            <li className="text-white/90">Убедитесь, что вы авторизованы в системе</li>
+            <li className="text-white/90">Проверьте, что у вас есть персонажи в коллекции 'characters'</li>
+            <li className="text-white/90">Проверьте, что у персонажей правильно указан userId, совпадающий с вашим id</li>
+            <li className="text-white/90">
               <strong>Firestore Rules для списка документов:</strong><br/>
-              <code className="bg-black/30 p-1 rounded">
+              <code className="bg-black/30 p-1 rounded inline-block mt-1 text-green-400 border border-green-900/30">
                 allow list: if request.auth != null && request.query.where('userId', '==', request.auth.uid);
               </code>
             </li>
-            <li>
+            <li className="text-white/90">
               <strong>Это значит:</strong> для запросов списка персонажей (list) 
               нужен явный фильтр where('userId', '==', userId)
             </li>
-            <li>Проверьте в консоли, что запрос содержит этот фильтр</li>
+            <li className="text-white/90">Проверьте в консоли, что запрос содержит этот фильтр</li>
           </ul>
         </CardContent>
       </Card>
