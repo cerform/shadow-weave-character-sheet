@@ -2,60 +2,44 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Clock } from "lucide-react";
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 
 const CharacterNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme } = useTheme();
-  const currentThemeId = theme || 'default';
-  const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
   
-  // Проверяем текущий маршрут
-  const isActive = (path: string) => location.pathname === path;
+  // Определяем текущий маршрут для выделения активной вкладки
+  const currentPath = location.pathname;
   
+  const isActivePath = (path: string): boolean => {
+    return currentPath === path;
+  };
+
   return (
-    <div 
-      className="flex flex-wrap gap-2 p-3 mb-4 rounded-lg border"
-      style={{ 
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        borderColor: `${currentTheme.accent}30` 
-      }}
-    >
-      <Button
-        variant={isActive('/characters') ? "default" : "outline"}
+    <div className="flex flex-wrap gap-2 mb-6">
+      <Button 
+        variant={isActivePath('/recent-characters') ? "default" : "outline"} 
         size="sm"
-        className="gap-2"
-        onClick={() => navigate('/characters')}
-      >
-        <FileText size={16} />
-        Все персонажи
-      </Button>
-      
-      <Button
-        variant={isActive('/recent-characters') ? "default" : "outline"}
-        size="sm"
-        className="gap-2"
         onClick={() => navigate('/recent-characters')}
+        className="rounded-full"
       >
-        <Clock size={16} />
         Недавние
       </Button>
       
-      <Button
-        variant="outline"
+      <Button 
+        variant={isActivePath('/characters') ? "default" : "outline"} 
         size="sm"
-        className="gap-2 ml-auto"
-        onClick={() => navigate('/character-creation')}
-        style={{
-          backgroundColor: `${currentTheme.accent}20`,
-          borderColor: `${currentTheme.accent}50`,
-          color: currentTheme.accent
-        }}
+        onClick={() => navigate('/characters')}
+        className="rounded-full"
       >
-        <Calendar size={16} />
+        Все персонажи
+      </Button>
+      
+      <Button 
+        variant={isActivePath('/character-creation') ? "default" : "outline"} 
+        size="sm"
+        onClick={() => navigate('/character-creation')}
+        className="rounded-full"
+      >
         Создать персонажа
       </Button>
     </div>
