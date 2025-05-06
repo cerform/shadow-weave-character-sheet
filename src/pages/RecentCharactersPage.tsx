@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, themeKey, onCl
     <Card 
       className="overflow-hidden transform transition-all duration-200 hover:scale-105 cursor-pointer"
       style={{
-        backgroundColor: `${currentTheme.cardBg || '#2a2a2a'}`,
+        backgroundColor: `${currentTheme.cardBackground || '#2a2a2a'}`,
         borderColor: `${currentTheme.accent}30`,
         boxShadow: `0 4px 12px ${currentTheme.accent}10`
       }}
