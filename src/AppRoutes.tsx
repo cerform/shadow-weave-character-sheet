@@ -18,6 +18,7 @@ import CharactersListPage from './pages/CharactersListPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
 import TestPage from './pages/TestPage';
+import DndSpellsPage from './pages/DndSpellsPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
@@ -92,6 +93,9 @@ const AppRoutes: React.FC = () => {
       
       {/* Добавляем тестовую страницу */}
       <Route path="/test" element={<TestPage />} />
+      
+      {/* Добавляем страницу заклинаний D&D */}
+      <Route path="/dnd-spells" element={<DndSpellsPage />} />
       
       {/* Маршруты DM с защитой */}
       <Route path="/dm" element={
