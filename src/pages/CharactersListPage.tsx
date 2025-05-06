@@ -11,6 +11,7 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { getCharactersByUserId, deleteCharacter } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
+import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 
 // Import our components
 import LoadingState from '@/components/characters/LoadingState';
@@ -29,6 +30,7 @@ const CharactersListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('table');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -36,10 +38,10 @@ const CharactersListPage: React.FC = () => {
     
     if (isAuthenticated && user) {
       console.log('CharactersListPage: Пользователь авторизован, загружаем персонажей');
-      console.log('User ID:', user.uid || user.id);
       loadCharacters();
     } else {
       console.log('CharactersListPage: Пользователь не авторизован');
+      setLoading(false);
     }
   }, [isAuthenticated, user]);
 
@@ -49,7 +51,8 @@ const CharactersListPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const userId = user?.uid || user?.id;
+      // Используем расширенный метод получения userId
+      const userId = user?.uid || user?.id || getCurrentUserIdExtended();
       console.log('CharactersListPage: Загрузка персонажей для пользователя:', userId);
       
       if (!userId) {
@@ -58,8 +61,36 @@ const CharactersListPage: React.FC = () => {
         return;
       }
       
+      // Создаём отладочную информацию
+      const debug = {
+        userId,
+        authCurrentUser: auth.currentUser ? {
+          uid: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          isAnonymous: auth.currentUser.isAnonymous,
+          emailVerified: auth.currentUser.emailVerified
+        } : null,
+        query: {
+          collection: "characters",
+          filter: `userId == ${userId}`,
+          whereClause: `where("userId", "==", userId)`
+        }
+      };
+      
       const fetchedCharacters = await getCharactersByUserId(userId);
       console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
+      
+      // Обновляем отладочную информацию
+      debug.snapshotSize = fetchedCharacters.length;
+      debug.snapshotEmpty = fetchedCharacters.length === 0;
+      debug.charactersCount = fetchedCharacters.length;
+      debug.firstCharacter = fetchedCharacters.length > 0 ? {
+        id: fetchedCharacters[0].id,
+        name: fetchedCharacters[0].name,
+        userId: fetchedCharacters[0].userId
+      } : null;
+      
+      setDebugInfo(debug);
       
       // Добавляем немного отладочной информации
       if (fetchedCharacters.length > 0) {
@@ -151,6 +182,15 @@ const CharactersListPage: React.FC = () => {
             >
               {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
             </Button>
+            {process.env.NODE_ENV !== 'production' && (
+              <Button
+                onClick={loadCharacters}
+                size="sm"
+                variant="outline"
+              >
+                Обновить данные
+              </Button>
+            )}
           </div>
           
           {/* Загрузка */}
@@ -173,6 +213,15 @@ const CharactersListPage: React.FC = () => {
                   <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
                     {JSON.stringify(characters, null, 2)}
                   </pre>
+                  
+                  {debugInfo && (
+                    <div className="mt-4">
+                      <h3 className="text-md font-bold mb-2">Отладочная информация:</h3>
+                      <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded text-xs">
+                        {JSON.stringify(debugInfo, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <CharactersTable 

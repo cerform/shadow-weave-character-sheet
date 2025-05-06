@@ -14,7 +14,7 @@ export * from './firestore';
 export { app, db, storage, analyticsPromise, initializeAnalytics };
 
 // Экспортируем firebaseAuth под оригинальным именем для обратной совместимости
-export { firebaseAuth } from './auth';
+export { auth as firebaseAuth } from './auth';
 
 // Для обратной совместимости также экспортируем интерфейсы
 export type { DetailedAuthError } from './error-utils';

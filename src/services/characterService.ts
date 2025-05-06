@@ -215,7 +215,8 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     
     console.log('Query parameters:', { 
       collection: 'characters', 
-      filter: `where userId == ${userId}`
+      filter: `where userId == ${userId}`,
+      whereClause: `where("userId", "==", "${userId}")`
     });
     
     const querySnapshot = await getDocs(q);
