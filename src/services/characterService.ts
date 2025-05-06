@@ -273,7 +273,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     const querySnapshot = await getDocs(charactersCollection);
     
     const characters: Character[] = [];
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>) => {
+    querySnapshot.forEach((doc) => {
       const data = doc.data();
       console.log('Found character:', { id: doc.id, userId: data.userId });
       characters.push({
@@ -321,9 +321,12 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       
       if (allDocsSnapshot.size > 0) {
         console.log('Примеры документов:');
-        allDocsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>, index: number) => {
+        allDocsSnapshot.forEach((doc) => {
+          // Используем index из замыкания - это безопасно, так как forEach предоставляет индекс
+          let index = 0;
           if (index < 3) { // показываем только первые 3 документа для отладки
             console.log(`Документ ${index + 1}:`, { id: doc.id, data: doc.data() });
+            index++;
           }
         });
       }
@@ -336,7 +339,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     console.log('Query returned documents count:', querySnapshot.size);
     
     const characters: Character[] = [];
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>) => {
+    querySnapshot.forEach((doc) => {
       const data = doc.data();
       console.log('Character document:', { id: doc.id, name: data.name });
       characters.push({
