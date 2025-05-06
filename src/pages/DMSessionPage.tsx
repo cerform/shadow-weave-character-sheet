@@ -1,17 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { socketService } from '@/services/socket';
-import DiceRoller from '@/components/session/DiceRoller';
-import SessionChat from '@/components/session/SessionChat';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import useSessionStore from '@/stores/sessionStore';
-import { Session } from '@/types/session';
+import { Input } from "@/components/ui/input";
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import {
+import { 
+  getSessionById, 
+  subscribeToSession, 
+  removeParticipant 
+} from '@/services/sessionService';
+import { Session, Participant } from '@/types/session';
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -23,14 +24,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -38,138 +31,193 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
+  Copy,
+  RefreshCw,
+  UserMinus,
   Send,
-  Clock,
-  UserPlus
+  Clock
 } from "lucide-react";
-
-// Define the Player type since it doesn't exist in session.ts
-interface Player {
-  id: string;
-  name: string;
-  character?: any;
-  connected: boolean;
-}
 
 const DMSessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const sessionStore = useSessionStore();
-  const { sessions, fetchSessions, endSession } = sessionStore;
-  const { currentUser } = useAuth(); // Используем currentUser из useAuth вместо sessionStore
-  const { isAuthenticated } = useAuth();
-  const [currentSession, setCurrentSession] = useState<any | null>(null);
-  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [isEndingSession, setIsEndingSession] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
-  const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [messageInput, setMessageInput] = useState('');
+  const [messages, setMessages] = useState<Array<{ 
+    id: string;
+    sender: string;
+    text: string;
+    timestamp: Date;
+    isMaster: boolean;
+  }>>([]);
+  const [notes, setNotes] = useState('');
+  const [isRefreshingKey, setIsRefreshingKey] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/auth');
+    if (!sessionId) {
+      setError('Идентификатор сессии не указан');
       return;
     }
     
     const loadSession = async () => {
-      await fetchSessions();
-    };
-    
-    loadSession();
-  }, [isAuthenticated, navigate, fetchSessions]);
-
-  // Select the current session when sessions load or ID changes
-  useEffect(() => {
-    if (sessions && sessionId) {
-      const session = sessions.find(s => s.id === sessionId);
-      
-      if (session) {
-        setCurrentSession(session);
-      } else {
-        // Session not found, navigate back
-        navigate('/dm');
-        toast({
-          title: "Сессия не найдена",
-          variant: "destructive"
-        });
+      try {
+        setLoading(true);
+        const sessionData = await getSessionById(sessionId);
+        
+        if (!sessionData) {
+          setError('Сессия не найдена');
+          return;
+        }
+        
+        // Проверяем, является ли пользователь мастером этой сессии
+        if (sessionData.hostId !== user?.uid) {
+          setError('У вас нет доступа к этой сессии в качестве Мастера');
+          return;
+        }
+        
+        setSession(sessionData);
+      } catch (err) {
+        console.error('Ошибка при загрузке сессии:', err);
+        setError('Не удалось загрузить данные сессии');
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [sessions, sessionId, navigate, toast]);
+    };
 
-  const handleEndSession = () => {
-    if (sessionId && endSession) {
-      endSession(sessionId);
-      navigate('/dm');
-      toast({
-        title: "Сессия успешно завершена",
+    loadSession();
+    
+    // Подписываемся на обновления сессии в реальном времени
+    if (sessionId) {
+      const unsubscribe = subscribeToSession(sessionId, (updatedSession) => {
+        setSession(updatedSession);
       });
+      
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [sessionId, user]);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        toast.success('Скопировано в буфер обмена');
+      },
+      (err) => {
+        console.error('Не удалось скопировать: ', err);
+        toast.error('Не удалось скопировать');
+      }
+    );
+  };
+
+  const generateInviteLink = () => {
+    if (!session) return '';
+    return `${window.location.origin}/join/${session.id}?key=${session.sessionKey}`;
+  };
+
+  const refreshSessionKey = async () => {
+    try {
+      setIsRefreshingKey(true);
+      // Здесь будет функция обновления ключа сессии
+      toast.success('Код сессии обновлен');
+    } catch (err) {
+      console.error('Ошибка при обновлении кода сессии:', err);
+      toast.error('Не удалось обновить код сессии');
+    } finally {
+      setIsRefreshingKey(false);
     }
   };
 
-  const handleAddPlayer = () => {
-    if (!newPlayerName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите имя игрока",
-        variant: "destructive"
-      });
-      return;
+  const handleRemoveParticipant = async (userId: string) => {
+    if (!session) return;
+    
+    try {
+      await removeParticipant(session.id, userId);
+      toast.success('Игрок удален из сессии');
+    } catch (err) {
+      console.error('Ошибка при удалении игрока:', err);
+      toast.error('Не удалось удалить игрока');
     }
+  };
+
+  const handleEndSession = async () => {
+    if (!session) return;
     
-    // Add player logic would go here
-    
-    setNewPlayerName('');
-    setIsAddingPlayer(false);
-    toast({
-      title: "Успех",
-      description: `Игрок ${newPlayerName} добавлен в сессию`
-    });
+    try {
+      // Здесь была бы функция завершения сессии
+      navigate('/dm-dashboard');
+      toast.success('Сессия завершена');
+    } catch (err) {
+      console.error('Ошибка при завершении сессии:', err);
+      toast.error('Не удалось завершить сессию');
+    }
   };
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
+    if (!messageInput.trim() || !user) return;
     
     const newMessage = {
       id: Date.now().toString(),
-      sender: currentUser?.displayName || 'DM', // Use displayName instead of name
-      content: message,
-      timestamp: new Date().toISOString(),
-      isDM: true
+      sender: user.displayName || 'Мастер',
+      text: messageInput,
+      timestamp: new Date(),
+      isMaster: true
     };
     
-    setMessages(prev => [...prev, newMessage]);
-    setMessage('');
+    setMessages([...messages, newMessage]);
+    setMessageInput('');
     
-    // In a real app, you'd send this via socket
+    // В реальном приложении здесь был бы код для отправки сообщения через сокеты
   };
 
-  if (!currentSession) {
+  const handleSaveNotes = () => {
+    // Здесь будет функция сохранения заметок
+    toast.success('Заметки сохранены');
+  };
+
+  if (loading) {
     return (
-      <div className="container p-6">
-        <h1>Загрузка сессии...</h1>
-        <Button onClick={() => navigate('/dm')}>Вернуться к списку сессий</Button>
+      <div className="container mx-auto p-6">
+        <Card className="bg-black/50 backdrop-blur-sm">
+          <CardContent className="py-12 flex justify-center">
+            <p>Загрузка сессии...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !session) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="bg-black/50 backdrop-blur-sm">
+          <CardContent className="py-12">
+            <h2 className="text-xl font-bold mb-4 text-center">Ошибка</h2>
+            <p className="text-center mb-6">{error || 'Не удалось загрузить сессию'}</p>
+            <div className="flex justify-center">
+              <Button onClick={() => navigate('/dm-dashboard')}>Назад</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="container py-6 px-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 bg-slate-800/80 p-4 rounded-lg">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/dm')}>
+          <Button variant="ghost" onClick={() => navigate('/dm-dashboard')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Button>
-          <h1 className="text-3xl font-bold">{currentSession.name}</h1>
-          <div className="px-2 py-1 rounded bg-green-100 text-green-800 text-sm">
-            Код: {currentSession.code}
-          </div>
+          <h1 className="text-3xl font-bold">{session.name}</h1>
         </div>
         
         <AlertDialog>
@@ -191,165 +239,191 @@ const DMSessionPage = () => {
         </AlertDialog>
       </div>
       
-      {currentSession.description && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <p>{currentSession.description}</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Основная колонка */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="bg-slate-800/60 border-slate-700">
             <CardHeader>
-              <CardTitle>Участники сессии</CardTitle>
-              <CardDescription>Игроки, присоединившиеся к вашей сессии</CardDescription>
+              <CardTitle>Информация о сессии</CardTitle>
+              <CardDescription>Настройки и управление сессией</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Имя</TableHead>
-                      <TableHead>Персонаж</TableHead>
-                      <TableHead>Статус</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentSession.players && currentSession.players.length > 0 ? (
-                      currentSession.players.map((player: Player) => (
-                        <TableRow key={player.id}>
-                          <TableCell className="font-medium">{player.name}</TableCell>
-                          <TableCell>
-                            {player.character ? player.character.name : 'Не выбран'}
-                          </TableCell>
-                          <TableCell>
-                            <div className={`w-3 h-3 rounded-full ${player.connected ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
-                            {player.connected ? 'Онлайн' : 'Оффлайн'}
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              Просмотр
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4">
-                          Нет игроков в сессии
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Код сессии</h3>
+                <div className="flex items-center gap-2">
+                  <div className="bg-black/20 px-4 py-2 rounded font-mono flex-1 text-center text-xl">
+                    {session.sessionKey}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => copyToClipboard(session.sessionKey)}
+                    title="Копировать код"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={refreshSessionKey}
+                    disabled={isRefreshingKey}
+                    title="Обновить код"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshingKey ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
               </div>
               
-              <div className="mt-4">
-                <Button onClick={() => setIsAddingPlayer(true)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Добавить игрока
-                </Button>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Ссылка для приглашения</h3>
+                <div className="flex items-center gap-2">
+                  <div className="bg-black/20 px-4 py-2 rounded font-mono text-xs flex-1 overflow-x-auto whitespace-nowrap">
+                    {generateInviteLink()}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => copyToClipboard(generateInviteLink())}
+                    title="Копировать ссылку"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Панель управления игрой</CardTitle>
-              <CardDescription>Инструменты Мастера Подземелий</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate(`/battle/${sessionId}`)}>Карта боя</Button>
-              <Button>Генератор событий</Button>
-              <Button>Бestiарий</Button>
-              <Button>Таблицы лута</Button>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Участники сессии</h3>
+                <div className="bg-black/20 rounded overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Персонаж</TableHead>
+                        <TableHead>Игрок</TableHead>
+                        <TableHead>Присоединился</TableHead>
+                        <TableHead className="text-right">Действия</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {session.participants.length > 0 ? (
+                        session.participants.map((participant) => (
+                          <TableRow key={participant.userId}>
+                            <TableCell className="font-medium">{participant.characterName}</TableCell>
+                            <TableCell>Игрок</TableCell>
+                            <TableCell>
+                              {new Date(participant.joinedAt).toLocaleTimeString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleRemoveParticipant(participant.userId)}
+                                title="Удалить игрока"
+                              >
+                                <UserMinus className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-6">
+                            В сессии пока нет игроков
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Панель управления игрой</h3>
+                <div className="flex flex-wrap gap-3">
+                  <Button onClick={() => navigate(`/session/${session.id}`)}>
+                    Присоединиться к сессии
+                  </Button>
+                  <Button onClick={() => navigate(`/battle/${session.id}`)}>
+                    Карта боя
+                  </Button>
+                  <Button>Генератор событий</Button>
+                  <Button>Бестиарий</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
         
-        <div>
-          <Card className="h-[500px] flex flex-col">
+        {/* Правая колонка */}
+        <div className="space-y-6">
+          {/* Чат */}
+          <Card className="bg-slate-800/60 border-slate-700 h-[400px] flex flex-col">
             <CardHeader>
               <CardTitle>Чат сессии</CardTitle>
+              <CardDescription>Общение с игроками</CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow overflow-y-auto min-h-[300px] p-4">
+            <CardContent className="flex-grow overflow-y-auto p-4 flex flex-col">
               {messages.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  Здесь будут отображаться сообщения
+                <div className="flex-grow flex items-center justify-center text-gray-400">
+                  Сообщений пока нет
                 </div>
               ) : (
                 <div className="space-y-3">
                   {messages.map(msg => (
-                    <div key={msg.id} className={`p-2 rounded-lg ${msg.isDM ? 'bg-amber-100 ml-6' : 'bg-blue-100 mr-6'}`}>
-                      <div className="font-bold flex justify-between">
-                        <span>{msg.sender}</span>
-                        <span className="text-xs text-gray-500">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                    <div 
+                      key={msg.id} 
+                      className={`p-3 rounded-lg ${msg.isMaster ? 'bg-amber-100/10 text-amber-200' : 'bg-blue-100/10 text-blue-200'}`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className={`font-bold ${msg.isMaster ? 'text-amber-400' : 'text-blue-400'}`}>
+                          {msg.sender} {msg.isMaster ? '(Мастер)' : ''}
+                        </span>
+                        <span className="text-xs text-gray-400 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {msg.timestamp.toLocaleTimeString()}
                         </span>
                       </div>
-                      <div>{msg.content}</div>
+                      <p>{msg.text}</p>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
-            <div className="p-4 border-t flex">
+            <div className="p-4 border-t border-slate-700 flex">
               <Input 
                 placeholder="Введите сообщение..." 
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-grow"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                className="flex-grow bg-slate-700/60 border-slate-600"
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
-              <Button onClick={handleSendMessage} className="ml-2">
+              <Button 
+                className="ml-2" 
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim()}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
           </Card>
           
-          <Card className="mt-6">
+          {/* Заметки */}
+          <Card className="bg-slate-800/60 border-slate-700">
             <CardHeader>
-              <CardTitle>Заметки</CardTitle>
+              <CardTitle>Заметки Мастера</CardTitle>
+              <CardDescription>Личные записи для ведения игры</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <textarea 
-                className="w-full h-40 p-2 border rounded"
-                placeholder="Записи для Мастера..."
-              ></textarea>
+                className="w-full h-40 p-3 bg-slate-700/60 border border-slate-600 rounded-md resize-none"
+                placeholder="Заметки для Мастера..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+              <Button onClick={handleSaveNotes}>Сохранить заметки</Button>
             </CardContent>
           </Card>
         </div>
       </div>
-      
-      <Dialog open={isAddingPlayer} onOpenChange={setIsAddingPlayer}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Добавить игрока</DialogTitle>
-            <DialogDescription>
-              Добавьте нового игрока в сессию
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Имя игрока</Label>
-              <Input 
-                id="name" 
-                value={newPlayerName} 
-                onChange={(e) => setNewPlayerName(e.target.value)} 
-                placeholder="Введите имя игрока"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingPlayer(false)}>Отмена</Button>
-            <Button onClick={handleAddPlayer}>Добавить</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

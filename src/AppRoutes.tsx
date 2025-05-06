@@ -1,143 +1,47 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-
-// Импортируем страницы
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import AuthPage from './pages/AuthPage';
-import SpellbookPage from './pages/SpellbookPage';
-import CharacterCreationPage from './pages/CharacterCreationPage';
-import ProfilePage from './pages/ProfilePage';
-import HandbookPage from './pages/HandbookPage';
-import CharacterSheetPage from './pages/CharacterSheetPage';
-import DMDashboardPage from './pages/DMDashboardPage';
-import PlayerDashboardPage from './pages/PlayerDashboardPage';
-import BattleScenePage from './pages/BattleScenePage';
+import { Routes, Route } from 'react-router-dom';
 import CharactersListPage from './pages/CharactersListPage';
-import UnauthorizedPage from './pages/UnauthorizedPage';
-import DebugPage from './pages/DebugPage';
+import CharacterSheetPage from './pages/CharacterSheetPage';
+import CharacterCreationPage from './pages/CharacterCreationPage';
+import CharacterEditPage from './pages/CharacterEditPage';
+import BattlePage from './pages/BattlePage';
+import AuthPage from './pages/AuthPage';
+import HomePage from './pages/HomePage';
+import PlayerSessionPage from './pages/PlayerSessionPage';
+import GameRoomPage from './pages/GameRoomPage';
+import NotFoundPage from './pages/NotFoundPage';
+/* Добавляем импорты для новых страниц сессий */
+import CreateSessionPage from "./pages/CreateSessionPage";
+import JoinSessionPage from "./pages/JoinSessionPage";
+import SessionPage from "./pages/SessionPage";
+import DMSessionPage from "./pages/DMSessionPage";
+import DMDashboardPage from "./pages/DMDashboardPage";
 
-// Ленивая загрузка страниц, зависящих от WebSocket
-const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
-const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
-
-// Импорт хука для защиты маршрутов
-import { useProtectedRoute } from './hooks/use-auth';
-
-// Компонент Fallback для ленивой загрузки
-const LazyLoading = () => (
-  <div className="flex items-center justify-center h-screen w-full">
-    <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-  </div>
-);
-
-// Компонент для защиты маршрутов DM
-const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessDMDashboard } = useProtectedRoute();
-  
-  if (loading) {
-    return <LazyLoading />;
-  }
-  
-  if (!canAccessDMDashboard) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Компонент для защиты маршрутов игрока
-const ProtectedPlayerRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessPlayerDashboard } = useProtectedRoute();
-  
-  if (loading) {
-    return <LazyLoading />;
-  }
-  
-  if (!canAccessPlayerDashboard) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Компонент для маршрутизации на основе роли
-const RoleBasedRedirect = () => {
-  const { loading, isDM, isPlayer } = useProtectedRoute();
-  
-  if (loading) {
-    return <LazyLoading />;
-  }
-  
-  if (isDM) {
-    return <Navigate to="/dm" replace />;
-  }
-  
-  if (isPlayer) {
-    return <Navigate to="/player" replace />;
-  }
-  
-  return <Navigate to="/auth" replace />;
-};
-
-const AppRoutes: React.FC = () => {
+const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="/dashboard" element={<RoleBasedRedirect />} />
-      
-      {/* Маршруты DM с защитой */}
-      <Route path="/dm" element={
-        <ProtectedDMRoute>
-          <DMDashboardPage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/dm-session/:id" element={
-        <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <GameRoomPage />
-          </React.Suspense>
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle/:sessionId" element={
-        <ProtectedDMRoute>
-          <BattleScenePage />
-        </ProtectedDMRoute>
-      } />
-      
-      {/* Маршруты игрока с защитой */}
-      <Route path="/player" element={
-        <ProtectedPlayerRoute>
-          <PlayerDashboardPage />
-        </ProtectedPlayerRoute>
-      } />
-      <Route path="/join-session" element={
-        <ProtectedPlayerRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <JoinSessionPage />
-          </React.Suspense>
-        </ProtectedPlayerRoute>
-      } />
-      
-      {/* Перенаправление для исправленных URL */}
-      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
-      
-      {/* Добавляем маршрут для отладки */}
-      <Route path="/debug" element={<DebugPage />} />
-      
-      {/* Общедоступные маршруты */}
-      <Route path="/spellbook" element={<SpellbookPage />} />
-      <Route path="/character-creation" element={<CharacterCreationPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/handbook" element={<HandbookPage />} />
-      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      {/* Основные маршруты */}
+      <Route path="/" element={<HomePage />} />
       <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/character-sheet" element={<CharacterSheetPage />} />
+      <Route path="/character-creation" element={<CharacterCreationPage />} />
+      <Route path="/character-edit/:id" element={<CharacterEditPage />} />
+      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      <Route path="/battle/:sessionId" element={<BattlePage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/session" element={<PlayerSessionPage />} />
+      <Route path="/game-room/:roomCode" element={<GameRoomPage />} />
       
-      {/* Перенаправления */}
-      <Route path="/sheet" element={<Navigate to="/characters" replace />} />
-      <Route path="*" element={<NotFound />} />
+      {/* Маршруты сессий */}
+      <Route path="/create-session" element={<CreateSessionPage />} />
+      <Route path="/join/:sessionId" element={<JoinSessionPage />} />
+      <Route path="/join" element={<JoinSessionPage />} />
+      <Route path="/session/:sessionId" element={<SessionPage />} />
+      <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
+      <Route path="/dm-dashboard" element={<DMDashboardPage />} />
+      
+      {/* Другие маршруты и 404 */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
