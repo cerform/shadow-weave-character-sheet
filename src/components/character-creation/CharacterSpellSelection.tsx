@@ -52,6 +52,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [loading, setLoading] = useState(true);
   const [internalAvailableSpells, setInternalAvailableSpells] = useState<SpellData[]>([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [cantripsKnown, setCantripsKnown] = useState(0);
+  const [spellsKnown, setSpellsKnown] = useState(0);
 
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
@@ -97,6 +99,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
   }, [effectiveClass, effectiveLevel, loadSpellsForCharacter]);
 
+  // Пересчитываем количество известных заклинаний при каждом изменении списка заклинаний
+  useEffect(() => {
+    if (character.spells) {
+      const cantripsCount = character.spells.filter(spell => {
+        if (typeof spell === 'string') return false;
+        return spell.level === 0;
+      }).length;
+      
+      const spellsCount = character.spells.filter(spell => {
+        if (typeof spell === 'string') return false;
+        return spell.level > 0;
+      }).length;
+      
+      setCantripsKnown(cantripsCount);
+      setSpellsKnown(spellsCount);
+    } else {
+      setCantripsKnown(0);
+      setSpellsKnown(0);
+    }
+  }, [character.spells]);
+
   // Получаем модификатор характеристики
   const getModifierForClass = useCallback(() => {
     if (!character || !character.abilities) return 3; // По умолчанию +3
@@ -126,9 +149,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Отображаем информацию о лимитах
   const { maxSpellLevel, cantripsCount, knownSpells } = spellLimits();
-  
-  // Получаем текущие количества заклинаний
-  const spellCounts = getSelectedSpellCount();
 
   // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
@@ -212,10 +232,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     
     if (adding) {
       // Проверяем лимиты заклинаний
-      const spellCounts = getSelectedSpellCount();
-      const limits = spellLimits();
-      
-      if (spell.level === 0 && spellCounts.cantrips >= limits.cantripsCount) {
+      if (spell.level === 0 && cantripsKnown >= cantripsCount) {
         toast({
           title: "Лимит заговоров",
           description: "Вы достигли максимального количества известных заговоров",
@@ -224,7 +241,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      if (spell.level > 0 && spellCounts.spells >= limits.knownSpells) {
+      if (spell.level > 0 && spellsKnown >= knownSpells) {
         toast({
           title: "Лимит заклинаний",
           description: "Вы достигли максимального количества известных заклинаний",
@@ -254,6 +271,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       
       updateCharacter({ spells: updatedSpells });
       
+      // Обновляем счетчики
+      if (spell.level === 0) {
+        setCantripsKnown(prev => prev + 1);
+      } else {
+        setSpellsKnown(prev => prev + 1);
+      }
+      
       toast({
         title: "Заклинание изучено",
         description: `Заклинание "${spell.name}" добавлено в список известных заклинаний`,
@@ -271,6 +295,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         });
         
         updateCharacter({ spells: updatedSpells });
+        
+        // Обновляем счетчики
+        if (spell.level === 0) {
+          setCantripsKnown(prev => Math.max(0, prev - 1));
+        } else {
+          setSpellsKnown(prev => Math.max(0, prev - 1));
+        }
         
         toast({
           title: "Заклинание забыто",
@@ -311,7 +342,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <p className="text-sm text-muted-foreground" style={{color: currentTheme.mutedTextColor}}>
           Уровень: {effectiveLevel}, Класс: {effectiveClass}
           <br />
-          Известно заговоров: {spellCounts.cantrips}/{cantripsCount}, Известно заклинаний: {spellCounts.spells}/{knownSpells}, Макс. уровень заклинаний: {maxSpellLevel}
+          <span className={cantripsKnown >= cantripsCount ? "text-red-500 font-bold" : ""}>
+            Известно заговоров: {cantripsKnown}/{cantripsCount}
+          </span>, 
+          <span className={spellsKnown >= knownSpells ? "text-red-500 font-bold" : ""}> 
+            Известно заклинаний: {spellsKnown}/{knownSpells}
+          </span>, 
+          Макс. уровень заклинаний: {maxSpellLevel}
         </p>
         <Separator className="my-2 bg-accent/30" />
         <input
@@ -359,8 +396,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             filteredSpells.map((spell) => {
               const isAdded = isSpellKnown(spell);
               const canAdd = spell.level === 0 
-                ? spellCounts.cantrips < cantripsCount 
-                : spellCounts.spells < knownSpells;
+                ? cantripsKnown < cantripsCount 
+                : spellsKnown < knownSpells;
               
               return (
                 <Card key={spell.id || spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>

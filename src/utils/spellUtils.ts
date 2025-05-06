@@ -327,3 +327,24 @@ export const groupSpellsByLevel = (spells: SpellData[]): Record<number, SpellDat
 export const getUniqueSpellLevels = (spells: SpellData[]): number[] => {
   return [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
 };
+
+/**
+ * Подсчитывает количество заклинаний и заговоров у персонажа
+ */
+export const countKnownSpells = (character: Character): { cantrips: number; spells: number } => {
+  if (!character.spells || !Array.isArray(character.spells)) {
+    return { cantrips: 0, spells: 0 };
+  }
+
+  const cantrips = character.spells.filter(spell => {
+    if (typeof spell === 'string') return false;
+    return spell.level === 0;
+  }).length;
+
+  const spells = character.spells.filter(spell => {
+    if (typeof spell === 'string') return false;
+    return spell.level > 0;
+  }).length;
+
+  return { cantrips, spells };
+};
