@@ -5,6 +5,9 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 // Используем уже существующее приложение из firebase.ts
 // и добавляем инициализацию Analytics
 
+// Реэкспортируем app для внутренних сервисов
+export { app };
+
 // Initialize Analytics only if supported (prevents errors in environments like SSR)
 export const initializeAnalytics = async () => {
   try {
