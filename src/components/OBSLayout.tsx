@@ -70,7 +70,7 @@ export default function OBSLayout({
           </div>
         )}
         
-        <div className="w-full h-full relative overflow-hidden">
+        <div className="w-full h-full relative overflow-y-auto">
           {children}
         </div>
         
