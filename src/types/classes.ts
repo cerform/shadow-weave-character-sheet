@@ -14,6 +14,7 @@ export interface ClassData {
     spellSlots?: Record<number, number[]>;
   };
   subclasses?: Record<string, SubclassData>;
+  features?: Feature[]; // Добавляем поле features для более подробных описаний
 }
 
 export interface SubclassData {
@@ -26,4 +27,11 @@ export interface Feature {
   name: string;
   level: number;
   description: string;
+}
+
+// Интерфейс для магических ресурсов (например, очков чародейства)
+export interface MagicalResource {
+  name: string;
+  description: string;
+  progression: number[];
 }
