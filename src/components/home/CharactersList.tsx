@@ -4,21 +4,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
-import { User, Swords, Shield, AlertCircle, RefreshCw } from "lucide-react";
+import { User, Swords, Shield, AlertCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import LoadingState from '@/components/characters/LoadingState';
 import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const CharactersList: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { getUserCharacters, loading: contextLoading, refreshCharacters } = useCharacter();
+  const { getUserCharacters, loading: contextLoading, refreshCharacters, deleteCharacter } = useCharacter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [characterToDelete, setCharacterToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Функция для загрузки персонажей с обработкой ошибок и повторных попыток
   const loadCharacters = async () => {
@@ -89,6 +93,32 @@ const CharactersList: React.FC = () => {
   // Функция для открытия персонажа
   const handleOpenCharacter = (id: string) => {
     navigate(`/character/${id}`);
+  };
+
+  // Функция для удаления персонажа
+  const openDeleteDialog = (id: string) => {
+    setCharacterToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCharacter = async () => {
+    if (!characterToDelete) return;
+    
+    try {
+      setDeletingId(characterToDelete);
+      await deleteCharacter(characterToDelete);
+      toast.success('Персонаж успешно удален');
+      // Обновляем список персонажей после удаления
+      const updatedCharacters = characters.filter(char => char.id !== characterToDelete);
+      setCharacters(updatedCharacters);
+    } catch (err) {
+      console.error('Ошибка при удалении персонажа:', err);
+      toast.error('Не удалось удалить персонажа');
+    } finally {
+      setDeletingId(null);
+      setCharacterToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   // Эффект для загрузки персонажей при монтировании и изменении статуса аутентификации
@@ -178,7 +208,7 @@ const CharactersList: React.FC = () => {
         {characters.map((character) => (
           <Card 
             key={character.id} 
-            className="shadow-lg border border-purple-700/30 bg-black/30 backdrop-blur-sm hover:shadow-purple-700/10 hover:border-purple-700/50 transition-all duration-300"
+            className="shadow-lg border border-purple-700/30 bg-black/30 backdrop-blur-sm hover:shadow-purple-700/10 hover:border-purple-700/50 transition-all duration-300 relative"
           >
             <CardHeader>
               <div className="flex items-center">
@@ -195,9 +225,19 @@ const CharactersList: React.FC = () => {
               <Button variant="outline" onClick={() => handleOpenCharacter(character.id)}>
                 Открыть
               </Button>
-              <Button onClick={() => handleOpenCharacter(character.id)}>
-                Играть
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => handleOpenCharacter(character.id)}>
+                  Играть
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="icon"
+                  onClick={() => openDeleteDialog(character.id)}
+                  disabled={deletingId === character.id}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </div>
             </CardFooter>
           </Card>
         ))}
@@ -211,6 +251,27 @@ const CharactersList: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удаление персонажа</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить персонажа? 
+              Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCharacter}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
