@@ -75,9 +75,17 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       setLoading(true);
       setError(null);
       
-      // Проверяем, есть ли userId у персонажа
+      // Получаем userId и проверяем его корректность
       const userId = getCurrentUid();
-      if (userId && !character.userId) {
+      if (!userId) {
+        console.error('saveCurrentCharacter: ID пользователя не найден');
+        setError('ID пользователя не найден');
+        return;
+      }
+      
+      // Явно проверяем и устанавливаем userId как строку
+      if (!character.userId || character.userId !== userId) {
+        console.log('saveCurrentCharacter: Устанавливаем корректный userId:', userId);
         character.userId = userId;
       }
       
@@ -92,7 +100,8 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       }
       
       // Сохраняем персонажа
-      console.log(`CharacterContext: Сохраняем персонажа ${updatedCharacter.name || 'Безымянный'}${updatedCharacter.id ? ' с ID ' + updatedCharacter.id : ''}`);
+      console.log(`CharacterContext: Сохраняем персонажа ${updatedCharacter.name || 'Безымянный'}${updatedCharacter.id ? ' с ID ' + updatedCharacter.id : ''}`, 
+        'userId:', updatedCharacter.userId);
       const savedCharId = await saveCharacter(updatedCharacter);
       
       if (savedCharId) {
@@ -130,11 +139,11 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         return [];
       }
       
-      console.log('CharacterContext: ID пользователя:', userId);
+      console.log('CharacterContext: ID пользователя:', userId, 'тип:', typeof userId);
       
-      // Получаем персонажей конкретного пользователя
-      const fetchedCharacters = await getCharactersByUserId(userId);
-      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса, данные:`, fetchedCharacters);
+      // Получаем персонажей конкретного пользователя, явно передавая userId как строку
+      const fetchedCharacters = await getCharactersByUserId(String(userId));
+      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса`);
       
       // Фильтруем невалидные персонажи
       const validCharacters = fetchedCharacters.filter(char => char !== null && char.id);
@@ -220,7 +229,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     
     const userId = getCurrentUid();
     if (userId) {
-      console.log('CharacterContext: Пользователь авторизован, загружаем персонажей');
+      console.log('CharacterContext: Пользователь авторизован, загружаем персонажей. userId:', userId);
       loadCharacters();
     } else {
       console.log('CharacterContext: Пользователь не авторизован, персонажи не загружаются');

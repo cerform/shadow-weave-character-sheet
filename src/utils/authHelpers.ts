@@ -10,7 +10,7 @@ export const getCurrentUid = (): string | null => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       const uid = currentUser.uid;
-      console.log('authHelpers: ID текущего пользователя:', uid);
+      console.log('authHelpers: ID текущего пользователя:', uid, 'тип:', typeof uid);
       return uid;
     }
     console.log('authHelpers: Пользователь не аутентифицирован');
@@ -38,8 +38,8 @@ export const getCurrentUserIdExtended = (): string => {
           const parsedUser = JSON.parse(savedUser);
           if (parsedUser && (parsedUser.uid || parsedUser.id)) {
             const recoveredId = parsedUser.uid || parsedUser.id;
-            console.log('authHelpers: Восстановлен ID пользователя из localStorage:', recoveredId);
-            return recoveredId;
+            console.log('authHelpers: Восстановлен ID пользователя из localStorage:', recoveredId, 'тип:', typeof recoveredId);
+            return String(recoveredId); // Явно преобразуем в строку
           }
         } catch (e) {
           console.error('authHelpers: Ошибка при парсинге данных пользователя из localStorage:', e);
@@ -51,8 +51,8 @@ export const getCurrentUserIdExtended = (): string => {
     }
     
     const uid = auth.currentUser.uid;
-    console.log('authHelpers: ID пользователя получен успешно:', uid);
-    return uid;
+    console.log('authHelpers: ID пользователя получен успешно:', uid, 'тип:', typeof uid);
+    return String(uid); // Явно преобразуем в строку
   } catch (error) {
     console.error('authHelpers: Критическая ошибка при получении ID пользователя:', error);
     return '';

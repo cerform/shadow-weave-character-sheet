@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, UserPlus } from "lucide-react";
+import { Loader2, AlertCircle, UserPlus, Bug } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { createTestCharacter } from '@/services/characterService';
 import InfoMessage from '@/components/ui/InfoMessage';
+import { useAuth } from '@/hooks/use-auth';
+import { getCurrentUid } from '@/utils/authHelpers';
 
 interface CharacterCardsProps {
   characters: Character[];
@@ -16,8 +18,33 @@ interface CharacterCardsProps {
 
 const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, loading = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [creatingTest, setCreatingTest] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  
+  // Добавляем отладочную информацию
+  useEffect(() => {
+    const uid = getCurrentUid();
+    setDebugInfo({
+      currentUserId: uid,
+      currentUserIdType: typeof uid,
+      authUser: user ? {
+        id: user.id || user.uid,
+        idType: typeof (user.id || user.uid)
+      } : null,
+      characters: characters ? {
+        count: characters.length,
+        type: typeof characters,
+        isArray: Array.isArray(characters),
+        firstCharacter: characters.length > 0 ? {
+          id: characters[0].id,
+          userId: characters[0].userId,
+          userIdType: typeof characters[0].userId
+        } : null
+      } : null
+    });
+  }, [user, characters]);
   
   // Отладочный вывод
   console.log("CharacterCards: получены персонажи:", characters);
@@ -94,6 +121,19 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
           <p className="mt-2 text-sm text-muted-foreground">
             Для отладки: создать тестового персонажа с базовыми данными
           </p>
+          
+          {/* Отладочная информация */}
+          {debugInfo && (
+            <div className="mt-6 p-4 bg-black/40 rounded-lg text-left">
+              <div className="flex items-center mb-2">
+                <Bug className="h-4 w-4 mr-2 text-blue-400" />
+                <h3 className="text-blue-400 font-medium">Отладочная информация</h3>
+              </div>
+              <pre className="text-xs text-white whitespace-pre-wrap break-words">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -103,6 +143,20 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
   return (
     <div style={{ padding: 20 }} className="bg-black/20 rounded-lg">
       <h2 style={{ color: "white" }} className="mb-4">Список персонажей ({characters.length}):</h2>
+      
+      {/* Отладочная информация */}
+      {debugInfo && (
+        <div className="mb-4 p-3 bg-black/40 rounded text-left">
+          <div className="flex items-center mb-2">
+            <Bug className="h-4 w-4 mr-2 text-blue-400" />
+            <h3 className="text-blue-400 font-medium">Отладочная информация</h3>
+          </div>
+          <pre className="text-xs text-white whitespace-pre-wrap break-words max-h-40 overflow-auto">
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+        </div>
+      )}
+      
       <ul>
         {characters.map((char) => (
           <li 
