@@ -75,7 +75,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
           name: spell.name,
           level: spell.level,
-          school: spell.school || '����ниверсальн��я',
+          school: spell.school || '�����ниверсальн��я',
           castingTime: spell.castingTime || '1 действие',
           range: spell.range || 'На себя',
           components: spell.components || '',
