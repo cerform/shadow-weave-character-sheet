@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
+
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { CharacterContext } from '@/contexts/CharacterContext';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { Badge } from "@/components/ui/badge";
 
 interface SkillsPanelProps {
@@ -13,7 +14,7 @@ export const SkillsPanel = ({ character }: SkillsPanelProps) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  const { updateCharacter } = useContext(CharacterContext);
+  const { updateCharacter } = useCharacter();
   
   // Функция для вычисления модификатора характеристики
   const getModifier = (score: number) => {

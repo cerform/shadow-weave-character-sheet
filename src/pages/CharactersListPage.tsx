@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -43,6 +42,8 @@ const CharactersListPage: React.FC = () => {
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [creatingTest, setCreatingTest] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>({});
+  // Add local error state since we're using it
+  const [localError, setLocalError] = useState<string | null>(null);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -82,7 +83,7 @@ const CharactersListPage: React.FC = () => {
       if (!userId) {
         console.log('CharactersListPage: ID пользователя не найден');
         setDebugInfo(prev => ({...prev, userIdError: 'ID пользователя не найден'}));
-        setError('ID пользователя не найден');
+        setLocalError('ID пользователя не найден');
         return;
       }
       
@@ -290,6 +291,7 @@ const CharactersListPage: React.FC = () => {
               <div>Попыток загрузки: {loadAttempts}</div>
               <div>ID пользователя: {getCurrentUid() || 'Не найден'}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
+              {localError && <div className="text-red-400">Ошибка: {localError}</div>}
               <div className="mt-2">
                 <h4 className="font-semibold text-blue-300">Отладочные данные:</h4>
                 <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
