@@ -29,7 +29,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   useEffect(() => {
     const autoSaveCharacter = async () => {
       // Проверяем, был ли уже выполнен автосейв для предотвращения повторных запросов
-      if (!autoSaved && character.name && character.race && character.class && !isSaving) {
+      if (!autoSaved && character.name && character.race && character.class && !isSaving && !character.id) {
         try {
           console.log('Начинаем автоматическое сохранение персонажа...');
           setIsSaving(true);

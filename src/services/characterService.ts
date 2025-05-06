@@ -315,6 +315,23 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       filter: `where userId == ${userId}`
     });
     
+    // Попробуем сначала получить все документы, чтобы увидеть, что есть в коллекции
+    try {
+      const allDocsSnapshot = await getDocs(collection(db, 'characters'));
+      console.log(`В коллекции characters всего документов: ${allDocsSnapshot.size}`);
+      
+      if (allDocsSnapshot.size > 0) {
+        console.log('Примеры документов:');
+        allDocsSnapshot.forEach((doc, index) => {
+          if (index < 3) { // показываем только первые 3 документа для отладки
+            console.log(`Документ ${index + 1}:`, { id: doc.id, data: doc.data() });
+          }
+        });
+      }
+    } catch (allDocsError) {
+      console.error('Ошибка при получении всех документов:', allDocsError);
+    }
+    
     const querySnapshot = await getDocs(q);
     
     console.log('Query returned documents count:', querySnapshot.size);

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
@@ -16,6 +15,7 @@ import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
 import CharactersListPage from './pages/CharactersListPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
+import DebugPage from './pages/DebugPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
@@ -123,6 +123,9 @@ const AppRoutes: React.FC = () => {
       
       {/* Перенаправление для исправленных URL */}
       <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
+      
+      {/* Добавляем маршрут для отладки */}
+      <Route path="/debug" element={<DebugPage />} />
       
       {/* Общедоступные маршруты */}
       <Route path="/spellbook" element={<SpellbookPage />} />

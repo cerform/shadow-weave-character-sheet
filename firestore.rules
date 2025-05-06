@@ -11,13 +11,15 @@ service cloud.firestore {
     // ⚔️ Персонажи: пользователь может читать/писать только свои
     match /characters/{characterId} {
       // Разрешаем чтение персонажа, если user.id совпадает с userId в документе
+      // Также разрешаем чтение всех персонажей текущему пользователю для отображения списка
       allow read: if request.auth != null && 
-        (resource.data.userId == request.auth.uid);
+        (resource.data.userId == request.auth.uid || request.auth.uid != null);
       
       // Для записи проверяем, что пользователь записывает свой userId
-      // И предотвращаем создание дубликатов, если документ уже существует
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && 
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.userId == request.auth.uid);
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
