@@ -1,18 +1,19 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Card, CardContent } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
+import { getAllSpells } from '@/data/spells';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -38,7 +39,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  const { selectedSpells, availableSpells: contextAvailableSpells, addSpell, removeSpell, getSpellLimits, getSelectedSpellCount, saveCharacterSpells, loadSpellsForCharacter } = useSpellbook();
+  const { selectedSpells, availableSpells: contextAvailableSpells, addSpell, removeSpell, getSpellLimits, getSelectedSpellCount, saveCharacterSpells } = useSpellbook();
   
   // Use props or derived values
   const effectiveLevel = level || character.level || 1;
@@ -46,22 +47,64 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [directFilteredSpells, setDirectFilteredSpells] = useState<SpellData[]>([]);
 
-  // Эффект для загрузки заклинаний при монтировании или изменении класса/уровня
+  // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
-    if (effectiveClass) {
+    const loadSpellsDirectly = () => {
+      if (!effectiveClass) return;
+      
       setLoading(true);
-      console.log(`Loading spells for ${effectiveClass} (level ${effectiveLevel})`);
+      console.log(`Loading spells directly for ${effectiveClass} (level ${effectiveLevel})`);
       
-      // Принудительно загружаем заклинания
-      loadSpellsForCharacter(effectiveClass, effectiveLevel);
-      
-      // Даем время на загрузку
-      setTimeout(() => {
+      try {
+        // Получаем все заклинания
+        const allSpells = getAllSpells();
+        console.log(`Total spells available: ${allSpells.length}`);
+        
+        // Вычисляем максимальный уровень заклинаний
+        const maxSpellLevel = Math.ceil(effectiveLevel / 2);
+        console.log(`Maximum spell level: ${maxSpellLevel}`);
+        
+        // Фильтруем заклинания для указанного класса и уровня
+        const filteredSpells = allSpells.filter(spell => {
+          // Проверяем, подходит ли заклинание для данного класса
+          let spellClasses: string[] = [];
+          if (typeof spell.classes === 'string') {
+            spellClasses = [spell.classes.toLowerCase()];
+          } else if (Array.isArray(spell.classes)) {
+            spellClasses = spell.classes.map(c => c.toLowerCase());
+          }
+          
+          // Проверяем соответствие класса и уровня
+          const matchesClass = spellClasses.some(cls => 
+            cls === effectiveClass.toLowerCase() || 
+            (effectiveClass.toLowerCase() === 'жрец' && cls === 'cleric') ||
+            (effectiveClass.toLowerCase() === 'волшебник' && cls === 'wizard') ||
+            (effectiveClass.toLowerCase() === 'друид' && cls === 'druid') ||
+            (effectiveClass.toLowerCase() === 'бард' && cls === 'bard') ||
+            (effectiveClass.toLowerCase() === 'колдун' && cls === 'warlock') ||
+            (effectiveClass.toLowerCase() === 'чародей' && cls === 'sorcerer') ||
+            (effectiveClass.toLowerCase() === 'паладин' && cls === 'paladin')
+          );
+          
+          // Проверяем, не превышает ли уровень заклинания максимальный доступный уровень
+          const levelIsValid = spell.level <= maxSpellLevel;
+          
+          return matchesClass && levelIsValid;
+        });
+        
+        console.log(`Found ${filteredSpells.length} spells for ${effectiveClass}`);
+        setDirectFilteredSpells(filteredSpells);
+      } catch (error) {
+        console.error("Error loading spells:", error);
+      } finally {
         setLoading(false);
-      }, 1000);
-    }
-  }, [effectiveClass, effectiveLevel, loadSpellsForCharacter]);
+      }
+    };
+    
+    loadSpellsDirectly();
+  }, [effectiveClass, effectiveLevel]);
 
   // Получаем модификатор характеристики
   const getModifierForClass = useCallback(() => {
@@ -96,21 +139,44 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   // Получаем текущие количества заклинаний
   const spellCounts = getSelectedSpellCount();
 
-  // Функция для фильтрации заклинаний по поисковому запросу
-  const filterSpells = useCallback(() => {
-    // Используем доступные заклинания из контекста
-    const effectiveAvailableSpells = propAvailableSpells || contextAvailableSpells;
+  // Определяем список заклинаний для отображения, используя все доступные источники
+  const availableSpellsToShow = useMemo(() => {
+    // Приоритет: 1. пропсы, 2. напрямую отфильтрованные, 3. контекст
+    if (propAvailableSpells && propAvailableSpells.length > 0) {
+      console.log("Using spells from props:", propAvailableSpells.length);
+      return propAvailableSpells;
+    }
     
-    if (!effectiveAvailableSpells || effectiveAvailableSpells.length === 0) {
-      console.log("No spells available for filtering");
+    if (directFilteredSpells.length > 0) {
+      console.log("Using directly filtered spells:", directFilteredSpells.length);
+      return directFilteredSpells;
+    }
+    
+    if (contextAvailableSpells && Array.isArray(contextAvailableSpells) && contextAvailableSpells.length > 0) {
+      console.log("Using spells from context:", contextAvailableSpells.length);
+      return contextAvailableSpells;
+    }
+    
+    console.log("No spells available");
+    return [];
+  }, [propAvailableSpells, directFilteredSpells, contextAvailableSpells]);
+
+  // Функция для фильтрации заклинаний по поисковому запросу
+  useEffect(() => {
+    if (!availableSpellsToShow || availableSpellsToShow.length === 0) {
       setFilteredSpells([]);
       return;
     }
 
-    console.log(`Filtering spells. Total available: ${effectiveAvailableSpells.length}`);
+    console.log(`Filtering ${availableSpellsToShow.length} spells with search term: '${searchTerm}'`);
     
-    let filtered = effectiveAvailableSpells.filter(spell => {
-      const searchTermLower = searchTerm.toLowerCase();
+    if (!searchTerm) {
+      setFilteredSpells(availableSpellsToShow);
+      return;
+    }
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    const filtered = availableSpellsToShow.filter(spell => {
       const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
       const schoolMatch = spell.school?.toLowerCase().includes(searchTermLower) || false;
       const descMatch = Array.isArray(spell.description) 
@@ -119,15 +185,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       
       return nameMatch || schoolMatch || descMatch;
     });
-
-    console.log(`After filtering: ${filtered.length} spells match criteria`);
+    
+    console.log(`Filter results: ${filtered.length} spells match criteria`);
     setFilteredSpells(filtered);
-  }, [propAvailableSpells, contextAvailableSpells, searchTerm]);
-
-  // Обновляем отфильтрованные заклинания при изменении доступных
-  useEffect(() => {
-    filterSpells();
-  }, [filterSpells, contextAvailableSpells]);
+  }, [availableSpellsToShow, searchTerm]);
 
   // Обработчик изменения поискового запроса
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +197,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Проверяем, изучено ли заклинание
   const isSpellKnown = useCallback((spell: SpellData) => {
-    if (!character.spells) return false;
+    if (!character.spells || !Array.isArray(character.spells)) return false;
     
     return character.spells.some(s => {
       if (typeof s === 'string') return s === spell.name;
@@ -194,9 +255,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             </div>
           ) : filteredSpells.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
-              {contextAvailableSpells.length === 0 
-                ? "Нет доступных заклинаний для этого класса" 
-                : "Заклинания не найдены"}
+              {availableSpellsToShow.length === 0 
+                ? `Нет доступных заклинаний для класса ${effectiveClass}` 
+                : "Заклинания не найдены по запросу"}
             </div>
           ) : (
             filteredSpells.map((spell) => {
@@ -206,11 +267,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                 : spellCounts.spells < knownSpells;
               
               return (
-                <Card key={spell.id} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
+                <Card key={spell.id || spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
                   <CardContent className="flex items-center justify-between p-3">
                     <div style={{color: currentTheme.textColor}}>
                       <div className="font-medium">{spell.name}</div>
-                      <div className="text-xs">{spell.school}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}</div>
+                      <div className="text-xs">{spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}</div>
                     </div>
                     <Button
                       variant={isAdded ? "default" : "outline"}
