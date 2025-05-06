@@ -42,18 +42,24 @@ export const filterByClass = (spells: SpellData[], classes: string[]): SpellData
   return spells.filter(spell => {
     if (!spell.classes) return false;
     
+    // Обрабатываем случай, когда classes это строка
     if (typeof spell.classes === 'string') {
-      return classes.some(c => spell.classes.toLowerCase().includes(c.toLowerCase()));
+      const spellClassLower = spell.classes.toLowerCase();
+      return classes.some(c => spellClassLower.includes(c.toLowerCase()));
     }
     
-    return spell.classes.some(spellClass => 
-      classes.some(c => {
+    // Обрабатываем случай, когда classes это массив строк
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.some(spellClass => {
         if (typeof spellClass === 'string') {
-          return spellClass.toLowerCase().includes(c.toLowerCase());
+          const spellClassLower = spellClass.toLowerCase();
+          return classes.some(c => spellClassLower.includes(c.toLowerCase()));
         }
         return false;
-      })
-    );
+      });
+    }
+    
+    return false;
   });
 };
 

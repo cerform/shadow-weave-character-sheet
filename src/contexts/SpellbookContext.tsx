@@ -109,6 +109,8 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         duration: spell.duration || 'Мгновенная',
         description: spell.description || '',
         classes: spell.classes || [],
+        ritual: spell.ritual || false,
+        concentration: spell.concentration || false
       } as SpellData;
     });
     
@@ -135,8 +137,10 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
                   range: 'Касание',
                   components: '',
                   duration: 'Мгновенная',
-                  description: '',
+                  description: [''],
                   classes: characterClass,
+                  ritual: false,
+                  concentration: false
                 } as SpellData;
               }
             } else {

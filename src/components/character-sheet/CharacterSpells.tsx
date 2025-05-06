@@ -1,11 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Character, CharacterSpell } from '@/types/character';
-import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils'; // Обновленный импорт
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Book, CheckCircle, Circle } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';

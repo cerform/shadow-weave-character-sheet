@@ -11,9 +11,6 @@ export interface SpellData {
   components: string;
   duration: string;
   description: string[];
-  higherLevel?: string;
-  higherLevels?: string;
-  materials?: string;
   classes: string[] | string;
   ritual: boolean;
   concentration: boolean;
@@ -22,6 +19,9 @@ export interface SpellData {
   somatic?: boolean;
   material?: boolean;
   source?: string;
+  higherLevel?: string;
+  higherLevels?: string;
+  materials?: string;
 }
 
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {

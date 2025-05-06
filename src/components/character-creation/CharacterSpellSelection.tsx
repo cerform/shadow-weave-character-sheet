@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -172,7 +171,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return [];
   }, [propAvailableSpells, contextAvailableSpells, internalAvailableSpells]);
 
-  // Функция для фильтрации заклинаний по поисковому запросу
+  // Фильтрация по поисковому запросу и активной вкладке
   useEffect(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) {
       console.log("No spells available for filtering");
@@ -190,9 +189,16 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       filtered = spellsToFilter.filter(spell => {
         const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
         const schoolMatch = spell.school?.toLowerCase().includes(searchTermLower) || false;
-        const descMatch = Array.isArray(spell.description) 
-          ? spell.description.join(' ').toLowerCase().includes(searchTermLower)
-          : (spell.description || '').toLowerCase().includes(searchTermLower);
+        
+        // Безопасная проверка типа description
+        let descMatch = false;
+        if (spell.description) {
+          if (Array.isArray(spell.description)) {
+            descMatch = spell.description.join(' ').toLowerCase().includes(searchTermLower);
+          } else if (typeof spell.description === 'string') {
+            descMatch = spell.description.toLowerCase().includes(searchTermLower);
+          }
+        }
         
         return nameMatch || schoolMatch || descMatch;
       });

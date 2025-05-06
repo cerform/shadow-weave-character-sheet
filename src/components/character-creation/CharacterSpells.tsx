@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { calculateKnownSpells, getMaxSpellLevel } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 import NavigationButtons from './NavigationButtons';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import { useSpellbook } from '@/contexts/SpellbookContext';
