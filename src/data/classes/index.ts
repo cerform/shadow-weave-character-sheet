@@ -140,7 +140,7 @@ const wizardClassData = {
   }
 };
 
-// Export classData as a named export (this is the key fix!)
+// Explicitly export classData as a named export
 export const classData = {
   "Бард": bardClassData,
   "Жрец": clericClassData,
