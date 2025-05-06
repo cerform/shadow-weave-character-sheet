@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Character } from '@/types/character';
+import { getItemDisplayText, isItem } from '@/utils/itemUtils';
 
 interface InventoryTabProps {
   character: Character;
@@ -36,7 +37,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
           <h3 className="text-lg font-semibold">Оружие</h3>
           <ul className="list-disc pl-5">
             {getWeapons().map((weapon, index) => (
-              <li key={index}>{weapon}</li>
+              <li key={index}>{isItem(weapon) ? weapon.name : weapon}</li>
             ))}
           </ul>
         </div>
@@ -51,7 +52,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
         <h3 className="text-lg font-semibold">Предметы</h3>
         <ul className="list-disc pl-5">
           {getItems().map((item, index) => (
-            <li key={index}>{item}</li>
+            <li key={index}>{isItem(item) ? getItemDisplayText(item) : item}</li>
           ))}
         </ul>
       </div>
@@ -61,23 +62,23 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
         <div className="grid grid-cols-5 gap-2">
           <div className="text-center">
             <p className="font-bold">ММ</p>
-            <p>{character.currency?.cp || 0}</p>
+            <p>{character.money?.cp || 0}</p>
           </div>
           <div className="text-center">
             <p className="font-bold">СМ</p>
-            <p>{character.currency?.sp || 0}</p>
+            <p>{character.money?.sp || 0}</p>
           </div>
           <div className="text-center">
             <p className="font-bold">ЭМ</p>
-            <p>{character.currency?.ep || 0}</p>
+            <p>{character.money?.ep || 0}</p>
           </div>
           <div className="text-center">
             <p className="font-bold">ЗМ</p>
-            <p>{character.currency?.gp || 0}</p>
+            <p>{character.money?.gp || 0}</p>
           </div>
           <div className="text-center">
             <p className="font-bold">ПМ</p>
-            <p>{character.currency?.pp || 0}</p>
+            <p>{character.money?.pp || 0}</p>
           </div>
         </div>
       </div>

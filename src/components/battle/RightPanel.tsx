@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Token } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
 import { createDefaultCharacter } from '@/utils/characterUtils';
+import { Character } from '@/types/character';
 
 interface RightPanelProps {
   tokens: Token[];
@@ -44,6 +46,8 @@ interface RightPanelProps {
   onRemoveLightSource?: (id: number) => void;
   onUpdateLightSource?: (id: number, updates: Partial<Omit<LightSource, 'id'>>) => void;
   onAttachLightToToken?: (lightId: number, tokenId: number | undefined) => void;
+  onUpdateTokenHP?: (id: number, hp: number) => void;
+  onRemoveCondition?: (tokenId: number, conditionIndex: number) => void;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -75,7 +79,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onAddLightSource = () => {},
   onRemoveLightSource = () => {},
   onUpdateLightSource = () => {},
-  onAttachLightToToken = () => {}
+  onAttachLightToToken = () => {},
+  onUpdateTokenHP = () => {},
+  onRemoveCondition = () => {}
 }) => {
   const [tokenName, setTokenName] = useState('');
   const [tokenType, setTokenType] = useState<"player" | "monster" | "npc" | "boss">("monster");
@@ -122,16 +128,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
   
   const dummyCharacter = createDefaultCharacter();
   
-  const handleSelectToken = (id: string) => {
-    onSelectToken(Number(id));
+  const handleSelectToken = (id: number) => {
+    onSelectToken(id);
   };
 
-  const handleTokenHPChange = (id: string, newHP: number) => {
-    onUpdateTokenHP(Number(id), newHP);
+  const handleTokenHPChange = (id: number, newHP: number) => {
+    onUpdateTokenHP(id, newHP);
   };
 
-  const handleRemoveCondition = (tokenId: string, conditionIndex: number) => {
-    onRemoveCondition(Number(tokenId), conditionIndex);
+  const handleRemoveCondition = (tokenId: number, conditionIndex: number) => {
+    onRemoveCondition(tokenId, conditionIndex);
+  };
+  
+  // Фиксируем все числовые преобразования
+  const handleOnRemoveLight = (id: string) => {
+    onRemoveLightSource(Number(id));
+  };
+  
+  const handleOnAttachLight = (lightId: string, tokenId?: string) => {
+    onAttachLightToToken(Number(lightId), tokenId ? Number(tokenId) : undefined);
+  };
+  
+  const handleCharacterUpdate = () => {
+    // This is just a dummy function for DicePanel
+    console.log('Character update called from RightPanel');
   };
 
   return (
@@ -174,14 +194,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => onAttachLightToToken(light.id, undefined)}
+                      onClick={() => handleOnAttachLight(String(light.id), undefined)}
                     >
                       Открепить
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => onRemoveLightSource(light.id)}
+                      onClick={() => handleOnRemoveLight(String(light.id))}
                     >
                       Удалить
                     </Button>
@@ -372,7 +392,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
         <DicePanel 
           character={dummyCharacter} 
           onUpdate={handleCharacterUpdate}
-          compactMode={true} 
           isDM={isDM} 
           tokens={tokens} 
           selectedTokenId={selectedTokenId || 0}

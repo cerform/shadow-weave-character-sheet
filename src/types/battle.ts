@@ -77,8 +77,6 @@ export interface DicePanelProps {
 export interface LightSource {
   id: string;
   position: { x: number; y: number }; // Добавляем position вместо x и y
-  x?: number; // Для обратной совместимости
-  y?: number; // Для обратной совместимости
   radius: number;
   color?: string;
   intensity?: number;
@@ -105,11 +103,60 @@ export interface SpellCastingPanelProps {
 
 export interface SpellPanelProps {
   character: Character;
-  spells?: (string | CharacterSpell)[];
+  spells?: any[];
   onUpdate?: (newSpells: any) => void;
 }
 
 export interface CharacterComponentProps {
   character: Character;
   onUpdate?: (updates: Partial<Character>) => void;
+}
+
+// Добавляем интерфейсы для MobileCharacterCreationPage
+export interface CharacterRaceSelectionProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterSubraceSelectionProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterClassSelectionProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterLevelSelectionProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterAbilityScoresProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterBackgroundProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  backgrounds: any[];
+}
+
+export interface CharacterHitPointsCalculatorProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterBasicInfoProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+export interface CharacterSpellSelectionProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }

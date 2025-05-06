@@ -18,6 +18,14 @@ export interface UserType {
   createdAt?: Date;
 }
 
+// Type definition for User that includes role property
+export interface User {
+  id: string;
+  email?: string;
+  displayName?: string;
+  role?: 'user' | 'dm' | 'admin';
+}
+
 export interface AuthContextType {
   currentUser: UserType | null;
   user: UserType | null; // Добавляем user как алиас для currentUser

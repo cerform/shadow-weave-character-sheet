@@ -21,23 +21,6 @@ const NotFoundPage = () => <div>Страница не найдена</div>;
 const DMPage = () => <div>Страница мастера</div>;
 const BattleMap = () => <div>Карта боя</div>;
 
-// Добавим интерфейс для User
-interface User {
-  id: string;
-  email?: string;
-  displayName?: string;
-  role?: 'user' | 'dm' | 'admin';
-}
-
-// Обновляем типы для хука useAuth
-interface AuthContextType {
-  isAuthenticated: boolean;
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, displayName: string) => Promise<void>;
-}
-
 // Простой компонент для защиты маршрутов
 const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
   // Используем авторизацию без явного приведения типов
