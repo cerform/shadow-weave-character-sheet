@@ -1,4 +1,3 @@
-
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { Character } from '@/types/character';
@@ -102,7 +101,7 @@ export const saveCharacter = async (character: Character): Promise<string> => {
     }
     
     if (character.id) {
-      // Обновление существующего персонажа
+      // Обновление ��уществующего персонажа
       const docRef = doc(db, 'characters', character.id);
       await updateDoc(docRef, { ...character });
       return character.id;
@@ -113,6 +112,52 @@ export const saveCharacter = async (character: Character): Promise<string> => {
     }
   } catch (error) {
     console.error('Ошибка при сохранении персонажа:', error);
+    throw error;
+  }
+};
+
+/**
+ * Сохранение персонажа в Firestore
+ * @param character Данные персонажа
+ * @param userId ID пользователя
+ * @returns ID персонажа
+ */
+export const saveCharacterToFirestore = async (character: Character, userId?: string): Promise<string> => {
+  try {
+    // Проверяем наличие userId
+    const uid = userId || getCurrentUid();
+    if (!uid) {
+      throw new Error('Ошибка: Пользователь не авторизован');
+    }
+
+    // Создаем копию персонажа для сохранения
+    const characterToSave = { 
+      ...character,
+      userId: uid,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Если это новый персонаж, добавляем дату создания
+    if (!characterToSave.createdAt) {
+      characterToSave.createdAt = new Date().toISOString();
+    }
+
+    let charId: string;
+    
+    if (character.id) {
+      // Обновление существующего персонажа
+      const docRef = doc(db, 'characters', character.id);
+      await updateDoc(docRef, { ...characterToSave });
+      charId = character.id;
+    } else {
+      // Создание нового персонажа
+      const docRef = await addDoc(collection(db, 'characters'), { ...characterToSave });
+      charId = docRef.id;
+    }
+
+    return charId;
+  } catch (error) {
+    console.error('Ошибка при сохранении персонажа в Firestore:', error);
     throw error;
   }
 };
@@ -144,11 +189,23 @@ export const createTestCharacter = async (): Promise<string> => {
     }
     
     // Создаем тестового персонажа с явно указанным userId
+    // Исправляем тип, добавляя все обязательные поля из интерфейса Character
     const testChar: Character = {
+      id: "", // Пустая строка для нового персонажа
       name: `Тест ${new Date().toLocaleTimeString()}`,
-      className: 'Воин',
+      class: 'Воин', // Используем class вместо className, чтобы соответствовать интерфейсу
+      className: 'Воин', // Оставляем для обратной совместимости
       race: 'Человек',
       level: 1,
+      experience: 0,  // Добавляем обязательное поле
+      strength: 10,   // Добавляем обязательные поля характеристик
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10,
+      maxHp: 10,      // Добавляем обязательные поля здоровья
+      currentHp: 10,
       userId: userId, // Явно указываем userId
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
