@@ -5,16 +5,17 @@ export { useAuth, AuthProvider, AuthContext } from '@/contexts/AuthContext';
 // Экспортируем типы для удобства использования
 export type { UserType, AuthContextType } from '@/types/auth';
 
+// Импортируем AuthContext для использования в хуках
+import { useAuth } from '@/contexts/AuthContext';
+
 // Удобный хук для проверки аутентификации
 export const useIsAuthenticated = () => {
-  const { useAuth } = require('@/contexts/AuthContext');
   const { isAuthenticated, currentUser, loading } = useAuth();
   return { isAuthenticated, currentUser, loading };
 };
 
 // Хук для проверки роли пользователя
 export const useUserRole = () => {
-  const { useAuth } = require('@/contexts/AuthContext');
   const { currentUser } = useAuth();
   return {
     isDM: currentUser?.role === 'dm' || currentUser?.isDM === true,
