@@ -1,67 +1,65 @@
 
 import React, { useEffect, useState } from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
-interface CapturedError {
+// Тип для отслеживаемых ошибок консоли
+interface CaughtError {
   message: string;
-  timestamp: string;
+  timestamp: Date;
   stack?: string;
 }
 
 const ConsoleErrorCatcher: React.FC = () => {
-  const [errors, setErrors] = useState<CapturedError[]>([]);
-  const [warnings, setWarnings] = useState<CapturedError[]>([]);
-
+  const [errors, setErrors] = useState<CaughtError[]>([]);
+  const [warnings, setWarnings] = useState<CaughtError[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
+  
   useEffect(() => {
     // Сохраняем оригинальные методы консоли
     const originalConsoleError = console.error;
     const originalConsoleWarn = console.warn;
     
-    // Переопределяем console.error
-    console.error = function(...args) {
+    // Перехватываем console.error
+    console.error = (...args: any[]) => {
       // Вызываем оригинальный метод
       originalConsoleError.apply(console, args);
       
-      // Добавляем ошибку в наш список
-      const errorMessage = args
-        .map(arg => {
-          if (arg instanceof Error) return arg.message;
-          if (typeof arg === 'object') return JSON.stringify(arg);
-          return String(arg);
-        })
-        .join(' ');
+      // Создаем объект ошибки
+      const errorMessage = args.map(arg => 
+        typeof arg === 'string' ? arg : 
+        arg instanceof Error ? arg.message : 
+        JSON.stringify(arg)
+      ).join(' ');
       
-      setErrors(prev => [
-        ...prev, 
-        { 
-          message: errorMessage,
-          timestamp: new Date().toISOString(),
-          stack: args[0] instanceof Error ? args[0].stack : undefined
-        }
-      ].slice(-5)); // Хранить только последние 5 ошибок
+      const errorObj: CaughtError = {
+        message: errorMessage,
+        timestamp: new Date(),
+        stack: args.find(arg => arg instanceof Error)?.stack
+      };
+      
+      // Добавляем ошибку в состояние
+      setErrors(prev => [...prev, errorObj]);
     };
     
-    // Переопределяем console.warn
-    console.warn = function(...args) {
+    // Перехватываем console.warn
+    console.warn = (...args: any[]) => {
       // Вызываем оригинальный метод
       originalConsoleWarn.apply(console, args);
       
-      // Добавляем предупреждение в наш список
-      const warnMessage = args
-        .map(arg => {
-          if (typeof arg === 'object') return JSON.stringify(arg);
-          return String(arg);
-        })
-        .join(' ');
+      // Создаем объект предупреждения
+      const warnMessage = args.map(arg => 
+        typeof arg === 'string' ? arg : 
+        JSON.stringify(arg)
+      ).join(' ');
       
-      setWarnings(prev => [
-        ...prev, 
-        { 
-          message: warnMessage,
-          timestamp: new Date().toISOString() 
-        }
-      ].slice(-5)); // Хранить только последние 5 предупреждений
+      const warnObj: CaughtError = {
+        message: warnMessage,
+        timestamp: new Date()
+      };
+      
+      // Добавляем предупреждение в состояние
+      setWarnings(prev => [...prev, warnObj]);
     };
     
     // Восстанавливаем оригинальные методы при размонтировании
@@ -71,56 +69,73 @@ const ConsoleErrorCatcher: React.FC = () => {
     };
   }, []);
   
+  // Если нет ошибок и предупреждений, не отображаем компонент
   if (errors.length === 0 && warnings.length === 0) {
     return null;
   }
   
   return (
-    <div className="space-y-2 mb-4">
-      {errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="flex items-center gap-2">
-            Ошибки консоли <span className="text-xs bg-red-900 px-1.5 py-0.5 rounded-full">{errors.length}</span>
-          </AlertTitle>
-          <AlertDescription>
-            <div className="mt-2 space-y-2 max-h-48 overflow-y-auto text-xs">
-              {errors.map((error, index) => (
-                <div key={index} className="p-2 border border-red-900 bg-red-950 rounded">
-                  <div className="font-mono">{error.message}</div>
-                  {error.stack && (
-                    <details>
-                      <summary className="cursor-pointer text-red-400">Stack trace</summary>
-                      <pre className="whitespace-pre-wrap text-[10px] mt-1 pl-2 border-l border-red-800">{error.stack}</pre>
-                    </details>
-                  )}
-                  <div className="text-[10px] text-red-500 mt-1">{new Date(error.timestamp).toLocaleTimeString()}</div>
-                </div>
-              ))}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {warnings.length > 0 && (
-        <Alert variant="warning" className="border-amber-500 bg-amber-950/40">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertTitle className="flex items-center gap-2 text-amber-500">
-            Предупреждения <span className="text-xs bg-amber-900 px-1.5 py-0.5 rounded-full">{warnings.length}</span>
-          </AlertTitle>
-          <AlertDescription className="text-amber-300">
-            <div className="mt-2 space-y-2 max-h-48 overflow-y-auto text-xs">
-              {warnings.map((warning, index) => (
-                <div key={index} className="p-2 border border-amber-900 bg-amber-950/60 rounded">
-                  <div className="font-mono">{warning.message}</div>
-                  <div className="text-[10px] text-amber-600 mt-1">{new Date(warning.timestamp).toLocaleTimeString()}</div>
-                </div>
-              ))}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
+    <Card className={`mb-4 ${errors.length > 0 ? 'bg-red-900/30 border-red-600/50' : 'bg-amber-900/30 border-amber-600/50'}`}>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {errors.length > 0 ? (
+              <AlertCircle size={18} className="text-red-400" />
+            ) : (
+              <Check size={18} className="text-amber-400" />
+            )}
+            
+            <span className={errors.length > 0 ? 'text-red-200' : 'text-amber-200'}>
+              {errors.length > 0 
+                ? `Перехвачено ${errors.length} ошибок консоли` 
+                : `Перехвачено ${warnings.length} предупреждений`}
+            </span>
+          </div>
+          
+          <button 
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs text-gray-300 hover:underline"
+          >
+            {showDetails ? 'Скрыть детали' : 'Показать детали'}
+          </button>
+        </div>
+        
+        {showDetails && (
+          <div className="mt-2 space-y-2">
+            {errors.length > 0 && (
+              <div>
+                <h4 className="font-medium text-red-300 mb-1">Ошибки:</h4>
+                <ul className="space-y-1 text-xs">
+                  {errors.map((error, index) => (
+                    <li key={`error-${index}`} className="bg-black/30 p-2 rounded">
+                      <div>{error.message}</div>
+                      {error.stack && (
+                        <div className="mt-1 text-gray-400 whitespace-pre-wrap text-[10px]">
+                          {error.stack}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {warnings.length > 0 && (
+              <div>
+                <h4 className="font-medium text-amber-300 mb-1">Предупреждения:</h4>
+                <ul className="space-y-1 text-xs">
+                  {warnings.map((warning, index) => (
+                    <li key={`warn-${index}`} className="bg-black/30 p-2 rounded">
+                      {warning.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

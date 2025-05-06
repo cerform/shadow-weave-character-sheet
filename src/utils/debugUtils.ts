@@ -68,7 +68,7 @@ export const analyzeCharacter = (character: Character) => {
 /**
  * Проверяет список персонажей на наличие проблем
  */
-export const validateCharacters = (characters?: Character[]) => {
+export const validateCharacters = (characters?: Character[] | null) => {
   if (!characters || !Array.isArray(characters)) {
     return {
       valid: false,
@@ -90,6 +90,16 @@ export const validateCharacters = (characters?: Character[]) => {
   }
   
   const detailedIssues = characters.map((character, index) => {
+    if (!character) {
+      return {
+        index,
+        id: 'unknown',
+        name: 'Пустой объект',
+        valid: false,
+        issues: ['Объект персонажа равен null или undefined']
+      };
+    }
+    
     const analysis = analyzeCharacter(character);
     return {
       index,

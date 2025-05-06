@@ -44,8 +44,18 @@ const ExtendedDebugger: React.FC<ExtendedDebuggerProps> = ({
   // Проверка валидности персонажей
   const validationIssues = [];
   
-  if (characters && characters.length > 0) {
+  if (characters && Array.isArray(characters) && characters.length > 0) {
     characters.forEach((char, index) => {
+      if (!char) {
+        validationIssues.push({
+          characterIndex: index,
+          characterId: 'unknown',
+          characterName: 'Пустой объект',
+          issues: ['Объект персонажа null или undefined']
+        });
+        return;
+      }
+      
       const issues = [];
       
       if (!char.id) issues.push('Отсутствует ID');
@@ -74,20 +84,28 @@ const ExtendedDebugger: React.FC<ExtendedDebuggerProps> = ({
         });
       }
     });
+  } else if (!Array.isArray(characters)) {
+    validationIssues.push({
+      characterIndex: -1,
+      characterId: 'error',
+      characterName: 'Ошибка типа',
+      issues: ['characters не является массивом']
+    });
   }
   
   // Данные для отладки
   const debugData = {
     characterState: {
-      charactersCount: characters ? characters.length : 0,
+      charactersCount: Array.isArray(characters) ? characters.length : 0,
       isLoading: loading,
       error,
-      firstCharacter: characters && characters.length > 0 ? {
-        id: characters[0].id,
-        name: characters[0].name,
-        class: characters[0].class || characters[0].className,
-        race: characters[0].race,
-        userId: characters[0].userId,
+      charactersIsArray: Array.isArray(characters),
+      firstCharacter: Array.isArray(characters) && characters.length > 0 ? {
+        id: characters[0]?.id,
+        name: characters[0]?.name,
+        class: characters[0]?.class || characters[0]?.className,
+        race: characters[0]?.race,
+        userId: characters[0]?.userId,
       } : null,
     },
     auth: authInfo,
@@ -134,7 +152,7 @@ const ExtendedDebugger: React.FC<ExtendedDebuggerProps> = ({
           data={debugData.environment}
         />
 
-        {characters && characters.length > 0 && (
+        {Array.isArray(characters) && characters.length > 0 && characters[0] && (
           <DebugPanel 
             title="5. Данные первого персонажа (сырые)" 
             data={characters[0]}
