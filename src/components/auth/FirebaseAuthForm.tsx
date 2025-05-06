@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   getAuth,
@@ -21,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { LogIn, UserPlus, LogOut } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,11 @@ const FirebaseAuthForm: React.FC = () => {
   const [role, setRole] = useState<"player" | "dm">("player");
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, currentUser } = useAuth();
+  
+  // Получаем returnPath из параметров state при переходе на страницу auth
+  const returnPath = location.state?.returnPath || '/';
   
   // Получаем текущую тему
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -50,12 +55,12 @@ const FirebaseAuthForm: React.FC = () => {
   useEffect(() => {
     console.log("Firebase Auth Form - Auth state:", { isAuthenticated, currentUser });
     
-    // Если пользователь уже авторизован, перенаправляем на главную
+    // Если пользователь уже авторизован, перенаправляем на указанный путь или на главную
     if (isAuthenticated && currentUser) {
-      console.log("User is authenticated, redirecting to home");
-      navigate('/');
+      console.log("User is authenticated, redirecting to:", returnPath);
+      navigate(returnPath);
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, navigate, returnPath]);
 
   const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
     try {
@@ -107,7 +112,8 @@ const FirebaseAuthForm: React.FC = () => {
       
       // Добавляем небольшую задержку перед перенаправлением, чтобы состояние успело обновиться
       setTimeout(() => {
-        navigate('/');
+        console.log("Redirecting to:", returnPath);
+        navigate(returnPath);
       }, 500);
     } catch (err: any) {
       setError(err.message);
@@ -125,8 +131,11 @@ const FirebaseAuthForm: React.FC = () => {
     setError("");
     setIsLoading(true);
     try {
+      console.log("[AUTH] Начинаем Google авторизацию");
       const result = await signInWithPopup(auth, provider);
       const { user } = result;
+      
+      console.log("[AUTH] Google логин успешен, сохраняем профиль пользователя");
       await ensureUserProfile(user.uid, user.email, user.displayName);
       
       toast({
@@ -136,10 +145,12 @@ const FirebaseAuthForm: React.FC = () => {
       
       // Добавляем небольшую задержку перед перенаправлением, чтобы состояние успело обновиться
       setTimeout(() => {
-        navigate('/');
+        console.log("Redirecting after Google auth to:", returnPath);
+        navigate(returnPath);
       }, 500);
     } catch (err: any) {
       setError("Google авторизация не удалась: " + err.message);
+      console.error("[AUTH] Ошибка Google авторизации:", err);
       toast({
         title: "Ошибка",
         description: "Google авторизация не удалась: " + err.message,

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
@@ -33,10 +34,11 @@ const transformUser = (firebaseUser: FirebaseUser, extraData: Partial<UserType> 
     id: firebaseUser.uid,
     uid: firebaseUser.uid,
     email: firebaseUser.email || '',
-    displayName: firebaseUser.displayName || extraData.displayName,
-    photoURL: firebaseUser.photoURL || extraData.photoURL,
+    displayName: firebaseUser.displayName || extraData.displayName || '',
+    photoURL: firebaseUser.photoURL || extraData.photoURL || '',
     username: extraData.username || firebaseUser.displayName || '',
     isDM: extraData.isDM || false, // Используем переданное значение или false по умолчанию
+    role: extraData.role || 'player', // Добавляем роль пользователя
   };
 };
 
@@ -63,6 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isDM: user.isDM !== undefined ? user.isDM : userData.isDM || false,
           photoURL: user.photoURL || userData.photoURL || '',
           displayName: user.displayName || userData.displayName || '',
+          role: user.role || userData.role || 'player', // Добавляем роль
           // Сохраняем другие поля, но не перезаписываем их
         }, { merge: true });
         
@@ -76,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDM: user.isDM || false,
+          role: user.role || 'player', // Добавляем роль
           photoURL: user.photoURL || '',
           characters: [],
         });

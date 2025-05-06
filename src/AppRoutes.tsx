@@ -15,7 +15,7 @@ import DMDashboardPage from './pages/DMDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
 import CharactersListPage from './pages/CharactersListPage';
 
-// Ленивая загрузка страницы игровой сессии
+// Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
 

@@ -134,6 +134,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
         {/* Добавляем кубики в навигацию */}
         <DiceDrawer />
         
+        {/* Кнопки профиля и выхода - показываем только если пользователь авторизован */}
         {isAuthenticated && currentUser ? (
           <>
             {/* Кнопка профиля */}
@@ -143,7 +144,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
                   variant="outline" 
                   size="icon"
                   asChild
-                  style={buttonStyle}
+                  style={{
+                    ...buttonStyle,
+                    borderColor: location.pathname === '/profile' ? currentTheme.accent : buttonStyle.borderColor,
+                    backgroundColor: location.pathname === '/profile' ? `${currentTheme.accent}30` : buttonStyle.backgroundColor
+                  }}
                   className="hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Link to="/profile">
@@ -183,7 +188,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
                 variant="outline" 
                 size="icon"
                 asChild
-                style={buttonStyle}
+                style={{
+                  ...buttonStyle,
+                  borderColor: location.pathname === '/auth' ? currentTheme.accent : buttonStyle.borderColor,
+                  backgroundColor: location.pathname === '/auth' ? `${currentTheme.accent}30` : buttonStyle.backgroundColor
+                }}
                 className="hover:shadow-lg transition-all hover:scale-105"
               >
                 <Link to="/auth">
@@ -206,7 +215,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
                   variant="outline" 
                   size="icon"
                   asChild
-                  style={buttonStyle}
+                  style={{
+                    ...buttonStyle,
+                    borderColor: location.pathname === '/dm' ? currentTheme.accent : buttonStyle.borderColor,
+                    backgroundColor: location.pathname === '/dm' ? `${currentTheme.accent}30` : buttonStyle.backgroundColor
+                  }}
                   className="hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Link to="/dm">
@@ -226,7 +239,11 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
                   variant="outline" 
                   size="icon"
                   asChild
-                  style={buttonStyle}
+                  style={{
+                    ...buttonStyle,
+                    borderColor: location.pathname === '/battle' ? currentTheme.accent : buttonStyle.borderColor,
+                    backgroundColor: location.pathname === '/battle' ? `${currentTheme.accent}30` : buttonStyle.backgroundColor
+                  }}
                   className="hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Link to="/battle">
