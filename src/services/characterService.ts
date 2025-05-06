@@ -2,7 +2,7 @@
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
-import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, addDoc } from 'firebase/firestore';
 import { getCurrentUid } from '@/utils/authHelpers';
 
 // Локальное сохранение персонажа (резервное)
@@ -87,6 +87,64 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
   } catch (error) {
     console.error('Error saving character:', error);
     throw error;
+  }
+};
+
+// Автоматическое сохранение персонажа в Firestore без указания ID
+export const saveCharacterToFirestore = async (characterData: Character, userId?: string): Promise<string | null> => {
+  try {
+    // Получаем ID пользователя, если он не передан
+    const uid = userId || getCurrentUid();
+    if (!uid) {
+      console.error('No user ID available for saving character');
+      return null;
+    }
+    
+    // Добавляем метаданные
+    const now = new Date().toISOString();
+    const characterToSave = {
+      ...characterData,
+      userId: uid,
+      createdAt: characterData.createdAt || now,
+      updatedAt: now
+    };
+    
+    // Очищаем объект от undefined значений
+    Object.keys(characterToSave).forEach(key => {
+      if (characterToSave[key] === undefined) {
+        delete characterToSave[key];
+      }
+    });
+    
+    // Если нет ID, создаем новый документ
+    let docRef;
+    if (!characterToSave.id) {
+      characterToSave.id = uuidv4();
+      docRef = doc(db, 'characters', characterToSave.id);
+      await setDoc(docRef, characterToSave);
+    } else {
+      docRef = doc(db, 'characters', characterToSave.id);
+      await setDoc(docRef, characterToSave);
+    }
+    
+    console.log('✅ Character saved to Firestore with ID:', characterToSave.id);
+    
+    // Сохраняем копию локально для резервного доступа
+    saveCharacterToLocalStorage(characterToSave);
+    
+    return characterToSave.id;
+  } catch (error) {
+    console.error('❌ Error saving character to Firestore:', error);
+    
+    // Пробуем сохранить локально
+    try {
+      const character = { ...characterData, userId: userId || getCurrentUid() || 'unknown' };
+      saveCharacterToLocalStorage(character);
+      return character.id || null;
+    } catch (localError) {
+      console.error('Failed to save character locally:', localError);
+      return null;
+    }
   }
 };
 
@@ -235,7 +293,8 @@ const characterService = {
   getCharacter,
   deleteCharacter,
   getAllCharacters,
-  getCharactersByUserId
+  getCharactersByUserId,
+  saveCharacterToFirestore
 };
 
 export default characterService;

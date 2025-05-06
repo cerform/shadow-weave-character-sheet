@@ -1,12 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, Check, Download, Eye } from 'lucide-react';
+import { ArrowLeft, Check, Download, Eye, Save } from 'lucide-react';
+import { saveCharacterToFirestore } from '@/services/characterService';
+import { getCurrentUid } from '@/utils/authHelpers';
 import NavigationButtons from './NavigationButtons';
 
 interface CharacterReviewProps {
@@ -20,6 +22,46 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   const { saveCurrentCharacter, setCharacter } = useCharacter();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
+  const [characterId, setCharacterId] = useState<string | null>(null);
+
+  // Автоматическое сохранение персонажа при попадании на экран завершения
+  useEffect(() => {
+    const autoSaveCharacter = async () => {
+      if (!autoSaved && character.name && character.race && character.class) {
+        try {
+          setIsSaving(true);
+          const uid = getCurrentUid();
+          
+          if (!uid) {
+            toast.error('Необходимо войти для сохранения персонажа');
+            return;
+          }
+          
+          const savedId = await saveCharacterToFirestore(character, uid);
+          
+          if (savedId) {
+            console.log('✅ Персонаж автоматически сохранен с ID:', savedId);
+            setCharacterId(savedId);
+            updateCharacter({ id: savedId });
+            setAutoSaved(true);
+            
+            toast.success('Персонаж успешно сохранен!');
+            
+            // Также обновляем персонажа в контексте
+            setCharacter({...character, id: savedId});
+          }
+        } catch (error) {
+          console.error('❌ Ошибка при автосохранении персонажа:', error);
+          toast.error('Не удалось автоматически сохранить персонажа');
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    };
+    
+    autoSaveCharacter();
+  }, [character, autoSaved, updateCharacter, setCharacter]);
 
   const handleSaveCharacter = async () => {
     try {
@@ -44,7 +86,11 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
   };
 
   const handleViewCharacter = () => {
-    navigate('/sheet');
+    if (characterId) {
+      navigate(`/character/${characterId}`);
+    } else {
+      navigate('/characters');
+    }
   };
 
   const exportCharacter = () => {
@@ -68,7 +114,9 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold">Завершение создания персонажа</h2>
         <p className="text-muted-foreground mt-2">
-          Проверьте информацию о персонаже перед сохранением
+          {autoSaved ? 
+            'Ваш персонаж успешно сохранен! Теперь вы можете продолжить работу с ним.' : 
+            'Проверьте информацию о персонаже перед сохранением'}
         </p>
       </div>
 
@@ -88,7 +136,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             </div>
             <div className="space-y-1">
               <dt className="text-sm text-muted-foreground">Класс:</dt>
-              <dd className="font-medium">{character.className} {character.subclass ? `(${character.subclass})` : ''}</dd>
+              <dd className="font-medium">{character.className || character.class} {character.subclass ? `(${character.subclass})` : ''}</dd>
             </div>
             <div className="space-y-1">
               <dt className="text-sm text-muted-foreground">Уровень:</dt>
@@ -110,41 +158,51 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">СИЛ</div>
-              <div className="text-xl font-bold">{character.abilities?.strength || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.strength || character.strength || '-'}</div>
             </div>
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">ЛОВ</div>
-              <div className="text-xl font-bold">{character.abilities?.dexterity || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.dexterity || character.dexterity || '-'}</div>
             </div>
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">ТЕЛ</div>
-              <div className="text-xl font-bold">{character.abilities?.constitution || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.constitution || character.constitution || '-'}</div>
             </div>
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">ИНТ</div>
-              <div className="text-xl font-bold">{character.abilities?.intelligence || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.intelligence || character.intelligence || '-'}</div>
             </div>
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">МДР</div>
-              <div className="text-xl font-bold">{character.abilities?.wisdom || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.wisdom || character.wisdom || '-'}</div>
             </div>
             <div className="bg-black/30 p-3 rounded-lg text-center">
               <div className="text-sm text-muted-foreground">ХАР</div>
-              <div className="text-xl font-bold">{character.abilities?.charisma || '-'}</div>
+              <div className="text-xl font-bold">{character.abilities?.charisma || character.charisma || '-'}</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="flex flex-col space-y-4">
-        <Button 
-          onClick={handleSaveCharacter} 
-          className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
-          disabled={isSaving}
-        >
-          <Check className="h-5 w-5" />
-          {isSaving ? 'Сохранение...' : 'Сохранить и перейти в режим OBS'}
-        </Button>
+        {autoSaved ? (
+          <Button 
+            onClick={handleViewCharacter} 
+            className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+          >
+            <Eye className="h-5 w-5" />
+            Открыть лист персонажа
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleSaveCharacter} 
+            className="bg-emerald-700 hover:bg-emerald-800 flex items-center gap-2"
+            disabled={isSaving}
+          >
+            <Save className="h-5 w-5" />
+            {isSaving ? 'Сохранение...' : 'Принудительно сохранить персонажа'}
+          </Button>
+        )}
         
         <div className="grid grid-cols-2 gap-4">
           <Button 
@@ -153,7 +211,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             className="flex items-center gap-2"
           >
             <Eye className="h-5 w-5" />
-            Открыть лист персонажа
+            {autoSaved ? 'Открыть в режиме OBS' : 'Открыть лист персонажа'}
           </Button>
           
           <Button 

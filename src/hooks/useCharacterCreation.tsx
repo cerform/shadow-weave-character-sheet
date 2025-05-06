@@ -1,8 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { useToast } from "@/hooks/use-toast";
 import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
+import { saveCharacterToFirestore } from "@/services/characterService";
 
 export const useCharacterCreation = () => {
   const { toast } = useToast();
@@ -67,6 +69,43 @@ export const useCharacterCreation = () => {
   };
 
   const [character, setCharacter] = useState<Character>(defaultCharacter);
+  const [characterReady, setCharacterReady] = useState<boolean>(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
+
+  // Автоматическое сохранение персонажа, когда он готов
+  useEffect(() => {
+    const autoSaveCharacter = async () => {
+      if (characterReady && autoSaveEnabled) {
+        const uid = getCurrentUid();
+        if (!uid) {
+          console.warn("No user ID available, can't auto-save character");
+          return;
+        }
+
+        try {
+          const characterId = await saveCharacterToFirestore(character, uid);
+          if (characterId) {
+            console.log("✅ Character auto-saved to Firestore with ID:", characterId);
+            // Обновляем ID персонажа в локальном состоянии
+            setCharacter(prev => ({...prev, id: characterId}));
+            toast({
+              title: "Персонаж сохранен",
+              description: "Ваш персонаж был автоматически сохранен",
+            });
+          }
+        } catch (error) {
+          console.error("❌ Error during character auto-save:", error);
+          toast({
+            title: "Ошибка сохранения",
+            description: "Не удалось автоматически сохранить персонажа",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    autoSaveCharacter();
+  }, [characterReady, autoSaveEnabled, character, toast]);
 
   const updateCharacter = (updates: Partial<Character>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
@@ -119,6 +158,27 @@ export const useCharacterCreation = () => {
     
     setCharacter(prev => ({ ...prev, ...cleanedUpdates }));
     console.log("Персонаж обновлен:", { ...character, ...cleanedUpdates });
+  };
+
+  // Функция для проверки готовности персонажа к сохранению
+  const checkCharacterReady = (char: Character = character) => {
+    // Проверяем наличие обязательных полей
+    const isReady = !!(
+      char.name && 
+      char.race && 
+      char.class && 
+      char.level
+    );
+    
+    setCharacterReady(isReady);
+    return isReady;
+  };
+
+  // Функция для включения автосохранения и проверки готовности персонажа
+  const enableAutoSave = () => {
+    const isReady = checkCharacterReady();
+    setAutoSaveEnabled(true);
+    return isReady;
   };
 
   // Проверяем, является ли класс магическим
@@ -256,7 +316,11 @@ export const useCharacterCreation = () => {
     getTotalLevel,
     getAllClasses,
     getAbilityScorePointsByLevel,
-    convertToCharacter
+    convertToCharacter,
+    characterReady,
+    checkCharacterReady,
+    enableAutoSave,
+    autoSaveEnabled
   };
 };
 
