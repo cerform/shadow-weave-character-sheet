@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -20,23 +20,39 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({
   nextStep = () => {},
   prevStep = () => {}
 }) => {
-  // Инициализируем состояние из объекта character
-  const initialEquipment = character.equipment || {
-    weapons: [],
-    armor: '',
-    items: []
-  };
+  // Инициализируем оборудование с учетом возможных форматов данных
+  const initialWeapons: string[] = [];
+  const initialArmor: string = '';
+  const initialItems: string[] = [];
   
-  const equipmentIsArray = Array.isArray(initialEquipment);
-  
-  // Преобразуем в объект, если equipment это массив
-  const initialEquipmentObj = equipmentIsArray 
-    ? { weapons: initialEquipment as string[], armor: '', items: [] }
-    : initialEquipment as { weapons?: string[], armor?: string, items?: string[] };
+  // Проверяем формат оборудования и извлекаем данные
+  if (character.equipment) {
+    if (Array.isArray(character.equipment)) {
+      // Если это массив Item, извлекаем имена
+      character.equipment.forEach(item => {
+        if (item.type === 'weapon') {
+          initialWeapons.push(item.name);
+        } else if (item.type === 'armor') {
+          // Берем только первую броню в список
+          if (!initialArmor) {
+            initialArmor = item.name;
+          }
+        } else {
+          initialItems.push(item.name);
+        }
+      });
+    } else if (typeof character.equipment === 'object') {
+      // Если это объект с weapons, armor, items
+      const equip = character.equipment as any;
+      if (equip.weapons) initialWeapons.push(...equip.weapons);
+      if (equip.armor) initialArmor = equip.armor;
+      if (equip.items) initialItems.push(...equip.items);
+    }
+  }
 
-  const [weapons, setWeapons] = useState<string[]>(initialEquipmentObj.weapons || []);
-  const [armor, setArmor] = useState<string>(initialEquipmentObj.armor || '');
-  const [items, setItems] = useState<string[]>(initialEquipmentObj.items || []);
+  const [weapons, setWeapons] = useState<string[]>(initialWeapons);
+  const [armor, setArmor] = useState<string>(initialArmor);
+  const [items, setItems] = useState<string[]>(initialItems);
   const [gold, setGold] = useState<number>(character.gold || 0);
   
   // Для ввода нового оружия
@@ -67,16 +83,16 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({
   };
   
   const handleNext = () => {
-    // Форматируем данные о снаряжении
-    const equipmentData = {
-      weapons: weapons,
-      armor: armor,
-      items: items
-    };
+    // Форматируем данные о снаряжении в соответствии с типом Item[]
+    const equipmentItems: Item[] = [
+      ...weapons.map(name => ({ name, quantity: 1, type: 'weapon' })),
+      ...(armor ? [{ name: armor, quantity: 1, type: 'armor' }] : []),
+      ...items.map(name => ({ name, quantity: 1, type: 'item' }))
+    ];
     
     // Обновляем персонажа
     onUpdate({ 
-      equipment: equipmentData,
+      equipment: equipmentItems,
       gold: gold
     });
     

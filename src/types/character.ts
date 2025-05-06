@@ -1,9 +1,10 @@
-
 export interface Character {
   id?: string;
   name: string;
   race?: string;
+  subrace?: string;  // Добавляем поле subrace
   class?: string;
+  className?: string; // Добавляем альтернатив��ое поле className
   subclass?: string;
   background?: string;
   level: number;
@@ -16,6 +17,22 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
+    // Добавляем алиасы для удобства
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  // Добавляем поле stats для обратной совместимости
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
   };
   skills?: Record<string, {
     proficient: boolean;
@@ -27,6 +44,10 @@ export interface Character {
     maximum: number;
     temporary: number;
   };
+  // Добавляем алиасы для hitPoints
+  maxHp?: number;
+  currentHp?: number;
+  tempHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -48,6 +69,8 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  // Добавляем поля для gold
+  gold?: number;
   deathSaves?: {
     successes: number;
     failures: number;
@@ -92,6 +115,17 @@ export interface Character {
   createdAt?: string;
   // Added property for character image
   image?: string;
+  // Пользовательские поля
+  gender?: string; // Добавляем поле gender
+  userId?: string; // Добавляем поле userId для связи с пользователем
+  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
+  // Добавляем поля для обратной совместимости
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
 }
 
 export interface CharacterSpell {

@@ -3,7 +3,9 @@ export interface Character {
   id?: string;
   name: string;
   race?: string;
+  subrace?: string;
   class?: string;
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -16,6 +18,21 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
+    // Добавляем алиасы для удобства
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
   };
   skills?: Record<string, {
     proficient: boolean;
@@ -27,6 +44,9 @@ export interface Character {
     maximum: number;
     temporary: number;
   };
+  maxHp?: number;
+  currentHp?: number;
+  tempHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -48,6 +68,7 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  gold?: number;
   deathSaves?: {
     successes: number;
     failures: number;
@@ -59,6 +80,38 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
+  raceFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  classFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  backgroundFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  feats?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  gender?: string;
+  userId?: string;
+  abilityPointsUsed?: number;
+  updatedAt?: string;
+  createdAt?: string;
+  image?: string;
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
 }
 
 export interface CharacterSpell {

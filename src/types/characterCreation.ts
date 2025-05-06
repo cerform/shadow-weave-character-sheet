@@ -34,6 +34,23 @@ export interface AutoFeatures {
   background?: { [key: string]: string[] };
 }
 
+// Добавляем интерфейс для CharacterSheet, который может содержать дополнительные поля
+export interface CharacterSheet extends Partial<Character> {
+  abilityPointsUsed?: number;
+  gender?: string;
+  subrace?: string;
+  maxHp?: number;
+  currentHp?: number;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+}
+
 // Интерфейс хука useLevelFeatures
 export interface UseLevelFeaturesResult {
   availableFeatures: LevelFeature[];
@@ -52,3 +69,6 @@ export interface UseLevelFeaturesResult {
   handleWeaponTypeSelection: (weaponType: string, selected: boolean) => void;
   handleArmorTypeSelection: (armorType: string, selected: boolean) => void;
 }
+
+// Импортируем необходимые типы
+import { Character, Item } from './character';
