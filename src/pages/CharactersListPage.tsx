@@ -12,7 +12,6 @@ import { getCharactersByUserId, deleteCharacter } from '@/services/characterServ
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
-import { auth } from '@/services/firebase/auth';
 import { getAuth } from 'firebase/auth';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import LoadingState from '@/components/characters/LoadingState';
@@ -199,7 +198,7 @@ const CharactersListPage: React.FC = () => {
     toast.info('Обновляем список персонажей...');
     console.log('CharactersListPage: Принудительное обновление списка персонажей');
     console.log('CharactersListPage: Текущий пользователь:', user);
-    console.log('CharactersListPage: Firebase auth currentUser:', auth.currentUser);
+    console.log('CharactersListPage: Firebase auth currentUser:', getAuth().currentUser);
     
     loadCharacters();
   };

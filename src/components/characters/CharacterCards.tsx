@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Loader2, User } from "lucide-react";
+import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
