@@ -121,6 +121,9 @@ const AppRoutes: React.FC = () => {
         </ProtectedPlayerRoute>
       } />
       
+      {/* Перенаправление для исправленных URL */}
+      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
+      
       {/* Общедоступные маршруты */}
       <Route path="/spellbook" element={<SpellbookPage />} />
       <Route path="/character-creation" element={<CharacterCreationPage />} />

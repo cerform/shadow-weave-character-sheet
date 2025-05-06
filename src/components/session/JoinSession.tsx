@@ -5,6 +5,8 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useToast } from "../ui/use-toast";
 import useSessionStore from '@/stores/sessionStore';
+import { useNavigate } from 'react-router-dom';
+import { Home } from 'lucide-react';
 
 interface JoinSessionProps {
   onJoined?: (code: string) => void;
@@ -14,6 +16,7 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
   const [sessionCode, setSessionCode] = useState('');
   const { toast } = useToast();
   const sessionStore = useSessionStore();
+  const navigate = useNavigate();
 
   const handleJoinSession = () => {
     if (!sessionCode.trim()) {
@@ -73,9 +76,19 @@ const JoinSession: React.FC<JoinSessionProps> = ({ onJoined }) => {
           placeholder="Введите код сессии"
         />
       </div>
-      <Button onClick={handleJoinSession} className="w-full">
-        Присоединиться к игре
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button onClick={handleJoinSession} className="flex-1">
+          Присоединиться к игре
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2"
+        >
+          <Home className="size-4" />
+          На главную
+        </Button>
+      </div>
     </div>
   );
 };

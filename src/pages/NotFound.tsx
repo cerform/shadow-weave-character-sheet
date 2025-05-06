@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, Users } from "lucide-react";
+import { Home, Users, LogIn } from "lucide-react";
 
 const NotFound: React.FC = () => {
   const location = useLocation();
@@ -16,8 +16,9 @@ const NotFound: React.FC = () => {
     );
   }, [location.pathname]);
 
-  // Проверяем, если это попытка перейти на /sheet
+  // Проверяем специальные случаи перенаправлений
   const isSheetPage = location.pathname === '/sheet';
+  const isJoinGamePage = location.pathname === '/join-game';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -27,6 +28,7 @@ const NotFound: React.FC = () => {
         <p className="text-muted-foreground mb-6">
           К сожалению, запрошенная страница ({location.pathname}) не существует.
           {isSheetPage && " Возможно, вы искали страницу персонажа."}
+          {isJoinGamePage && " Для присоединения к игре используйте страницу 'Присоединиться к сессии'."}
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -46,6 +48,17 @@ const NotFound: React.FC = () => {
             >
               <Users className="size-4" />
               Список персонажей
+            </Button>
+          )}
+
+          {isJoinGamePage && (
+            <Button 
+              onClick={() => navigate("/join-session")} 
+              className="flex items-center gap-2" 
+              variant="secondary"
+            >
+              <LogIn className="size-4" />
+              Присоединиться к сессии
             </Button>
           )}
         </div>
