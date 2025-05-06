@@ -44,31 +44,54 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     // Явно преобразуем в строку и используем trim для удаления пробелов
     const userIdString = String(userId).trim();
     
+    // Проверяем доступность базы данных
+    if (!db) {
+      console.error('getCharactersByUserId: База данных недоступна');
+      throw new Error('База данных недоступна');
+    }
+    
+    console.log('getCharactersByUserId: Проверка базы данных успешна');
+    
     // Создаем запрос с ЯВНЫМ фильтром по userId
     const charactersRef = collection(db, 'characters');
     const q = query(charactersRef, where("userId", "==", userIdString));
     
     console.log('getCharactersByUserId: Выполняем запрос с userId =', userIdString);
-    const snapshot = await getDocs(q);
     
-    console.log(`getCharactersByUserId: Найдено ${snapshot.docs.length} документов`);
-    
-    // Маппинг результатов с дополнительной проверкой
-    const characters = snapshot.docs.map(doc => {
-      const data = doc.data();
-      // Добавляем проверку наличия userId и соответствия запрошенному
-      if (!data.userId) {
-        console.warn(`getCharactersByUserId: У персонажа ${doc.id} отсутствует userId, ожидалось ${userIdString}`);
-        data.userId = userIdString; // Исправляем на лету
-      }
+    try {
+      const snapshot = await getDocs(q);
+      console.log(`getCharactersByUserId: Найдено ${snapshot.docs.length} документов`);
       
-      return { ...data, id: doc.id } as Character;
-    });
-    
-    console.log(`getCharactersByUserId: Обработано ${characters.length} персонажей:`, 
-      characters.map(c => ({ id: c.id, name: c.name, userId: c.userId })));
-    
-    return characters;
+      // Логируем все полученные документы для отладки
+      snapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        console.log(`getCharactersByUserId: Документ ${index + 1}:`, { 
+          id: doc.id,
+          userId: data.userId,
+          name: data.name || 'без имени'
+        });
+      });
+      
+      // Маппинг результатов с дополнительной проверкой
+      const characters = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Добавляем проверку наличия userId и соответствия запрошенному
+        if (!data.userId) {
+          console.warn(`getCharactersByUserId: У персонажа ${doc.id} отсутствует userId, ожидалось ${userIdString}`);
+          data.userId = userIdString; // Исправляем на лету
+        }
+        
+        return { ...data, id: doc.id } as Character;
+      });
+      
+      console.log(`getCharactersByUserId: Обработано ${characters.length} персонажей:`, 
+        characters.map(c => ({ id: c.id, name: c.name, userId: c.userId })));
+      
+      return characters;
+    } catch (error) {
+      console.error('getCharactersByUserId: Ошибка при выполнении запроса:', error);
+      throw error;
+    }
   } catch (error) {
     console.error('Ошибка при получении персонажей пользователя:', error);
     throw error;

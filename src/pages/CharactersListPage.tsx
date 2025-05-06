@@ -32,17 +32,23 @@ const CharactersListPage: React.FC = () => {
   // Добавляем эффект для логирования состояния
   useEffect(() => {
     console.log('CharactersListPage: Текущий список персонажей:', characters);
-  }, [characters]);
+    console.log('CharactersListPage: Состояние loading:', loading);
+    console.log('CharactersListPage: Состояние error:', error);
+    console.log('CharactersListPage: Пользователь авторизован?', isAuthenticated);
+    console.log('CharactersListPage: Данные пользователя:', user);
+  }, [characters, loading, error, isAuthenticated, user]);
 
   // Функция загрузки персонажей
   const handleRefresh = async () => {
     try {
+      console.log('CharactersListPage: Начинаем обновление персонажей...');
       setIsRefreshing(true);
       await refreshCharacters();
+      console.log('CharactersListPage: Персонажи обновлены успешно');
       toast.success('Персонажи обновлены');
     } catch (err) {
-      toast.error('Не удалось обновить список персонажей');
       console.error('Ошибка при обновлении персонажей:', err);
+      toast.error('Не удалось обновить список персонажей');
     } finally {
       setIsRefreshing(false);
     }
@@ -50,11 +56,15 @@ const CharactersListPage: React.FC = () => {
 
   // Принудительно загружаем персонажей при монтировании компонента
   useEffect(() => {
-    if (isAuthenticated && !characters.length && !loading) {
-      console.log('CharactersListPage: Инициализация загрузки персонажей');
-      refreshCharacters();
+    if (isAuthenticated && user?.uid) {
+      console.log('CharactersListPage: Инициализация загрузки персонажей. UserId:', user.uid);
+      refreshCharacters().then(() => {
+        console.log('CharactersListPage: Первичная загрузка персонажей завершена');
+      }).catch(err => {
+        console.error('CharactersListPage: Ошибка при первичной загрузке персонажей', err);
+      });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.uid]);
 
   // Если пользователь не авторизован, предлагаем войти
   if (!isAuthenticated) {
