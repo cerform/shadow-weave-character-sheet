@@ -37,6 +37,19 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     }
   };
 
+  // Функция для отображения класса персонажа с учетом разных форматов данных
+  const getCharacterClass = (character: Character): string => {
+    // Проверяем различные поля, где может храниться класс
+    return character.className || character.class || character.characterClass || '—';
+  };
+
+  // Функция для форматирования уровня персонажа
+  const getCharacterLevel = (character: Character): string => {
+    const level = character.level;
+    if (!level) return '1'; // По умолчанию 1 уровень
+    return String(level);
+  };
+
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
       <CardHeader>
@@ -57,10 +70,10 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
           <TableBody>
             {characters.map((character) => (
               <TableRow key={character.id}>
-                <TableCell className="font-medium">{character.name}</TableCell>
-                <TableCell>{character.className || character.class}</TableCell>
-                <TableCell>{character.race}</TableCell>
-                <TableCell>{character.level}</TableCell>
+                <TableCell className="font-medium">{character.name || 'Без имени'}</TableCell>
+                <TableCell>{getCharacterClass(character)}</TableCell>
+                <TableCell>{character.race || '—'}</TableCell>
+                <TableCell>{getCharacterLevel(character)}</TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button 
                     variant="ghost" 

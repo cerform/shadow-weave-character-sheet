@@ -59,6 +59,12 @@ const CharactersListPage: React.FC = () => {
       
       const fetchedCharacters = await getCharactersByUserId(userId);
       console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
+      console.log('Данные персонажей:', fetchedCharacters);
+      
+      // Проверка полей у полученных персонажей
+      if (fetchedCharacters.length > 0) {
+        console.log('Поля первого персонажа:', Object.keys(fetchedCharacters[0]));
+      }
       
       setCharacters(fetchedCharacters);
       

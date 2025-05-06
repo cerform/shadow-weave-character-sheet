@@ -1,7 +1,8 @@
+
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
-import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, addDoc, orderBy, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, orderBy, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { getCurrentUid } from '@/utils/authHelpers';
 
 // Локальное сохранение персонажа (резервное)
@@ -278,7 +279,10 @@ export const getAllCharacters = async (): Promise<Character[]> => {
       console.log('Found character:', { id: doc.id, userId: data.userId });
       characters.push({
         ...data,
-        id: doc.id
+        id: doc.id,
+        name: data.name || 'Без имени',
+        class: data.className || data.class || '—',
+        level: data.level || 1,
       } as Character);
     });
     
@@ -321,9 +325,9 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       
       if (allDocsSnapshot.size > 0) {
         console.log('Примеры документов:');
+        // Используем forEach без явного указания индекса
+        let index = 0;
         allDocsSnapshot.forEach((doc) => {
-          // Используем index из замыкания - это безопасно, так как forEach предоставляет индекс
-          let index = 0;
           if (index < 3) { // показываем только первые 3 документа для отладки
             console.log(`Документ ${index + 1}:`, { id: doc.id, data: doc.data() });
             index++;
