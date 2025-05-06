@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import classData from '@/data/classes';
+import { classData } from '@/data/classes';
 import { useToast } from '@/hooks/use-toast';
 
 interface SpellSlotManagerProps {
