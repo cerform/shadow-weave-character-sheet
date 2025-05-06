@@ -21,6 +21,9 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Выводим данные персонажа для отладки
+  console.log('CharacterCard: Отрисовка персонажа:', character.name, character);
+  
   // Получаем класс персонажа из разных возможных полей с безопасной проверкой
   const getCharacterClass = (): string => {
     const classValue = character.className || character.class;
@@ -31,7 +34,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   
   // Получаем уровень персонажа с безопасным значением по умолчанию
   const getCharacterLevel = (): string => {
-    if (character.level) {
+    if (character.level !== undefined) {
       return `${character.level} уровень`;
     }
     return '1 уровень';

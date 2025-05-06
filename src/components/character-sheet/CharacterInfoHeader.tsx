@@ -12,6 +12,16 @@ interface CharacterInfoHeaderProps {
 const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({ character }) => {
   const { theme } = useTheme();
   
+  console.log('CharacterInfoHeader: Отображение персонажа', character);
+  
+  // Получаем класс персонажа с учетом различных форматов данных
+  const getCharacterClass = (): string => {
+    const classValue = character.className || character.class;
+    return typeof classValue === 'string' && classValue.trim() !== ''
+      ? classValue
+      : '';
+  };
+  
   const getBgColor = () => {
     switch (theme) {
       case 'fantasy':
@@ -31,7 +41,7 @@ const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({ character }) 
           <div>
             <h2 className="text-2xl font-bold">{character.name || 'Безымянный герой'}</h2>
             <div className="text-sm text-muted-foreground">
-              {character.race} {character.subrace && `(${character.subrace})`} &bull; {character.class || ''} &bull; Уровень {character.level || 1}
+              {character.race} {character.subrace && `(${character.subrace})`} &bull; {getCharacterClass()} &bull; Уровень {character.level || 1}
             </div>
           </div>
           

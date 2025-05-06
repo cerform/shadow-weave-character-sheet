@@ -9,6 +9,8 @@ interface CharacterHeaderProps {
 }
 
 export const CharacterHeader = ({ character, onUpdate }: CharacterHeaderProps) => {
+  console.log('CharacterHeader: Отображение персонажа', character);
+  
   // Функция для получения класса персонажа с учетом различных форматов данных
   const getCharacterClass = (): string => {
     if (!character) return '—';

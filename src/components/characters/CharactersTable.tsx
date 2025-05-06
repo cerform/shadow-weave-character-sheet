@@ -60,8 +60,17 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     return String(level);
   };
 
+  // Функция для безопасного получения расы персонажа
+  const getCharacterRace = (character: Character): string => {
+    return character.race || '—';
+  };
+
+  // Выводим в консоль для отладки
+  console.log('CharactersTable: characters получены:', characters);
+  
   // Если нет персонажей, показываем сообщение
   if (!characters || characters.length === 0) {
+    console.log('CharactersTable: Персонажи не найдены');
     return (
       <Card className="bg-black/50 backdrop-blur-sm">
         <CardHeader>
@@ -75,13 +84,30 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     );
   }
 
-  console.log('CharactersTable: Рендеринг таблицы с персонажами:', characters);
+  // Отфильтруем персонажей, чтобы убедиться, что у всех есть ID
+  const validCharacters = characters.filter(character => character && character.id);
+  console.log('CharactersTable: Валидных персонажей:', validCharacters.length);
+  
+  if (validCharacters.length === 0) {
+    console.warn('CharactersTable: Все персонажи невалидны (без ID)');
+    return (
+      <Card className="bg-black/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
+          <CardDescription>Проблема с данными персонажей</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Возникла проблема с загрузкой данных персонажей. Попробуйте обновить страницу.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
-        <CardDescription>Всего персонажей: {characters.length}</CardDescription>
+        <CardDescription>Всего персонажей: {validCharacters.length}</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -95,56 +121,48 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {characters.map((character) => {
-              // Проверка наличия ID у персонажа
-              if (!character || !character.id) {
-                console.warn('CharactersTable: Персонаж без ID', character);
-                return null;
-              }
-              
-              return (
-                <TableRow key={character.id}>
-                  <TableCell className="font-medium text-primary">
-                    {character.name || 'Без имени'}
-                  </TableCell>
-                  <TableCell>{getCharacterClass(character)}</TableCell>
-                  <TableCell>{character.race || '—'}</TableCell>
-                  <TableCell>{getCharacterLevel(character)}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleViewCharacter(character.id!)}
-                      title="Открыть"
-                    >
-                      <Eye size={16} />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => navigate(`/character/${character.id}`)}
-                      title="Редактировать"
-                    >
-                      <Edit size={16} />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDelete(character.id!)}
-                      disabled={deletingId === character.id}
-                      className="text-red-500 hover:text-red-700"
-                      title="Удалить"
-                    >
-                      {deletingId === character.id ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={16} />
-                      )}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {validCharacters.map((character) => (
+              <TableRow key={character.id}>
+                <TableCell className="font-medium text-primary">
+                  {character.name || 'Без имени'}
+                </TableCell>
+                <TableCell>{getCharacterClass(character)}</TableCell>
+                <TableCell>{getCharacterRace(character)}</TableCell>
+                <TableCell>{getCharacterLevel(character)}</TableCell>
+                <TableCell className="text-right space-x-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleViewCharacter(character.id!)}
+                    title="Открыть"
+                  >
+                    <Eye size={16} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate(`/character/${character.id}`)}
+                    title="Редактировать"
+                  >
+                    <Edit size={16} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDelete(character.id!)}
+                    disabled={deletingId === character.id}
+                    className="text-red-500 hover:text-red-700"
+                    title="Удалить"
+                  >
+                    {deletingId === character.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>
