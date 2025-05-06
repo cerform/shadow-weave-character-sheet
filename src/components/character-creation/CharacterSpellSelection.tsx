@@ -75,7 +75,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
           name: spell.name,
           level: spell.level,
-          school: spell.school || '��ниверсальн��я',
+          school: spell.school || '����ниверсальн��я',
           castingTime: spell.castingTime || '1 действие',
           range: spell.range || 'На себя',
           components: spell.components || '',
@@ -189,9 +189,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       filtered = spellsToFilter.filter(spell => {
         const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
         
-        // Fixed: Safe handling of school property
-        const schoolMatch = typeof spell.school === 'string' ? 
-          spell.school.toLowerCase().includes(searchTermLower) : false;
+        // Safe handling of school property with proper type checking
+        let schoolMatch = false;
+        if (spell.school && typeof spell.school === 'string') {
+          schoolMatch = spell.school.toLowerCase().includes(searchTermLower);
+        }
         
         // Безопасная проверка типа description
         let descMatch = false;

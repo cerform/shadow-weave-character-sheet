@@ -245,7 +245,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                       <Minus className="h-4 w-4" />
                     </Button>
                     <div className="px-4 py-1 border-y border-x-0 text-xl font-bold">
-                      {character[ability as keyof typeof character] || 10}
+                      {Number(character[ability as keyof Character]) || 10}
                     </div>
                     <Button 
                       variant="outline" 
@@ -267,14 +267,16 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
             ))}
           </div>
           
-          {/* Fix: Use proper ReactNode rendering for character skills */}
-          {typeof character.skills === 'object' && character.skills !== null ? (
-            <div>
+          {/* Properly render character skills as a ReactNode */}
+          {character.skills && typeof character.skills === 'object' && character.skills !== null ? (
+            <div className="space-y-2 mt-4">
+              <h4 className="text-sm font-medium">Character Skills:</h4>
               {Object.entries(character.skills).map(([skill, value]) => (
-                <div key={skill}>
-                  {typeof value === 'object' ? 
-                    `${skill}: ${JSON.stringify(value)}` : 
-                    `${skill}: ${value}`}
+                <div key={skill} className="text-sm p-2 border rounded">
+                  <span className="font-medium">{skill}:</span>{' '}
+                  {typeof value === 'object' 
+                    ? JSON.stringify(value) 
+                    : String(value)}
                 </div>
               ))}
             </div>
