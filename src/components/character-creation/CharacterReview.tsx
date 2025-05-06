@@ -46,13 +46,17 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             console.log('ID персонажа не установлен, будет сгенерирован новый');
           } else {
             console.log('ID персонажа уже существует:', character.id);
+            // Если ID уже есть, не нужно создавать новый
+            setAutoSaved(true);
+            setCharacterId(character.id);
+            setIsSaving(false);
+            return;
           }
           
           // Убедимся, что userId установлен перед сохранением
           const characterToSave = {
             ...character,
             userId: uid,
-            // Не добавляем новый id, если он уже установлен
           };
           
           const savedId = await saveCharacterToFirestore(characterToSave, uid);
@@ -86,6 +90,14 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
 
   const handleSaveCharacter = async () => {
     try {
+      // Если персонаж уже был автосохранен, не нужно его сохранять повторно
+      if (autoSaved && (characterId || character.id)) {
+        toast.success('Персонаж уже сохранен');
+        // Сразу перенаправляем на страницу персонажа
+        navigate(`/character/${characterId || character.id}`);
+        return;
+      }
+      
       setIsSaving(true);
       
       const uid = getCurrentUid();

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
@@ -69,11 +70,13 @@ export const useCharacterCreation = () => {
   const [character, setCharacter] = useState<Character>(defaultCharacter);
   const [characterReady, setCharacterReady] = useState<boolean>(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
+  const [alreadySaved, setAlreadySaved] = useState<boolean>(false);
 
   // Автоматическое сохранение персонажа, когда он готов
   useEffect(() => {
     const autoSaveCharacter = async () => {
-      if (characterReady && autoSaveEnabled) {
+      // Добавляем проверку на alreadySaved, чтобы избежать дублирующих сохранений
+      if (characterReady && autoSaveEnabled && !alreadySaved && !character.id) {
         const uid = getCurrentUid();
         if (!uid) {
           console.warn("No user ID available, can't auto-save character");
@@ -86,6 +89,7 @@ export const useCharacterCreation = () => {
             console.log("✅ Character auto-saved to Firestore with ID:", characterId);
             // Обновляем ID персонажа в локальном состоянии
             setCharacter(prev => ({...prev, id: characterId}));
+            setAlreadySaved(true); // Отмечаем, что персонаж уже сохранен
             toast.success("Ваш персонаж был автоматически сохранен");
           }
         } catch (error) {
@@ -96,7 +100,7 @@ export const useCharacterCreation = () => {
     };
 
     autoSaveCharacter();
-  }, [characterReady, autoSaveEnabled, character]);
+  }, [characterReady, autoSaveEnabled, character, alreadySaved]);
 
   const updateCharacter = (updates: Partial<Character>) => {
     // Если обновляются abilities, также обновляем и stats для совместимости
@@ -146,6 +150,11 @@ export const useCharacterCreation = () => {
         delete cleanedUpdates[key];
       }
     });
+    
+    // Если обновляется ID и ранее не было ID, отмечаем персонажа как сохраненный
+    if (updates.id && !character.id) {
+      setAlreadySaved(true);
+    }
     
     setCharacter(prev => ({ ...prev, ...cleanedUpdates }));
     console.log("Персонаж обновлен:", { ...character, ...cleanedUpdates });
@@ -308,7 +317,8 @@ export const useCharacterCreation = () => {
     characterReady,
     checkCharacterReady,
     enableAutoSave,
-    autoSaveEnabled
+    autoSaveEnabled,
+    alreadySaved  // Добавляем новое свойство для отслеживания состояния сохранения
   };
 };
 

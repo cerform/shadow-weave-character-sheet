@@ -102,6 +102,18 @@ export const deleteCharacter = async (id: string): Promise<void> => {
 // Сохранение персонажа
 export const saveCharacter = async (character: Character): Promise<string> => {
   try {
+    // Проверяем, существует ли уже персонаж с таким id и userId
+    if (character.id) {
+      // Если у персонажа есть id, проверим, существует ли он уже в базе данных
+      const existingCharacter = await getCharacter(character.id);
+      
+      if (existingCharacter) {
+        console.log(`Обновление существующего персонажа с ID ${character.id}`);
+      } else {
+        console.log(`Персонаж с ID ${character.id} не найден в базе, создаем новый`);
+      }
+    }
+    
     // Убедимся, что у персонажа есть имя
     if (!character.name) {
       character.name = "Безымянный герой";
@@ -148,6 +160,21 @@ export const saveCharacter = async (character: Character): Promise<string> => {
 // Функция saveCharacterToFirestore для использования в других файлах
 export const saveCharacterToFirestore = async (character: Character, userId: string): Promise<string> => {
   try {
+    // Если у персонажа уже есть ID, проверим существует ли он в базе
+    if (character.id) {
+      const existingCharacter = await getCharacter(character.id);
+      if (existingCharacter) {
+        console.log(`Обновляем существующий персонаж с ID: ${character.id}`);
+        const characterRef = doc(db, 'characters', character.id);
+        await setDoc(characterRef, { 
+          ...character,
+          userId,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        return character.id;
+      }
+    }
+  
     // Убедимся, что у персонажа есть имя
     if (!character.name) {
       character.name = "Безымянный герой";

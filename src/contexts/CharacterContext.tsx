@@ -69,9 +69,17 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
+      // Проверяем, существует ли персонаж с таким же ID в списке персонажей
+      if (updatedCharacter.id) {
+        console.log(`Сохранение существующего персонажа с ID: ${updatedCharacter.id}`);
+      }
+      
       const savedCharId = await saveCharacter(updatedCharacter);
       if (savedCharId) {
-        setCharacter({...updatedCharacter, id: savedCharId});
+        // Обновляем ID только если его не было раньше
+        if (!updatedCharacter.id) {
+          setCharacter({...updatedCharacter, id: savedCharId});
+        }
         toast.success(`${updatedCharacter.name || 'Персонаж'} успешно сохранен`);
       }
       
