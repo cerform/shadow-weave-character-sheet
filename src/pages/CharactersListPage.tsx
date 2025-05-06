@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ const CharactersListPage: React.FC = () => {
   const [showDebug, setShowDebug] = useState(true); // Добавляем для отладки
   
   // Добавляем режимы отображения данных
-  const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('raw');
+  const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('table');
 
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -187,7 +186,7 @@ const CharactersListPage: React.FC = () => {
             />
           )}
           
-          {/* Режим отображения: или таблица, или сырые данные */}
+          {/* Добавляем временный вывод сырого JSON для отладки */}
           {!loading && !error && characters.length > 0 && (
             <>
               {displayMode === 'table' ? (
@@ -198,7 +197,7 @@ const CharactersListPage: React.FC = () => {
               ) : (
                 <div className="p-4 bg-black/20 rounded-lg">
                   <h2 className="text-lg font-bold mb-4">Сырые данные персонажей:</h2>
-                  <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-100/20 rounded">
+                  <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
                     {JSON.stringify(characters, null, 2)}
                   </pre>
                 </div>

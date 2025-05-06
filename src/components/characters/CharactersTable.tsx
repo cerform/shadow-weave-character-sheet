@@ -7,6 +7,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface CharactersTableProps {
   characters: Character[];
@@ -16,6 +18,9 @@ interface CharactersTableProps {
 const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
   // Расширенная отладка в компоненте таблицы
   useEffect(() => {
@@ -73,7 +78,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     return (
       <Card className="bg-black/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>Список персонажей</CardTitle>
+          <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
           <CardDescription>У вас пока нет персонажей</CardDescription>
         </CardHeader>
         <CardContent>
@@ -93,7 +98,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Список персонажей</CardTitle>
+        <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
         <CardDescription>Всего персонажей: {characters.length}</CardDescription>
       </CardHeader>
       <CardContent>
