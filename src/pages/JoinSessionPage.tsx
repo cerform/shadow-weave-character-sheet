@@ -58,6 +58,7 @@ const JoinSessionPage: React.FC = () => {
     const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
     
     try {
+      // Используем обновленный метод connect с новой сигнатурой
       connect(sessionCode, playerName, lastSelectedCharacterId);
       
       // Store session info in localStorage

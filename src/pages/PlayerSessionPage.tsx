@@ -55,7 +55,8 @@ const PlayerSessionPage = () => {
 
   // Отображаем обновления от других игроков
   useEffect(() => {
-    if (lastUpdate && lastUpdate.character && lastUpdate.character.id !== character?.id) {
+    // Проверяем, что lastUpdate существует и имеет свойство character
+    if (lastUpdate && lastUpdate.character && character && lastUpdate.character.id !== character.id) {
       toast({
         title: `Обновление от игрока`,
         description: `${lastUpdate.character.name} обновил своего персонажа.`,

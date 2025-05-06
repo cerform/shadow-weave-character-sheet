@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,8 @@ const CharacterSheetPage = () => {
         if (parsedSession && parsedSession.sessionCode) {
           // Если есть сессия и персонаж, подключаемся к сессии
           if (character) {
-            connect(parsedSession.sessionCode, parsedSession.playerName, character.id);
+            // Используем обновленный метод connect, передавая только обязательный параметр
+            connect(parsedSession.sessionCode);
           }
         }
       } catch (error) {
