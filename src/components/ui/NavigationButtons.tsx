@@ -131,11 +131,12 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
           </TooltipContent>
         </Tooltip>
         
-        {/* Добавляем кнопку кубиков в навигацию */}
+        {/* Добавляем кубики в навигацию */}
         <DiceDrawer />
         
         {isAuthenticated && currentUser ? (
           <>
+            {/* Кнопка профиля */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -156,6 +157,7 @@ export const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className 
               </TooltipContent>
             </Tooltip>
             
+            {/* Кнопка выхода */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
