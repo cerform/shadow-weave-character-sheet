@@ -123,7 +123,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const getModifierForClass = useCallback(() => {
     if (!character || !character.abilities) return 3; // По умолчанию +3
     
-    const classLower = character.class?.toLowerCase() || '';
+    const classLower = character.class ? character.class.toLowerCase() : "";
     
     if (['жрец', 'друид'].includes(classLower)) {
       // Мудрость

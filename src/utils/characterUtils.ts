@@ -17,6 +17,16 @@ export const getAbilityModifier = (score: number): number => {
 };
 
 /**
+ * Альтернативное имя для getAbilityModifier для обратной совместимости
+ */
+export const getModifierFromAbilityScore = getAbilityModifier;
+
+/**
+ * Альтернативное имя для getAbilityModifier для обратной совместимости
+ */
+export const getNumericModifier = getAbilityModifier;
+
+/**
  * Создаёт персонажа по умолчанию
  */
 export const createDefaultCharacter = (): Character => {

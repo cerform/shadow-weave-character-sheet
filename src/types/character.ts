@@ -126,6 +126,11 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  // Added properties for timestamps
+  updatedAt?: string;
+  createdAt?: string;
+  // Added property for character image
+  image?: string;
 }
 
 export interface CharacterSpell {
