@@ -13,6 +13,11 @@ import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { auth } from '@/services/firebase/auth';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
+import LoadingState from '@/components/characters/LoadingState';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
+import CharactersTable from '@/components/characters/CharactersTable';
+import EmptyState from '@/components/characters/EmptyState';
+import CharactersHeader from '@/components/characters/CharactersHeader';
 
 // Интерфейс для отладочной информации с нужными полями
 interface DebugInfo {
