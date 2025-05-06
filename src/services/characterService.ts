@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
@@ -274,7 +273,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     const querySnapshot = await getDocs(charactersCollection);
     
     const characters: Character[] = [];
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>) => {
       const data = doc.data();
       console.log('Found character:', { id: doc.id, userId: data.userId });
       characters.push({
@@ -322,7 +321,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       
       if (allDocsSnapshot.size > 0) {
         console.log('Примеры документов:');
-        allDocsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>, index: number) => {
+        allDocsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>, index: number) => {
           if (index < 3) { // показываем только первые 3 документа для отладки
             console.log(`Документ ${index + 1}:`, { id: doc.id, data: doc.data() });
           }
@@ -337,7 +336,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     console.log('Query returned documents count:', querySnapshot.size);
     
     const characters: Character[] = [];
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData, DocumentData>) => {
       const data = doc.data();
       console.log('Character document:', { id: doc.id, name: data.name });
       characters.push({
