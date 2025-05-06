@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -204,7 +203,7 @@ const CharactersListPage: React.FC = () => {
           </div>
 
           {/* Информационная панель для отладки */}
-          <Alert variant="outline" className="bg-blue-900/20 border-blue-500/50">
+          <Alert className="bg-blue-900/20 border-blue-500/50">
             <AlertCircle className="h-4 w-4 text-blue-500" />
             <AlertTitle className="text-blue-200">Статус загрузки персонажей</AlertTitle>
             <AlertDescription className="text-muted-foreground">

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Refresh } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
@@ -82,7 +81,7 @@ const RecentCharactersPage: React.FC = () => {
   const loadCharacters = async () => {
     try {
       setIsRefreshing(true);
-      console.log('RecentCharactersPage: Загружаем персонажей');
+      console.log('RecentCharactersPage: Загружа��м персонажей');
       
       await refreshCharacters();
       toast.success('Персонажи успешно загружены');
@@ -154,7 +153,7 @@ const RecentCharactersPage: React.FC = () => {
               disabled={loading || isRefreshing}
               className="gap-2"
             >
-              <Refresh size={16} className={loading || isRefreshing ? "animate-spin" : ""} />
+              <RefreshCw size={16} className={loading || isRefreshing ? "animate-spin" : ""} />
               Обновить
             </Button>
           </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -72,7 +71,7 @@ const InfoMessage: React.FC<InfoMessageProps> = ({
   };
 
   return (
-    <Alert variant="outline" className={cn(infoMessageVariants({ variant }), className)}>
+    <Alert className={cn(infoMessageVariants({ variant }), className)}>
       {getIcon()}
       {title && <AlertTitle className={getTitleClassName()}>{title}</AlertTitle>}
       <AlertDescription className="text-muted-foreground">
