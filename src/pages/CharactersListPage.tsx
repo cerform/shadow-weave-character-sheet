@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useCharacter } from '@/contexts/CharacterContext';
 import CharactersTable from "@/components/characters/CharactersTable";
@@ -14,15 +14,21 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import CharactersPageDebugger from '@/components/debug/CharactersPageDebugger';
 import ConsoleErrorCatcher from '@/components/debug/ConsoleErrorCatcher';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
+import LoadingState from '@/components/characters/LoadingState';
+import { toast } from 'sonner';
+import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { characters, loading, error, deleteCharacter, getUserCharacters } = useCharacter();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
   
   // При монтировании компонента обновляем список персонажей
   useEffect(() => {
@@ -36,6 +42,7 @@ const CharactersListPage: React.FC = () => {
     console.log('CharactersListPage: Монтирование компонента');
     console.log('CharactersListPage: isAuthenticated =', isAuthenticated);
     console.log('CharactersListPage: Количество персонажей =', characters?.length || 0);
+    console.log('CharactersListPage: userId =', user?.uid);
     
     return () => {
       console.log('CharactersListPage: Размонтирование компонента');
@@ -49,6 +56,28 @@ const CharactersListPage: React.FC = () => {
       console.error('CharactersListPage: Ошибка:', error);
     }
   }, [characters, error]);
+  
+  // Запускаем диагностику при возникновении ошибки
+  useEffect(() => {
+    if (error) {
+      runDiagnostics();
+    }
+  }, [error]);
+  
+  const runDiagnostics = async () => {
+    try {
+      console.log('CharactersListPage: Запуск диагностики');
+      const results = await diagnoseCharacterLoading();
+      console.log('CharactersListPage: Результаты диагностики:', results);
+      setDiagnosticResults(results);
+      
+      if (!results.success) {
+        toast.error('Диагностика выявила проблемы с загрузкой данных');
+      }
+    } catch (e) {
+      console.error('CharactersListPage: Ошибка диагностики:', e);
+    }
+  };
   
   const refreshCharacters = async () => {
     try {
@@ -124,10 +153,53 @@ const CharactersListPage: React.FC = () => {
             </div>
           </div>
           
-          <CharactersTable
-            characters={characters || []}
-            onDelete={deleteCharacter}
-          />
+          {/* Обработка состояния загрузки */}
+          {loading && <LoadingState />}
+          
+          {/* Обработка ошибок */}
+          {error && !loading && (
+            <ErrorDisplay 
+              errorMessage={error} 
+              onRetry={refreshCharacters} 
+              technicalDetails={diagnosticResults}
+            />
+          )}
+          
+          {/* Отображение данных после загрузки */}
+          {!loading && !error && (
+            <>
+              {/* Если есть результаты диагностики и они содержат ошибки */}
+              {diagnosticResults && !diagnosticResults.success && (
+                <Card className="mb-6 bg-amber-900/20 border-amber-500/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-amber-400">
+                      <AlertTriangle size={18} />
+                      Проблемы с загрузкой данных
+                    </CardTitle>
+                    <CardDescription>
+                      Обнаружены потенциальные проблемы с доступом к данным
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-amber-200 mb-2">{diagnosticResults.error}</p>
+                    <pre className="whitespace-pre-wrap text-xs bg-black/40 p-3 rounded max-h-40 overflow-auto">
+                      {JSON.stringify(diagnosticResults.debug, null, 2)}
+                    </pre>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" onClick={runDiagnostics}>
+                      Повторить диагностику
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+              
+              <CharactersTable
+                characters={characters || []}
+                onDelete={deleteCharacter}
+              />
+            </>
+          )}
         </div>
       </OBSLayout>
     </ErrorBoundary>

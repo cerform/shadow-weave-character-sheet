@@ -1,6 +1,6 @@
 
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/services/firebase/firestore'; // Исправляем путь импорта
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 
