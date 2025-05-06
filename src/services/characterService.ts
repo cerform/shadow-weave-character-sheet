@@ -21,6 +21,8 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     console.log('characterService: Выполняем запрос к Firestore...');
     const snapshot = await getDocs(q);
     
+    console.log(`characterService: Получен ответ от Firestore, документов: ${snapshot.size}`);
+    
     if (snapshot.empty) {
       console.log('characterService: Персонажи не найдены для пользователя', userId);
       return [];
@@ -43,8 +45,8 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     });
     
     console.log(`characterService: Получено ${characters.length} персонажей`);
-    characters.forEach(char => {
-      console.log(`- ${char.name || 'Безымянный'} (ID: ${char.id})`);
+    characters.forEach((char, index) => {
+      console.log(`- ${index + 1}. ${char.name || 'Безымянный'} (ID: ${char.id})`);
     });
     
     return characters;

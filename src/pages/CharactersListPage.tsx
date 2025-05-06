@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const CharactersListPage: React.FC = () => {
   
   const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -50,6 +52,14 @@ const CharactersListPage: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
+  // При обновлении попыток загрузки - загружаем заново
+  useEffect(() => {
+    if (loadAttempts > 0) {
+      console.log(`CharactersListPage: Повторная загрузка персонажей (попытка ${loadAttempts})`);
+      loadCharacters();
+    }
+  }, [loadAttempts]);
+
   // Функция загрузки персонажей
   const loadCharacters = async () => {
     try {
@@ -61,8 +71,10 @@ const CharactersListPage: React.FC = () => {
         return;
       }
       
-      await refreshCharacters();
-      toast.success(`Персонажи успешно загружены`);
+      // Непосредственно загружаем персонажей
+      const result = await refreshCharacters();
+      console.log('CharactersListPage: Персонажи загружены:', characters);
+      toast.success(`Персонажи успешно загружены (${characters.length})`);
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       toast.error('Ошибка при загрузке персонажей');
@@ -85,13 +97,11 @@ const CharactersListPage: React.FC = () => {
     }
   };
 
-  // Переключатель режимов отображения
-  const cycleDisplayMode = () => {
-    if (displayMode === 'table') setDisplayMode('cards');
-    else if (displayMode === 'cards') setDisplayMode('raw');
-    else setDisplayMode('table');
+  // Повторная попытка загрузки
+  const handleRetry = () => {
+    setLoadAttempts(prev => prev + 1);
   };
-  
+
   // Если пользователь не авторизован, предлагаем войти
   if (!isAuthenticated) {
     return (
@@ -210,6 +220,7 @@ const CharactersListPage: React.FC = () => {
               <div>Загрузка: {loading ? "Да" : "Нет"}</div>
               <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
               <div>Загружено персонажей: {characters.length}</div>
+              <div>Попыток загрузки: {loadAttempts}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
             </AlertDescription>
           </Alert>
@@ -221,7 +232,7 @@ const CharactersListPage: React.FC = () => {
           {error && !loading && (
             <ErrorDisplay 
               errorMessage={error}
-              onRetry={loadCharacters}
+              onRetry={handleRetry}
             />
           )}
           

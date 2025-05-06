@@ -36,7 +36,7 @@ export const CharacterContext = createContext<CharacterContextType>({
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // Начальная загрузка
+  const [loading, setLoading] = useState<boolean>(true); // По умолчанию true
   const [error, setError] = useState<string | null>(null);
   
   // Функция для обновления частичных данных персонажа
@@ -53,7 +53,8 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     try {
       setLoading(true);
       setError(null);
-      await getUserCharacters();
+      const result = await getUserCharacters();
+      console.log('CharacterContext: Список персонажей обновлен, получено:', result.length);
       return Promise.resolve();
     } catch (err) {
       console.error('CharacterContext: Ошибка при обновлении персонажей:', err);
@@ -131,20 +132,26 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       
       // Получаем персонажей конкретного пользователя
       const fetchedCharacters = await getCharactersByUserId(userId);
-      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей:`, fetchedCharacters);
+      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса`);
       
       // Фильтруем невалидные персонажи
       const validCharacters = fetchedCharacters.filter(char => char !== null && char.id);
+      console.log(`CharacterContext: После фильтрации осталось ${validCharacters.length} персонажей`);
+      
+      // Устанавливаем персонажи в состояние
       setCharacters(validCharacters);
+      
+      // Сбрасываем состояние загрузки и ошибок
+      setLoading(false);
+      setError(null);
       
       return validCharacters;
     } catch (error) {
       console.error('CharacterContext: Ошибка при получении персонажей:', error);
       setError('Не удалось загрузить персонажей');
+      setLoading(false);
       toast.error("Не удалось загрузить список персонажей.");
       return [];
-    } finally {
-      setLoading(false);
     }
   };
   
@@ -201,6 +208,8 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   
   // При инициализации получаем список персонажей
   useEffect(() => {
+    console.log('CharacterContext: Инициализация контекста персонажей');
+    
     const loadCharacters = async () => {
       console.log('CharacterContext: Начальная загрузка персонажей');
       await getUserCharacters();
@@ -208,12 +217,22 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     
     const userId = getCurrentUid();
     if (userId) {
+      console.log('CharacterContext: Пользователь авторизован, загружаем персонажей');
       loadCharacters();
     } else {
       console.log('CharacterContext: Пользователь не авторизован, персонажи не загружаются');
       setLoading(false); // Сбрасываем состояние загрузки, если пользователь не авторизован
     }
+    
+    return () => {
+      console.log('CharacterContext: Размонтирование контекста персонажей');
+    };
   }, []);
+  
+  // Отладочная информация при изменении состояния
+  useEffect(() => {
+    console.log(`CharacterContext: Состояние - персонажей: ${characters.length}, загрузка: ${loading}, ошибка: ${error || 'нет'}`);
+  }, [characters, loading, error]);
   
   return (
     <CharacterContext.Provider 

@@ -66,6 +66,13 @@ export const getCurrentUserIdExtended = (): string => {
 export const isUserAuthenticated = (): boolean => {
   const isAuth = auth.currentUser !== null;
   console.log('authHelpers: Проверка аутентификации:', isAuth);
+  
+  // Если пользователь авторизован, выводим дополнительную информацию
+  if (isAuth) {
+    const user = auth.currentUser;
+    console.log(`authHelpers: Пользователь авторизован (${user!.uid}), email: ${user!.email}`);
+  }
+  
   return isAuth;
 };
 
@@ -89,4 +96,45 @@ export const hasAccessToResource = (resourceOwnerId: string | undefined): boolea
   const hasAccess = currentUserId === resourceOwnerId;
   console.log(`authHelpers: Проверка доступа к ресурсу ${resourceOwnerId}:`, hasAccess);
   return hasAccess;
+};
+
+/**
+ * Сохраняет пользователя в localStorage
+ * @param user Данные пользователя
+ */
+export const saveUserToLocalStorage = (user: any): void => {
+  if (!user) return;
+  
+  try {
+    const userData = {
+      uid: user.uid,
+      id: user.uid, // Дублируем для совместимости
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL
+    };
+    
+    localStorage.setItem('authUser', JSON.stringify(userData));
+    console.log('authHelpers: Пользователь сохранен в localStorage:', userData.uid);
+  } catch (error) {
+    console.error('authHelpers: Ошибка при сохранении пользователя в localStorage:', error);
+  }
+};
+
+/**
+ * Получает данные пользователя из localStorage
+ * @returns Данные пользователя или null
+ */
+export const getUserFromLocalStorage = (): any => {
+  try {
+    const savedUser = localStorage.getItem('authUser');
+    if (!savedUser) return null;
+    
+    const parsedUser = JSON.parse(savedUser);
+    console.log('authHelpers: Пользователь получен из localStorage:', parsedUser.uid || parsedUser.id);
+    return parsedUser;
+  } catch (error) {
+    console.error('authHelpers: Ошибка при получении пользователя из localStorage:', error);
+    return null;
+  }
 };
