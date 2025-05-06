@@ -15,6 +15,8 @@ export interface ClassData {
   };
   subclasses?: Record<string, SubclassData>;
   features?: Feature[]; // Добавляем поле features для более подробных описаний
+  description?: string; // Добавляем отдельное поле для описания класса
+  equipment?: string[]; // Добавляем поле для стартового снаряжения класса
 }
 
 export interface SubclassData {

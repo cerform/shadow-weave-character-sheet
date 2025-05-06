@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { getAllClasses } from "@/data/classes/index"; // Используем правильный импорт
+import { getAllClasses, getClassDetails } from "@/data/classes/index"; 
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -27,6 +27,43 @@ const FeatureItem = ({ title, level, description }: { title: string; level: numb
   </div>
 );
 
+// Компонент для отображения особенностей класса
+const ClassFeatureItem = ({ feature }: { feature: any }) => (
+  <div className="mb-4 border-l-2 border-primary/50 pl-3">
+    <h4 className="font-medium text-base">{feature.name}</h4>
+    <p className="text-sm text-muted-foreground">{feature.level} уровень</p>
+    <p className="text-sm mt-1">{feature.description}</p>
+  </div>
+);
+
+// Компонент для отображения таблицы данных о классе
+const ClassInfoTable = ({ classDetails }: { classDetails: any }) => (
+  <div className="grid grid-cols-2 gap-4 mt-4">
+    <div>
+      <h4 className="font-medium text-sm">Кость здоровья</h4>
+      <p className="text-sm">d{classDetails.hitDice}</p>
+    </div>
+    <div>
+      <h4 className="font-medium text-sm">Основная характеристика</h4>
+      <p className="text-sm">{Array.isArray(classDetails.primaryAbility) 
+        ? classDetails.primaryAbility.join(", ")
+        : classDetails.primaryAbility}</p>
+    </div>
+    <div>
+      <h4 className="font-medium text-sm">Спасброски</h4>
+      <p className="text-sm">{Array.isArray(classDetails.savingThrows) 
+        ? classDetails.savingThrows.join(", ")
+        : classDetails.savingThrows}</p>
+    </div>
+    {classDetails.spellcasting && (
+      <div>
+        <h4 className="font-medium text-sm">Характеристика заклинаний</h4>
+        <p className="text-sm">{classDetails.spellcasting.ability}</p>
+      </div>
+    )}
+  </div>
+);
+
 interface CharacterClassSelectionProps {
   character: any;
   updateCharacter: (updates: any) => void;
@@ -45,6 +82,7 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [subclassActiveTab, setSubclassActiveTab] = useState<string>("description");
   const [classes, setClasses] = useState<any[]>([]);
+  const [classDetails, setClassDetails] = useState<any>(null);
   const { toast } = useToast();
 
   // Загружаем классы при инициализации
@@ -55,6 +93,16 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
     };
     loadClasses();
   }, []);
+
+  // Загружаем детали выбранного класса
+  useEffect(() => {
+    if (selectedClass) {
+      const details = getClassDetails(selectedClass);
+      setClassDetails(details);
+    } else {
+      setClassDetails(null);
+    }
+  }, [selectedClass]);
 
   // Проверяем, есть ли подклассы для выбранного класса
   const hasSubclasses = (className: string) => {
@@ -141,9 +189,6 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
     }
   };
 
-  // Find the selected class details
-  const selectedClassDetails = classes.find(c => c.name === selectedClass);
-
   return (
     <div>
       <SectionHeader
@@ -156,16 +201,16 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
           <SelectionCard
             key={cls.name}
             title={cls.name}
-            description={cls.description}
+            description={cls.description || "Описание будет добавлено..."}
             selected={selectedClass === cls.name} 
             onClick={() => setSelectedClass(cls.name)}
           />
         ))}
       </SelectionCardGrid>
 
-      {selectedClassDetails && (
+      {classDetails && (
         <div className="mt-8 bg-card/20 p-5 rounded-lg border">
-          <h3 className="text-xl font-medium mb-3">{selectedClassDetails.name}</h3>
+          <h3 className="text-xl font-medium mb-3">{classDetails.name}</h3>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-3 mb-4">
@@ -176,36 +221,59 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
             
             <ScrollArea className="h-64 rounded-md border p-4">
               <TabsContent value="overview" className="space-y-4 mt-0">
-                <p>{selectedClassDetails.description}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <h4 className="font-medium text-sm">Кость здоровья</h4>
-                    <p className="text-sm">{selectedClassDetails.hitDie}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-sm">Основная характеристика</h4>
-                    <p className="text-sm">{selectedClassDetails.primaryAbility}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-sm">Спасброски</h4>
-                    <p className="text-sm">{selectedClassDetails.savingThrows}</p>
-                  </div>
-                </div>
+                <p>{classDetails.description || "Описание будет добавлено..."}</p>
+                <ClassInfoTable classDetails={classDetails} />
               </TabsContent>
               
               <TabsContent value="features" className="mt-0">
-                <div className="space-y-4">
-                  {selectedClassDetails.features && selectedClassDetails.features.map((feature: any, index: number) => (
-                    <div key={index}>
-                      <h4 className="font-medium">{feature.name}</h4>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
+                <div className="space-y-2">
+                  {classDetails.features && classDetails.features.map((feature: any, index: number) => (
+                    <ClassFeatureItem key={index} feature={feature} />
                   ))}
                 </div>
               </TabsContent>
               
               <TabsContent value="proficiencies" className="mt-0">
-                <p>{selectedClassDetails.proficiencies}</p>
+                <div className="space-y-4">
+                  {classDetails.armorProficiencies && classDetails.armorProficiencies.length > 0 && (
+                    <div>
+                      <h4 className="font-medium">Владение доспехами</h4>
+                      <p className="text-sm">{classDetails.armorProficiencies.join(', ')}</p>
+                    </div>
+                  )}
+                  
+                  {classDetails.weaponProficiencies && classDetails.weaponProficiencies.length > 0 && (
+                    <div>
+                      <h4 className="font-medium">Владение оружием</h4>
+                      <p className="text-sm">{classDetails.weaponProficiencies.join(', ')}</p>
+                    </div>
+                  )}
+                  
+                  {classDetails.toolProficiencies && classDetails.toolProficiencies.length > 0 && (
+                    <div>
+                      <h4 className="font-medium">Владение инструментами</h4>
+                      <p className="text-sm">{classDetails.toolProficiencies.join(', ')}</p>
+                    </div>
+                  )}
+                  
+                  {classDetails.skillChoices && classDetails.skillChoices.length > 0 && (
+                    <div>
+                      <h4 className="font-medium">Доступные навыки</h4>
+                      <p className="text-sm">Выберите {classDetails.skillCount} из: {classDetails.skillChoices.join(', ')}</p>
+                    </div>
+                  )}
+
+                  {classDetails.equipment && classDetails.equipment.length > 0 && (
+                    <div>
+                      <h4 className="font-medium">Начальное снаряжение</h4>
+                      <ul className="text-sm list-disc pl-5">
+                        {classDetails.equipment.map((item: string, idx: number) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </ScrollArea>
           </Tabs>

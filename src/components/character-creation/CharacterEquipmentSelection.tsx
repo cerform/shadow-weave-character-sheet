@@ -1,238 +1,348 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import type { CharacterSheet } from "@/utils/characterImports";
-import NavigationButtons from './NavigationButtons';
-import { Check, Plus } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  SelectionCard,
-  SelectionCardGrid,
-  SelectionCardBadge
-} from "@/components/ui/selection-card";
+import React, { useState, useEffect } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NavigationButtons from "./NavigationButtons";
+import { useToast } from "@/hooks/use-toast";
 import SectionHeader from "@/components/ui/section-header";
-import { useTheme } from '@/hooks/use-theme';
+import { getClassDetails } from "@/data/classes";
+
+// Базовые категории снаряжения
+const EQUIPMENT_CATEGORIES = {
+  weapons: "Оружие",
+  armor: "Доспехи и щиты",
+  accessories: "Аксессуары",
+  packs: "Снаряжение",
+  tools: "Инструменты",
+};
+
+// Базовое снаряжение по категориям
+const BASIC_EQUIPMENT = {
+  weapons: [
+    "Длинный меч",
+    "Короткий меч",
+    "Длинный лук",
+    "Короткий лук",
+    "Кинжал",
+    "Боевой топор",
+    "Булава",
+    "Посох",
+    "Рапира",
+    "Арбалет",
+  ],
+  armor: [
+    "Кожаный доспех",
+    "Кольчуга",
+    "Латы",
+    "Щит",
+  ],
+  accessories: [
+    "Мешочек с компонентами",
+    "Священный символ",
+    "Амулет защиты",
+    "Кольцо невидимости",
+    "Плащ эльфийской работы",
+  ],
+  packs: [
+    "Набор авантюриста",
+    "Набор исследователя подземелий",
+    "Набор целителя",
+    "Набор дипломата",
+    "Набор священника",
+    "Набор путешественника",
+    "Набор учёного",
+  ],
+  tools: [
+    "Инструменты вора",
+    "Музыкальный инструмент",
+    "Инструменты алхимика",
+    "Инструменты ремесленника",
+    "Набор травника",
+  ],
+};
+
+// Снаряжение, специфичное для классов
+const CLASS_EQUIPMENT = {
+  "Бард": {
+    weapons: ["Рапира", "Длинный меч", "Короткий меч", "Кинжал"],
+    accessories: ["Музыкальный инструмент", "Мешочек с компонентами"],
+    packs: ["Набор дипломата", "Набор артиста"],
+  },
+  "Жрец": {
+    weapons: ["Булава", "Боевой молот", "Лёгкий арбалет"],
+    armor: ["Кольчуга", "Чешуйчатый доспех", "Щит"],
+    accessories: ["Священный символ"],
+    packs: ["Набор священника", "Набор путешественника"],
+  },
+  "Волшебник": {
+    weapons: ["Посох", "Кинжал", "Лёгкий арбалет"],
+    accessories: ["Мешочек с компонентами", "Книга заклинаний", "Магическая фокусировка"],
+    packs: ["Набор учёного", "Набор путешественника"],
+  },
+  "Воин": {
+    weapons: ["Длинный меч", "Длинный лук", "Боевой топор", "Копьё", "Арбалет"],
+    armor: ["Кольчуга", "Кожаный доспех", "Щит"],
+    packs: ["Набор путешественника", "Набор исследователя"],
+  },
+  "Плут": {
+    weapons: ["Рапира", "Короткий меч", "Короткий лук", "Кинжал", "Ручной арбалет"],
+    armor: ["Кожаный доспех"],
+    tools: ["Инструменты вора"],
+    packs: ["Набор взломщика", "Набор исследователя", "Набор артиста"],
+  },
+  "Варвар": {
+    weapons: ["Двуручный топор", "Боевой топор", "Метательное копьё"],
+    packs: ["Набор исследователя"],
+  },
+  "Паладин": {
+    weapons: ["Длинный меч", "Боевой молот", "Метательное копьё"],
+    armor: ["Кольчуга", "Щит"],
+    accessories: ["Священный символ"],
+    packs: ["Набор священника", "Набор путешественника"],
+  },
+  "Колдун": {
+    weapons: ["Кинжал", "Посох", "Лёгкий арбалет"],
+    armor: ["Кожаный доспех"],
+    accessories: ["Мешочек с компонентами", "Магическая фокусировка"],
+    packs: ["Набор учёного", "Набор подземелья"],
+  },
+  "Друид": {
+    weapons: ["Серп", "Дубинка", "Копьё", "Кинжал"],
+    armor: ["Кожаный доспех", "Щит"],
+    accessories: ["Фокусировка друида"],
+    tools: ["Набор травника"],
+    packs: ["Набор путешественника"],
+  },
+  "Чародей": {
+    weapons: ["Кинжал", "Посох", "Лёгкий арбалет"],
+    accessories: ["Магическая фокусировка", "Мешочек с компонентами"],
+    packs: ["Набор путешественника", "Набор дипломата"],
+  },
+  "Следопыт": {
+    weapons: ["Короткий меч", "Длинный лук", "Короткий лук"],
+    armor: ["Чешуйчатый доспех", "Кожаный доспех"],
+    packs: ["Набор путешественника", "Набор исследователя"],
+  },
+  "Монах": {
+    weapons: ["Короткий меч", "Посох", "Кинжал", "Дротик"],
+    packs: ["Набор путешественника", "Набор подземелья"],
+  },
+  "Изобретатель": {
+    weapons: ["Кинжал", "Лёгкий арбалет"],
+    armor: ["Кожаный доспех", "Щит"],
+    tools: ["Инструменты изобретателя", "Инструменты вора"],
+    accessories: ["Магическая фокусировка", "Мешочек с компонентами"],
+    packs: ["Набор путешественника"],
+  }
+};
+
+// Функция для получения доступного снаряжения для выбранного класса
+const getAvailableEquipmentForClass = (className: string) => {
+  const classEquipment = CLASS_EQUIPMENT[className as keyof typeof CLASS_EQUIPMENT] || {};
+  const result: Record<string, string[]> = {};
+
+  // Для каждой категории берем базовое снаряжение и добавляем специфичное для класса
+  Object.entries(EQUIPMENT_CATEGORIES).forEach(([key, value]) => {
+    const categoryKey = key as keyof typeof BASIC_EQUIPMENT;
+    const classItems = classEquipment[categoryKey] || [];
+    const baseItems = BASIC_EQUIPMENT[categoryKey] || [];
+    
+    // Объединяем и удаляем дубликаты
+    const uniqueItems = Array.from(new Set([...classItems, ...baseItems]));
+    result[key] = uniqueItems;
+  });
+
+  return result;
+};
 
 interface CharacterEquipmentSelectionProps {
-  character: CharacterSheet;
-  updateCharacter: (updates: Partial<CharacterSheet>) => void;
+  character: any;
+  updateCharacter: (updates: any) => void;
   nextStep: () => void;
   prevStep: () => void;
-}
-
-interface EquipmentItem {
-  name: string;
-  description?: string;
-  category: 'weapon' | 'armor' | 'accessory' | 'gear' | 'tool';
 }
 
 const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = ({
   character,
   updateCharacter,
   nextStep,
-  prevStep
+  prevStep,
 }) => {
-  // Получаем текущую тему
-  const { themeStyles } = useTheme();
-  
-  // Преобразуем equipment в массив строк, если это объект
-  const initialEquipment = useMemo(() => {
-    return Array.isArray(character.equipment) 
-      ? character.equipment 
-      : character.equipment?.weapons?.concat(
-          character.equipment?.armor ? [character.equipment.armor] : [],
-          character.equipment?.items || []
-        ) || [];
-  }, [character.equipment]);
-  
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(initialEquipment);
-  const [customItem, setCustomItem] = useState('');
-  const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
-  
-  // Загружаем доступное снаряжение на основе класса и предыстории
+  const [selectedItems, setSelectedItems] = useState<string[]>(character.equipment || []);
+  const [customItem, setCustomItem] = useState("");
+  const [availableEquipment, setAvailableEquipment] = useState<Record<string, string[]>>({});
+  const [classDetails, setClassDetails] = useState<any>(null);
+  const { toast } = useToast();
+
+  // Загружаем детали класса и доступное снаряжение
   useEffect(() => {
-    const loadEquipment = () => {
-      // Здесь будет логика загрузки снаряжения на основе класса и предыстории
-      // Пока используем тестовый набор
-      setAvailableEquipment([
-        { name: "Длинный меч", category: "weapon" },
-        { name: "Короткий меч", category: "weapon" },
-        { name: "Длинный лук", category: "weapon" },
-        { name: "Кинжал", category: "weapon" },
-        { name: "Боевой топор", category: "weapon" },
-        { name: "Кожаный доспех", category: "armor" },
-        { name: "Кольчуга", category: "armor" },
-        { name: "Щит", category: "armor" },
-        { name: "Набор авантюриста", category: "gear" },
-        { name: "Набор исследователя подземелий", category: "gear" },
-        { name: "Набор целителя", category: "gear" },
-        { name: "Инструменты вора", category: "tool" },
-        { name: "Музыкальный инструмент", category: "tool" },
-        { name: "Алхимический набор", category: "tool" },
-        { name: "Мешочек с компонентами", category: "accessory" },
-        { name: "Священный символ", category: "accessory" },
-        { name: "Амулет защиты", category: "accessory" }
-      ]);
-    };
-    
-    loadEquipment();
-  }, [character.class, character.background]);
-  
-  // Определяем стили для выбранного снаряжения на основе текущей темы
-  const selectionStyles = useMemo(() => ({
-    selectedBgColor: `${themeStyles?.accent}20` || 'rgba(157, 92, 255, 0.2)',
-    selectedBorderColor: themeStyles?.accent || '#9D5CFF',
-    hoverBgColor: `${themeStyles?.accent}10` || 'rgba(157, 92, 255, 0.1)',
-    textColor: themeStyles?.textColor || '#FFFFFF',
-    boxShadow: `0 0 8px ${themeStyles?.accent}50` || '0 0 8px rgba(157, 92, 255, 0.5)',
-  }), [themeStyles]);
-  
-  const toggleEquipment = (item: string) => {
-    let newEquipment;
-    
-    if (selectedEquipment.includes(item)) {
-      newEquipment = selectedEquipment.filter(i => i !== item);
+    if (character.class) {
+      const details = getClassDetails(character.class);
+      setClassDetails(details);
+      
+      // Получаем снаряжение для выбранного класса
+      const equipment = getAvailableEquipmentForClass(details?.name || "");
+      setAvailableEquipment(equipment);
+    }
+  }, [character.class]);
+
+  const isItemSelected = (item: string) => {
+    return selectedItems.includes(item);
+  };
+
+  const toggleItem = (item: string) => {
+    if (isItemSelected(item)) {
+      setSelectedItems(selectedItems.filter((i) => i !== item));
     } else {
-      newEquipment = [...selectedEquipment, item];
+      setSelectedItems([...selectedItems, item]);
     }
-    
-    setSelectedEquipment(newEquipment);
-    updateCharacter({ equipment: newEquipment });
   };
-  
+
   const addCustomItem = () => {
-    if (customItem.trim() !== '') {
-      const newEquipment = [...selectedEquipment, customItem.trim()];
-      setSelectedEquipment(newEquipment);
-      updateCharacter({ equipment: newEquipment });
-      setCustomItem('');
+    if (customItem.trim()) {
+      if (isItemSelected(customItem)) {
+        toast({
+          title: "Предмет уже добавлен",
+          description: "Этот предмет уже в вашем инвентаре",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedItems([...selectedItems, customItem]);
+      setCustomItem("");
     }
   };
-  
-  const getEquipmentByCategory = (category: string) => {
-    return availableEquipment.filter(item => item.category === category);
+
+  const handleNext = () => {
+    if (selectedItems.length === 0) {
+      toast({
+        title: "Выберите снаряжение",
+        description: "Пожалуйста, выберите хотя бы один предмет снаряжения.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateCharacter({ equipment: selectedItems });
+    nextStep();
   };
-  
-  const renderEquipmentCategory = (category: string, title: string) => {
-    const items = getEquipmentByCategory(category);
-    
-    if (items.length === 0) return null;
-    
+
+  // Рендер секции с предметами
+  const renderEquipmentSection = (category: string, items: string[]) => {
     return (
-      <div className="mb-6 animate-fade-in">
-        <h3 className="font-medium text-lg mb-3" style={{ color: themeStyles?.accent }}>{title}</h3>
-        <SelectionCardGrid>
-          {items.map(item => {
-            const isSelected = selectedEquipment.includes(item.name);
-            return (
-              <SelectionCard
-                key={item.name}
-                title={item.name}
-                selected={isSelected}
-                onClick={() => toggleEquipment(item.name)}
-                className="transition-all duration-200 border-2"
-                style={{
-                  backgroundColor: isSelected ? selectionStyles.selectedBgColor : 'rgba(0, 0, 0, 0.3)',
-                  borderColor: isSelected ? selectionStyles.selectedBorderColor : 'rgba(255, 255, 255, 0.1)',
-                  boxShadow: isSelected ? selectionStyles.boxShadow : 'none',
-                }}
-              >
-                {isSelected && (
-                  <div className="absolute top-2 right-2">
-                    <SelectionCardBadge
-                      className="bg-transparent"
-                      style={{ color: selectionStyles.selectedBorderColor }}
-                    >
-                      <Check size={16} />
-                    </SelectionCardBadge>
-                  </div>
+      <div className="mb-6" key={category}>
+        <h3 className="text-lg font-semibold text-amber-500 mb-3">{EQUIPMENT_CATEGORIES[category as keyof typeof EQUIPMENT_CATEGORIES]}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {items.map((item) => (
+            <button
+              key={item}
+              className={`
+                px-4 py-2 rounded-md text-left border transition-colors
+                ${isItemSelected(item)
+                  ? "bg-amber-900/30 border-amber-600 text-amber-300"
+                  : "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800"}
+              `}
+              onClick={() => toggleItem(item)}
+            >
+              <div className="flex items-center">
+                <div className="flex-grow">{item}</div>
+                {isItemSelected(item) && (
+                  <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
                 )}
-              </SelectionCard>
-            );
-          })}
-        </SelectionCardGrid>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     );
   };
-  
+
+  // Показываем начальное снаряжение из описания класса
+  const renderClassStartingEquipment = () => {
+    if (!classDetails?.equipment || classDetails.equipment.length === 0) return null;
+    
+    return (
+      <div className="mb-6 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+        <h3 className="text-lg font-semibold text-white mb-2">Рекомендуемое начальное снаряжение для {classDetails.name}</h3>
+        <ul className="list-disc pl-6 text-gray-300 space-y-1">
+          {classDetails.equipment.map((item: string, index: number) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div>
       <SectionHeader
         title="Снаряжение"
         description="Выберите снаряжение для вашего персонажа."
-        className="mb-6"
       />
-      
-      {/* Снаряжение по категориям */}
-      {renderEquipmentCategory('weapon', 'Оружие')}
-      {renderEquipmentCategory('armor', 'Доспехи и щиты')}
-      {renderEquipmentCategory('accessory', 'Аксессуары')}
-      {renderEquipmentCategory('gear', 'Снаряжение')}
-      {renderEquipmentCategory('tool', 'Инструменты')}
-      
-      {/* Добавление собственного снаряжения */}
-      <Card 
-        className="mt-8 mb-6 border animate-fade-in" 
-        style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          borderColor: `${themeStyles?.accent}30`,
-        }}
-      >
-        <CardContent className="p-6">
-          <h3 className="font-medium text-lg mb-3" style={{ color: themeStyles?.accent }}>Добавить своё снаряжение</h3>
+
+      {/* Показываем рекомендуемое снаряжение для выбранного класса */}
+      {renderClassStartingEquipment()}
+
+      <ScrollArea className="h-[60vh] pr-4">
+        {Object.entries(availableEquipment).map(([category, items]) => {
+          if (items.length > 0) {
+            return renderEquipmentSection(category, items);
+          }
+          return null;
+        })}
+
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-amber-500 mb-3">Добавить своё снаряжение</h3>
           <div className="flex gap-2">
             <Input
-              type="text"
               placeholder="Введите название предмета..."
               value={customItem}
               onChange={(e) => setCustomItem(e.target.value)}
-              className="flex-1 bg-black/50 border-gray-700 text-white"
-              style={{ borderColor: `${themeStyles?.accent}30` }}
+              className="bg-gray-800/50 border-gray-700 text-white"
             />
-            <Button 
-              onClick={addCustomItem} 
-              className="shrink-0"
-              style={{ 
-                backgroundColor: themeStyles?.accent,
-                borderColor: themeStyles?.accent
-              }}
+            <Button
+              onClick={addCustomItem}
+              className="bg-amber-600 hover:bg-amber-700"
             >
-              <Plus className="h-4 w-4 mr-1" /> Добавить
+              Добавить
             </Button>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Выбранное снаряжение */}
-      {selectedEquipment.length > 0 && (
-        <Card 
-          className="mt-6 mb-8 border animate-fade-in" 
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            borderColor: `${themeStyles?.accent}30`,
-          }}
-        >
-          <CardContent className="p-6">
-            <h3 className="font-medium text-lg mb-3" style={{ color: themeStyles?.accent }}>Выбранное снаряжение:</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {selectedEquipment.map((item, index) => (
-                <li key={index} style={{ color: themeStyles?.accent }}>
-                  <span style={{ color: themeStyles?.textColor }}>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Используем только один NavigationButtons */}
+        </div>
+      </ScrollArea>
+
+      <div className="mt-6 bg-gray-800/70 p-4 rounded-md border border-gray-700">
+        <h3 className="font-semibold mb-2 text-amber-400">Выбранное снаряжение ({selectedItems.length})</h3>
+        <div className="flex flex-wrap gap-1">
+          {selectedItems.length > 0 ? (
+            selectedItems.map((item) => (
+              <div
+                key={item}
+                className="bg-amber-900/40 text-amber-300 px-2 py-1 rounded-md flex items-center text-sm"
+              >
+                <span>{item}</span>
+                <button
+                  className="ml-1 text-gray-400 hover:text-white"
+                  onClick={() => toggleItem(item)}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400">Пока не выбрано ни одного предмета.</p>
+          )}
+        </div>
+      </div>
+
       <NavigationButtons
-        nextStep={nextStep}
+        allowNext={selectedItems.length > 0}
+        nextStep={handleNext}
         prevStep={prevStep}
-        allowNext={selectedEquipment.length > 0}
-        disableNext={selectedEquipment.length === 0}
-        isFirstStep={false}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -53,50 +54,61 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [activeTab, setActiveTab] = useState('all');
   const [cantripsKnown, setCantripsKnown] = useState(0);
   const [spellsKnown, setSpellsKnown] = useState(0);
+  const [loadAttempts, setLoadAttempts] = useState(0);
+  const [loadedSuccessfully, setLoadedSuccessfully] = useState(false);
 
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
-    if (effectiveClass) {
+    if (effectiveClass && !loadedSuccessfully && loadAttempts < 3) {
       setLoading(true);
-      console.log(`Loading spells for ${effectiveClass} (level ${effectiveLevel})`);
+      setLoadAttempts(prev => prev + 1);
       
-      // Принудительно загружаем заклинания из контекста
-      loadSpellsForCharacter(effectiveClass, effectiveLevel);
-      
-      // Резервная загрузка заклинаний напрямую из данных
-      const classSpells = getSpellsByClass(effectiveClass);
-      console.log(`Direct loading found ${classSpells.length} spells for ${effectiveClass}`);
-      
-      // Преобразуем заклинания к типу SpellData и устанавливаем максимальный уровень
-      const maxSpellLevel = Math.ceil(effectiveLevel / 2);
-      const filteredSpells = classSpells
-        .filter(spell => spell.level <= maxSpellLevel)
-        .map(spell => ({
-          id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-          name: spell.name,
-          level: spell.level,
-          school: spell.school || 'Универсальная',
-          castingTime: spell.castingTime || '1 действие',
-          range: spell.range || 'На себя',
-          components: spell.components || '',
-          duration: spell.duration || 'Мгновенная',
-          description: spell.description || ['Нет описания'],
-          classes: spell.classes || [],
-          ritual: spell.ritual || false,
-          concentration: spell.concentration || false
-        } as SpellData));
-      
-      if (filteredSpells.length > 0) {
-        console.log(`Setting ${filteredSpells.length} internal spells`);
-        setInternalAvailableSpells(filteredSpells);
+      try {
+        console.log(`Loading spells for ${effectiveClass} (level ${effectiveLevel})`);
+        
+        // Принудительно загружаем заклинания из контекста
+        loadSpellsForCharacter(effectiveClass, effectiveLevel);
+        
+        // Резервная загрузка заклинаний напрямую из данных
+        const classSpells = getSpellsByClass(effectiveClass);
+        console.log(`Direct loading found ${classSpells.length} spells for ${effectiveClass}`);
+        
+        if (classSpells.length > 0) {
+          // Преобразуем заклинания к типу SpellData и устанавливаем максимальный уровень
+          const maxSpellLevel = Math.ceil(effectiveLevel / 2);
+          const filteredSpells = classSpells
+            .filter(spell => spell.level <= maxSpellLevel)
+            .map(spell => ({
+              id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+              name: spell.name,
+              level: spell.level,
+              school: spell.school || 'Универсальная',
+              castingTime: spell.castingTime || '1 действие',
+              range: spell.range || 'На себя',
+              components: spell.components || '',
+              duration: spell.duration || 'Мгновенная',
+              description: spell.description || ['Нет описания'],
+              classes: spell.classes || [],
+              ritual: spell.ritual || false,
+              concentration: spell.concentration || false
+            } as SpellData));
+          
+          if (filteredSpells.length > 0) {
+            console.log(`Setting ${filteredSpells.length} internal spells`);
+            setInternalAvailableSpells(filteredSpells);
+            setLoadedSuccessfully(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading spells:", error);
+      } finally {
+        // Даем время на загрузку
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
       }
-      
-      // Даем время на загрузку
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
     }
-  }, [effectiveClass, effectiveLevel, loadSpellsForCharacter]);
+  }, [effectiveClass, effectiveLevel, loadSpellsForCharacter, loadedSuccessfully, loadAttempts]);
 
   // Пересчитываем количество известных заклинаний при каждом изменении списка заклинаний
   useEffect(() => {
@@ -128,7 +140,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (['жрец', 'друид'].includes(classLower)) {
       // Мудрость
       return Math.floor((character.abilities.wisdom || character.wisdom || 10) - 10) / 2;
-    } else if (['волшебник', 'маг'].includes(classLower)) {
+    } else if (['волшебник', 'маг', 'изобретатель'].includes(classLower)) {
       // Интеллект
       return Math.floor((character.abilities.intelligence || character.intelligence || 10) - 10) / 2;
     } else {
@@ -153,34 +165,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const spellsToFilter = useMemo(() => {
     // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. контекст
     if (propAvailableSpells && propAvailableSpells.length > 0) {
-      console.log("Using props spells:", propAvailableSpells.length);
       return propAvailableSpells;
     } 
     
     if (internalAvailableSpells.length > 0) {
-      console.log("Using internal spells:", internalAvailableSpells.length);
       return internalAvailableSpells;
     }
     
     if (contextAvailableSpells && contextAvailableSpells.length > 0) {
-      console.log("Using context spells:", contextAvailableSpells.length);
       return contextAvailableSpells;
     }
     
-    console.log("No spells available");
     return [];
   }, [propAvailableSpells, contextAvailableSpells, internalAvailableSpells]);
 
   // Фильтрация по поисковому запросу и активной вкладке
   useEffect(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) {
-      console.log("No spells available for filtering");
       setFilteredSpells([]);
       return;
     }
 
-    console.log(`Filtering ${spellsToFilter.length} spells with search term: '${searchTerm}'`);
-    
     let filtered = spellsToFilter;
     
     // Фильтрация по поисковому запросу, если он есть
@@ -215,7 +220,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       filtered = filtered.filter(spell => spell.level === level);
     }
     
-    console.log(`Filter results: ${filtered.length} spells match criteria`);
     setFilteredSpells(filtered);
   }, [spellsToFilter, searchTerm, activeTab]);
 
@@ -288,12 +292,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       } else {
         setSpellsKnown(prev => prev + 1);
       }
-      
-      toast({
-        title: "Заклинание изучено",
-        description: `Заклинание "${spell.name}" добавлено в список известных заклинаний`,
-        variant: "default"
-      });
     } else {
       // Удаляем заклинание из контекста
       removeSpell(spell.id.toString());
@@ -313,12 +311,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         } else {
           setSpellsKnown(prev => Math.max(0, prev - 1));
         }
-        
-        toast({
-          title: "Заклинание забыто",
-          description: `Заклинание "${spell.name}" удалено из списка известных заклинаний`,
-          variant: "default"
-        });
       }
     }
   };
@@ -345,6 +337,37 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       return acc;
     }, {});
   }, [spellsToFilter]);
+
+  // Если не удалось загрузить заклинания после нескольких попыток
+  if (loadAttempts >= 3 && !loadedSuccessfully && !loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="text-center py-8 text-red-400">
+          <h3 className="text-xl font-bold mb-3">Не удалось загрузить заклинания</h3>
+          <p className="mb-4">Произошла ошибка при загрузке списка заклинаний для класса {effectiveClass}.</p>
+          <Button 
+            onClick={() => {
+              setLoadAttempts(0);
+              setLoading(true);
+            }}
+            className="bg-primary mx-auto"
+          >
+            Попробовать снова
+          </Button>
+        </div>
+        
+        {nextStep && prevStep && (
+          <div className="mt-auto pt-4">
+            <NavigationButtons 
+              onPrev={prevStep} 
+              onNext={nextStep}
+              nextLabel="Пропустить выбор заклинаний"
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -444,6 +467,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             onPrev={prevStep} 
             onNext={handleSaveAndContinue}
             nextLabel="Сохранить и продолжить"
+            allowNext={!loading}
           />
         </div>
       )}

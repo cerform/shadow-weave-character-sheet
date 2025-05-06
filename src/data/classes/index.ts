@@ -1,3 +1,4 @@
+
 import { ClassData } from '@/types/classes';
 import monkClassData from './monk';
 import artificerClassData from './artificer';
@@ -16,6 +17,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: ["three musical instruments of your choice"],
     skillChoices: ["athletics", "acrobatics", "sleight of hand", "stealth", "arcana", "history", "investigation", "nature", "religion", "animal handling", "insight", "medicine", "perception", "survival", "deception", "intimidation", "performance", "persuasion"],
     skillCount: 3,
+    description: "Барды - это вдохновляющие маги, чья сила отражает музыку создания. Чарующие звуками и заклинаниями, они воодушевляют союзников и наводят страх на врагов.",
+    equipment: [
+      "Рапира, или длинный меч, или любое простое оружие",
+      "Набор дипломата или набор артиста",
+      "Музыкальный инструмент",
+      "Кожаный доспех и кинжал"
+    ],
     spellcasting: {
       ability: "charisma",
       spellSlots: {
@@ -53,6 +61,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["arcana", "history", "insight", "investigation", "medicine", "religion"],
     skillCount: 2,
+    description: "Волшебники - это верховные маги, черпающие свою силу из тщательного изучения магии и заклинательской традиции.",
+    equipment: [
+      "Посох или кинжал",
+      "Мешочек с компонентами или магическая фокусировка",
+      "Набор учёного или набор путешественника",
+      "Книга заклинаний"
+    ],
     spellcasting: {
       ability: "intelligence",
       spellSlots: {
@@ -90,6 +105,14 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["history", "insight", "medicine", "persuasion", "religion"],
     skillCount: 2,
+    description: "Жрецы - посланники богов в мире смертных. Наделённые божественной магией, они могут как исцелять раны, так и наносить удары своим врагам.",
+    equipment: [
+      "Булава или боевой молот (если владеете)",
+      "Чешуйчатый доспех, кожаный доспех или кольчуга (если владеете)",
+      "Лёгкий арбалет и 20 болтов или любое простое оружие",
+      "Набор священника или набор путешественника",
+      "Щит и священный символ"
+    ],
     spellcasting: {
       ability: "wisdom",
       spellSlots: {
@@ -127,6 +150,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["arcana", "deception", "insight", "intimidation", "persuasion", "religion"],
     skillCount: 2,
+    description: "Чародеи - врожденные маги, получающие свою силу от магического наследия или воздействия некоего мистического события. Их магия идет из глубины души и не требует изучения.",
+    equipment: [
+      "Лёгкий арбалет и 20 болтов или любое простое оружие",
+      "Магическая фокусировка или мешочек с компонентами",
+      "Набор путешественника или набор дипломата",
+      "Две кинжала"
+    ],
     spellcasting: {
       ability: "charisma",
       spellSlots: {
@@ -169,6 +199,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["animal handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival"],
     skillCount: 3,
+    description: "Следопыты - это стражи границ между цивилизацией и дикой местностью. Они выслеживают монстров, защищают поселения и находят безопасные пути через неизведанные земли.",
+    equipment: [
+      "Чешуйчатый доспех и два коротких меча или два простых рукопашных оружия",
+      "Лёгкий или тяжёлый арбалет и 20 болтов",
+      "Набор путешественника или набор исследователя",
+      "Амулет или тотем природы"
+    ],
     spellcasting: {
       ability: "wisdom",
       spellSlots: {
@@ -207,6 +244,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: ["one type of artisan's tools or one musical instrument"],
     skillChoices: ["acrobatics", "athletics", "history", "insight", "religion", "stealth"],
     skillCount: 2,
+    description: "Монахи - это мастера боевых искусств, использующие тело как совершенное оружие. Сочетая физическую подготовку с духовной и магической силой, они достигают невероятных подвигов.",
+    equipment: [
+      "Короткий меч или любое простое оружие",
+      "Набор подземелья или набор путешественника",
+      "10 дротиков",
+      "Реликвия, представляющая ваш монастырь или тренировки"
+    ],
     features: [
       {
         name: "Защита без доспехов",
@@ -235,6 +279,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: ["thieves' tools", "tinker's tools", "one other type of artisan's tools"],
     skillChoices: ["arcana", "history", "investigation", "medicine", "nature", "perception", "sleight of hand"],
     skillCount: 2,
+    description: "Изобретатели сочетают магическое мастерство с технологическими изобретениями. Они создают магические предметы, зелья и различные устройства, которые могут помочь в приключениях.",
+    equipment: [
+      "Любое простое оружие и щит",
+      "Лёгкий арбалет и 20 болтов",
+      "Инструменты изобретателя и инструменты вора",
+      "Кожаный доспех, подзорная труба и набор компонентов"
+    ],
     spellcasting: {
       ability: "intelligence",
       spellSlots: {
@@ -273,6 +324,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["acrobatics", "animal handling", "athletics", "history", "insight", "intimidation", "perception", "survival"],
     skillCount: 2,
+    description: "Воины - мастера боевых искусств, владеющие разнообразным оружием и доспехами. Они специализируются на боевых приемах и тактических решениях.",
+    equipment: [
+      "Кольчуга или кожаный доспех, длинный лук и 20 стрел",
+      "Любое воинское оружие и щит, или два любых воинских оружия",
+      "Лёгкий арбалет и 20 болтов или два ручных топора",
+      "Набор путешественника или набор исследователя"
+    ],
     features: [
       {
         name: "Боевой стиль",
@@ -306,6 +364,12 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["animal handling", "athletics", "intimidation", "nature", "perception", "survival"],
     skillCount: 2,
+    description: "Варвары — это свирепые воины, которые используют свою ярость и инстинкты в бою. Они полагаются на грубую силу и стойкость, а не на сложные приемы или магию.",
+    equipment: [
+      "Двуручный топор или любое воинское рукопашное оружие",
+      "Два ручных топора или любое простое оружие",
+      "Набор исследователя и четыре метательных копья"
+    ],
     features: [
       {
         name: "Ярость",
@@ -320,7 +384,7 @@ export const classData: Record<string, ClassData> = {
       {
         name: "Бесстрашный натиск",
         level: 2,
-        description: "Вы получаете преимущество на проверки инициативы. Если вы ошеломлены, вы можете действовать обычным образом в свой первы�� ход."
+        description: "Вы получаете преимущество на проверки инициативы. Если вы ошеломлены, вы можете действовать обычным образом в свой первый ход."
       }
     ]
   },
@@ -334,6 +398,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["athletics", "insight", "intimidation", "medicine", "persuasion", "religion"],
     skillCount: 2,
+    description: "Паладины — это святые воины, которые используют божественную силу для защиты других и борьбы со злом. Они сочетают боевое мастерство и божественную магию.",
+    equipment: [
+      "Воинское оружие и щит или два воинских оружия",
+      "Пять метательных копий или любое простое рукопашное оружие",
+      "Набор священника или набор путешественника",
+      "Кольчуга и священный символ"
+    ],
     spellcasting: {
       ability: "charisma",
       spellSlots: {
@@ -372,6 +443,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: ["thieves' tools"],
     skillChoices: ["acrobatics", "athletics", "deception", "insight", "intimidation", "investigation", "perception", "performance", "persuasion", "sleight of hand", "stealth"],
     skillCount: 4,
+    description: "Плуты полагаются на умение, скрытность и уязвимые места врагов, чтобы получить преимущество в любой ситуации.",
+    equipment: [
+      "Рапира или короткий меч",
+      "Короткий лук и колчан с 20 стрелами или короткий меч",
+      "Набор взломщика, набор исследователя или набор артиста",
+      "Кожаный доспех, два кинжала и воровские инструменты"
+    ],
     features: [
       {
         name: "Компетентность",
@@ -400,6 +478,12 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: ["herbalism kit"],
     skillChoices: ["arcana", "animal handling", "insight", "medicine", "nature", "perception", "religion", "survival"],
     skillCount: 2,
+    description: "Друиды — это стражи природы, которые ценят баланс жизненных сил и циклическую природу всех вещей. Они охраняют дикие земли и связаны с природной магией.",
+    equipment: [
+      "Деревянный щит или любое простое оружие",
+      "Серп или любое простое рукопашное оружие",
+      "Кожаный доспех, набор путешественника и фокусировка друида"
+    ],
     spellcasting: {
       ability: "wisdom",
       spellSlots: {
@@ -437,6 +521,13 @@ export const classData: Record<string, ClassData> = {
     toolProficiencies: [],
     skillChoices: ["arcana", "deception", "history", "intimidation", "investigation", "nature", "religion"],
     skillCount: 2,
+    description: "Колдуны получают магическую силу через сделку с потусторонним существом. Они ищут знания и силу, спрятанные в тайнах мультивселенной.",
+    equipment: [
+      "Лёгкий арбалет и 20 болтов или любое простое оружие",
+      "Мешочек с компонентами или магическая фокусировка",
+      "Набор учёного или набор подземелья",
+      "Кожаный доспех, любое простое оружие и два кинжала"
+    ],
     spellcasting: {
       ability: "charisma",
       spellSlots: {
