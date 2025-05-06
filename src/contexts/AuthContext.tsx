@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { auth as firebaseAuth, firebaseAuth as fbAuth, db } from '@/services/firebase';
@@ -12,6 +11,7 @@ const defaultAuthContext: AuthContextType = {
   loading: true,
   error: null,
   login: async () => {},
+  loginWithGoogle: async () => {},
   signup: async () => {},
   register: async () => {},
   logout: async () => {},
@@ -269,6 +269,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Добавляем алиас loginWithGoogle для совместимости с типом AuthContextType
+  const loginWithGoogle = async (): Promise<void> => {
+    try {
+      await googleLogin();
+    } catch (err) {
+      console.error("Google login error in loginWithGoogle:", err);
+      throw err;
+    }
+  };
+
   // Функция обновления профиля
   const updateProfile = async (data: Partial<UserType>) => {
     try {
@@ -299,6 +309,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loading,
         error: error ? error.message : null,
         login,
+        loginWithGoogle,
         register,
         logout,
         googleLogin,
