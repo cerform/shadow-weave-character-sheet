@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { calculateKnownSpells, getMaxSpellLevel, normalizeSpells } from '@/utils/spellUtils';
+import { calculateKnownSpells, getMaxSpellLevel } from '@/utils/spellUtils';
 import NavigationButtons from './NavigationButtons';
 import CharacterSpellSelection from './CharacterSpellSelection';
+import { useSpellbook } from '@/contexts/SpellbookContext';
 
 interface CharacterSpellsProps {
   character: Character;
@@ -19,6 +20,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
   prevStep = () => {}
 }) => {
   const [isMagicUser, setIsMagicUser] = useState(false);
+  const { loadSpellsForCharacter } = useSpellbook();
 
   // Основные магические классы
   const magicClasses = [
@@ -30,12 +32,18 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
     // Проверяем, есть ли у персонажа доступ к заклинаниям
     if (character.class && magicClasses.includes(character.class)) {
       setIsMagicUser(true);
+      
+      // Явно загружаем заклинания для класса персонажа
+      if (character.class && character.level) {
+        console.log(`Загрузка заклинаний для ${character.class} (уровень ${character.level})`);
+        loadSpellsForCharacter(character.class, character.level);
+      }
     } else {
       // Если класс не магический, сразу переходим к следующему шагу
       onUpdate({ spells: [] });
       nextStep();
     }
-  }, [character.class]);
+  }, [character.class, character.level, magicClasses, nextStep, onUpdate, loadSpellsForCharacter]);
 
   if (!isMagicUser) {
     return null; // Ничего не рендерим, если класс не магический
