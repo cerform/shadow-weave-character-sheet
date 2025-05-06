@@ -14,13 +14,9 @@ import CharacterSheetPage from './pages/CharacterSheetPage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
-import CharactersListPage from './pages/CharactersListPage';
-import RecentCharactersPage from './pages/RecentCharactersPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
-import TestPage from './pages/TestPage';
 import DndSpellsPage from './pages/DndSpellsPage';
-import CleanCharacterPage from './pages/CleanCharacterPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
@@ -95,11 +91,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
-      {/* Тестовые страницы */}
-      <Route path="/test" element={<TestPage />} />
-      <Route path="/test-characters" element={<TestPage />} />
-      <Route path="/clean-characters" element={<CleanCharacterPage />} />
-      
       {/* Добавляем страницу заклинаний D&D */}
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
       
@@ -148,12 +139,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/character/:id" element={<CharacterSheetPage />} />
-      <Route path="/characters" element={<CharactersListPage />} />
-      <Route path="/recent-characters" element={<RecentCharactersPage />} />
-      
-      {/* Перенаправления */}
-      <Route path="/sheet" element={<Navigate to="/characters" replace />} />
-      <Route path="/recent" element={<Navigate to="/recent-characters" replace />} />
       
       {/* Маршрут для неизвестных путей */}
       <Route path="*" element={<NotFound />} />

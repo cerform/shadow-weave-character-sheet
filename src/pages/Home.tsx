@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ProfilePreview from '@/components/home/ProfilePreview';
+import CharactersList from '@/components/home/CharactersList';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -48,43 +50,11 @@ const Home = () => {
             {/* Профиль пользователя (если авторизован) */}
             {isAuthenticated && <ProfilePreview />}
 
-            {/* Основные карточки */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Персонажи */}
-              <Card 
-                className="backdrop-blur-sm border-blue-500/30 shadow-lg overflow-hidden group hover:shadow-blue-500/20 transition-all duration-300"
-                style={{ backgroundColor: `${currentTheme.background}90`, borderColor: `${currentTheme.accent}40` }}
-              >
-                <CardHeader className="pb-4">
-                  <div 
-                    className="rounded-full w-12 h-12 flex items-center justify-center mb-2"
-                    style={{ backgroundColor: `${currentTheme.accent}20` }}
-                  >
-                    <Users className="h-6 w-6" style={{ color: currentTheme.accent }} />
-                  </div>
-                  <CardTitle className="text-xl" style={{ color: currentTheme.textColor }}>Персонажи</CardTitle>
-                  <CardDescription style={{ color: `${currentTheme.textColor}80` }}>
-                    Управление персонажами
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm" style={{ color: `${currentTheme.textColor}90` }}>
-                  <p>Просматривайте список ваших персонажей, редактируйте их характеристики и историю.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full btn-magic"
-                    onClick={() => handleNavigation('/characters')}
-                    style={{ 
-                      backgroundColor: currentTheme.accent,
-                      color: '#000',
-                      borderColor: currentTheme.accent
-                    }}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
+            {/* Список персонажей пользователя */}
+            <CharactersList />
 
+            {/* Основные карточки */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
               {/* Создать персонажа */}
               <Card className="bg-emerald-900/40 backdrop-blur-sm border-emerald-500/30 shadow-lg overflow-hidden group hover:shadow-emerald-500/20 transition-all duration-300">
                 <CardHeader className="pb-4">
@@ -103,30 +73,6 @@ const Home = () => {
                   <Button 
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white btn-magic"
                     onClick={() => handleNavigation('/character-creation')}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Лист персонажа */}
-              <Card className="bg-amber-900/40 backdrop-blur-sm border-amber-500/30 shadow-lg overflow-hidden group hover:shadow-amber-500/20 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="rounded-full bg-amber-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <Book className="h-6 w-6 text-amber-400" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Лист персонажа</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Просмотр и редактирование
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm text-gray-300">
-                  <p>Просматривайте и редактируйте листы персонажей, отслеживайте инвентарь и заклинания.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/characters')}
                   >
                     ПЕРЕЙТИ
                   </Button>
@@ -256,11 +202,6 @@ const Home = () => {
                 </div>
               </div>
             )}
-
-            {/* Добавьте в раздел с навигацией или там, где отображаются основные кнопки: */}
-            <Button variant="outline" asChild className="w-full mb-2">
-              <Link to="/test">Тест загрузки персонажей</Link>
-            </Button>
           </main>
         </div>
       </div>
