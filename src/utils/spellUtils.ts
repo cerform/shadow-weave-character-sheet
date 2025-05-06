@@ -207,11 +207,11 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
-    // Fix: Ensure classes is always an array by explicitly handling all possible cases
+    // Ensure classes is always an array with proper type
     classes: (function() {
       if (!spell.classes) return [] as string[];
       if (typeof spell.classes === 'string') return [spell.classes];
-      return spell.classes;
+      return Array.isArray(spell.classes) ? spell.classes : [];
     })(),
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
