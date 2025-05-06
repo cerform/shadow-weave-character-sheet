@@ -18,6 +18,8 @@ import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import CharactersTable from '@/components/characters/CharactersTable';
 import CharacterCards from '@/components/characters/CharacterCards';
 import CharactersHeader from '@/components/characters/CharactersHeader';
+import { getCurrentUid } from '@/utils/authHelpers';
+import { createTestCharacter } from '@/services/characterService';
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +41,7 @@ const CharactersListPage: React.FC = () => {
   const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [creatingTest, setCreatingTest] = useState(false);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -71,10 +74,19 @@ const CharactersListPage: React.FC = () => {
         return;
       }
       
+      const userId = getCurrentUid();
+      console.log('CharactersListPage: ID пользователя:', userId);
+      
       // Непосредственно загружаем персонажей
       const result = await refreshCharacters();
       console.log('CharactersListPage: Персонажи загружены:', characters);
-      toast.success(`Персонажи успешно загружены (${characters.length})`);
+      
+      // Проверяем количество персонажей после загрузки
+      if (characters.length === 0) {
+        console.log('CharactersListPage: Персонажи не найдены');
+      } else {
+        toast.success(`Персонажи успешно загружены (${characters.length})`);
+      }
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       toast.error('Ошибка при загрузке персонажей');
@@ -94,6 +106,24 @@ const CharactersListPage: React.FC = () => {
       console.error('Ошибка при удалении персонажа:', err);
       toast.error('Не удалось удалить персонажа');
       return Promise.reject(err);
+    }
+  };
+
+  // Функция для создания тестового персонажа
+  const handleCreateTestCharacter = async () => {
+    try {
+      setCreatingTest(true);
+      const newCharId = await createTestCharacter();
+      toast.success('Тестовый персонаж создан успешно');
+      console.log('Создан тестовый персонаж с ID:', newCharId);
+      
+      // Обновляем список персонажей после создания
+      await loadCharacters();
+    } catch (err) {
+      console.error('Ошибка при создании тестового персонажа:', err);
+      toast.error('Не удалось создать тестового персонажа');
+    } finally {
+      setCreatingTest(false);
     }
   };
 
@@ -157,15 +187,27 @@ const CharactersListPage: React.FC = () => {
           
           {/* Панель управления отображением и создания персонажа */}
           <div className="flex flex-wrap justify-between gap-3">
-            {/* Кнопка создания нового персонажа */}
-            <Button
-              onClick={() => navigate('/character-creation')}
-              className="gap-2"
-              variant="default"
-            >
-              <UserPlus size={16} />
-              Создать нового персонажа
-            </Button>
+            {/* Кнопки действий */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => navigate('/character-creation')}
+                className="gap-2"
+                variant="default"
+              >
+                <UserPlus size={16} />
+                Создать нового персонажа
+              </Button>
+              
+              <Button
+                onClick={handleCreateTestCharacter}
+                disabled={creatingTest}
+                variant="secondary" 
+                className="gap-2"
+              >
+                {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={16} />}
+                Создать тестового персонажа
+              </Button>
+            </div>
             
             <div className="flex gap-2">
               {/* Кнопки переключения режима */}
@@ -221,6 +263,7 @@ const CharactersListPage: React.FC = () => {
               <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
               <div>Загружено персонажей: {characters.length}</div>
               <div>Попыток загрузки: {loadAttempts}</div>
+              <div>ID пользователя: {getCurrentUid() || 'Не найден'}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
             </AlertDescription>
           </Alert>

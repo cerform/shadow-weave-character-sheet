@@ -1,4 +1,3 @@
-
 import { collection, doc, getDocs, getDoc, query, where, deleteDoc, setDoc, addDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { Character } from '@/types/character';
@@ -70,7 +69,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     return await getCharactersByUserId(userId);
   } catch (error) {
     console.error('characterService: Ошибка при получении всех персонажей:', error);
-    throw error;
+    return []; // Изменено: возвращаем пустой массив вместо выброса исключения
   }
 };
 
@@ -201,7 +200,7 @@ export const saveCharacter = async (character: Character): Promise<string> => {
     // Создание нового персонажа
     else {
       console.log('characterService: Создание нового персонажа');
-      // Для нового персонажа добавляем дату создания
+      // Для ново��о персонажа добавляем дату создания
       cleanedCharacter.createdAt = now;
       
       // Убедимся, что у персонажа есть имя
@@ -257,6 +256,43 @@ export const saveCharacterToFirestore = async (character: Character, userId: str
     }
   } catch (error) {
     console.error('saveCharacterToFirestore: Ошибка при сохранении персонажа:', error);
+    throw error;
+  }
+};
+
+// Функция для создания тестового персонажа (для отладки)
+export const createTestCharacter = async (): Promise<string> => {
+  try {
+    const userId = getCurrentUserIdExtended();
+    if (!userId) {
+      throw new Error('ID пользователя не найден');
+    }
+    
+    const testCharacter: Character = {
+      id: '',
+      userId: userId,
+      name: 'Тестовый персонаж',
+      race: 'Человек',
+      class: 'Воин',
+      level: 1,
+      experience: 0,
+      strength: 14,
+      dexterity: 12,
+      constitution: 14,
+      intelligence: 10,
+      wisdom: 12,
+      charisma: 10,
+      maxHp: 12,
+      currentHp: 12,
+      background: 'Солдат',
+      alignment: 'Законно-нейтральный',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return await saveCharacter(testCharacter);
+  } catch (error) {
+    console.error('characterService: Ошибка при создании тестового персонажа:', error);
     throw error;
   }
 };

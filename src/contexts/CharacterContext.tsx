@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters, getCharactersByUserId } from '@/services/characterService';
 import { Character } from '@/types/character';
@@ -19,6 +18,7 @@ export interface CharacterContextType {
   refreshCharacters: () => Promise<void>;
 }
 
+// Создаем контекст с дефолтными значениями
 export const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
@@ -33,10 +33,11 @@ export const CharacterContext = createContext<CharacterContextType>({
   refreshCharacters: async () => {},
 });
 
+// Исправляем определение провайдера для корректной работы Fast Refresh
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // По умолчанию true
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   // Функция для обновления частичных данных персонажа
@@ -234,25 +235,30 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     console.log(`CharacterContext: Состояние - персонажей: ${characters.length}, загрузка: ${loading}, ошибка: ${error || 'нет'}`);
   }, [characters, loading, error]);
   
+  // Создаем объект контекста
+  const contextValue = { 
+    character, 
+    setCharacter,
+    updateCharacter, 
+    saveCurrentCharacter,
+    characters,
+    getUserCharacters,
+    getCharacterById,
+    deleteCharacter: handleDeleteCharacter,
+    loading,
+    error,
+    refreshCharacters
+  };
+  
   return (
-    <CharacterContext.Provider 
-      value={{ 
-        character, 
-        setCharacter,
-        updateCharacter, 
-        saveCurrentCharacter,
-        characters,
-        getUserCharacters,
-        getCharacterById,
-        deleteCharacter: handleDeleteCharacter,
-        loading,
-        error,
-        refreshCharacters
-      }}
-    >
+    <CharacterContext.Provider value={contextValue}>
       {children}
     </CharacterContext.Provider>
   );
 };
 
+// Экспортируем хук для использования контекста
 export const useCharacter = () => useContext(CharacterContext);
+
+// Выделяем объект контекста для лучшей согласованности Fast Refresh
+export default CharacterContext;

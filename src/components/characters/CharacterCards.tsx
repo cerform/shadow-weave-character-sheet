@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, UserPlus } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import CharacterCard from '@/components/character/CharacterCard';
 import EmptyState from './EmptyState';
 import InfoMessage from '@/components/ui/InfoMessage';
+import { createTestCharacter } from '@/services/characterService';
 
 interface CharacterCardsProps {
   characters: Character[];
@@ -19,6 +20,7 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [validCharacters, setValidCharacters] = useState<Character[]>([]);
+  const [creatingTest, setCreatingTest] = useState(false);
   
   // При получении новых персонажей, фильтруем их
   useEffect(() => {
@@ -62,6 +64,23 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     }
   };
   
+  // Функция для создания тестового персонажа
+  const handleCreateTestCharacter = async () => {
+    try {
+      setCreatingTest(true);
+      const newCharId = await createTestCharacter();
+      toast.success('Тестовый персонаж создан успешно');
+      console.log('Создан тестовый персонаж с ID:', newCharId);
+      // Обновляем список персонажей после создания
+      window.location.reload();
+    } catch (err) {
+      console.error('Ошибка при создании тестового персонажа:', err);
+      toast.error('Не удалось создать тестового персонажа');
+    } finally {
+      setCreatingTest(false);
+    }
+  };
+  
   // Показываем плейсхолдер при загрузке
   if (loading) {
     return (
@@ -96,9 +115,28 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     );
   }
 
-  // Если нет персонажей, показываем соответствующее сообщение
+  // Если нет персонажей, показываем соответствующее сообщение с кнопкой создания тестового персонажа
   if (characters.length === 0) {
-    return <EmptyState />;
+    return (
+      <div>
+        <EmptyState />
+        
+        {/* Добавляем кнопку для создания тестового персонажа */}
+        <div className="mt-8 text-center">
+          <Button
+            onClick={handleCreateTestCharacter}
+            disabled={creatingTest}
+            className="gap-2"
+          >
+            {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={16} />}
+            Создать тестового персонажа
+          </Button>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Для отладки: создать тестового персонажа с базовыми данными
+          </p>
+        </div>
+      </div>
+    );
   }
   
   // Если нет валидных персонажей
@@ -113,6 +151,19 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
         <Button onClick={() => navigate('/character-creation')}>
           Создать нового персонажа
         </Button>
+        
+        {/* Добавляем кнопку для создания тестового персонажа */}
+        <div className="mt-4">
+          <Button
+            onClick={handleCreateTestCharacter}
+            disabled={creatingTest}
+            variant="outline"
+            className="gap-2"
+          >
+            {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={16} />}
+            Создать тестового персонажа
+          </Button>
+        </div>
       </div>
     );
   }
