@@ -1,68 +1,49 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
-interface NavigationButtonsProps {
-  allowNext: boolean;
-  nextStep: () => void;
-  prevStep: () => void;
-  isFirstStep: boolean;
-  nextLabel?: string;
+export interface NavigationButtonsProps {
+  onPrev?: () => void;
+  onNext?: () => void;
   prevLabel?: string;
+  nextLabel?: string;
+  disablePrev?: boolean;
   disableNext?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  allowNext,
-  nextStep,
-  prevStep,
-  isFirstStep,
-  nextLabel = 'Далее',
+  onPrev,
+  onNext,
   prevLabel = 'Назад',
-  disableNext,
+  nextLabel = 'Далее',
+  disablePrev = false,
+  disableNext = false
 }) => {
-  // Если disableNext передан, используем его, иначе !allowNext
-  const isNextDisabled = disableNext !== undefined ? disableNext : !allowNext;
-  
-  // Получаем текущую тему
-  const { theme, themeStyles } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themeStyles || themes[themeKey] || themes.default;
-
-  // Определяем иконку для кнопки "Далее"
-  const NextIcon = nextLabel.toLowerCase().includes('сохранить') ? Save : ChevronRight;
-  
   return (
-    <div className="flex justify-between mt-6">
-      {!isFirstStep ? (
-        <Button 
-          variant="outline" 
-          onClick={prevStep}
-          style={{ 
-            borderColor: currentTheme.accent,
-            color: currentTheme.textColor
-          }}
+    <div className="flex justify-between gap-4">
+      {onPrev && (
+        <Button
+          variant="outline"
+          onClick={onPrev}
+          disabled={disablePrev}
+          className="flex items-center"
         >
-          <ChevronLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 mr-1" />
           {prevLabel}
         </Button>
-      ) : (
-        <div></div>
       )}
-      <Button 
-        onClick={nextStep} 
-        disabled={isNextDisabled}
-        style={{ 
-          backgroundColor: currentTheme.accent,
-          color: '#FFFFFF'
-        }}
-      >
-        {nextLabel}
-        <NextIcon className="ml-2 h-4 w-4" />
-      </Button>
+      
+      {onNext && (
+        <Button
+          onClick={onNext}
+          disabled={disableNext}
+          className="flex items-center ml-auto"
+        >
+          {nextLabel}
+          <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      )}
     </div>
   );
 };

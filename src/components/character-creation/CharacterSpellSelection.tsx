@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
