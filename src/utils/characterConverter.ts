@@ -58,6 +58,27 @@ export const convertToCharacter = (data: any): Character => {
   character.createdAt = character.createdAt || new Date().toISOString();
   character.updatedAt = character.updatedAt || new Date().toISOString();
   
+  // Добавляем модификатор владения (proficiency bonus)
+  character.proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level / 4));
+  
+  // Добавляем класс брони, если отсутствует
+  character.armorClass = character.armorClass || 10 + Math.floor((character.dexterity - 10) / 2);
+  
+  // Обрабатываем заклинания
+  if (!character.spells) {
+    character.spells = [];
+  }
+  
+  // Инициализируем ячейки заклинаний, если они отсутствуют
+  if (!character.spellSlots) {
+    character.spellSlots = calculateSpellSlots(character.class, character.level);
+  }
+  
+  // Инициализируем параметры заклинателя
+  if (!character.spellcasting) {
+    character.spellcasting = calculateSpellcastingParams(character);
+  }
+  
   return character as Character;
 };
 
@@ -82,6 +103,123 @@ export const createEmptyCharacter = (): Character => {
     currentHp: 10,
     backstory: '',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    proficiencyBonus: 2,
+    armorClass: 10,
+    spells: [],
+    spellSlots: {}
   };
 };
+
+/**
+ * Рассчитывает количество ячеек заклинаний для класса и уровня
+ */
+function calculateSpellSlots(characterClass: string | undefined, level: number): Record<number, { max: number; used: number }> {
+  const slots: Record<number, { max: number; used: number }> = {};
+  
+  if (!characterClass) return slots;
+  
+  const lowerClass = characterClass.toLowerCase();
+  
+  // Полные заклинатели (маг, жрец, друид, бард)
+  if (['волшебник', 'wizard', 'жрец', 'cleric', 'друид', 'druid', 'бард', 'bard', 'чародей', 'sorcerer'].includes(lowerClass)) {
+    if (level >= 1) {
+      slots[1] = { max: level >= 3 ? 4 : level >= 2 ? 3 : 2, used: 0 };
+    }
+    if (level >= 3) {
+      slots[2] = { max: level >= 4 ? 3 : 2, used: 0 };
+    }
+    if (level >= 5) {
+      slots[3] = { max: level >= 6 ? 3 : 2, used: 0 };
+    }
+    if (level >= 7) {
+      slots[4] = { max: level >= 8 ? 3 : 1, used: 0 };
+    }
+    if (level >= 9) {
+      slots[5] = { max: level >= 10 ? 2 : 1, used: 0 };
+    }
+    if (level >= 11) {
+      slots[6] = { max: 1, used: 0 };
+    }
+    if (level >= 13) {
+      slots[7] = { max: 1, used: 0 };
+    }
+    if (level >= 15) {
+      slots[8] = { max: 1, used: 0 };
+    }
+    if (level >= 17) {
+      slots[9] = { max: 1, used: 0 };
+    }
+  }
+  // Полузаклинатели (паладин, следопыт)
+  else if (['паладин', 'paladin', 'следопыт', 'ranger'].includes(lowerClass)) {
+    if (level >= 2) {
+      slots[1] = { max: level >= 3 ? 3 : 2, used: 0 };
+    }
+    if (level >= 5) {
+      slots[2] = { max: level >= 7 ? 3 : 2, used: 0 };
+    }
+    if (level >= 9) {
+      slots[3] = { max: level >= 11 ? 3 : 2, used: 0 };
+    }
+    if (level >= 13) {
+      slots[4] = { max: level >= 15 ? 2 : 1, used: 0 };
+    }
+    if (level >= 17) {
+      slots[5] = { max: 1, used: 0 };
+    }
+  }
+  // Колдун (особая система ячеек)
+  else if (['колдун', 'warlock'].includes(lowerClass)) {
+    const maxSlotLevel = Math.min(5, Math.ceil(level / 2));
+    const slotsCount = level === 1 ? 1 : (level < 11 ? 2 : (level < 17 ? 3 : 4));
+    
+    if (level >= 1) {
+      slots[maxSlotLevel] = { max: slotsCount, used: 0 };
+    }
+  }
+  
+  return slots;
+}
+
+/**
+ * Рассчитывает параметры заклинательной способности персонажа
+ */
+function calculateSpellcastingParams(character: any) {
+  if (!character.class) return { ability: 'INT', saveDC: 10, attackBonus: 0 };
+  
+  const lowerClass = character.class.toLowerCase();
+  let spellAbility = 'INT'; // По умолчанию - интеллект
+  
+  // Определяем базовую характеристику для класса
+  if (['жрец', 'cleric', 'друид', 'druid'].includes(lowerClass)) {
+    spellAbility = 'WIS';
+  } else if (['бард', 'bard', 'колдун', 'warlock', 'чародей', 'sorcerer', 'паладин', 'paladin'].includes(lowerClass)) {
+    spellAbility = 'CHA';
+  } else if (['следопыт', 'ranger'].includes(lowerClass)) {
+    spellAbility = 'WIS';
+  }
+  
+  // Получаем значение характеристики
+  let abilityScore = 10;
+  if (spellAbility === 'INT') abilityScore = character.intelligence || 10;
+  else if (spellAbility === 'WIS') abilityScore = character.wisdom || 10;
+  else if (spellAbility === 'CHA') abilityScore = character.charisma || 10;
+  
+  // Вычисляем модификатор
+  const abilityMod = Math.floor((abilityScore - 10) / 2);
+  
+  // Вычисляем бонус мастерства
+  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level / 4));
+  
+  // Считаем СЛ спасброска и бонус атаки заклинанием
+  const saveDC = 8 + proficiencyBonus + abilityMod;
+  const attackBonus = proficiencyBonus + abilityMod;
+  
+  return {
+    ability: spellAbility,
+    saveDC,
+    attackBonus,
+    abilityModifier: abilityMod
+  };
+}

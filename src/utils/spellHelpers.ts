@@ -1,6 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
@@ -57,4 +57,37 @@ export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
 export const getSpellLevel = (spell: CharacterSpell | string): number => {
   if (typeof spell === 'string') return 0; // По умолчанию заговор
   return spell.level;
+};
+
+/**
+ * Преобразует CharacterSpell к SpellData
+ */
+export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || ['Нет описания'],
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
+  };
+};
+
+/**
+ * Получает название уровня заклинания (для отображения)
+ */
+export const getSpellLevelName = (level: number): string => {
+  if (level === 0) return "Заговор";
+  if (level === 1) return "1-й уровень";
+  if (level === 2) return "2-й уровень";
+  if (level === 3) return "3-й уровень";
+  if (level >= 4) return `${level}-й уровень`;
+  return `${level} уровень`;
 };

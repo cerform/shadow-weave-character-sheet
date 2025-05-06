@@ -10,8 +10,9 @@ import SpellPanel from '../SpellPanel';
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import SpellSelectionModal from '../SpellSelectionModal';
-import { SpellSlotsPopover } from '../SpellSlotsPopover';
-import { getSpellLevel, isSpellPrepared, isCharacterSpellObject } from '@/utils/spellHelpers';
+import { SpellSlotsPanel } from '../SpellSlotsPanel';
+import { getSpellLevel, isSpellPrepared, isCharacterSpellObject, getSpellLevelName } from '@/utils/spellHelpers';
+import { Book, CircleDot, CircleDotDashed } from 'lucide-react';
 
 interface SpellsTabProps {
   character: Character;
@@ -62,10 +63,55 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
     });
   }
 
+  // Функция для использования ячейки заклинания
+  const useSpellSlot = (level: number) => {
+    if (!character.spellSlots || !character.spellSlots[level]) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (slotInfo.used >= slotInfo.max) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used + 1
+    };
+    
+    onUpdate({ spellSlots: updatedSpellSlots });
+    
+    toast({
+      title: "Ячейка использована",
+      description: `Использована ячейка заклинания ${level} уровня`,
+    });
+  };
+
+  // Функция для восстановления ячейки заклинания
+  const restoreSpellSlot = (level: number) => {
+    if (!character.spellSlots || !character.spellSlots[level]) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (slotInfo.used <= 0) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used - 1
+    };
+    
+    onUpdate({ spellSlots: updatedSpellSlots });
+    
+    toast({
+      title: "Ячейка восстановлена",
+      description: `Восстановлена ячейка заклинания ${level} уровня`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Заклинания</h2>
+        <h2 className="text-2xl font-bold flex items-center">
+          <Book className="mr-2 h-6 w-6" />
+          Заклинания
+        </h2>
         <Button onClick={handleAddSpell}>Добавить заклинание</Button>
       </div>
 
@@ -81,11 +127,11 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
             <TabsContent value="all">
               {Object.keys(spellsByLevel).length > 0 ? (
                 <div className="space-y-6">
-                  {Object.entries(spellsByLevel).map(([level, levelSpells]) => (
+                  {Object.entries(spellsByLevel).sort(([a, b]) => Number(a) - Number(b)).map(([level, levelSpells]) => (
                     <Card key={level}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">
-                          {level === '0' ? 'Заговоры' : `Заклинания ${level} уровня`}
+                          {level === '0' ? 'Заговоры' : getSpellLevelName(parseInt(level))}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -138,7 +184,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
                       <Card key={`prepared-${level}`}>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg">
-                            {level === '0' ? 'Заговоры' : `Заклинания ${level} уровня`}
+                            {level === '0' ? 'Заговоры' : getSpellLevelName(parseInt(level))}
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -227,29 +273,19 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
             </CardContent>
           </Card>
           
-          <h4 className="text-md font-medium mb-2">Слоты заклинаний</h4>
-          
-          {/* Отображение слотов заклинаний */}
-          <div className="space-y-2 mb-4">
-            {Object.entries(character.spellSlots || {}).map(([level, slot]) => (
-              <div key={`slot-${level}`} className="flex justify-between items-center">
-                <span>Уровень {level}:</span>
-                <div className="flex items-center space-x-2">
-                  <SpellSlotsPopover 
-                    level={parseInt(level)}
-                    character={character}
-                    onUpdate={onUpdate}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Отображение ячеек заклинаний */}
+          <SpellSlotsPanel 
+            character={character}
+            onUpdate={onUpdate}
+          />
           
           {/* Дополнительные ресурсы колдовства */}
           {character.sorceryPoints && (
-            <div>
-              <h4 className="text-md font-medium mb-2">Очки колдовства</h4>
+            <div className="mt-4">
               <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Очки колдовства</CardTitle>
+                </CardHeader>
                 <CardContent className="p-3">
                   <div className="flex justify-between items-center">
                     <span>Очки:</span>
@@ -304,6 +340,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
       
       <Separator />
       
+      {/* Модальное окно для добавления заклинаний */}
       <SpellSelectionModal
         open={isAddSpellModalOpen}
         onOpenChange={setIsAddSpellModalOpen}
