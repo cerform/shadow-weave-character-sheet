@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Loader2, Info, Database, User, Shield, CheckCircle, AlertCircle, FileText, Users, RefreshCw } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase'; // Используем централизованный импорт
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUid } from '@/utils/authHelpers';
@@ -24,7 +24,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 const TestPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  // Явно используем хук useAuth для проверки авторизации
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{[key: string]: any}>({});
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -38,11 +39,22 @@ const TestPage: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   // Загружаем персонажей при монтировании компонента
+  // Добавляем зависимость от authLoading, чтобы запускать загрузку, когда завершится проверка аутентификации
   useEffect(() => {
-    if (isAuthenticated) {
-      testCharacters();
+    // Если процесс проверки авторизации все еще идет, не запускаем загрузку персонажей
+    if (authLoading) {
+      console.log('TestPage: Ждем завершения проверки авторизации');
+      return;
     }
-  }, [isAuthenticated]);
+    
+    // Загружаем персонажей только для авторизованных пользователей
+    if (isAuthenticated) {
+      console.log('TestPage: Пользователь авторизован, загружаем персонажей');
+      testCharacters();
+    } else {
+      console.log('TestPage: Пользователь не авторизован');
+    }
+  }, [isAuthenticated, authLoading]);
   
   // Тест аутентификации
   const testAuth = async () => {
@@ -149,8 +161,8 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // Если пользователь не авторизован, предлагаем авторизоваться
-  if (!isAuthenticated) {
+  // Если пользователь не авторизован, и проверка авторизации завершена, предлагаем авторизоваться
+  if (!isAuthenticated && !authLoading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80">
         <div className="max-w-md text-center p-6">
@@ -163,6 +175,16 @@ const TestPage: React.FC = () => {
             Войти
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Показываем загрузку, пока проверяется авторизация
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+        <p>Проверка авторизации...</p>
       </div>
     );
   }
@@ -212,6 +234,13 @@ const TestPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p className="text-white/80 mb-4">Альтернативный список ваших персонажей</p>
+              
+              {/* Показываем индикатор загрузки, если данные загружаются */}
+              {loading && (
+                <div className="flex justify-center p-4">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              )}
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="mb-6 w-full justify-start bg-black/20">
@@ -463,3 +492,4 @@ service cloud.firestore {
 };
 
 export default TestPage;
+

@@ -1,145 +1,103 @@
 
+// Сервис для тестирования работы с Firestore
+
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/firebase';
-import { getCurrentUid, getCurrentUserIdExtended } from '@/utils/authHelpers';
+import { db, auth } from '@/lib/firebase'; // Используем централизованный экспорт
 import { Character } from '@/types/character';
-import { auth } from '@/services/firebase/auth';
 
 /**
- * Функция для тестирования получения персонажей пользователя
- * с соблюдением правил безопасности Firestore
+ * Тестовая загрузка персонажей для пользователя
  */
 export const testLoadCharacters = async (): Promise<{
   success: boolean;
   message: string;
   characters: Character[];
-  debug: Record<string, any>;
+  debug?: any;
 }> => {
-  const debug: Record<string, any> = {};
-  
   try {
-    // Получаем текущий ID пользователя всеми доступными способами
-    const userId = getCurrentUserIdExtended();
-    debug.userId = userId;
-    
-    // Добавляем больше отладочной информации
-    debug.authCurrentUser = auth.currentUser ? {
-      uid: auth.currentUser.uid,
-      email: auth.currentUser.email,
-      isAnonymous: auth.currentUser.isAnonymous,
-      emailVerified: auth.currentUser.emailVerified
-    } : null;
-    
-    if (!userId) {
+    // Проверяем, авторизован ли пользователь
+    if (!auth.currentUser) {
       return {
         success: false,
-        message: 'Ошибка: Пользователь не авторизован или невозможно получить ID',
+        message: "Пользователь не авторизован",
         characters: [],
-        debug
+        debug: { error: "Отсутствует текущий пользователь" }
       };
     }
     
-    // Создаем запрос с обязательным фильтром userId для соблюдения правил безопасности
-    const charactersCollection = collection(db, 'characters');
-    const charactersQuery = query(
-      charactersCollection, 
-      where('userId', '==', userId)
-    );
+    const userId = auth.currentUser.uid;
+    console.log('testLoadCharacters: Запрос персонажей для пользователя', userId);
     
-    debug.query = {
-      collection: 'characters',
-      filter: `userId == ${userId}`,
-      whereClause: 'where("userId", "==", userId)'
-    };
+    // Создаем запрос с фильтрацией по userId
+    const charactersRef = collection(db, 'characters');
+    const q = query(charactersRef, where("userId", "==", userId));
     
-    // Выполняем запрос
-    console.log('Загрузка персонажей для пользователя:', userId);
-    const querySnapshot = await getDocs(charactersQuery);
-    
-    debug.snapshotSize = querySnapshot.size;
-    debug.snapshotEmpty = querySnapshot.empty;
-    
-    // Проверяем результат запроса
-    if (querySnapshot.empty) {
+    try {
+      // Получаем документы
+      const snapshot = await getDocs(q);
+      
+      console.log(`testLoadCharacters: Найдено ${snapshot.docs.length} документов`);
+      
+      // Маппинг результатов
+      const characters = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { ...data, id: doc.id } as Character;
+      });
+      
+      // Формируем отладочную информацию
+      const debugInfo = {
+        userId,
+        auth: {
+          currentUser: auth.currentUser ? {
+            uid: auth.currentUser.uid,
+            email: auth.currentUser.email,
+          } : null
+        },
+        query: {
+          collection: 'characters',
+          where: ['userId', '==', userId]
+        },
+        documentsCount: snapshot.docs.length,
+        documentsIds: snapshot.docs.map(doc => doc.id)
+      };
+      
       return {
         success: true,
-        message: 'Запрос выполнен успешно, но персонажи не найдены',
+        message: `Успешно загружено ${characters.length} персонажей`,
+        characters,
+        debug: debugInfo
+      };
+    } catch (error) {
+      console.error('testLoadCharacters: Ошибка при выполнении запроса:', error);
+      return {
+        success: false,
+        message: `Ошибка при выполнении запроса: ${error}`,
         characters: [],
-        debug
+        debug: { error: String(error) }
       };
     }
-    
-    // Преобразуем результаты запроса в массив персонажей
-    const characters: Character[] = [];
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      characters.push({
-        ...data,
-        id: doc.id
-      } as Character);
-    });
-    
-    debug.charactersCount = characters.length;
-    debug.firstCharacter = characters[0] ? {
-      id: characters[0].id,
-      name: characters[0].name,
-      userId: characters[0].userId
-    } : null;
-    
-    return {
-      success: true,
-      message: `Загружено ${characters.length} персонажей`,
-      characters,
-      debug
-    };
   } catch (error) {
-    console.error('Ошибка при тестировании загрузки персонажей:', error);
+    console.error('testLoadCharacters: Ошибка:', error);
     return {
       success: false,
-      message: `Ошибка: ${error instanceof Error ? error.message : String(error)}`,
+      message: `Ошибка: ${error}`,
       characters: [],
-      debug: {
-        ...debug,
-        error: error instanceof Error ? error.message : String(error)
-      }
+      debug: { error: String(error) }
     };
   }
 };
 
 /**
- * Утилита для получения ID текущего пользователя в Firebase
+ * Получение информации о текущем пользователе
  */
-export const getCurrentUserDetails = (): {
-  uid: string | null;
-  isAuthenticated: boolean;
-} => {
-  const uid = getCurrentUserIdExtended();
+export const getCurrentUserDetails = () => {
+  const currentUser = auth.currentUser;
+  
   return {
-    uid,
-    isAuthenticated: !!uid
+    uid: currentUser?.uid || null,
+    email: currentUser?.email || null,
+    displayName: currentUser?.displayName || null,
+    isAuthenticated: !!currentUser
   };
 };
 
-/**
- * Вспомогательная функция для отладки состояния аутентификации
- */
-export const debugAuthState = (): Record<string, any> => {
-  const authData: Record<string, any> = {
-    currentUserFromAuth: auth.currentUser ? {
-      uid: auth.currentUser.uid,
-      email: auth.currentUser.email
-    } : null,
-    uidFromHelpers: getCurrentUid(),
-    extendedUidFromHelpers: getCurrentUserIdExtended()
-  };
-  
-  // Проверяем localStorage
-  try {
-    const savedUser = localStorage.getItem('authUser');
-    authData.savedUserInLocalStorage = savedUser ? JSON.parse(savedUser) : null;
-  } catch (e) {
-    authData.localStorageError = String(e);
-  }
-  
-  return authData;
-};
