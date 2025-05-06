@@ -1,7 +1,7 @@
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase/firestore';
-import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, addDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc, addDoc, orderBy } from 'firebase/firestore';
 import { getCurrentUid } from '@/utils/authHelpers';
 
 // Локальное сохранение персонажа (резервное)
@@ -256,20 +256,15 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   }
   
   try {
-    console.log('Getting characters for specific userId:', userId);
+    console.log('Getting characters for user:', userId);
     const charactersCollection = collection(db, 'characters');
     
-    // Сначала попробуем получить все документы для отладки
-    console.log('DEBUG: Проверка всех документов в коллекции characters');
-    const allDocsSnapshot = await getDocs(charactersCollection);
-    console.log(`В коллекции characters всего ${allDocsSnapshot.size} документов`);
-    allDocsSnapshot.forEach(doc => {
-      const data = doc.data();
-      console.log(`Документ ${doc.id}: userId = ${data.userId}`);
-    });
-    
-    // Теперь применяем фильтрацию по userId
-    const q = query(charactersCollection, where('userId', '==', userId));
+    // Создаем запрос с фильтрацией по userId
+    const q = query(
+      charactersCollection,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
     
     console.log('Query parameters:', { 
       collection: 'characters', 
@@ -283,10 +278,13 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log('Character document:', { id: doc.id, data });
+      console.log('Character document:', { id: doc.id, name: data.name });
       characters.push({
         ...data,
-        id: doc.id
+        id: doc.id,
+        name: data.name || 'Без имени',
+        className: data.class || data.className || '—',
+        level: data.level || 1,
       } as Character);
     });
     
