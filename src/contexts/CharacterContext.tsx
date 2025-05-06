@@ -1,7 +1,9 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { saveCharacter, getAllCharacters, deleteCharacter } from '@/services/characterService';
+import { saveCharacter, getAllCharacters, deleteCharacter, getCharacter } from '@/services/characterService';
 import { Character, CharacterSpell } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
+import { getCurrentUid } from '@/utils/authHelpers';
 
 export interface CharacterContextType {
   character: Character | null;
@@ -13,6 +15,7 @@ export interface CharacterContextType {
   deleteCharacter: (id: string) => Promise<void>;
   loading: boolean;
   error: string | null;
+  getCharacterById: (id: string) => Promise<Character | null>;
 }
 
 export const CharacterContext = createContext<CharacterContextType>({
@@ -24,7 +27,8 @@ export const CharacterContext = createContext<CharacterContextType>({
   getUserCharacters: async () => [],
   deleteCharacter: async () => {},
   loading: false,
-  error: null
+  error: null,
+  getCharacterById: async () => null,
 });
 
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
@@ -32,6 +36,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Функция для обновления частичных данных персонажа
   const updateCharacter = (updates: Partial<Character>) => {
@@ -49,6 +54,12 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       setLoading(true);
       setError(null);
       
+      // Проверяем, есть ли userId у персонажа
+      const userId = getCurrentUid();
+      if (userId && !character.userId) {
+        character.userId = userId;
+      }
+      
       const updatedCharacter = { 
         ...character, 
         updatedAt: new Date().toISOString(),
@@ -59,9 +70,13 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         updatedCharacter.createdAt = new Date().toISOString();
       }
       
-      const savedChar = saveCharacter(updatedCharacter);
+      const savedChar = await saveCharacter(updatedCharacter);
       if (savedChar) {
         setCharacter({...updatedCharacter, id: savedChar.id});
+        toast({
+          title: "Персонаж сохранен",
+          description: `${savedChar.name || 'Персонаж'} успешно сохранен`,
+        });
       }
       
       // Обновляем список персонажей
@@ -69,6 +84,11 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     } catch (error) {
       console.error('Ошибка при сохранении персонажа:', error);
       setError('Не удалось сохранить персонажа');
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить персонажа. Пожалуйста, попробуйте снова.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,13 +100,35 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       setLoading(true);
       setError(null);
       
-      const fetchedCharacters = getAllCharacters();
+      const fetchedCharacters = await getAllCharacters();
       setCharacters(fetchedCharacters);
       return fetchedCharacters;
     } catch (error) {
       console.error('Ошибка при получении персонажей:', error);
       setError('Не удалось загрузить персонажей');
+      toast({
+        title: "Ошибка загрузки",
+        description: "Не удалось загрузить список персонажей.",
+        variant: "destructive",
+      });
       return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Получение персонажа по ID
+  const getCharacterById = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const fetchedCharacter = await getCharacter(id);
+      return fetchedCharacter;
+    } catch (error) {
+      console.error('Ошибка при получении персонажа:', error);
+      setError(`Не удалось загрузить персонажа с ID ${id}`);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -98,8 +140,13 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       setLoading(true);
       setError(null);
       
-      deleteCharacter(id);
+      await deleteCharacter(id);
       setCharacters(prev => prev.filter(char => char.id !== id));
+      
+      toast({
+        title: "Персонаж удален",
+        description: "Персонаж успешно удален",
+      });
       
       // Если удаляем текущего персонажа, сбрасываем его
       if (character && character.id === id) {
@@ -108,6 +155,11 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     } catch (error) {
       console.error('Ошибка при удалении персонажа:', error);
       setError('Не удалось удалить персонажа');
+      toast({
+        title: "Ошибка удаления",
+        description: "Не удалось удалить персонажа. Пожалуйста, попробуйте снова.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -130,6 +182,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
         saveCurrentCharacter,
         characters,
         getUserCharacters,
+        getCharacterById,
         deleteCharacter: handleDeleteCharacter,
         loading,
         error

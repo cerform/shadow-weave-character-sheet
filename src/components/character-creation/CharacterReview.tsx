@@ -17,14 +17,20 @@ interface CharacterReviewProps {
 }
 
 const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, updateCharacter, setCurrentStep }) => {
-  const { saveCurrentCharacter } = useCharacter();
+  const { saveCurrentCharacter, setCharacter } = useCharacter();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveCharacter = async () => {
     try {
       setIsSaving(true);
+      
+      // Сначала устанавливаем персонажа в контексте
+      setCharacter(character);
+      
+      // Затем сохраняем персонажа
       await saveCurrentCharacter();
+      
       toast.success('Персонаж успешно сохранен');
       
       // Предлагаем перейти в режим OBS для дальнейшего использования

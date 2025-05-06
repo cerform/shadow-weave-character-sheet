@@ -1,26 +1,35 @@
 
-// Этот файл - заглушка для хелперов аутентификации
-// В реальном приложении здесь будет настоящий код для работы с аутентификацией
+import { auth } from '@/services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
-// Получение текущего id пользователя
-export function getCurrentUid(): string | null {
-  // Пытаемся получить данные пользователя из localStorage (для простоты)
-  const userString = localStorage.getItem('user');
-  if (userString) {
-    try {
-      const user = JSON.parse(userString);
-      return user.uid || null;
-    } catch (error) {
-      console.error('Ошибка при разборе данных пользователя:', error);
-      return null;
-    }
-  }
-  
-  // Возвращаем фиктивный id пользователя для тестирования
-  return 'test-user-id';
-}
+// Получаем ID текущего пользователя
+export const getCurrentUid = (): string | null => {
+  const user = auth.currentUser;
+  return user ? user.uid : null;
+};
 
 // Проверка, авторизован ли пользователь
-export function isAuthenticated(): boolean {
-  return !!getCurrentUid();
-}
+export const isAuthenticated = (): boolean => {
+  return !!auth.currentUser;
+};
+
+// Наблюдатель за состоянием авторизации
+export const watchAuthState = (callback: (user: any) => void): () => void => {
+  return onAuthStateChanged(auth, (user) => {
+    callback(user);
+  });
+};
+
+// Проверка роли пользователя
+export const checkUserRole = async (uid: string): Promise<string | null> => {
+  if (!uid) return null;
+  
+  try {
+    // Здесь может быть логика получения роли из Firestore или другого источника
+    // Для примера возвращаем фиктивные данные
+    return 'player';
+  } catch (error) {
+    console.error('Ошибка при проверке роли пользователя:', error);
+    return null;
+  }
+};
