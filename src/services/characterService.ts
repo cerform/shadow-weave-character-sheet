@@ -222,21 +222,49 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     const querySnapshot = await getDocs(q);
     
     console.log('Query returned documents count:', querySnapshot.size);
+    console.log('Query snapshot empty?', querySnapshot.empty);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data() as DocumentData;
-      console.log('Character document:', { id: doc.id, name: data.name });
+      console.log('Character document:', { id: doc.id, name: data.name, userId: data.userId });
       characters.push({
         ...data,
         id: doc.id,
         name: data.name || 'Без имени',
         className: data.class || data.className || '—',
         level: data.level || 1,
+        // Убедимся что в каждом персонаже есть поле userId
+        userId: data.userId || userId
       } as Character);
     });
     
     console.log('Found characters for userId:', characters.length);
+    
+    // Если персонажей не было найдено, попробуем проверить персонажей из localStorage
+    if (characters.length === 0) {
+      console.log('No characters found in Firestore, checking localStorage');
+      try {
+        const existingChars = localStorage.getItem('dnd-characters');
+        if (existingChars) {
+          const allChars: Character[] = JSON.parse(existingChars);
+          const userChars = allChars.filter(char => char.userId === userId);
+          if (userChars.length > 0) {
+            console.log('Found characters in localStorage:', userChars.length);
+            // Сохраняем найденные в localStorage персонажи в Firestore
+            userChars.forEach(async (char) => {
+              if (char.id) {
+                await saveCharacter({...char, userId});
+              }
+            });
+            return userChars;
+          }
+        }
+      } catch (localError) {
+        console.error('Error getting characters from localStorage:', localError);
+      }
+    }
+    
     return characters;
   } catch (error) {
     console.error('Error getting characters by userId:', error);
@@ -247,6 +275,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
       if (existingChars) {
         const allChars: Character[] = JSON.parse(existingChars);
         const userChars = allChars.filter(char => char.userId === userId);
+        console.log('Fallback: Found characters in localStorage:', userChars.length);
         return userChars;
       }
     } catch (localError) {

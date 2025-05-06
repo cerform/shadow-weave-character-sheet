@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -11,17 +11,10 @@ import { getCharactersByUserId, deleteCharacter } from '@/services/characterServ
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
-import { auth } from '@/services/firebase/auth'; // Добавляем импорт auth
+import { auth } from '@/services/firebase/auth';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 
-// Import our components
-import LoadingState from '@/components/characters/LoadingState';
-import ErrorDisplay from '@/components/characters/ErrorDisplay';
-import EmptyState from '@/components/characters/EmptyState';
-import CharactersTable from '@/components/characters/CharactersTable';
-import CharactersHeader from '@/components/characters/CharactersHeader';
-
-// Интерфейс для отладочной информации
+// Интерфейс для отладочной информации с нужными полями
 interface DebugInfo {
   userId: string;
   authCurrentUser: {
@@ -29,7 +22,7 @@ interface DebugInfo {
     email: any;
     isAnonymous: any;
     emailVerified: any;
-  };
+  } | null;
   query: {
     collection: string;
     filter: string;
@@ -98,9 +91,12 @@ const CharactersListPage: React.FC = () => {
         query: {
           collection: "characters",
           filter: `userId == ${userId}`,
-          whereClause: `where("userId", "==", userId)`
+          whereClause: `where("userId", "==", "${userId}")`
         }
       };
+      
+      // Добавляем console.log перед запросом для отладки
+      console.log('CharactersListPage: Отправляем запрос в Firestore с userId:', userId);
       
       const fetchedCharacters = await getCharactersByUserId(userId);
       console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
@@ -150,6 +146,12 @@ const CharactersListPage: React.FC = () => {
   // Переключатель режимов отображения
   const toggleDisplayMode = () => {
     setDisplayMode(mode => (mode === 'table' ? 'raw' : 'table'));
+  };
+  
+  // Новая функция принудительного обновления
+  const forceRefresh = () => {
+    toast.info('Обновляем список персонажей...');
+    loadCharacters();
   };
 
   // Если пользователь не авторизован, предлагаем войти
@@ -210,15 +212,16 @@ const CharactersListPage: React.FC = () => {
             >
               {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
             </Button>
-            {process.env.NODE_ENV !== 'production' && (
-              <Button
-                onClick={loadCharacters}
-                size="sm"
-                variant="outline"
-              >
-                Обновить данные
-              </Button>
-            )}
+            
+            <Button
+              onClick={forceRefresh}
+              size="sm"
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw size={16} className="animate-spin" />
+              Обновить
+            </Button>
           </div>
           
           {/* Загрузка */}
