@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   getAuth,
@@ -27,6 +26,7 @@ import { toast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/hooks/use-auth';
+import { db } from "@/firebase";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -42,7 +42,7 @@ const FirebaseAuthForm: React.FC = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated, currentUser, login, signup, googleLogin, logout } = useAuth();
   
   // Получаем returnPath из параметров state при переходе на страницу auth
   const returnPath = location.state?.returnPath || '/';
@@ -97,16 +97,16 @@ const FirebaseAuthForm: React.FC = () => {
     setError("");
     setIsLoading(true);
     try {
-      const result = isLogin
-        ? await signInWithEmailAndPassword(auth, email, password)
-        : await createUserWithEmailAndPassword(auth, email, password);
-
-      await ensureUserProfile(result.user.uid, result.user.email, result.user.displayName);
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await signup(email, password, email.split('@')[0], role === "dm");
+      }
       
       toast({
         title: isLogin ? "Вход выполнен" : "Регистрация завершена",
         description: isLogin 
-          ? `Добро пожаловать, ${result.user.email}` 
+          ? `Добро пожаловать, ${email}` 
           : `Ваш аккаунт успешно создан в роли ${role === "dm" ? "Мастера" : "Игрока"}`
       });
       
@@ -132,15 +132,11 @@ const FirebaseAuthForm: React.FC = () => {
     setIsLoading(true);
     try {
       console.log("[AUTH] Начинаем Google авторизацию");
-      const result = await signInWithPopup(auth, provider);
-      const { user } = result;
-      
-      console.log("[AUTH] Google логин успешен, сохраняем профиль пользователя");
-      await ensureUserProfile(user.uid, user.email, user.displayName);
+      await googleLogin();
       
       toast({
         title: "Вход через Google",
-        description: `Добро пожаловать, ${user.displayName || user.email}`
+        description: `Авторизация выполнена успешно`
       });
       
       // Добавляем небольшую задержку перед перенаправлением, чтобы состояние успело обновиться
@@ -163,7 +159,7 @@ const FirebaseAuthForm: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
       toast({
         title: "Выход выполнен",
         description: "Вы успешно вышли из системы"

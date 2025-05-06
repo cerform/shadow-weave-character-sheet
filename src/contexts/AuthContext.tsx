@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
-import { auth, firebaseAuth } from '@/services/firebase/auth';
-import { db } from '@/firebase';
-import { User as FirebaseUser } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { User as FirebaseUser } from 'firebase/auth';
+import { db } from '@/firebase';
+import { auth, loginWithEmail, registerWithEmail, loginWithGoogle, logout, listenToAuthChanges } from '@/services/firebase/auth';
 import { toast } from 'sonner';
 
 const defaultAuthContext: AuthContextType = {
@@ -17,7 +17,7 @@ const defaultAuthContext: AuthContextType = {
   signup: async () => {},
   register: async () => {},
   logout: async () => {},
-  googleLogin: async () => null, // Возвращает null при ошибке или редиректе
+  googleLogin: async () => null,
   isAuthenticated: false,
   updateProfile: async () => {}
 };
@@ -39,15 +39,15 @@ const transformUser = (firebaseUser: FirebaseUser, extraData: Partial<UserType> 
     displayName: firebaseUser.displayName || extraData.displayName || '',
     photoURL: firebaseUser.photoURL || extraData.photoURL || '',
     username: extraData.username || firebaseUser.displayName || '',
-    isDM: extraData.isDM || false, // Используем переданное значение или false по умолчанию
-    role: extraData.role || 'player', // Добавляем роль пользователя
+    isDM: extraData.isDM || false,
+    role: extraData.role || 'player',
   };
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Функция для сохранения информации о пользователе в Firestore
   const saveUserToFirestore = async (user: UserType) => {
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isDM: user.isDM !== undefined ? user.isDM : userData.isDM || false,
           photoURL: user.photoURL || userData.photoURL || '',
           displayName: user.displayName || userData.displayName || '',
-          role: user.role || userData.role || 'player', // Добавляем роль
+          role: user.role || userData.role || 'player',
           // Сохраняем другие поля, но не перезаписываем их
         }, { merge: true });
         
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDM: user.isDM || false,
-          role: user.role || 'player', // Добавляем роль
+          role: user.role || 'player',
           photoURL: user.photoURL || '',
           characters: [],
         });
@@ -113,30 +113,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Настройка слушателя изменения состояния аутентификации
     console.log("Setting up auth state listener");
-    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
+    
+    const unsubscribe = listenToAuthChanges(async (authUser) => {
       setLoading(true);
       try {
         if (authUser) {
           console.log("Auth state changed: User logged in", authUser);
-          // Пользователь авторизован
           // Получаем дополнительные данные из Firestore
           const userData = await getUserFromFirestore(authUser.uid);
           const transformedUser = transformUser(authUser, userData);
           
-          // Убедимся, что пользователь правильно трансформирован и имеет все необходимые данные
           console.log("Трансформированный пользователь:", transformedUser);
+          
+          // Сохраняем в localStorage для быстрого доступа
+          localStorage.setItem('authUser', JSON.stringify(transformedUser));
           
           setUser(transformedUser);
           // Сохраняем пользователя в Firestore (создаем или обновляем)
           await saveUserToFirestore(transformedUser);
         } else {
           console.log("Auth state changed: User logged out");
-          // Пользователь не авторизован
+          // Очищаем localStorage при выходе
+          localStorage.removeItem('authUser');
           setUser(null);
         }
       } catch (err) {
         console.error("Error in auth state listener", err);
-        setError(err as Error);
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -150,17 +153,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting login with email:", email);
-      const userCredential = await auth.loginWithEmail(email, password);
-      if (userCredential) {
-        console.log("Login successful", userCredential);
+      const firebaseUser = await loginWithEmail(email, password);
+      if (firebaseUser) {
+        console.log("Login successful", firebaseUser);
         // Получаем дополнительные данные из Firestore
-        const userData = await getUserFromFirestore(userCredential.uid);
-        const transformedUser = transformUser(userCredential, userData);
+        const userData = await getUserFromFirestore(firebaseUser.uid);
+        const transformedUser = transformUser(firebaseUser, userData);
         setUser(transformedUser);
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError(err as Error);
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setLoading(false);
@@ -171,11 +174,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log("Attempting signup:", email, displayName, isDM);
-      const userCredential = await auth.registerWithEmail(email, password);
-      if (userCredential) {
-        console.log("Signup successful", userCredential);
+      const firebaseUser = await registerWithEmail(email, password);
+      if (firebaseUser) {
+        console.log("Signup successful", firebaseUser);
         // Создаем объект пользователя с дополнительными данными
-        const transformedUser = transformUser(userCredential, { isDM, displayName });
+        const transformedUser = transformUser(firebaseUser, { isDM, displayName });
         transformedUser.displayName = displayName;
         transformedUser.username = displayName;
         transformedUser.isDM = isDM;
@@ -187,7 +190,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err as Error);
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setLoading(false);
@@ -197,17 +200,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Алиас для signup, чтобы соответствовать ожидаемому имени функции
   const register = signup;
 
-  const logout = async () => {
+  const logoutUser = async () => {
     try {
       setLoading(true);
       console.log("Attempting logout");
-      await auth.logout();
+      await logout();
+      // Очищаем localStorage при выходе
+      localStorage.removeItem('authUser');
       setUser(null);
       console.log("Logout successful");
       toast.success("Вы успешно вышли из системы");
     } catch (err) {
       console.error("Logout error:", err);
-      setError(err as Error);
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setLoading(false);
@@ -215,28 +220,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Обновленная функция для входа через Google с поддержкой redirect
-  const googleLogin = async (): Promise<UserType | null> => {
+  const googleLoginFn = async (): Promise<UserType | null> => {
     try {
       setLoading(true);
       console.log("Attempting Google login");
-      const userCredential = await auth.loginWithGoogle();
+      const firebaseUser = await loginWithGoogle();
       
       // Если был выполнен редирект, управление не дойдет до этой точки
       // Если попап был успешным, обрабатываем результат
-      if (userCredential) {
-        console.log("Google login successful", userCredential);
+      if (firebaseUser) {
+        console.log("Google login successful", firebaseUser);
         // Получаем дополнительные данные из Firestore
-        const userData = await getUserFromFirestore(userCredential.uid);
+        const userData = await getUserFromFirestore(firebaseUser.uid);
         
         // Создаем объект пользователя с учетом данных из Firestore
-        const transformedUser = transformUser(userCredential, {
+        const transformedUser = transformUser(firebaseUser, {
           ...userData,
-          photoURL: userCredential.photoURL || userData.photoURL,
-          displayName: userCredential.displayName || userData.displayName,
-          username: userData.username || userCredential.displayName
+          photoURL: firebaseUser.photoURL || userData.photoURL,
+          displayName: firebaseUser.displayName || userData.displayName,
+          username: userData.username || firebaseUser.displayName
         });
         
         console.log("Трансформированный пользователь Google:", transformedUser);
+        
+        // Сохраняем в localStorage
+        localStorage.setItem('authUser', JSON.stringify(transformedUser));
         
         // Сохраняем пользователя в Firestore для обновления или создания
         await saveUserToFirestore(transformedUser);
@@ -253,8 +261,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return null;
     } catch (err) {
       console.error("Google login error:", err);
-      setError(err as Error);
-      toast.error("Не удалось войти через Google: " + (err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
+      toast.error("Не удалось войти через Google: " + (err instanceof Error ? err.message : String(err)));
       throw err;
     } finally {
       setLoading(false);
@@ -262,9 +270,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Добавляем алиас loginWithGoogle для совместимости с типом AuthContextType
-  const loginWithGoogle = async (): Promise<void> => {
+  const googleLoginWithGoogle = async (): Promise<void> => {
     try {
-      await googleLogin();
+      await googleLoginFn();
     } catch (err) {
       console.error("Google login error in loginWithGoogle:", err);
       throw err;
@@ -280,12 +288,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Обновляем профиль в Firestore
       const updatedUser = { ...user, ...data };
       await saveUserToFirestore(updatedUser);
+      
+      // Обновляем в localStorage
+      localStorage.setItem('authUser', JSON.stringify(updatedUser));
+      
       setUser(updatedUser);
       
       toast.success("Ваш профиль успешно обновлен");
     } catch (err) {
       console.error("Profile update error:", err);
-      setError(err as Error);
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     }
   };
@@ -296,12 +308,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         currentUser: user,
         loading,
-        error: error ? error.message : null,
+        error,
         login,
-        loginWithGoogle,
+        loginWithGoogle: googleLoginWithGoogle,
         register,
-        logout,
-        googleLogin,
+        logout: logoutUser,
+        googleLogin: googleLoginFn,
         isAuthenticated: !!user,
         updateProfile,
         signup
