@@ -237,7 +237,7 @@ const SessionPage = () => {
                 {/* Dice Roller */}
                 <div>
                   <h3 className="text-lg font-medium mb-3">Броски кубиков:</h3>
-                  <DiceRoller />
+                  <DiceRoller roomCode={session.sessionKey || session.id} />
                 </div>
               </CardContent>
             </Card>
