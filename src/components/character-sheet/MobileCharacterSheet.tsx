@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 import { CharacterHeader } from './CharacterHeader';
 import { HPBar } from './HPBar';
@@ -304,7 +304,25 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
         return (
           <>
             {items.length > 0 ? (
-              items.map((item, i) => <li key={i}>{item.name}</li>)
+              items.map((item, idx) => (
+                <li key={idx} className="flex justify-between items-center py-1 border-b border-border/30 last:border-0">
+                  <div>
+                    {isItem(item) ? (
+                      <>
+                        <span className="font-medium">{item.name}</span>
+                        {item.type && <span className="text-xs text-muted-foreground ml-1">({item.type})</span>}
+                        {item.quantity > 1 && <span className="text-xs ml-1">x{item.quantity}</span>}
+                      </>
+                    ) : (
+                      <span>{item}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs">Количество:</span>
+                    <span className="text-lg font-bold">{item.quantity || 1}</span>
+                  </div>
+                </li>
+              ))
             ) : (
               <li>Нет предметов</li>
             )}

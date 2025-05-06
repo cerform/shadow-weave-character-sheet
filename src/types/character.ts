@@ -63,13 +63,13 @@ export interface Character {
     skills?: string[];
   } | string[];
   // Поддержка обоих типов equipment
-  equipment?: Item[] | {
+  equipment?: (string | Item)[] | Item[] | {
     weapons?: string[];
     armor?: string;
     items?: string[];
   } | string[];
   features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[] | (string | CharacterSpell)[];
+  spells?: (string | CharacterSpell)[] | CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -168,7 +168,14 @@ export interface Character {
     spellAttackBonus: number;
     spellsKnown?: number;
     cantripsKnown?: number;
+    preparedSpellsLimit?: number; // Добавляем недостающее свойство
   };
+  additionalClasses?: Array<{
+    class: string;
+    level: number;
+    subclass?: string;
+  }>;
+  languages?: string[];
 }
 
 export interface CharacterSpell {

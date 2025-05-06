@@ -73,16 +73,18 @@ export interface DicePanelProps {
   onSelectToken?: (id: number) => void;
 }
 
-// Добавляем недостающие типы для компонентов боя
+// Обновляем типы для компонентов боя
 export interface LightSource {
   id: string;
-  position: { x: number; y: number };
+  position: { x: number; y: number }; // Добавляем position вместо x и y
+  x?: number; // Для обратной совместимости
+  y?: number; // Для обратной совместимости
   radius: number;
   color?: string;
   intensity?: number;
   enabled?: boolean;
-  type?: string; // Добавляем тип для источника света
-  attachedToTokenId?: number; // ID токена, к которому привязан источник света
+  type?: string;
+  attachedToTokenId?: number;
 }
 
 export interface VisibleArea {
@@ -93,4 +95,21 @@ export interface VisibleArea {
   y?: number; // Позиция Y для областей видимости
   radius?: number; // Радиус для круглых областей видимости
   tokenId?: number; // ID токена, связанного с областью видимости
+}
+
+// Добавляем интерфейс для панелей заклинаний и компонентов
+export interface SpellCastingPanelProps {
+  character: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
+}
+
+export interface SpellPanelProps {
+  character: Character;
+  spells?: (string | CharacterSpell)[];
+  onUpdate?: (newSpells: any) => void;
+}
+
+export interface CharacterComponentProps {
+  character: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
 }

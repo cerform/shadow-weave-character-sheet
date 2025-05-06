@@ -44,9 +44,28 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       type: newEquipmentType,
     };
 
-    const updatedEquipment = character.equipment
-      ? [...(Array.isArray(character.equipment) ? character.equipment : []), newItem]
-      : [newItem];
+    let updatedEquipment: (Item | string)[] = [];
+    
+    if (character.equipment) {
+      if (Array.isArray(character.equipment)) {
+        updatedEquipment = [...character.equipment, newItem];
+      } else {
+        // Конвертируем объект в массив Item для нового формата
+        const items: Item[] = [];
+        if (character.equipment.weapons) {
+          character.equipment.weapons.forEach(w => items.push({ name: w, quantity: 1, type: 'weapon' }));
+        }
+        if (character.equipment.armor) {
+          items.push({ name: character.equipment.armor, quantity: 1, type: 'armor' });
+        }
+        if (character.equipment.items) {
+          character.equipment.items.forEach(i => items.push({ name: i, quantity: 1 }));
+        }
+        updatedEquipment = [...items, newItem];
+      }
+    } else {
+      updatedEquipment = [newItem];
+    }
 
     onUpdate({ equipment: updatedEquipment });
     setNewEquipmentName('');
@@ -61,7 +80,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
 
     const updatedEquipment = [...character.equipment];
     updatedEquipment.splice(index, 1);
-    onUpdate({ equipment: updatedEquipment });
+    onUpdate({ equipment: updatedEquipment as (Item | string)[] });
   };
 
   const handleStartEdit = (item: Item) => {

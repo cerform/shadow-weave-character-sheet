@@ -122,6 +122,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
   
   const dummyCharacter = createDefaultCharacter();
   
+  const handleSelectToken = (id: string) => {
+    onSelectToken(Number(id));
+  };
+
+  const handleTokenHPChange = (id: string, newHP: number) => {
+    onUpdateTokenHP(Number(id), newHP);
+  };
+
+  const handleRemoveCondition = (tokenId: string, conditionIndex: number) => {
+    onRemoveCondition(Number(tokenId), conditionIndex);
+  };
+
   return (
     <div className="h-full flex flex-col space-y-2 p-2">
       <Tabs defaultValue="tokens" className="flex-1">
@@ -359,12 +371,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
       <Card className="p-4">
         <DicePanel 
           character={dummyCharacter} 
-          onUpdate={() => {}} 
+          onUpdate={handleCharacterUpdate}
           compactMode={true} 
           isDM={isDM} 
           tokens={tokens} 
-          selectedTokenId={selectedTokenId} 
-          onSelectToken={onSelectToken} 
+          selectedTokenId={selectedTokenId || 0}
+          onSelectToken={onSelectToken}
         />
       </Card>
     </div>

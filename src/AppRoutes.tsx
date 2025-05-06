@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
@@ -41,8 +40,8 @@ interface AuthContextType {
 
 // Простой компонент для защиты маршрутов
 const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
-  // Используем безопасное приведение типов
-  const auth = useAuth() as AuthContextType;
+  // Используем авторизацию без явного приведения типов
+  const auth = useAuth();
   const { isAuthenticated, user } = auth;
   
   if (!isAuthenticated) {
@@ -57,8 +56,8 @@ const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requi
 };
 
 const AppRoutes = () => {
-  // Используем безопасное приведение типов здесь тоже
-  const auth = useAuth() as AuthContextType;
+  // Используем авторизацию без явного приведения типов
+  const auth = useAuth();
   const { isAuthenticated } = auth;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

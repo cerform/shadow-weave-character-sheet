@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileAppLayout from '@/components/mobile-app/MobileAppLayout';
@@ -138,16 +137,16 @@ const MobileCharacterCreationPage: React.FC = () => {
   const getTabContent = (tabId: string) => {
     switch (tabId) {
       case 'race':
-        return <CharacterRaceSelection character={character} onUpdate={updateCharacter} />;
+        return <CharacterRaceSelection character={character} onUpdate={(updates: Partial<Character>) => updateCharacter(updates)} />;
       case 'subrace':
         return needsSubrace() ? 
-          <CharacterSubraceSelection character={character} onUpdate={updateCharacter} /> :
+          <CharacterSubraceSelection character={character} onUpdate={(updates: Partial<Character>) => updateCharacter(updates)} /> :
           <div className="text-center py-4">
             <p>Выбранная раса не имеет подрас.</p>
             <Button onClick={goToNextTab} className="mt-4">Перейти к следующему шагу</Button>
           </div>;
       case 'class':
-        return <CharacterClassSelection character={character} onUpdate={updateCharacter} />;
+        return <CharacterClassSelection character={character} onUpdate={(updates: Partial<Character>) => updateCharacter(updates)} />;
       case 'level':
         return <CharacterLevelSelection character={character} onUpdate={updateCharacter} />;
       case 'abilities':

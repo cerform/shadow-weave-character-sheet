@@ -1,11 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SpellCastingPanel from '../SpellCastingPanel';
 import SpellPanel from '../SpellPanel';
-
-// Исправляем доступ к полям spellcasting
+import { SpellCastingPanelProps, SpellPanelProps } from '@/types/battle';
 
 interface SpellsTabProps {
   character: Character;
@@ -47,7 +47,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
           <TabsContent value="cantrips" className="mt-2">
             <SpellPanel
               character={character}
-              spells={character.spells?.filter((spell: any) => spell.level === 0)}
+              spells={character.spells?.filter((spell: any) => spell.level === 0) as any[]}
               onUpdate={updateSpells}
             />
           </TabsContent>
@@ -56,7 +56,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
             <TabsContent key={level} value={`level-${level}`} className="mt-2">
               <SpellPanel
                 character={character}
-                spells={character.spells?.filter((spell: any) => spell.level === level)}
+                spells={character.spells?.filter((spell: any) => spell.level === level) as any[]}
                 onUpdate={updateSpells}
               />
             </TabsContent>
