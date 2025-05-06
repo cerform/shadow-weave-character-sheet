@@ -283,18 +283,31 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 
 // Получение персонажей по ID пользователя
 export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
-  if (!userId) return [];
+  if (!userId) {
+    console.error('getCharactersByUserId: Не указан userId!');
+    return [];
+  }
   
   try {
     console.log('Getting characters for specific userId:', userId);
     const charactersCollection = collection(db, 'characters');
     const q = query(charactersCollection, where('userId', '==', userId));
+    
+    console.log('Query parameters:', { 
+      collection: 'characters', 
+      filter: `where userId == ${userId}`
+    });
+    
     const querySnapshot = await getDocs(q);
+    
+    console.log('Query returned documents count:', querySnapshot.size);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log('Character document:', { id: doc.id, data });
       characters.push({
-        ...doc.data(),
+        ...data,
         id: doc.id
       } as Character);
     });

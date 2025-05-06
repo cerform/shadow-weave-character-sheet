@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { getAllCharacters, deleteCharacter } from '@/services/characterService';
+import { getAllCharacters, deleteCharacter, getCharactersByUserId } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 
-// Import our new components
+// Import our components
 import LoadingState from '@/components/characters/LoadingState';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import EmptyState from '@/components/characters/EmptyState';
@@ -46,7 +47,8 @@ const CharactersListPage: React.FC = () => {
       setError(null);
       
       console.log('Loading characters for user:', user?.uid || user?.id);
-      const fetchedCharacters = await getCharactersByUserId(user.uid);
+      // Используем импортированную функцию getCharactersByUserId
+      const fetchedCharacters = await getCharactersByUserId(user.uid || user.id);
       setCharacters(fetchedCharacters);
       console.log('Loaded characters:', fetchedCharacters);
     } catch (err) {

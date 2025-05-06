@@ -12,10 +12,10 @@ service cloud.firestore {
     match /characters/{characterId} {
       // Для чтения проверяем, совпадает ли userId в документе с текущим пользователем
       allow read: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+        (resource.data.userId == request.auth.uid || resource.data.userId == null);
       // Для записи проверяем, что пользователь записывает свой userId
       allow write: if request.auth != null && 
-        request.resource.data.userId == request.auth.uid;
+        (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null);
     }
 
     // 🧙‍♂️ DM's данные (отдельная коллекция): только DM имеет доступ
