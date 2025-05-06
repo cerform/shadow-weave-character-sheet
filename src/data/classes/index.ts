@@ -1,4 +1,3 @@
-
 // Import only the class files that exist already
 import rangerClassData from './ranger';
 import sorcererClassData from './sorcerer';
@@ -141,6 +140,7 @@ const wizardClassData = {
   }
 };
 
+// Export classData as a named export (this is the key fix!)
 export const classData = {
   "Бард": bardClassData,
   "Жрец": clericClassData,
@@ -171,7 +171,7 @@ export const classData = {
   "Barbarian": barbarianClassData
 };
 
-// Экспортируем classData как именованный экспорт
+// Export classData as both default and named exports
 export default classData;
 
 export {

@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from "@/types/character";
 import { SpellData } from "@/types/spells";
 
@@ -202,7 +201,7 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
   if (!spell.classes) {
     classesArray = [];
   } else if (typeof spell.classes === 'string') {
-    classesArray = [spell.classes];
+    classesArray = [spell.classes]; // Convert string to array
   } else if (Array.isArray(spell.classes)) {
     classesArray = spell.classes.map(c => String(c));
   } else {
