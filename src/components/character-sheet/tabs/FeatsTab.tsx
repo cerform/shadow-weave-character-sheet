@@ -27,7 +27,7 @@ const FeatsTab: React.FC<FeatsTabProps> = ({ character, onUpdate }) => {
   };
 
   // Получаем особенности расы
-  const racialFeatures = character.racialFeatures || [];
+  const racialFeatures = character.raceFeatures || [];
   
   // Получаем особенности класса
   const classFeatures = character.classFeatures || [];

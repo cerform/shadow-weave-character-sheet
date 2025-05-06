@@ -31,7 +31,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate }) => {
   });
   
   // Получение текущих особенностей из персонажа
-  const racialFeatures = character.racialFeatures || [];
+  const racialFeatures = character.raceFeatures || [];
   const classFeatures = character.classFeatures || [];
   const backgroundFeatures = character.backgroundFeatures || [];
   const feats = character.feats || [];
@@ -59,7 +59,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate }) => {
     
     // Добавляем особенность в соответствующий массив
     if (newFeature.type === 'racial') {
-      updatedCharacter.racialFeatures = [...racialFeatures, featureToAdd];
+      updatedCharacter.raceFeatures = [...racialFeatures, featureToAdd];
     } else if (newFeature.type === 'class') {
       updatedCharacter.classFeatures = [...classFeatures, featureToAdd];
     } else if (newFeature.type === 'background') {
