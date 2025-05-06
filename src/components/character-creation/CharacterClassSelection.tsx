@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import NavigationButtons from "@/components/character-creation/NavigationButtons";
-import { classes } from "@/data/classes";
+import { getAllClasses } from "@/data/classes/index"; // Используем правильный импорт
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -44,7 +44,17 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
   const [selectedSubclass, setSelectedSubclass] = useState<string>(character.subclass || "");
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [subclassActiveTab, setSubclassActiveTab] = useState<string>("description");
+  const [classes, setClasses] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Загружаем классы при инициализации
+  useEffect(() => {
+    const loadClasses = async () => {
+      const allClasses = getAllClasses();
+      setClasses(allClasses);
+    };
+    loadClasses();
+  }, []);
 
   // Проверяем, есть ли подклассы для выбранного класса
   const hasSubclasses = (className: string) => {
@@ -185,7 +195,7 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
               
               <TabsContent value="features" className="mt-0">
                 <div className="space-y-4">
-                  {selectedClassDetails.features.map((feature, index) => (
+                  {selectedClassDetails.features && selectedClassDetails.features.map((feature: any, index: number) => (
                     <div key={index}>
                       <h4 className="font-medium">{feature.name}</h4>
                       <p className="text-sm text-muted-foreground">{feature.description}</p>
@@ -312,4 +322,3 @@ const CharacterClassSelection: React.FC<CharacterClassSelectionProps> = ({
 };
 
 export default CharacterClassSelection;
-
