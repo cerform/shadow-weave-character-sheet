@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -31,10 +30,14 @@ const CharactersListPage: React.FC = () => {
 
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
+      console.log('Authenticated user available:', user);
+      console.log('User ID:', user.uid || user.id);
       loadCharacters();
+    } else {
+      console.log('User not authenticated or no user data');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Функция загрузки персонажей
   const loadCharacters = async () => {
@@ -42,6 +45,7 @@ const CharactersListPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Loading characters for user:', user?.uid || user?.id);
       const fetchedCharacters = await getAllCharacters();
       setCharacters(fetchedCharacters);
       console.log('Loaded characters:', fetchedCharacters);

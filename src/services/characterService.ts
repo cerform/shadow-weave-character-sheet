@@ -232,22 +232,31 @@ export const getAllCharacters = async (): Promise<Character[]> => {
       return existingChars ? JSON.parse(existingChars) : [];
     }
     
-    // Получаем персонажей из Firestore
+    console.log('Fetching characters for userId:', userId);
+    
+    // Получаем персонажей из Firestore с явным фильтром по userId
     const charactersCollection = collection(db, 'characters');
     const q = query(charactersCollection, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
-      characters.push(doc.data() as Character);
+      characters.push({
+        ...doc.data(),
+        id: doc.id
+      } as Character);
     });
+    
+    console.log('Found characters in Firestore:', characters.length, characters);
     
     // Если в Firestore нет персонажей, проверяем localStorage
     if (characters.length === 0) {
       console.log('No characters found in Firestore, checking localStorage');
       const existingChars = localStorage.getItem('dnd-characters');
       if (existingChars) {
-        return JSON.parse(existingChars);
+        const localChars = JSON.parse(existingChars);
+        // Фильтруем по userId
+        return localChars.filter(char => char.userId === userId);
       }
     }
     
@@ -258,7 +267,13 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     // Возвращаем из localStorage как резервный вариант
     try {
       const existingChars = localStorage.getItem('dnd-characters');
-      return existingChars ? JSON.parse(existingChars) : [];
+      const userId = getCurrentUid();
+      if (existingChars) {
+        const chars = JSON.parse(existingChars);
+        // Фильтруем по userId даже в локальном хранилище
+        return userId ? chars.filter(char => char.userId === userId) : chars;
+      }
+      return [];
     } catch (localError) {
       console.error('Error getting characters from localStorage:', localError);
       return [];
@@ -271,15 +286,20 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   if (!userId) return [];
   
   try {
+    console.log('Getting characters for specific userId:', userId);
     const charactersCollection = collection(db, 'characters');
     const q = query(charactersCollection, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     
     const characters: Character[] = [];
     querySnapshot.forEach((doc) => {
-      characters.push(doc.data() as Character);
+      characters.push({
+        ...doc.data(),
+        id: doc.id
+      } as Character);
     });
     
+    console.log('Found characters for userId:', characters.length);
     return characters;
   } catch (error) {
     console.error('Error getting characters by userId:', error);
