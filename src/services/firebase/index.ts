@@ -2,7 +2,7 @@
 // Экспортируем внешний firebase.ts как единую точку входа,
 // переименовывая auth из @/firebase для избежания конфликта имен
 import { app, db, storage, analyticsPromise, initializeAnalytics } from '@/firebase';
-import { auth as firebaseDefaultAuth } from '@/firebase';
+import { getAuth } from 'firebase/auth';
 
 // Экспортируем авторизацию из нашего сервиса
 export * from './auth';
@@ -14,7 +14,7 @@ export * from './firestore';
 export { app, db, storage, analyticsPromise, initializeAnalytics };
 
 // Экспортируем firebaseAuth под оригинальным именем для обратной совместимости
-export { firebaseDefaultAuth as firebaseAuth };
+export { firebaseAuth } from './auth';
 
 // Для обратной совместимости также экспортируем интерфейсы
 export type { DetailedAuthError } from './error-utils';
