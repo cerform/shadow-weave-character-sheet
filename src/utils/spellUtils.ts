@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from "@/types/character";
 import { SpellData } from "@/types/spells";
 
@@ -211,7 +210,10 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     classes: (function() {
       if (!spell.classes) return [] as string[];
       if (typeof spell.classes === 'string') return [spell.classes];
-      return Array.isArray(spell.classes) ? spell.classes.map(c => String(c)) : [];
+      if (Array.isArray(spell.classes)) {
+        return spell.classes.map(c => String(c));
+      }
+      return [] as string[];
     })(),
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
