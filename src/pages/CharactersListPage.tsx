@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList } from "lucide-react";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, Bug } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -17,6 +17,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import ErrorBoundary from '@/components/ErrorBoundary';
 import CharactersTable from '@/components/characters/CharactersTable';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
+// Импортируем новые компоненты отладки
+import ExtendedDebugger from '@/components/debug/ExtendedDebugger';
+import ConsoleErrorCatcher from '@/components/debug/ConsoleErrorCatcher';
+import { validateCharacters } from '@/utils/debugUtils';
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,29 +29,53 @@ const CharactersListPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  // Используем контекст персонажей напрямую
+  // Используем контекст персонажей
   const { characters, loading, error, refreshCharacters, deleteCharacter } = useCharacter();
   
   // State для управления UI
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  // Добавляем новый стейт для отображения отладчика
+  const [showDebugger, setShowDebugger] = useState(true);
   
-  // Добавляем эффект для логирования состояния
+  // Добавляем эффект для более подробного логирования
   useEffect(() => {
-    console.log('CharactersListPage: Текущий список персонажей:', characters);
-    console.log('CharactersListPage: Состояние loading:', loading);
-    console.log('CharactersListPage: Состояние error:', error);
-    console.log('CharactersListPage: Пользователь авторизован?', isAuthenticated);
-    console.log('CharactersListPage: Данные пользователя:', user);
-  }, [characters, loading, error, isAuthenticated, user]);
+    console.log('CharactersListPage: Компонент монтируется/обновляется');
+    console.log(`CharactersListPage: isAuthenticated = ${isAuthenticated}, user = `, user);
+    
+    if (characters) {
+      console.log(`CharactersListPage: Загружено ${characters.length} персонажей`);
+      // Валидация персонажей для отладки
+      const validation = validateCharacters(characters);
+      console.log('CharactersListPage: Результат валидации персонажей:', validation);
+      if (validation.charactersWithIssues > 0) {
+        console.warn(`CharactersListPage: Обнаружены проблемы в ${validation.charactersWithIssues} персонажах`);
+        console.warn('Детали проблем:', validation.detailedIssues);
+      }
+    } else {
+      console.warn('CharactersListPage: characters не является массивом или undefined:', characters);
+    }
+    
+    // Вывести статусы
+    console.log(`CharactersListPage: loading = ${loading}, error = ${error || 'нет'}`);
+    
+    return () => {
+      console.log('CharactersListPage: Компонент размонтируется');
+    };
+  }, [isAuthenticated, user, characters, loading, error]);
 
-  // Функция загрузки персонажей
+  // Функция загрузки персонажей с дополнительной отладочной информацией
   const handleRefresh = async () => {
     try {
       console.log('CharactersListPage: Начинаем обновление персонажей...');
       setIsRefreshing(true);
       await refreshCharacters();
-      console.log('CharactersListPage: Персонажи обновлены успешно');
+      console.log('CharactersListPage: Персонажи обновлены успешно. Получено:', characters?.length || 0);
+      
+      if (Array.isArray(characters) && characters.length > 0) {
+        console.log('CharactersListPage: Пример первого персонажа:', characters[0]);
+      }
+      
       toast.success('Персонажи обновлены');
     } catch (err) {
       console.error('Ошибка при обновлении персонажей:', err);
@@ -112,7 +140,18 @@ const CharactersListPage: React.FC = () => {
               Мои персонажи
             </h1>
             
-            <IconOnlyNavigation includeThemeSelector />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowDebugger(!showDebugger)}
+                title={showDebugger ? "Скрыть отладчик" : "Показать отладчик"}
+                className={showDebugger ? "text-yellow-500" : ""}
+              >
+                <Bug size={18} />
+              </Button>
+              <IconOnlyNavigation includeThemeSelector />
+            </div>
           </div>
         }
       >
@@ -129,20 +168,16 @@ const CharactersListPage: React.FC = () => {
             </p>
           </div>
           
+          {/* Компонент для отлова ошибок консоли */}
+          <ConsoleErrorCatcher />
+          
+          {/* Отладчик (показывается при активации) */}
+          {showDebugger && (
+            <ExtendedDebugger title="Отладчик страницы персонажей" />
+          )}
+          
           {/* Навигация по страницам персонажей */}
           <CharacterNavigation />
-          
-          {/* Отладочная информация */}
-          <div className="mb-6 p-4 border border-blue-500/30 bg-blue-900/20 rounded-md">
-            <h3 className="font-medium text-blue-200 mb-2">Отладочная информация</h3>
-            <div className="text-sm text-muted-foreground">
-              <div>Авторизован: {isAuthenticated ? "Да" : "Нет"}</div>
-              <div>ID пользователя: {user?.uid || "Не определен"}</div>
-              <div>Загрузка: {loading ? "Да" : "Нет"}</div>
-              <div>Персонажей: {Array.isArray(characters) ? characters.length : 'Нет данных'}</div>
-              {error && <div className="text-red-400">Ошибка: {error}</div>}
-            </div>
-          </div>
           
           {/* Панель управления */}
           <div className="flex flex-wrap justify-between items-center mb-6 gap-4">

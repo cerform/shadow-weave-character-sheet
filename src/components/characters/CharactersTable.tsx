@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Eye, Edit, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import DebugPanel from '@/components/debug/DebugPanel';
+import { validateCharacters } from '@/utils/debugUtils';
 
 interface CharactersTableProps {
   characters: Character[];
@@ -21,6 +23,17 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const [validationReport, setValidationReport] = useState<any>(null);
+  
+  // Валидация массива персонажей при монтировании/обновлении
+  useEffect(() => {
+    const validation = validateCharacters(characters);
+    setValidationReport(validation);
+    
+    if (!validation.valid) {
+      console.warn('CharactersTable: Найдены проблемы с данными персонажей:', validation);
+    }
+  }, [characters]);
 
   // Функция открытия персонажа
   const handleViewCharacter = (id: string) => {
@@ -65,11 +78,44 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     return character.race || '—';
   };
 
+  // Проверяем корректность массива персонажей
+  if (!Array.isArray(characters)) {
+    console.error('CharactersTable: characters не является массивом:', characters);
+    return (
+      <Card className="bg-black/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-red-500">Ошибка данных</CardTitle>
+          <CardDescription>Формат данных персонажей некорректный</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-red-950/30 border border-red-800 rounded">
+            <p className="mb-2 flex items-center gap-2">
+              <AlertCircle size={18} className="text-red-500" />
+              Данные о персонажах не являются массивом
+            </p>
+            <pre className="text-xs bg-black/50 p-2 rounded overflow-auto max-h-40">
+              {typeof characters === 'object' 
+                ? JSON.stringify(characters, null, 2) 
+                : `Тип данных: ${typeof characters}`}
+            </pre>
+          </div>
+          
+          <Button
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Обновить страницу
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Выводим в консоль для отладки
   console.log('CharactersTable: characters получены:', characters);
   
   // Если нет персонажей, показываем сообщение
-  if (!characters || characters.length === 0) {
+  if (characters.length === 0) {
     console.log('CharactersTable: Персонажи не найдены');
     return (
       <Card className="bg-black/50 backdrop-blur-sm">
@@ -97,11 +143,31 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
           <CardDescription>Проблема с данными персонажей</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Возникла проблема с загрузкой данных персонажей. Попробуйте обновить страницу.</p>
+          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
+            <p>Возникла проблема с загрузкой данных персонажей. Они получены, но в некорректном формате.</p>
+          </div>
+          
+          {validationReport && (
+            <DebugPanel 
+              title="Проблемы с данными персонажей" 
+              data={validationReport} 
+              variant="warning"
+              showByDefault={true}
+            />
+          )}
+          
+          <div className="mt-4">
+            <Button onClick={() => window.location.reload()}>
+              Обновить страницу
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
   }
+  
+  // Если есть невалидные персонажи, выводим предупреждение
+  const hasInvalidCharacters = characters.length > validCharacters.length;
 
   return (
     <Card className="bg-black/50 backdrop-blur-sm">
@@ -110,6 +176,23 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
         <CardDescription>Всего персонажей: {validCharacters.length}</CardDescription>
       </CardHeader>
       <CardContent>
+        {validationReport && !validationReport.valid && (
+          <DebugPanel 
+            title="Диагностика данных персонажей" 
+            data={validationReport} 
+            variant="warning"
+            showByDefault={true}
+          />
+        )}
+        
+        {hasInvalidCharacters && (
+          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
+            <p className="text-yellow-200 text-sm">
+              Внимание: {characters.length - validCharacters.length} из {characters.length} персонажей не отображаются из-за отсутствия ID
+            </p>
+          </div>
+        )}
+        
         <Table>
           <TableHeader>
             <TableRow>
