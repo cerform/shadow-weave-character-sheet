@@ -7,6 +7,8 @@ export type { UserType, AuthContextType } from '@/types/auth';
 
 // Удобный хук для проверки аутентификации
 export const useIsAuthenticated = () => {
+  const { useAuth } = require('@/contexts/AuthContext');
   const { isAuthenticated, currentUser, loading } = useAuth();
   return { isAuthenticated, currentUser, loading };
 };
+
