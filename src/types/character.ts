@@ -67,9 +67,9 @@ export interface Character {
     weapons?: string[];
     armor?: string;
     items?: string[];
-  };
+  } | string[];
   features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[];
+  spells?: CharacterSpell[] | string[] | (string | CharacterSpell)[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -149,6 +149,25 @@ export interface Character {
   sorceryPoints?: {
     max: number;
     current: number;
+  };
+  // Дополнительные поля
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: Record<string, number>;
+  currency?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
+  spellcasting?: {
+    ability: string;
+    spellSaveDC: number;
+    spellAttackBonus: number;
+    spellsKnown?: number;
+    cantripsKnown?: number;
   };
 }
 

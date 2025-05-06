@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Character } from '@/types/character';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { getAbilityModifierValue } from '@/utils/abilityUtils';
+import { getAbilityModifier } from '@/utils/characterUtils';
 
 interface SkillsPanelProps {
   character: Character;
@@ -59,7 +58,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     
     // Получаем модификатор характеристики
     const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 10;
-    const abilityMod = getAbilityModifierValue(abilityScore);
+    const abilityMod = getAbilityModifier(abilityScore);
     
     // Вычисляем значение навыка
     const profBonus = character.proficiencyBonus || 2;

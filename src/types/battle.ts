@@ -1,4 +1,3 @@
-
 import { Character } from './character';
 
 export interface Token {
@@ -71,4 +70,20 @@ export interface DicePanelProps {
   tokens?: Token[];
   selectedTokenId?: number;
   onSelectToken?: (id: number) => void;
+}
+
+// Добавляем недостающие типы для компонентов боя
+export interface LightSource {
+  id: string;
+  position: { x: number; y: number };
+  radius: number;
+  color?: string;
+  intensity?: number;
+  enabled?: boolean;
+}
+
+export interface VisibleArea {
+  id: string;
+  points: Array<{ x: number; y: number }>;
+  type: 'rectangle' | 'circle' | 'polygon';
 }

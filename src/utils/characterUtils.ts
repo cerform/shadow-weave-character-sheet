@@ -2,101 +2,99 @@
 import { Character } from '@/types/character';
 
 /**
- * Вычисляет бонус мастерства на основе уровня
+ * Вычисляет модификатор характеристики
+ * @param abilityScore Значение характеристики
+ * @returns Модификатор характеристики
+ */
+export const getAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Вычисляет бонус мастерства по уровню персонажа
+ * @param level Уровень персонажа
+ * @returns Бонус мастерства
  */
 export const calculateProficiencyBonus = (level: number): number => {
-  if (level < 1) return 2;
   return Math.floor((level - 1) / 4) + 2;
 };
 
 /**
- * Получает модификатор характеристики на основе значения
+ * Вычисляет общий модификатор способности из разных источников
+ * @param character Персонаж
+ * @param ability Характеристика
+ * @returns Общий модификатор
  */
-export const getAbilityModifier = (score: number): number => {
-  return Math.floor((score - 10) / 2);
-};
-
-/**
- * Альтернативное имя для getAbilityModifier для обратной совместимости
- */
-export const getModifierFromAbilityScore = getAbilityModifier;
-
-/**
- * Альтернативное имя для getAbilityModifier для обратной совместимости
- */
-export const getNumericModifier = getAbilityModifier;
-
-/**
- * Создаёт персонажа по умолчанию
- */
-export const createDefaultCharacter = (): Character => {
-  const id = Date.now().toString();
+export const getAbilityTotalModifier = (character: Character, ability: string): number => {
+  // Получаем базовый показатель способности
+  let abilityScore = 10;
+  const lowerAbility = ability.toLowerCase();
   
-  return {
-    id,
-    name: 'Новый персонаж',
-    race: '',
-    class: '',
-    level: 1,
-    experience: 0,
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
-    maxHp: 10,
-    currentHp: 10,
-    proficiencyBonus: 2,
-    skillProficiencies: [],
-    expertise: [],
-    savingThrowProficiencies: [],
-    skills: {},
-    spells: [],
-    features: []
-  };
-};
-
-/**
- * Получает модификатор характеристики персонажа
- */
-export const getCharacterAbilityModifier = (character: Character, ability: string): number => {
-  const abilityScore = character[ability.toLowerCase() as keyof Character] as number || 10;
+  if (character.abilities && character.abilities[ability as keyof typeof character.abilities]) {
+    abilityScore = character.abilities[ability as keyof typeof character.abilities] as number;
+  } else if (character.stats && character.stats[lowerAbility as keyof typeof character.stats]) {
+    abilityScore = character.stats[lowerAbility as keyof typeof character.stats];
+  } else if (character[lowerAbility as keyof Character]) {
+    const value = character[lowerAbility as keyof Character];
+    if (typeof value === 'number') {
+      abilityScore = value;
+    }
+  }
+  
+  // Вычисляем и возвращаем модификатор
   return getAbilityModifier(abilityScore);
 };
 
 /**
- * Вычисляет бонус атаки оружия
+ * Безопасно возвращает значение инициативы персонажа
+ * @param character Персонаж
+ * @returns Значение инициативы
  */
-export const calculateAttackBonus = (
-  character: Character, 
-  weaponType: 'melee' | 'ranged' | 'finesse' | 'spell', 
-  isProficient: boolean = false
-): number => {
-  let abilityModifier = 0;
-  
-  if (weaponType === 'melee') {
-    abilityModifier = getAbilityModifier(character.strength || 10);
-  } else if (weaponType === 'ranged') {
-    abilityModifier = getAbilityModifier(character.dexterity || 10);
-  } else if (weaponType === 'finesse') {
-    // Для finesse weapons используем лучший модификатор
-    const strMod = getAbilityModifier(character.strength || 10);
-    const dexMod = getAbilityModifier(character.dexterity || 10);
-    abilityModifier = Math.max(strMod, dexMod);
-  } else if (weaponType === 'spell') {
-    // Для заклинаний используем основную характеристику заклинателя
-    const classLower = character.class?.toLowerCase() || '';
-    
-    if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
-      abilityModifier = getAbilityModifier(character.wisdom || 10);
-    } else if (['волшебник', 'wizard'].includes(classLower)) {
-      abilityModifier = getAbilityModifier(character.intelligence || 10);
-    } else {
-      abilityModifier = getAbilityModifier(character.charisma || 10);
+export const getInitiativeValue = (character: Character): number => {
+  if (character.initiative !== undefined) {
+    if (typeof character.initiative === 'number') {
+      return character.initiative;
+    } else if (typeof character.initiative === 'string') {
+      const parsed = parseInt(character.initiative);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
     }
   }
   
-  const profBonus = isProficient ? calculateProficiencyBonus(character.level || 1) : 0;
-  return abilityModifier + profBonus;
+  // Если инициатива не задана, используем модификатор ловкости
+  return getAbilityTotalModifier(character, 'dexterity');
+};
+
+/**
+ * Форматирует бонус для отображения со знаком
+ * @param bonus Числовое значение бонуса
+ * @returns Строка с форматированным бонусом
+ */
+export const formatBonus = (bonus: number): string => {
+  return bonus >= 0 ? `+${bonus}` : `${bonus}`;
+};
+
+/**
+ * Преобразует название способности в удобочитаемый формат
+ * @param ability Название способности
+ * @returns Удобочитаемое название
+ */
+export const getAbilityName = (ability: string): string => {
+  const nameMap: Record<string, string> = {
+    strength: 'Сила',
+    dexterity: 'Ловкость',
+    constitution: 'Телосложение',
+    intelligence: 'Интеллект',
+    wisdom: 'Мудрость',
+    charisma: 'Харизма',
+    STR: 'Сила',
+    DEX: 'Ловкость',
+    CON: 'Телосложение',
+    INT: 'Интеллект',
+    WIS: 'Мудрость',
+    CHA: 'Харизма'
+  };
+  
+  return nameMap[ability] || ability;
 };
