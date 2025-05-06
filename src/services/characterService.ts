@@ -209,8 +209,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     // Создаем запрос к коллекции characters
     const charactersCollection = collection(db, 'characters');
     
-    // ВАЖНО: Используем точно такой же формат запроса, как в тестовой функции
-    // Создаем запрос с фильтрацией по userId
+    // ВАЖНО: Создаем запрос с фильтрацией по userId, точно как в тестовой функции
     const q = query(
       charactersCollection,
       where('userId', '==', userId)
@@ -236,13 +235,15 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
         userId: data.userId || 'Не указан'
       });
       
+      // Убедимся, что у персонажа есть все необходимые поля
       characters.push({
         ...data,
         id: doc.id,
+        userId: data.userId || userId,
         name: data.name || 'Без имени',
         className: data.class || data.className || '—',
-        level: data.level || 1,
-        userId: data.userId || userId
+        race: data.race || '—',
+        level: data.level || 1
       } as Character);
     });
     
@@ -258,6 +259,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     
     // Пробуем получить из localStorage как резервный вариант
     try {
+      console.log('getCharactersByUserId: Пробуем получить персонажей из localStorage');
       const existingChars = localStorage.getItem('dnd-characters');
       if (existingChars) {
         const allChars: Character[] = JSON.parse(existingChars);

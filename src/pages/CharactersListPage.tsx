@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList, FileJson } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -12,10 +13,12 @@ import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { auth } from '@/services/firebase/auth';
+import { getAuth } from 'firebase/auth';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import LoadingState from '@/components/characters/LoadingState';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import CharactersTable from '@/components/characters/CharactersTable';
+import CharacterCards from '@/components/characters/CharacterCards';
 import EmptyState from '@/components/characters/EmptyState';
 import CharactersHeader from '@/components/characters/CharactersHeader';
 import { testLoadCharacters } from '@/services/firebase/firestore-test';
@@ -53,7 +56,7 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayMode, setDisplayMode] = useState<'table' | 'raw' | 'test'>('table');
+  const [displayMode, setDisplayMode] = useState<'table' | 'cards' | 'raw' | 'test'>('cards');
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [testResults, setTestResults] = useState<any>(null);
   
@@ -83,17 +86,21 @@ const CharactersListPage: React.FC = () => {
       if (!userId) {
         console.error('CharactersListPage: ID пользователя отсутствует');
         setError('ID пользователя отсутствует');
+        setLoading(false); // Исправлено: прекращаем загрузку при отсутствии userId
         return;
       }
+      
+      // Получаем оригинальный Firebase auth
+      const firebaseAuth = getAuth();
       
       // Создаём отладочную информацию
       const debug: DebugInfo = {
         userId,
-        authCurrentUser: auth.currentUser ? {
-          uid: auth.currentUser.uid,
-          email: auth.currentUser.email,
-          isAnonymous: auth.currentUser.isAnonymous,
-          emailVerified: auth.currentUser.emailVerified
+        authCurrentUser: firebaseAuth.currentUser ? { // Используем оригинальный Firebase Auth
+          uid: firebaseAuth.currentUser.uid,
+          email: firebaseAuth.currentUser.email,
+          isAnonymous: firebaseAuth.currentUser.isAnonymous,
+          emailVerified: firebaseAuth.currentUser.emailVerified
         } : null,
         query: {
           collection: "characters",
@@ -131,7 +138,8 @@ const CharactersListPage: React.FC = () => {
       toast.success(`Загружено персонажей: ${fetchedCharacters.length}`);
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
-      setError(`Не удалось загрузить персонажей: ${err}`);
+      // Исправлено: правильная обработка ошибки
+      setError(`Не удалось загрузить персонажей: ${err instanceof Error ? err.message : String(err)}`);
       toast.error('Ошибка при загрузке персонажей');
     } finally {
       setLoading(false);
@@ -158,7 +166,7 @@ const CharactersListPage: React.FC = () => {
       }
     } catch (err) {
       console.error('CharactersListPage: Ошибка при тестовой загрузке:', err);
-      setError(`Ошибка при тестовой загрузке: ${err}`);
+      setError(`Ошибка при тестовой загрузке: ${err instanceof Error ? err.message : String(err)}`);
       toast.error('Ошибка при тестовой загрузке');
     } finally {
       setLoading(false);
@@ -180,8 +188,10 @@ const CharactersListPage: React.FC = () => {
   };
 
   // Переключатель режимов отображения
-  const toggleDisplayMode = () => {
-    setDisplayMode(mode => (mode === 'table' ? 'raw' : 'table'));
+  const cycleDisplayMode = () => {
+    if (displayMode === 'table') setDisplayMode('cards');
+    else if (displayMode === 'cards') setDisplayMode('raw');
+    else setDisplayMode('table');
   };
   
   // Новая функция принудительного обновления с дополнительной диагностикой
@@ -244,33 +254,69 @@ const CharactersListPage: React.FC = () => {
           {/* Добавляем навигацию по страницам персонажей */}
           <CharacterNavigation />
           
-          {/* Панель управления отображением */}
-          <div className="flex justify-end gap-3">
+          {/* Панель управления отображением и создания персонажа */}
+          <div className="flex flex-wrap justify-between gap-3">
+            {/* Кнопка создания нового персонажа */}
             <Button
-              onClick={() => setDisplayMode(mode => mode === 'raw' ? 'table' : 'raw')}
-              size="sm"
+              onClick={() => navigate('/character-creation')}
+              className="gap-2"
+              variant="default"
             >
-              {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
+              <UserPlus size={16} />
+              Создать нового персонажа
             </Button>
             
-            <Button
-              onClick={runTestLoad}
-              size="sm"
-              className="gap-2"
-              variant="secondary"
-            >
-              Тестовая загрузка
-            </Button>
-            
-            <Button
-              onClick={forceRefresh}
-              size="sm"
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-              Обновить
-            </Button>
+            <div className="flex gap-2">
+              {/* Кнопки переключения режима */}
+              <div className="flex rounded-md overflow-hidden border">
+                <Button
+                  onClick={() => setDisplayMode('cards')}
+                  size="sm"
+                  variant={displayMode === 'cards' ? "default" : "ghost"}
+                  className={`rounded-none ${displayMode === 'cards' ? "" : "bg-transparent"}`}
+                  title="Режим карточек"
+                >
+                  <LayoutGrid size={16} />
+                </Button>
+                <Button
+                  onClick={() => setDisplayMode('table')}
+                  size="sm"
+                  variant={displayMode === 'table' ? "default" : "ghost"}
+                  className={`rounded-none ${displayMode === 'table' ? "" : "bg-transparent"}`}
+                  title="Режим таблицы"
+                >
+                  <LayoutList size={16} />
+                </Button>
+                <Button
+                  onClick={() => setDisplayMode('raw')}
+                  size="sm"
+                  variant={displayMode === 'raw' ? "default" : "ghost"}
+                  className={`rounded-none ${displayMode === 'raw' ? "" : "bg-transparent"}`}
+                  title="JSON данные"
+                >
+                  <FileJson size={16} />
+                </Button>
+              </div>
+              
+              <Button
+                onClick={runTestLoad}
+                size="sm"
+                className="gap-2"
+                variant="secondary"
+              >
+                Тестовая загрузка
+              </Button>
+              
+              <Button
+                onClick={forceRefresh}
+                size="sm"
+                variant="outline"
+                className="gap-2"
+              >
+                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                Обновить
+              </Button>
+            </div>
           </div>
           
           {/* Загрузка */}
@@ -313,6 +359,11 @@ const CharactersListPage: React.FC = () => {
                     </pre>
                   )}
                 </div>
+              ) : displayMode === 'cards' ? (
+                <CharacterCards
+                  characters={characters}
+                  onDelete={deleteCharacter}
+                />
               ) : (
                 <CharactersTable 
                   characters={characters}
