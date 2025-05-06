@@ -60,7 +60,7 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  // Добавляем поддержку обоих типов equipment
+  // Поддержка обоих типов equipment
   equipment?: Item[] | {
     weapons?: string[];
     armor?: string;

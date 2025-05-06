@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,11 +19,12 @@
   }
 
   * {
-    @apply border-border selection:bg-white/10 selection:text-white;
+    @apply border-border;
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
     background-color: var(--background) !important;
     background-image: url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png');
     background-size: cover;
@@ -112,4 +112,58 @@ button, .btn {
 button:hover, .btn:hover {
   background-color: rgba(var(--accent), 0.3) !important;
   box-shadow: 0 0 10px var(--accent) !important;
+}
+
+@layer utilities {
+  /* Скрываем полосы прокрутки для мобильных устройств */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Стили для анимаций и переходов */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .slide-in {
+    animation: slideIn 0.3s ease-in-out;
+  }
+  
+  /* CSS анимации */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Медиа-запросы для адаптивного шрифта */
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+    
+    .mobile-container {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
 }

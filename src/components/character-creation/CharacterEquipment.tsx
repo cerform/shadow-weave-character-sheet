@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -75,9 +75,16 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       items: items
     };
     
+    // Преобразуем в массив Item для соответствия типу Character.equipment
+    const equipmentItems: Item[] = [
+      ...weapons.map(name => ({ name, quantity: 1, type: 'weapon' })),
+      ...(armor ? [{ name: armor, quantity: 1, type: 'armor' }] : []),
+      ...items.map(name => ({ name, quantity: 1 }))
+    ];
+    
     // Обновляем персонажа
     onUpdate({ 
-      equipment: updatedEquipment,
+      equipment: equipmentItems,
       gold: gold
     });
     
@@ -89,43 +96,46 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
   
   return (
     <Card className="w-full">
-      <CardContent className="pt-6">
+      <CardContent className="pt-6 space-y-4">
+        {/* Мобильно-оптимизированный интерфейс */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="weapons">Оружие (через запятую)</Label>
+            <Label htmlFor="weapons" className="text-sm font-medium">Оружие (через запятую)</Label>
             <Textarea 
               id="weapons"
               value={weapons.join(", ")}
               onChange={(e) => handleWeaponsChange(e.target.value)}
               placeholder="Длинный меч, кинжал, лук..."
-              className="mt-1"
+              className="mt-1 resize-none text-sm"
+              rows={3}
             />
           </div>
           
           <div>
-            <Label htmlFor="armor">Доспехи</Label>
+            <Label htmlFor="armor" className="text-sm font-medium">Доспехи</Label>
             <Input
               id="armor"
               value={armor}
               onChange={(e) => setArmor(e.target.value)}
               placeholder="Кольчуга, кожаный доспех..."
-              className="mt-1"
+              className="mt-1 text-sm"
             />
           </div>
           
           <div>
-            <Label htmlFor="items">Предметы (через запятую)</Label>
+            <Label htmlFor="items" className="text-sm font-medium">Предметы (через запятую)</Label>
             <Textarea
               id="items"
               value={items.join(", ")}
               onChange={(e) => handleItemsChange(e.target.value)}
               placeholder="Рюкзак, верёвка 50 футов, фонарь..."
-              className="mt-1"
+              className="mt-1 resize-none text-sm"
+              rows={3}
             />
           </div>
           
           <div>
-            <Label htmlFor="gold">Золото</Label>
+            <Label htmlFor="gold" className="text-sm font-medium">Золото</Label>
             <div className="flex items-center space-x-2 mt-1">
               <Input
                 id="gold"
@@ -133,6 +143,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
                 value={gold}
                 onChange={(e) => setGold(Number(e.target.value) || 0)}
                 min={0}
+                className="text-sm"
               />
               <span>зм</span>
             </div>
