@@ -37,3 +37,29 @@ export interface MagicalResource {
   description: string;
   progression: number[];
 }
+
+// Добавляем дополнительные типы для классовых особенностей
+export interface ClassFeature {
+  name: string;
+  level: number;
+  description: string;
+}
+
+// Добавляем типы для расовых особенностей
+export interface RacialFeature {
+  name: string;
+  description: string;
+}
+
+// Добавляем типы для особенностей предыстории
+export interface BackgroundFeature {
+  name: string;
+  description: string;
+}
+
+// Расширение для умений/черт персонажа
+export interface Feat {
+  name: string;
+  description: string;
+  prerequisites?: string[];
+}
