@@ -17,6 +17,8 @@ import { logAuthError } from './error-utils';
 
 // Initialize Firebase Auth
 export const auth = getAuth(app);
+// Export auth as firebaseAuth for backward compatibility
+export const firebaseAuth = auth;
 
 // Установка постоянной сессии для аутентификации
 setPersistence(auth, browserLocalPersistence)

@@ -26,11 +26,10 @@ import { toast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/hooks/use-auth';
-import { db } from "@/firebase";
+import { db as firebaseDb } from "@/firebase"; // Rename db to firebaseDb to avoid conflict
 
 const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+// Removed the duplicate db declaration and use firebaseDb instead
 
 const FirebaseAuthForm: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -64,7 +63,7 @@ const FirebaseAuthForm: React.FC = () => {
 
   const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
     try {
-      const userDoc = doc(db, "users", uid);
+      const userDoc = doc(firebaseDb, "users", uid);
       const snapshot = await getDoc(userDoc);
       
       if (!snapshot.exists()) {
