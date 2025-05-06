@@ -75,6 +75,12 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
       console.log('saveCharacter: Добавлен ID пользователя:', userId);
     }
     
+    // Проверяем наличие имени персонажа
+    if (!character.name || character.name.trim() === '') {
+      character.name = 'Безымянный герой';
+      console.log('saveCharacter: Установлено имя по умолчанию');
+    }
+    
     // Очищаем объект от undefined значений
     Object.keys(character).forEach(key => {
       if (character[key as keyof Character] === undefined) {
