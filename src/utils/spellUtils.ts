@@ -1,5 +1,6 @@
 
 import { Character } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 // Функция для расчета максимального уровня заклинаний
 export const getMaxSpellLevel = (characterClass: string, level: number): number => {
@@ -91,10 +92,10 @@ export const calculateAvailableSpellsByClassAndLevel = (
 };
 
 // Функция для нормализации заклинаний (преобразует строки в объекты)
-export const normalizeSpells = (character: Character) => {
-  if (!character.spells) return [];
+export const normalizeSpells = (character: Character | any): any[] => {
+  if (!character || !character.spells) return [];
   
-  return character.spells.map(spell => {
+  return character.spells.map((spell: any) => {
     if (typeof spell === 'string') {
       return {
         name: spell,
@@ -167,4 +168,28 @@ export const canPrepareMoreSpells = (character: Character): boolean => {
   }).length;
   
   return preparedCount < preparedLimit;
+};
+
+// Новые функции для исправления ошибок
+// Функция convertToSpellData для преобразования CharacterSpell в SpellData
+export const convertToSpellData = (spell: any): SpellData => {
+  return {
+    id: spell.id || `spell-${spell.name?.toLowerCase().replace(/\s+/g, '-')}`,
+    name: spell.name || 'Неизвестное заклинание',
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    materials: spell.materials || ''
+  };
 };

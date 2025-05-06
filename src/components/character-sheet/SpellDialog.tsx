@@ -33,7 +33,7 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
   // Проверяем, подготовлено ли заклинание
   const isPrepared = () => {
     if (!character.spells) return false;
-    const normalizedSpells = normalizeSpells(character.spells);
+    const normalizedSpells = normalizeSpells(character);
     const foundSpell = normalizedSpells.find(s => s.name === spell.name);
     return foundSpell?.prepared || false;
   };
@@ -42,7 +42,7 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
   const togglePrepared = () => {
     if (!onUpdate || !character.spells) return;
     
-    const normalizedSpells = normalizeSpells(character.spells);
+    const normalizedSpells = normalizeSpells(character);
     const updatedSpells = normalizedSpells.map(s => {
       if (s.name === spell.name) {
         return { ...s, prepared: !s.prepared };

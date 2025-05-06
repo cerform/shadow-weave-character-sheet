@@ -30,7 +30,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
 
   // Нормализуем заклинания персонажа
   const spells = useMemo(() => {
-    return normalizeSpells(character.spells || []);
+    return normalizeSpells(character);
   }, [character.spells]);
 
   // Группируем заклинания по уровням

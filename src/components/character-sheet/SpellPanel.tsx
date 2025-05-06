@@ -14,7 +14,7 @@ import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { convertToSpellData, normalizeSpells } from '@/utils/spellUtils';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
 
 interface SpellPanelProps {
   character: Character;
@@ -34,7 +34,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
   };
 
   // Получаем нормализованные заклинания
-  const normalizedSpells = normalizeSpells(character.spells || []);
+  const normalizedSpells = normalizeSpells(character);
 
   // Группируем заклинания по уровням
   const spellsByLevel = normalizedSpells.reduce((acc: Record<number, CharacterSpell[]>, spell) => {
@@ -122,7 +122,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Separator style={{ backgroundColor: `${currentTheme.accent}40` }} />
-          {Object.keys(character.spellSlots || {}).map((level) =>
+          {character.spellSlots && Object.keys(character.spellSlots).map((level) =>
             renderSpellSlotUse(character, parseInt(level))
           )}
         </CardFooter>
@@ -211,7 +211,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">
         <Separator style={{ backgroundColor: `${currentTheme.accent}40` }} />
-        {Object.keys(character.spellSlots || {}).map((level) =>
+        {character.spellSlots && Object.keys(character.spellSlots).map((level) =>
           renderSpellSlotUse(character, parseInt(level))
         )}
       </CardFooter>
