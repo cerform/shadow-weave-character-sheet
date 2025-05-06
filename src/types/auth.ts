@@ -1,25 +1,29 @@
 
 export interface UserType {
-  id: string;
+  uid?: string;
   email: string;
   displayName?: string;
+  username?: string;
   photoURL?: string;
   isDM?: boolean;
-  username?: string;
-  uid?: string;
-  role?: "player" | "dm";
+  characterName?: string;
+  characterClass?: string;
+  characterRace?: string;
+  characterLevel?: string;
+  characterBio?: string;
+  characterGuild?: string;
+  lastLogin?: Date;
+  createdAt?: Date;
 }
 
 export interface AuthContextType {
-  user: UserType | null;
+  currentUser: UserType | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  register: (email: string, password: string, username?: string) => Promise<void>;
+  logout: () => Promise<void>;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (email: string, password: string, displayName?: string, isDM?: boolean, role?: "player" | "dm") => Promise<void>;
-  googleLogin: () => Promise<UserType | null>; 
-  isAuthenticated: boolean;
-  currentUser: UserType | null;
-  updateProfile?: (data: Partial<UserType>) => Promise<void>;
-  signup?: (email: string, password: string, displayName: string, isDM?: boolean, role?: "player" | "dm") => Promise<void>;
+  updateProfile: (data: Partial<UserType>) => Promise<void>;
 }

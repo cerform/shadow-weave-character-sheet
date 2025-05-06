@@ -11,4 +11,3 @@ export const useIsAuthenticated = () => {
   const { isAuthenticated, currentUser, loading } = useAuth();
   return { isAuthenticated, currentUser, loading };
 };
-
