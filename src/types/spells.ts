@@ -10,7 +10,7 @@ export interface SpellData {
   range: string;
   components: string;
   duration: string;
-  description: string[];
+  description: string[] | string;
   classes: string[] | string;
   ritual: boolean;
   concentration: boolean;
@@ -25,6 +25,17 @@ export interface SpellData {
 }
 
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+  // Обеспечиваем, что classes всегда будет массивом строк
+  let classesArray: string[] = [];
+  
+  if (!spell.classes) {
+    classesArray = [];
+  } else if (typeof spell.classes === 'string') {
+    classesArray = [spell.classes];
+  } else if (Array.isArray(spell.classes)) {
+    classesArray = spell.classes.map(c => String(c));
+  }
+
   return {
     id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
@@ -39,7 +50,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
         spell.description : 
         [spell.description] : 
       ['Нет описания'],
-    classes: spell.classes || [],
+    classes: classesArray,
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
@@ -66,8 +77,8 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     range: spell.range,
     components: spell.components,
     duration: spell.duration,
-    description: spell.description.join('\n'),
-    classes: typeof spell.classes === 'string' ? spell.classes : spell.classes.join(', '),
+    description: Array.isArray(spell.description) ? spell.description.join('\n') : spell.description,
+    classes: Array.isArray(spell.classes) ? spell.classes.join(', ') : spell.classes,
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,

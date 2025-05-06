@@ -309,7 +309,7 @@ export const convertSpellsForState = (spells: SpellData[]): CharacterSpell[] => 
     components: spell.components,
     duration: spell.duration,
     description: Array.isArray(spell.description) ? spell.description.join('\n') : spell.description,
-    classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes],
+    classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes as string],
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false
