@@ -12,6 +12,7 @@ import { getCharactersByUserId, deleteCharacter } from '@/services/characterServ
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUserIdExtended } from '@/utils/authHelpers';
+import { auth } from '@/services/firebase/auth'; // Добавляем импорт auth
 
 // Import our components
 import LoadingState from '@/components/characters/LoadingState';
@@ -19,6 +20,30 @@ import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import EmptyState from '@/components/characters/EmptyState';
 import CharactersTable from '@/components/characters/CharactersTable';
 import CharactersHeader from '@/components/characters/CharactersHeader';
+
+// Интерфейс для отладочной информации
+interface DebugInfo {
+  userId: string;
+  authCurrentUser: {
+    uid: any;
+    email: any;
+    isAnonymous: any;
+    emailVerified: any;
+  };
+  query: {
+    collection: string;
+    filter: string;
+    whereClause: string;
+  };
+  snapshotSize?: number;
+  snapshotEmpty?: boolean;
+  charactersCount?: number;
+  firstCharacter?: {
+    id: string;
+    name: string;
+    userId: string;
+  } | null;
+}
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +55,7 @@ const CharactersListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('table');
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -62,7 +87,7 @@ const CharactersListPage: React.FC = () => {
       }
       
       // Создаём отладочную информацию
-      const debug = {
+      const debug: DebugInfo = {
         userId,
         authCurrentUser: auth.currentUser ? {
           uid: auth.currentUser.uid,
