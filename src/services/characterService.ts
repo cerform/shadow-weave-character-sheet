@@ -1,3 +1,4 @@
+
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { Character } from '@/types/character';
@@ -9,13 +10,17 @@ import { getCurrentUid } from '@/utils/authHelpers';
  */
 export const getAllCharacters = async (): Promise<Character[]> => {
   try {
+    console.log('characterService: запрос всех персонажей');
     const charactersRef = collection(db, 'characters');
     const snapshot = await getDocs(charactersRef);
     
-    return snapshot.docs.map(doc => {
+    const characters = snapshot.docs.map(doc => {
       const data = doc.data();
       return { ...data, id: doc.id } as Character;
     });
+    
+    console.log(`characterService: получено ${characters.length} персонажей`);
+    return characters;
   } catch (error) {
     console.error('Ошибка при получении всех персонажей:', error);
     throw error;
@@ -46,12 +51,24 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     console.log('getCharactersByUserId: Выполняем запрос с userId =', userIdString);
     const snapshot = await getDocs(q);
     
-    console.log(`getCharactersByUserId: Найдено ${snapshot.docs.length} персонажей`);
+    console.log(`getCharactersByUserId: Найдено ${snapshot.docs.length} документов`);
     
-    return snapshot.docs.map(doc => {
+    // Маппинг результатов с дополнительной проверкой
+    const characters = snapshot.docs.map(doc => {
       const data = doc.data();
+      // Добавляем проверку наличия userId и соответствия запрошенному
+      if (!data.userId) {
+        console.warn(`getCharactersByUserId: У персонажа ${doc.id} отсутствует userId, ожидалось ${userIdString}`);
+        data.userId = userIdString; // Исправляем на лету
+      }
+      
       return { ...data, id: doc.id } as Character;
     });
+    
+    console.log(`getCharactersByUserId: Обработано ${characters.length} персонажей:`, 
+      characters.map(c => ({ id: c.id, name: c.name, userId: c.userId })));
+    
+    return characters;
   } catch (error) {
     console.error('Ошибка при получении персонажей пользователя:', error);
     throw error;
@@ -93,6 +110,7 @@ export const saveCharacter = async (character: Character): Promise<string> => {
     // Если у персонажа нет userId и мы можем его получить, добавляем
     if (!character.userId && userId) {
       character.userId = userId;
+      console.log('saveCharacter: Добавлен userId:', userId);
     }
     
     // Если у персонажа по-прежнему нет userId, это ошибка
@@ -100,14 +118,30 @@ export const saveCharacter = async (character: Character): Promise<string> => {
       throw new Error('Ошибка: У персонажа отсутствует userId');
     }
     
+    // Проверяем соединение с базой
+    if (!db) {
+      console.error('saveCharacter: Нет соединения с Firebase');
+      throw new Error('Нет соединения с базой данных');
+    }
+    
+    console.log('saveCharacter: Сохраняем персонажа', { 
+      id: character.id, 
+      name: character.name, 
+      userId: character.userId 
+    });
+    
     if (character.id) {
-      // Обновление ��уществующего персонажа
+      // Обновление существующего персонажа
       const docRef = doc(db, 'characters', character.id);
-      await updateDoc(docRef, { ...character });
+      // Делаем копию объекта без id для обновления
+      const { id, ...updateData } = character;
+      await updateDoc(docRef, updateData);
+      console.log('saveCharacter: Персонаж обновлен с ID:', character.id);
       return character.id;
     } else {
       // Создание нового персонажа
       const docRef = await addDoc(collection(db, 'characters'), { ...character });
+      console.log('saveCharacter: Создан новый персонаж с ID:', docRef.id);
       return docRef.id;
     }
   } catch (error) {
@@ -189,7 +223,6 @@ export const createTestCharacter = async (): Promise<string> => {
     }
     
     // Создаем тестового персонажа с явно указанным userId
-    // Исправляем тип, добавляя все обязательные поля из интерфейса Character
     const testChar: Character = {
       id: "", // Пустая строка для нового персонажа
       name: `Тест ${new Date().toLocaleTimeString()}`,
@@ -197,16 +230,16 @@ export const createTestCharacter = async (): Promise<string> => {
       className: 'Воин', // Оставляем для обратной совместимости
       race: 'Человек',
       level: 1,
-      experience: 0,  // Добавляем обязательное поле
-      strength: 10,   // Добавляем обязательные поля характеристик
+      experience: 0,  
+      strength: 10,   
       dexterity: 10,
       constitution: 10,
       intelligence: 10,
       wisdom: 10,
       charisma: 10,
-      maxHp: 10,      // Добавляем обязательные поля здоровья
+      maxHp: 10,      
       currentHp: 10,
-      userId: userId, // Явно указываем userId
+      userId: userId, 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       stats: {

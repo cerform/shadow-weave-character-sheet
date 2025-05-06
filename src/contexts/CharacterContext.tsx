@@ -4,6 +4,7 @@ import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters, getChar
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getCurrentUid } from '@/utils/authHelpers';
+import { useAuth } from '@/hooks/use-auth';
 
 export interface CharacterContextType {
   character: Character | null;
@@ -40,6 +41,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuth();
   
   // Функция для обновления частичных данных персонажа
   const updateCharacter = (updates: Partial<Character>) => {
@@ -145,9 +147,19 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       const fetchedCharacters = await getCharactersByUserId(String(userId));
       console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса`);
       
-      // Фильтруем невалидные персонажи
-      const validCharacters = fetchedCharacters.filter(char => char !== null && char.id);
+      // Фильтруем невалидные персонажи и добавляем отладочные данные
+      const validCharacters = fetchedCharacters
+        .filter(char => char !== null && char.id)
+        .map(char => {
+          if (!char.userId) {
+            console.warn(`CharacterContext: У персонажа ${char.name || 'Без имени'} (${char.id}) отсутствует userId, устанавливаем текущий`);
+            return {...char, userId: String(userId)};
+          }
+          return char;
+        });
+      
       console.log(`CharacterContext: После фильтрации осталось ${validCharacters.length} персонажей`);
+      console.log('CharacterContext: Персонажи:', validCharacters);
       
       // Устанавливаем персонажи в состояние
       setCharacters(validCharacters);
@@ -218,28 +230,17 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
     }
   };
   
-  // При инициализации получаем список персонажей
+  // При изменении состояния авторизации загружаем персонажей
   useEffect(() => {
-    console.log('CharacterContext: Инициализация контекста персонажей');
-    
-    const loadCharacters = async () => {
-      console.log('CharacterContext: Начальная загрузка персонажей');
-      await getUserCharacters();
-    };
-    
-    const userId = getCurrentUid();
-    if (userId) {
-      console.log('CharacterContext: Пользователь авторизован, загружаем персонажей. userId:', userId);
-      loadCharacters();
+    if (isAuthenticated && user?.uid) {
+      console.log('CharacterContext: Пользователь авторизован, загружаем персонажей. userId:', user.uid);
+      getUserCharacters();
     } else {
       console.log('CharacterContext: Пользователь не авторизован, персонажи не загружаются');
-      setLoading(false); // Сбрасываем состояние загрузки, если пользователь не авторизован
+      setLoading(false);
+      setCharacters([]);
     }
-    
-    return () => {
-      console.log('CharacterContext: Размонтирование контекста персонажей');
-    };
-  }, []);
+  }, [isAuthenticated, user?.uid]);
   
   // Отладочная информация при изменении состояния
   useEffect(() => {

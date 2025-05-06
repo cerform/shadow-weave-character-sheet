@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RefreshCw, UserPlus, LayoutGrid, LayoutList } from "lucide-react";
@@ -29,6 +29,11 @@ const CharactersListPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   
+  // Добавляем эффект для логирования состояния
+  useEffect(() => {
+    console.log('CharactersListPage: Текущий список персонажей:', characters);
+  }, [characters]);
+
   // Функция загрузки персонажей
   const handleRefresh = async () => {
     try {
@@ -42,6 +47,14 @@ const CharactersListPage: React.FC = () => {
       setIsRefreshing(false);
     }
   };
+
+  // Принудительно загружаем персонажей при монтировании компонента
+  useEffect(() => {
+    if (isAuthenticated && !characters.length && !loading) {
+      console.log('CharactersListPage: Инициализация загрузки персонажей');
+      refreshCharacters();
+    }
+  }, [isAuthenticated]);
 
   // Если пользователь не авторизован, предлагаем войти
   if (!isAuthenticated) {
@@ -100,6 +113,18 @@ const CharactersListPage: React.FC = () => {
         
         {/* Навигация по страницам персонажей */}
         <CharacterNavigation />
+        
+        {/* Отладочная информация */}
+        <div className="mb-6 p-4 border border-blue-500/30 bg-blue-900/20 rounded-md">
+          <h3 className="font-medium text-blue-200 mb-2">Отладочная информация</h3>
+          <div className="text-sm text-muted-foreground">
+            <div>Авторизован: {isAuthenticated ? "Да" : "Нет"}</div>
+            <div>ID пользователя: {user?.uid || "Не определен"}</div>
+            <div>Загрузка: {loading ? "Да" : "Нет"}</div>
+            <div>Персонажей: {characters.length}</div>
+            {error && <div className="text-red-400">Ошибка: {error}</div>}
+          </div>
+        </div>
         
         {/* Панель управления */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
