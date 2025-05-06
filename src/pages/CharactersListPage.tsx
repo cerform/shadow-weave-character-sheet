@@ -85,7 +85,7 @@ const CharactersListPage: React.FC = () => {
       if (!userId) {
         console.error('CharactersListPage: ID пользователя отсутствует');
         setError('ID пользователя отсутствует');
-        setLoading(false); // Исправлено: прекращаем загрузку при отсутствии userId
+        setLoading(false); // Прекращаем загрузку при отсутствии userId
         return;
       }
       
@@ -95,7 +95,7 @@ const CharactersListPage: React.FC = () => {
       // Создаём отладочную информацию
       const debug: DebugInfo = {
         userId,
-        authCurrentUser: firebaseAuth.currentUser ? { // Используем оригинальный Firebase Auth
+        authCurrentUser: firebaseAuth.currentUser ? { 
           uid: firebaseAuth.currentUser.uid,
           email: firebaseAuth.currentUser.email,
           isAnonymous: firebaseAuth.currentUser.isAnonymous,
@@ -111,33 +111,44 @@ const CharactersListPage: React.FC = () => {
       // Добавляем console.log перед запросом для отладки
       console.log('CharactersListPage: Отправляем запрос в Firestore с userId:', userId);
       
-      const fetchedCharacters = await getCharactersByUserId(userId);
-      console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
-      
-      // Обновляем отладочную информацию
-      debug.snapshotSize = fetchedCharacters.length;
-      debug.snapshotEmpty = fetchedCharacters.length === 0;
-      debug.charactersCount = fetchedCharacters.length;
-      debug.firstCharacter = fetchedCharacters.length > 0 ? {
-        id: fetchedCharacters[0].id,
-        name: fetchedCharacters[0].name,
-        userId: fetchedCharacters[0].userId
-      } : null;
-      
-      setDebugInfo(debug);
-      
-      // Добавляем немного отладочной информации
-      if (fetchedCharacters.length > 0) {
-        console.log('CharactersListPage: Первый персонаж:', fetchedCharacters[0]);
-      } else {
-        console.log('CharactersListPage: Персонажи не найдены');
+      try {
+        const fetchedCharacters = await getCharactersByUserId(userId);
+        console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
+        
+        // Обновляем отладочную информацию
+        debug.snapshotSize = fetchedCharacters.length;
+        debug.snapshotEmpty = fetchedCharacters.length === 0;
+        debug.charactersCount = fetchedCharacters.length;
+        debug.firstCharacter = fetchedCharacters.length > 0 ? {
+          id: fetchedCharacters[0].id,
+          name: fetchedCharacters[0].name,
+          userId: fetchedCharacters[0].userId
+        } : null;
+        
+        setDebugInfo(debug);
+        
+        // Добавляем немного отладочной информации
+        if (fetchedCharacters.length > 0) {
+          console.log('CharactersListPage: Первый персонаж:', fetchedCharacters[0]);
+        } else {
+          console.log('CharactersListPage: Персонажи не найдены');
+        }
+        
+        setCharacters(fetchedCharacters);
+        toast.success(`Загружено персонажей: ${fetchedCharacters.length}`);
+      } catch (fetchError) {
+        console.error('CharactersListPage: Ошибка при загрузке персонажей из Firestore:', fetchError);
+        setError(`Не удалось загрузить персонажей: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
+        
+        // Добавляем больше информации в отладочные данные
+        debug.snapshotEmpty = true;
+        debug.charactersCount = 0;
+        debug.firstCharacter = null;
+        setDebugInfo(debug);
       }
-      
-      setCharacters(fetchedCharacters);
-      toast.success(`Загружено персонажей: ${fetchedCharacters.length}`);
     } catch (err) {
-      console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
-      // Исправлено: правильная обработка ошибки
+      console.error('CharactersListPage: Общая ошибка при загрузке персонажей:', err);
+      // Правильная обработка ошибки
       setError(`Не удалось загрузить персонажей: ${err instanceof Error ? err.message : String(err)}`);
       toast.error('Ошибка при загрузке персонажей');
     } finally {
@@ -330,7 +341,7 @@ const CharactersListPage: React.FC = () => {
           )}
           
           {/* Показ данных или таблица */}
-          {!loading && !error && characters.length > 0 && (
+          {!loading && !error && (
             <>
               {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
@@ -361,19 +372,19 @@ const CharactersListPage: React.FC = () => {
               ) : displayMode === 'cards' ? (
                 <CharacterCards
                   characters={characters}
-                  onDelete={deleteCharacter}
+                  onDelete={handleDeleteCharacter}
                 />
               ) : (
                 <CharactersTable 
                   characters={characters}
-                  onDelete={deleteCharacter}
+                  onDelete={handleDeleteCharacter}
                 />
               )}
             </>
           )}
 
-          {/* Пустое состояние */}
-          {!loading && !error && characters.length === 0 && <EmptyState />}
+          {/* Пустое состояние - убираем, т.к. CharacterCards теперь сам показывает сообщение */}
+          {!loading && !error && characters.length === 0 && displayMode !== 'cards' && <EmptyState />}
         </div>
       </div>
     </OBSLayout>

@@ -59,6 +59,15 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete })
     }
   };
 
+  // Если нет персонажей, показываем соответствующее сообщение
+  if (characters.length === 0) {
+    return (
+      <div className="text-center p-10 bg-black/20 rounded-lg">
+        <p className="text-muted-foreground">У вас нет персонажей. Создайте новый персонаж!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {characters.map((character) => (
