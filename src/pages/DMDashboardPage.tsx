@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +22,7 @@ const DMDashboardPage = () => {
   const { currentUser } = useAuth();
   const [userSessions, setUserSessions] = useState<any[]>([]);
   const [sessionsLoaded, setSessionsLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUser?.isDM) {
@@ -32,16 +32,17 @@ const DMDashboardPage = () => {
     }
 
     // Загружаем сессии при монтировании компонента только если они еще не загружены
-    if (!sessionsLoaded && currentUser?.id) {
+    if (!sessionsLoaded && currentUser?.uid) {
       const loadSessions = async () => {
         try {
           const sessions = await sessionStore.fetchSessions();
           // Фильтруем только сессии текущего DM
-          const filteredSessions = sessions.filter(s => s.dmId === currentUser?.id);
+          const filteredSessions = sessions.filter(s => s.dmId === currentUser?.uid);
           setUserSessions(filteredSessions);
           setSessionsLoaded(true);
         } catch (error) {
           console.error("Ошибка загрузки сессий:", error);
+          setError("Не удалось загрузить сессии. Пожалуйста, попробуйте позже.");
           setSessionsLoaded(true); // Помечаем как загруженные, чтобы избежать повторных запросов
         }
       };
@@ -85,6 +86,26 @@ const DMDashboardPage = () => {
       minute: '2-digit'
     });
   };
+
+  if (error) {
+    return (
+      <BackgroundWrapper>
+        <div className="min-h-screen p-4 sm:p-6 flex items-center justify-center">
+          <Card className="max-w-md w-full bg-black/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Ошибка загрузки</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{error}</p>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => navigate('/')} className="w-full">Вернуться на главную</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </BackgroundWrapper>
+    );
+  }
 
   return (
     <BackgroundWrapper>

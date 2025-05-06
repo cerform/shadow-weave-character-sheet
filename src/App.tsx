@@ -1,49 +1,34 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { SessionProvider } from '@/contexts/SessionContext';
+import { UserThemeProvider } from '@/contexts/UserThemeContext';
 import AppRoutes from './AppRoutes';
-import { Toaster } from './components/ui/toaster';
-import { useTheme } from './hooks/use-theme';
-import { themes } from './lib/themes';
-import { useUserTheme } from './hooks/use-user-theme';
 import './App.css';
 
-function App() {
-  const { theme } = useTheme();
-  const { activeTheme } = useUserTheme();
-  
-  // Применяем тему при загрузке приложения
-  useEffect(() => {
-    const applyTheme = () => {
-      const themeToApply = activeTheme || theme || 'default';
-      const currentTheme = themes[themeToApply as keyof typeof themes] || themes.default;
-      
-      // Устанавливаем атрибуты и классы
-      document.documentElement.setAttribute('data-theme', themeToApply);
-      document.body.className = '';
-      document.body.classList.add(`theme-${themeToApply}`);
-      
-      // Устанавливаем CSS-переменные
-      document.documentElement.style.setProperty('--background', currentTheme.background);
-      document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
-      document.documentElement.style.setProperty('--primary', currentTheme.primary);
-      document.documentElement.style.setProperty('--accent', currentTheme.accent);
-      document.documentElement.style.setProperty('--text-color', currentTheme.textColor);
-      document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
-      
-      console.log('Тема применена при инициализации:', themeToApply);
-    };
-    
-    applyTheme();
-  }, [theme, activeTheme]);
+// Создаем клиент запросов
+const queryClient = new QueryClient();
 
+function App() {
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <AppRoutes />
-        <Toaster />
-      </div>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <Router>
+          <AuthProvider>
+            <SessionProvider>
+              <UserThemeProvider>
+                <AppRoutes />
+                <Toaster />
+              </UserThemeProvider>
+            </SessionProvider>
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
