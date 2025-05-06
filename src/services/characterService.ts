@@ -7,26 +7,31 @@ import { getCurrentUserIdExtended } from '@/utils/authHelpers';
 // Получение персонажей по ID пользователя
 export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
   try {
-    console.log('Загрузка персонажей для пользователя:', userId);
+    console.log('characterService: Загрузка персонажей для пользователя:', userId);
+    
+    // Создаем запрос к коллекции characters, фильтруя по userId
     const q = query(collection(db, 'characters'), where('userId', '==', userId));
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
-      console.log('Персонажи не найдены');
+      console.log('characterService: Персонажи не найдены для пользователя', userId);
       return [];
     }
     
+    // Преобразуем документы Firestore в объекты Character
     const characters = snapshot.docs.map(doc => {
       const data = doc.data();
-      const characterData = {
+      return {
         id: doc.id,
         ...data,
       } as Character;
-      console.log(`Загружен персонаж: ${characterData.name || 'Безымянный'} с ID: ${characterData.id}`);
-      return characterData;
     });
     
-    console.log(`Получено ${characters.length} персонажей`);
+    console.log(`characterService: Получено ${characters.length} персонажей`);
+    characters.forEach(char => {
+      console.log(`- ${char.name || 'Безымянный'} (ID: ${char.id})`);
+    });
+    
     return characters;
   } catch (error) {
     console.error('Ошибка при получении персонажей:', error);
@@ -37,7 +42,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
 // Получение всех персонажей пользователя
 export const getAllCharacters = async (): Promise<Character[]> => {
   try {
-    console.log('Загрузка всех персонажей');
+    console.log('characterService: Загрузка всех персонажей');
     const userId = getCurrentUserIdExtended();
     
     if (!userId) {
@@ -55,7 +60,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 // Получение персонажа по ID
 export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
-    console.log('Получение персонажа с ID:', id);
+    console.log('characterService: Получение персонажа с ID:', id);
     const docRef = doc(db, 'characters', id);
     const docSnap = await getDoc(docRef);
     
@@ -64,10 +69,10 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
         id: docSnap.id, 
         ...docSnap.data() 
       } as Character;
-      console.log('Персонаж найден:', characterData.name);
+      console.log('characterService: Персонаж найден:', characterData.name);
       return characterData;
     } else {
-      console.log('Персонаж не найден');
+      console.log('characterService: Персонаж не найден');
       return null;
     }
   } catch (error) {
@@ -80,7 +85,7 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
 export const deleteCharacter = async (id: string): Promise<void> => {
   try {
     await deleteDoc(doc(db, 'characters', id));
-    console.log(`Персонаж ${id} удален`);
+    console.log(`characterService: Персонаж ${id} удален`);
   } catch (error) {
     console.error('Ошибка при удалении персонажа:', error);
     throw error;
@@ -103,26 +108,46 @@ export const saveCharacter = async (character: Character): Promise<string> => {
       characterToSave.userId = userId;
     }
     
+    // Исключаем специальные объекты, которые могут вызвать ошибку сериализации
+    // Очищаем объект от полей, которые могут содержать неклонируемые значения
+    const cleanObject = (obj: any): any => {
+      const cleaned = { ...obj };
+      Object.keys(cleaned).forEach(key => {
+        if (cleaned[key] instanceof Request ||
+            cleaned[key] instanceof Response ||
+            key === '__ob__' || // Vue.js observer
+            key.startsWith('_') || // Internal properties
+            cleaned[key] === undefined) {
+          delete cleaned[key];
+        } else if (cleaned[key] !== null && typeof cleaned[key] === 'object') {
+          cleaned[key] = cleanObject(cleaned[key]);
+        }
+      });
+      return cleaned;
+    };
+    
+    const cleanedCharacter = cleanObject(characterToSave);
+    
     // Если у персонажа уже есть ID
-    if (characterToSave.id) {
-      console.log(`Обновление существующего персонажа с ID ${characterToSave.id}`);
-      const characterRef = doc(db, 'characters', characterToSave.id);
-      await setDoc(characterRef, characterToSave, { merge: true });
-      return characterToSave.id;
+    if (cleanedCharacter.id) {
+      console.log(`characterService: Обновление существующего персонажа с ID ${cleanedCharacter.id}`);
+      const characterRef = doc(db, 'characters', cleanedCharacter.id);
+      await setDoc(characterRef, cleanedCharacter, { merge: true });
+      return cleanedCharacter.id;
     } 
     // Создание нового персонажа
     else {
-      console.log('Создание нового персонажа');
+      console.log('characterService: Создание нового персонажа');
       // Для нового персонажа добавляем дату создания
-      characterToSave.createdAt = now;
+      cleanedCharacter.createdAt = now;
       
       // Убедимся, что у персонажа есть имя
-      if (!characterToSave.name) {
-        characterToSave.name = "Безымянный герой";
+      if (!cleanedCharacter.name) {
+        cleanedCharacter.name = "Безымянный герой";
       }
       
-      const docRef = await addDoc(collection(db, 'characters'), characterToSave);
-      console.log(`Новый персонаж создан с ID: ${docRef.id}`);
+      const docRef = await addDoc(collection(db, 'characters'), cleanedCharacter);
+      console.log(`characterService: Новый персонаж создан с ID: ${docRef.id}`);
       return docRef.id;
     }
   } catch (error) {
@@ -150,17 +175,34 @@ export const saveCharacterToFirestore = async (character: Character, userId: str
       characterToSave.name = "Безымянный герой";
     }
     
+    // Очищаем объект от полей, которые могут содержать неклонируемые значения
+    const cleanObject = (obj: any): any => {
+      const cleaned = { ...obj };
+      Object.keys(cleaned).forEach(key => {
+        if (cleaned[key] instanceof Request ||
+            cleaned[key] instanceof Response ||
+            cleaned[key] === undefined) {
+          delete cleaned[key];
+        } else if (cleaned[key] !== null && typeof cleaned[key] === 'object') {
+          cleaned[key] = cleanObject(cleaned[key]);
+        }
+      });
+      return cleaned;
+    };
+    
+    const cleanedCharacter = cleanObject(characterToSave);
+    
     // Если у персонажа уже есть ID
-    if (characterToSave.id) {
-      console.log(`saveCharacterToFirestore: Обновление персонажа с ID ${characterToSave.id}`);
-      const characterRef = doc(db, 'characters', characterToSave.id);
-      await setDoc(characterRef, characterToSave, { merge: true });
-      return characterToSave.id;
+    if (cleanedCharacter.id) {
+      console.log(`saveCharacterToFirestore: Обновление персонажа с ID ${cleanedCharacter.id}`);
+      const characterRef = doc(db, 'characters', cleanedCharacter.id);
+      await setDoc(characterRef, cleanedCharacter, { merge: true });
+      return cleanedCharacter.id;
     } 
     // Создание нового персонажа
     else {
       console.log('saveCharacterToFirestore: Создание нового персонажа');
-      const docRef = await addDoc(collection(db, 'characters'), characterToSave);
+      const docRef = await addDoc(collection(db, 'characters'), cleanedCharacter);
       console.log(`saveCharacterToFirestore: Новый персонаж создан с ID: ${docRef.id}`);
       return docRef.id;
     }

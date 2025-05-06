@@ -49,8 +49,28 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     );
   }
 
+  // Проверяем наличие данных персонажей
+  if (!characters) {
+    console.error('CharacterCards: Получен null или undefined вместо массива персонажей');
+    return (
+      <div className="text-center p-6 border border-red-500/30 rounded bg-red-950/20">
+        <p className="text-red-400">Ошибка загрузки данных персонажей</p>
+      </div>
+    );
+  }
+  
+  // Если не массив
+  if (!Array.isArray(characters)) {
+    console.error('CharacterCards: Получен не массив:', typeof characters);
+    return (
+      <div className="text-center p-6 border border-red-500/30 rounded bg-red-950/20">
+        <p className="text-red-400">Неверный формат данных персонажей</p>
+      </div>
+    );
+  }
+
   // Если нет персонажей, показываем соответствующее сообщение
-  if (!characters || !Array.isArray(characters) || characters.length === 0) {
+  if (characters.length === 0) {
     return <EmptyState />;
   }
   

@@ -1,41 +1,62 @@
 
-import { auth } from '@/services/firebase/auth';
+import { auth } from "@/firebase";
 
 /**
- * Получает текущий UID пользователя или null если пользователь не авторизован
+ * Получает ID текущего пользователя, если он аутентифицирован
+ * @returns ID пользователя или null
  */
 export const getCurrentUid = (): string | null => {
-  // Получаем напрямую из Firebase Auth
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    return currentUser.uid;
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const uid = currentUser.uid;
+      console.log('authHelpers: ID текущего пользователя:', uid);
+      return uid;
+    }
+    console.log('authHelpers: Пользователь не аутентифицирован');
+    return null;
+  } catch (error) {
+    console.error('authHelpers: Ошибка при получении ID пользователя:', error);
+    return null;
   }
-  
-  // Если не удалось получить UID
-  return null;
 };
 
 /**
- * Расширенная функция для получения текущего пользователя с бОльшим количеством источников
+ * Расширенная версия getCurrentUid с дополнительной обработкой ошибок
+ * @returns ID пользователя или пустая строка
  */
-export const getCurrentUserIdExtended = (): string | null => {
-  // Проверяем базовую функцию
-  const basicUid = getCurrentUid();
-  if (basicUid) return basicUid;
-  
-  // Пытаемся получить из localStorage (если пользователь был сохранен)
+export const getCurrentUserIdExtended = (): string => {
   try {
-    const savedUser = localStorage.getItem('authUser');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      if (parsedUser && (parsedUser.uid || parsedUser.id)) {
-        return parsedUser.uid || parsedUser.id;
-      }
+    const uid = getCurrentUid();
+    if (!uid) {
+      console.warn('authHelpers: Не удалось получить ID пользователя, используется пустой ID');
+      return '';
     }
+    return uid;
   } catch (error) {
-    console.error('Ошибка при чтении из localStorage:', error);
+    console.error('authHelpers: Критическая ошибка при получении ID пользователя:', error);
+    return '';
   }
+};
+
+/**
+ * Проверяет, авторизован ли текущий пользователь
+ * @returns true, если пользователь авторизован
+ */
+export const isUserAuthenticated = (): boolean => {
+  return auth.currentUser !== null;
+};
+
+/**
+ * Проверяет, имеет ли текущий пользователь доступ к указанному ресурсу
+ * @param resourceOwnerId ID владельца ресурса
+ * @returns true, если текущий пользователь является владельцем ресурса
+ */
+export const hasAccessToResource = (resourceOwnerId: string | undefined): boolean => {
+  if (!resourceOwnerId) return false;
   
-  // Если не удалось получить UID
-  return null;
+  const currentUserId = getCurrentUid();
+  if (!currentUserId) return false;
+  
+  return currentUserId === resourceOwnerId;
 };
