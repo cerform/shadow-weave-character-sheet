@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
-import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users } from "lucide-react";
+import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users, Dices } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
@@ -21,6 +21,7 @@ const Home = () => {
   const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
 
   const handleNavigation = (path: string) => {
+    console.log('Home: Переход на страницу', path);
     navigate(path);
   };
 
@@ -51,7 +52,7 @@ const Home = () => {
             {isAuthenticated && <ProfilePreview />}
 
             {/* Список персонажей пользователя */}
-            <CharactersList />
+            {isAuthenticated && <CharactersList />}
 
             {/* Основные карточки */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
@@ -107,7 +108,7 @@ const Home = () => {
               <Card className="bg-red-900/40 backdrop-blur-sm border-red-500/30 shadow-lg overflow-hidden group hover:shadow-red-500/20 transition-all duration-300">
                 <CardHeader className="pb-4">
                   <div className="rounded-full bg-red-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <Shield className="h-6 w-6 text-red-400" />
+                    <Dices className="h-6 w-6 text-red-400" />
                   </div>
                   <CardTitle className="text-xl text-white">Игра</CardTitle>
                   <CardDescription className="text-gray-300">
@@ -120,7 +121,7 @@ const Home = () => {
                 <CardFooter>
                   <Button 
                     className="w-full bg-red-600 hover:bg-red-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/join-game')}
+                    onClick={() => handleNavigation('/join-session')}
                   >
                     ПЕРЕЙТИ
                   </Button>

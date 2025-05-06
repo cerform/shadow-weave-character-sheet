@@ -1,191 +1,82 @@
-// Import only the class files that exist already
-import rangerClassData from './ranger';
-import sorcererClassData from './sorcerer';
-import monkClassData from './monk';
-import artificerClassData from './artificer';
-import barbarianClassData from './barbarian';
+import { ClassData } from '@/types/classes';
 
-// Define placeholder data for missing class files
-const bardClassData = {
-  name: "Бард",
-  englishName: "Bard",
-  // Add basic placeholder data
-  hitDice: "1d8",
-  primaryAbility: "CHA",
-  spellcasting: {
-    spellSlots: {
-      1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
-      6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
-      7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2],
-      8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-      9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+// Данные о классах D&D 5e
+export const classData: Record<string, ClassData> = {
+  "бард": {
+    name: "Бард",
+    hitDice: 8,
+    primaryAbility: ["charisma"],
+    savingThrows: ["dexterity", "charisma"],
+    armorProficiencies: ["light"],
+    weaponProficiencies: ["simple", "hand crossbows", "longswords", "rapiers", "shortswords"],
+    toolProficiencies: ["three musical instruments of your choice"],
+    skillChoices: ["athletics", "acrobatics", "sleight of hand", "stealth", "arcana", "history", "investigation", "nature", "religion", "animal handling", "insight", "medicine", "perception", "survival", "deception", "intimidation", "performance", "persuasion"],
+    skillCount: 3,
+    spellcasting: {
+      ability: "charisma",
+      spellSlots: {
+        1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+        2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3],
+        6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2],
+        7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2],
+        8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+      }
+    }
+  },
+  "волшебник": {
+    name: "Волшебник",
+    hitDice: 6,
+    primaryAbility: ["intelligence"],
+    savingThrows: ["intelligence", "wisdom"],
+    armorProficiencies: [],
+    weaponProficiencies: ["daggers", "darts", "slings", "quarterstaffs", "light crossbows"],
+    toolProficiencies: [],
+    skillChoices: ["arcana", "history", "insight", "investigation", "medicine", "religion"],
+    skillCount: 2,
+    spellcasting: {
+      ability: "intelligence",
+      spellSlots: {
+        1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+        2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3],
+        6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2],
+        7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2],
+        8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+      }
+    }
+  },
+  "жрец": {
+    name: "Жрец",
+    hitDice: 8,
+    primaryAbility: ["wisdom"],
+    savingThrows: ["wisdom", "charisma"],
+    armorProficiencies: ["light", "medium", "shields"],
+    weaponProficiencies: ["simple"],
+    toolProficiencies: [],
+    skillChoices: ["history", "insight", "medicine", "persuasion", "religion"],
+    skillCount: 2,
+    spellcasting: {
+      ability: "wisdom",
+      spellSlots: {
+        1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+        2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3],
+        6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2],
+        7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2],
+        8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+      }
     }
   }
 };
 
-const clericClassData = {
-  name: "Жрец",
-  englishName: "Cleric",
-  // Add basic placeholder data
-  hitDice: "1d8",
-  primaryAbility: "WIS",
-  spellcasting: {
-    spellSlots: {
-      1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
-      6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
-      7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2],
-      8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-      9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
-    }
-  }
-};
-
-const druidClassData = {
-  name: "Друид",
-  englishName: "Druid",
-  // Add basic placeholder data
-  hitDice: "1d8",
-  primaryAbility: "WIS",
-  spellcasting: {
-    spellSlots: {
-      1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
-      6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
-      7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2],
-      8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-      9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
-    }
-  }
-};
-
-const fighterClassData = {
-  name: "Воин",
-  englishName: "Fighter",
-  // Add basic placeholder data
-  hitDice: "1d10",
-  primaryAbility: "STR"
-};
-
-const paladinClassData = {
-  name: "Паладин",
-  englishName: "Paladin",
-  // Add basic placeholder data
-  hitDice: "1d10",
-  primaryAbility: "STR",
-  spellcasting: {
-    spellSlots: {
-      1: [0, 0, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      2: [0, 0, 0, 0, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      3: [0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      4: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3],
-      5: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
-    }
-  }
-};
-
-const rogueClassData = {
-  name: "Плут",
-  englishName: "Rogue",
-  // Add basic placeholder data
-  hitDice: "1d8",
-  primaryAbility: "DEX"
-};
-
-const warlockClassData = {
-  name: "Колдун",
-  englishName: "Warlock",
-  // Add basic placeholder data
-  hitDice: "1d8",
-  primaryAbility: "CHA",
-  spellcasting: {
-    spellSlots: {
-      1: [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      2: [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      3: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      4: [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      5: [0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4]
-    }
-  }
-};
-
-const wizardClassData = {
-  name: "Волшебник",
-  englishName: "Wizard",
-  // Add basic placeholder data
-  hitDice: "1d6",
-  primaryAbility: "INT",
-  spellcasting: {
-    spellSlots: {
-      1: [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      2: [0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      3: [0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      4: [0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
-      6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
-      7: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2],
-      8: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-      9: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
-    }
-  }
-};
-
-// Explicitly export classData as a named export
-export const classData = {
-  "Бард": bardClassData,
-  "Жрец": clericClassData,
-  "Друид": druidClassData,
-  "Воин": fighterClassData,
-  "Паладин": paladinClassData,
-  "Следопыт": rangerClassData,
-  "Плут": rogueClassData,
-  "Чародей": sorcererClassData,
-  "Колдун": warlockClassData,
-  "Волшебник": wizardClassData,
-  "Монах": monkClassData,
-  "Изобретатель": artificerClassData,
-  "Варвар": barbarianClassData,
-  // Английские названия для совместимости
-  "Bard": bardClassData,
-  "Cleric": clericClassData,
-  "Druid": druidClassData,
-  "Fighter": fighterClassData,
-  "Paladin": paladinClassData,
-  "Ranger": rangerClassData,
-  "Rogue": rogueClassData,
-  "Sorcerer": sorcererClassData,
-  "Warlock": warlockClassData,
-  "Wizard": wizardClassData,
-  "Monk": monkClassData,
-  "Artificer": artificerClassData,
-  "Barbarian": barbarianClassData
-};
-
-// Export classData as both default and named exports
-export default classData;
-
-export {
-  bardClassData,
-  clericClassData,
-  druidClassData,
-  fighterClassData,
-  paladinClassData,
-  rangerClassData,
-  rogueClassData,
-  sorcererClassData,
-  warlockClassData,
-  wizardClassData,
-  monkClassData,
-  artificerClassData,
-  barbarianClassData
-};
+export type ClassName = keyof typeof classData;

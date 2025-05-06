@@ -1,40 +1,19 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Character } from '@/types/character';
-import { socket } from '@/services/socket';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
-interface SessionData {
-  name: string;
-  code: string;
-  dm: string;
-  players: string[];
-}
-
-interface SocketContextType {
-  connected: boolean;
-  lastUpdate?: any;
-  connect: (sessionCode: string, playerName: string, characterId?: string) => void;
-  disconnect: () => void;
-  sendUpdate: (character: Character) => void;
-  sendMessage: (message: string) => void;
+interface SocketContextProps {
+  sendUpdate: ((data: any) => void) | null;
   isConnected: boolean;
-  sessionData: SessionData | null;
-  socket: any;
+  connectionError: string | null;
 }
 
-const defaultContext: SocketContextType = {
-  connected: false,
-  connect: () => {},
-  disconnect: () => {},
-  sendUpdate: () => {},
-  sendMessage: () => {},
+const defaultSocketContext: SocketContextProps = {
+  sendUpdate: null,
   isConnected: false,
-  sessionData: null,
-  socket: null
+  connectionError: null
 };
 
-const SocketContext = createContext<SocketContextType>(defaultContext);
+const SocketContext = createContext<SocketContextProps>(defaultSocketContext);
 
 export const useSocket = () => useContext(SocketContext);
 
@@ -43,107 +22,29 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-  const [connected, setConnected] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<any>(null);
-  const [sessionData, setSessionData] = useState<SessionData | null>(null);
-  const { toast } = useToast();
-  
-  // Предотвращаем автоматическое подключение WebSocket
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Функция-заглушка для отправки данных
+  const sendUpdate = (data: any) => {
+    console.log('Отправка данных через сокет:', data);
+    // В реальном приложении здесь будет реализована настоящая отправка через сокет
+  };
+
+  // Эффект для инициализации соединения при монтировании компонента
   useEffect(() => {
-    // Проверяем, активен ли сокет и отключаем его
-    if (socket && socket.connected) {
-      try {
-        socket.disconnect();
-        console.log('[SOCKET] Отключение неиспользуемых WebSocket соединений');
-      } catch (err) {
-        console.error('[SOCKET] Ошибка при отключении:', err);
-      }
-    }
+    console.log('SocketProvider: Инициализация');
     
-    // Регистрируем обработчик ошибок для сокета
-    if (socket) {
-      socket.on('connect_error', (err: any) => {
-        console.error('[SOCKET] Ошибка соединения:', err);
-      });
-      
-      socket.on('error', (err: any) => {
-        console.error('[SOCKET] Общая ошибка сокета:', err);
-      });
-    }
+    // Здесь будет код для инициализации WebSocket соединения
     
-    // Очистка при размонтировании
     return () => {
-      if (socket) {
-        socket.off('connect_error');
-        socket.off('error');
-        
-        if (socket.connected) {
-          socket.disconnect();
-        }
-      }
+      console.log('SocketProvider: Отключение');
+      // Закрытие соединения при размонтировании компонента
     };
   }, []);
-  
-  // Реализуем локальную мок-версию соединения
-  const connect = (sessionCode: string, playerName: string, characterId?: string) => {
-    console.log(`[SOCKET] Подключение к мок-сессии ${sessionCode} как ${playerName} с персонажем ${characterId}`);
-    
-    try {
-      // Используем локальную имитацию соединения вместо реального WebSocket
-      setConnected(true);
-      setSessionData({
-        name: `Сессия ${sessionCode}`,
-        code: sessionCode,
-        dm: 'DM',
-        players: [playerName]
-      });
-      
-      toast({
-        title: "Подключено к сессии",
-        description: `Вы успешно подключились к сессии ${sessionCode}`,
-      });
-    } catch (error) {
-      console.error("[SOCKET] Ошибка подключения:", error);
-      toast({
-        title: "Ошибка подключения",
-        description: "Не удалось подключиться к сессии",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const disconnect = () => {
-    console.log('[SOCKET] Отключение от мок-сессии');
-    setConnected(false);
-    setSessionData(null);
-    
-    toast({
-      title: "Отключено от сессии",
-      description: "Вы отключились от сессии"
-    });
-  };
-  
-  const sendUpdate = (character: Character) => {
-    console.log('[SOCKET] Отправка обновления персонажа (мок):', character);
-    setLastUpdate({ character, timestamp: new Date().toISOString() });
-  };
-  
-  const sendMessage = (message: string) => {
-    console.log('[SOCKET] Отправка сообщения (мок):', message);
-  };
-  
+
   return (
-    <SocketContext.Provider value={{
-      connected,
-      lastUpdate,
-      connect,
-      disconnect,
-      sendUpdate,
-      sendMessage,
-      isConnected: connected,
-      sessionData,
-      socket
-    }}>
+    <SocketContext.Provider value={{ sendUpdate, isConnected, connectionError }}>
       {children}
     </SocketContext.Provider>
   );
