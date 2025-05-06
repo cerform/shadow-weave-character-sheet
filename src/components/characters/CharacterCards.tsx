@@ -7,6 +7,7 @@ import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import CharacterCard from '@/components/character/CharacterCard';
 import EmptyState from './EmptyState';
+import InfoMessage from '@/components/ui/InfoMessage';
 
 interface CharacterCardsProps {
   characters: Character[];
@@ -53,9 +54,11 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
   if (!characters) {
     console.error('CharacterCards: Получен null или undefined вместо массива персонажей');
     return (
-      <div className="text-center p-6 border border-red-500/30 rounded bg-red-950/20">
-        <p className="text-red-400">Ошибка загрузки данных персонажей</p>
-      </div>
+      <InfoMessage
+        variant="error"
+        title="Ошибка при загрузке"
+        message="Не удалось загрузить данные персонажей"
+      />
     );
   }
   
@@ -63,9 +66,11 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
   if (!Array.isArray(characters)) {
     console.error('CharacterCards: Получен не массив:', typeof characters);
     return (
-      <div className="text-center p-6 border border-red-500/30 rounded bg-red-950/20">
-        <p className="text-red-400">Неверный формат данных персонажей</p>
-      </div>
+      <InfoMessage
+        variant="error"
+        title="Ошибка данных"
+        message="Неверный формат данных персонажей"
+      />
     );
   }
 
@@ -74,9 +79,22 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     return <EmptyState />;
   }
   
+  // Фильтруем невалидные персонажи
+  const validCharacters = characters.filter(char => char !== null && char.id);
+  
+  if (validCharacters.length === 0) {
+    return (
+      <InfoMessage
+        variant="warning"
+        title="Нет персонажей"
+        message="Не найдено действительных персонажей для отображения"
+      />
+    );
+  }
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {characters.map((character) => {
+      {validCharacters.map((character) => {
         if (!character || !character.id) {
           console.warn('CharacterCards: Некорректный персонаж:', character);
           return null;

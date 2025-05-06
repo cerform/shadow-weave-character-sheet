@@ -27,11 +27,31 @@ export const getCurrentUid = (): string | null => {
  */
 export const getCurrentUserIdExtended = (): string => {
   try {
-    const uid = getCurrentUid();
-    if (!uid) {
+    // Проверяем наличие пользователя напрямую из auth
+    if (!auth.currentUser) {
+      console.warn('authHelpers: Текущий пользователь не найден в auth.currentUser');
+      
+      // Пробуем получить ID из localStorage
+      const savedUser = localStorage.getItem('authUser');
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          if (parsedUser && (parsedUser.uid || parsedUser.id)) {
+            const recoveredId = parsedUser.uid || parsedUser.id;
+            console.log('authHelpers: Восстановлен ID пользователя из localStorage:', recoveredId);
+            return recoveredId;
+          }
+        } catch (e) {
+          console.error('authHelpers: Ошибка при парсинге данных пользователя из localStorage:', e);
+        }
+      }
+      
       console.warn('authHelpers: Не удалось получить ID пользователя, используется пустой ID');
       return '';
     }
+    
+    const uid = auth.currentUser.uid;
+    console.log('authHelpers: ID пользователя получен успешно:', uid);
     return uid;
   } catch (error) {
     console.error('authHelpers: Критическая ошибка при получении ID пользователя:', error);
@@ -44,7 +64,9 @@ export const getCurrentUserIdExtended = (): string => {
  * @returns true, если пользователь авторизован
  */
 export const isUserAuthenticated = (): boolean => {
-  return auth.currentUser !== null;
+  const isAuth = auth.currentUser !== null;
+  console.log('authHelpers: Проверка аутентификации:', isAuth);
+  return isAuth;
 };
 
 /**
@@ -53,10 +75,18 @@ export const isUserAuthenticated = (): boolean => {
  * @returns true, если текущий пользователь является владельцем ресурса
  */
 export const hasAccessToResource = (resourceOwnerId: string | undefined): boolean => {
-  if (!resourceOwnerId) return false;
+  if (!resourceOwnerId) {
+    console.log('authHelpers: ID владельца ресурса не указан');
+    return false;
+  }
   
   const currentUserId = getCurrentUid();
-  if (!currentUserId) return false;
+  if (!currentUserId) {
+    console.log('authHelpers: Текущий пользователь не аутентифицирован');
+    return false;
+  }
   
-  return currentUserId === resourceOwnerId;
+  const hasAccess = currentUserId === resourceOwnerId;
+  console.log(`authHelpers: Проверка доступа к ресурсу ${resourceOwnerId}:`, hasAccess);
+  return hasAccess;
 };

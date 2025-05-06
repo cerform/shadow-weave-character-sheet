@@ -9,8 +9,16 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
   try {
     console.log('characterService: Загрузка персонажей для пользователя:', userId);
     
+    if (!userId || userId.trim() === '') {
+      console.error('characterService: ID пользователя пустой или невалидный');
+      return [];
+    }
+    
     // Создаем запрос к коллекции characters, фильтруя по userId
-    const q = query(collection(db, 'characters'), where('userId', '==', userId));
+    const charactersRef = collection(db, 'characters');
+    const q = query(charactersRef, where('userId', '==', userId));
+    
+    console.log('characterService: Выполняем запрос к Firestore...');
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
@@ -19,12 +27,19 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     }
     
     // Преобразуем документы Firestore в объекты Character
-    const characters = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-      } as Character;
+    const characters: Character[] = [];
+    
+    snapshot.forEach(doc => {
+      try {
+        const data = doc.data();
+        const character = {
+          id: doc.id,
+          ...data,
+        } as Character;
+        characters.push(character);
+      } catch (e) {
+        console.error('characterService: Ошибка при обработке документа персонажа:', e);
+      }
     });
     
     console.log(`characterService: Получено ${characters.length} персонажей`);
@@ -34,7 +49,7 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
     
     return characters;
   } catch (error) {
-    console.error('Ошибка при получении персонажей:', error);
+    console.error('characterService: Ошибка при получении персонажей:', error);
     throw error;
   }
 };
@@ -46,13 +61,13 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     const userId = getCurrentUserIdExtended();
     
     if (!userId) {
-      console.error('ID пользователя не найден');
+      console.error('characterService: ID пользователя не найден');
       return [];
     }
     
     return await getCharactersByUserId(userId);
   } catch (error) {
-    console.error('Ошибка при получении всех персонажей:', error);
+    console.error('characterService: Ошибка при получении всех персонажей:', error);
     throw error;
   }
 };
@@ -60,6 +75,11 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 // Получение персонажа по ID
 export const getCharacter = async (id: string): Promise<Character | null> => {
   try {
+    if (!id || id.trim() === '') {
+      console.error('characterService: Получен пустой ID персонажа');
+      return null;
+    }
+    
     console.log('characterService: Получение персонажа с ID:', id);
     const docRef = doc(db, 'characters', id);
     const docSnap = await getDoc(docRef);
@@ -76,7 +96,7 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
       return null;
     }
   } catch (error) {
-    console.error('Ошибка при получении персонажа:', error);
+    console.error('characterService: Ошибка при получении персонажа:', error);
     throw error;
   }
 };
@@ -84,19 +104,75 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
 // Удаление персонажа
 export const deleteCharacter = async (id: string): Promise<void> => {
   try {
+    if (!id || id.trim() === '') {
+      throw new Error('ID персонажа не может быть пустым');
+    }
+    
     await deleteDoc(doc(db, 'characters', id));
     console.log(`characterService: Персонаж ${id} удален`);
   } catch (error) {
-    console.error('Ошибка при удалении персонажа:', error);
+    console.error('characterService: Ошибка при удалении персонажа:', error);
     throw error;
   }
+};
+
+// Функция очистки объекта от неклонируемых значений
+const cleanObject = (obj: any): any => {
+  if (!obj || typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  
+  // Если это массив, очищаем каждый элемент
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanObject(item));
+  }
+  
+  // Создаем новый объект для очищенных данных
+  const cleaned: Record<string, any> = {};
+  
+  Object.keys(obj).forEach(key => {
+    try {
+      // Пропускаем функции, символы и т.д.
+      if (typeof obj[key] === 'function' || 
+          typeof obj[key] === 'symbol' || 
+          obj[key] instanceof Request ||
+          obj[key] instanceof Response ||
+          key === '__ob__' || // Vue.js observer
+          key.startsWith('_')) { // Internal properties
+        return;
+      }
+      
+      // Если свойство имеет значение undefined, пропускаем его
+      if (obj[key] === undefined) {
+        return;
+      }
+      
+      // Рекурсивно очищаем вложенные объекты
+      if (obj[key] !== null && typeof obj[key] === 'object') {
+        cleaned[key] = cleanObject(obj[key]);
+      } else {
+        // Простые типы данных
+        cleaned[key] = obj[key];
+      }
+    } catch (e) {
+      console.error(`characterService: Ошибка при очистке свойства ${key}:`, e);
+    }
+  });
+  
+  return cleaned;
 };
 
 // Сохранение персонажа
 export const saveCharacter = async (character: Character): Promise<string> => {
   try {
-    // Проверяем существование персонажа
+    if (!character) {
+      throw new Error('Персонаж не может быть пустым');
+    }
+    
+    // Получаем текущее время
     const now = new Date().toISOString();
+    
+    // Создаем копию персонажа и добавляем дату обновления
     let characterToSave = { ...character, updatedAt: now };
     
     // Убедимся, что у персонажа есть ID пользователя
@@ -108,25 +184,10 @@ export const saveCharacter = async (character: Character): Promise<string> => {
       characterToSave.userId = userId;
     }
     
-    // Исключаем специальные объекты, которые могут вызвать ошибку сериализации
-    // Очищаем объект от полей, которые могут содержать неклонируемые значения
-    const cleanObject = (obj: any): any => {
-      const cleaned = { ...obj };
-      Object.keys(cleaned).forEach(key => {
-        if (cleaned[key] instanceof Request ||
-            cleaned[key] instanceof Response ||
-            key === '__ob__' || // Vue.js observer
-            key.startsWith('_') || // Internal properties
-            cleaned[key] === undefined) {
-          delete cleaned[key];
-        } else if (cleaned[key] !== null && typeof cleaned[key] === 'object') {
-          cleaned[key] = cleanObject(cleaned[key]);
-        }
-      });
-      return cleaned;
-    };
-    
+    // Очищаем объект от неклонируемых значений
     const cleanedCharacter = cleanObject(characterToSave);
+    
+    console.log(`characterService: Сохранение персонажа ${cleanedCharacter.name || 'Безымянный'}`);
     
     // Если у персонажа уже есть ID
     if (cleanedCharacter.id) {
@@ -151,7 +212,7 @@ export const saveCharacter = async (character: Character): Promise<string> => {
       return docRef.id;
     }
   } catch (error) {
-    console.error('Ошибка при сохранении персонажа:', error);
+    console.error('characterService: Ошибка при сохранении персонажа:', error);
     throw error;
   }
 };
@@ -175,21 +236,7 @@ export const saveCharacterToFirestore = async (character: Character, userId: str
       characterToSave.name = "Безымянный герой";
     }
     
-    // Очищаем объект от полей, которые могут содержать неклонируемые значения
-    const cleanObject = (obj: any): any => {
-      const cleaned = { ...obj };
-      Object.keys(cleaned).forEach(key => {
-        if (cleaned[key] instanceof Request ||
-            cleaned[key] instanceof Response ||
-            cleaned[key] === undefined) {
-          delete cleaned[key];
-        } else if (cleaned[key] !== null && typeof cleaned[key] === 'object') {
-          cleaned[key] = cleanObject(cleaned[key]);
-        }
-      });
-      return cleaned;
-    };
-    
+    // Очищаем объект от полей, которые могут вызвать ошибку сериализации
     const cleanedCharacter = cleanObject(characterToSave);
     
     // Если у персонажа уже есть ID
@@ -207,7 +254,7 @@ export const saveCharacterToFirestore = async (character: Character, userId: str
       return docRef.id;
     }
   } catch (error) {
-    console.error('Ошибка при сохранении персонажа в Firestore:', error);
+    console.error('saveCharacterToFirestore: Ошибка при сохранении персонажа:', error);
     throw error;
   }
 };
