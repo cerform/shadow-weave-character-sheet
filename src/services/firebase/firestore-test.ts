@@ -1,8 +1,9 @@
 
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase';
-import { getCurrentUid } from '@/utils/authHelpers';
+import { getCurrentUid, getCurrentUserIdExtended } from '@/utils/authHelpers';
 import { Character } from '@/types/character';
+import { auth } from '@/services/firebase/auth';
 
 /**
  * Функция для тестирования получения персонажей пользователя
@@ -17,14 +18,22 @@ export const testLoadCharacters = async (): Promise<{
   const debug: Record<string, any> = {};
   
   try {
-    // Получаем текущий ID пользователя
-    const userId = getCurrentUid();
+    // Получаем текущий ID пользователя всеми доступными способами
+    const userId = getCurrentUserIdExtended();
     debug.userId = userId;
+    
+    // Добавляем больше отладочной информации
+    debug.authCurrentUser = auth.currentUser ? {
+      uid: auth.currentUser.uid,
+      email: auth.currentUser.email,
+      isAnonymous: auth.currentUser.isAnonymous,
+      emailVerified: auth.currentUser.emailVerified
+    } : null;
     
     if (!userId) {
       return {
         success: false,
-        message: 'Ошибка: Пользователь не авторизован',
+        message: 'Ошибка: Пользователь не авторизован или невозможно получить ID',
         characters: [],
         debug
       };
@@ -104,9 +113,33 @@ export const getCurrentUserDetails = (): {
   uid: string | null;
   isAuthenticated: boolean;
 } => {
-  const uid = getCurrentUid();
+  const uid = getCurrentUserIdExtended();
   return {
     uid,
     isAuthenticated: !!uid
   };
+};
+
+/**
+ * Вспомогательная функция для отладки состояния аутентификации
+ */
+export const debugAuthState = (): Record<string, any> => {
+  const authData: Record<string, any> = {
+    currentUserFromAuth: auth.currentUser ? {
+      uid: auth.currentUser.uid,
+      email: auth.currentUser.email
+    } : null,
+    uidFromHelpers: getCurrentUid(),
+    extendedUidFromHelpers: getCurrentUserIdExtended()
+  };
+  
+  // Проверяем localStorage
+  try {
+    const savedUser = localStorage.getItem('authUser');
+    authData.savedUserInLocalStorage = savedUser ? JSON.parse(savedUser) : null;
+  } catch (e) {
+    authData.localStorageError = String(e);
+  }
+  
+  return authData;
 };
