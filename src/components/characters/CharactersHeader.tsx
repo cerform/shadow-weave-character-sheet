@@ -1,38 +1,31 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 interface CharactersHeaderProps {
-  username: string;
+  username?: string;
 }
 
-const CharactersHeader: React.FC<CharactersHeaderProps> = ({ username }) => {
-  const navigate = useNavigate();
+const CharactersHeader: React.FC<CharactersHeaderProps> = ({ username = "Путешественник" }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-
+  
   return (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
-        Персонажи игрока {username}
-      </h2>
-      <Button
-        onClick={() => navigate('/character-creation')}
-        className="gap-2"
-        style={{
-          backgroundColor: currentTheme.accent,
-          color: currentTheme.buttonText || '#FFFFFF',
-        }}
-      >
-        <Plus size={16} />
-        Создать персонажа
-      </Button>
-    </div>
+    <Card className="bg-black/40 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle style={{ color: currentTheme.accent }}>
+          Персонажи пользователя {username}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground">
+          Здесь вы можете управлять вашими персонажами, создавать новых и просматривать существующих.
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -118,7 +118,7 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
         const characterName = character.name || 'Безымянный герой';
         
         return (
-          <Card key={character.id} className="overflow-hidden bg-black/40 backdrop-blur-sm">
+          <Card key={character.id} className="overflow-hidden bg-black/40 backdrop-blur-sm border border-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex justify-between items-center">
                 <span className="text-primary truncate" title={characterName}>

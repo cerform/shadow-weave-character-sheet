@@ -20,6 +20,7 @@ import CharactersTable from '@/components/characters/CharactersTable';
 import CharacterCards from '@/components/characters/CharacterCards';
 import CharactersHeader from '@/components/characters/CharactersHeader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; 
+import EmptyState from '@/components/characters/EmptyState';
 
 // Интерфейс для диагностической информации
 interface DiagnosticInfo {
@@ -359,8 +360,13 @@ const CharactersListPage: React.FC = () => {
             />
           )}
           
+          {/* Пустое состояние */}
+          {!loading && !error && characters.length === 0 && (
+            <EmptyState />
+          )}
+          
           {/* Показ данных в выбранном режиме */}
-          {!loading && !error && (
+          {!loading && !error && characters.length > 0 && (
             <>
               {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
@@ -410,10 +416,12 @@ const CharactersListPage: React.FC = () => {
                   onDelete={handleDeleteCharacter}
                 />
               ) : (
-                <CharacterCards
-                  characters={characters}
-                  onDelete={handleDeleteCharacter}
-                />
+                <div className="bg-transparent">
+                  <CharacterCards
+                    characters={characters}
+                    onDelete={handleDeleteCharacter}
+                  />
+                </div>
               )}
               
               {/* Показываем информацию о количестве загруженных персонажей */}
