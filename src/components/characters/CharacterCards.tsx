@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, UserPlus } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
-import CharacterCard from '@/components/character/CharacterCard';
-import EmptyState from './EmptyState';
-import InfoMessage from '@/components/ui/InfoMessage';
 import { createTestCharacter } from '@/services/characterService';
+import InfoMessage from '@/components/ui/InfoMessage';
 
 interface CharacterCardsProps {
   characters: Character[];
@@ -19,52 +17,14 @@ interface CharacterCardsProps {
 const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, loading = false }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [validCharacters, setValidCharacters] = useState<Character[]>([]);
   const [creatingTest, setCreatingTest] = useState(false);
   
-  // При получении новых персонажей, фильтруем их
-  useEffect(() => {
-    if (!characters) {
-      console.error('CharacterCards: characters is undefined or null');
-      setValidCharacters([]);
-      return;
-    }
-    
-    if (!Array.isArray(characters)) {
-      console.error('CharacterCards: characters is not an array, type:', typeof characters);
-      setValidCharacters([]);
-      return;
-    }
-    
-    // Фильтруем персонажей, оставляя только с валидными ID
-    const filtered = characters.filter(char => char && char.id);
-    console.log(`CharacterCards: Отфильтровано ${filtered.length} персонажей из ${characters.length}`);
-    
-    setValidCharacters(filtered);
-  }, [characters]);
+  // Отладочный вывод
+  console.log("CharacterCards: получены персонажи:", characters);
+  console.log("CharacterCards: тип данных:", typeof characters);
+  console.log("CharacterCards: это массив?", Array.isArray(characters));
   
-  // Функция открытия персонажа
-  const handleViewCharacter = (id: string) => {
-    console.log('CharacterCards: Открываю персонажа с ID:', id);
-    localStorage.setItem('last-selected-character', id);
-    navigate(`/character/${id}`);
-  };
-
-  // Функция удаления персонажа
-  const handleDelete = async (id: string) => {
-    try {
-      setDeletingId(id);
-      await onDelete(id);
-      toast.success('Персонаж удален успешно');
-    } catch (err) {
-      toast.error('Не удалось удалить персонажа');
-      console.error('CharacterCards: Ошибка при удалении персонажа:', err);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-  
-  // Функция для создания тестового персонажа
+  // Функция создания тестового персонажа
   const handleCreateTestCharacter = async () => {
     try {
       setCreatingTest(true);
@@ -115,14 +75,14 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     );
   }
 
-  // Если нет персонажей, показываем соответствующее сообщение с кнопкой создания тестового персонажа
+  // Если нет персонажей, показываем отладочное сообщение
   if (characters.length === 0) {
     return (
-      <div>
-        <EmptyState />
+      <div className="p-6 bg-black/20 rounded-lg text-center">
+        <p style={{ color: "white" }}>Нет персонажей</p>
         
-        {/* Добавляем кнопку для создания тестового персонажа */}
-        <div className="mt-8 text-center">
+        {/* Кнопка для создания тестового персонажа */}
+        <div className="mt-8">
           <Button
             onClick={handleCreateTestCharacter}
             disabled={creatingTest}
@@ -139,51 +99,23 @@ const CharacterCards: React.FC<CharacterCardsProps> = ({ characters, onDelete, l
     );
   }
   
-  // Если нет валидных персонажей
-  if (validCharacters.length === 0) {
-    return (
-      <div className="p-6 bg-black/20 rounded-lg text-center">
-        <AlertCircle className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Нет персонажей для отображения</h3>
-        <p className="text-muted-foreground mb-4">
-          Найдено {characters.length} персонажей, но они не содержат корректных данных.
-        </p>
-        <Button onClick={() => navigate('/character-creation')}>
-          Создать нового персонажа
-        </Button>
-        
-        {/* Добавляем кнопку для создания тестового персонажа */}
-        <div className="mt-4">
-          <Button
-            onClick={handleCreateTestCharacter}
-            disabled={creatingTest}
-            variant="outline"
-            className="gap-2"
-          >
-            {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={16} />}
-            Создать тестового персонажа
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
+  // Если есть персонажи - показываем простой отладочный список
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {validCharacters.map((character) => {
-        if (!character || !character.id) {
-          console.warn('CharacterCards: Некорректный персонаж:', character);
-          return null;
-        }
-        
-        return (
-          <CharacterCard 
-            key={character.id} 
-            character={character} 
-            onClick={() => handleViewCharacter(character.id!)} 
-          />
-        );
-      })}
+    <div style={{ padding: 20 }} className="bg-black/20 rounded-lg">
+      <h2 style={{ color: "white" }} className="mb-4">Список персонажей ({characters.length}):</h2>
+      <ul>
+        {characters.map((char) => (
+          <li 
+            key={char.id || 'unknown'} 
+            style={{ color: "lime", marginBottom: 10 }}
+            onClick={() => navigate(`/character/${char.id}`)}
+            className="cursor-pointer hover:text-green-300 transition-colors"
+          >
+            {char.name || 'Безымянный'} — {char.class || char.className || 'Без класса'}
+            {char.level ? ` (${char.level} уровень)` : ''}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

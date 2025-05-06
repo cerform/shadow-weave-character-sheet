@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { saveCharacter, getCharacter, deleteCharacter, getAllCharacters, getCharactersByUserId } from '@/services/characterService';
 import { Character } from '@/types/character';
@@ -19,7 +20,7 @@ export interface CharacterContextType {
 }
 
 // Создаем контекст с дефолтными значениями
-export const CharacterContext = createContext<CharacterContextType>({
+const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
   updateCharacter: () => {},
@@ -133,7 +134,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       
       // Получаем персонажей конкретного пользователя
       const fetchedCharacters = await getCharactersByUserId(userId);
-      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса`);
+      console.log(`CharacterContext: Получено ${fetchedCharacters.length} персонажей от сервиса, данные:`, fetchedCharacters);
       
       // Фильтруем невалидные персонажи
       const validCharacters = fetchedCharacters.filter(char => char !== null && char.id);
@@ -146,6 +147,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       setLoading(false);
       setError(null);
       
+      // Вернем полученные персонажи для использования в вызывающем коде
       return validCharacters;
     } catch (error) {
       console.error('CharacterContext: Ошибка при получении персонажей:', error);
@@ -260,5 +262,5 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
 // Экспортируем хук для использования контекста
 export const useCharacter = () => useContext(CharacterContext);
 
-// Выделяем объект контекста для лучшей согласованности Fast Refresh
+// Экспортируем сам контекст для совместимости
 export default CharacterContext;

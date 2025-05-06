@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const CharactersListPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [creatingTest, setCreatingTest] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>({});
   
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
@@ -70,24 +72,48 @@ const CharactersListPage: React.FC = () => {
       
       if (!isAuthenticated) {
         console.log('CharactersListPage: Пользователь не авторизован, прерываем загрузку');
+        setDebugInfo(prev => ({...prev, authError: 'Пользователь не авторизован'}));
         return;
       }
       
       const userId = getCurrentUid();
       console.log('CharactersListPage: ID пользователя:', userId);
       
-      // Непосредственно загружаем персонажей
-      const result = await refreshCharacters();
-      console.log('CharactersListPage: Персонажи загружены:', characters);
-      
-      // Проверяем количество персонажей после загрузки
-      if (characters.length === 0) {
-        console.log('CharactersListPage: Персонажи не найдены');
-      } else {
-        toast.success(`Персонажи успешно загружены (${characters.length})`);
+      if (!userId) {
+        console.log('CharactersListPage: ID пользователя не найден');
+        setDebugInfo(prev => ({...prev, userIdError: 'ID пользователя не найден'}));
+        setError('ID пользователя не найден');
+        return;
       }
+      
+      setDebugInfo(prev => ({...prev, userId}));
+      
+      try {
+        // Непосредственно загружаем персонажей через контекст
+        await refreshCharacters();
+        
+        // Получаем обновленное значение characters из контекста
+        console.log('CharactersListPage: После обновления, characters =', characters);
+        setDebugInfo(prev => ({...prev, characters, charactersLength: characters?.length || 0}));
+        
+        // Проверяем количество персонажей после загрузки
+        if (!characters || characters.length === 0) {
+          console.log('CharactersListPage: Персонажи не найдены');
+          setDebugInfo(prev => ({...prev, noCharacters: true}));
+        } else {
+          console.log(`CharactersListPage: Загружено ${characters.length} персонажей`);
+          toast.success(`Персонажи успешно загружены (${characters.length})`);
+          setDebugInfo(prev => ({...prev, charactersLoaded: true}));
+        }
+      } catch (err) {
+        console.error('CharactersListPage: Внутренняя ошибка при загрузке персонажей:', err);
+        setDebugInfo(prev => ({...prev, refreshError: err}));
+        throw err;
+      }
+      
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
+      setDebugInfo(prev => ({...prev, loadError: err}));
       toast.error('Ошибка при загрузке персонажей');
     } finally {
       setIsRefreshing(false);
@@ -178,7 +204,7 @@ const CharactersListPage: React.FC = () => {
           {/* Верхняя панель - заголовок с кнопкой создания */}
           <CharactersHeader 
             username={user?.displayName || user?.username || ""} 
-            characterCount={characters.length}
+            characterCount={characters?.length || 0} 
           />
           
           {/* Добавляем навигацию по страницам персонажей */}
@@ -253,17 +279,26 @@ const CharactersListPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Информационная панель для отладки */}
+          {/* Расширенная отладочная информация */}
           <Alert className="bg-blue-900/20 border-blue-500/50">
             <AlertCircle className="h-4 w-4 text-blue-500" />
-            <AlertTitle className="text-blue-200">Статус загрузки персонажей</AlertTitle>
+            <AlertTitle className="text-blue-200">Отладочная информация о персонажах</AlertTitle>
             <AlertDescription className="text-muted-foreground">
               <div>Загрузка: {loading ? "Да" : "Нет"}</div>
               <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
-              <div>Загружено персонажей: {characters.length}</div>
+              <div>Загружено персонажей: {characters?.length || 0}</div>
               <div>Попыток загрузки: {loadAttempts}</div>
               <div>ID пользователя: {getCurrentUid() || 'Не найден'}</div>
               {error && <div className="text-red-400">Ошибка: {error}</div>}
+              <div className="mt-2">
+                <h4 className="font-semibold text-blue-300">Отладочные данные:</h4>
+                <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+                <pre className="text-xs text-white/80 bg-black/30 p-2 mt-1 rounded max-h-32 overflow-auto">
+                  {JSON.stringify(characters, null, 2)}
+                </pre>
+              </div>
             </AlertDescription>
           </Alert>
 
@@ -290,20 +325,20 @@ const CharactersListPage: React.FC = () => {
                 </div>
               ) : displayMode === 'table' ? (
                 <CharactersTable 
-                  characters={characters}
+                  characters={characters || []}
                   onDelete={handleDeleteCharacter}
                 />
               ) : (
                 <div className="bg-transparent">
                   <CharacterCards
-                    characters={characters}
+                    characters={characters || []}
                     onDelete={handleDeleteCharacter}
                   />
                 </div>
               )}
               
               {/* Показываем информацию о количестве загруженных персонажей */}
-              {!loading && characters.length > 0 && (
+              {!loading && characters && characters.length > 0 && (
                 <div className="mt-2 text-center text-muted-foreground text-sm">
                   Загружено персонажей: {characters.length}
                 </div>
