@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Character } from '@/types/character';
@@ -12,6 +11,7 @@ import CharacterExportPDF from './CharacterExportPDF';
 import DicePanel from './DicePanel';
 import RestPanel from './RestPanel';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { isItem } from '@/utils/characterUtils';
 
 interface MobileCharacterSheetProps {
   character: Character;
@@ -52,6 +52,19 @@ const MobileCharacterSheet: React.FC<MobileCharacterSheetProps> = ({ character, 
       }
     };
     input.click();
+  };
+  
+  const renderEquipmentItem = (item: string | Item) => {
+    if (isItem(item)) {
+      return (
+        <div key={item.name}>
+          <span>{item.name}</span>
+          <span>{item.type}</span>
+        </div>
+      );
+    } else {
+      return <div key={item}>{item}</div>;
+    }
   };
   
   return (

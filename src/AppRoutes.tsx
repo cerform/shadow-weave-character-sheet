@@ -41,8 +41,9 @@ interface AuthContextType {
 
 // Простой компонент для защиты маршрутов
 const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
-  const auth = useAuth();
-  const { isAuthenticated, user } = auth as AuthContextType;
+  // Используем безопасное приведение типов
+  const auth = useAuth() as AuthContextType;
+  const { isAuthenticated, user } = auth;
   
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
@@ -56,8 +57,9 @@ const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requi
 };
 
 const AppRoutes = () => {
-  const auth = useAuth();
-  const { isAuthenticated } = auth as AuthContextType;
+  // Используем безопасное приведение типов здесь тоже
+  const auth = useAuth() as AuthContextType;
+  const { isAuthenticated } = auth;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   

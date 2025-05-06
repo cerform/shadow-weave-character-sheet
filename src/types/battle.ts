@@ -1,3 +1,4 @@
+
 import { Character } from './character';
 
 export interface Token {
@@ -65,7 +66,7 @@ export interface BattleMap {
 export interface DicePanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-  compactMode?: boolean;
+  compactMode?: boolean;  // Добавлено поле compactMode
   isDM?: boolean;
   tokens?: Token[];
   selectedTokenId?: number;
@@ -80,10 +81,16 @@ export interface LightSource {
   color?: string;
   intensity?: number;
   enabled?: boolean;
+  type?: string; // Добавляем тип для источника света
+  attachedToTokenId?: number; // ID токена, к которому привязан источник света
 }
 
 export interface VisibleArea {
   id: string;
   points: Array<{ x: number; y: number }>;
   type: 'rectangle' | 'circle' | 'polygon';
+  x?: number; // Позиция X для областей видимости
+  y?: number; // Позиция Y для областей видимости
+  radius?: number; // Радиус для круглых областей видимости
+  tokenId?: number; // ID токена, связанного с областью видимости
 }

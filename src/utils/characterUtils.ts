@@ -1,5 +1,4 @@
-
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 
 /**
  * Вычисляет модификатор характеристики
@@ -9,6 +8,13 @@ import { Character } from '@/types/character';
 export const getAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };
+
+/**
+ * Алиас для getAbilityModifier для обратной совместимости
+ * @param abilityScore Значение характеристики
+ * @returns Модификатор характеристики
+ */
+export const getModifierFromAbilityScore = getAbilityModifier;
 
 /**
  * Вычисляет бонус мастерства по уровню персонажа
@@ -97,4 +103,57 @@ export const getAbilityName = (ability: string): string => {
   };
   
   return nameMap[ability] || ability;
+};
+
+// Добавляем вспомогательные функции для типов из battle.ts
+/**
+ * Создает дефолтного персонажа с базовыми свойствами
+ * @returns Базовый шаблон персонажа
+ */
+export const createDefaultCharacter = (): Character => {
+  return {
+    id: "",
+    name: "",
+    level: 1,
+    abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    stats: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    }
+  };
+};
+
+/**
+ * Получает числовой модификатор без форматирования
+ * @param abilityScore Значение характеристики
+ * @returns Числовое значение модификатора
+ */
+export const getNumericModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Проверяет, является ли объект элементом инвентаря (Item), а не строкой
+ * @param item Объект для проверки
+ * @returns true, если объект является Item
+ */
+export const isItem = (item: string | Item): item is Item => {
+  return typeof item === 'object' && item !== null;
 };
