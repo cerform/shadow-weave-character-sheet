@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,16 +22,6 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Расширенная отладка в компоненте таблицы
-  useEffect(() => {
-    console.log('CharactersTable: получил персонажей:', characters);
-    console.log('CharactersTable: типы данных в объектах:', 
-      characters.length > 0 
-      ? Object.entries(characters[0]).map(([key, value]) => `${key}: ${typeof value}`)
-      : 'Нет персонажей'
-    );
-  }, [characters]);
-
   // Функция открытия персонажа
   const handleViewCharacter = (id: string) => {
     console.log(`Открываем персонажа с ID: ${id}`);
@@ -45,6 +35,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     try {
       setDeletingId(id);
       await onDelete(id);
+      toast.success('Персонаж удален успешно');
     } catch (err) {
       toast.error('Не удалось удалить персонажа');
       console.error('Ошибка при удалении персонажа:', err);
@@ -74,7 +65,6 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
 
   // Если нет персонажей, показываем сообщение
   if (!characters || characters.length === 0) {
-    console.log('CharactersTable: Нет персонажей для отображения');
     return (
       <Card className="bg-black/50 backdrop-blur-sm">
         <CardHeader>
@@ -87,13 +77,6 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
       </Card>
     );
   }
-
-  // Дополнительная проверка на структуру данных
-  console.log('CharactersTable: Рендеринг', characters.length, 'персонажей', 
-    characters.map(c => 
-      `id: ${c.id}, name: ${c.name}, class: ${getCharacterClass(c)}`
-    ).join('; ')
-  );
 
   return (
     <Card className="bg-black/50 backdrop-blur-sm">

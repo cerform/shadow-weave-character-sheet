@@ -1,12 +1,36 @@
 
-// Экспорт useAuth из AuthContext для совместимости с существующим кодом
-export { useAuth, AuthProvider, AuthContext } from '@/contexts/AuthContext';
+// Реэкспортируем useAuth из контекста для совместимости
+import { useAuth as useAuthContext } from '@/contexts/AuthContext';
 
-// Экспортируем типы для удобства использования
-export type { UserType, AuthContextType } from '@/types/auth';
+// Тип для пользователя
+export interface UserType {
+  uid?: string;
+  id?: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
+  username?: string;
+  isDM?: boolean;
+  role?: 'dm' | 'player';
+}
 
-// Импортируем AuthContext для использования в хуках
-import { useAuth } from '@/contexts/AuthContext';
+// Тип для контекста аутентификации
+export interface AuthContextType {
+  currentUser: UserType | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<UserType>;
+  signUp: (email: string, password: string, username: string) => Promise<UserType>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateUserProfile: (data: Partial<UserType>) => Promise<void>;
+  user?: UserType | null;
+}
+
+// Экспортируем основной хук аутентификации
+export const useAuth = () => {
+  return useAuthContext();
+};
 
 // Удобный хук для проверки аутентификации
 export const useIsAuthenticated = () => {
@@ -38,3 +62,6 @@ export const useProtectedRoute = () => {
     canAccessPlayerDashboard: isAuthenticated && isPlayer,
   };
 };
+
+// Экспортируем для обратной совместимости
+export { useAuth as default };

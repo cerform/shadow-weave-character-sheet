@@ -1,11 +1,6 @@
 
-// Экспортируем основную конфигурацию Firebase
-export { app, analyticsPromise } from './config';
+// Экспортируем внешний firebase.ts как единую точку входа
+export * from '@/firebase';
 
-// Экспортируем сервисы Firebase
-export { db } from './firestore';
-export { storage } from './storage';
-export { auth, firebaseAuth } from './auth';
-
-// Экспортируем интерфейсы ошибок
+// Для обратной совместимости также экспортируем интерфейсы
 export type { DetailedAuthError } from './error-utils';

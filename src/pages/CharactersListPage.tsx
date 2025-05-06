@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,8 @@ const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(true); // Добавляем для отладки
-  
-  // Добавляем режимы отображения данных
   const [displayMode, setDisplayMode] = useState<'table' | 'raw'>('table');
-
+  
   // Загрузка персонажей при монтировании компонента
   useEffect(() => {
     console.log('CharactersListPage: Проверка авторизации пользователя');
@@ -62,16 +60,15 @@ const CharactersListPage: React.FC = () => {
       
       const fetchedCharacters = await getCharactersByUserId(userId);
       console.log('CharactersListPage: Получено персонажей:', fetchedCharacters.length);
-      console.log('Данные персонажей:', fetchedCharacters);
       
-      // Проверка полей у полученных персонажей
+      // Добавляем немного отладочной информации
       if (fetchedCharacters.length > 0) {
-        console.log('Поля первого персонажа:', Object.keys(fetchedCharacters[0]));
+        console.log('Первый персонаж:', fetchedCharacters[0]);
+      } else {
+        console.log('Персонажи не найдены');
       }
       
       setCharacters(fetchedCharacters);
-      
-      console.log('CharactersListPage: Персонажи загружены успешно');
     } catch (err) {
       console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
       setError(`Не удалось загрузить персонажей: ${err}`);
@@ -154,27 +151,8 @@ const CharactersListPage: React.FC = () => {
             >
               {displayMode === 'raw' ? "Показать таблицу" : "Показать сырые данные"}
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => setShowDebug(!showDebug)}
-              size="sm"
-            >
-              {showDebug ? "Скрыть отладку" : "Показать отладку"}
-            </Button>
           </div>
           
-          {/* Отладочная информация */}
-          {showDebug && !loading && !error && characters.length > 0 && (
-            <div className="bg-black/20 p-4 rounded-lg">
-              <h2 className="text-lg font-bold mb-2">🛠 Debug: Данные из Firestore</h2>
-              <p className="mb-2">Количество персонажей: {characters.length}</p>
-              <div className="overflow-auto max-h-60">
-                <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(characters, null, 2)}</pre>
-              </div>
-            </div>
-          )}
-
           {/* Загрузка */}
           {loading && <LoadingState />}
           
@@ -186,21 +164,21 @@ const CharactersListPage: React.FC = () => {
             />
           )}
           
-          {/* Добавляем временный вывод сырого JSON для отладки */}
+          {/* Показ данных или таблица */}
           {!loading && !error && characters.length > 0 && (
             <>
-              {displayMode === 'table' ? (
-                <CharactersTable 
-                  characters={characters}
-                  onDelete={handleDeleteCharacter}
-                />
-              ) : (
+              {displayMode === 'raw' ? (
                 <div className="p-4 bg-black/20 rounded-lg">
-                  <h2 className="text-lg font-bold mb-4">Сырые данные персонажей:</h2>
+                  <h2 className="text-lg font-bold mb-4">Данные персонажей:</h2>
                   <pre className="whitespace-pre-wrap overflow-auto max-h-96 p-4 bg-gray-800 text-white rounded">
                     {JSON.stringify(characters, null, 2)}
                   </pre>
                 </div>
+              ) : (
+                <CharactersTable 
+                  characters={characters}
+                  onDelete={handleDeleteCharacter}
+                />
               )}
             </>
           )}

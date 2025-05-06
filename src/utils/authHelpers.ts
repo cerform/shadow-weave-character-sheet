@@ -1,35 +1,57 @@
 
-import { firebaseAuth } from '@/services/firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebase';
 
-// Получаем ID текущего пользователя
+/**
+ * Получает UID текущего авторизованного пользователя
+ * @returns string | null - UID пользователя или null, если не авторизован
+ */
 export const getCurrentUid = (): string | null => {
-  const user = firebaseAuth.currentUser;
-  return user ? user.uid : null;
-};
-
-// Проверка, авторизован ли пользователь
-export const isAuthenticated = (): boolean => {
-  return !!firebaseAuth.currentUser;
-};
-
-// Наблюдатель за состоянием авторизации
-export const watchAuthState = (callback: (user: any) => void): () => void => {
-  return onAuthStateChanged(firebaseAuth, (user) => {
-    callback(user);
-  });
-};
-
-// Проверка роли пользователя
-export const checkUserRole = async (uid: string): Promise<string | null> => {
-  if (!uid) return null;
+  const currentUser = auth.currentUser;
   
-  try {
-    // Здесь может быть логика получения роли из Firestore или другого источника
-    // Для примера возвращаем фиктивные данные
-    return 'player';
-  } catch (error) {
-    console.error('Ошибка при проверке роли пользователя:', error);
-    return null;
+  if (currentUser) {
+    return currentUser.uid;
   }
+  
+  // Если пользователь не авторизован в Firebase, проверяем localStorage
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.uid || user.id || null;
+    }
+  } catch (e) {
+    console.error('Error getting user from localStorage:', e);
+  }
+  
+  return null;
+};
+
+/**
+ * Проверяет аутентификацию пользователя
+ * @returns boolean - true, если пользователь аутентифицирован
+ */
+export const isUserAuthenticated = (): boolean => {
+  return !!getCurrentUid();
+};
+
+/**
+ * Получает данные текущего пользователя
+ * @returns any - данные пользователя или null
+ */
+export const getCurrentUser = (): any | null => {
+  if (auth.currentUser) {
+    return auth.currentUser;
+  }
+  
+  // Если пользователь не авторизован в Firebase, проверяем localStorage
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
+  } catch (e) {
+    console.error('Error getting user from localStorage:', e);
+  }
+  
+  return null;
 };
