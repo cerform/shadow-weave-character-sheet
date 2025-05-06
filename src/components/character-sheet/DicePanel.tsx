@@ -52,9 +52,10 @@ const DicePanel: React.FC<DicePanelProps> = ({
         timestamp: new Date().toISOString()
       };
       
+      // Обновить интерфейс Character, чтобы включить lastDiceRoll
       onUpdate({ 
         lastDiceRoll: newRoll 
-      });
+      } as Partial<Character>);
       
       setIsRolling(false);
     }, 600);

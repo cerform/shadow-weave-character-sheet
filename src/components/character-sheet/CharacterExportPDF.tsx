@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Character, Item } from '@/types/character';
+import { Character, Item, CharacterSpell } from '@/types/character';
 
 interface CharacterExportPDFProps {
   character: Character;
@@ -109,7 +109,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         if (Array.isArray(character.equipment)) {
           if (character.equipment.length > 0) {
             if (typeof character.equipment[0] === 'string') {
-              processedEquipment.push(...character.equipment as string[]);
+              processedEquipment.push(...(character.equipment as unknown as string[]));
             } else {
               // Если это массив объектов Item
               processedEquipment.push(...(character.equipment as Item[]).map(item => 
@@ -166,7 +166,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         const spellsArray = Array.isArray(character.spells)
           ? (typeof character.spells[0] === 'string'
               ? character.spells as string[]
-              : (character.spells as any[]).map(s => s.name || s.toString()))
+              : (character.spells as CharacterSpell[]).map(s => s.name))
           : [];
             
         autoTable(doc, {

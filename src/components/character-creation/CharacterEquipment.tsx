@@ -43,9 +43,10 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
         setItems(otherItems);
       } else {
         // Если это объект с weapons, armor, items
-        setWeapons(character.equipment.weapons || []);
-        setArmor(character.equipment.armor || '');
-        setItems(character.equipment.items || []);
+        const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
+        setWeapons(equip.weapons || []);
+        setArmor(equip.armor || '');
+        setItems(equip.items || []);
       }
     }
     

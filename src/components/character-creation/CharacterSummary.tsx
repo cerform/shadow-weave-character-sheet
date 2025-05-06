@@ -27,17 +27,18 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     } else {
       // Объект с weapons, armor, items
       const equipParts = [];
+      const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
       
-      if (character.equipment.weapons && character.equipment.weapons.length > 0) {
-        equipParts.push(`Оружие: ${character.equipment.weapons.join(', ')}`);
+      if (equip.weapons && equip.weapons.length > 0) {
+        equipParts.push(`Оружие: ${equip.weapons.join(', ')}`);
       }
       
-      if (character.equipment.armor) {
-        equipParts.push(`Доспех: ${character.equipment.armor}`);
+      if (equip.armor) {
+        equipParts.push(`Доспех: ${equip.armor}`);
       }
       
-      if (character.equipment.items && character.equipment.items.length > 0) {
-        equipParts.push(`Предметы: ${character.equipment.items.join(', ')}`);
+      if (equip.items && equip.items.length > 0) {
+        equipParts.push(`Предметы: ${equip.items.join(', ')}`);
       }
       
       return equipParts.length ? equipParts.join('; ') : 'Нет экипировки';
@@ -90,7 +91,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
               <h4 className="font-medium mb-1">Базовые параметры:</h4>
               <div className="space-y-1 text-sm">
                 <div>КД: {character.armorClass || '–'}</div>
-                <div>Инициатива: {character.initiative || '–'}</div>
+                <div>Инициатива: {character.initiative !== undefined ? character.initiative : '–'}</div>
                 <div>Скорость: {character.speed || '–'}</div>
                 <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
                 <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
@@ -102,7 +103,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
             <h4 className="font-medium mb-1">Владения и навыки:</h4>
             <p className="text-sm">
               {character.proficiencies && typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && 
-                character.proficiencies.skills ? 
+                'skills' in character.proficiencies && character.proficiencies.skills ? 
                 formatList(character.proficiencies.skills) : 
                 'Нет навыков'}
             </p>

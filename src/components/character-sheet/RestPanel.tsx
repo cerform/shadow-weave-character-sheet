@@ -17,7 +17,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   // Функция для короткого отдыха
   const handleShortRest = () => {
     // Обновляем ресурсы, которые восстанавливаются после короткого отдыха
-    const updatedResources = { ...character.resources };
+    const updatedResources = { ...character.resources } || {};
     
     // Восстанавливаем ресурсы с типом short-rest или short
     if (character.resources) {
@@ -32,7 +32,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
     // Обновляем персонажа
     onUpdate({
       resources: updatedResources
-    });
+    } as Partial<Character>);
     
     // Отправляем уведомление
     toast({
@@ -44,7 +44,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   // Функция для продолжительного отдыха
   const handleLongRest = () => {
     // Восстанавливаем все ресурсы
-    const updatedResources = { ...character.resources };
+    const updatedResources = { ...character.resources } || {};
     
     if (character.resources) {
       Object.keys(character.resources).forEach(resourceKey => {
@@ -94,7 +94,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
       hitDice: updatedHitDice,
       spellSlots: updatedSpellSlots,
       sorceryPoints: updatedSorceryPoints
-    });
+    } as Partial<Character>);
     
     // Отправляем уведомление
     toast({

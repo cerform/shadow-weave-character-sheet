@@ -29,7 +29,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
           ...currentHitDice,
           used: currentHitDice.used + 1
         }
-      });
+      } as Partial<Character>);
       
       toast({
         title: "Кость хитов использована",
@@ -41,7 +41,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
           ...currentHitDice,
           used: currentHitDice.used - 1
         }
-      });
+      } as Partial<Character>);
       
       toast({
         title: "Кость хитов восстановлена",
@@ -106,7 +106,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
             used: resource.used + 1
           }
         }
-      });
+      } as Partial<Character>);
       
       toast({
         title: `Ресурс ${resourceKey} использован`,
@@ -121,7 +121,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
             used: resource.used - 1
           }
         }
-      });
+      } as Partial<Character>);
       
       toast({
         title: `Ресурс ${resourceKey} восстановлен`,
@@ -136,7 +136,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     
     onUpdate({
       temporaryHp: temporaryHp
-    });
+    } as Partial<Character>);
     
     toast({
       title: "Временные хиты добавлены",
@@ -165,7 +165,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
                 variant="outline" 
                 size="sm" 
                 onClick={() => handleHitDiceChange('use')}
-                disabled={character.hitDice.used >= character.hitDice.total}
+                disabled={!character.hitDice || character.hitDice.used >= character.hitDice.total}
                 className="flex-1"
               >
                 <ArrowDown01 className="h-4 w-4 mr-1" />
@@ -175,7 +175,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
                 variant="outline" 
                 size="sm" 
                 onClick={() => handleHitDiceChange('recover')}
-                disabled={character.hitDice.used <= 0}
+                disabled={!character.hitDice || character.hitDice.used <= 0}
                 className="flex-1"
               >
                 <ArrowUp01 className="h-4 w-4 mr-1" />
@@ -224,7 +224,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
         )}
         
         {/* Другие ресурсы */}
-        {character.resources && Object.entries(character.resources).length > 0 && (
+        {character.resources && Object.keys(character.resources).length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium">Прочие ресурсы:</h4>
             

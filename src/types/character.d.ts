@@ -60,6 +60,7 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
+  // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
     weapons?: string[];
     armor?: string;
@@ -155,7 +156,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
