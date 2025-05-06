@@ -12,11 +12,47 @@ interface CharactersPageDebuggerProps {
   title?: string;
 }
 
+// Определяем тип для отладочных данных
+interface DebugInfo {
+  page: {
+    route: string;
+    timestamp: string;
+  };
+  characters: {
+    total: string | number;
+    isArray: boolean;
+    firstCharacterId: string;
+    emptyOrInvalid: boolean;
+  };
+  firebaseAuth: {
+    currentUid: string | null;
+    isAuthenticated: boolean;
+  };
+  context: {
+    loading: boolean;
+    error: string | null;
+    charactersCount: number;
+  };
+  // Добавляем поле firstCharacter как опциональное
+  firstCharacter?: {
+    id: string;
+    name: string;
+    userId: string;
+    userIdMatches: boolean;
+    hasMissingFields: boolean;
+    normalized: {
+      hadChanges: boolean;
+      nameNormalized: boolean;
+      userIdNormalized: boolean;
+    };
+  };
+}
+
 const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
   title = 'Диагностика страницы персонажей'
 }) => {
   const [validationReport, setValidationReport] = useState<any>(null);
-  const [debugData, setDebugData] = useState<any>({});
+  const [debugData, setDebugData] = useState<DebugInfo | null>(null);
   const [consoleErrors, setConsoleErrors] = useState<string[]>([]);
   
   // Получаем данные из контекста персонажей
@@ -33,7 +69,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
       setValidationReport(validation);
       
       // Создаем более детальные данные для отладки
-      const debugInfo = {
+      const debugInfo: DebugInfo = {
         page: {
           route: '/characters',
           timestamp: new Date().toISOString(),
@@ -124,7 +160,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
         {/* Информация о странице */}
         <DebugPanel 
           title="1. Данные страницы /characters" 
-          data={debugData.page || { route: '/characters' }}
+          data={debugData?.page || { route: '/characters' }}
           showByDefault={true}
           variant="info"
         />
@@ -132,7 +168,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
         {/* Состояние контекста */}
         <DebugPanel 
           title="2. Состояние контекста персонажей" 
-          data={debugData.context || { loading }}
+          data={debugData?.context || { loading }}
           variant={error ? 'error' : loading ? 'warning' : 'info'}
           showByDefault={!!error}
         />
@@ -140,9 +176,9 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
         {/* Данные авторизации */}
         <DebugPanel 
           title="3. Firebase авторизация" 
-          data={debugData.firebaseAuth || {}}
+          data={debugData?.firebaseAuth || {}}
           showByDefault={false}
-          variant={debugData.firebaseAuth?.isAuthenticated ? 'info' : 'warning'}
+          variant={debugData?.firebaseAuth?.isAuthenticated ? 'info' : 'warning'}
         />
         
         {/* Проблемы с персонажами */}
@@ -177,16 +213,16 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
         {/* Данные о персонажах */}
         <DebugPanel 
           title="5. Данные о персонажах" 
-          data={debugData.characters || {}}
-          showByDefault={!!debugData.characters?.emptyOrInvalid}
+          data={debugData?.characters || {}}
+          showByDefault={!!debugData?.characters?.emptyOrInvalid}
           variant={
-            !debugData.characters?.isArray ? 'error' : 
-            debugData.characters?.total === 0 ? 'warning' : 'info'
+            !debugData?.characters?.isArray ? 'error' : 
+            debugData?.characters?.total === 0 ? 'warning' : 'info'
           }
         />
         
         {/* Данные первого персонажа */}
-        {debugData.firstCharacter && (
+        {debugData?.firstCharacter && (
           <DebugPanel 
             title="6. Первый персонаж" 
             data={debugData.firstCharacter}
