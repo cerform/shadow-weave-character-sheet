@@ -38,8 +38,12 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Fix the "always truthy" error by checking if fixed is defined AND has entries
-    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
+    // Правильно проверяем наличие fixed и убеждаемся, что объект не пустой
+    const hasFixedBonuses = abilityBonuses.fixed !== undefined && 
+                           abilityBonuses.fixed !== null && 
+                           Object.keys(abilityBonuses.fixed).length > 0;
+                           
+    if (hasFixedBonuses) {
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
@@ -164,7 +168,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {abilityBonuses.fixed && Object.entries(abilityBonuses.fixed).length > 0 && (
+          {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
             <div className="mb-2">
               <p>Фиксированные бонусы:</p>
               <div className="flex flex-wrap gap-2 mt-1">
