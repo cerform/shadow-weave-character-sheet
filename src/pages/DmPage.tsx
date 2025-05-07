@@ -1,37 +1,73 @@
+// src/pages/DMDashboardPage.tsx
 
 import React from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import NavigationButtons from '@/components/ui/NavigationButtons';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
-import ThemeSelector from '@/components/ThemeSelector';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import SessionManager from '@/components/dm/SessionManager';
+import PlayerMonitor from '@/components/dm/PlayerMonitor';
+import EncounterBuilder from '@/components/dm/EncounterBuilder';
+import MapControl from '@/components/dm/MapControl';
+import DiceControl from '@/components/dm/DiceControl';
+import InitiativeTracker from '@/components/dm/InitiativeTracker';
+import EffectPanel from '@/components/dm/EffectPanel';
+import TimelineControl from '@/components/dm/TimelineControl';
+import NarrativeNotes from '@/components/dm/NarrativeNotes';
+import WebCamGrid from '@/components/dm/WebCamGrid';
+import OBSLayout from '@/components/OBSLayout';
+import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 
-const DmPage: React.FC = () => {
-  const { themeStyles } = useTheme();
-  
+const DMDashboardPage: React.FC = () => {
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen py-4">
-        <div className="container mx-auto px-4">
-          <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <h1 className="text-3xl font-bold mb-4 sm:mb-0" style={{ color: themeStyles?.textColor }}>
-              Экран Мастера
-            </h1>
-            <div className="flex items-center space-x-4">
-              <ThemeSelector />
-              <NavigationButtons />
-            </div>
-          </header>
-          
-          <div className="bg-black/50 rounded-lg p-8 backdrop-blur-sm">
-            <h2 className="text-2xl mb-6">Инструменты Мастера Подземелий</h2>
-            <p className="text-lg">Этот раздел находится в разработке.</p>
-          </div>
+    <OBSLayout
+      topPanelContent={
+        <div className="flex justify-between items-center p-3">
+          <h1 className="text-xl font-bold text-yellow-400">DM Dashboard</h1>
+          <IconOnlyNavigation includeThemeSelector />
         </div>
+      }
+    >
+      <div className="container mx-auto p-4 space-y-6">
+        <Tabs defaultValue="session" className="w-full">
+          <TabsList className="grid grid-cols-4 gap-2">
+            <TabsTrigger value="session">🎲 Сессия</TabsTrigger>
+            <TabsTrigger value="map">🗺️ Карта</TabsTrigger>
+            <TabsTrigger value="combat">⚔️ Бой</TabsTrigger>
+            <TabsTrigger value="narrative">📖 Сюжет</TabsTrigger>
+          </TabsList>
+
+          {/* Session Control */}
+          <TabsContent value="session">
+            <div className="grid md:grid-cols-2 gap-4">
+              <SessionManager />
+              <PlayerMonitor />
+              <DiceControl />
+            </div>
+          </TabsContent>
+
+          {/* Map Control */}
+          <TabsContent value="map">
+            <MapControl />
+            <WebCamGrid />
+          </TabsContent>
+
+          {/* Combat Tracker */}
+          <TabsContent value="combat">
+            <div className="grid md:grid-cols-2 gap-4">
+              <EncounterBuilder />
+              <InitiativeTracker />
+              <EffectPanel />
+            </div>
+          </TabsContent>
+
+          {/* Narrative Tools */}
+          <TabsContent value="narrative">
+            <NarrativeNotes />
+            <TimelineControl />
+          </TabsContent>
+        </Tabs>
       </div>
-      <FloatingDiceButton />
-    </BackgroundWrapper>
+    </OBSLayout>
   );
 };
 
-export default DmPage;
+export default DMDashboardPage;
