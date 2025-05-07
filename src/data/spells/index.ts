@@ -13,6 +13,7 @@ import { level8 } from "./level8";
 import { level9 } from "./level9";
 import { CharacterSpell } from "@/types/character";
 import { SpellData } from "@/types/spells";
+import { createSpellId } from "@/utils/spellHelpers";
 
 // Combine all spell levels into a single array
 export const spells: CharacterSpell[] = [
@@ -30,9 +31,22 @@ export const spells: CharacterSpell[] = [
   ...level9
 ];
 
+// Генерируем id для всех заклинаний, если их нет
+export const ensureSpellIds = (spellsList: CharacterSpell[]): CharacterSpell[] => {
+  return spellsList.map(spell => {
+    if (!spell.id) {
+      return {
+        ...spell,
+        id: createSpellId(spell.name)
+      };
+    }
+    return spell;
+  });
+};
+
 // Get spells by level
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  return spells.filter(spell => spell.level === level);
+  return ensureSpellIds(spells.filter(spell => spell.level === level));
 };
 
 // Convert spell level to text
@@ -47,7 +61,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
   
   const normalizedClassName = className ? className.toLowerCase() : '';
   
-  return spells.filter((spell) => {
+  return ensureSpellIds(spells.filter((spell) => {
     if (!spell.classes) return false;
     
     // Check type of classes and safely access
@@ -63,7 +77,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
     }
     
     return false;
-  });
+  }));
 };
 
 // Get spell details by name
@@ -79,9 +93,9 @@ export const getSpellDetails = (spellName: string): CharacterSpell | undefined =
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   if (!school) return [];
   
-  return spells.filter(
+  return ensureSpellIds(spells.filter(
     (spell) => spell && spell.school && spell.school.toLowerCase() === school.toLowerCase()
-  );
+  ));
 };
 
 // Get available spell schools
@@ -99,7 +113,7 @@ export const getSpellSchools = (): string[] => {
 
 // Export a function to get all spells
 export const getAllSpells = (): SpellData[] => {
-  // Проверяем, что массив spells не пустой
+  // Проверяем, что массив spells не пуст
   if (spells.length === 0) {
     console.warn('Массив заклинаний пуст. Проверьте импорты заклинаний.');
     
@@ -120,9 +134,12 @@ export const getAllSpells = (): SpellData[] => {
   
   console.log('Загружаю заклинания, всего:', spells.length);
   
+  // Убедимся, что все заклинания имеют id
+  const spellsWithIds = ensureSpellIds(spells);
+  
   // Преобразуем CharacterSpell[] в SpellData[]
-  return spells.map(spell => ({
-    id: spell.id || spell.name,
+  return spellsWithIds.map(spell => ({
+    id: spell.id || createSpellId(spell.name),
     name: spell.name,
     name_en: spell.name_en,
     level: spell.level,
@@ -133,15 +150,15 @@ export const getAllSpells = (): SpellData[] => {
     duration: spell.duration || '',
     description: spell.description || '',
     classes: spell.classes || [],
-    ritual: spell.ritual,
-    concentration: spell.concentration,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    prepared: spell.prepared,
-    higherLevel: spell.higherLevel || spell.higherLevels,
-    higherLevels: spell.higherLevels || spell.higherLevel,
-    materials: spell.materials
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    prepared: spell.prepared || false,
+    higherLevel: spell.higherLevel || spell.higherLevels || '',
+    higherLevels: spell.higherLevels || spell.higherLevel || '',
+    materials: spell.materials || ''
   }));
 };
 

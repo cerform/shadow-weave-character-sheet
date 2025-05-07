@@ -1,5 +1,6 @@
 
 import { SpellData, SpellFilter } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
 
 /**
  * Получение названия уровня заклинания
@@ -125,4 +126,52 @@ export const spellMatchesSearchTerm = (spell: SpellData, searchTerm: string): bo
   if (spell.school.toLowerCase().includes(normalizedSearch)) return true;
   
   return false;
+};
+
+/**
+ * Преобразует строку имени заклинания в формат slug для ID
+ */
+export const createSpellId = (name: string): string => {
+  return name.toLowerCase()
+    .replace(/[^\wа-яё]+/g, '-') // заменяем все не-буквенные и не-цифровые символы на дефис
+    .replace(/(^-|-$)/g, '') // удаляем начальные и конечные дефисы
+    .replace(/--+/g, '-'); // заменяем последовательности дефисов на один дефис
+};
+
+/**
+ * Импорт заклинаний из текста
+ */
+export const importSpellsFromText = (text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] => {
+  // Простой алгоритм разбора списка заклинаний из текста
+  // В этой базовой версии мы просто разделяем по новой строке
+  const lines = text.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
+  const result: CharacterSpell[] = [];
+  
+  // Если есть существующие заклинания, добавляем новые только если их нет в списке
+  const existingNames = existingSpells.map(spell => spell.name.toLowerCase());
+  
+  for (const line of lines) {
+    // Простейший анализ, предполагающий, что каждая строка содержит одно заклинание
+    // Можно доработать этот алгоритм для более сложного разбора
+    if (existingNames.includes(line.toLowerCase())) {
+      continue; // Пропускаем, если заклинание уже есть
+    }
+    
+    // Создаем базовую структуру заклинания
+    const spell: CharacterSpell = {
+      id: createSpellId(line),
+      name: line,
+      level: 0, // По умолчанию заговор
+      school: 'Неизвестно', // По умолчанию
+      description: 'Требуется описание заклинания',
+      classes: []
+    };
+    
+    result.push(spell);
+  }
+  
+  return result;
 };
