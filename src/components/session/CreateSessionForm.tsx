@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LoaderIcon } from 'lucide-react';
+import { FieldError } from 'react-hook-form';
 
 interface CreateSessionFormProps {
   onSubmit: (data: { name: string, description: string }) => void;
@@ -37,7 +38,7 @@ const CreateSessionForm: React.FC<CreateSessionFormProps> = ({
           />
           {errors.name && (
             <p className="text-sm text-red-500 mt-1" role="alert">
-              {String(errors.name.message)}
+              {errors.name.message?.toString()}
             </p>
           )}
         </div>

@@ -1,3 +1,4 @@
+
 // Import React and required components
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -184,8 +185,6 @@ const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({
     
     onUpdateInitiative(updatedInitiative);
   };
-
-  
 
   return (
     <div className="initiative-tracker p-2 h-full flex flex-col">

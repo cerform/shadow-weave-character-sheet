@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +10,26 @@ import { normalizeCharacter } from '@/utils/characterNormalizer';
 const CharactersPageDebugger: React.FC = () => {
   const { characters, setCharacter, createCharacter, updateCharacter, deleteCharacter } = useCharacter();
   
+  // Функция для создания нового тестового персонажа
+  const handleCreateCharacter = () => {
+    if (createCharacter) {
+      const newCharacter: Partial<Character> = { 
+        name: `New Character ${Date.now()}`,
+        // Добавляем базовые свойства для предотвращения ошибок
+        level: 1,
+        race: 'Human',
+        class: 'Fighter'
+      };
+      createCharacter(normalizeCharacter(newCharacter));
+    }
+  };
+  
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Characters Debugger</h1>
       
       <div className="mb-4">
-        <Button onClick={() => createCharacter(normalizeCharacter({ name: `New Character ${Date.now()}` }))}>
+        <Button onClick={handleCreateCharacter}>
           Create New Character
         </Button>
       </div>

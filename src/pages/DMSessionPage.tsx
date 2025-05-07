@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useSessionStore from '@/stores/sessionStore';
@@ -13,9 +14,15 @@ import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import InitiativeTrackerPanel from '@/components/session/InitiativeTrackerPanel';
 import DiceRoller from '@/components/session/DiceRoller';
 
+interface GameSessionWithOptionalFields extends Omit<GameSession, 'dmId'> {
+  dmId?: string;
+  chat?: any[];
+  updatedAt?: string;
+}
+
 const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const [session, setSession] = useState<GameSession | null>(null);
+  const [session, setSession] = useState<GameSessionWithOptionalFields | null>(null);
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [selectedTokenId, setSelectedTokenId] = useState<number | string | null>(null);
   const [background, setBackground] = useState<string | null>(null);
@@ -46,8 +53,8 @@ const DMSessionPage: React.FC = () => {
           return;
         }
         
-        // Cast to GameSession to ensure type safety
-        const gameSession: GameSession = {
+        // Cast to GameSessionWithOptionalFields to handle type safety
+        const gameSession: GameSessionWithOptionalFields = {
           ...foundSession,
           dmId: foundSession.dmId || '', // Ensure required property
           chat: foundSession.chat || [],
@@ -92,6 +99,11 @@ const DMSessionPage: React.FC = () => {
       socketService.disconnect();
     };
   }, [sessionId]);
+
+  // Handle token selection
+  const handleSelectToken = (id: number | string) => {
+    setSelectedTokenId(id);
+  };
 
   // Update token position
   const handleUpdateTokenPosition = async (id: number | string, x: number, y: number) => {
@@ -181,6 +193,41 @@ const DMSessionPage: React.FC = () => {
       
       return updated;
     });
+  };
+
+  // Handle sending chat message
+  const handleSendMessage = (message: string) => {
+    if (!session) return;
+
+    const newMessage = {
+      id: `msg-${Date.now()}`,
+      senderId: 'dm',
+      senderName: 'Мастер подземелий',
+      content: message,
+      timestamp: new Date().toISOString(),
+      type: 'text' as const
+    };
+
+    // Update local state
+    const updatedChat = [...(session.chat || []), newMessage];
+    
+    setSession(prevSession => {
+      if (!prevSession) return null;
+      return {
+        ...prevSession,
+        chat: updatedChat
+      };
+    });
+
+    // Update in store
+    sessionStore.updateSession({
+      ...session,
+      chat: updatedChat,
+      updatedAt: new Date().toISOString()
+    });
+
+    // Send via socket
+    socketService.sendMessage(newMessage);
   };
 
   // If an error occurs
