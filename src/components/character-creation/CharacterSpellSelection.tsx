@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useSpellbook } from '@/contexts/SpellbookContext';
+import { useSpellbook } from '@/hooks/spellbook';
 import { CustomScrollArea } from "@/components/ui/custom-scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -11,11 +10,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { normalizeCharacterSpells, updateCharacterSpells } from '@/utils/spellTypeUtils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -113,15 +113,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   // Пересчитываем количество известных заклинаний при каждом изменении списка заклинаний
   useEffect(() => {
     if (character.spells) {
-      const cantripsCount = character.spells.filter(spell => {
-        if (typeof spell === 'string') return false;
-        return spell.level === 0;
-      }).length;
+      const normalizedSpells = normalizeCharacterSpells(character.spells);
       
-      const spellsCount = character.spells.filter(spell => {
-        if (typeof spell === 'string') return false;
-        return spell.level > 0;
-      }).length;
+      const cantripsCount = normalizedSpells.filter(spell => spell.level === 0).length;
+      const spellsCount = normalizedSpells.filter(spell => spell.level > 0).length;
       
       setCantripsKnown(cantripsCount);
       setSpellsKnown(spellsCount);
@@ -230,12 +225,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Проверяем, изучено ли заклинание
   const isSpellKnown = useCallback((spell: SpellData) => {
-    if (!character.spells || !Array.isArray(character.spells)) return false;
+    if (!character.spells) return false;
     
-    return character.spells.some(s => {
-      if (typeof s === 'string') return s === spell.name;
-      return s.id === spell.id || s.name === spell.name;
-    });
+    const normalizedSpells = normalizeCharacterSpells(character.spells);
+    return normalizedSpells.some(s => s.id === spell.id || s.name === spell.name);
   }, [character.spells]);
 
   // Обработчик добавления/удаления заклинания
@@ -269,8 +262,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       addSpell(spell);
       
       // Также добавляем заклинание прямо в персонажа
-      const updatedSpells = [...(character.spells || [])];
-      updatedSpells.push({
+      const normalizedSpells = normalizeCharacterSpells(character.spells || []);
+      const newSpell: CharacterSpell = {
         id: spell.id,
         name: spell.name,
         level: spell.level,
@@ -282,9 +275,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         description: spell.description,
         classes: spell.classes,
         prepared: true // По умолчанию заклинания подготовлены
-      });
+      };
       
-      updateCharacter({ spells: updatedSpells });
+      const updatedSpells = [...normalizedSpells, newSpell];
+      updateCharacter(updateCharacterSpells(character, updatedSpells));
       
       // Обновляем счетчики
       if (spell.level === 0) {
@@ -298,12 +292,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       
       // Также удаляем заклинание из персонажа
       if (character.spells) {
-        const updatedSpells = character.spells.filter(s => {
-          if (typeof s === 'string') return s !== spell.name;
-          return s.id !== spell.id && s.name !== spell.name;
-        });
+        const normalizedSpells = normalizeCharacterSpells(character.spells);
         
-        updateCharacter({ spells: updatedSpells });
+        const updatedSpells = normalizedSpells.filter(s => 
+          s.id !== spell.id && s.name !== spell.name
+        );
+        
+        updateCharacter(updateCharacterSpells(character, updatedSpells));
         
         // Обновляем счетчики
         if (spell.level === 0) {

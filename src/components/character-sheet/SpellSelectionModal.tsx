@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getPreparedSpellsLimit, canPrepareMoreSpells, filterSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData } from '@/types/spells';
+import { normalizeCharacterSpells, updateCharacterSpells } from '@/utils/spellTypeUtils';
 
 interface SpellSelectionModalProps {
   open: boolean;
@@ -169,12 +169,10 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
 
   // Проверяем, добавлено ли заклинание в список заклинаний персонажа
   const isSpellAdded = (spellName: string): boolean => {
-    return character.spells?.some(spell => {
-      if (typeof spell === 'string') {
-        return spell === spellName;
-      }
-      return spell.name === spellName;
-    }) || false;
+    if (!character.spells) return false;
+    
+    const normalizedSpells = normalizeCharacterSpells(character.spells);
+    return normalizedSpells.some(spell => spell.name === spellName);
   };
 
   // Добавляем заклинание персонажу
@@ -188,12 +186,12 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Копируем массив заклинаний персонажа или создаем новый
-    const updatedSpells = [...(character.spells || [])];
+    const normalizedSpells = normalizeCharacterSpells(character.spells || []);
     
     // Добавляем заклинание
-    updatedSpells.push(spell);
+    const updatedSpells = [...normalizedSpells, spell];
     
-    onUpdate({ spells: updatedSpells });
+    onUpdate(updateCharacterSpells(character, updatedSpells));
     
     toast({
       title: "Заклинание добавлено",
@@ -205,14 +203,10 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const removeSpellFromCharacter = (spellName: string) => {
     if (!character.spells) return;
     
-    const updatedSpells = character.spells.filter(spell => {
-      if (typeof spell === 'string') {
-        return spell !== spellName;
-      }
-      return spell.name !== spellName;
-    });
+    const normalizedSpells = normalizeCharacterSpells(character.spells);
+    const updatedSpells = normalizedSpells.filter(spell => spell.name !== spellName);
     
-    onUpdate({ spells: updatedSpells });
+    onUpdate(updateCharacterSpells(character, updatedSpells));
     
     toast({
       title: "Заклинание удалено",
@@ -234,9 +228,8 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       return;
     }
     
-    const updatedSpells = character.spells.map(existingSpell => {
-      if (typeof existingSpell === 'string') return existingSpell;
-      
+    const normalizedSpells = normalizeCharacterSpells(character.spells);
+    const updatedSpells = normalizedSpells.map(existingSpell => {
       if (existingSpell.name === spell.name) {
         return {
           ...existingSpell,
@@ -246,7 +239,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       return existingSpell;
     });
     
-    onUpdate({ spells: updatedSpells });
+    onUpdate(updateCharacterSpells(character, updatedSpells));
     
     toast({
       title: spell.prepared ? "Заклинание не подготовлено" : "Заклинание подготовлено",

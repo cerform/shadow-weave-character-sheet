@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -6,6 +5,7 @@ import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
 import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
+import { normalizeCharacterSpells, updateCharacterSpells } from '@/utils/spellTypeUtils';
 
 interface SpellbookContextType {
   selectedSpells: SpellData[];
@@ -119,36 +119,31 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Если у персонажа уже есть заклинания, загружаем их
     if (character && character.spells && character.spells.length > 0) {
       // Преобразуем CharacterSpell[] в SpellData[]
-      const characterSpellData = Array.isArray(character.spells) 
-        ? character.spells.map(spell => {
-            if (typeof spell === 'string') {
-              // Если заклинание представлено строкой, ищем полные данные
-              const foundSpell = allSpells.find(s => s.name === spell);
-              if (foundSpell) {
-                return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
-              } else {
-                // Создаем минимальный объект заклинания
-                return {
-                  id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
-                  name: spell,
-                  level: 0,
-                  school: 'Универсальная',
-                  castingTime: '1 действие',
-                  range: 'Касание',
-                  components: '',
-                  duration: 'Мгновенная',
-                  description: [''],
-                  classes: characterClass,
-                  ritual: false,
-                  concentration: false
-                } as SpellData;
-              }
-            } else {
-              // Если это уже объект заклинания
-              return convertCharacterSpellToSpellData(spell);
-            }
-          })
-        : [];
+      const normalizedSpells = normalizeCharacterSpells(character.spells);
+      
+      const characterSpellData = normalizedSpells.map(spell => {
+        // Ищем полные данные в allSpells
+        const foundSpell = allSpells.find(s => s.name === spell.name);
+        if (foundSpell) {
+          return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
+        } else {
+          // Создаем минимальный объект заклинания
+          return {
+            id: `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+            name: spell.name,
+            level: spell.level || 0,
+            school: spell.school || 'Универсальная',
+            castingTime: spell.castingTime || '1 действие',
+            range: spell.range || 'Касание',
+            components: spell.components || '',
+            duration: spell.duration || 'Мгновенная',
+            description: spell.description || [''],
+            classes: spell.classes || characterClass,
+            ritual: spell.ritual || false,
+            concentration: spell.concentration || false
+          } as SpellData;
+        }
+      });
       
       setSelectedSpells(characterSpellData);
     }
@@ -208,8 +203,10 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         };
         
         // Добавляем заклинание к списку заклинаний персонажа
-        const updatedSpells = [...(character.spells || []), characterSpell];
-        updateCharacter({ spells: updatedSpells });
+        const normalizedSpells = normalizeCharacterSpells(character.spells || []);
+        const updatedSpells = [...normalizedSpells, characterSpell];
+        
+        updateCharacter(updateCharacterSpells(character, updatedSpells));
         
         toast({
           title: "Заклинание добавлено",
@@ -229,14 +226,13 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       const spellName = selectedSpells.find(s => s.id === spellId || s.id === `spell-${spellId}`)?.name;
       
       if (spellName) {
-        const updatedSpells = character.spells.filter(spell => {
-          if (typeof spell === 'string') {
-            return spell !== spellName;
-          }
-          return spell.id !== spellId && spell.name !== spellName;
-        });
+        const normalizedSpells = normalizeCharacterSpells(character.spells);
         
-        updateCharacter({ spells: updatedSpells });
+        const updatedSpells = normalizedSpells.filter(spell => 
+          spell.id !== spellId && spell.name !== spellName
+        );
+        
+        updateCharacter(updateCharacterSpells(character, updatedSpells));
         
         toast({
           title: "Заклинание удалено",

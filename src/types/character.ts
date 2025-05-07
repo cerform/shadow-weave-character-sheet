@@ -1,10 +1,11 @@
+
 export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;  // Добавляем поле subrace
+  subrace?: string;
   class?: string;
-  className?: string; // Добавляем альтернативное поле className
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -17,7 +18,6 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
-    // Добавляем алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -25,7 +25,6 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  // Добавляем поле stats для обратной совместимости
   stats?: {
     strength: number;
     dexterity: number;
@@ -45,23 +44,25 @@ export interface Character {
     maximum: number;
     temporary: number;
   };
-  // Добавляем алиасы для hitPoints
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number; // Добавляем отдельное поле для временных хитов
+  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
+  savingThrowProficiencies?: Record<string, boolean>; // Добавлено для AbilitiesTab
+  skillProficiencies?: string[]; // Добавлено для AbilitiesTab
+  expertise?: string[]; // Добавлено для AbilitiesTab 
+  skillBonuses?: Record<string, number>; // Добавлено для AbilitiesTab
   proficiencies?: {
     languages?: string[];
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[]; // Добавляем поле skills
+    skills?: string[];
   } | string[];
-  // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
     weapons?: string[];
     armor?: string;
@@ -70,6 +71,12 @@ export interface Character {
   features?: Feature[] | string[];
   spells?: CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
+  spellcasting?: { // Добавлено для SpellsTab
+    ability: string;
+    saveDC: number;
+    attackBonus: number;
+    level?: number;
+  };
   money?: {
     cp?: number;
     sp?: number;
@@ -77,7 +84,6 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Добавляем поля для gold
   gold?: number;
   deathSaves?: {
     successes: number;
@@ -90,8 +96,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string; // Добавляем поле для заметок
-  // Изменяем названия свойств для особенностей
+  notes?: string;
   raceFeatures?: {
     name: string;
     description: string;
@@ -112,6 +117,11 @@ export interface Character {
     description: string;
     level?: number;
   }[];
+  additionalClasses?: Array<{  // Добавлено для useCharacterCreation
+    name: string;
+    level: number;
+    subclass?: string;
+  }>;
   currency?: {
     cp?: number;
     sp?: number;
@@ -119,25 +129,19 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Добавляем поля для временных меток
   updatedAt?: string;
   createdAt?: string;
-  // Добавляем поле для изображения персонажа
   image?: string;
-  // Пользовательские поля
   gender?: string;
-  userId?: string; // Поле для связи с пользователем
-  abilityPointsUsed?: number; // Поле для отслеживания использованных очков
-  // Поля для обратной совместимости
+  userId?: string;
+  abilityPointsUsed?: number;
   strength?: number;
   dexterity?: number;
   constitution?: number;
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  // Добавляем поле для инициативы
   initiative?: string | number;
-  // Добавляем поле для последнего броска кубиков
   lastDiceRoll?: {
     diceType: string;
     count: number;
@@ -147,20 +151,17 @@ export interface Character {
     label: string;
     timestamp: string;
   };
-  // Добавляем поле для костей хитов
   hitDice?: {
     total: number;
     used: number;
     dieType: string;
     value: string;
   };
-  // Добавляем поле для отслеживания ресурсов
   resources?: Record<string, {
     max: number;
     used: number;
     recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
   }>;
-  // Добавляем поле для очков колдовства
   sorceryPoints?: {
     max: number;
     current: number;
@@ -175,7 +176,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
