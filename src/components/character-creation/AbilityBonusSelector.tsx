@@ -168,18 +168,29 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
-            <div className="mb-2">
-              <p>Фиксированные бонусы:</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {Object.entries(abilityBonuses.fixed).map(([ability, bonus]) => (
-                  <Badge key={ability} variant="outline" className="bg-amber-900/20">
-                    {abilities.find(a => a.key === ability)?.name} +{bonus}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Фикс ошибки TS2872: используем переменную hasFixedBonuses для проверки */}
+          {(() => {
+            const hasFixedBonuses = 
+              abilityBonuses.fixed !== undefined && 
+              abilityBonuses.fixed !== null && 
+              Object.keys(abilityBonuses.fixed).length > 0;
+            
+            if (hasFixedBonuses) {
+              return (
+                <div className="mb-2">
+                  <p>Фиксированные бонусы:</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {Object.entries(abilityBonuses.fixed!).map(([ability, bonus]) => (
+                      <Badge key={ability} variant="outline" className="bg-amber-900/20">
+                        {abilities.find(a => a.key === ability)?.name} +{bonus}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
           
           {abilityBonuses.amount > 0 && (
             <p className="mt-2">
