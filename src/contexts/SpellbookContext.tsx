@@ -29,6 +29,20 @@ export interface SpellbookContextProps {
   resetFilters: () => void;
   loading: boolean;
   searchSpells: (term: string) => void;
+  
+  // Дополнительные свойства для SpellBookViewer
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+  selectedSpell: SpellData | null;
+  isModalOpen: boolean;
+  handleOpenSpell: (spell: SpellData) => void;
+  handleClose: () => void;
+  getBadgeColor: (level: number) => string;
+  getSchoolBadgeColor: (school: string) => string;
+  formatClasses: (classes: string[] | string) => string;
+  isLoading: boolean;
 }
 
 const SpellbookContext = createContext<SpellbookContextProps | null>(null);
@@ -50,6 +64,8 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
   const [activeClass, setActiveClass] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -184,6 +200,78 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setActiveClass([]);
     setSearchTerm('');
   }, []);
+  
+  // Дополнительные методы для SpellBookViewer
+  const toggleLevel = useCallback((level: number) => {
+    setActiveLevel(prev => 
+      prev.includes(level) ? prev.filter(v => v !== level) : [...prev, level]
+    );
+  }, []);
+  
+  const toggleSchool = useCallback((school: string) => {
+    setActiveSchool(prev => 
+      prev.includes(school) ? prev.filter(v => v !== school) : [...prev, school]
+    );
+  }, []);
+  
+  const toggleClass = useCallback((className: string) => {
+    setActiveClass(prev => 
+      prev.includes(className) ? prev.filter(v => v !== className) : [...prev, className]
+    );
+  }, []);
+  
+  const clearFilters = useCallback(() => {
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setSearchTerm('');
+  }, []);
+  
+  const handleOpenSpell = useCallback((spell: SpellData) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
+  }, []);
+  
+  const handleClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedSpell(null);
+  }, []);
+  
+  const getBadgeColor = useCallback((level: number): string => {
+    const colors: Record<number, string> = {
+      0: 'bg-gray-500',
+      1: 'bg-blue-500',
+      2: 'bg-green-500',
+      3: 'bg-yellow-500',
+      4: 'bg-orange-500',
+      5: 'bg-red-500',
+      6: 'bg-purple-500',
+      7: 'bg-pink-500',
+      8: 'bg-indigo-500',
+      9: 'bg-cyan-500'
+    };
+    return colors[level] || 'bg-gray-500';
+  }, []);
+  
+  const getSchoolBadgeColor = useCallback((school: string): string => {
+    const colors: Record<string, string> = {
+      'Воплощение': 'bg-red-500/70',
+      'Вызов': 'bg-yellow-500/70',
+      'Некромантия': 'bg-purple-500/70',
+      'Преобразование': 'bg-blue-500/70',
+      'Прорицание': 'bg-cyan-500/70',
+      'Иллюзия': 'bg-indigo-500/70',
+      'Ограждение': 'bg-green-500/70',
+      'Очарование': 'bg-pink-500/70'
+    };
+    return colors[school] || 'bg-gray-500/70';
+  }, []);
+  
+  const formatClasses = useCallback((classes: string[] | string): string => {
+    if (!classes) return '';
+    if (Array.isArray(classes)) return classes.join(', ');
+    return classes;
+  }, []);
 
   return (
     <SpellbookContext.Provider
@@ -206,7 +294,20 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isFilterActive,
         resetFilters,
         loading,
-        searchSpells
+        searchSpells,
+        // Дополнительные свойства
+        toggleLevel,
+        toggleSchool,
+        toggleClass,
+        clearFilters,
+        selectedSpell,
+        isModalOpen,
+        handleOpenSpell,
+        handleClose,
+        getBadgeColor,
+        getSchoolBadgeColor,
+        formatClasses,
+        isLoading: loading
       }}
     >
       {children}

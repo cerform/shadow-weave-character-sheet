@@ -1,36 +1,48 @@
 
 import { Item } from '@/types/character';
 
-export const isItem = (item: any): item is Item => {
-  return item && typeof item === 'object' && 'name' in item && typeof item.name === 'string';
-};
+/**
+ * Проверка, является ли объект типом Item
+ */
+export function isItem(item: string | Item): item is Item {
+  return typeof item === 'object' && item !== null;
+}
 
-export const getItemDisplayText = (item: string | Item): string => {
-  if (isItem(item)) {
-    const { name, quantity } = item;
-    return quantity > 1 ? `${name} (${quantity})` : name;
+/**
+ * Получение строки для отображения предмета
+ */
+export function getItemDisplayText(item: Item): string {
+  let displayText = item.name;
+  
+  if (item.quantity > 1) {
+    displayText += ` (${item.quantity})`;
   }
-  return String(item);
-};
+  
+  if (item.type) {
+    displayText += ` [${item.type}]`;
+  }
+  
+  return displayText;
+}
 
-// Add the missing utility functions
-export const getItemName = (item: string | Item): string => {
-  if (isItem(item)) {
-    return item.name;
-  }
-  return String(item);
-};
+/**
+ * Преобразование строки в объект Item
+ */
+export function stringToItem(itemStr: string): Item {
+  return {
+    name: itemStr,
+    quantity: 1
+  };
+}
 
-export const getItemType = (item: string | Item): string => {
-  if (isItem(item)) {
-    return item.type || 'предмет';
-  }
-  return 'предмет';
-};
-
-export const getItemQuantity = (item: string | Item): number => {
-  if (isItem(item)) {
-    return item.quantity || 1;
-  }
-  return 1;
-};
+/**
+ * Нормализация массива элементов снаряжения
+ */
+export function normalizeItemArray(items: (string | Item)[]): Item[] {
+  return items.map(item => {
+    if (isItem(item)) {
+      return item;
+    }
+    return stringToItem(item);
+  });
+}

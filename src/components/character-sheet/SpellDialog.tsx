@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { SpellData } from '@/types/spells';
 import { Character } from '@/types/character';
-import { normalizeSpells, getSpellcastingAbilityModifier } from '@/utils/spellUtils';
+import { getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 import { Separator } from '@/components/ui/separator';
 
 export interface SpellDialogProps {

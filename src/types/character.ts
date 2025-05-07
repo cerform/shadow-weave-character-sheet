@@ -10,7 +10,7 @@ export interface Character {
   class?: string;
   className?: string;
   subclass?: string;
-  subrace?: string;  // Добавляем поле подрасы
+  subrace?: string;  // Поле подрасы
   background?: string;
   level: number;
   experience?: number;
@@ -57,12 +57,12 @@ export interface Character {
   speed?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
-  savingThrowProficiencies?: Record<string, boolean>;  // Добавляем это свойство
-  skillProficiencies?: string[];  // Добавляем это свойство
-  expertise?: string[];  // Добавляем это свойство
-  skillBonuses?: Record<string, number>;  // Добавляем это свойство
-  selectedAbilities?: string[];  // Добавляем это свойство
-  abilityBonuses?: Record<string, number>;  // Добавляем это свойство
+  savingThrowProficiencies?: Record<string, boolean>;
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: Record<string, number>;
+  selectedAbilities?: string[];
+  abilityBonuses?: Record<string, number>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character, Item } from '@/types/character';
 import { Button } from '@/components/ui/button';
@@ -44,11 +45,17 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       type: newEquipmentType,
     };
 
-    let updatedEquipment: (Item | string)[] = [];
+    let updatedEquipment: Item[] = [];
     
     if (character.equipment) {
       if (Array.isArray(character.equipment)) {
-        updatedEquipment = [...character.equipment, newItem];
+        // Преобразуем все элементы equipment в Item
+        updatedEquipment = [...character.equipment.map(item => {
+          if (typeof item === 'string') {
+            return { name: item, quantity: 1 } as Item;
+          }
+          return item as Item;
+        }), newItem];
       } else {
         // Конвертируем объект в массив Item для нового формата
         const items: Item[] = [];
@@ -80,7 +87,16 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
 
     const updatedEquipment = [...character.equipment];
     updatedEquipment.splice(index, 1);
-    onUpdate({ equipment: updatedEquipment as (Item | string)[] });
+    
+    // Преобразуем все элементы equipment в Item
+    const normalizedEquipment: Item[] = updatedEquipment.map(item => {
+      if (typeof item === 'string') {
+        return { name: item, quantity: 1 } as Item;
+      }
+      return item as Item;
+    });
+    
+    onUpdate({ equipment: normalizedEquipment });
   };
 
   const handleStartEdit = (item: Item) => {
@@ -106,8 +122,16 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       type: editedItemType,
     };
     updatedEquipment[index] = itemToUpdate;
+    
+    // Преобразуем все элементы equipment в Item
+    const normalizedEquipment: Item[] = updatedEquipment.map(item => {
+      if (typeof item === 'string') {
+        return { name: item, quantity: 1 } as Item;
+      }
+      return item as Item;
+    });
 
-    onUpdate({ equipment: updatedEquipment });
+    onUpdate({ equipment: normalizedEquipment });
     setEditingItemId(null);
   };
   
@@ -167,7 +191,17 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
         );
       }
     } else {
-      return <div key={item}>{item}</div>;
+      return (
+        <div key={item} className="flex items-center justify-between">
+          <div><span>{item}</span></div>
+          <div>
+            <Button size="sm" variant="destructive" onClick={() => handleRemoveItem(index)}>
+              <X className="h-4 w-4 mr-2" />
+              Удалить
+            </Button>
+          </div>
+        </div>
+      );
     }
   };
   

@@ -1,92 +1,128 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
-import { spells as allSpells } from '@/data/spells';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
+import { importSpellsFromText } from '@/utils/spellHelpers';
 import { CharacterSpell } from '@/types/character';
+import { getAllSpells } from '@/data/spells';
 
 interface SpellImporterProps {
-  onClose: () => void;
-  onImport?: (updatedSpells: CharacterSpell[]) => void;
+  onImport: (spells: CharacterSpell[]) => void;
+  existingSpells?: CharacterSpell[];
 }
 
-const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
+const SpellImporter: React.FC<SpellImporterProps> = ({ onImport, existingSpells = [] }) => {
   const [inputText, setInputText] = useState('');
-  const [importedCount, setImportedCount] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
+  const [parseResults, setParseResults] = useState<CharacterSpell[]>([]);
 
-  const handleImport = () => {
+  const handleTextInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+  };
+
+  const parseSpells = () => {
+    if (!inputText.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите текст для импорта заклинаний.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
-      setIsProcessing(true);
-      const updatedSpells = importSpellsFromText(inputText, allSpells);
-      const newCount = updatedSpells.length - allSpells.length;
-      setImportedCount(newCount > 0 ? newCount : 0);
-      
-      if (onImport) {
-        onImport(updatedSpells);
+      const parsedSpells = importSpellsFromText(inputText, existingSpells);
+      const newSpells = parsedSpells.filter(spell => 
+        !existingSpells.some(existing => 
+          existing.name === spell.name
+        )
+      );
+
+      if (newSpells.length === 0) {
+        toast({
+          title: 'Внимание',
+          description: 'Не найдено новых заклинаний или все заклинания уже добавлены.',
+          variant: 'warning'
+        });
+        return;
       }
-      
+
+      setParseResults(newSpells);
       toast({
-        title: "Заклинания импортированы",
-        description: `Добавлено или обновлено ${newCount > 0 ? newCount : 'несколько'} заклинаний`,
-        variant: "default",
+        title: 'Заклинания найдены',
+        description: `Найдено ${newSpells.length} новых заклинаний.`,
       });
-      
-      // Очистим поле ввода после успешного импорта
-      setInputText('');
     } catch (error) {
-      console.error("Ошибка при импорте заклинаний:", error);
+      console.error('Error parsing spells:', error);
       toast({
-        title: "Ошибка импорта",
-        description: "Не удалось импортировать заклинания. Проверьте формат ввода.",
-        variant: "destructive",
+        title: 'Ошибка',
+        description: 'Не удалось распознать заклинания из текста.',
+        variant: 'destructive'
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
+  const confirmImport = () => {
+    if (parseResults.length === 0) {
+      toast({
+        title: 'Предупреждение',
+        description: 'Нет заклинаний для импорта.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    onImport(parseResults);
+    toast({
+      title: 'Успех',
+      description: `Импортировано ${parseResults.length} заклинаний.`,
+    });
+    setInputText('');
+    setParseResults([]);
+  };
+
   return (
-    <Card className="border-accent bg-card/70">
-      <CardHeader>
-        <CardTitle>Импорт заклинаний</CardTitle>
-        <CardDescription>
-          Вставьте заклинания в формате: [уровень] название компоненты
-        </CardDescription>
-        <CardDescription>
-          Например: [3] Огненный шар ВСМ
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-bold mb-2">Импорт заклинаний</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Вставьте текст с заклинаниями для импорта. Каждое заклинание должно быть на отдельной строке.
+        </p>
         <Textarea
-          placeholder="Вставьте заклинания по одному на строке..."
-          className="h-[200px] mb-4"
           value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
+          onChange={handleTextInput}
+          rows={10}
+          placeholder="Вставьте список заклинаний..."
+          className="font-mono"
         />
-        
-        {importedCount > 0 && (
-          <div className="bg-green-500/10 text-green-500 p-2 rounded-md mb-4">
-            Успешно добавлено или обновлено: {importedCount} заклинаний
+        <Button onClick={parseSpells} className="mt-2">
+          Проверить заклинания
+        </Button>
+      </div>
+
+      {parseResults.length > 0 && (
+        <div className="border p-4 rounded-md">
+          <h3 className="font-semibold mb-2">Найдено {parseResults.length} заклинаний:</h3>
+          <div className="max-h-60 overflow-y-auto space-y-1">
+            {parseResults.map((spell, index) => (
+              <div key={index} className="text-sm p-1 border-b">
+                <span className="font-medium">{spell.name}</span>
+                <span className="ml-2 text-gray-500">
+                  ({spell.level === 0 ? 'Заговор' : `${spell.level} уровень`})
+                </span>
+                {spell.school && <span className="ml-2 text-gray-500">{spell.school}</span>}
+              </div>
+            ))}
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          Отмена
-        </Button>
-        <Button 
-          onClick={handleImport} 
-          disabled={isProcessing || !inputText.trim()}
-        >
-          {isProcessing ? "Импортирую..." : "Импортировать"}
-        </Button>
-      </CardFooter>
-    </Card>
+          <div className="mt-4 space-x-2">
+            <Button onClick={confirmImport}>Импортировать</Button>
+            <Button variant="outline" onClick={() => setParseResults([])}>
+              Отмена
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

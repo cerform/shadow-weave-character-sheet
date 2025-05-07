@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -18,28 +17,30 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
   const [isSpellModalOpen, setIsSpellModalOpen] = useState(false);
   
   // Группировка заклинаний по уровням
-  const spellsByLevel: Record<number, (string | any)[]> = {
+  const spellsByLevel: Record<number, CharacterSpell[]> = {
     0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: []
   };
   
   if (character.spells && Array.isArray(character.spells)) {
     character.spells.forEach((spell) => {
-      const level = typeof spell === 'string' ? 0 : spell.level || 0;
+      const spellObj: CharacterSpell = typeof spell === 'string' 
+        ? { name: spell, level: 0 } 
+        : spell;
+      
+      const level = spellObj.level || 0;
       if (!spellsByLevel[level]) {
         spellsByLevel[level] = [];
       }
-      spellsByLevel[level].push(spell);
+      spellsByLevel[level].push(spellObj);
     });
   }
   
-  const handleSpellUpdate = (level: number, newSpells: any[]) => {
+  const handleSpellUpdate = (level: number, newSpells: CharacterSpell[]) => {
     // Обновляем только заклинания указанного уровня
     const updatedSpells = [...(character.spells || [])].filter(spell => {
-      if (typeof spell === 'string') {
-        return spellsByLevel[level].every(s => typeof s === 'string' ? s !== spell : s.id !== spell);
-      }
-      return spell.level !== level;
-    });
+      const spellLevel = typeof spell === 'string' ? 0 : spell.level;
+      return spellLevel !== level;
+    }) as CharacterSpell[];
     
     // Добавляем обновленные заклинания нужного уровня
     updatedSpells.push(...newSpells);
