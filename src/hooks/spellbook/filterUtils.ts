@@ -80,7 +80,9 @@ export const applyAllFilters = (
   searchTerm: string = '', 
   levels: number[] = [], 
   schools: string[] = [],
-  classes: string[] = []
+  classes: string[] = [],
+  ritual: boolean | null = null,
+  concentration: boolean | null = null
 ): SpellData[] => {
   let filtered = spells;
   
@@ -100,5 +102,26 @@ export const applyAllFilters = (
     filtered = filterByClass(filtered, classes);
   }
   
+  if (ritual !== null) {
+    filtered = filtered.filter(spell => spell.ritual === ritual);
+  }
+  
+  if (concentration !== null) {
+    filtered = filtered.filter(spell => spell.concentration === concentration);
+  }
+  
   return filtered;
+};
+
+// Добавляем функцию filterSpells для совместимости с useSpellbook.ts
+export const filterSpells = (spells: SpellData[], filter: any): SpellData[] => {
+  return applyAllFilters(
+    spells, 
+    filter.search, 
+    filter.level, 
+    filter.school,
+    filter.className,
+    filter.ritual,
+    filter.concentration
+  );
 };

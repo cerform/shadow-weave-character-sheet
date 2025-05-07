@@ -9,5 +9,10 @@ export default useSpellbook;
 export { 
   convertCharacterSpellToSpellData,
   convertSpellDataToCharacterSpell,
-  convertSpellArray
 } from '@/types/spells';
+
+// Экспортируем вспомогательные функции из spellHelpers
+export {
+  convertCharacterSpellsToSpellData,
+  convertToSpellData
+} from '@/utils/spellHelpers';

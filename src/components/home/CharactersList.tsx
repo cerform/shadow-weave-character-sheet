@@ -53,7 +53,7 @@ const CharactersList: React.FC = () => {
       await getUserCharacters();
       toast({
         title: "Список персонажей обновлен",
-        variant: "success"
+        variant: "default" // Изменен с "success" на "default"
       });
       setError(null);
     } catch (err) {
