@@ -73,3 +73,28 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell | string)
     materials: spell.materials
   };
 }
+
+// Функция для преобразования SpellData в CharacterSpell
+export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpell {
+  return {
+    id: spell.id,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    classes: spell.classes,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    prepared: spell.prepared,
+    higherLevel: spell.higherLevel,
+    higherLevels: spell.higherLevels,
+    materials: spell.materials
+  };
+}

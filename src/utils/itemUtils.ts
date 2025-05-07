@@ -46,3 +46,33 @@ export function normalizeItemArray(items: (string | Item)[]): Item[] {
     return stringToItem(item);
   });
 }
+
+/**
+ * Получение названия предмета
+ */
+export function getItemName(item: string | Item): string {
+  if (isItem(item)) {
+    return item.name;
+  }
+  return item;
+}
+
+/**
+ * Получение типа предмета
+ */
+export function getItemType(item: string | Item): string | undefined {
+  if (isItem(item)) {
+    return item.type;
+  }
+  return undefined;
+}
+
+/**
+ * Получение количества предметов
+ */
+export function getItemQuantity(item: string | Item): number {
+  if (isItem(item)) {
+    return item.quantity;
+  }
+  return 1;
+}

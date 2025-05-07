@@ -1,21 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character, Item } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
+import { isItem, stringToItem } from '@/utils/itemUtils';
 
 interface CharacterEquipmentProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-}
-
-// Вспомогательная функция для проверки типа объекта
-function isItem(item: string | Item): item is Item {
-  return typeof item === 'object' && item !== null;
 }
 
 const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUpdate }) => {
@@ -52,7 +46,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
         // Преобразуем все элементы equipment в Item
         updatedEquipment = [...character.equipment.map(item => {
           if (typeof item === 'string') {
-            return { name: item, quantity: 1 } as Item;
+            return stringToItem(item);
           }
           return item as Item;
         }), newItem];
@@ -91,7 +85,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
     // Преобразуем все элементы equipment в Item
     const normalizedEquipment: Item[] = updatedEquipment.map(item => {
       if (typeof item === 'string') {
-        return { name: item, quantity: 1 } as Item;
+        return stringToItem(item);
       }
       return item as Item;
     });
@@ -126,7 +120,7 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
     // Преобразуем все элементы equipment в Item
     const normalizedEquipment: Item[] = updatedEquipment.map(item => {
       if (typeof item === 'string') {
-        return { name: item, quantity: 1 } as Item;
+        return stringToItem(item);
       }
       return item as Item;
     });
@@ -135,66 +129,50 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
     setEditingItemId(null);
   };
   
-  // В местах использования item.type и item.name,
-  // добавляем проверку через isItem:
-  
-  // Например:
   const renderItem = (item: string | Item, index: number) => {
-    if (isItem(item)) {
-      if (editingItemId === item.name) {
-        return (
-          <div key={item.name} className="flex items-center space-x-2">
-            <Input
-              type="text"
-              value={editedItemName}
-              onChange={(e) => setEditedItemName(e.target.value)}
-              className="w-24"
-            />
-            <Input
-              type="number"
-              value={String(editedItemQuantity)}
-              onChange={(e) => setEditedItemQuantity(Number(e.target.value))}
-              className="w-16"
-            />
-            <Input
-              type="text"
-              value={editedItemType}
-              onChange={(e) => setEditedItemType(e.target.value)}
-              className="w-24"
-            />
-            <Button size="sm" onClick={() => handleSaveEdit(index)}>
-              Сохранить
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-              Отмена
-            </Button>
-          </div>
-        );
-      } else {
-        return (
-          <div key={item.name} className="flex items-center justify-between">
-            <div>
-              <span>{item.name}</span>
-              {item.type && <span className="ml-2 text-sm text-gray-500">({item.type})</span>}
-              {item.quantity > 1 && <span className="ml-2 text-sm text-gray-500">x{item.quantity}</span>}
-            </div>
-            <div>
-              <Button size="sm" onClick={() => handleStartEdit(item)}>
-                Редактировать
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleRemoveItem(index)}>
-                <X className="h-4 w-4 mr-2" />
-                Удалить
-              </Button>
-            </div>
-          </div>
-        );
-      }
+    const itemObj = isItem(item) ? item : stringToItem(item);
+    
+    if (editingItemId === itemObj.name) {
+      return (
+        <div key={itemObj.name} className="flex items-center space-x-2">
+          <Input
+            type="text"
+            value={editedItemName}
+            onChange={(e) => setEditedItemName(e.target.value)}
+            className="w-24"
+          />
+          <Input
+            type="number"
+            value={String(editedItemQuantity)}
+            onChange={(e) => setEditedItemQuantity(Number(e.target.value))}
+            className="w-16"
+          />
+          <Input
+            type="text"
+            value={editedItemType}
+            onChange={(e) => setEditedItemType(e.target.value)}
+            className="w-24"
+          />
+          <Button size="sm" onClick={() => handleSaveEdit(index)}>
+            Сохранить
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+            Отмена
+          </Button>
+        </div>
+      );
     } else {
       return (
-        <div key={item} className="flex items-center justify-between">
-          <div><span>{item}</span></div>
+        <div key={itemObj.name} className="flex items-center justify-between">
           <div>
+            <span>{itemObj.name}</span>
+            {itemObj.type && <span className="ml-2 text-sm text-gray-500">({itemObj.type})</span>}
+            {itemObj.quantity > 1 && <span className="ml-2 text-sm text-gray-500">x{itemObj.quantity}</span>}
+          </div>
+          <div>
+            <Button size="sm" onClick={() => handleStartEdit(itemObj)}>
+              Редактировать
+            </Button>
             <Button size="sm" variant="destructive" onClick={() => handleRemoveItem(index)}>
               <X className="h-4 w-4 mr-2" />
               Удалить

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { Button } from '@/components/ui/button';
@@ -38,9 +39,9 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
   const handleSpellUpdate = (level: number, newSpells: CharacterSpell[]) => {
     // Обновляем только заклинания указанного уровня
     const updatedSpells = [...(character.spells || [])].filter(spell => {
-      const spellLevel = typeof spell === 'string' ? 0 : spell.level;
+      const spellLevel = typeof spell === 'string' ? 0 : (spell as CharacterSpell).level;
       return spellLevel !== level;
-    }) as CharacterSpell[];
+    });
     
     // Добавляем обновленные заклинания нужного уровня
     updatedSpells.push(...newSpells);

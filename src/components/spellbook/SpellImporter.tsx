@@ -42,7 +42,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onImport, existingSpells 
         toast({
           title: 'Внимание',
           description: 'Не найдено новых заклинаний или все заклинания уже добавлены.',
-          variant: 'warning'
+          variant: 'destructive'
         });
         return;
       }
@@ -67,7 +67,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onImport, existingSpells 
       toast({
         title: 'Предупреждение',
         description: 'Нет заклинаний для импорта.',
-        variant: 'warning'
+        variant: 'destructive'
       });
       return;
     }

@@ -120,3 +120,11 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
   
   return result;
 }
+
+/**
+ * Получение названия уровня заклинания
+ */
+export function getSpellLevelName(level: number): string {
+  if (level === 0) return 'Заговор';
+  return `${level} уровень`;
+}

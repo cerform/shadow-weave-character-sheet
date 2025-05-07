@@ -1,4 +1,3 @@
-
 // Import necessary types
 import { Item } from './character';
 
@@ -132,6 +131,7 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   initiative?: string | number;
+  lastUpdated?: string | number;
   lastDiceRoll?: {
     diceType: string;
     count: number;
