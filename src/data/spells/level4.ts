@@ -1,8 +1,8 @@
+
 import { CharacterSpell } from '@/types/character';
 
 export const level4: CharacterSpell[] = [
   {
-    id: 'aura-of-life',
     name: "Аура жизни",
     level: 4,
     school: "Ограждение",
@@ -19,7 +19,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Паладин", "Жрец"]
   },
   {
-    id: 'aura-of-purity',
     name: "Аура очищения",
     level: 4,
     school: "Ограждение",
@@ -32,11 +31,10 @@ export const level4: CharacterSpell[] = [
     concentration: true,
     ritual: false,
     duration: "Концентрация, вплоть до 10 минут",
-    description: "Очищающая энергия исходит от вас, окружая ваших друзей и защищая их от болезней. Вы и все дружественные существа в пределах 30 футов от вас имеют иммунитет к болезням и ядам, а существа, очарованные, парализованные или отравленные, могут совершить новый спасбросок при входе в ауре.",
+    description: "Очищающая энергия исходит от вас, окружая ваших друзей и защищая их от болезней. Вы и все дружественные существа в пределах 30 футов от вас имеют иммунитет к болезням и ядам, а существа, очарованные, парализованные или отравленные, могут совершить новый спасбросок при входе в ауру.",
     classes: ["Паладин", "Жрец"]
   },
   {
-    id: 'sickening-radiance',
     name: "Болезненное сияние",
     level: 4,
     school: "Воплощение",
@@ -53,7 +51,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Волшебник", "Искуситель"]
   },
   {
-    id: 'galders-speedy-courier',
     name: "Быстрый гонец Гальдера",
     level: 4,
     school: "Вызов",
@@ -70,7 +67,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
-    id: 'mordenkainens-faithful-hound',
     name: "Верный пёс Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -87,7 +83,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: 'control-water',
     name: "Власть над водами",
     level: 4,
     school: "Преобразование",
@@ -104,7 +99,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Жрец"]
   },
   {
-    id: 'watery-sphere',
     name: "Водяная сфера",
     level: 4,
     school: "Вызов",
@@ -121,7 +115,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
-    id: 'phantasmal-killer',
     name: "Воображаемый убийца",
     level: 4,
     school: "Иллюзия",
@@ -138,7 +131,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
-    id: 'greater-invisibility',
     name: "Высшая невидимость",
     level: 4,
     school: "Иллюзия",
@@ -155,7 +147,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Чародей"]
   },
   {
-    id: 'giant-insect',
     name: "Гигантское насекомое",
     level: 4,
     school: "Преобразование",
@@ -172,7 +163,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Жрец"]
   },
   {
-    id: 'hail-of-thorns',
     name: "Град",
     level: 4,
     school: "Воплощение",
@@ -189,7 +179,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
-    id: 'spirit-of-death',
     name: "Дух смерти",
     level: 4,
     school: "Некромантия",
@@ -206,7 +195,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: 'vitriolic-sphere',
     name: "Едкий шар",
     level: 4,
     school: "Воплощение",
@@ -223,7 +211,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: 'private-sanctum',
     name: "Запечатывание врат",
     level: 4,
     school: "Ограждение",
@@ -240,7 +227,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин"]
   },
   {
-    id: 'death-ward',
     name: "Защита от смерти",
     level: 4,
     school: "Ограждение",
@@ -257,7 +243,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: 'banishment',
     name: "Изгнание",
     level: 4,
     school: "Ограждение",
@@ -274,7 +259,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин", "Колдун"]
   },
   {
-    id: 'fabricate',
     name: "Изготовление",
     level: 4,
     school: "Преобразование",
@@ -291,7 +275,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Искуситель"]
   },
   {
-    id: 'stone-shape',
     name: "Изменение формы камня",
     level: 4,
     school: "Преобразование",
@@ -308,7 +291,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Искуситель"]
   },
   {
-    id: 'mordenkainens-magnificent-mansion',
     name: "Кабинет Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -325,7 +307,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: 'stoneskin',
     name: "Каменная кожа",
     level: 4,
     school: "Ограждение",

@@ -1,177 +1,157 @@
 
 import { SpellData, SpellFilter } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
+import { getAllSpells } from '@/data/spells';
 
 /**
- * Получение названия уровня заклинания
+ * Фильтрация заклинаний по заданным критериям
  */
-export const getSpellLevelName = (level: number): string => {
-  if (level === 0) return 'Заговор';
-  return `${level} уровень`;
-};
-
-/**
- * Фильтрация заклинаний на основе предоставленных фильтров
- */
-export const filterSpells = (spells: SpellData[], filters: SpellFilter): SpellData[] => {
-  if (!filters || Object.keys(filters).length === 0) return spells;
+export const filterSpells = (spells: SpellData[] | CharacterSpell[], filters: SpellFilter): SpellData[] => {
+  if (!spells || spells.length === 0) return [];
 
   return spells.filter(spell => {
     // Фильтрация по названию
     if (filters.name && !spell.name.toLowerCase().includes(filters.name.toLowerCase())) {
       return false;
     }
-
+    
     // Фильтрация по уровню
     if (filters.level !== undefined) {
       if (Array.isArray(filters.level)) {
-        if (filters.level.length > 0 && !filters.level.includes(spell.level)) {
-          return false;
-        }
-      } else if (filters.level !== null && filters.level !== spell.level) {
+        if (filters.level.length > 0 && !filters.level.includes(spell.level)) return false;
+      } else if (spell.level !== filters.level) {
         return false;
       }
     }
-
+    
     // Фильтрация по школе
-    if (filters.school) {
+    if (filters.school !== undefined) {
       if (Array.isArray(filters.school)) {
-        if (filters.school.length > 0 && !filters.school.includes(spell.school)) {
-          return false;
-        }
-      } else if (filters.school !== spell.school) {
+        if (filters.school.length > 0 && !filters.school.includes(spell.school)) return false;
+      } else if (spell.school !== filters.school) {
         return false;
       }
     }
-
+    
     // Фильтрация по классу
-    if (filters.class) {
+    if (filters.class !== undefined) {
       const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
       
       if (Array.isArray(filters.class)) {
-        if (filters.class.length > 0 && !filters.class.some(c => spellClasses.includes(c))) {
-          return false;
-        }
+        if (filters.class.length > 0 && !filters.class.some(c => spellClasses.includes(c))) return false;
       } else if (!spellClasses.includes(filters.class)) {
         return false;
       }
     }
-
-    // Фильтрация по ритуалу
+    
+    // Фильтрация по ритуалу и концентрации
     if (filters.ritual !== undefined && spell.ritual !== filters.ritual) {
       return false;
     }
-
-    // Фильтрация по концентрации
+    
     if (filters.concentration !== undefined && spell.concentration !== filters.concentration) {
       return false;
     }
-
+    
     return true;
-  });
+  }) as SpellData[];
 };
 
 /**
- * Получение цвета бейджа для уровня заклинания
+ * Парсер для быстрого импорта заклинаний
  */
-export const getSpellLevelColor = (level: number): string => {
-  const colors = [
-    'bg-stone-800 text-white', // Заговоры
-    'bg-blue-900 text-white',  // 1 уровень
-    'bg-indigo-900 text-white', // 2 уровень
-    'bg-purple-900 text-white', // 3 уровень
-    'bg-pink-900 text-white', // 4 уровень
-    'bg-red-900 text-white', // 5 уровень
-    'bg-orange-900 text-white', // 6 уровень
-    'bg-amber-900 text-white', // 7 уровень
-    'bg-yellow-900 text-white', // 8 уровень
-    'bg-green-900 text-white', // 9 уровень
-  ];
+export function parseSpellEntry(entry: string): Partial<CharacterSpell> {
+  // Базовый парсер для строк вида: "[level] name components"
+  // Например: "[0] Огненный снаряд ВС"
+  const levelMatch = entry.match(/\[(\d+)\]/);
+  const level = levelMatch ? parseInt(levelMatch[1]) : 0;
   
-  return colors[level] || colors[0];
-};
-
-/**
- * Форматирование классов для отображения
- */
-export const formatSpellClasses = (classes: string[] | string | undefined): string => {
-  if (!classes) return '';
+  // Получаем имя заклинания (предполагаем, что оно находится между уровнем и компонентами)
+  let name = entry.replace(/\[\d+\]\s*/, '').trim();
   
-  if (Array.isArray(classes)) {
-    return classes.join(', ');
+  // Определяем компоненты (обычно в конце строки)
+  const componentsMatch = name.match(/\s([ВСМ]+)$/);
+  let components = '';
+  
+  if (componentsMatch) {
+    components = componentsMatch[1].replace('В', 'V').replace('С', 'S').replace('М', 'M');
+    name = name.replace(/\s[ВСМ]+$/, '').trim();
   }
   
-  return classes;
-};
+  return {
+    name,
+    level,
+    components: components || '',
+    verbal: components.includes('V'),
+    somatic: components.includes('S'),
+    material: components.includes('M')
+  };
+}
 
 /**
- * Проверка соответствия заклинания строке поиска
+ * Обработка пакетного импорта заклинаний
  */
-export const spellMatchesSearchTerm = (spell: SpellData, searchTerm: string): boolean => {
-  if (!searchTerm) return true;
+export function processSpellBatch(text: string): Partial<CharacterSpell>[] {
+  const lines = text.split('\n');
+  const results: Partial<CharacterSpell>[] = [];
   
-  const normalizedSearch = searchTerm.toLowerCase();
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    try {
+      const spell = parseSpellEntry(trimmed);
+      results.push(spell);
+    } catch (error) {
+      console.error(`Failed to parse spell entry: "${trimmed}"`, error);
+    }
+  }
   
-  // Проверяем название
-  if (spell.name.toLowerCase().includes(normalizedSearch)) return true;
-  
-  // Проверяем английское название, если есть
-  if (spell.name_en && spell.name_en.toLowerCase().includes(normalizedSearch)) return true;
-  
-  // Проверяем описание
-  if (typeof spell.description === 'string' && 
-      spell.description.toLowerCase().includes(normalizedSearch)) return true;
-  
-  // Проверяем школу
-  if (spell.school.toLowerCase().includes(normalizedSearch)) return true;
-  
-  return false;
-};
-
-/**
- * Преобразует строку имени заклинания в формат slug для ID
- */
-export const createSpellId = (name: string): string => {
-  return name.toLowerCase()
-    .replace(/[^\wа-яё]+/g, '-') // заменяем все не-буквенные и не-цифровые символы на дефис
-    .replace(/(^-|-$)/g, '') // удаляем начальные и конечные дефисы
-    .replace(/--+/g, '-'); // заменяем последовательности дефисов на один дефис
-};
+  return results;
+}
 
 /**
  * Импорт заклинаний из текста
  */
-export const importSpellsFromText = (text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] => {
-  // Простой алгоритм разбора списка заклинаний из текста
-  // В этой базовой версии мы просто разделяем по новой строке
-  const lines = text.split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
+export function importSpellsFromText(text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] {
+  if (!text) return existingSpells;
   
+  const allSpells = getAllSpells();
+  const lines = text.split('\n');
   const result: CharacterSpell[] = [];
   
-  // Если есть существующие заклинания, добавляем новые только если их нет в списке
-  const existingNames = existingSpells.map(spell => spell.name.toLowerCase());
-  
   for (const line of lines) {
-    // Простейший анализ, предполагающий, что каждая строка содержит одно заклинание
-    // Можно доработать этот алгоритм для более сложного разбора
-    if (existingNames.includes(line.toLowerCase())) {
-      continue; // Пропускаем, если заклинание уже есть
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    // Ищем заклинание по имени в списке всех заклинаний
+    const spellName = trimmed.split('(')[0].split('[')[0].trim();
+    const foundSpell = allSpells.find(
+      s => s.name.toLowerCase() === spellName.toLowerCase()
+    );
+    
+    if (foundSpell) {
+      result.push({
+        id: foundSpell.id,
+        name: foundSpell.name,
+        level: foundSpell.level,
+        school: foundSpell.school,
+        castingTime: foundSpell.castingTime,
+        range: foundSpell.range,
+        components: foundSpell.components,
+        duration: foundSpell.duration,
+        description: foundSpell.description,
+        classes: foundSpell.classes,
+        ritual: foundSpell.ritual,
+        concentration: foundSpell.concentration,
+        verbal: foundSpell.verbal,
+        somatic: foundSpell.somatic,
+        material: foundSpell.material
+      });
+    } else {
+      console.warn(`Заклинание не найдено: ${spellName}`);
     }
-    
-    // Создаем базовую структуру заклинания
-    const spell: CharacterSpell = {
-      id: createSpellId(line),
-      name: line,
-      level: 0, // По умолчанию заговор
-      school: 'Неизвестно', // По умолчанию
-      description: 'Требуется описание заклинания',
-      classes: []
-    };
-    
-    result.push(spell);
   }
   
   return result;
-};
+}
