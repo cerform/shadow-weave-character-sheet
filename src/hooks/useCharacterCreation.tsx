@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
@@ -298,6 +297,53 @@ export const useCharacterCreation = () => {
   // Функция для конвертации данных в тип Character
   const convertToCharacter = (characterData: any): Character => {
     return characterData as Character;
+  };
+
+  // Функции для управления мультиклассами
+  const handleAddClass = (className: string) => {
+    if (!character) return;
+    
+    const updatedClasses = Array.isArray(character.additionalClasses) ? 
+      [...character.additionalClasses, className] : 
+      [className];
+    
+    setCharacter({
+      ...character,
+      additionalClasses: updatedClasses
+    });
+  };
+
+  const handleRemoveClass = (index: number) => {
+    if (!character || !Array.isArray(character.additionalClasses)) return;
+    
+    const updatedClasses = [...character.additionalClasses];
+    updatedClasses.splice(index, 1);
+    
+    setCharacter({
+      ...character,
+      additionalClasses: updatedClasses
+    });
+  };
+
+  const handleMultiClass = (className: string) => {
+    if (!character) return;
+    
+    // Check if additionalClasses exists and is an array
+    if (!character.additionalClasses) {
+      setCharacter({
+        ...character,
+        additionalClasses: [className]
+      });
+      return;
+    }
+    
+    // If it exists, add the class if it's not already included
+    if (Array.isArray(character.additionalClasses) && !character.additionalClasses.includes(className)) {
+      setCharacter({
+        ...character,
+        additionalClasses: [...character.additionalClasses, className]
+      });
+    }
   };
 
   return { 

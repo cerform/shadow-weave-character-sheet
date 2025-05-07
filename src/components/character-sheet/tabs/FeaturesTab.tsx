@@ -1,156 +1,176 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character, Feature } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Trash2 } from 'lucide-react';
 
-interface FeatsTabProps {
+interface FeaturesTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-const FeatsTab: React.FC<FeatsTabProps> = ({ character, onUpdate }) => {
-  const [expandedSections, setExpandedSections] = useState({
-    racial: true,
-    class: true,
-    background: true,
-    feats: true,
-  });
+const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate }) => {
+  const [newFeatureName, setNewFeatureName] = useState('');
+  const [newFeatureDescription, setNewFeatureDescription] = useState('');
+  const [selectedFeatureIndex, setSelectedFeatureIndex] = useState<number | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [featureSource, setFeatureSource] = useState('');
 
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections({
-      ...expandedSections,
-      [section]: !expandedSections[section],
-    });
-  };
-
-  // Получаем особенности расы с правильным типом
-  const racialFeatures = character.raceFeatures || [] as Feature[];
-  
-  // Получаем особенности класса
-  const classFeatures = character.classFeatures || [] as Feature[];
-  
-  // Получаем особенности предыстории
-  const backgroundFeatures = character.backgroundFeatures || [] as Feature[];
-  
-  // Получаем черты персонажа
-  const characterFeats = character.feats || [] as Feature[];
-
-  // Вспомогательная функция для определения, есть ли какие-то особенности
-  const hasAnyFeatures = () => {
-    return racialFeatures.length > 0 || 
-           classFeatures.length > 0 || 
-           backgroundFeatures.length > 0 ||
-           characterFeats.length > 0;
-  };
-
-  // Вспомогательная функция для отображения раскрывающегося блока с содержимым
-  const renderExpandableSection = (
-    title: string,
-    features: Feature[],
-    expanded: boolean,
-    onToggle: () => void
-  ) => {
-    if (!features || features.length === 0) {
-      return (
-        <div className="border border-gray-700 rounded-lg p-4 mb-4 bg-gray-800/50">
-          <div className="flex justify-between items-center cursor-pointer" onClick={onToggle}>
-            <h3 className="text-xl font-semibold text-amber-400">{title}</h3>
-            {expanded ? 
-              <ChevronUp className="h-5 w-5 text-amber-400" /> : 
-              <ChevronDown className="h-5 w-5 text-amber-400" />
-            }
-          </div>
-          {expanded && (
-            <div className="mt-2 text-gray-400">
-              Нет особенностей {title.toLowerCase()}
-            </div>
-          )}
-        </div>
-      );
+  useEffect(() => {
+    if (selectedFeatureIndex !== null && character.features && Array.isArray(character.features)) {
+      const feature = character.features[selectedFeatureIndex];
+      if (typeof feature === 'object' && feature !== null) {
+        setNewFeatureName(feature.name || '');
+        setNewFeatureDescription(feature.description || '');
+      }
+    } else {
+      setNewFeatureName('');
+      setNewFeatureDescription('');
     }
+  }, [selectedFeatureIndex, character.features]);
 
-    return (
-      <div className="border border-gray-700 rounded-lg p-4 mb-4 bg-gray-800/50">
-        <div className="flex justify-between items-center cursor-pointer" onClick={onToggle}>
-          <h3 className="text-xl font-semibold text-amber-400">{title}</h3>
-          {expanded ? 
-            <ChevronUp className="h-5 w-5 text-amber-400" /> : 
-            <ChevronDown className="h-5 w-5 text-amber-400" />
-          }
-        </div>
-        
-        {expanded && (
-          <div className="mt-2 space-y-2">
-            {features.map((feature, index) => (
-              <Card key={index} className="bg-gray-800/70 border-gray-700">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-amber-300 text-lg">
-                    {feature.name} {feature.level ? `(Ур. ${feature.level})` : ''}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-gray-200">
-                  <p className="whitespace-pre-line">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  const handleAddFeature = () => {
+    if (newFeatureName && newFeatureDescription) {
+      const newFeature: Feature = {
+        name: newFeatureName,
+        description: newFeatureDescription,
+        source: featureSource || 'custom',
+      };
+
+      const updatedFeatures = character.features ? [...character.features, newFeature] : [newFeature];
+      onUpdate({ features: updatedFeatures });
+      setNewFeatureName('');
+      setNewFeatureDescription('');
+      setFeatureSource('');
+    }
+  };
+
+  const handleEditFeature = () => {
+    if (selectedFeatureIndex !== null && character.features && Array.isArray(character.features)) {
+      const updatedFeatures = [...character.features];
+      if (typeof updatedFeatures[selectedFeatureIndex] === 'object' && updatedFeatures[selectedFeatureIndex] !== null) {
+        (updatedFeatures[selectedFeatureIndex] as Feature).name = newFeatureName;
+        (updatedFeatures[selectedFeatureIndex] as Feature).description = newFeatureDescription;
+      }
+      onUpdate({ features: updatedFeatures });
+      setEditMode(false);
+      setSelectedFeatureIndex(null);
+      setNewFeatureName('');
+      setNewFeatureDescription('');
+    }
+  };
+
+  const handleDeleteFeature = () => {
+    if (selectedFeatureIndex !== null && character.features && Array.isArray(character.features)) {
+      const updatedFeatures = [...character.features];
+      updatedFeatures.splice(selectedFeatureIndex, 1);
+      onUpdate({ features: updatedFeatures });
+      setSelectedFeatureIndex(null);
+      setEditMode(false);
+    }
+  };
+
+  const handleFeatureSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFeatureSource(e.target.value);
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-amber-500 mb-6">Особенности и умения</h2>
-      
-      {hasAnyFeatures() ? (
-        <ScrollArea className="h-[70vh]">
-          {/* Особенности расы */}
-          {renderExpandableSection(
-            `Особенности расы ${character.race || ''}`,
-            racialFeatures,
-            expandedSections.racial,
-            () => toggleSection('racial')
-          )}
-          
-          {/* Особенности класса */}
-          {renderExpandableSection(
-            `Особенности класса ${character.class || ''}`,
-            classFeatures,
-            expandedSections.class,
-            () => toggleSection('class')
-          )}
-          
-          {/* Особенности предыстории */}
-          {renderExpandableSection(
-            `Особенности предыстории ${character.background || ''}`,
-            backgroundFeatures,
-            expandedSections.background,
-            () => toggleSection('background')
-          )}
-          
-          {/* Черты персонажа */}
-          {renderExpandableSection(
-            'Черты персонажа',
-            characterFeats,
-            expandedSections.feats,
-            () => toggleSection('feats')
-          )}
-        </ScrollArea>
-      ) : (
-        <div className="p-8 text-center">
-          <div className="text-lg text-gray-400 mb-4">
-            У вашего персонажа пока нет особенностей или умений
-          </div>
-          <p className="text-gray-500">
-            Особенности и умения появятся по мере развития персонажа, 
-            выбора классовых опций, или получения черт
-          </p>
-        </div>
-      )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Список особенностей */}
+      <div>
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Особенности</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <ScrollArea className="h-[300px] pr-4">
+              <ul className="space-y-2">
+                {character.features && Array.isArray(character.features) ? (
+                  character.features.map((feature, index) => (
+                    <li
+                      key={index}
+                      className={`p-2 rounded cursor-pointer ${selectedFeatureIndex === index ? 'bg-secondary/50' : 'hover:bg-secondary/20'}`}
+                      onClick={() => {
+                        setSelectedFeatureIndex(index);
+                        setEditMode(true);
+                      }}
+                    >
+                      {typeof feature === 'object' && feature !== null ? feature.name : feature}
+                    </li>
+                  ))
+                ) : (
+                  <li>Нет особенностей</li>
+                )}
+              </ul>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Форма для добавления/редактирования */}
+      <div>
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>{editMode ? 'Редактировать особенность' : 'Добавить особенность'}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Источник</label>
+              <select
+                value={character.features ? 
+                  (typeof character.features === 'string' ? character.features : 'custom') : ''
+                }
+                onChange={handleFeatureSourceChange}
+                className="border p-2 rounded"
+              >
+                <option value="">Выберите источник</option>
+                <option value="race">Раса</option>
+                <option value="class">Класс</option>
+                <option value="background">Предыстория</option>
+                <option value="custom">Свои</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Название</label>
+              <Input
+                type="text"
+                value={newFeatureName}
+                onChange={(e) => setNewFeatureName(e.target.value)}
+                placeholder="Название особенности"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Описание</label>
+              <Textarea
+                value={newFeatureDescription}
+                onChange={(e) => setNewFeatureDescription(e.target.value)}
+                placeholder="Описание особенности"
+                className="h-24"
+              />
+            </div>
+            <div className="flex justify-between">
+              {editMode ? (
+                <>
+                  <Button variant="secondary" onClick={handleEditFeature}>
+                    Сохранить
+                  </Button>
+                  <Button variant="destructive" onClick={handleDeleteFeature}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Удалить
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={handleAddFeature}>Добавить</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default FeatsTab;
+export default FeaturesTab;

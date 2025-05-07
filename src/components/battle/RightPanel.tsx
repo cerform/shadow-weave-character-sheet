@@ -278,7 +278,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       Раскрыть весь туман
                     </Button>
                     <Button size="sm" variant="outline" onClick={onResetFog}>
-                      Сбросить туман
+                      Сбросить ��уман
                     </Button>
                   </div>
                 )}

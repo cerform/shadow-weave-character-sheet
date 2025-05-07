@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SpellCastingPanel from '../SpellCastingPanel';
 import SpellPanel from '../SpellPanel';
-import { SpellCastingPanelProps, SpellPanelProps } from '@/types/battle';
 
 interface SpellsTabProps {
   character: Character;
@@ -19,6 +18,21 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
   // Функция для обновления заклинаний
   const updateSpells = (newSpells: any) => {
     onUpdate({ spells: newSpells });
+  };
+
+  // Получение заклинаний для конкретного уровня
+  const getSpellsByLevel = (level: number | 'cantrips') => {
+    if (!character.spells || !Array.isArray(character.spells)) return [];
+    
+    if (level === 'cantrips') {
+      return character.spells.filter(spell => 
+        typeof spell === 'object' && spell.level === 0
+      );
+    }
+    
+    return character.spells.filter(spell => 
+      typeof spell === 'object' && spell.level === level
+    );
   };
 
   return (
@@ -47,7 +61,9 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
           <TabsContent value="cantrips" className="mt-2">
             <SpellPanel
               character={character}
+              spells={getSpellsByLevel('cantrips')}
               onUpdate={updateSpells}
+              level={0}
             />
           </TabsContent>
 
@@ -55,7 +71,9 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
             <TabsContent key={level} value={`level-${level}`} className="mt-2">
               <SpellPanel
                 character={character}
+                spells={getSpellsByLevel(level)}
                 onUpdate={updateSpells}
+                level={level}
               />
             </TabsContent>
           ))}

@@ -328,7 +328,15 @@ const PlayBattlePage = () => {
   };
 
   // Функция добавления источника света
-  const handleAddLight = (type: string, radius: number, color: string, attached: boolean = false) => {
+  const handleAddLight = (type: "torch" | "lantern" | "daylight" | "custom", color?: string, intensity?: number) => {
+    // Default values
+    let radius = 30; // Default radius
+    let lightColor = color || "#ffbb73"; // Default color for torch
+    
+    // Adjust radius based on type
+    if (type === "lantern") radius = 60;
+    else if (type === "daylight") radius = 120;
+    
     // Create light with proper position property
     const newLight: Omit<LightSource, "id"> = {
       position: {
@@ -336,13 +344,13 @@ const PlayBattlePage = () => {
         y: 250
       },
       radius,
-      color,
+      color: lightColor,
       type,
-      intensity: 1.0,
+      intensity: intensity || 1.0,
       enabled: true
     };
     
-    if (attached && selectedTokenId) {
+    if (selectedTokenId) {
       newLight.attachedToTokenId = selectedTokenId;
       
       // If attached to a token, use the token's position
@@ -360,7 +368,7 @@ const PlayBattlePage = () => {
   
   // Fix token setting
   const handleSetTokens = (newTokens: Token[]) => {
-    // Convert the function from a setState style function to a direct value setter
+    // Convert from setState-style function to direct value setter
     newTokens.forEach(token => {
       addToken(token);
     });

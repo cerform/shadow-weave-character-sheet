@@ -98,6 +98,40 @@ interface BattleStore {
   setShowWebcams: (show: boolean) => void;
 }
 
+const addLightSource = (lightSource: Omit<LightSource, "id">) => {
+  set((state) => ({
+    mapSettings: {
+      ...state.mapSettings,
+      lightSources: [...state.mapSettings.lightSources, { 
+        ...lightSource, 
+        id: String(Date.now())  // Convert to string to match LightSource.id type
+      }]
+    }
+  }));
+};
+
+const removeLightSource = (id: number) => {
+  set((state) => ({
+    mapSettings: {
+      ...state.mapSettings,
+      lightSources: state.mapSettings.lightSources.filter(light => 
+        String(light.id) !== String(id)  // Convert both to string for comparison
+      )
+    }
+  }));
+};
+
+const updateLightSource = (id: number, updates: Partial<Omit<LightSource, "id">>) => {
+  set((state) => ({
+    mapSettings: {
+      ...state.mapSettings,
+      lightSources: state.mapSettings.lightSources.map(light => 
+        String(light.id) === String(id) ? { ...light, ...updates } : light  // Convert both to string
+      )
+    }
+  }));
+};
+
 const useBattleStore = create<BattleStore>((set, get) => ({
   // Начальное состояние
   tokens: [],
@@ -373,7 +407,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
         ...state.mapSettings,
         lightSources: [...state.mapSettings.lightSources, { 
           ...lightSource, 
-          id: Date.now() 
+          id: String(Date.now())  // Convert to string to match LightSource.id type
         }]
       }
     }));
@@ -383,7 +417,9 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     set((state) => ({
       mapSettings: {
         ...state.mapSettings,
-        lightSources: state.mapSettings.lightSources.filter(light => light.id !== id)
+        lightSources: state.mapSettings.lightSources.filter(light => 
+          String(light.id) !== String(id)  // Convert both to string for comparison
+        )
       }
     }));
   },
@@ -393,7 +429,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       mapSettings: {
         ...state.mapSettings,
         lightSources: state.mapSettings.lightSources.map(light => 
-          light.id === id ? { ...light, ...updates } : light
+          String(light.id) === String(id) ? { ...light, ...updates } : light  // Convert both to string
         )
       }
     }));

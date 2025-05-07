@@ -74,7 +74,7 @@ export interface DicePanelProps {
 
 // Обновляем типы для компонентов боя
 export interface LightSource {
-  id: string; // Note: Keep this as string for compatibility
+  id: string | number; // Note: Keep this as string for compatibility
   position: { x: number; y: number };
   radius: number;
   color?: string;

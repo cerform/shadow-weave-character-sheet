@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -146,6 +145,7 @@ export interface Character {
     max: number;
     current: number;
   };
+  additionalClasses?: string[];
 }
 
 export interface CharacterSpell {

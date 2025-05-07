@@ -123,6 +123,7 @@ export interface Character {
     used: number;
     dieType: string;
     value: string;
+    remaining?: number;  // Add remaining as an optional property
   };
   resources?: Record<string, {
     max: number;

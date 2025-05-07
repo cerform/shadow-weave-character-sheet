@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { AlertCircle, Bug } from 'lucide-react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { validateCharacters } from '@/utils/debugUtils';
-import { normalizeCharacterData } from '@/utils/characterNormalizer';
+import { normalizeCharacter } from '@/utils/characterNormalizer';
 import DebugPanel from './DebugPanel';
 
 interface CharactersPageDebuggerProps {
@@ -96,7 +95,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
         const firstChar = characters[0];
         
         // Применяем нормализацию к первому персонажу для анализа
-        const normalizedChar = normalizeCharacterData(firstChar);
+        const normalizedChar = normalizeCharacter(firstChar);
         
         // Добавляем данные для отладки
         debugInfo.firstCharacter = {

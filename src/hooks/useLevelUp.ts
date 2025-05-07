@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
@@ -111,7 +112,7 @@ function getSpellcastingAbilityForClass(classType: string): string {
   return 'INT';
 }
 
-// Fix the half-caster spell slots
+// Fix for half-caster spell slots
 function calculateSpellSlotsForLevel(level: number, classType: string): Record<number, { max: number; used: number }> {
   // Базовая таблица ячеек заклинаний полного заклинателя (волшебник, жрец и т.д.)
   const fullCasterSlots = {
@@ -139,7 +140,7 @@ function calculateSpellSlotsForLevel(level: number, classType: string): Record<n
   
   // Half-casters like паладин and следопыт
   const halfCasterSlots = {
-    1: {},
+    1: { 1: { max: 0, used: 0 } },
     2: { 1: { max: 2, used: 0 } },
     3: { 1: { max: 3, used: 0 } },
     4: { 1: { max: 3, used: 0 } },

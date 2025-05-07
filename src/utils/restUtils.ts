@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 type RestType = 'short-rest' | 'long-rest';
@@ -23,15 +24,24 @@ export const takeRest = (character: Character, restType: RestType) => {
   const updatedChar = { ...character };
 
   if (restType === 'short-rest') {
-    if (character.hitDice && character.hitDice.remaining > 0) {
-      const diceToRoll = Math.min(character.hitDice.remaining, Math.ceil((character.level || 1) / 2));
-      let healing = 0;
-      for (let i = 0; i < diceToRoll; i++) {
-        healing += Math.floor(Math.random() * 6) + 1; // Assuming d6 hit dice
-      }
+    if (character.hitDice) {
+      // Create a local copy with remaining property
+      const hitDice = { ...character.hitDice, remaining: character.hitDice.total - character.hitDice.used };
       
-      updatedChar.currentHp = restoreHitPoints(character, healing);
-      updatedChar.hitDice = { ...character.hitDice, remaining: character.hitDice.remaining - diceToRoll };
+      if (hitDice.remaining > 0) {
+        const diceToRoll = Math.min(hitDice.remaining, Math.ceil((character.level || 1) / 2));
+        let healing = 0;
+        for (let i = 0; i < diceToRoll; i++) {
+          healing += Math.floor(Math.random() * 6) + 1; // Assuming d6 hit dice
+        }
+        
+        updatedChar.currentHp = restoreHitPoints(character, healing);
+        // Update used value instead of remaining
+        updatedChar.hitDice = { 
+          ...character.hitDice, 
+          used: character.hitDice.used + diceToRoll 
+        };
+      }
     }
   }
 
@@ -41,7 +51,10 @@ export const takeRest = (character: Character, restType: RestType) => {
     updatedChar.temporaryHp = 0;
     
     if (character.hitDice) {
-      updatedChar.hitDice = { ...character.hitDice, remaining: Math.ceil((character.level || 1) / 2) };
+      // Restore half of used hit dice on long rest
+      const restoredDice = Math.ceil((character.level || 1) / 2);
+      const newUsed = Math.max(0, character.hitDice.used - restoredDice);
+      updatedChar.hitDice = { ...character.hitDice, used: newUsed };
     }
     
     if (character.spellSlots) {
