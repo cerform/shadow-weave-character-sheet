@@ -1,5 +1,7 @@
+
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
+import { calculateAbilityModifier } from '@/utils/characterUtils';
 
 export const useCharacterCreation = () => {
   // Базовое состояние для создания персонажа
@@ -151,69 +153,83 @@ export const useCharacterCreation = () => {
     }));
   }, [characterData.abilities, characterData.class, characterData.level]);
 
-  // Завершение создания персонажа
-  const finalizeCharacter = useCallback((): Character => {
+  // Проверка на магический класс
+  const isMagicClass = useCallback(() => {
+    const magicClasses = ['волшебник', 'чародей', 'колдун', 'бард', 'клерик', 'друид', 'паладин', 'следопыт'];
+    return magicClasses.includes((characterData.class || '').toLowerCase());
+  }, [characterData.class]);
+
+  // Конвертация в полноценного персонажа
+  const convertToCharacter = useCallback((data: Partial<Character> = characterData): Character => {
     // Рассчитываем бонус мастерства
-    const profBonus = Math.floor((characterData.level || 1) / 4) + 2;
+    const profBonus = Math.floor((data.level || 1) / 4) + 2;
     
     // Получаем модификатор ловкости для расчета класса брони
-    const dexModifier = Math.floor((characterData.abilities?.dexterity || 10) - 10) / 2;
+    const dexModifier = calculateAbilityModifier(data.abilities?.dexterity || data.dexterity || 10);
     
-    // Финализируем персонажа
-    const finalCharacter: Character = {
+    return {
       id: Date.now().toString(),
       userId: '',
-      name: characterData.name || 'Новый персонаж',
-      race: characterData.race || 'Человек',
-      class: characterData.class || 'Воин',
-      level: characterData.level || 1,
-      background: characterData.background || '',
-      alignment: characterData.alignment || 'Нейтральный',
+      name: data.name || 'Новый персонаж',
+      race: data.race || 'Человек',
+      class: data.class || 'Воин',
+      level: data.level || 1,
+      background: data.background || '',
+      alignment: data.alignment || 'Нейтральный',
       experience: 0,
-      abilities: characterData.abilities || {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10
+      abilities: {
+        strength: data.abilities?.strength || data.strength || 10,
+        dexterity: data.abilities?.dexterity || data.dexterity || 10,
+        constitution: data.abilities?.constitution || data.constitution || 10,
+        intelligence: data.abilities?.intelligence || data.intelligence || 10,
+        wisdom: data.abilities?.wisdom || data.wisdom || 10,
+        charisma: data.abilities?.charisma || data.charisma || 10,
+        STR: data.abilities?.STR || data.abilities?.strength || data.strength || 10,
+        DEX: data.abilities?.DEX || data.abilities?.dexterity || data.dexterity || 10,
+        CON: data.abilities?.CON || data.abilities?.constitution || data.constitution || 10,
+        INT: data.abilities?.INT || data.abilities?.intelligence || data.intelligence || 10,
+        WIS: data.abilities?.WIS || data.abilities?.wisdom || data.wisdom || 10,
+        CHA: data.abilities?.CHA || data.abilities?.charisma || data.charisma || 10
       },
       proficiencyBonus: profBonus,
       armorClass: 10 + dexModifier,
-      maxHp: characterData.maxHp || 10,
-      currentHp: characterData.maxHp || 10,
-      temporaryHp: 0,
+      maxHp: data.maxHp || 10,
+      currentHp: data.currentHp || 10,
+      temporaryHp: data.temporaryHp || 0,
       hitDice: {
-        total: characterData.level || 1,
+        total: data.level || 1,
         used: 0,
-        type: getHitDiceForClass(characterData.class || 'Воин')
+        type: getHitDiceForClass(data.class || 'Воин')
       },
       deathSaves: {
         successes: 0,
         failures: 0
       },
       inspiration: false,
+      conditions: [],
       inventory: [],
-      equipment: [],
-      spells: [],
-      proficiencies: [],
-      features: [],
-      notes: '',
-      resources: {},
-      savingThrowProficiencies: getSavingThrowsForClass(characterData.class || 'Воин'),
-      skillProficiencies: [],
-      expertise: [],
-      skillBonuses: {},
-      spellcasting: getSpellcastingForClass(characterData.class || 'Воин'),
-      gold: 0,
+      equipment: data.equipment || [],
+      spells: data.spells || [],
+      proficiencies: data.proficiencies || [],
+      features: data.features || [],
+      notes: data.notes || '',
+      resources: data.resources || {},
+      savingThrowProficiencies: data.savingThrowProficiencies || getSavingThrowsForClass(data.class || 'Воин'),
+      skillProficiencies: data.skillProficiencies || [],
+      expertise: data.expertise || [],
+      skillBonuses: data.skillBonuses || {},
+      spellcasting: data.spellcasting || getSpellcastingForClass(data.class || 'Воин'),
+      gold: data.gold || 0,
       initiative: dexModifier,
       lastDiceRoll: { formula: '', rolls: [], total: 0 },
-      conditions: [],
-      languages: []
-    };
-    
-    return finalCharacter;
+      languages: data.languages || []
+    } as Character;
   }, [characterData]);
+
+  // Завершение создания персонажа
+  const finalizeCharacter = useCallback((): Character => {
+    return convertToCharacter(characterData);
+  }, [characterData, convertToCharacter]);
 
   // Вспомогательные функции
   const getHitDiceForClass = (className: string): string => {
@@ -229,7 +245,7 @@ export const useCharacterCreation = () => {
       case 'плут':
       case 'колдун': return 'd8';
       case 'чародей':
-      case 'в��лшебник': return 'd6';
+      case 'волшебник': return 'd6';
       default: return 'd8';
     }
   };
@@ -277,6 +293,7 @@ export const useCharacterCreation = () => {
     }
   };
 
+  // Экспортируем расширенный API для совместимости с CharacterCreationPage
   return {
     characterData,
     currentStep,
@@ -291,6 +308,13 @@ export const useCharacterCreation = () => {
     selectBackground,
     setLevel,
     calculateHealth,
-    finalizeCharacter
+    finalizeCharacter,
+    // Добавляем API для совместимости с CharacterCreationPage
+    isMagicClass,
+    convertToCharacter,
+    // Добавляем методы для возможности использовать как character/updateCharacter
+    character: characterData,
+    updateCharacter: updateBasicInfo
   };
 };
+

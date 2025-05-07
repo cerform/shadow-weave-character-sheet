@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, FileUp } from 'lucide-react';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import { Character } from '@/types/character';
-import { createDefaultCharacter } from '@/utils/characterUtils';
 
 // Custom components
 import CharacterContent from './CharacterContent';
@@ -27,7 +26,7 @@ interface CharacterSheetProps {
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-const CharacterSheet = ({ character, onUpdate }: CharacterSheetProps) => {
+const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdate }) => {
   return (
     <div className="bg-card bg-opacity-90 rounded-lg shadow-lg border border-primary/20 p-4">
       <CharacterHeader character={character} onUpdate={onUpdate} />
@@ -43,7 +42,7 @@ const CharacterSheet = ({ character, onUpdate }: CharacterSheetProps) => {
       
       <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <DicePanel character={character} />
+          <DicePanel character={character} onUpdate={onUpdate} />
         </div>
         <div>
           <ResourcePanel character={character} onUpdate={onUpdate} />

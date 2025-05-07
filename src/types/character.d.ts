@@ -16,6 +16,12 @@ export interface Character {
     intelligence: number;
     wisdom: number;
     charisma: number;
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
   };
   proficiencyBonus: number;
   armorClass: number;
@@ -65,10 +71,11 @@ export interface Character {
   initiative: number;
   lastDiceRoll: DiceResult;
   languages: string[];
+  subrace?: string; // Добавляем поле subrace
 }
 
 export interface CharacterSpell {
-  id?: string;
+  id?: string | number;
   name: string;
   level: number;
   school: string;
@@ -76,10 +83,20 @@ export interface CharacterSpell {
   range: string;
   components: string;
   duration: string;
-  description: string;
+  description: string | string[];
   prepared: boolean;
   favorite?: boolean;
   tags?: string[];
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  higherLevel?: string;
+  higherLevels?: string;
+  source?: string;
+  classes?: string[] | string;
+  ritual?: boolean;
+  concentration?: boolean;
 }
 
 export interface CharacterFeature {
@@ -101,4 +118,7 @@ export interface DiceResult {
   modifier?: number; // Обратная совместимость
   label?: string;
   timestamp?: string;
+  nickname?: string;
+  result?: number;
+  reason?: string;
 }

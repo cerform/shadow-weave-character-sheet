@@ -32,13 +32,13 @@ export interface ChatMessage {
   // Добавляем дополнительные поля
   senderName?: string;
   content?: string;
+  senderId?: string;
   rollResult?: {
     formula: string;
     rolls: number[];
     total: number;
     reason?: string;
   };
-  senderId?: string;
 }
 
 // Модифицируем интерфейс для игровой сессии
@@ -47,7 +47,7 @@ export interface GameSession {
   name: string;
   code: string;
   dmId: string;
-  players: any[]; // Можно детализировать тип игроков при необходимости
+  players: SessionPlayer[]; // Определяем тип игроков
   createdAt: string;
   description?: string;
   // Добавляем недостающие поля
@@ -60,9 +60,24 @@ export interface GameSession {
   initiative?: Initiative[];
 }
 
+// Определяем тип игрока сессии
+export interface SessionPlayer {
+  id: string;
+  name?: string;
+  userId?: string;
+  characterId?: string;
+  connected?: boolean;
+}
+
 // Для DM сессий
 export interface DMSession extends GameSession {
   // Специфические поля для DM
+  updatedAt: string;
+  battleActive: boolean;
+  chat: ChatMessage[];
+  map: any;
+  tokens: TokenData[];
+  initiative: Initiative[];
 }
 
 export interface GameSessionWithOptionalFields extends GameSession {

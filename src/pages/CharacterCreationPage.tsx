@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,13 +23,20 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
+  const { 
+    characterData, 
+    updateCharacter, 
+    isMagicClass, 
+    convertToCharacter,
+    setCurrentStep
+  } = useCharacterCreation();
+  
   const [races] = useState(getAllRaces());
   const [classes] = useState(getAllClasses());
   const [backgrounds] = useState(getAllBackgrounds());
   const [subracesForRace, setSubracesForRace] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setActiveStep] = useState(0);
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
   const [diceResults, setDiceResults] = useState<number[][]>([]);
   const [abilityScorePoints, setAbilityScorePoints] = useState(27);
@@ -52,12 +60,12 @@ const CharacterCreationPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (character.race) {
-      fetchSubraces(character.race);
+    if (characterData.race) {
+      fetchSubraces(characterData.race);
     } else {
       setSubracesForRace(null);
     }
-  }, [character.race, fetchSubraces]);
+  }, [characterData.race, fetchSubraces]);
 
   // Define steps for the character creation process
   const steps = useMemo(() => {
@@ -66,66 +74,68 @@ const CharacterCreationPage: React.FC = () => {
         id: 0, 
         name: "Раса", 
         description: "Выбор расы персонажа",
-        completed: !!character.race
+        completed: !!characterData.race
       },
       { 
         id: 1, 
         name: "Подраса", 
         description: "Выбор подрасы персонажа",
-        completed: !subracesForRace?.length || !!character.subrace
+        completed: !subracesForRace?.length || !!characterData.subrace
       },
       { 
         id: 2, 
         name: "Класс", 
         description: "Выбор класса персонажа",
-        completed: !!character.class
+        completed: !!characterData.class
       },
       { 
         id: 3, 
         name: "Уровень", 
         description: "Выбор уровня персонажа",
-        completed: !!character.level
+        completed: !!characterData.level
       },
       { 
         id: 4, 
         name: "Характеристики", 
         description: "Распределение характеристик",
-        completed: character.strength !== 10 || 
-                 character.dexterity !== 10 || 
-                 character.constitution !== 10 || 
-                 character.intelligence !== 10 || 
-                 character.wisdom !== 10 || 
-                 character.charisma !== 10
+        completed: characterData.abilities && (
+          characterData.abilities.strength !== 10 || 
+          characterData.abilities.dexterity !== 10 || 
+          characterData.abilities.constitution !== 10 || 
+          characterData.abilities.intelligence !== 10 || 
+          characterData.abilities.wisdom !== 10 || 
+          characterData.abilities.charisma !== 10
+        )
       },
       { 
         id: 5, 
         name: "Предыстория", 
         description: "Выбор предыстории персонажа",
-        completed: !!character.background
+        completed: !!characterData.background
       },
       { 
         id: 6, 
         name: "Здоровье", 
         description: "Определение очков здоровья",
-        completed: !!character.maxHp && character.maxHp > 0
+        completed: !!characterData.maxHp && characterData.maxHp > 0
       },
       { 
         id: 7, 
         name: "Снаряжение", 
         description: "Выбор снаряжения",
-        completed: !!character.equipment && getEquipmentLength(character.equipment) > 0
+        completed: !!characterData.equipment && getEquipmentLength(characterData.equipment) > 0
       },
       { 
         id: 8, 
         name: "Детали", 
         description: "Персональные детали",
-        completed: !!character.name
+        completed: !!characterData.name
       },
       { 
         id: 9, 
         name: "Заклинания", 
         description: "Выбор заклинаний",
-        completed: !isMagicClass() || (!!character.spells && character.spells.length > 0)
+        completed: !isMagicClass() || (!!characterData.spells && characterData.spells.length > 0)
       },
       { 
         id: 10, 
@@ -134,7 +144,7 @@ const CharacterCreationPage: React.FC = () => {
         completed: false
       }
     ];
-  }, [character, subracesForRace, isMagicClass]);
+  }, [characterData, subracesForRace, isMagicClass]);
 
   // Filter steps if needed (for example, skip subrace step if no subraces)
   const visibleSteps = useMemo(() => {
@@ -248,17 +258,19 @@ const CharacterCreationPage: React.FC = () => {
   // Handle next and previous step navigation
   const nextStep = useCallback(() => {
     if (currentStep < visibleSteps.length - 1) {
+      setActiveStep(currentStep + 1);
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentStep, visibleSteps.length]);
+  }, [currentStep, visibleSteps.length, setCurrentStep]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
+      setActiveStep(currentStep - 1);
       setCurrentStep(currentStep - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentStep]);
+  }, [currentStep, setCurrentStep]);
 
   // Handle save character
   const handleSaveCharacter = useCallback(async () => {
@@ -276,7 +288,7 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Check required fields
-      if (!character.name || !character.race || !character.class) {
+      if (!characterData.name || !characterData.race || !characterData.class) {
         toast({
           title: "Ошибка",
           description: "Пожалуйста, заполните все обязательные поля (Имя, Раса, Класс).",
@@ -286,7 +298,7 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Prepare character for saving
-      const characterToSave = convertToCharacter(character);
+      const characterToSave = convertToCharacter(characterData);
 
       // Save character to database
       const newCharacter = await createCharacter(characterToSave);
@@ -314,7 +326,7 @@ const CharacterCreationPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [character, convertToCharacter, navigate, toast]);
+  }, [characterData, convertToCharacter, navigate, toast]);
 
   // Calculate whether 'Next' button should be allowed based on current step
   const canProceedToNextStep = useMemo(() => {
@@ -351,7 +363,7 @@ const CharacterCreationPage: React.FC = () => {
         <CreationStepper 
           steps={visibleSteps} 
           currentStep={currentStep} 
-          setCurrentStep={setCurrentStep} 
+          setCurrentStep={setActiveStep} 
         />
       </div>
       
@@ -361,7 +373,7 @@ const CharacterCreationPage: React.FC = () => {
         <CreationSidebar 
           steps={visibleSteps} 
           currentStep={currentStep} 
-          setCurrentStep={setCurrentStep} 
+          setCurrentStep={setActiveStep} 
         />
         
         {/* Content Area */}
@@ -376,7 +388,7 @@ const CharacterCreationPage: React.FC = () => {
           <CardContent className="p-6">
             <CharacterCreationContent
               currentStep={visibleSteps[currentStep]?.id || 0}
-              character={character}
+              character={characterData as Character}
               updateCharacter={updateCharacter}
               nextStep={nextStep}
               prevStep={prevStep}
@@ -391,7 +403,7 @@ const CharacterCreationPage: React.FC = () => {
               rollsHistory={rollsHistory}
               onLevelChange={handleLevelChange}
               maxAbilityScore={maxAbilityScore}
-              setCurrentStep={setCurrentStep}
+              setCurrentStep={setActiveStep}
             />
           </CardContent>
         </Card>

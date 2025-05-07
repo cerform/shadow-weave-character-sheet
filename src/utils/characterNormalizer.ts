@@ -41,7 +41,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
     },
     deathSaves: character.deathSaves || { successes: 0, failures: 0 },
     inspiration: character.inspiration === undefined ? false : character.inspiration,
-    conditions: character.conditions || [], // Добавляем поле conditions
+    conditions: character.conditions || [], // Добавляем пустой массив для условий
     inventory: character.inventory || [],
     equipment: character.equipment || [],
     spells: character.spells || [],
@@ -66,6 +66,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       total: character.lastDiceRoll?.total || 0,
     },
     languages: character.languages || [],
+    subrace: character.subrace || ''
   } as Character;
 
   return normalizedCharacter;

@@ -1,6 +1,4 @@
 
-import { CharacterSpell } from './character';
-
 // Интерфейс для данных заклинаний
 export interface SpellData {
   id: string | number;
@@ -27,7 +25,7 @@ export interface SpellData {
 }
 
 // Функция для конвертации CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+export const convertCharacterSpellToSpellData = (spell: any): SpellData => {
   return {
     id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
@@ -53,7 +51,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
 };
 
 // Функция для конвертации SpellData в CharacterSpell
-export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+export const convertSpellDataToCharacterSpell = (spell: SpellData): any => {
   return {
     id: typeof spell.id === 'number' ? spell.id.toString() : spell.id,
     name: spell.name,
@@ -79,9 +77,11 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
 };
 
 // Функция для конвертации массива заклинаний
-export const convertSpellArray = <T extends SpellData | CharacterSpell>(
+export const convertSpellArray = <T extends SpellData | any>(
   spells: T[],
   converter: (spell: T) => any
 ): any[] => {
   return spells.map(spell => converter(spell));
 };
+
+import { CharacterSpell } from './character';
