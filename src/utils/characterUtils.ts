@@ -124,15 +124,19 @@ export const createDefaultCharacter = (): Character => {
       maximum: 8,
       temporary: 0
     },
-    proficiencyBonus: 2,
-    abilities: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10, 
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: 'd8',
+      value: '1d8',
+      remaining: 1
     },
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
+    proficiencyBonus: 2,
+    abilities: initialAbilityScores,
     savingThrows: {
       strength: false,
       dexterity: false,
@@ -154,8 +158,6 @@ export const createDefaultCharacter = (): Character => {
     spellSlots: {},
     resources: {},
     notes: '',
-    isNPC: false,
-    isTemplate: false,
     creationDate: new Date().toISOString(),
     lastUpdated: new Date().toISOString()
   };

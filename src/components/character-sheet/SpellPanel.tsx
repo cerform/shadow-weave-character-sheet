@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Plus, BookOpen } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import SpellDialog from './SpellDialog'; // Default import
+import SpellDialog from './SpellDialog';
+import { convertToSpellData } from '@/utils/spellUtils';
 
 export interface SpellPanelProps {
   character: Character;
@@ -51,14 +52,14 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
           <ScrollArea className="max-h-64">
             <div className="space-y-2">
               {spells.map((spell, index) => {
-                const spellId = typeof spell === 'string' ? spell : spell.id || '';
+                const spellId = typeof spell === 'string' ? spell : spell.id || spell.name || '';
                 const spellName = typeof spell === 'string' ? spell : spell.name || spellId;
                 
                 return (
                   <div key={spellId || index} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
                     <Button 
                       variant="ghost" 
-                      onClick={() => handleOpenSpell(spellId.toString())}
+                      onClick={() => handleOpenSpell(spellId)}
                       className="flex-1 justify-start px-2 hover:bg-transparent hover:underline"
                     >
                       <BookOpen className="h-4 w-4 mr-2" />
@@ -67,7 +68,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveSpell(spellId.toString())}
+                      onClick={() => handleRemoveSpell(spellId)}
                       className="text-destructive hover:text-destructive/80"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -98,30 +99,11 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
         <SpellDialog 
           open={!!openSpellId}
           onOpenChange={handleCloseDialog}
-          spell={{
-            id: openSpellId,
-            name: spells.find(s => 
-              (typeof s === 'string' ? s : s.id) === openSpellId
-            ) ? 
-              (typeof spells.find(s => 
-                (typeof s === 'string' ? s : s.id) === openSpellId
-              ) === 'string' ? 
-                openSpellId : 
-                (spells.find(s => 
-                  (typeof s === 'string' ? s : s.id) === openSpellId
-                ) as CharacterSpell).name || ''
-              ) : '',
-            level: level,
-            school: '',
-            castingTime: '',
-            range: '',
-            components: '',
-            duration: '',
-            description: '',
-            classes: [],
-            ritual: false,
-            concentration: false
-          }}
+          spell={convertToSpellData(
+            spells.find(s => 
+              (typeof s === 'string' ? s : s.id || s.name) === openSpellId
+            ) || openSpellId
+          )}
           character={character}
         />
       )}

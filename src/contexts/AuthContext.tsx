@@ -47,6 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [loginInProgress, setLoginInProgress] = useState<boolean>(false);
 
   // Функция для сохранения информации о пользователе в Firestore
   const saveUserToFirestore = async (user: UserType) => {
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("Создан новый пользователь:", user.id);
       }
     } catch (error) {
-      console.error("Ошибка при сохра��ении пользователя в Firestore:", error);
+      console.error("Ошибка при сохра����ении пользователя в Firestore:", error);
     }
   };
 
@@ -151,6 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      setLoginInProgress(true);
       console.log("Attempting login with email:", email);
       const firebaseUser = await loginWithEmail(email, password);
       if (firebaseUser) {
@@ -161,17 +163,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(transformedUser);
       }
     } catch (err) {
-      console.error("Login error:", err);
-      handleError(err);
-      throw err;
+      handleLoginError(err);
     } finally {
       setLoading(false);
+      setLoginInProgress(false);
     }
   };
 
   const signup = async (email: string, password: string, displayName: string, isDM: boolean = false) => {
     try {
       setLoading(true);
+      setLoginInProgress(true);
       console.log("Attempting signup:", email, displayName, isDM);
       const firebaseUser = await registerWithEmail(email, password);
       if (firebaseUser) {
@@ -188,11 +190,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(transformedUser);
       }
     } catch (err) {
-      console.error("Signup error:", err);
-      handleError(err);
-      throw err;
+      handleLoginError(err);
     } finally {
       setLoading(false);
+      setLoginInProgress(false);
     }
   };
 
@@ -306,6 +307,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(errorMessage);
   };
 
+  const handleLoginError = (error: any) => {
+    console.error("Login failed:", error);
+    setLoginInProgress(false);
+    // Convert Error object to string if necessary
+    setError(error instanceof Error ? error.message : String(error));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -327,3 +335,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;

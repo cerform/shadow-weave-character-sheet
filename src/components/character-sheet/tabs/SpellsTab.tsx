@@ -1,12 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SpellPanel from '../SpellPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Book, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import SpellPanel from '../SpellPanel';
+import SpellCastingPanel from '../SpellCastingPanel';
 import SpellSelectionModal from '../SpellSelectionModal';
+import { convertToSpellData, getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 
 interface SpellsTabProps {
   character: Character;
