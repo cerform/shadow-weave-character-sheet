@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useSessionStore from '@/stores/sessionStore';
@@ -18,7 +17,7 @@ const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<GameSession | null>(null);
   const [tokens, setTokens] = useState<TokenData[]>([]);
-  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [selectedTokenId, setSelectedTokenId] = useState<number | string | null>(null);
   const [background, setBackground] = useState<string | null>(null);
   const [battleActive, setBattleActive] = useState<boolean>(false);
   const [initiative, setInitiative] = useState<Initiative[]>([]);
@@ -29,7 +28,7 @@ const DMSessionPage: React.FC = () => {
   const navigate = useNavigate();
   const sessionStore = useSessionStore();
 
-  // Загружаем данные сессии
+  // When loading a session
   useEffect(() => {
     if (!sessionId) return;
     
@@ -38,10 +37,7 @@ const DMSessionPage: React.FC = () => {
       setError(null);
       
       try {
-        // Загружаем все сессии из хранилища
         const sessions = await sessionStore.fetchSessions();
-        
-        // Ищем нужную сессию по ID
         const foundSession = sessions.find(s => s.id === sessionId);
         
         if (!foundSession) {
@@ -50,27 +46,37 @@ const DMSessionPage: React.FC = () => {
           return;
         }
         
-        console.log('Найдена сессия:', foundSession);
+        // Cast to GameSession to ensure type safety
+        const gameSession: GameSession = {
+          ...foundSession,
+          dmId: foundSession.dmId || '', // Ensure required property
+          chat: foundSession.chat || [],
+          initiative: foundSession.initiative || [],
+          tokens: foundSession.tokens || [],
+          isActive: foundSession.isActive || false,
+          battleActive: foundSession.battleActive || false
+        };
         
-        // Устанавливаем текущую сессию без вызова повторного обновления
-        setSession(foundSession);
+        console.log('Найдена сессия:', gameSession);
         
-        // Устанавливаем другие параметры из сессии
-        setBattleActive(foundSession.battleActive || false);
+        // Set current session without triggering a re-render
+        setSession(gameSession);
         
-        if (foundSession.map?.background) {
-          setBackground(foundSession.map.background);
+        // Set other session properties
+        setBattleActive(gameSession.battleActive || false);
+        
+        if (gameSession.map?.background) {
+          setBackground(gameSession.map.background);
         }
         
-        if (foundSession.initiative) {
-          setInitiative(foundSession.initiative);
+        if (gameSession.initiative) {
+          setInitiative(gameSession.initiative);
         }
         
-        // Устанавливаем токены
-        setTokens(foundSession.tokens || []);
+        setTokens(gameSession.tokens || []);
         
-        // Подключаем WebSocket
-        socketService.connect(foundSession.code, 'Мастер подземелий', undefined);
+        // Connect to WebSocket
+        socketService.connect(gameSession.code, 'Мастер подземелий', undefined);
       } catch (error) {
         console.error('Ошибка при загрузке сессии:', error);
         setError('Произошла ошибка при загрузке сессии. Попробуйте обновить страницу.');
@@ -81,14 +87,14 @@ const DMSessionPage: React.FC = () => {
     
     loadSession();
     
-    // Отключаемся от WebSocket при размонтировании
+    // Disconnect from WebSocket on unmount
     return () => {
       socketService.disconnect();
     };
   }, [sessionId]);
 
-  // Обновление позиции токена
-  const handleUpdateTokenPosition = async (id: number, x: number, y: number) => {
+  // Update token position
+  const handleUpdateTokenPosition = async (id: number | string, x: number, y: number) => {
     const updatedTokens = tokens.map(token => 
       token.id === id ? { ...token, x, y } : token
     );
@@ -96,14 +102,14 @@ const DMSessionPage: React.FC = () => {
     setTokens(updatedTokens);
     
     if (session) {
-      // Обновляем токены в сессии
+      // Update tokens in session
       sessionStore.updateSession({
-        id: session.id,
+        ...session,
         tokens: updatedTokens,
         updatedAt: new Date().toISOString()
       });
       
-      // Отправляем обновление через WebSocket
+      // Send update through WebSocket
       const updatedToken = updatedTokens.find(token => token.id === id);
       if (updatedToken) {
         socketService.updateToken(updatedToken);
@@ -111,25 +117,7 @@ const DMSessionPage: React.FC = () => {
     }
   };
 
-  // Выбор токена
-  const handleSelectToken = (id: number | null) => {
-    setSelectedTokenId(id);
-  };
-
-  // Отправка сообщения в чат
-  const handleSendMessage = (message: string) => {
-    if (!message.trim() || !session) return;
-    
-    const chatMessage = {
-      message,
-      roomCode: session.code,
-      nickname: 'Мастер подземелий'
-    };
-    
-    socketService.sendChatMessage(chatMessage);
-  };
-
-  // Обработчик смены статуса боя
+  // Toggle battle status
   const handleBattleToggle = () => {
     if (!session) return;
     
@@ -137,38 +125,38 @@ const DMSessionPage: React.FC = () => {
     setBattleActive(newBattleStatus);
     
     sessionStore.updateSession({
-      id: session.id,
+      ...session,
       battleActive: newBattleStatus,
       updatedAt: new Date().toISOString()
     });
     
     toast.success(newBattleStatus ? 'Режим боя активирован' : 'Режим боя завершен');
     
-    // Если бой завершен, очищаем инициативу
+    // If battle is finished, clear initiative
     if (!newBattleStatus) {
       setInitiative([]);
       sessionStore.updateSession({
-        id: session.id,
+        ...session,
         initiative: [],
         updatedAt: new Date().toISOString()
       });
     }
   };
   
-  // Обработчик обновления инициативы
+  // Update initiative
   const handleUpdateInitiative = (newInitiative: Initiative[]) => {
     setInitiative(newInitiative);
     
     if (session) {
       sessionStore.updateSession({
-        id: session.id,
+        ...session,
         initiative: newInitiative,
         updatedAt: new Date().toISOString()
       });
     }
   };
   
-  // Обработчик перехода к следующему ходу
+  // Next turn
   const handleNextTurn = () => {
     if (initiative.length === 0) return;
     
@@ -185,7 +173,7 @@ const DMSessionPage: React.FC = () => {
       
       if (session) {
         sessionStore.updateSession({
-          id: session.id,
+          ...session,
           initiative: updated,
           updatedAt: new Date().toISOString()
         });
@@ -195,7 +183,7 @@ const DMSessionPage: React.FC = () => {
     });
   };
 
-  // Если возникла ошибка
+  // If an error occurs
   if (error) {
     return (
       <div className="container mx-auto p-4">
@@ -216,7 +204,7 @@ const DMSessionPage: React.FC = () => {
     );
   }
 
-  // Если данные сессии еще не загружены
+  // If session data is still loading
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 flex items-center justify-center h-screen">
@@ -228,7 +216,7 @@ const DMSessionPage: React.FC = () => {
     );
   }
 
-  // Если сессия не найдена даже после загрузки
+  // If session is not found even after loading
   if (!session) {
     return (
       <div className="container mx-auto p-4">
@@ -344,11 +332,11 @@ const DMSessionPage: React.FC = () => {
         <TabsContent value="chat" className="h-full">
           <div className="h-full">
             <SessionChat 
-              messages={session.messages || []}
+              messages={session?.chat || []}
               onSendMessage={handleSendMessage}
-              sessionCode={session.code}
+              sessionCode={session?.code || ''}
               playerName="Мастер подземелий"
-              roomCode={session.code}
+              roomCode={session?.code || ''}
             />
           </div>
         </TabsContent>

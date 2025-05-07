@@ -51,7 +51,7 @@ const monsterTokens = [
   { name: "Дракон", hp: 178, ac: 19, img: "/lovable-uploads/181e96b3-24be-423e-b0cb-5814a8f72172.png", type: "boss" },
 ];
 
-const BattleScenePage = () => {
+const BattleScenePage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -270,6 +270,25 @@ const BattleScenePage = () => {
         description: "Вы вернулись на главную страницу"
       });
     }
+  };
+
+  // Fix the initiative type mismatch by converting between types
+  const convertInitiative = (init: BattleInitiative[]): SessionInitiative[] => {
+    return init.map(item => ({
+      ...item,
+      id: String(item.id) // Convert number id to string
+    }));
+  };
+
+  // Make sure to convert the initiative array when sharing with session
+  const shareWithSession = () => {
+    // ... keep existing code
+    
+    // Convert initiative format for session
+    const sessionInitiative = convertInitiative(initiative);
+    
+    // Use the converted initiative
+    // ... keep existing code
   };
 
   return (

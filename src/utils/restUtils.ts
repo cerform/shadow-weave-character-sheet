@@ -1,114 +1,75 @@
+import { Character } from '@/types/character';
 
-import { Character } from "@/types/character";
+// Update the rest types to match what's used in the code
+export type RestType = 'short' | 'long' | 'short-rest' | 'long-rest';
 
-/**
- * Восстанавливает ресурсы персонажа после короткого отдыха
- */
-export const takeShortRest = (character: Character): Character => {
-  if (!character) return character;
+export const shortRest = (character: Character): Partial<Character> => {
+  let updatedCharacter: Partial<Character> = {};
   
-  // Создаем копию персонажа для обновления
-  const updatedCharacter = { ...character };
-  
-  // Восстановление хитов (если есть кость хитов)
-  if (updatedCharacter.hitDice && updatedCharacter.hitDice.total > 0 && updatedCharacter.hitDice.used > 0) {
-    // При коротком отдыхе можно восстановить кости хитов, но не все
+  // Восстановление хитов через кости хитов
+  if (character.hitDice && character.hitDice.total > 0 && character.hitDice.used < character.hitDice.total) {
+    // Игрок может использовать кости хитов
+    const availableDice = character.hitDice.total - character.hitDice.used;
+    
+    // Обновляем персонажа с информацией о доступных костях хитов
     updatedCharacter.hitDice = {
-      ...updatedCharacter.hitDice,
-      used: Math.max(0, updatedCharacter.hitDice.used - 1) // Восстанавливаем 1 кость хитов
+      ...character.hitDice,
+      available: availableDice
     };
   }
   
-  // Восстановление особых ресурсов, которые восстанавливаются после короткого отдыха
-  if (updatedCharacter.resources) {
-    const updatedResources = { ...updatedCharacter.resources };
+  // Восстановление ресурсов, которые восстанавливаются после короткого отдыха
+  if (character.resources) {
+    const updatedResources = { ...character.resources };
+    let resourcesChanged = false;
     
-    Object.keys(updatedResources).forEach(key => {
-      const resource = updatedResources[key];
-      
-      // Проверяем тип восстановления ресурса
-      if (resource.recoveryType === 'short' || resource.recoveryType === 'shortRest') {
+    Object.keys(character.resources).forEach(key => {
+      const resource = character.resources![key];
+      if (resource.shortRestRecover) {
         updatedResources[key] = {
           ...resource,
-          used: 0 // Полное восстановление ресурса
+          used: 0 // Сбрасываем использованные ресурсы
         };
+        resourcesChanged = true;
       }
     });
     
-    updatedCharacter.resources = updatedResources;
-  }
-  
-  // Для колдуна восстанавливаем ячейки заклинаний
-  if (updatedCharacter.class?.toLowerCase() === 'колдун' || updatedCharacter.class?.toLowerCase() === 'warlock') {
-    if (updatedCharacter.spellSlots) {
-      const updatedSpellSlots = { ...updatedCharacter.spellSlots };
-      
-      // У колдуна все ячейки восстанавливаются после короткого отдыха
-      Object.keys(updatedSpellSlots).forEach(level => {
-        updatedSpellSlots[level] = {
-          ...updatedSpellSlots[level],
-          used: 0 // Полное восстановление ячеек
-        };
-      });
-      
-      updatedCharacter.spellSlots = updatedSpellSlots;
+    if (resourcesChanged) {
+      updatedCharacter.resources = updatedResources;
     }
   }
   
   return updatedCharacter;
 };
 
-/**
- * Восстанавливает ресурсы персонажа после продолжительного отдыха
- */
-export const takeLongRest = (character: Character): Character => {
-  if (!character) return character;
+export const longRest = (character: Character): Partial<Character> => {
+  let updatedCharacter: Partial<Character> = {};
   
-  // Создаем копию персонажа для обновления
-  const updatedCharacter = { ...character };
+  // Восстановление хитов
+  updatedCharacter.currentHp = character.maxHp;
+  updatedCharacter.temporaryHp = 0; // Сбрасываем временные хиты
   
-  // Восстановление хитов до максимума
-  updatedCharacter.currentHp = updatedCharacter.maxHp;
-  updatedCharacter.temporaryHp = 0; // Временные хиты исчезают
-  
-  // Восстановление костей хитов (половина от максимума)
-  if (updatedCharacter.hitDice) {
-    const maxRecovery = Math.max(1, Math.floor(updatedCharacter.hitDice.total / 2));
-    const currentUsed = updatedCharacter.hitDice.used;
+  // Восстановление костей хитов (до половины от максимума)
+  if (character.hitDice) {
+    const recoveredDice = Math.max(1, Math.floor(character.hitDice.total / 2));
+    const newUsed = Math.max(0, character.hitDice.used - recoveredDice);
     
     updatedCharacter.hitDice = {
-      ...updatedCharacter.hitDice,
-      used: Math.max(0, currentUsed - maxRecovery) // Восстанавливаем половину потраченных костей хитов
+      ...character.hitDice,
+      used: newUsed
     };
   }
   
-  // Восстановление способностей заклинателя
-  if (updatedCharacter.spellSlots) {
-    const updatedSpellSlots = { ...updatedCharacter.spellSlots };
+  // Восстановление всех ресурсов
+  if (character.resources) {
+    const updatedResources = { ...character.resources };
     
-    // Восстанавливаем все ячейки заклинаний
-    Object.keys(updatedSpellSlots).forEach(level => {
-      updatedSpellSlots[level] = {
-        ...updatedSpellSlots[level],
-        used: 0 // Полное восстановление ячеек
-      };
-    });
-    
-    updatedCharacter.spellSlots = updatedSpellSlots;
-  }
-  
-  // Восстановление специальных ресурсов
-  if (updatedCharacter.resources) {
-    const updatedResources = { ...updatedCharacter.resources };
-    
-    Object.keys(updatedResources).forEach(key => {
-      const resource = updatedResources[key];
-      
-      // Все ресурсы восстанавливаются после длительного отдыха, если не указано иное
-      if (!resource.recoveryType || resource.recoveryType === 'long' || resource.recoveryType === 'longRest') {
+    Object.keys(character.resources).forEach(key => {
+      const resource = character.resources![key];
+      if (resource.longRestRecover !== false) { // По умолчанию все ресурсы восстанавливаются после длительного отдыха
         updatedResources[key] = {
           ...resource,
-          used: 0 // Полное восстановление ресурса
+          used: 0 // Сбрасываем использованные ресурсы
         };
       }
     });
@@ -116,61 +77,105 @@ export const takeLongRest = (character: Character): Character => {
     updatedCharacter.resources = updatedResources;
   }
   
-  // Восстановление очков чародейства для чародея
-  if (updatedCharacter.sorceryPoints) {
-    updatedCharacter.sorceryPoints = {
-      ...updatedCharacter.sorceryPoints,
-      current: updatedCharacter.sorceryPoints.max
-    };
+  // Восстановление ячеек заклинаний
+  if (character.spellSlots) {
+    const updatedSpellSlots = { ...character.spellSlots };
+    
+    Object.keys(character.spellSlots).forEach(level => {
+      if (updatedSpellSlots[level]) {
+        updatedSpellSlots[level].used = 0; // Восстанавливаем все ячейки заклинаний
+      }
+    });
+    
+    updatedCharacter.spellSlots = updatedSpellSlots;
   }
   
-  // Сбросить счетчики смертельных спасбросков
-  if (updatedCharacter.deathSaves) {
-    updatedCharacter.deathSaves = {
-      successes: 0,
-      failures: 0
-    };
+  // Сбрасываем состояния (conditions)
+  if (character.conditions && character.conditions.length > 0) {
+    // Фильтруем состояния, которые не сбрасываются после отдыха
+    const persistentConditions = character.conditions.filter(condition => {
+      // Здесь можно добавить логику для определения, какие состояния сохраняются
+      const persistentTypes = ['curse', 'disease', 'permanent'];
+      return condition.type && persistentTypes.includes(condition.type);
+    });
+    
+    updatedCharacter.conditions = persistentConditions;
   }
   
   return updatedCharacter;
 };
 
-/**
- * Восстановление ресурсов после боя
- */
-export const postCombatRecovery = (character: Character): Character => {
-  if (!character) return character;
-  
-  const updatedCharacter = { ...character };
-  
-  // Концентрация на заклинаниях прерывается
-  // Можно реализовать, если в персонаже хранится информация о текущих заклинаниях
-  
-  // Эффекты, которые заканчиваются после боя, исчезают
-  // Эту логику можно реализовать, если в персонаже есть список активных эффектов
-  
-  return updatedCharacter;
+export const takeRest = (character: Character, restType: RestType): Partial<Character> => {
+  if (restType === 'short' || restType === 'short-rest') {
+    return shortRest(character);
+  } else {
+    return longRest(character);
+  }
 };
 
-/**
- * Обновление глобальных модификаторов после изменения характеристик персонажа
- */
-export const recalculateCharacterStats = (character: Character): Character => {
-  if (!character) return character;
-  
-  const updatedCharacter = { ...character };
-  
-  // Пересчет бонуса мастерства
-  const level = updatedCharacter.level || 1;
-  updatedCharacter.proficiencyBonus = Math.ceil(1 + level / 4);
-  
-  // Пересчет модификаторов характеристик
-  const getModifier = (score: number) => Math.floor((score - 10) / 2);
-  
-  // Обновляем модификаторы в skills, если они зависят от характеристик
-  if (updatedCharacter.skills) {
-    // Эту логику нужно реализовать в соответствии с вашей структурой данных
+export const useHitDice = (character: Character, diceCount: number): Partial<Character> => {
+  if (!character.hitDice || character.hitDice.used >= character.hitDice.total) {
+    return {}; // Нет доступных костей хитов
   }
   
-  return updatedCharacter;
+  // Ограничиваем количество используемых костей
+  const availableDice = character.hitDice.total - character.hitDice.used;
+  const diceToUse = Math.min(diceCount, availableDice);
+  
+  if (diceToUse <= 0) return {};
+  
+  // Вычисляем восстановление хитов
+  // Формула: diceToUse * (среднее значение кости хитов) + модификатор телосложения * diceToUse
+  const diceType = character.hitDice.type || 'd8'; // По умолчанию d8
+  const diceValue = parseInt(diceType.substring(1));
+  const averageRoll = Math.floor((diceValue + 1) / 2); // Среднее значение броска
+  
+  const conModifier = Math.floor((character.abilities?.constitution || 10) - 10) / 2;
+  const healingAmount = diceToUse * averageRoll + Math.floor(conModifier) * diceToUse;
+  
+  // Обновляем хиты и использованные кости хитов
+  const newCurrentHp = Math.min(character.maxHp, (character.currentHp || 0) + healingAmount);
+  const newUsedDice = character.hitDice.used + diceToUse;
+  
+  return {
+    currentHp: newCurrentHp,
+    hitDice: {
+      ...character.hitDice,
+      used: newUsedDice
+    }
+  };
+};
+
+export const restoreResource = (character: Character, resourceKey: string, amount: number): Partial<Character> => {
+  if (!character.resources || !character.resources[resourceKey]) {
+    return {};
+  }
+  
+  const resource = character.resources[resourceKey];
+  const newUsed = Math.max(0, resource.used - amount);
+  
+  const updatedResources = {
+    ...character.resources,
+    [resourceKey]: {
+      ...resource,
+      used: newUsed
+    }
+  };
+  
+  return {
+    resources: updatedResources
+  };
+};
+
+export const getRestoreableResources = (character: Character, restType: RestType): string[] => {
+  if (!character.resources) return [];
+  
+  return Object.keys(character.resources).filter(key => {
+    const resource = character.resources![key];
+    if (restType === 'long' || restType === 'long-rest') {
+      return resource.longRestRecover !== false;
+    } else {
+      return resource.shortRestRecover === true;
+    }
+  });
 };

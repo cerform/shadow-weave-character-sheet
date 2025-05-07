@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -104,6 +103,36 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
       description: `Восстановлена ячейка заклинания ${level} уровня`,
     });
   };
+
+  // Update the parts that reference spellcasting.saveDC and spellcasting.attackBonus
+  useEffect(() => {
+    if (character && character.spellcasting) {
+      const { spellcasting } = character;
+      
+      if (spellcasting.ability) {
+        const abilityScore = character.abilities ? character.abilities[spellcasting.ability.toLowerCase() as keyof typeof character.abilities] : 10;
+        const abilityMod = Math.floor((abilityScore - 10) / 2);
+        const profBonus = character.proficiencyBonus || 2;
+        
+        // Calculate saveDC if not already in character
+        const saveDC = spellcasting.saveDC !== undefined ? 
+          spellcasting.saveDC : 
+          8 + profBonus + abilityMod;
+          
+        // Calculate attackBonus if not already in character
+        const attackBonus = spellcasting.attackBonus !== undefined ? 
+          spellcasting.attackBonus : 
+          profBonus + abilityMod;
+          
+        // Update spellcasting info
+        setSpellcastingInfo({
+          ...spellcasting,
+          saveDC,
+          attackBonus
+        });
+      }
+    }
+  }, [character]);
 
   return (
     <div className="space-y-6">

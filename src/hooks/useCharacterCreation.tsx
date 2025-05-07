@@ -1,73 +1,43 @@
-
-import { useState, useEffect } from "react";
-import { Character } from "@/types/character";
+import { useState, useEffect } from 'react';
+import { Character } from '@/types/character';
 import { toast } from 'sonner';
 import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
 import { saveCharacterToFirestore } from "@/services/characterService";
 
 export const useCharacterCreation = () => {
-  const defaultCharacter: Character = {
-    id: "",
-    name: "",
-    gender: "",
-    race: "",
-    class: "",
-    subclass: "",
-    additionalClasses: [],
+  // Initialize with complete character object including all required and optional properties
+  const [character, setCharacter] = useState<Character>({
+    id: '',
+    userId: '',
+    name: '',
+    race: '',
+    class: '',
     level: 1,
-    background: "",
-    alignment: "",
+    background: '',
+    alignment: '',
     experience: 0,
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
+    abilities: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    proficiencyBonus: 2,
+    armorClass: 10,
     maxHp: 10,
     currentHp: 10,
-    abilities: {
-      // Add legacy ability score properties
-      STR: 10,
-      DEX: 10,
-      CON: 10,
-      INT: 10,
-      WIS: 10,
-      CHA: 10,
-      // Add new ability score properties
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    // Initialize with empty objects instead of arrays
-    skills: {},
-    savingThrows: {},
-    proficiencies: [],
-    languages: [],
+    gold: 0,
     equipment: [],
     spells: [],
+    proficiencies: [],
     features: [],
-    personalityTraits: "",
-    ideals: "",
-    bonds: "",
-    flaws: "",
-    appearance: "",
-    backstory: ""
-  };
+    languages: [],
+    additionalClasses: {}
+  });
 
-  const [character, setCharacter] = useState<Character>(defaultCharacter);
   const [characterReady, setCharacterReady] = useState<boolean>(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
   const [alreadySaved, setAlreadySaved] = useState<boolean>(false);
@@ -300,6 +270,39 @@ export const useCharacterCreation = () => {
     return characterData as Character;
   };
 
+  // Функция для добавления мультикласса
+  const addMulticlass = (newClass: string, level: number, subclass?: string) => {
+    // Ensure additionalClasses exists
+    const currentAdditionalClasses = character.additionalClasses || {};
+    
+    // Add new class
+    setCharacter(prev => ({
+      ...prev,
+      additionalClasses: {
+        ...currentAdditionalClasses,
+        [newClass]: {
+          level,
+          subclass
+        }
+      }
+    }));
+  };
+  
+  // Функция для удаления мультикласса
+  const removeMulticlass = (className: string) => {
+    // Check if additionalClasses exists
+    if (!character.additionalClasses) return;
+    
+    // Create a new object without the specified class
+    const newAdditionalClasses = { ...character.additionalClasses };
+    delete newAdditionalClasses[className];
+    
+    setCharacter(prev => ({
+      ...prev,
+      additionalClasses: newAdditionalClasses
+    }));
+  };
+
   return { 
     character, 
     updateCharacter, 
@@ -369,3 +372,5 @@ export const getAbilityScorePointsByLevel = (level: number, basePoints: number =
 export const convertToCharacter = (characterData: any): Character => {
   return characterData as Character;
 };
+
+export default useCharacterCreation;

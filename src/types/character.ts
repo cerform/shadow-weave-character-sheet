@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -53,13 +52,13 @@ export interface Character {
   temporaryHp?: number;
   armorClass?: number;
   speed?: number;
-  initiative?: number | string;
+  initiative?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
   savingThrowProficiencies?: string[]; // Добавлено
   skillProficiencies?: string[]; // Добавлено
   expertise?: string[]; // Добавлено
-  skillBonuses?: Record<string, number>; // Добавлено
+  skillBonuses?: { [key: string]: number }; // Добавлено
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -133,11 +132,19 @@ export interface Character {
   gender?: string;
   userId?: string;
   abilityPointsUsed?: number;
-  additionalClasses?: string[]; // Добавлено
+  additionalClasses?: {
+    [className: string]: {
+      level: number;
+      subclass?: string;
+    }
+  };
   spellcasting?: {
     ability?: string;
     class?: string;
     level?: number;
+    saveDC?: number;
+    attackBonus?: number;
+    preparedSpellsLimit?: number;
   };
   // Добавляем поля для обратной совместимости
   strength?: number;
@@ -147,26 +154,21 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   // Добавляем новые поля для исправления ошибок типов
-  lastDiceRoll?: {
-    diceType: string;
-    count: number;
-    modifier: number;
-    rolls: number[];
-    total: number;
-    label: string;
-    timestamp: string;
-  };
+  lastDiceRoll?: DiceResult;
   hitDice?: {
     total: number;
     used: number;
-    dieType: string;
-    value: string;
+    type: string;
   };
-  resources?: Record<string, {
-    max: number;
-    used: number;
-    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
-  }>;
+  resources?: {
+    [key: string]: {
+      max: number;
+      used: number;
+      name?: string;
+      shortRestRecover?: boolean;
+      longRestRecover?: boolean;
+    };
+  };
   sorceryPoints?: {
     max: number;
     current: number;
@@ -196,15 +198,15 @@ export interface CharacterSpell {
   materials?: string;
 }
 
+// Enhance the Item interface to ensure it works correctly
 export interface Item {
   name: string;
-  quantity: number;
-  weight?: number;
-  description?: string;
+  quantity?: number;
   type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
+  description?: string;
+  weight?: number;
+  cost?: string;
+  properties?: string[];
 }
 
 export interface Feature {
@@ -249,10 +251,12 @@ export interface LevelFeature {
 
 // Определение типа для результатов броска кубиков
 export interface DiceResult {
-  nickname: string;
-  diceType: string;
-  result: number;
-  rolls?: number[];
-  total?: number;
+  formula: string;
+  rolls: number[];
+  total: number;
+  diceType?: string;
+  nickname?: string;
+  result?: number;
   label?: string;
+  reason?: string;
 }

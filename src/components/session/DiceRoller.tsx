@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { socketService } from "@/services/socket";
-import { DiceResult } from "@/types/character"; // Используем тип DiceResult из character.ts
+import { DiceResult } from "@/types/character"; // Using DiceResult from character.ts
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

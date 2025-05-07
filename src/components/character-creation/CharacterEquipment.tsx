@@ -29,21 +29,21 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       if (Array.isArray(character.equipment)) {
         // Если это массив Item объектов, преобразуем в строки
         const weaponItems = character.equipment
-          .filter(item => item.type === 'weapon')
-          .map(item => item.name);
+          .filter(item => typeof item === 'object' && item.type === 'weapon')
+          .map(item => typeof item === 'object' ? item.name : item);
         setWeapons(weaponItems);
         
         const armorItem = character.equipment
-          .find(item => item.type === 'armor');
-        setArmor(armorItem?.name || '');
+          .find(item => typeof item === 'object' && item.type === 'armor');
+        setArmor(armorItem && typeof armorItem === 'object' ? armorItem.name : '');
         
         const otherItems = character.equipment
-          .filter(item => item.type !== 'weapon' && item.type !== 'armor')
-          .map(item => item.name);
+          .filter(item => typeof item !== 'object' || (item.type !== 'weapon' && item.type !== 'armor'))
+          .map(item => typeof item === 'object' ? item.name : item);
         setItems(otherItems);
       } else {
         // Если это объект с weapons, armor, items
-        const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
+        const equip = character.equipment as unknown as { weapons?: string[], armor?: string, items?: string[] };
         setWeapons(equip.weapons || []);
         setArmor(equip.armor || '');
         setItems(equip.items || []);
