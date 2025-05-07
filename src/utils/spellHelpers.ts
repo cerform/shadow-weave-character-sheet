@@ -1,4 +1,3 @@
-
 import { SpellData, SpellFilter } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 
@@ -124,7 +123,7 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
 /**
  * Получение названия уровня заклинания
  */
-export function getSpellLevelName(level: number): string {
+export const getSpellLevelName = (level: number): string => {
   if (level === 0) return 'Заговор';
   return `${level} уровень`;
-}
+};

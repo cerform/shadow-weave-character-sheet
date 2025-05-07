@@ -1,20 +1,23 @@
-// src/pages/DMDashboardPage.tsx
 
+// src/pages/DmPage.tsx
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import SessionManager from '@/components/dm/SessionManager';
-import PlayerMonitor from '@/components/dm/PlayerMonitor';
-import EncounterBuilder from '@/components/dm/EncounterBuilder';
-import MapControl from '@/components/dm/MapControl';
-import DiceControl from '@/components/dm/DiceControl';
-import InitiativeTracker from '@/components/dm/InitiativeTracker';
-import EffectPanel from '@/components/dm/EffectPanel';
-import TimelineControl from '@/components/dm/TimelineControl';
-import NarrativeNotes from '@/components/dm/NarrativeNotes';
-import WebCamGrid from '@/components/dm/WebCamGrid';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
+
+// Placeholder component until actual implementations
+const PlaceholderComponent = ({ title }: { title: string }) => (
+  <Card className="h-64">
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="flex items-center justify-center h-full">
+      <p className="text-muted-foreground">Компонент в разработке</p>
+    </CardContent>
+  </Card>
+);
 
 const DMDashboardPage: React.FC = () => {
   return (
@@ -38,31 +41,31 @@ const DMDashboardPage: React.FC = () => {
           {/* Session Control */}
           <TabsContent value="session">
             <div className="grid md:grid-cols-2 gap-4">
-              <SessionManager />
-              <PlayerMonitor />
-              <DiceControl />
+              <PlaceholderComponent title="Управление сессией" />
+              <PlaceholderComponent title="Мониторинг игроков" />
+              <PlaceholderComponent title="Кости" />
             </div>
           </TabsContent>
 
           {/* Map Control */}
           <TabsContent value="map">
-            <MapControl />
-            <WebCamGrid />
+            <PlaceholderComponent title="Управление картой" />
+            <PlaceholderComponent title="Видеосетка" />
           </TabsContent>
 
           {/* Combat Tracker */}
           <TabsContent value="combat">
             <div className="grid md:grid-cols-2 gap-4">
-              <EncounterBuilder />
-              <InitiativeTracker />
-              <EffectPanel />
+              <PlaceholderComponent title="Конструктор сражений" />
+              <PlaceholderComponent title="Трекер инициативы" />
+              <PlaceholderComponent title="Управление эффектами" />
             </div>
           </TabsContent>
 
           {/* Narrative Tools */}
           <TabsContent value="narrative">
-            <NarrativeNotes />
-            <TimelineControl />
+            <PlaceholderComponent title="Заметки сюжета" />
+            <PlaceholderComponent title="Управление таймлайном" />
           </TabsContent>
         </Tabs>
       </div>

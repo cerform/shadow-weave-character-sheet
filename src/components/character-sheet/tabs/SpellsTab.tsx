@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { Button } from '@/components/ui/button';
@@ -36,16 +35,23 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
     });
   }
   
+  // Обновленная функция для обновления заклинаний
   const handleSpellUpdate = (level: number, newSpells: CharacterSpell[]) => {
-    // Обновляем только заклинания указанного уровня
-    const updatedSpells = [...(character.spells || [])].filter(spell => {
-      const spellLevel = typeof spell === 'string' ? 0 : (spell as CharacterSpell).level;
-      return spellLevel !== level;
-    });
+    // Convert any string spells to CharacterSpell objects
+    const currentSpells = character.spells || [];
+    const convertedCurrentSpells = currentSpells.map(spell => 
+      typeof spell === 'string' ? { name: spell, level: 0 } as CharacterSpell : spell
+    );
     
-    // Добавляем обновленные заклинания нужного уровня
+    // Remove spells of the specified level
+    const updatedSpells = convertedCurrentSpells.filter(spell => 
+      spell.level !== level
+    );
+    
+    // Add the new spells
     updatedSpells.push(...newSpells);
     
+    // Update the character
     onUpdate({ spells: updatedSpells });
   };
   

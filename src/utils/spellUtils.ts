@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 

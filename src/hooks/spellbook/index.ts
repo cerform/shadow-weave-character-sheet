@@ -2,23 +2,24 @@
 import { SpellData, SpellFilter } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { getAllSpells, filterSpells } from '@/data/spells';
+import { useContext } from 'react';
+import { SpellbookContext } from '@/contexts/SpellbookContext';
 
-export function useSpellbook() {
-  // Здесь будем использовать импорт из data/spells
-  const allSpells = getAllSpells();
+// Re-export the useSpellbook hook from SpellbookContext
+export { useSpellbook } from '@/contexts/SpellbookContext';
 
-  const loadSpellsForClass = (className: string) => {
-    // Логика для загрузки заклинаний для конкретного класса
-    console.log(`Loading spells for class: ${className}`);
-    return allSpells.filter(spell => {
-      const classes = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
-      return classes.some(c => c?.toLowerCase() === className?.toLowerCase());
-    });
-  };
+// This function remains for backward compatibility
+export function useSpellbookManager() {
+  // Use basic functionality from the context
+  const context = useSpellbook();
 
   return {
-    spells: allSpells,
-    loadSpellsForClass,
-    filterSpells: (filters: SpellFilter) => filterSpells(allSpells, filters)
+    spells: context.spells,
+    filteredSpells: context.filteredSpells,
+    filter: context.filters,
+    setFilter: context.setFilters,
+    loading: context.loading
   };
 }
+
+export default useSpellbookManager;

@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Character } from '@/types/character';
-import { getAbilityModifier, getAbilityModifierString, abilityNames, abilityFullNames } from '@/utils/abilityUtils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { getAbilityModifierString, getAbilityName } from '@/utils/abilityUtils';
 
 interface AbilitiesTabProps {
   character: Character;
@@ -8,199 +14,207 @@ interface AbilitiesTabProps {
 }
 
 const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
-  const [strength, setStrength] = useState(character.abilities?.strength || 10);
-  const [dexterity, setDexterity] = useState(character.abilities?.dexterity || 10);
-  const [constitution, setConstitution] = useState(character.abilities?.constitution || 10);
-  const [intelligence, setIntelligence] = useState(character.abilities?.intelligence || 10);
-  const [wisdom, setWisdom] = useState(character.abilities?.wisdom || 10);
-  const [charisma, setCharisma] = useState(character.abilities?.charisma || 10);
+  const [editMode, setEditMode] = useState(false);
+  const [localStats, setLocalStats] = useState({
+    strength: character.stats?.strength || 10,
+    dexterity: character.stats?.dexterity || 10,
+    constitution: character.stats?.constitution || 10,
+    intelligence: character.stats?.intelligence || 10,
+    wisdom: character.stats?.wisdom || 10,
+    charisma: character.stats?.charisma || 10,
+  });
 
-  const handleAbilityChange = (ability: string, value: number) => {
-    const updatedAbilities = {
-      ...character.abilities,
-      [ability]: value,
-      strength: character.abilities?.strength,
-      dexterity: character.abilities?.dexterity,
-      constitution: character.abilities?.constitution,
-      intelligence: character.abilities?.intelligence,
-      wisdom: character.abilities?.wisdom,
-      charisma: character.abilities?.charisma
-    };
-
-    switch (ability) {
-      case 'strength':
-        setStrength(value);
-        updatedAbilities.STR = value;
-        break;
-      case 'dexterity':
-        setDexterity(value);
-        updatedAbilities.DEX = value;
-        break;
-      case 'constitution':
-        setConstitution(value);
-        updatedAbilities.CON = value;
-        break;
-      case 'intelligence':
-        setIntelligence(value);
-        updatedAbilities.INT = value;
-        break;
-      case 'wisdom':
-        setWisdom(value);
-        updatedAbilities.WIS = value;
-        break;
-      case 'charisma':
-        setCharisma(value);
-        updatedAbilities.CHA = value;
-        break;
-    }
-
-    onUpdate({ abilities: updatedAbilities });
+  const handleStatChange = (ability: string, value: number) => {
+    setLocalStats(prev => ({ ...prev, [ability]: value }));
   };
 
-  const handleToggleSavingThrow = (ability: string) => {
-    const proficiencies = character.savingThrowProficiencies || {};
-    const updatedProficiencies: Record<string, boolean> = { ...proficiencies };
+  const handleSaveStats = () => {
+    onUpdate({ stats: localStats });
+    setEditMode(false);
+  };
+
+  // Handle saving throw proficiency toggle
+  const toggleSavingThrowProficiency = (ability: string) => {
+    const currentProficiencies = character.savingThrowProficiencies || {};
     
-    // Toggle the proficiency
+    // Create a new object to avoid mutation
+    const updatedProficiencies = { ...currentProficiencies };
     updatedProficiencies[ability] = !updatedProficiencies[ability];
     
-    onUpdate({ 
-      savingThrowProficiencies: updatedProficiencies 
-    });
+    onUpdate({ savingThrowProficiencies: updatedProficiencies });
   };
 
-  const handleToggleSkillProficiency = (skillName: string) => {
-    const currentProficiencies = character.skillProficiencies || [];
-    let updatedProficiencies: string[];
+  // Handle skill proficiency toggle
+  const toggleSkillProficiency = (skill: string) => {
+    const currentProficiencies = character.skillProficiencies || {};
+    const currentExpertise = character.expertise || {};
     
-    if (currentProficiencies.includes(skillName)) {
-      updatedProficiencies = currentProficiencies.filter(p => p !== skillName);
+    // Check if the skill has expertise before toggling proficiency
+    const hasExpertise = Boolean(currentExpertise[skill]);
+    
+    // If the skill has expertise and we're removing proficiency,
+    // we need to remove expertise too
+    if (hasExpertise && currentProficiencies[skill]) {
+      const updatedExpertise = { ...currentExpertise };
+      delete updatedExpertise[skill];
+      
+      onUpdate({
+        skillProficiencies: {
+          ...currentProficiencies,
+          [skill]: false
+        },
+        expertise: updatedExpertise
+      });
     } else {
-      updatedProficiencies = [...currentProficiencies, skillName];
+      onUpdate({
+        skillProficiencies: {
+          ...currentProficiencies,
+          [skill]: !currentProficiencies[skill]
+        }
+      });
+    }
+  };
+
+  // Handle expertise toggle
+  const toggleExpertise = (skill: string) => {
+    const currentExpertise = character.expertise || {};
+    const currentProficiencies = character.skillProficiencies || {};
+    
+    // Expertise requires proficiency
+    if (!currentProficiencies[skill]) {
+      // Optionally, show a message or prevent toggling
+      return;
     }
     
-    onUpdate({ 
-      skillProficiencies: updatedProficiencies 
-    });
-  };
-
-  const handleToggleExpertise = (skillName: string) => {
-    const currentExpertise = character.expertise || [];
-    let updatedExpertise: string[];
-    
-    if (currentExpertise.includes(skillName)) {
-      updatedExpertise = currentExpertise.filter(e => e !== skillName);
+    const updatedExpertise = { ...currentExpertise };
+    if (updatedExpertise[skill]) {
+      delete updatedExpertise[skill];
     } else {
-      updatedExpertise = [...currentExpertise, skillName];
+      updatedExpertise[skill] = true;
     }
     
-    onUpdate({ 
-      expertise: updatedExpertise 
-    });
+    onUpdate({ expertise: updatedExpertise });
   };
 
-  const handleSkillBonusChange = (skillName: string, value: number) => {
-    const skillBonuses = character.skillBonuses || {};
-    const updatedBonuses = { ...skillBonuses };
-    
-    updatedBonuses[skillName] = value;
-    
-    onUpdate({
-      skillBonuses: updatedBonuses
-    });
-  };
+  const skills = [
+    { name: 'acrobatics', ability: 'dexterity', label: 'Акробатика' },
+    { name: 'animalHandling', ability: 'wisdom', label: 'Уход за животными' },
+    { name: 'arcana', ability: 'intelligence', label: 'Магия' },
+    { name: 'athletics', ability: 'strength', label: 'Атлетика' },
+    { name: 'deception', ability: 'charisma', label: 'Обман' },
+    { name: 'history', ability: 'intelligence', label: 'История' },
+    { name: 'insight', ability: 'wisdom', label: 'Проницательность' },
+    { name: 'intimidation', ability: 'charisma', label: 'Запугивание' },
+    { name: 'investigation', ability: 'intelligence', label: 'Расследование' },
+    { name: 'medicine', ability: 'wisdom', label: 'Медицина' },
+    { name: 'nature', ability: 'intelligence', label: 'Природа' },
+    { name: 'perception', ability: 'wisdom', label: 'Внимательность' },
+    { name: 'performance', ability: 'charisma', label: 'Выступление' },
+    { name: 'persuasion', ability: 'charisma', label: 'Убеждение' },
+    { name: 'religion', ability: 'intelligence', label: 'Религия' },
+    { name: 'sleightOfHand', ability: 'dexterity', label: 'Ловкость рук' },
+    { name: 'stealth', ability: 'dexterity', label: 'Скрытность' },
+    { name: 'survival', ability: 'wisdom', label: 'Выживание' },
+  ];
 
-  const renderAbility = (ability: string) => {
-    const abilityValue = character.abilities?.[ability] || 10;
-    const modifier = getAbilityModifier(abilityValue);
-    const modifierString = getAbilityModifierString(abilityValue);
-    const isProficient = isSavingThrowProficient(ability.toLowerCase());
-
-    return (
-      <div key={ability} className="mb-4">
-        <h4 className="font-semibold">{abilityFullNames[ability]}</h4>
-        <div className="flex items-center space-x-4">
-          <input
-            type="number"
-            value={abilityValue}
-            onChange={(e) => handleAbilityChange(ability, Number(e.target.value))}
-            className="w-20 border rounded px-2 py-1"
-          />
-          <span className="text-gray-500">Модификатор: {modifierString}</span>
-          <button
-            onClick={() => handleToggleSavingThrow(ability.toLowerCase())}
-            className={`px-3 py-1 rounded ${isProficient ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-500'}`}
-          >
-            {isProficient ? 'Спас-бросок: владеет' : 'Спас-бросок: не владеет'}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderSkill = (skillName: string) => {
-    const isProficient = isSkillProficient(skillName);
-    const hasExpertise = hasExpertise(skillName);
-    const skillBonus = character.skillBonuses?.[skillName] || 0;
-
-    return (
-      <div key={skillName} className="mb-2">
-        <div className="flex items-center space-x-2">
-          <label className="w-32">{skillName}</label>
-          <button
-            onClick={() => handleToggleSkillProficiency(skillName)}
-            className={`px-2 py-1 rounded ${isProficient ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-500'}`}
-          >
-            {isProficient ? 'Владеет' : 'Не владеет'}
-          </button>
-          <button
-            onClick={() => handleToggleExpertise(skillName)}
-            className={`px-2 py-1 rounded ${hasExpertise ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-500'}`}
-          >
-            {hasExpertise ? 'Эксперт' : 'Не эксперт'}
-          </button>
-          <input
-            type="number"
-            value={skillBonus}
-            onChange={(e) => handleSkillBonusChange(skillName, Number(e.target.value))}
-            className="w-16 border rounded px-2 py-1"
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const isSavingThrowProficient = (ability: string): boolean => {
-    const proficiencies = character.savingThrowProficiencies || {};
-    return !!proficiencies[ability];
-  };
-  
-  const isSkillProficient = (skillName: string): boolean => {
-    const proficiencies = character.skillProficiencies || [];
-    return proficiencies.includes(skillName);
-  };
-  
-  const hasExpertise = (skillName: string): boolean => {
-    const expertise = character.expertise || [];
-    return expertise.includes(skillName);
-  };
+  const savingThrows = [
+    'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'
+  ];
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">Характеристики</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {abilityNames.map(ability => renderAbility(ability))}
+      <Card>
+        <CardHeader>
+          <CardTitle>Характеристики</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 md:grid-cols-6 gap-4">
+          {Object.entries(localStats).map(([ability, value]) => (
+            <div key={ability} className="space-y-2">
+              <Label>{getAbilityName(ability)}</Label>
+              {editMode ? (
+                <Input
+                  type="number"
+                  value={value}
+                  onChange={(e) => handleStatChange(ability, parseInt(e.target.value))}
+                />
+              ) : (
+                <div className="p-2 border rounded">{value} ({getAbilityModifierString(value)})</div>
+              )}
+            </div>
+          ))}
+        </CardContent>
+        <div className="p-4 border-t">
+          {editMode ? (
+            <div className="flex justify-end">
+              <button onClick={handleSaveStats} className="px-4 py-2 bg-green-500 text-white rounded">Сохранить</button>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <button onClick={() => setEditMode(true)} className="px-4 py-2 bg-blue-500 text-white rounded">Редактировать</button>
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
 
-      <div>
-        <h3 className="text-lg font-semibold">Навыки</h3>
-        <div>
-          {/* Replace with actual skill names from your data */}
-          {['Акробатика', 'Атлетика', 'Внимательность', 'Выживание', 'Выступление', 'Запугивание', 'История', 'Колдовство', 'Ловкость рук', 'Медицина', 'Обман', 'Природа', 'Проницательность', 'Религия', 'Скрытность', 'Убеждение', 'Угроза', 'Анализ'].map(skill => renderSkill(skill))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Спасброски</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+            {savingThrows.map(ability => (
+              <div key={ability} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`saving-throw-${ability}`}
+                  checked={character.savingThrowProficiencies?.[ability] || false}
+                  onCheckedChange={() => toggleSavingThrowProficiency(ability)}
+                />
+                <Label htmlFor={`saving-throw-${ability}`}>
+                  {getAbilityName(ability)} ({getAbilityModifierString(localStats[ability] || 10)})
+                </Label>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Навыки</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="max-h-64">
+            <div className="space-y-2">
+              {skills.map(skill => (
+                <div key={skill.name} className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`skill-${skill.name}`}
+                        checked={character.skillProficiencies?.[skill.name] || false}
+                        onCheckedChange={() => toggleSkillProficiency(skill.name)}
+                      />
+                      <Label htmlFor={`skill-${skill.name}`}>
+                        {skill.label} ({getAbilityModifierString(localStats[skill.ability] || 10)})
+                      </Label>
+                    </div>
+                  </div>
+                  <div>
+                    {character.skillProficiencies?.[skill.name] && (
+                      <Checkbox
+                        id={`expertise-${skill.name}`}
+                        checked={character.expertise?.[skill.name] || false}
+                        onCheckedChange={() => toggleExpertise(skill.name)}
+                        disabled={!character.skillProficiencies?.[skill.name]}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 };

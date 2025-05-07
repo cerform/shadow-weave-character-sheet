@@ -24,6 +24,15 @@ export interface SpellbookContextProps {
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string) => string;
   isLoading: boolean;
+  searchTerm: string;
+  setSearchTerm: (text: string) => void;
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
+  loading: boolean;
 }
 
 export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
@@ -37,9 +46,25 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [filters, setFilters] = useState<SpellFilter>({});
   const [searchText, setSearchText] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Prepared values for UI filters
+  const [allLevels] = useState<number[]>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const [allSchools] = useState<string[]>([
+    'Воплощение', 'Некромантия', 'Преобразование', 'Иллюзия',
+    'Прорицание', 'Очарование', 'Вызов', 'Ограждение'
+  ]);
+  const [allClasses] = useState<string[]>([
+    'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 'Чародей', 
+    'Паладин', 'Следопыт', 'Воин', 'Плут'
+  ]);
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);  
+  const [activeClass, setActiveClass] = useState<string[]>([]);
+  const loading = isLoading; // Alias for backward compatibility
 
   // Загружаем все заклинания при инициализации
   useEffect(() => {
@@ -123,10 +148,22 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   const clearFilters = () => {
     setFilters({});
     setSearchText('');
+    setSearchTerm('');
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
   };
 
   // Функции для переключения фильтров
   const toggleLevel = (level: number) => {
+    setActiveLevel(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+    
     setFilters(prev => {
       const newFilters = { ...prev };
       
@@ -152,6 +189,14 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   };
 
   const toggleSchool = (school: string) => {
+    setActiveSchool(prev => {
+      if (prev.includes(school)) {
+        return prev.filter(s => s !== school);
+      } else {
+        return [...prev, school];
+      }
+    });
+    
     setFilters(prev => {
       const newFilters = { ...prev };
       
@@ -177,6 +222,14 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   };
 
   const toggleClass = (className: string) => {
+    setActiveClass(prev => {
+      if (prev.includes(className)) {
+        return prev.filter(c => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+    
     setFilters(prev => {
       const newFilters = { ...prev };
       
@@ -254,6 +307,15 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
     return classes;
   };
 
+  // Load spells for a specific class
+  const loadSpellsForClass = (className: string) => {
+    console.log(`Loading spells for class: ${className}`);
+    return spells.filter(spell => {
+      const classes = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+      return classes.some(c => c?.toLowerCase() === className?.toLowerCase());
+    });
+  };
+
   return (
     <SpellbookContext.Provider
       value={{
@@ -276,7 +338,16 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
         getBadgeColor,
         getSchoolBadgeColor,
         formatClasses,
-        isLoading
+        isLoading,
+        searchTerm,
+        setSearchTerm,
+        allLevels,
+        allSchools,
+        allClasses,
+        activeLevel,
+        activeSchool,
+        activeClass,
+        loading
       }}
     >
       {children}
@@ -285,10 +356,10 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
 };
 
 // Expose a custom hook to use the context
-export const useSpellbookContext = () => {
+export const useSpellbook = () => {
   const context = useContext(SpellbookContext);
   if (context === undefined) {
-    throw new Error('useSpellbookContext must be used within a SpellbookProvider');
+    throw new Error('useSpellbook must be used within a SpellbookProvider');
   }
   return context;
 };

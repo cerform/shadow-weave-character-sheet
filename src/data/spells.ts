@@ -1,18 +1,26 @@
 
 import { SpellData, SpellFilter } from '@/types/spells';
-import { cantrips } from './spells/cantrips';
-import { level3 } from './spells/level3';
-import { level5 } from './spells/level5';
-import { level6 } from './spells/level6';
-import { level7 } from './spells/level7';
-import { level8 } from './spells/level8';
-import { level9 } from './spells/level9';
 import { filterSpells } from '@/utils/spellHelpers';
 
+// Create empty arrays for spell levels until we have actual data
+const cantrips: SpellData[] = [];
+const level1: SpellData[] = [];
+const level2: SpellData[] = [];
+const level3: SpellData[] = [];
+const level4: SpellData[] = [];
+const level5: SpellData[] = [];
+const level6: SpellData[] = [];
+const level7: SpellData[] = [];
+const level8: SpellData[] = [];
+const level9: SpellData[] = [];
+
 // Объединяем все списки заклинаний
-const allSpells = [
+const allSpells: SpellData[] = [
   ...cantrips,
+  ...level1,
+  ...level2,
   ...level3,
+  ...level4,
   ...level5,
   ...level6,
   ...level7,
