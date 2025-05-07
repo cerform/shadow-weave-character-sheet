@@ -1,4 +1,3 @@
-
 import { Character } from './character';
 
 export interface GameSession {
@@ -58,9 +57,9 @@ export interface TokenData {
 
 export interface Initiative {
   id: string;
+  tokenId: number | string; // Changed to accept string or number
   name: string;
   roll: number;
-  tokenId: number | string;
   isActive: boolean;
 }
 

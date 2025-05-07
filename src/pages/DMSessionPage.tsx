@@ -6,11 +6,13 @@ import { GameSession, TokenData, Initiative } from '@/types/session.types';
 import { toast } from 'sonner';
 import { socketService } from '@/services/socket';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BattleMap from '@/components/battle/BattleMap';
 import SessionChat from '@/components/SessionChat';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
+import InitiativeTrackerPanel from '@/components/session/InitiativeTrackerPanel';
+import DiceRoller from '@/components/session/DiceRoller';
 
 const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -83,7 +85,7 @@ const DMSessionPage: React.FC = () => {
     return () => {
       socketService.disconnect();
     };
-  }, [sessionId]);  // Убираем sessionStore из зависимостей, чтобы избежать зацикливания
+  }, [sessionId]);
 
   // Обновление позиции токена
   const handleUpdateTokenPosition = async (id: number, x: number, y: number) => {
@@ -127,11 +129,6 @@ const DMSessionPage: React.FC = () => {
     socketService.sendChatMessage(chatMessage);
   };
 
-  // Обработка запросов на бросок кубиков
-  const handleDiceRoll = (formula: string, reason?: string) => {
-    socketService.sendRoll({ formula, reason });
-  };
-
   // Обработчик смены статуса боя
   const handleBattleToggle = () => {
     if (!session) return;
@@ -146,6 +143,56 @@ const DMSessionPage: React.FC = () => {
     });
     
     toast.success(newBattleStatus ? 'Режим боя активирован' : 'Режим боя завершен');
+    
+    // Если бой завершен, очищаем инициативу
+    if (!newBattleStatus) {
+      setInitiative([]);
+      sessionStore.updateSession({
+        id: session.id,
+        initiative: [],
+        updatedAt: new Date().toISOString()
+      });
+    }
+  };
+  
+  // Обработчик обновления инициативы
+  const handleUpdateInitiative = (newInitiative: Initiative[]) => {
+    setInitiative(newInitiative);
+    
+    if (session) {
+      sessionStore.updateSession({
+        id: session.id,
+        initiative: newInitiative,
+        updatedAt: new Date().toISOString()
+      });
+    }
+  };
+  
+  // Обработчик перехода к следующему ходу
+  const handleNextTurn = () => {
+    if (initiative.length === 0) return;
+    
+    setInitiative(prev => {
+      const activeIndex = prev.findIndex(i => i.isActive);
+      if (activeIndex === -1) return prev;
+      
+      const nextIndex = (activeIndex + 1) % prev.length;
+      
+      const updated = prev.map((item, idx) => ({
+        ...item,
+        isActive: idx === nextIndex
+      }));
+      
+      if (session) {
+        sessionStore.updateSession({
+          id: session.id,
+          initiative: updated,
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      return updated;
+    });
   };
 
   // Если возникла ошибка
@@ -208,12 +255,6 @@ const DMSessionPage: React.FC = () => {
           <p className="text-muted-foreground">Код сессии: {session.code}</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant={battleActive ? "destructive" : "default"}
-            onClick={handleBattleToggle}
-          >
-            {battleActive ? 'Завершить бой' : 'Начать бой'}
-          </Button>
           <Button variant="outline" onClick={() => navigate('/dm')}>
             Выйти из сессии
           </Button>
@@ -221,10 +262,12 @@ const DMSessionPage: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-3rem)]">
-        <TabsList>
+        <TabsList className="grid grid-cols-5 md:w-auto w-full">
           <TabsTrigger value="map">Карта</TabsTrigger>
+          <TabsTrigger value="initiative">Инициатива</TabsTrigger>
           <TabsTrigger value="players">Игроки ({session.players?.length || 0})</TabsTrigger>
           <TabsTrigger value="chat">Чат</TabsTrigger>
+          <TabsTrigger value="dice">Кубики</TabsTrigger>
         </TabsList>
         
         <TabsContent value="map" className="h-full">
@@ -247,6 +290,22 @@ const DMSessionPage: React.FC = () => {
               battleActive={battleActive}
             />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="initiative" className="h-full overflow-y-auto">
+          <Card className="h-full">
+            <CardContent className="p-4">
+              <InitiativeTrackerPanel 
+                initiative={initiative}
+                tokens={tokens}
+                battleActive={battleActive}
+                sessionId={session.id}
+                onUpdateInitiative={handleUpdateInitiative}
+                onToggleBattle={handleBattleToggle}
+                onNextTurn={handleNextTurn}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="players" className="h-full">
@@ -292,6 +351,20 @@ const DMSessionPage: React.FC = () => {
               roomCode={session.code}
             />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="dice" className="h-full">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Кубики</CardTitle>
+              <CardDescription>
+                Бросайте кубики и делитесь результатами с игроками
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DiceRoller roomCode={session.code} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
