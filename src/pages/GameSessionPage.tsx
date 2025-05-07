@@ -1,106 +1,87 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSessionById } from '@/services/sessionService';
-import { GameSession, TokenData } from '@/types/session.types';
-import { useToast } from '@/hooks/use-toast';
-import { socketService } from '@/services/socket';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Character } from '@/types/character';
+import { GameSession } from '@/types/session.types';
 import { useAuth } from '@/hooks/use-auth';
-import { useCharacter } from '@/contexts/CharacterContext';
-import CharacterContent from '@/components/character-sheet/CharacterContent';
-import RestPanel from '@/components/character-sheet/RestPanel';
+import { getCharacter } from '@/services/characterService';
+import { useSocket } from '@/contexts/SocketContext';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, MessageSquare, UserCircle, Gamepad } from 'lucide-react';
 import SessionChat from '@/components/SessionChat';
 
-const GameSessionPage: React.FC = () => {
+const GameSessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<GameSession | null>(null);
-  const [playerToken, setPlayerToken] = useState<TokenData | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('character');
-  const { toast } = useToast();
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('character');
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { character, updateCharacter } = useCharacter();
+  const { isConnected, connect, disconnect } = useSocket();
 
-  // Загружаем данные сессии
   useEffect(() => {
-    if (!sessionId || !currentUser) return;
-    
+    if (!sessionId || !currentUser) {
+      navigate('/player');
+      return;
+    }
+
     const loadSession = async () => {
+      setIsLoading(true);
+      
       try {
+        // Загружаем данные сессии
         const sessionData = await getSessionById(sessionId);
+        
         if (!sessionData) {
-          toast({
-            title: 'Ошибка',
-            description: 'Сессия не найдена',
-            variant: 'destructive',
-          });
+          toast.error('Сессия не найдена');
           navigate('/player');
           return;
         }
         
-        setSession(sessionData);
+        // Проверяем, принадлежит ли пользователь к этой сессии
+        const playerData = sessionData.players.find(p => p.userId === currentUser.uid);
         
-        // Находим игрока в сессии
-        const player = sessionData.players.find(p => p.userId === currentUser.uid);
-        if (!player) {
-          toast({
-            title: 'Ошибка',
-            description: 'Вы не являетесь участником этой сессии',
-            variant: 'destructive',
-          });
+        if (!playerData) {
+          toast.error('Вы не являетесь участником этой сессии');
           navigate('/player');
           return;
         }
         
-        // Находим токен персонажа игрока
-        if (sessionData.tokens) {
-          const token = sessionData.tokens.find(t => t.characterId === player.characterId);
-          if (token) {
-            setPlayerToken(token);
+        // Загружаем персонажа игрока
+        if (playerData.characterId) {
+          const characterData = await getCharacter(playerData.characterId);
+          setCharacter(characterData);
+          
+          // Подключаемся к WebSocket сессии
+          if (!isConnected) {
+            connect(
+              sessionData.code, 
+              characterData?.name || playerData.name, 
+              playerData.characterId
+            );
           }
         }
         
-        // Подключаем WebSocket
-        socketService.connect(
-          sessionData.code,
-          player.name,
-          player.characterId
-        );
+        setSession(sessionData);
       } catch (error) {
         console.error('Ошибка при загрузке сессии:', error);
-        toast({
-          title: 'Ошибка',
-          description: 'Произошла ошибка при загрузке сессии',
-          variant: 'destructive',
-        });
+        toast.error('Произошла ошибка при загрузке сессии');
+      } finally {
+        setIsLoading(false);
       }
     };
-    
+
     loadSession();
     
-    // Отключаем WebSocket при размонтировании
+    // Отключаемся от WebSocket при размонтировании
     return () => {
-      socketService.disconnect();
+      disconnect();
     };
-  }, [sessionId, navigate, toast, currentUser]);
-
-  // Обновление персонажа
-  const handleCharacterUpdate = (updates: Partial<Character>) => {
-    if (!character) return;
-    
-    const updatedCharacter = { ...character, ...updates };
-    updateCharacter(updatedCharacter);
-    
-    // Отправляем обновление персонажа через WebSocket
-    socketService.updateToken({
-      characterId: character.id,
-      hp: updatedCharacter.currentHp,
-      maxHp: updatedCharacter.maxHp
-    });
-  };
+  }, [sessionId, currentUser, navigate, connect, disconnect, isConnected]);
 
   // Отправка сообщения в чат
   const handleSendMessage = (message: string) => {
@@ -112,22 +93,13 @@ const GameSessionPage: React.FC = () => {
       nickname: character?.name || 'Игрок'
     };
     
-    socketService.sendChatMessage(chatMessage);
+    // Отправляем через WebSocket
+    // socketService.sendChatMessage(chatMessage);
   };
 
-  // Обработка броска кубиков
-  const handleDiceRoll = (formula: string, reason?: string) => {
-    socketService.sendRoll({ 
-      formula, 
-      reason,
-      characterName: character?.name
-    });
-  };
-
-  // Если данные сессии еще не загружены
-  if (!session || !sessionId || !character) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto p-4 flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p>Загрузка сессии...</p>
@@ -136,122 +108,98 @@ const GameSessionPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="container mx-auto p-2 h-[calc(100vh-4rem)]">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-2xl font-bold">{session.name}</h1>
-          <p className="text-muted-foreground">Мастер: {session.dmId}</p>
-        </div>
-        <Button variant="outline" onClick={() => navigate('/player')}>
-          Покинуть сессию
-        </Button>
+  if (!session || !currentUser) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <p className="mb-4">Ошибка при загрузке сессии</p>
+            <Button onClick={() => navigate('/player')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Вернуться к списку сессий
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-3rem)]">
-        <TabsList>
-          <TabsTrigger value="character">Персонаж</TabsTrigger>
-          <TabsTrigger value="map">Карта</TabsTrigger>
-          <TabsTrigger value="chat">Чат</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="character" className="h-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
-            <div className="md:col-span-2 h-full overflow-auto">
-              <Card className="h-full">
-                <CardContent className="p-4">
-                  <CharacterContent
-                    character={character}
-                    onUpdate={handleCharacterUpdate}
-                    section="resources"
-                  />
-                  <div className="mt-4">
-                    <CharacterContent
-                      character={character}
-                      onUpdate={handleCharacterUpdate}
-                      section="skills"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="space-y-4">
-              <RestPanel
-                character={character}
-                onUpdate={handleCharacterUpdate}
-              />
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Броски</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDiceRoll('d20', 'проверка')}
-                    >
-                      d20
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDiceRoll('2d6', 'урон')}
-                    >
-                      2d6
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDiceRoll('d8', 'исцеление')}
-                    >
-                      d8
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDiceRoll('d100', 'случайный эффект')}
-                    >
-                      d100
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">{session.name}</h1>
+            <p className="text-muted-foreground">Код сессии: {session.code}</p>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="map" className="h-full">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Карта игровой сессии</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-4rem)] flex items-center justify-center">
-              {session.map?.background ? (
-                <div
-                  className="h-full w-full bg-center bg-contain bg-no-repeat"
-                  style={{ backgroundImage: `url(${session.map.background})` }}
-                >
-                  {/* Здесь будет отображаться игровая карта для игрока */}
+          <Button variant="outline" onClick={() => navigate('/player')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Выйти из сессии
+          </Button>
+        </div>
+      </header>
+
+      <main className="container mx-auto p-4 h-[calc(100vh-5rem)]">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="character">
+              <UserCircle className="mr-2 h-4 w-4" />
+              Персонаж
+            </TabsTrigger>
+            <TabsTrigger value="game">
+              <Gamepad className="mr-2 h-4 w-4" />
+              Игра
+            </TabsTrigger>
+            <TabsTrigger value="chat">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Чат
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="character" className="h-[calc(100%-48px)]">
+            {character ? (
+              <div className="bg-card rounded-lg p-4 h-full overflow-auto">
+                <h2 className="text-xl font-bold mb-4">{character.name}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p><span className="font-medium">Раса:</span> {character.race}</p>
+                    <p><span className="font-medium">Класс:</span> {character.class || character.className}</p>
+                    <p><span className="font-medium">Уровень:</span> {character.level}</p>
+                  </div>
+                  <div>
+                    <p><span className="font-medium">HP:</span> {character.currentHp}/{character.maxHp}</p>
+                    <p><span className="font-medium">КД:</span> {character.armorClass}</p>
+                    <p><span className="font-medium">Бонус мастерства:</span> +{character.proficiencyBonus}</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  <p>Карта не загружена мастером</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="chat" className="h-full">
-          <div className="h-full">
-            <SessionChat 
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p>Персонаж не выбран</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="game" className="h-[calc(100%-48px)]">
+            <div className="bg-card rounded-lg p-4 h-full">
+              <h2 className="text-xl font-bold mb-4">Игровая карта</h2>
+              <div className="flex items-center justify-center h-[calc(100%-2rem)] bg-muted/20 rounded-lg">
+                <p className="text-muted-foreground">Мастер еще не показал карту</p>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="chat" className="h-[calc(100%-48px)]">
+            <SessionChat
               messages={[]}
               onSendMessage={handleSendMessage}
               sessionCode={session.code}
-              playerName={character.name}
+              playerName={character?.name || 'Игрок'}
               roomCode={session.code}
             />
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };

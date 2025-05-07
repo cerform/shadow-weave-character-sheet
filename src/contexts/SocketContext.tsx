@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { socketService } from '@/services/socket';
+import { socketService, useSocket as useSocketStore } from '@/services/socket';
 import { TokenData } from '@/types/session.types';
 
 interface SocketContextType {
@@ -28,13 +28,14 @@ const defaultContextValue: SocketContextType = {
 const SocketContext = createContext<SocketContextType>(defaultContextValue);
 
 export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(false);
   const [sessionData, setSessionData] = useState<{ code: string; name?: string } | null>(null);
+  
+  // Используем новое zustand-хранилище
+  const { isConnected, connect: connectSocket, disconnect: disconnectSocket, sendChatMessage, sendRoll, updateToken } = useSocketStore();
 
   useEffect(() => {
     // Попытка восстановления соединения при монтировании компонента
     const connectionInfo = socketService.getConnectionInfo();
-    setIsConnected(connectionInfo.isConnected);
     
     if (connectionInfo.sessionCode) {
       setSessionData({
@@ -45,7 +46,6 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Регистрируем обработчики
     const handleConnect = (data: any) => {
       console.log('Socket connected:', data);
-      setIsConnected(true);
       setSessionData({
         code: data.sessionCode,
         name: data.sessionName
@@ -54,7 +54,6 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     const handleDisconnect = () => {
       console.log('Socket disconnected');
-      setIsConnected(false);
       setSessionData(null);
     };
     
@@ -70,25 +69,14 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Подключение к сессии
   const connect = (sessionCode: string, playerName: string = 'Игрок', characterId?: string) => {
     console.log(`Connecting to session: ${sessionCode} as ${playerName}`);
-    socketService.connect(sessionCode, playerName, characterId);
+    connectSocket(sessionCode, playerName, characterId);
   };
 
   // Отключение от сессии
   const disconnect = () => {
     console.log('Disconnecting from session');
-    socketService.disconnect();
-    setIsConnected(false);
+    disconnectSocket();
     setSessionData(null);
-  };
-
-  // Отправка сообщения в чат
-  const sendChatMessage = (message: { message: string, roomCode: string, nickname: string }) => {
-    socketService.sendChatMessage(message);
-  };
-
-  // Отправка запроса на бросок кубиков
-  const sendRoll = (rollRequest: { formula: string, reason?: string }) => {
-    socketService.sendRoll(rollRequest);
   };
 
   // Отправка обновления персонажа
@@ -99,11 +87,6 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
     
     console.log('Sending update:', payload);
-  };
-
-  // Обновление токена на карте
-  const updateToken = (token: TokenData) => {
-    socketService.updateToken(token);
   };
 
   return (

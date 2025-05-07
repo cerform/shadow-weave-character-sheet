@@ -4,6 +4,23 @@
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { TokenData } from '@/types/session.types';
+import { create } from 'zustand';
+
+// Определяем интерфейсы для хранилища сокетов
+interface SocketState {
+  isConnected: boolean;
+  sessionCode: string | null;
+  playerName: string | null;
+  characterId: string | null;
+}
+
+interface SocketActions {
+  connect: (sessionCode: string, playerName?: string, characterId?: string) => void;
+  disconnect: () => void;
+  sendChatMessage: (message: { message: string; roomCode: string; nickname: string }) => void;
+  sendRoll: (rollRequest: { formula: string; reason?: string }) => void;
+  updateToken: (token: TokenData) => void;
+}
 
 class SocketService {
   private socket: Socket | null = null;
@@ -270,3 +287,65 @@ class SocketService {
 
 // Экспортируем синглтон
 export const socketService = new SocketService();
+
+// Создаем Zustand-хранилище для сокетов
+export const useSocket = create<SocketState & SocketActions>((set, get) => ({
+  isConnected: false,
+  sessionCode: null,
+  playerName: null,
+  characterId: null,
+  
+  connect: (sessionCode, playerName = 'Игрок', characterId) => {
+    socketService.connect(sessionCode, playerName, characterId);
+    
+    // Обработчик подключения
+    const handleConnected = (data: any) => {
+      set({
+        isConnected: true,
+        sessionCode: data.sessionCode,
+        playerName: data.playerName,
+        characterId: data.characterId || null
+      });
+    };
+    
+    // Обработчик отключения
+    const handleDisconnected = () => {
+      set({
+        isConnected: false
+      });
+    };
+    
+    // Регистрируем обработчики
+    socketService.on('connected', handleConnected);
+    socketService.on('disconnected', handleDisconnected);
+    
+    // Обновляем состояние
+    set({
+      sessionCode,
+      playerName,
+      characterId: characterId || null
+    });
+  },
+  
+  disconnect: () => {
+    socketService.disconnect();
+    set({
+      isConnected: false,
+      sessionCode: null,
+      playerName: null,
+      characterId: null
+    });
+  },
+  
+  sendChatMessage: (message) => {
+    socketService.sendChatMessage(message);
+  },
+  
+  sendRoll: (rollRequest) => {
+    socketService.sendRoll(rollRequest);
+  },
+  
+  updateToken: (token) => {
+    socketService.updateToken(token);
+  }
+}));
