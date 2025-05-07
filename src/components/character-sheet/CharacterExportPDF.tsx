@@ -163,11 +163,14 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       
       // Add spells
       if (character.spells && character.spells.length > 0) {
-        const spellsArray = Array.isArray(character.spells)
-          ? (typeof character.spells[0] === 'string'
-              ? character.spells as string[]
-              : (character.spells as CharacterSpell[]).map(s => s.name))
-          : [];
+        const spellsArray: string[] = [];
+        
+        if (typeof character.spells[0] === 'string') {
+          spellsArray.push(...(character.spells as string[]));
+        } else {
+          // Конвертируем CharacterSpell[] в string[] явно с использованием map
+          spellsArray.push(...(character.spells as CharacterSpell[]).map(s => s.name));
+        }
             
         autoTable(doc, {
           startY: yPosition,

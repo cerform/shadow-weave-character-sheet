@@ -1,4 +1,5 @@
 
+
 export interface Character {
   id?: string;
   name: string;
@@ -146,6 +147,13 @@ export interface Character {
     max: number;
     current: number;
   };
+  currency?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
 }
 
 export interface CharacterSpell {
@@ -221,3 +229,4 @@ export interface LevelFeature {
   class?: string;
   required?: boolean;
 }
+

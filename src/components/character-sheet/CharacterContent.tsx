@@ -73,12 +73,12 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
                 <span style={{ color: currentTheme.textColor }}>{skillName}</span>
                 <span style={{ color: currentTheme.textColor }}>
                   {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
-                  {typeof skillValue === 'object' && 'value' in skillValue ? 
+                  {typeof skillValue === 'object' && skillValue !== null && 'value' in skillValue && 
                     (skillValue.value !== undefined && Number(skillValue.value) >= 0 ? 
-                      `+${skillValue.value}` : skillValue.value) : ''}
-                  {typeof skillValue === 'object' && 'bonus' in skillValue ? 
+                      `+${skillValue.value}` : skillValue.value)}
+                  {typeof skillValue === 'object' && skillValue !== null && 'bonus' in skillValue && 
                     (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
-                      `+${skillValue.bonus}` : skillValue.bonus) : ''}
+                      `+${skillValue.bonus}` : skillValue.bonus)}
                 </span>
               </div>
             ))}
