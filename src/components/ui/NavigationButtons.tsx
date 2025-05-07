@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Book, Dice, UserCircle2, Settings } from "lucide-react";
+import { Home, Book, Dices, UserCircle2, Settings } from "lucide-react";
 
 interface NavigationButtonsProps {
   className?: string;
@@ -40,7 +40,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({ className }) => {
         onClick={() => navigate("/dice")}
         title="Кости"
       >
-        <Dice size={18} />
+        <Dices size={18} />
       </Button>
       
       <Button 
