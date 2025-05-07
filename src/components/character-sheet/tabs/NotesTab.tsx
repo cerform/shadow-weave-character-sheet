@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Character } from '@/types/character';
@@ -25,4 +26,3 @@ const NotesTab: React.FC<NotesTabProps> = ({ character, onUpdate }) => {
 };
 
 export default NotesTab;
-

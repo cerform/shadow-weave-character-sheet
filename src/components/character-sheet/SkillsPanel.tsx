@@ -81,18 +81,16 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     };
     
     // Обновляем персонажа
-    let updatedProficiencies = { 
-      ...character.proficiencies
-    };
+    let updatedProficiencies = character.proficiencies ? { 
+      ...character.proficiencies 
+    } : {};
     
     // Проверяем тип proficiencies и обновляем соответственно
     if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
-      // Создаем массив навыков, если его нет
-      const skillsList = updatedProficiencies.skills || [];
-      
+      // Создаем или обновляем массив навыков
       if (!currentSkill.proficient) {
         // Добавляем навык в список владений
-        if (updatedProficiencies.skills) {
+        if ('skills' in updatedProficiencies && Array.isArray(updatedProficiencies.skills)) {
           updatedProficiencies = {
             ...updatedProficiencies,
             skills: [...updatedProficiencies.skills, skillKey]
@@ -105,7 +103,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
         }
       } else {
         // Удаляем навык из списка владений
-        if (updatedProficiencies.skills) {
+        if ('skills' in updatedProficiencies && Array.isArray(updatedProficiencies.skills)) {
           updatedProficiencies = {
             ...updatedProficiencies,
             skills: updatedProficiencies.skills.filter(skill => skill !== skillKey)
@@ -116,7 +114,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     
     onUpdate({
       skills: updatedSkills,
-      proficiencies: updatedProficiencies
+      proficiencies: updatedProficiencies as Character['proficiencies']
     });
     
     // Показываем уведомление

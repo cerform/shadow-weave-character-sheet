@@ -4,7 +4,7 @@ export interface Character {
   race?: string;
   subrace?: string;  // Добавляем поле subrace
   class?: string;
-  className?: string; // Добавляем альтернатив��ое поле className
+  className?: string; // Добавляем альтернативное поле className
   subclass?: string;
   background?: string;
   level: number;
@@ -38,6 +38,7 @@ export interface Character {
     proficient: boolean;
     expertise?: boolean;
     value?: number;
+    bonus?: number;
   }>;
   hitPoints?: {
     current: number;
@@ -48,6 +49,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
+  temporaryHp?: number; // Добавляем отдельное поле для временных хитов
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -57,10 +59,16 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
+    skills?: string[]; // Добавляем поле skills
   } | string[];
-  equipment?: Item[];
-  features?: string[];
-  spells?: CharacterSpell[];
+  // Добавляем поддержку обоих типов equipment
+  equipment?: Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
+  features?: Feature[] | string[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -82,7 +90,8 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
+  notes?: string; // Добавляем поле для заметок
+  // Изменяем названия свойств для особенностей
   raceFeatures?: {
     name: string;
     description: string;
@@ -110,22 +119,52 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Added properties for timestamps
+  // Добавляем поля для временных меток
   updatedAt?: string;
   createdAt?: string;
-  // Added property for character image
+  // Добавляем поле для изображения персонажа
   image?: string;
   // Пользовательские поля
-  gender?: string; // Добавляем поле gender
-  userId?: string; // Добавляем поле userId для связи с пользователем
-  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
-  // Добавляем поля для обратной совместимости
+  gender?: string;
+  userId?: string; // Поле для связи с пользователем
+  abilityPointsUsed?: number; // Поле для отслеживания использованных очков
+  // Поля для обратной совместимости
   strength?: number;
   dexterity?: number;
   constitution?: number;
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
+  // Добавляем поле для инициативы
+  initiative?: string | number;
+  // Добавляем поле для последнего броска кубиков
+  lastDiceRoll?: {
+    diceType: string;
+    count: number;
+    modifier: number;
+    rolls: number[];
+    total: number;
+    label: string;
+    timestamp: string;
+  };
+  // Добавляем поле для костей хитов
+  hitDice?: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
+  };
+  // Добавляем поле для отслеживания ресурсов
+  resources?: Record<string, {
+    max: number;
+    used: number;
+    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
+  }>;
+  // Добавляем поле для очков колдовства
+  sorceryPoints?: {
+    max: number;
+    current: number;
+  };
 }
 
 export interface CharacterSpell {
