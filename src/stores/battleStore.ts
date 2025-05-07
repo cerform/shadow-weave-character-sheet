@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { LightSource } from "@/types/battle";
 
@@ -97,40 +98,6 @@ interface BattleStore {
   setIsDM: (isDM: boolean) => void;
   setShowWebcams: (show: boolean) => void;
 }
-
-const addLightSource = (lightSource: Omit<LightSource, "id">) => {
-  set((state) => ({
-    mapSettings: {
-      ...state.mapSettings,
-      lightSources: [...state.mapSettings.lightSources, { 
-        ...lightSource, 
-        id: String(Date.now())  // Convert to string to match LightSource.id type
-      }]
-    }
-  }));
-};
-
-const removeLightSource = (id: number) => {
-  set((state) => ({
-    mapSettings: {
-      ...state.mapSettings,
-      lightSources: state.mapSettings.lightSources.filter(light => 
-        String(light.id) !== String(id)  // Convert both to string for comparison
-      )
-    }
-  }));
-};
-
-const updateLightSource = (id: number, updates: Partial<Omit<LightSource, "id">>) => {
-  set((state) => ({
-    mapSettings: {
-      ...state.mapSettings,
-      lightSources: state.mapSettings.lightSources.map(light => 
-        String(light.id) === String(id) ? { ...light, ...updates } : light  // Convert both to string
-      )
-    }
-  }));
-};
 
 const useBattleStore = create<BattleStore>((set, get) => ({
   // Начальное состояние
@@ -449,7 +416,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       mapSettings: {
         ...state.mapSettings,
         lightSources: state.mapSettings.lightSources.map(light => 
-          light.id === lightId ? { ...light, attachedToTokenId: tokenId } : light
+          String(light.id) === String(lightId) ? { ...light, attachedToTokenId: tokenId } : light
         )
       }
     }));

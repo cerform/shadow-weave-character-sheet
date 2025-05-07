@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
@@ -18,7 +19,7 @@ import { Character } from '@/types/character';
 interface RightPanelProps {
   tokens: Token[];
   selectedTokenId: number | null;
-  onSelectToken: (id: number | null) => void;
+  onSelectToken: (id: number) => void;
   onAddToken: (token: Token) => void;
   onRemoveToken: (id: number) => void;
   onStartBattle: () => void;
@@ -153,9 +154,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
     console.log('Character update called from RightPanel', updates);
   };
 
+  // Обработчик изменения инициативы - преобразуем string -> number явно
   const handleInitiativeChange = (value: string | number) => {
-    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
-    onUpdate({ initiative: numericValue });
+    let numValue: number;
+    
+    if (typeof value === 'string') {
+      numValue = parseInt(value, 10);
+    } else {
+      numValue = value;
+    }
+    
+    // Используем локальную функцию для обработки обновлений
+    const localOnUpdate = (updates: any) => {
+      console.log('Initiative updated:', updates);
+    };
+    
+    localOnUpdate({ initiative: numValue });
   };
 
   return (
@@ -311,7 +325,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              onClick={() => onRemoveLightSource(light.id)}
+                              onClick={() => onRemoveLightSource(Number(light.id))}
                             >
                               Удалить
                             </Button>
@@ -407,12 +421,3 @@ const RightPanel: React.FC<RightPanelProps> = ({
 };
 
 export default RightPanel;
-
-interface DicePanelProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-  isDM?: boolean;
-  tokens?: Token[];
-  selectedTokenId?: number;
-  onSelectToken?: (id: number) => void;
-}

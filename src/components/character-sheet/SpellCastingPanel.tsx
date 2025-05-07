@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Wand2, BookOpen, Brain } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { getAbilityModifier } from '@/utils/characterUtils';
+
+// Используем утилитарную функцию для получения модификатора характеристики
+function getAbilityModifier(character: Character, ability: string): number {
+  if (!character || !ability) return 0;
+  
+  const abilityScore = character.abilities?.[ability.toLowerCase()] || 10;
+  return Math.floor((abilityScore - 10) / 2);
+}
 
 export interface SpellCastingPanelProps {
   character: Character;

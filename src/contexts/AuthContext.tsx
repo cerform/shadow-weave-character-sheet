@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (err) {
         console.error("Error in auth state listener", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
+        handleError(err);
       } finally {
         setLoading(false);
       }
@@ -162,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      handleError(err);
       throw err;
     } finally {
       setLoading(false);
@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      handleError(err);
       throw err;
     } finally {
       setLoading(false);
@@ -211,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Вы успешно вышли из системы");
     } catch (err) {
       console.error("Logout error:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      handleError(err);
       throw err;
     } finally {
       setLoading(false);
@@ -260,7 +260,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return null;
     } catch (err) {
       console.error("Google login error:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      handleError(err);
       toast.error("Не удалось войти через Google: " + (err instanceof Error ? err.message : String(err)));
       throw err;
     } finally {
@@ -299,6 +299,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     }
+  };
+
+  const handleError = (err: Error | unknown) => {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    setError(errorMessage);
   };
 
   return (

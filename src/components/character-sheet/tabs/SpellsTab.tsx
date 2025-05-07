@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Sparkles } from "lucide-react";
 import SpellCastingPanel from '../SpellCastingPanel';
 import SpellPanel from '../SpellPanel';
-import { SpellSelectionModal } from '../SpellSelectionModal';
+import SpellSelectionModal from '../SpellSelectionModal';  // Исправлен импорт
 
 interface SpellsTabProps {
   character: Character;
@@ -73,7 +73,10 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
   return (
     <div className="space-y-4">
       {/* Основная информация о заклинаниях */}
-      <SpellCastingPanel character={character} onUpdate={onUpdate} />
+      <SpellCastingPanel 
+        character={character} 
+        onUpdate={onUpdate}
+      />
       
       {/* Вкладки для заклинаний разных уровней */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

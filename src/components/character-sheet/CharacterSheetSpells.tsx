@@ -125,10 +125,19 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     .filter(spell => typeof spell !== 'string' && spell.prepared && spell.level > 0)
     .length;
   
+  const handleCharacterUpdate = (updates: Partial<Character>) => {
+    if (updateCharacter) {
+      updateCharacter(updates);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       {/* Панель использования заклинаний */}
-      <SpellCastingPanel character={character} />
+      <SpellCastingPanel 
+        character={character} 
+        onUpdate={handleCharacterUpdate}
+      />
       
       {/* Панель ячеек заклинаний */}
       <SpellSlotManager character={character} />

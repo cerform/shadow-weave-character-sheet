@@ -1,12 +1,12 @@
 
-// Add or modify this file to include User type with role
+// Типы для пользователей и аутентификации
 export interface User {
   uid: string;
   id?: string;
   email?: string;
   displayName?: string;
   photoURL?: string;
-  role?: 'player' | 'dm' | 'admin';
+  role: 'player' | 'dm' | 'admin';
   isDM?: boolean;
   username?: string;
   characterName?: string;

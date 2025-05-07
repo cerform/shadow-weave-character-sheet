@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Plus, BookOpen } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { SpellDialog } from './SpellDialog';
+import SpellDialog from './SpellDialog'; // Исправлен импорт - убрана деструктуризация
 
 export interface SpellPanelProps {
   character: Character;
@@ -51,11 +51,11 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
           <ScrollArea className="max-h-64">
             <div className="space-y-2">
               {spells.map((spell, index) => {
-                const spellId = typeof spell === 'string' ? spell : spell.id;
+                const spellId = typeof spell === 'string' ? spell : spell.id || '';
                 const spellName = typeof spell === 'string' ? spell : spell.name || spellId;
                 
                 return (
-                  <div key={spellId} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
+                  <div key={spellId || index} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
                     <Button 
                       variant="ghost" 
                       onClick={() => handleOpenSpell(spellId)}

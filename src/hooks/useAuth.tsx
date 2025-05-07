@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     try {
       // In a real app, you'd make an API call here
-      const mockUser = { 
+      const mockUser: User = { 
         uid: '123', 
         id: '123', 
         email: email, 
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return Promise.resolve();
     } catch (e) {
       const err = e as Error;
-      setError(err.message);
+      setError(err.message || String(err));
       throw e;
     }
   };
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return Promise.resolve();
     } catch (e) {
       const err = e as Error;
-      setError(err.message);
+      setError(err.message || String(err));
       throw e;
     }
   };
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (email: string, password: string, displayName?: string, isDM?: boolean) => {
     try {
       // In a real app, you'd make an API call here
-      const mockUser = { 
+      const mockUser: User = { 
         uid: '123', 
         id: '123', 
         email: email,
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return Promise.resolve();
     } catch (e) {
       const err = e as Error;
-      setError(err.message);
+      setError(err.message || String(err));
       throw e;
     }
   };
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const googleLogin = async (redirectToPath?: string): Promise<User | null> => {
     try {
       // In a real app, you'd implement real Google Auth
-      const mockUser = { 
+      const mockUser: User = { 
         uid: '789', 
         id: '789', 
         email: 'google@example.com',
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return mockUser;
     } catch (e) {
       const err = e as Error;
-      setError(err.message);
+      setError(err.message || String(err));
       return null;
     }
   };
