@@ -23,6 +23,7 @@ export interface SpellData {
   materials?: string;
   higherLevel?: string;
   higherLevels?: string;
+  source?: string;
 }
 
 // Функция для конвертации CharacterSpell в SpellData
@@ -46,7 +47,8 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     material: spell.material || false,
     materials: spell.materials || '',
     higherLevel: spell.higherLevel || '',
-    higherLevels: spell.higherLevels || ''
+    higherLevels: spell.higherLevels || '',
+    source: spell.source || 'Книга игрока'
   };
 };
 
@@ -71,7 +73,8 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     material: spell.material || false,
     materials: spell.materials || '',
     higherLevel: spell.higherLevel || '',
-    higherLevels: spell.higherLevels || ''
+    higherLevels: spell.higherLevels || '',
+    source: spell.source || 'Книга игрока'
   };
 };
 

@@ -78,3 +78,6 @@ export const createDefaultCharacter = (): Character => {
 };
 
 import { Character } from '@/types/character';
+
+// Make sure this function is properly exported
+export { createDefaultCharacter };

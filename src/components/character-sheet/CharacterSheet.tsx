@@ -21,3 +21,50 @@ import { HPBar } from './HPBar';
 import DicePanel from './DicePanel';
 import ResourcePanel from './ResourcePanel';
 import RestPanel from './RestPanel';
+
+interface CharacterSheetProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdate }) => {
+  return (
+    <div className="bg-card bg-opacity-90 rounded-lg shadow-lg border border-primary/20 p-4">
+      <CharacterHeader character={character} onUpdate={onUpdate} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+        <div className="lg:col-span-2">
+          <CharacterInfoHeader character={character} onUpdate={onUpdate} />
+        </div>
+        <div>
+          <HPBar character={character} onUpdate={onUpdate} />
+        </div>
+      </div>
+      
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <DicePanel character={character} />
+        </div>
+        <div>
+          <ResourcePanel character={character} onUpdate={onUpdate} />
+        </div>
+        <div>
+          <RestPanel character={character} onUpdate={onUpdate} />
+        </div>
+      </div>
+      
+      <div className="mt-6">
+        <CharacterTabs character={character} onUpdate={onUpdate} />
+      </div>
+      
+      <div className="flex justify-between items-center mt-6">
+        <SaveCharacterButton character={character} />
+        <CharacterExportPDF character={character} />
+      </div>
+      
+      <LevelUpPanel character={character} onUpdate={onUpdate} />
+    </div>
+  );
+};
+
+export default CharacterSheet;

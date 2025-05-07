@@ -28,7 +28,7 @@ export interface ChatMessage {
   sender: string;
   message: string;
   timestamp: string;
-  type?: 'message' | 'system' | 'dice';
+  type?: 'message' | 'system' | 'dice' | 'text' | 'roll';
   // Добавляем дополнительные поля
   senderName?: string;
   content?: string;
@@ -53,8 +53,27 @@ export interface GameSession {
   // Добавляем недостающие поля
   updatedAt?: string;
   isActive?: boolean;
+  battleActive?: boolean;
+  chat?: ChatMessage[];
+  map?: any;
+  tokens?: TokenData[];
+  initiative?: Initiative[];
 }
 
-// Добавляем интерфейс для инициативы боя
+// Для DM сессий
+export interface DMSession extends GameSession {
+  // Специфические поля для DM
+}
+
+export interface GameSessionWithOptionalFields extends GameSession {
+  updatedAt?: string;
+  battleActive?: boolean;
+  chat?: ChatMessage[];
+  map?: any;
+  tokens?: TokenData[];
+  initiative?: Initiative[];
+}
+
+// Добавляем интерфейсы для инициативы боя
 export interface BattleInitiative extends Initiative {}
 export interface SessionInitiative extends Initiative {}
