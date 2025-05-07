@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Label } from '@/components/ui/label';
@@ -37,8 +38,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Правильно проверяем наличие fixed и убеждаемся, что объект не пустой
-    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
+    // Правильное решение проблемы с TypeScript 2872
+    if (abilityBonuses.fixed && typeof abilityBonuses.fixed === 'object' && Object.keys(abilityBonuses.fixed).length > 0) {
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
@@ -163,8 +164,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {/* Исправляем проверку на существование и непустоту объекта */}
-          {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
+          {/* Исправление проверки на существование и непустоту объекта */}
+          {abilityBonuses.fixed && typeof abilityBonuses.fixed === 'object' && Object.keys(abilityBonuses.fixed).length > 0 && (
             <div className="mb-2">
               <p>Фиксированные бонусы:</p>
               <div className="flex flex-wrap gap-2 mt-1">

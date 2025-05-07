@@ -6,7 +6,7 @@ import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import ThemeSelector from '@/components/ThemeSelector';
 
-const HandbookPage: React.FC = () => {
+const BattleMapPage: React.FC = () => {
   const { themeStyles } = useTheme();
   
   return (
@@ -15,7 +15,7 @@ const HandbookPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <h1 className="text-3xl font-bold mb-4 sm:mb-0" style={{ color: themeStyles?.textColor }}>
-              Справочник D&D 5e
+              Боевая карта
             </h1>
             <div className="flex items-center space-x-4">
               <ThemeSelector />
@@ -24,8 +24,8 @@ const HandbookPage: React.FC = () => {
           </header>
           
           <div className="bg-black/50 rounded-lg p-8 backdrop-blur-sm">
-            <h2 className="text-2xl mb-6">Содержимое справочника</h2>
-            <p className="text-lg">Этот раздел находится в разработке. Скоро здесь появится полное руководство по D&D 5e</p>
+            <h2 className="text-2xl mb-6">Интерактивная карта для боя</h2>
+            <p className="text-lg">Этот раздел находится в разработке.</p>
           </div>
         </div>
       </div>
@@ -34,4 +34,4 @@ const HandbookPage: React.FC = () => {
   );
 };
 
-export default HandbookPage;
+export default BattleMapPage;

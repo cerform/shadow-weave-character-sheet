@@ -14,13 +14,14 @@ import Index from './pages/Index';
 import MobileAppLayout from './components/mobile-app/MobileAppLayout';
 import MobileCharacterSheet from './components/character-sheet/MobileCharacterSheet';
 import MobileCharacterCreationPage from './pages/MobileCharacterCreationPage';
+import SpellProvider from './components/spellbook/SpellProvider';
 
-// Временные компоненты-заглушки для недостающих страниц
-const Handbook = () => <div>Справочник</div>;
-const HandbookCategory = () => <div>Категория справочника</div>;
-const NotFoundPage = () => <div>Страница не найдена</div>;
-const DMPage = () => <div>Страница мастера</div>;
-const BattleMap = () => <div>Карта боя</div>;
+// Добавим компоненты для недостающих страниц
+import HandbookPage from './pages/HandbookPage'; 
+import HandbookCategoryPage from './pages/HandbookCategoryPage';
+import DmPage from './pages/DmPage';
+import BattleMapPage from './pages/BattleMapPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Простой компонент для защиты маршрутов
 const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
@@ -78,15 +79,15 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       
       {/* Руководства */}
-      <Route path="/handbook" element={<Handbook />} />
-      <Route path="/handbook/:category" element={<HandbookCategory />} />
+      <Route path="/handbook" element={<HandbookPage />} />
+      <Route path="/handbook/:category" element={<HandbookCategoryPage />} />
       <Route path="/spellbook" element={<SpellbookPage />} />
       
       {/* Персонажи и управление ими */}
       <Route path="/characters" element={<CharactersListPage />} />
       <Route path="/character-creation" element={isMobile ? <MobileCharacterCreationPage /> : <CharacterCreationPage />} />
       <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
-      <Route path="/character/:id" element={<Navigate to={`/character-sheet/:id`} replace />} />
+      <Route path="/character/:id" element={<CharacterSheetPage />} />
       
       {/* Аутентификация */}
       <Route path="/auth" element={<AuthPage />} />
@@ -108,7 +109,7 @@ const AppRoutes = () => {
         path="/dm"
         element={
           <RequireAuth requireDM={true}>
-            <DMPage />
+            <DmPage />
           </RequireAuth>
         }
       />
@@ -116,7 +117,7 @@ const AppRoutes = () => {
         path="/battle"
         element={
           <RequireAuth requireDM={true}>
-            <BattleMap />
+            <BattleMapPage />
           </RequireAuth>
         }
       />

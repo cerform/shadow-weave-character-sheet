@@ -6,7 +6,7 @@ import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import { SpellbookProvider } from '@/contexts/SpellbookContext';
+import SpellProvider from '@/components/spellbook/SpellProvider';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
@@ -25,9 +25,9 @@ const SpellbookPage: React.FC = () => {
             </div>
           </header>
           
-          <SpellbookProvider>
+          <SpellProvider>
             <SpellBookViewer />
-          </SpellbookProvider>
+          </SpellProvider>
         </div>
       </div>
       <FloatingDiceButton />
