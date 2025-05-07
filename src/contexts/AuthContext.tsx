@@ -297,13 +297,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Ваш профиль успешно обновлен");
     } catch (err) {
       console.error("Profile update error:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      setError(err instanceof Error ? err.message : "Authentication error occurred.");
       throw err;
     }
   };
 
   const handleError = (err: Error | unknown) => {
-    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorMessage = err instanceof Error ? err.message : "Authentication error occurred.";
     setError(errorMessage);
   };
 

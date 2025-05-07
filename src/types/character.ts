@@ -123,7 +123,7 @@ export interface Character {
     used: number;
     dieType: string;
     value: string;
-    remaining?: number;  // Add remaining as an optional property
+    remaining?: number;
   };
   resources?: Record<string, {
     max: number;
@@ -152,11 +152,13 @@ export interface Character {
     spellAttackBonus: number;
     spellsKnown?: number;
     cantripsKnown?: number;
-    preparedSpellsLimit?: number; // Добавляем недостающее свойство
+    preparedSpellsLimit?: number;
   };
   additionalClasses?: string[];
   languages?: string[];
   preparedSpellsLimit?: number;
+  creationDate?: string;
+  lastUpdated?: string;
 }
 
 export interface CharacterSpell {

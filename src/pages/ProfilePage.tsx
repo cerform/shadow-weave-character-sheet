@@ -84,10 +84,10 @@ const ProfilePage = () => {
     }
   };
 
-  const updateUser = async (data: Partial<User>) => {
+  const updateUser = async (data: Partial<any>) => {
     try {
       setIsSaving(true);
-      await updateUserProfile(data);
+      await updateProfile(data);
       toast({
         title: "Профиль обновлен",
         description: "Ваш профиль был успешно обновлен."

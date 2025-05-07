@@ -1,4 +1,3 @@
-
 // Базовые значения характеристик
 export const initialAbilityScores = {
   STR: 10,
@@ -158,7 +157,6 @@ export const createDefaultCharacter = (): Character => {
     spellSlots: {},
     resources: {},
     notes: '',
-    creationDate: new Date().toISOString(),
     lastUpdated: new Date().toISOString()
   };
 };

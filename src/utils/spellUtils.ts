@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { getAllSpells } from '@/data/spells';
@@ -304,7 +303,9 @@ export const convertToSpellData = (spell: string | CharacterSpell | SpellData): 
     components: 'В',
     duration: 'Мгновенная',
     description: 'Нет описания',
-    classes: []
+    classes: [],
+    ritual: false,
+    concentration: false
   };
 };
 

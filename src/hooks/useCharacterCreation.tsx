@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
@@ -85,7 +84,6 @@ export const useCharacterCreation = () => {
     spellSlots: {},
     resources: {},
     notes: '',
-    creationDate: new Date().toISOString(),
     lastUpdated: new Date().toISOString()
   });
 
@@ -135,7 +133,7 @@ export const useCharacterCreation = () => {
         
         // Проверяем структуру данных и нормализуем
         if (typeof updatedProficiencies === 'object') {
-          // Если структура - массив, преобразуем в объект
+          // Если структура - массив, прео��разуем в объект
           if (Array.isArray(updatedProficiencies)) {
             updates.proficiencies = {
               armor: [],
@@ -240,7 +238,6 @@ export const useCharacterCreation = () => {
     return {
       ...formData,
       id: formData.id || uuidv4(),
-      creationDate: formData.creationDate || new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
       level: formData.level || 1,
       hitPoints: formData.hitPoints || { 
