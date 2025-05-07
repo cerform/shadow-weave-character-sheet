@@ -9,6 +9,7 @@ export interface User {
   role?: 'player' | 'dm' | 'admin';
   isDM?: boolean;
   username?: string;
+  characterName?: string;
   // Include any other user properties
 }
 
@@ -18,7 +19,7 @@ export interface AuthContextType {
   user: User | null;
   currentUser: User | null;
   loading: boolean;
-  error: Error | null;
+  error: Error | null | string;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle?: () => Promise<void>;
   logout: () => Promise<void>;

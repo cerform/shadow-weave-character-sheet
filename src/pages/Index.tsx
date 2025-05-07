@@ -46,7 +46,7 @@ const Index = () => {
       title: 'Лист персонажа',
       description: 'Просмотр и редактирование',
       icon: <Scroll size={32} />,
-      link: '/sheet',
+      link: '/character-sheet/sample',
       color: '#F59E0B',
       delay: 0.2,
     },

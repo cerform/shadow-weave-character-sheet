@@ -70,6 +70,11 @@ export const useCharacterCreation = () => {
   const [characterReady, setCharacterReady] = useState<boolean>(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
   const [alreadySaved, setAlreadySaved] = useState<boolean>(false);
+  const [additionalClasses, setAdditionalClasses] = useState<Array<{
+    class: string;
+    level: number;
+    subclass?: string;
+  }>>([]);
 
   // Автоматическое сохранение персонажа, когда он готов
   useEffect(() => {
@@ -254,7 +259,10 @@ export const useCharacterCreation = () => {
   };
   
   // Обработчик для изменения уровня персонажа
-  const handleLevelChange = (level: number) => {
+  const handleLevelChange = (level: number | string) => {
+    // Convert level from string to number if needed
+    const newLevel = typeof level === 'string' ? parseInt(level, 10) : level;
+    
     // Проверяем, не превышает ли общий уровень 20 с учетом мультикласса
     let additionalLevels = 0;
     if (character.additionalClasses) {
@@ -263,19 +271,19 @@ export const useCharacterCreation = () => {
       );
     }
     
-    if (level + additionalLevels > 20) {
+    if (newLevel + additionalLevels > 20) {
       toast.error(`Общий уровень персонажа не может прев��шать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
       return;
     }
     
-    if (level >= 1 && level <= 20) {
+    if (newLevel >= 1 && newLevel <= 20) {
       // Обновляем уровень в состоянии персонажа
-      updateCharacter({ level });
+      updateCharacter({ level: newLevel });
       
       // Опционально: здесь можно добавить логику изменения доступных
       // заклинаний, особенностей класса и подкласса в зависимости от уровня
       
-      console.log(`Уровень персонажа изменен на ${level}`);
+      console.log(`Уровень персонажа изменен на ${newLevel}`);
     } else {
       toast.error("Уровень должен быть от 1 до 20");
     }
@@ -344,6 +352,44 @@ export const useCharacterCreation = () => {
         additionalClasses: [...character.additionalClasses, className]
       });
     }
+  };
+
+  const handleClassChange = (selectedClass: string) => {
+    // Convert level from string to number if needed
+    const classLevel = typeof selectedLevel === 'string' 
+      ? parseInt(selectedLevel, 10) 
+      : (selectedLevel || 1);
+
+    // Обновляем класс в состоянии персонажа
+    updateCharacter({ class: selectedClass, level: classLevel });
+  };
+
+  const handleSubclassChange = (selectedSubclass: string) => {
+    // Convert class from string to string if needed (sanity check)
+    const currentClass = typeof character.class === 'string' 
+      ? character.class 
+      : '';
+    
+    // Обновляем подкласс в состоянии персонажа
+    updateCharacter({ subclass: selectedSubclass });
+  };
+
+  const handleAdditionalClassAdd = () => {
+    if (additionalClasses.length < 3) {
+      setAdditionalClasses([...additionalClasses, { class: '', level: 1 }]);
+    }
+  };
+
+  const handleAdditionalClassRemove = (index: number) => {
+    const updatedClasses = [...additionalClasses];
+    updatedClasses.splice(index, 1);
+    setAdditionalClasses(updatedClasses);
+  };
+
+  const handleAdditionalClassChange = (index: number, update: Partial<{ class: string, level: number, subclass: string }>) => {
+    const updatedClasses = [...additionalClasses];
+    updatedClasses[index] = { ...updatedClasses[index], ...update };
+    setAdditionalClasses(updatedClasses);
   };
 
   const updateAdditionalClass = (index: number, updates: Partial<any>) => {

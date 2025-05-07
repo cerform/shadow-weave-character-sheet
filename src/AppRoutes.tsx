@@ -1,12 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './hooks/use-auth';
 import ProfilePage from './pages/ProfilePage';
 import SpellbookPage from './pages/SpellbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
 import AuthPage from './pages/AuthPage';
+import Index from './pages/Index';
 
 // Импорт созданных нами компонентов
 import MobileAppLayout from './components/mobile-app/MobileAppLayout';
@@ -14,7 +15,6 @@ import MobileCharacterSheet from './components/character-sheet/MobileCharacterSh
 import MobileCharacterCreationPage from './pages/MobileCharacterCreationPage';
 
 // Временные компоненты-заглушки для недостающих страниц
-const HomePage = () => <div>Главная страница</div>;
 const Handbook = () => <div>Справочник</div>;
 const HandbookCategory = () => <div>Категория справочника</div>;
 const CharactersPage = () => <div>Список персонажей</div>;
@@ -26,14 +26,14 @@ const BattleMap = () => <div>Карта боя</div>;
 const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
   // Используем авторизацию без явного приведения типов
   const auth = useAuth();
-  const { isAuthenticated, user } = auth;
+  const { isAuthenticated, currentUser } = auth;
   
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
   
   // Check for role or isDM property
-  if (requireDM && !(user?.role === 'dm' || user?.isDM)) {
+  if (requireDM && !(currentUser?.role === 'dm' || currentUser?.isDM)) {
     return <Navigate to="/" replace />;
   }
   
@@ -64,7 +64,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Публичные маршруты */}
-      <Route path="/" element={isMobile ? <MobileAppLayout>Добро пожаловать</MobileAppLayout> : <HomePage />} />
+      <Route path="/" element={isMobile ? <MobileAppLayout>Добро пожаловать</MobileAppLayout> : <Index />} />
       
       {/* Руководства */}
       <Route path="/handbook" element={<Handbook />} />

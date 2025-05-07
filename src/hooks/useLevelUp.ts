@@ -137,7 +137,7 @@ function calculateSpellSlotsForLevel(level: number, classType: string): Record<n
     20: { 1: { max: 4, used: 0 }, 2: { max: 3, used: 0 }, 3: { max: 3, used: 0 }, 4: { max: 3, used: 0 }, 5: { max: 3, used: 0 }, 6: { max: 2, used: 0 }, 7: { max: 2, used: 0 }, 8: { max: 1, used: 0 }, 9: { max: 1, used: 0 } }
   };
   
-  // Half-casters like паладин and следопыт
+  // Half-casters like паладин и следопыт
   const halfCasterSlots = {
     1: { 1: { max: 0, used: 0 } },
     2: { 1: { max: 2, used: 0 } },
@@ -184,27 +184,28 @@ function getPreparedSpellsLimit(character: Character): number {
   return 0; // Для классов, которые не готовят заклинания
 }
 
+// Исправляем warlock spell slots
 const warlockSpellSlots = {
   1: { 1: { max: 1, used: 0 } },
   2: { 1: { max: 2, used: 0 } },
-  3: { 1: { max: 2, used: 0 }, 2: { max: 0, used: 0 } },
-  4: { 1: { max: 2, used: 0 }, 2: { max: 0, used: 0 } },
-  5: { 1: { max: 0, used: 0 }, 2: { max: 2, used: 0 } },
-  6: { 1: { max: 0, used: 0 }, 2: { max: 2, used: 0 } },
-  7: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 2, used: 0 } },
-  8: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 2, used: 0 } },
-  9: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 2, used: 0 } },
-  10: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 2, used: 0 } },
-  11: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 3, used: 0 } },
-  12: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 3, used: 0 } },
-  13: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 3, used: 0 } },
-  14: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 3, used: 0 } },
-  15: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 3, used: 0 } },
-  16: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 3, used: 0 } },
-  17: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 4, used: 0 } },
-  18: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 4, used: 0 } },
-  19: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 4, used: 0 } },
-  20: { 1: { max: 0, used: 0 }, 2: { max: 0, used: 0 }, 3: { max: 0, used: 0 }, 4: { max: 4, used: 0 } },
+  3: { 2: { max: 2, used: 0 } },
+  4: { 2: { max: 2, used: 0 } },
+  5: { 3: { max: 2, used: 0 } },
+  6: { 3: { max: 2, used: 0 } },
+  7: { 4: { max: 2, used: 0 } },
+  8: { 4: { max: 2, used: 0 } },
+  9: { 5: { max: 2, used: 0 } },
+  10: { 5: { max: 2, used: 0 } },
+  11: { 5: { max: 3, used: 0 } },
+  12: { 5: { max: 3, used: 0 } },
+  13: { 5: { max: 3, used: 0 } },
+  14: { 5: { max: 3, used: 0 } },
+  15: { 5: { max: 3, used: 0 } },
+  16: { 5: { max: 3, used: 0 } },
+  17: { 5: { max: 4, used: 0 } },
+  18: { 5: { max: 4, used: 0 } },
+  19: { 5: { max: 4, used: 0 } },
+  20: { 5: { max: 4, used: 0 } }
 };
 
 export default useLevelUp;
