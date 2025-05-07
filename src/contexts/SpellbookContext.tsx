@@ -1,9 +1,10 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell, Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
-import { getAllSpells } from '@/data/spells';
+import { allSpells, getAllSpells } from '@/data/spells';
 import { filterSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 import { convertCharacterSpellToSpellData } from '@/types/spells';
 
@@ -34,6 +35,7 @@ export interface SpellbookContextProps {
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string | string[]) => string;
   isLoading: boolean; // Добавляем свойство isLoading
+  loading?: boolean; // Для обратной совместимости
 }
 
 export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);

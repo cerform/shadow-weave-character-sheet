@@ -1,128 +1,104 @@
 
 import { SpellData } from '@/types/spells';
-import { SpellFilter } from '@/types/spells';
 
-/**
- * Фильтрует заклинания по поисковому запросу
- */
-export const filterBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
+// Функция для фильтрации заклинаний по поисковому запросу
+export const filterSpellsBySearch = (
+  spells: SpellData[],
+  searchTerm: string
+): SpellData[] => {
   if (!searchTerm) return spells;
-  
+
   const searchLower = searchTerm.toLowerCase();
   return spells.filter(spell => {
-    const nameMatch = spell.name.toLowerCase().includes(searchLower);
+    // Поиск по имени
+    if (spell.name.toLowerCase().includes(searchLower)) return true;
     
-    const schoolMatch = spell.school && spell.school.toLowerCase().includes(searchLower);
+    // Поиск по школе
+    if (spell.school.toLowerCase().includes(searchLower)) return true;
     
-    let descMatch = false;
-    if (spell.description) {
-      if (Array.isArray(spell.description)) {
-        descMatch = spell.description.join(' ').toLowerCase().includes(searchLower);
-      } else {
-        descMatch = String(spell.description).toLowerCase().includes(searchLower);
-      }
-    }
+    // Поиск по описанию
+    if (typeof spell.description === 'string' && spell.description.toLowerCase().includes(searchLower)) return true;
+    if (Array.isArray(spell.description) && spell.description.some(desc => desc.toLowerCase().includes(searchLower))) return true;
     
-    return nameMatch || schoolMatch || descMatch;
-  });
-};
-
-/**
- * Фильтрует заклинания по уровню
- */
-export const filterByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
-  if (!levels || levels.length === 0) return spells;
-  return spells.filter(spell => levels.includes(spell.level));
-};
-
-/**
- * Фильтрует заклинания по школе магии
- */
-export const filterBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
-  if (!schools || schools.length === 0) return spells;
-  return spells.filter(spell => spell.school && schools.includes(spell.school));
-};
-
-/**
- * Фильтрует заклинания по классу
- */
-export const filterByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
-  if (!classes || classes.length === 0) return spells;
-  
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    // Обрабатываем случай, когда classes это строка
-    if (typeof spell.classes === 'string') {
-      const spellClassLower = spell.classes.toLowerCase();
-      return classes.some(c => spellClassLower.includes(c.toLowerCase()));
-    }
-    
-    // Обрабатываем случай, когда classes это массив строк
-    if (Array.isArray(spell.classes)) {
-      return spell.classes.some(spellClass => {
-        if (typeof spellClass === 'string') {
-          const spellClassLower = spellClass.toLowerCase();
-          return classes.some(c => spellClassLower.includes(c.toLowerCase()));
-        }
-        return false;
-      });
-    }
+    // Поиск по классам
+    if (Array.isArray(spell.classes) && spell.classes.some(cls => cls.toLowerCase().includes(searchLower))) return true;
+    if (typeof spell.classes === 'string' && spell.classes.toLowerCase().includes(searchLower)) return true;
     
     return false;
   });
 };
 
-/**
- * Применяет все фильтры к списку заклинаний
- */
-export const applyAllFilters = (
-  spells: SpellData[], 
-  searchTerm: string = '', 
-  levels: number[] = [], 
-  schools: string[] = [],
-  classes: string[] = [],
-  ritual: boolean | null = null,
-  concentration: boolean | null = null
+// Функция для фильтрации заклинаний по уровню
+export const filterSpellsByLevel = (
+  spells: SpellData[],
+  levels: number[]
 ): SpellData[] => {
-  let filtered = spells;
-  
-  if (searchTerm) {
-    filtered = filterBySearchTerm(filtered, searchTerm);
-  }
-  
-  if (levels && levels.length > 0) {
-    filtered = filterByLevel(filtered, levels);
-  }
-  
-  if (schools && schools.length > 0) {
-    filtered = filterBySchool(filtered, schools);
-  }
-  
-  if (classes && classes.length > 0) {
-    filtered = filterByClass(filtered, classes);
-  }
-  
-  if (ritual !== null) {
-    filtered = filtered.filter(spell => spell.ritual === ritual);
-  }
-  
-  if (concentration !== null) {
-    filtered = filtered.filter(spell => spell.concentration === concentration);
-  }
-  
-  return filtered;
+  if (!levels.length) return spells;
+  return spells.filter(spell => levels.includes(spell.level));
 };
 
-// Добавляем функцию filterSpells для совместимости с useSpellbook.ts
-export const filterSpells = (spells: SpellData[], filter: SpellFilter): SpellData[] => {
-  return applyAllFilters(
-    spells, 
-    filter.search, 
-    filter.level, 
-    filter.school,
-    filter.className,
-    filter.ritual,
-    filter.concentration
-  );
+// Функция для фильтрации заклинаний по школе
+export const filterSpellsBySchool = (
+  spells: SpellData[],
+  schools: string[]
+): SpellData[] => {
+  if (!schools.length) return spells;
+  return spells.filter(spell => schools.includes(spell.school));
+};
+
+// Функция для фильтрации заклинаний по классу
+export const filterSpellsByClass = (
+  spells: SpellData[],
+  classes: string[]
+): SpellData[] => {
+  if (!classes.length) return spells;
+  return spells.filter(spell => {
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.some(cls => classes.includes(cls));
+    } else if (typeof spell.classes === 'string') {
+      return classes.includes(spell.classes);
+    }
+    return false;
+  });
+};
+
+// Функция для фильтрации заклинаний по ритуальности
+export const filterSpellsByRitual = (
+  spells: SpellData[],
+  isRitual: boolean | null
+): SpellData[] => {
+  if (isRitual === null) return spells;
+  return spells.filter(spell => spell.ritual === isRitual);
+};
+
+// Функция для фильтрации заклинаний по концентрации
+export const filterSpellsByConcentration = (
+  spells: SpellData[],
+  isConcentration: boolean | null
+): SpellData[] => {
+  if (isConcentration === null) return spells;
+  return spells.filter(spell => spell.concentration === isConcentration);
+};
+
+// Функция для применения всех фильтров
+export const applyAllFilters = (
+  spells: SpellData[],
+  searchTerm: string,
+  levels: number[],
+  schools: string[],
+  classes: string[],
+  isRitual: boolean | null,
+  isConcentration: boolean | null
+): SpellData[] => {
+  let filteredSpells = spells;
+  
+  // Последовательное применение фильтров
+  filteredSpells = filterSpellsBySearch(filteredSpells, searchTerm);
+  filteredSpells = filterSpellsByLevel(filteredSpells, levels);
+  filteredSpells = filterSpellsBySchool(filteredSpells, schools);
+  filteredSpells = filterSpellsByClass(filteredSpells, classes);
+  filteredSpells = filterSpellsByRitual(filteredSpells, isRitual);
+  filteredSpells = filterSpellsByConcentration(filteredSpells, isConcentration);
+  
+  return filteredSpells;
 };

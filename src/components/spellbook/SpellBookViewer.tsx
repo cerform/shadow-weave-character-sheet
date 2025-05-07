@@ -12,6 +12,20 @@ import { useSpellbook } from '@/hooks/spellbook';
 import { useTheme } from '@/hooks/use-theme';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Определение интерфейса для SpellFilterPanel
+interface SpellFilterPanelProps {
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+}
+
 const SpellBookViewer: React.FC = () => {
   const {
     filteredSpells,
@@ -34,8 +48,12 @@ const SpellBookViewer: React.FC = () => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
+    isLoading,
     loading
   } = useSpellbook();
+
+  // Определяем isLoading, чтобы избежать ошибок
+  const isDataLoading = isLoading || loading;
 
   const [viewMode, setViewMode] = useState<string>('list');
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -135,11 +153,10 @@ const SpellBookViewer: React.FC = () => {
           toggleSchool={toggleSchool}
           toggleClass={toggleClass}
           clearFilters={clearFilters}
-          currentTheme={currentTheme}
         />
       )}
 
-      {loading ? (
+      {isDataLoading ? (
         <div className="space-y-4 mt-8">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full" />

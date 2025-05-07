@@ -1,10 +1,10 @@
 
 import { SpellData } from '@/types/spells';
-import { getAllSpells } from '@/data/spells/index';
+import { getAllSpells as fetchAllSpells } from '@/data/spells/index';
 import { convertCharacterSpellToSpellData } from '@/types/spells';
 
 // Импортируем все заклинания из директории spells
-const importedSpells = getAllSpells();
+const importedSpells = fetchAllSpells();
 
 // Преобразуем заклинания в формат SpellData
 export const spells: SpellData[] = importedSpells.map(spell => convertCharacterSpellToSpellData(spell));
@@ -91,3 +91,6 @@ export const allSpells: SpellData[] = spells.length > 0 ? spells : exampleSpells
 export function getAllSpellsData(): SpellData[] {
   return allSpells;
 }
+
+// Экспортируем функцию getAllSpells для обратной совместимости
+export const getAllSpells = getAllSpellsData;

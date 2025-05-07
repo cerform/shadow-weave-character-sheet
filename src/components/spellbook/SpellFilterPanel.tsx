@@ -1,89 +1,82 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { X } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { X } from "lucide-react";
 
 interface SpellFilterPanelProps {
-  activeLevel: number[];
-  activeSchool: string[];
-  activeClass: string[];
   allLevels: number[];
   allSchools: string[];
   allClasses: string[];
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
   toggleLevel: (level: number) => void;
   toggleSchool: (school: string) => void;
-  toggleClass: (cls: string) => void;
+  toggleClass: (className: string) => void;
   clearFilters: () => void;
-  getBadgeColor: (level: number) => string;
-  getSchoolBadgeColor: (school: string) => string;
 }
 
 const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
-  activeLevel,
-  activeSchool,
-  activeClass,
   allLevels,
   allSchools,
   allClasses,
+  activeLevel,
+  activeSchool,
+  activeClass,
   toggleLevel,
   toggleSchool,
   toggleClass,
-  clearFilters,
-  getBadgeColor,
-  getSchoolBadgeColor
+  clearFilters
 }) => {
+  // Преобразование уровня в строку
+  const getLevelText = (level: number): string => {
+    return level === 0 ? "Заговор" : `${level} уровень`;
+  };
+
   return (
-    <div className="filter-panel bg-card/80 backdrop-blur-md p-4 rounded-lg mb-6 animate-in fade-in-50 slide-in-from-top-5">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Фильтры заклинаний</h3>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={clearFilters}
-          className="h-8 px-2"
-        >
-          Сбросить <X className="ml-1 h-3 w-3" />
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
+    <Card className="mb-6 border border-accent/20">
+      <CardContent className="p-4 pt-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Фильтры</h3>
+          {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-accent">
+              Сбросить
+            </Button>
+          )}
+        </div>
+
+        {/* Фильтр по уровням */}
+        <div className="mb-4">
           <h4 className="text-sm font-medium mb-2">Уровень</h4>
           <div className="flex flex-wrap gap-2">
             {allLevels.map(level => (
               <Badge
-                key={`level-filter-${level}`}
+                key={`level-${level}`}
                 variant={activeLevel.includes(level) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                style={activeLevel.includes(level) ? {
-                  backgroundColor: getBadgeColor(level),
-                  color: '#fff'
-                } : {}}
+                className={`cursor-pointer ${
+                  activeLevel.includes(level) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
                 onClick={() => toggleLevel(level)}
               >
-                {level === 0 ? 'Заговор' : level}
+                {getLevelText(level)}
               </Badge>
             ))}
           </div>
         </div>
-        
-        <div>
+
+        {/* Фильтр по школам */}
+        <div className="mb-4">
           <h4 className="text-sm font-medium mb-2">Школа</h4>
           <div className="flex flex-wrap gap-2">
             {allSchools.map(school => (
               <Badge
-                key={`school-filter-${school}`}
+                key={`school-${school}`}
                 variant={activeSchool.includes(school) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                style={activeSchool.includes(school) ? {
-                  backgroundColor: getSchoolBadgeColor(school),
-                  color: '#fff'
-                } : {
-                  borderColor: getSchoolBadgeColor(school),
-                  color: activeSchool.includes(school) ? '#fff' : getSchoolBadgeColor(school)
-                }}
+                className={`cursor-pointer ${
+                  activeSchool.includes(school) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
                 onClick={() => toggleSchool(school)}
               >
                 {school}
@@ -91,84 +84,27 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
             ))}
           </div>
         </div>
-        
+
+        {/* Фильтр по классам */}
         <div>
           <h4 className="text-sm font-medium mb-2">Класс</h4>
           <div className="flex flex-wrap gap-2">
-            {allClasses.map(cls => (
+            {allClasses.map(className => (
               <Badge
-                key={`class-filter-${cls}`}
-                variant={activeClass.includes(cls) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                onClick={() => toggleClass(cls)}
+                key={`class-${className}`}
+                variant={activeClass.includes(className) ? "default" : "outline"}
+                className={`cursor-pointer ${
+                  activeClass.includes(className) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
+                onClick={() => toggleClass(className)}
               >
-                {cls}
+                {className}
               </Badge>
             ))}
           </div>
         </div>
-      </div>
-      
-      {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
-        <>
-          <Separator className="my-4" />
-          <div>
-            <h4 className="text-sm font-medium mb-2">Активные фильтры</h4>
-            <div className="flex flex-wrap gap-2">
-              {activeLevel.map(level => (
-                <Badge
-                  key={`active-level-${level}`}
-                  variant="default"
-                  className="flex items-center"
-                  style={{
-                    backgroundColor: getBadgeColor(level),
-                    color: '#fff'
-                  }}
-                >
-                  {level === 0 ? 'Заговор' : `Уровень ${level}`}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleLevel(level)}
-                  />
-                </Badge>
-              ))}
-              
-              {activeSchool.map(school => (
-                <Badge
-                  key={`active-school-${school}`}
-                  variant="default"
-                  className="flex items-center"
-                  style={{
-                    backgroundColor: getSchoolBadgeColor(school),
-                    color: '#fff'
-                  }}
-                >
-                  {school}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleSchool(school)}
-                  />
-                </Badge>
-              ))}
-              
-              {activeClass.map(cls => (
-                <Badge
-                  key={`active-class-${cls}`}
-                  variant="default"
-                  className="flex items-center"
-                >
-                  {cls}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleClass(cls)}
-                  />
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
