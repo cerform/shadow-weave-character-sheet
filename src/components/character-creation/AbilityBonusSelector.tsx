@@ -1,16 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
-import { Character, RaceDetails } from '@/types/character';
-import { AbilityName, abilityNames } from '@/utils/abilityUtils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Character } from '@/types/character';
+import { RaceDetails, AbilityScoreIncrease } from '@/types/character';
+import { AbilityName, abilityNames, abilityFullNames } from '@/utils/abilityUtils';
 
 interface AbilityBonusSelectorProps {
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
-  raceDetails?: RaceDetails;
-  abilityBonuses?: {
+  abilityBonuses: {
     amount: number;
     options?: string[];
     fixed?: Record<string, number>;
@@ -20,171 +19,143 @@ interface AbilityBonusSelectorProps {
 const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   character,
   updateCharacter,
-  raceDetails,
-  abilityBonuses: propAbilityBonuses
+  abilityBonuses
 }) => {
-  const [selectedAbilities, setSelectedAbilities] = useState<AbilityName[]>([]);
-  const [remainingPoints, setRemainingPoints] = useState<number>(0);
-
-  // Get ability bonuses from race details or from props
-  const abilityBonuses = propAbilityBonuses || 
-    (raceDetails?.abilityBonuses || { fixed: {}, choice: { count: 0, options: [] } });
-
-  // Calculate fixed bonuses for each ability
-  const fixedBonuses: Record<string, number> = 
-    propAbilityBonuses?.fixed || raceDetails?.abilityBonuses?.fixed || {};
-    
-  const choiceCount = propAbilityBonuses?.amount || 
-    raceDetails?.abilityBonuses?.choice?.count || 0;
-    
-  const choiceOptions = propAbilityBonuses?.options || 
-    raceDetails?.abilityBonuses?.choice?.options || [];
-
+  const [selectedAbilities, setSelectedAbilities] = useState<Record<string, boolean>>({});
+  const [bonuses, setBonuses] = useState<Record<string, number>>({});
+  
+  // Инициализация выбранных способностей и бонусов
   useEffect(() => {
-    // Reset selections when race changes
-    setSelectedAbilities([]);
-    setRemainingPoints(choiceCount);
+    const initial: Record<string, boolean> = {};
+    const initialBonuses: Record<string, number> = {};
     
-    // Apply fixed bonuses
-    if ((raceDetails && raceDetails.abilityBonuses?.fixed) || 
-        (propAbilityBonuses && propAbilityBonuses.fixed)) {
-      const fixedAbilityUpdates: Partial<Character['abilities']> = {};
+    // Если есть фиксированные бонусы, применяем их
+    if (abilityBonuses.fixed) {
+      Object.entries(abilityBonuses.fixed).forEach(([ability, value]) => {
+        initialBonuses[ability] = value;
+      });
+    }
+    
+    // Если есть выбранные ранее, инициализируем их
+    if (abilityBonuses.options && character.selectedAbilities) {
+      character.selectedAbilities.forEach(ability => {
+        if (abilityBonuses.options?.includes(ability)) {
+          initial[ability] = true;
+          initialBonuses[ability] = 1; // По умолчанию +1
+        }
+      });
+    }
+    
+    setSelectedAbilities(initial);
+    setBonuses(initialBonuses);
+  }, [abilityBonuses, character.selectedAbilities]);
+  
+  // При изменении бонусов обновляем персонажа
+  useEffect(() => {
+    // Создаем безопасную копию бонусов
+    const safeInitBonuses: Partial<Record<string, number>> = {};
+    
+    abilityNames.forEach(ability => {
+      safeInitBonuses[ability] = 0;
+    });
+    
+    // Применяем бонусы
+    const finalBonuses = { ...safeInitBonuses, ...bonuses };
+    
+    // Обновляем характеристики персонажа
+    updateCharacter({
+      abilityBonuses: finalBonuses,
+      selectedAbilities: Object.keys(selectedAbilities).filter(key => selectedAbilities[key])
+    });
+    
+  }, [bonuses, selectedAbilities, updateCharacter]);
+  
+  // Обработчик выбора способности
+  const handleAbilitySelect = (ability: string) => {
+    // Проверяем, можно ли выбрать еще одну способность
+    const currentSelected = Object.values(selectedAbilities).filter(Boolean).length;
+    
+    // Если уже выбрано максимальное количество и пытаемся выбрать новую - отклоняем
+    if (currentSelected >= abilityBonuses.amount && !selectedAbilities[ability]) {
+      return;
+    }
+    
+    setSelectedAbilities(prev => {
+      const updated = { ...prev, [ability]: !prev[ability] };
       
-      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
-        const abilityKey = ability as AbilityName;
-        const currentAbilityValue = character.abilities?.[abilityKey] || 0;
-        fixedAbilityUpdates[abilityKey] = currentAbilityValue + bonus;
+      // Обновляем также бонусы
+      setBonuses(bonuses => {
+        const newBonuses = { ...bonuses };
+        
+        if (updated[ability]) {
+          newBonuses[ability] = (newBonuses[ability] || 0) + 1;
+        } else {
+          newBonuses[ability] = (newBonuses[ability] || 0) - 1;
+          if (newBonuses[ability] <= 0) {
+            delete newBonuses[ability];
+          }
+        }
+        
+        return newBonuses;
       });
       
-      if (Object.keys(fixedAbilityUpdates).length > 0) {
-        updateCharacter({ 
-          abilities: { 
-            ...(character.abilities || {}), 
-            ...fixedAbilityUpdates 
-          } 
-        });
-      }
-    }
-  }, [raceDetails, choiceCount, propAbilityBonuses]);
-
-  // Handle ability selection
-  const toggleAbility = (ability: AbilityName) => {
-    if (selectedAbilities.includes(ability)) {
-      // Deselect ability
-      setSelectedAbilities(prev => prev.filter(a => a !== ability));
-      setRemainingPoints(prev => prev + 1);
-      
-      // Update character ability
-      if (character.abilities) {
-        const currentAbilityValue = character.abilities[ability] || 0;
-        const updatedAbilities = {
-          ...character.abilities,
-          [ability]: currentAbilityValue - 1 // Subtract bonus
-        };
-        
-        updateCharacter({
-          abilities: updatedAbilities
-        });
-      }
-    } else if (remainingPoints > 0) {
-      // Select ability
-      setSelectedAbilities(prev => [...prev, ability]);
-      setRemainingPoints(prev => prev - 1);
-      
-      // Update character ability
-      if (character.abilities) {
-        const currentAbilityValue = character.abilities[ability] || 0;
-        const updatedAbilities = {
-          ...character.abilities,
-          [ability]: currentAbilityValue + 1 // Add bonus
-        };
-        
-        updateCharacter({
-          abilities: updatedAbilities
-        });
-      }
-    }
+      return updated;
+    });
   };
-
-  // Fixed bonuses display
-  const renderFixedBonuses = () => {
-    const fixedBonusExists = 
-      (propAbilityBonuses?.fixed && Object.keys(propAbilityBonuses.fixed).length > 0) ||
-      (raceDetails?.abilityBonuses?.fixed && Object.keys(raceDetails.abilityBonuses.fixed).length > 0);
-    
-    if (!fixedBonusExists) {
-      return null;
-    }
-    
-    return (
-      <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2">Фиксированные бонусы:</h3>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(fixedBonuses).map(([ability, bonus]) => (
-            <Badge key={ability} variant="secondary">
-              {ability}: +{bonus}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // No choice bonuses available
-  if (choiceCount === 0 || choiceOptions.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          {renderFixedBonuses()}
-          {(!raceDetails || Object.keys(fixedBonuses).length === 0) && (
-            <p className="text-sm text-muted-foreground">
-              У этой расы нет бонусов к характеристикам, которые нужно распределять.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    );
+  
+  // Отображаем интерфейс выбора только если есть что выбирать
+  if (abilityBonuses.amount <= 0) {
+    return null;
   }
-
-  // Render ability choice options
+  
   return (
     <Card>
-      <CardContent className="p-4">
-        {renderFixedBonuses()}
-        
-        <div>
-          <h3 className="text-sm font-medium mb-2">
-            Выберите бонусы к характеристикам: {remainingPoints} из {choiceCount}
-          </h3>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {choiceOptions.map((ability) => {
-              const abilityName = ability as AbilityName;
-              const isSelected = selectedAbilities.includes(abilityName);
-              const isDisabled = !isSelected && remainingPoints === 0;
-              
-              return (
-                <div
-                  key={ability}
-                  className={`p-2 rounded-md border cursor-pointer flex items-center justify-between
-                    ${isSelected ? 'bg-primary/10 border-primary' : 'hover:bg-accent/20'} 
-                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                  onClick={() => !isDisabled && toggleAbility(abilityName)}
-                >
-                  <span>{ability} +1</span>
-                  {isSelected && <Check className="h-4 w-4 text-primary" />}
+      <CardHeader>
+        <CardTitle>Бонусы к характеристикам</CardTitle>
+        <CardDescription>
+          {abilityBonuses.amount > 0
+            ? `Выберите ${abilityBonuses.amount} характеристик для получения бонуса +1`
+            : "Бонусы к характеристикам уже распределены"
+          }
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* Фиксированные бонусы */}
+        {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-sm font-medium mb-2">Фиксированные бонусы:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {Object.entries(abilityBonuses.fixed).map(([ability, value]) => (
+                <div key={ability} className="flex items-center justify-between p-2 border rounded">
+                  <span>{abilityFullNames[ability as AbilityName] || ability}</span>
+                  <span className="text-green-500">+{value}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-          
-          {remainingPoints > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Осталось выбрать бонусы: {remainingPoints}
-            </p>
-          )}
-        </div>
+        )}
+        
+        {/* Выбираемые бонусы */}
+        {abilityBonuses.amount > 0 && (
+          <>
+            <h4 className="text-sm font-medium mb-2">
+              Выберите характеристики ({Object.values(selectedAbilities).filter(Boolean).length}/{abilityBonuses.amount}):
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {(abilityBonuses.options || abilityNames).map(ability => (
+                <Button
+                  key={ability}
+                  variant={selectedAbilities[ability] ? "default" : "outline"}
+                  onClick={() => handleAbilitySelect(ability)}
+                  className="justify-between"
+                >
+                  <span>{abilityFullNames[ability as AbilityName] || ability}</span>
+                  {selectedAbilities[ability] && <span className="ml-2 text-green-500">+1</span>}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,58 +1,66 @@
 
-/**
- * Вычисляет модификатор характеристики на основе значения характеристики
- * @param abilityScore значение характеристики
- * @returns строковое представление модификатора характеристики (например, "+3" или "-1")
- */
-export function getAbilityModifierString(abilityScore?: number): string {
-  if (abilityScore === undefined || abilityScore === null) {
-    return '—'; // Возвращаем тире для неопределенных значений
+// Типы для характеристик персонажа
+export type AbilityName = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma' | 
+                         'STR' | 'DEX' | 'CON' | 'INT' | 'WIS' | 'CHA';
+
+// Массив с названиями характеристик
+export const abilityNames: AbilityName[] = [
+  'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'
+];
+
+// Краткие названия характеристик
+export const abilityShortNames: Record<string, AbilityName> = {
+  'strength': 'STR',
+  'dexterity': 'DEX',
+  'constitution': 'CON',
+  'intelligence': 'INT',
+  'wisdom': 'WIS',
+  'charisma': 'CHA',
+  'STR': 'STR',
+  'DEX': 'DEX',
+  'CON': 'CON',
+  'INT': 'INT',
+  'WIS': 'WIS',
+  'CHA': 'CHA'
+};
+
+// Полные названия на русском языке
+export const abilityFullNames: Record<AbilityName, string> = {
+  'strength': 'Сила',
+  'dexterity': 'Ловкость',
+  'constitution': 'Телосложение',
+  'intelligence': 'Интеллект',
+  'wisdom': 'Мудрость',
+  'charisma': 'Харизма',
+  'STR': 'Сила',
+  'DEX': 'Ловкость',
+  'CON': 'Телосложение',
+  'INT': 'Интеллект',
+  'WIS': 'Мудрость',
+  'CHA': 'Харизма'
+};
+
+// Конвертирует короткие имена в полные и наоборот
+export function normalizeAbilityName(name: string): AbilityName | undefined {
+  if (name in abilityFullNames) {
+    return name as AbilityName;
   }
   
-  const modifier = Math.floor((abilityScore - 10) / 2);
+  // Конвертируем из русских названий в английские
+  const reverseLookup = Object.entries(abilityFullNames).find(([_, value]) => value === name);
+  if (reverseLookup) {
+    return reverseLookup[0] as AbilityName;
+  }
+  
+  return undefined;
+}
+
+// Получение модификатора характеристики
+export function getAbilityModifier(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+// Форматирование модификатора в строку (+2, -1 и т.д.)
+export function formatModifier(modifier: number): string {
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 }
-
-/**
- * Вычисляет числовой модификатор характеристики на основе значения характеристики
- * @param abilityScore значение характеристики
- * @returns числовой модификатор характеристики
- */
-export function getAbilityModifier(abilityScore?: number): number {
-  if (abilityScore === undefined || abilityScore === null) {
-    return 0; // Возвращаем 0 для неопределенных значений
-  }
-  
-  return Math.floor((abilityScore - 10) / 2);
-}
-
-/**
- * Проверяет является ли класс персонажа магическим
- * @param characterClass название класса персонажа
- * @returns true если класс магический, иначе false
- */
-export function isMagicClass(characterClass?: string): boolean {
-  if (!characterClass) return false;
-  
-  const magicClasses = [
-    'Бард', 'Волшебник', 'Друид', 'Жрец', 'Колдун', 
-    'Паладин', 'Следопыт', 'Чародей',
-    // Английские варианты для совместимости
-    'Bard', 'Wizard', 'Druid', 'Cleric', 'Warlock',
-    'Paladin', 'Ranger', 'Sorcerer'
-  ];
-  
-  return magicClasses.includes(characterClass);
-}
-
-// Добавляем новые типы для AbilityBonusSelector
-export type AbilityName = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
-
-export const abilityNames: AbilityName[] = [
-  'strength',
-  'dexterity', 
-  'constitution', 
-  'intelligence', 
-  'wisdom', 
-  'charisma'
-];
