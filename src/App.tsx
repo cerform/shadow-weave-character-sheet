@@ -1,35 +1,42 @@
 
-import { BrowserRouter as Router } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from './contexts/AuthContext';
-import { CharacterProvider } from './contexts/CharacterContext';
-import { SpellbookProvider } from './contexts/SpellbookContext';
-import { UserThemeProvider } from '@/hooks/use-user-theme';
+import { Toaster as SonnerToaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
+import { UserThemeProvider } from '@/contexts/UserThemeContext';
+import TooltipProvider from '@/components/providers/TooltipProvider';
 import AppRoutes from './AppRoutes';
-import { SocketProvider } from './contexts/SocketContext';
+import './App.css';
 
-// Компонент для применения темы глобально
+// Создаем клиент для React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 минут
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 const App = () => {
-  console.log('App: Инициализация приложения');
-  
   return (
-    <UserThemeProvider>
-      <ThemeProvider defaultTheme="dark" attribute="class">
-        <AuthProvider>
-          <CharacterProvider>
-            <SpellbookProvider>
-              <SocketProvider>
-                <Router>
-                  <AppRoutes />
-                  <Toaster />
-                </Router>
-              </SocketProvider>
-            </SpellbookProvider>
-          </CharacterProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </UserThemeProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="dnd-ui-theme">
+      <UserThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <TooltipProvider>
+              <div>
+                <AppRoutes />
+                <Toaster />
+                <SonnerToaster position="top-center" closeButton />
+              </div>
+            </TooltipProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </UserThemeProvider>
+    </ThemeProvider>
   );
 };
 

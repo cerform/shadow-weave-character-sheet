@@ -18,6 +18,8 @@ import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
 import DndSpellsPage from './pages/DndSpellsPage';
 import CharactersListPage from './pages/CharactersListPage';
+import DMSessionManager from './pages/DMSessionManager';
+import JoinGameSession from './pages/JoinGameSession';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
@@ -113,6 +115,10 @@ const AppRoutes: React.FC = () => {
           <BattleScenePage />
         </ProtectedDMRoute>
       } />
+      
+      {/* Новые маршруты для игровых сессий */}
+      <Route path="/dm-session" element={<DMSessionManager />} />
+      <Route path="/join-game" element={<JoinGameSession />} />
       
       {/* Маршруты игрока с защитой */}
       <Route path="/player" element={

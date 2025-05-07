@@ -1,6 +1,18 @@
 
 import { SpellData } from '@/types/spells';
 
+// Маппинг школ магии для удобного отображения
+export const SchoolFilterMapping: { [key: string]: string } = {
+  'abjuration': 'Ограждение',
+  'conjuration': 'Вызов',
+  'divination': 'Прорицание',
+  'enchantment': 'Очарование',
+  'evocation': 'Воплощение',
+  'illusion': 'Иллюзия',
+  'necromancy': 'Некромантия',
+  'transmutation': 'Преобразование'
+};
+
 /**
  * Фильтрует заклинания по поисковому запросу
  */

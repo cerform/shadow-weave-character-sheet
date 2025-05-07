@@ -4,6 +4,7 @@ import NavigationButtons from "@/components/ui/NavigationButtons";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Users, UserPlus } from 'lucide-react';
 
 interface IconOnlyNavigationProps {
   includeThemeSelector?: boolean;
@@ -30,5 +31,18 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSel
     </div>
   );
 };
+
+// Добавляем новые элементы навигации в NavigationButtons.tsx
+// Этот компонент должен добавить следующие элементы:
+// {
+//   icon: <Users className="h-5 w-5" />,
+//   label: "Вести игру",
+//   href: "/dm-session",
+// },
+// {
+//   icon: <UserPlus className="h-5 w-5" />,
+//   label: "Присоединиться",
+//   href: "/join-game",
+// },
 
 export default IconOnlyNavigation;
