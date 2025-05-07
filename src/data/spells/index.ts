@@ -95,3 +95,8 @@ export const getSpellSchools = (): string[] => {
   
   return Array.from(schools);
 };
+
+// Добавляем функцию getAllSpells, которая возвращает все заклинания
+export const getAllSpells = (): CharacterSpell[] => {
+  return spells;
+};

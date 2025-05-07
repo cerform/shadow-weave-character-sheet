@@ -1,234 +1,163 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Check } from 'lucide-react';
+import { Character, RaceDetails, AbilityScoreIncrease } from '@/types/character';
+import { AbilityName, abilityNames } from '@/utils/abilityUtils';
 
 interface AbilityBonusSelectorProps {
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
-  abilityBonuses: {
-    amount: number;
-    options?: string[];
-    fixed?: Record<string, number>;
-  };
+  raceDetails?: RaceDetails;
 }
 
 const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   character,
   updateCharacter,
-  abilityBonuses
+  raceDetails
 }) => {
-  const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
-  
-  // Используем правильный тип для availablePoints
-  const [availablePoints, setAvailablePoints] = useState<number>(abilityBonuses.amount || 0);
-  
-  // Список доступных характеристик
-  const abilities = [
-    { id: 'strength', name: 'Сила', key: 'strength' },
-    { id: 'dexterity', name: 'Ловкость', key: 'dexterity' },
-    { id: 'constitution', name: 'Телосложение', key: 'constitution' },
-    { id: 'intelligence', name: 'Интеллект', key: 'intelligence' },
-    { id: 'wisdom', name: 'Мудрость', key: 'wisdom' },
-    { id: 'charisma', name: 'Харизма', key: 'charisma' }
-  ];
+  const [selectedAbilities, setSelectedAbilities] = useState<AbilityName[]>([]);
+  const [remainingPoints, setRemainingPoints] = useState<number>(0);
 
-  // Применяем фиксированные бонусы при инициализации
+  // Get ability bonuses from race details
+  const abilityBonuses = raceDetails?.abilityBonuses || { fixed: {}, choice: { count: 0, options: [] } };
+
+  // Calculate fixed bonuses for each ability
+  const fixedBonuses: Record<string, number> = abilityBonuses.fixed || {};
+  const choiceCount = abilityBonuses.choice?.count || 0;
+  const choiceOptions = abilityBonuses.choice?.options || [];
+
   useEffect(() => {
-    // Исправляем проверку на наличие fixed бонусов
-    const fixedBonuses = abilityBonuses.fixed;
-    if (!fixedBonuses) {
-      return;
-    }
+    // Reset selections when race changes
+    setSelectedAbilities([]);
+    setRemainingPoints(choiceCount);
     
-    const updates: Partial<Character> = {};
-    const updatedAbilities = { ...character.abilities } || {
-      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
-    };
+    // Apply fixed bonuses
+    const fixedAbilityUpdates: Record<string, number> = {};
     
-    // Теперь мы знаем, что fixed существует и имеет ключи
-    Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
-      const abilityKey = ability as keyof typeof updatedAbilities;
-      if (abilityKey in updatedAbilities) {
-        const currentValue = updatedAbilities[abilityKey] || 10;
-        updatedAbilities[abilityKey] = currentValue + bonus;
-        
-        const shortKeyMap: Record<string, string> = {
-          'strength': 'STR', 'dexterity': 'DEX', 'constitution': 'CON', 
-          'intelligence': 'INT', 'wisdom': 'WIS', 'charisma': 'CHA'
-        };
-        
-        const longKeyMap: Record<string, string> = {
-          'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 
-          'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'
-        };
-        
-        if (abilityKey in shortKeyMap) {
-          const shortKey = shortKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
-          updatedAbilities[shortKey] = currentValue + bonus;
-        } else if (abilityKey in longKeyMap) {
-          const longKey = longKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
-          updatedAbilities[longKey] = currentValue + bonus;
-        }
-      }
-    });
-    
-    updates.abilities = updatedAbilities;
-    updateCharacter(updates);
-  }, [abilityBonuses.fixed, character.abilities, updateCharacter]);
-
-  // Обработчик выбора характеристики
-  const handleAbilitySelect = (ability: string, index: number) => {
-    const newSelected = [...selectedAbilities];
-    
-    // Если характеристика уже была выбрана в другом селекторе, удаляем ее оттуда
-    if (newSelected.includes(ability)) {
-      const existingIndex = newSelected.indexOf(ability);
-      if (existingIndex !== index) {
-        newSelected[existingIndex] = '';
-      }
-    }
-    
-    // Обновляем выбор
-    newSelected[index] = ability;
-    setSelectedAbilities(newSelected);
-    
-    // Применяем бонусы
-    applyAbilityBonuses(newSelected);
-  };
-
-  // Применение бонусов к характеристикам
-  const applyAbilityBonuses = (selected: string[]) => {
-    // Получаем базовые характеристики (с учетом уже примененных фиксированных бонусов)
-    const baseAbilities = character.abilities || {
-      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
-    };
-    
-    // Создаем копию для обновления
-    const updatedAbilities = { ...baseAbilities };
-    
-    // Сбрасываем все "выборные" бонусы (не фиксированные)
-    // Для этого нам нужно знать, какие характеристики были ранее выбраны,
-    // но поскольку мы не храним это состояние, мы будем применять все бонусы заново
-    
-    // Применяем фиксированные бонусы (если есть)
-    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
-      Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
-        const abilityKey = ability as keyof typeof updatedAbilities;
-        if (abilityKey in updatedAbilities) {
-          const baseValue = abilityKey.includes('STR') || 
-                          abilityKey.includes('DEX') || 
-                          abilityKey.includes('CON') || 
-                          abilityKey.includes('INT') || 
-                          abilityKey.includes('WIS') || 
-                          abilityKey.includes('CHA') ? 10 : 10;
-          updatedAbilities[abilityKey] = baseValue + bonus;
-        }
+    if (raceDetails && abilityBonuses.fixed) {
+      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
+        const currentAbilityValue = character.abilities?.[ability as AbilityName] || 0;
+        fixedAbilityUpdates[ability] = currentAbilityValue + bonus;
       });
     }
     
-    // Применяем выбранные бонусы
-    selected.forEach(ability => {
-      if (ability) {
-        const abilityKey = ability as keyof typeof updatedAbilities;
-        const shortKey = ability === 'strength' ? 'STR' : 
-                       ability === 'dexterity' ? 'DEX' : 
-                       ability === 'constitution' ? 'CON' : 
-                       ability === 'intelligence' ? 'INT' : 
-                       ability === 'wisdom' ? 'WIS' : 
-                       ability === 'charisma' ? 'CHA' : '';
-        
-        if (abilityKey in updatedAbilities) {
-          updatedAbilities[abilityKey] = (updatedAbilities[abilityKey] || 10) + 1;
-          
-          // Обновляем также короткое имя свойства
-          if (shortKey && shortKey in updatedAbilities) {
-            updatedAbilities[shortKey as keyof typeof updatedAbilities] = 
-              (updatedAbilities[shortKey as keyof typeof updatedAbilities] || 10) + 1;
-          }
+    if (Object.keys(fixedAbilityUpdates).length > 0) {
+      updateCharacter({ 
+        abilities: { 
+          ...(character.abilities || {}), 
+          ...fixedAbilityUpdates 
+        } 
+      });
+    }
+  }, [raceDetails, choiceCount]);
+
+  // Handle ability selection
+  const toggleAbility = (ability: AbilityName) => {
+    if (selectedAbilities.includes(ability)) {
+      // Deselect ability
+      setSelectedAbilities(prev => prev.filter(a => a !== ability));
+      setRemainingPoints(prev => prev + 1);
+      
+      // Update character ability
+      const currentAbilityValue = character.abilities?.[ability] || 0;
+      updateCharacter({
+        abilities: {
+          ...(character.abilities || {}),
+          [ability]: currentAbilityValue - 1 // Subtract bonus
         }
-      }
-    });
-    
-    updateCharacter({ abilities: updatedAbilities });
+      });
+    } else if (remainingPoints > 0) {
+      // Select ability
+      setSelectedAbilities(prev => [...prev, ability]);
+      setRemainingPoints(prev => prev - 1);
+      
+      // Update character ability
+      const currentAbilityValue = character.abilities?.[ability] || 0;
+      updateCharacter({
+        abilities: {
+          ...(character.abilities || {}),
+          [ability]: currentAbilityValue + 1 // Add bonus
+        }
+      });
+    }
   };
 
-  // Сколько осталось распределить бонусов
-  const remainingBonuses = abilityBonuses.amount - selectedAbilities.filter(Boolean).length;
+  // Fixed bonuses display
+  const renderFixedBonuses = () => {
+    if (!abilityBonuses.fixed || Object.keys(abilityBonuses.fixed).length === 0) {
+      return null;
+    }
+    
+    return (
+      <div className="mb-4">
+        <h3 className="text-sm font-medium mb-2">Фиксированные бонусы:</h3>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(fixedBonuses).map(([ability, bonus]) => (
+            <Badge key={ability} variant="secondary">
+              {ability}: +{bonus}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
-  // Проверяем наличие фиксированных бонусов
-  const hasFixedBonuses = !!abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0;
-
-  return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle>Увеличение характеристик</CardTitle>
-        <CardDescription>
-          {hasFixedBonuses && (
-            <div className="mb-2">
-              <p>Фиксированные бонусы:</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {Object.entries(abilityBonuses.fixed!).map(([ability, bonus]) => (
-                  <Badge key={ability} variant="outline" className="bg-amber-900/20">
-                    {abilities.find(a => a.key === ability)?.name} +{bonus}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {abilityBonuses.amount > 0 && (
-            <p className="mt-2">
-              Выберите {abilityBonuses.amount} {abilityBonuses.amount === 1 ? 'характеристику' : 
-                abilityBonuses.amount < 5 ? 'характеристики' : 'характеристик'} 
-              для увеличения на +1
-              {remainingBonuses > 0 && 
-                ` (осталось выбрать: ${remainingBonuses})`
-              }
+  // No choice bonuses available
+  if (choiceCount === 0 || choiceOptions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          {renderFixedBonuses()}
+          {(!raceDetails || Object.keys(fixedBonuses).length === 0) && (
+            <p className="text-sm text-muted-foreground">
+              У этой расы нет бонусов к характеристикам, которые нужно распределять.
             </p>
           )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {Array.from({ length: abilityBonuses.amount }, (_, i) => (
-          <div key={i} className="mb-4">
-            <Label htmlFor={`ability-bonus-${i}`}>Характеристика {i + 1}</Label>
-            <Select
-              value={selectedAbilities[i] || ''}
-              onValueChange={(value) => handleAbilitySelect(value, i)}
-            >
-              <SelectTrigger id={`ability-bonus-${i}`}>
-                <SelectValue placeholder="Выберите характеристику" />
-              </SelectTrigger>
-              <SelectContent>
-                {abilities.map((ability) => {
-                  // Определяем, доступна ли эта характеристика для выбора
-                  const isAvailable = !selectedAbilities.includes(ability.id) || 
-                                      selectedAbilities[i] === ability.id;
-                  
-                  // Если характеристика ограничена опциями, проверяем её наличие в списке
-                  const isInOptions = !abilityBonuses.options || 
-                                     abilityBonuses.options.includes(ability.id);
-                  
-                  return isInOptions && (
-                    <SelectItem 
-                      key={ability.id} 
-                      value={ability.id}
-                      disabled={!isAvailable}
-                    >
-                      {ability.name}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Render ability choice options
+  return (
+    <Card>
+      <CardContent className="p-4">
+        {renderFixedBonuses()}
+        
+        <div>
+          <h3 className="text-sm font-medium mb-2">
+            Выберите бонусы к характеристикам: {remainingPoints} из {choiceCount}
+          </h3>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {choiceOptions.map((ability) => {
+              const isSelected = selectedAbilities.includes(ability);
+              const isDisabled = !isSelected && remainingPoints === 0;
+              
+              return (
+                <div
+                  key={ability}
+                  className={`p-2 rounded-md border cursor-pointer flex items-center justify-between
+                    ${isSelected ? 'bg-primary/10 border-primary' : 'hover:bg-accent/20'} 
+                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                  `}
+                  onClick={() => !isDisabled && toggleAbility(ability)}
+                >
+                  <span>{ability} +1</span>
+                  {isSelected && <Check className="h-4 w-4 text-primary" />}
+                </div>
+              );
+            })}
           </div>
-        ))}
+          
+          {remainingPoints > 0 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Осталось выбрать бонусы: {remainingPoints}
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
