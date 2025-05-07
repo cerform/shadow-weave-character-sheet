@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileText, 
   Gamepad, 
-  Dice6, 
+  Dices, 
   Map, 
   Video, 
   Smile,
@@ -169,7 +169,7 @@ const PlayerDashboardPage: React.FC = () => {
                     <span>Заклинания</span>
                   </Button>
                   <Button variant="outline" className="flex flex-col items-center h-auto py-4">
-                    <Dice6 className="h-8 w-8 mb-2" />
+                    <Dices className="h-8 w-8 mb-2" />
                     <span>Кубики</span>
                   </Button>
                   <Button variant="outline" className="flex flex-col items-center h-auto py-4">
