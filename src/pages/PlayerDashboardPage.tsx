@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,7 +169,7 @@ const PlayerDashboardPage: React.FC = () => {
                     <Gamepad className="h-8 w-8 mb-2" />
                     <span>Заклинания</span>
                   </Button>
-                  <Button variant="outline" className="flex flex-col items-center h-auto py-4">
+                  <Button variant="outline" className="flex flex-col items-center h-auto py-4" onClick={() => navigate('/dice')}>
                     <Dices className="h-8 w-8 mb-2" />
                     <span>Кубики</span>
                   </Button>
