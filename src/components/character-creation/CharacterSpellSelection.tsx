@@ -4,7 +4,7 @@ import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { CustomScrollArea } from "@/components/ui/custom-scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -384,7 +384,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        <Separator className="my-2 bg-accent/30" />
+        <Separator className="my-2" />
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -397,7 +397,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           }}
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full mb-4 flex flex-wrap">
             <TabsTrigger value="all">
               Все ({spellsToFilter.length})
@@ -414,7 +414,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
+      <CustomScrollArea className="flex-1">
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -459,7 +459,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             })
           )}
         </div>
-      </ScrollArea>
+      </CustomScrollArea>
 
       {nextStep && prevStep && (
         <div className="mt-4">
