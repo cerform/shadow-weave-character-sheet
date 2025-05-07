@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
 
 const DMDashboardPage = () => {
   const navigate = useNavigate();
@@ -25,31 +27,43 @@ const DMDashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!currentUser?.isDM) {
+    // Проверяем авторизацию
+    if (!currentUser) {
+      toast.error("Необходимо войти в аккаунт");
+      navigate('/auth');
+      return;
+    }
+
+    // Проверяем права DM
+    if (!currentUser.isDM) {
       toast.error("Доступ только для Мастеров Подземелий");
       navigate('/');
       return;
     }
 
-    // Загружаем сессии при монтировании компонента только если они еще не загружены
-    if (!sessionsLoaded && currentUser?.uid) {
-      const loadSessions = async () => {
-        try {
-          const sessions = await sessionStore.fetchSessions();
-          // Фильтруем только сессии текущего DM
-          const filteredSessions = sessions.filter(s => s.dmId === currentUser?.uid);
-          setUserSessions(filteredSessions);
-          setSessionsLoaded(true);
-        } catch (error) {
-          console.error("Ошибка загрузки сессий:", error);
-          setError("Не удалось загрузить сессии. Пожалуйста, попробуйте позже.");
-          setSessionsLoaded(true); // Помечаем как загруженные, чтобы избежать повторных запросов
-        }
-      };
+    // Загружаем сессии при монтировании компонента
+    const loadSessions = async () => {
+      try {
+        setError(null);
+        // Принудительно загружаем сессии заново
+        const sessions = await sessionStore.fetchSessions();
+        
+        // Фильтруем только сессии текущего DM
+        const filteredSessions = sessions.filter(s => s.dmId === currentUser?.uid);
+        
+        console.log("Загруженные сессии DM:", filteredSessions);
+        setUserSessions(filteredSessions);
+        setSessionsLoaded(true);
+      } catch (error) {
+        console.error("Ошибка загрузки сессий:", error);
+        setError("Не удалось загрузить сессии. Пожалуйста, попробуйте позже.");
+      } finally {
+        setSessionsLoaded(true);
+      }
+    };
 
-      loadSessions();
-    }
-  }, [currentUser, navigate, sessionStore, sessionsLoaded]);
+    loadSessions();
+  }, [currentUser, navigate]);
 
   const handleCreateSession = () => {
     if (!sessionName.trim()) {
@@ -57,23 +71,39 @@ const DMDashboardPage = () => {
       return;
     }
 
-    const newSession = sessionStore.createSession(sessionName, sessionDescription);
-    setShowCreateDialog(false);
-    setSessionName('');
-    setSessionDescription('');
-    
-    // Обновляем список сессий
-    setUserSessions(prev => [...prev, newSession]);
-    
-    toast.success("Сессия успешно создана!");
+    try {
+      const newSession = sessionStore.createSession(sessionName, sessionDescription);
+      
+      // Добавляем новую сессию в список
+      setUserSessions(prev => [...prev, newSession]);
+      
+      // Закрываем диалог
+      setShowCreateDialog(false);
+      setSessionName('');
+      setSessionDescription('');
+      
+      toast.success("Сессия успешно создана!");
+    } catch (error) {
+      console.error("Ошибка при создании сессии:", error);
+      toast.error("Не удалось создать сессию. Попробуйте ещё раз.");
+    }
   };
 
   const handleDeleteSession = (sessionId: string) => {
     if (confirm("Вы уверены, что хотите удалить эту сессию?")) {
-      sessionStore.endSession(sessionId);
-      // Обновляем список сессий
-      setUserSessions(prev => prev.filter(s => s.id !== sessionId));
-      toast.success("Сессия удалена");
+      try {
+        sessionStore.endSession(sessionId);
+        
+        // Обновляем список сессий
+        setUserSessions(prev => 
+          prev.map(s => s.id === sessionId ? {...s, isActive: false} : s)
+        );
+        
+        toast.success("Сессия завершена");
+      } catch (error) {
+        console.error("Ошибка при удалении сессии:", error);
+        toast.error("Не удалось удалить сессию");
+      }
     }
   };
 
@@ -96,7 +126,13 @@ const DMDashboardPage = () => {
               <CardTitle>Ошибка загрузки</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{error}</p>
+              <ErrorDisplay
+                errorMessage={error}
+                onRetry={() => {
+                  setSessionsLoaded(false);
+                  setError(null);
+                }}
+              />
             </CardContent>
             <CardFooter>
               <Button onClick={() => navigate('/')} className="w-full">Вернуться на главную</Button>
@@ -130,7 +166,7 @@ const DMDashboardPage = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-primary" />
-                      <span>Всего игроков: {userSessions.reduce((total, session) => total + session.players.length, 0)}</span>
+                      <span>Всего игроков: {userSessions.reduce((total, session) => total + (session.players?.length || 0), 0)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Shield className="h-5 w-5 text-primary" />
@@ -162,7 +198,12 @@ const DMDashboardPage = () => {
                   <CardDescription>Управление созданными вами сессиями</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {userSessions.length === 0 ? (
+                  {!sessionsLoaded ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Загрузка сессий...</p>
+                    </div>
+                  ) : userSessions.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">У вас пока нет созданных сессий</p>
                       <Button 
@@ -185,6 +226,7 @@ const DMDashboardPage = () => {
                                   size="icon" 
                                   onClick={() => handleDeleteSession(session.id)}
                                   className="h-8 w-8 text-destructive hover:text-destructive/80"
+                                  disabled={!session.isActive}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -193,6 +235,7 @@ const DMDashboardPage = () => {
                                   size="icon" 
                                   onClick={() => navigate(`/dm-session/${session.id}`)}
                                   className="h-8 w-8"
+                                  disabled={!session.isActive}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -215,7 +258,7 @@ const DMDashboardPage = () => {
                               </div>
                               <div className="flex items-center text-xs text-muted-foreground">
                                 <Users className="h-3 w-3 mr-1" />
-                                <span>Игроков: {session.players.length}</span>
+                                <span>Игроков: {session.players?.length || 0}</span>
                               </div>
                             </div>
                           </CardContent>
@@ -224,6 +267,7 @@ const DMDashboardPage = () => {
                               variant="link" 
                               className="ml-auto flex items-center" 
                               onClick={() => navigate(`/dm-session/${session.id}`)}
+                              disabled={!session.isActive}
                             >
                               Управление сессией <ArrowRight className="h-4 w-4 ml-1" />
                             </Button>

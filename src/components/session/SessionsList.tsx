@@ -1,6 +1,4 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +6,7 @@ import { Gamepad2, Play, Users, Calendar, Clock } from 'lucide-react';
 import { GameSession } from '@/types/session.types';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 interface SessionsListProps {
   sessions: GameSession[];
@@ -74,80 +73,88 @@ const SessionsList: React.FC<SessionsListProps> = ({ sessions, type, isLoading }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {sessions.map((session) => (
-        <Card key={session.id} className="relative overflow-hidden">
-          {!session.isActive && (
-            <div className="absolute top-0 right-0 left-0 bg-destructive/90 text-destructive-foreground py-1 px-2 text-center text-sm font-medium">
-              Сессия завершена
-            </div>
-          )}
-          
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <CardTitle className="truncate">{session.name}</CardTitle>
-              <Badge variant={session.isActive ? 'default' : 'outline'}>
-                {session.isActive ? 'Активна' : 'Завершена'}
-              </Badge>
-            </div>
-            <CardDescription>
-              Код: <span className="font-mono">{session.code}</span>
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm">
-                <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>
-                  {session.players?.length || 0} игроков
-                </span>
+      {sessions.map((session) => {
+        // Проверяем, существуют ли нужные данные
+        const hasCreatedAt = session.createdAt && !isNaN(new Date(session.createdAt).getTime());
+        const hasUpdatedAt = session.updatedAt && !isNaN(new Date(session.updatedAt).getTime());
+        
+        return (
+          <Card key={session.id} className="relative overflow-hidden">
+            {!session.isActive && (
+              <div className="absolute top-0 right-0 left-0 bg-destructive/90 text-destructive-foreground py-1 px-2 text-center text-sm font-medium">
+                Сессия завершена
               </div>
-              
-              <div className="flex items-center text-sm">
-                <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>
-                  Создана {' '}
-                  {formatDistanceToNow(new Date(session.createdAt), {
-                    addSuffix: true,
-                    locale: ru,
-                  })}
-                </span>
+            )}
+            
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="truncate">{session.name || 'Без названия'}</CardTitle>
+                <Badge variant={session.isActive ? 'default' : 'outline'}>
+                  {session.isActive ? 'Активна' : 'Завершена'}
+                </Badge>
               </div>
-              
-              {session.updatedAt && session.updatedAt !== session.createdAt && (
+              <CardDescription>
+                Код: <span className="font-mono">{session.code}</span>
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="space-y-2">
                 <div className="flex items-center text-sm">
-                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <Users className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span>
-                    Обновлена {' '}
-                    {formatDistanceToNow(new Date(session.updatedAt), {
-                      addSuffix: true,
-                      locale: ru,
-                    })}
+                    {session.players?.length || 0} игроков
                   </span>
                 </div>
-              )}
-              
-              {session.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {session.description}
-                </p>
-              )}
-            </div>
-          </CardContent>
-          
-          <CardFooter>
-            <Button 
-              className="w-full" 
-              variant={session.isActive ? "default" : "outline"}
-              onClick={() => handleJoinSession(session.id)}
-              disabled={!session.isActive}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              {session.isActive ? 'Присоединиться' : 'Просмотреть'}
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
+                
+                {hasCreatedAt && (
+                  <div className="flex items-center text-sm">
+                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Создана {' '}
+                      {formatDistanceToNow(new Date(session.createdAt), {
+                        addSuffix: true,
+                        locale: ru,
+                      })}
+                    </span>
+                  </div>
+                )}
+                
+                {hasUpdatedAt && hasCreatedAt && session.updatedAt !== session.createdAt && (
+                  <div className="flex items-center text-sm">
+                    <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Обновлена {' '}
+                      {formatDistanceToNow(new Date(session.updatedAt), {
+                        addSuffix: true,
+                        locale: ru,
+                      })}
+                    </span>
+                  </div>
+                )}
+                
+                {session.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {session.description}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+            
+            <CardFooter>
+              <Button 
+                className="w-full" 
+                variant={session.isActive ? "default" : "outline"}
+                onClick={() => handleJoinSession(session.id)}
+                disabled={!session.isActive}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                {session.isActive ? 'Присоединиться' : 'Просмотреть'}
+              </Button>
+            </CardFooter>
+          </Card>
+        );
+      })}
     </div>
   );
 };

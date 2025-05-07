@@ -1,15 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSessionById, getSessionTokens, updateToken, removeToken } from '@/services/sessionService';
+import useSessionStore from '@/stores/sessionStore';
 import { GameSession, TokenData, Initiative } from '@/types/session.types';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { socketService } from '@/services/socket';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BattleMap from '@/components/battle/BattleMap';
 import SessionChat from '@/components/SessionChat';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
 
 const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -20,50 +21,65 @@ const DMSessionPage: React.FC = () => {
   const [battleActive, setBattleActive] = useState<boolean>(false);
   const [initiative, setInitiative] = useState<Initiative[]>([]);
   const [activeTab, setActiveTab] = useState<string>('map');
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
   const navigate = useNavigate();
+  const sessionStore = useSessionStore();
 
   // Загружаем данные сессии
   useEffect(() => {
     if (!sessionId) return;
     
     const loadSession = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        const sessionData = await getSessionById(sessionId);
-        if (!sessionData) {
-          toast({
-            title: 'Ошибка',
-            description: 'Сессия не найдена',
-            variant: 'destructive',
-          });
-          navigate('/dm');
+        // Сначала загружаем все сессии, если они еще не загружены
+        if (sessionStore.sessions.length === 0) {
+          await sessionStore.fetchSessions();
+        }
+        
+        // Ищем нужную сессию по ID
+        const foundSession = sessionStore.sessions.find(s => s.id === sessionId);
+        
+        if (!foundSession) {
+          setError('Сессия не найдена. Проверьте ID сессии или создайте новую.');
+          setIsLoading(false);
           return;
         }
         
-        setSession(sessionData);
-        setBattleActive(sessionData.battleActive || false);
+        // Устанавливаем текущую сессию
+        setSession(foundSession);
         
-        if (sessionData.map?.background) {
-          setBackground(sessionData.map.background);
+        // Устанавливаем другие параметры из сессии
+        setBattleActive(foundSession.battleActive || false);
+        
+        if (foundSession.map?.background) {
+          setBackground(foundSession.map.background);
         }
         
-        if (sessionData.initiative) {
-          setInitiative(sessionData.initiative);
+        if (foundSession.initiative) {
+          setInitiative(foundSession.initiative);
         }
         
-        // Загружаем токены
-        const sessionTokens = await getSessionTokens(sessionId);
-        setTokens(sessionTokens || []);
+        // Устанавливаем токены
+        setTokens(foundSession.tokens || []);
         
         // Подключаем WebSocket
-        socketService.connect(sessionData.code, 'Мастер подземелий', undefined);
+        socketService.connect(foundSession.code, 'Мастер подземелий', undefined);
+        
+        // Обновляем текущую сессию в хранилище
+        sessionStore.updateSession({ 
+          id: foundSession.id, 
+          updatedAt: new Date().toISOString() 
+        });
       } catch (error) {
         console.error('Ошибка при загрузке сессии:', error);
-        toast({
-          title: 'Ошибка',
-          description: 'Произошла ошибка при загрузке сессии',
-          variant: 'destructive',
-        });
+        setError('Произошла ошибка при загрузке сессии. Попробуйте обновить страницу.');
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -73,7 +89,7 @@ const DMSessionPage: React.FC = () => {
     return () => {
       socketService.disconnect();
     };
-  }, [sessionId, navigate, toast]);
+  }, [sessionId, sessionStore]);
 
   // Обновление позиции токена
   const handleUpdateTokenPosition = async (id: number, x: number, y: number) => {
@@ -83,14 +99,18 @@ const DMSessionPage: React.FC = () => {
     
     setTokens(updatedTokens);
     
-    const updatedToken = updatedTokens.find(token => token.id === id);
-    if (updatedToken && sessionId) {
-      try {
-        await updateToken(sessionId, updatedToken);
-        // Отправляем обновление через WebSocket
+    if (session) {
+      // Обновляем токены в сессии
+      sessionStore.updateSession({
+        id: session.id,
+        tokens: updatedTokens,
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Отправляем обновление через WebSocket
+      const updatedToken = updatedTokens.find(token => token.id === id);
+      if (updatedToken) {
         socketService.updateToken(updatedToken);
-      } catch (error) {
-        console.error('Ошибка при обновлении токена:', error);
       }
     }
   };
@@ -102,11 +122,11 @@ const DMSessionPage: React.FC = () => {
 
   // Отправка сообщения в чат
   const handleSendMessage = (message: string) => {
-    if (!message.trim()) return;
+    if (!message.trim() || !session) return;
     
     const chatMessage = {
       message,
-      roomCode: session?.code || '',
+      roomCode: session.code,
       nickname: 'Мастер подземелий'
     };
     
@@ -118,14 +138,70 @@ const DMSessionPage: React.FC = () => {
     socketService.sendRoll({ formula, reason });
   };
 
+  // Обработчик смены статуса боя
+  const handleBattleToggle = () => {
+    if (!session) return;
+    
+    const newBattleStatus = !battleActive;
+    setBattleActive(newBattleStatus);
+    
+    sessionStore.updateSession({
+      id: session.id,
+      battleActive: newBattleStatus,
+      updatedAt: new Date().toISOString()
+    });
+    
+    toast.success(newBattleStatus ? 'Режим боя активирован' : 'Режим боя завершен');
+  };
+
+  // Если возникла ошибка
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <ErrorDisplay 
+          errorMessage={error} 
+          onRetry={() => navigate('/dm')}
+          technicalDetails={{ 
+            sessionId,
+            availableSessions: sessionStore.sessions.map(s => ({ id: s.id, name: s.name }))
+          }}
+        />
+        <div className="mt-4">
+          <Button onClick={() => navigate('/dm')}>
+            Вернуться к списку сессий
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Если данные сессии еще не загружены
-  if (!session || !sessionId) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-4 flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p>Загрузка сессии...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Если сессия не найдена даже после загрузки
+  if (!session) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="max-w-md mx-auto bg-card/95 backdrop-blur-md">
+          <CardHeader>
+            <CardTitle>Сессия не найдена</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">Запрошенная сессия не существует или была удалена.</p>
+            <Button onClick={() => navigate('/dm')}>
+              Вернуться к списку сессий
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -140,7 +216,7 @@ const DMSessionPage: React.FC = () => {
         <div className="flex gap-2">
           <Button
             variant={battleActive ? "destructive" : "default"}
-            onClick={() => setBattleActive(!battleActive)}
+            onClick={handleBattleToggle}
           >
             {battleActive ? 'Завершить бой' : 'Начать бой'}
           </Button>
@@ -153,7 +229,7 @@ const DMSessionPage: React.FC = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-3rem)]">
         <TabsList>
           <TabsTrigger value="map">Карта</TabsTrigger>
-          <TabsTrigger value="players">Игроки ({session.players.length})</TabsTrigger>
+          <TabsTrigger value="players">Игроки ({session.players?.length || 0})</TabsTrigger>
           <TabsTrigger value="chat">Чат</TabsTrigger>
         </TabsList>
         
@@ -185,7 +261,7 @@ const DMSessionPage: React.FC = () => {
               <CardTitle>Игроки в сессии</CardTitle>
             </CardHeader>
             <CardContent>
-              {session.players.length > 0 ? (
+              {session.players && session.players.length > 0 ? (
                 <div className="space-y-4">
                   {session.players.map((player) => (
                     <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -215,7 +291,7 @@ const DMSessionPage: React.FC = () => {
         <TabsContent value="chat" className="h-full">
           <div className="h-full">
             <SessionChat 
-              messages={[]}
+              messages={session.messages || []}
               onSendMessage={handleSendMessage}
               sessionCode={session.code}
               playerName="Мастер подземелий"
