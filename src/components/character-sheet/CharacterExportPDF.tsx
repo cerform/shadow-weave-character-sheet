@@ -168,7 +168,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         if (typeof character.spells[0] === 'string') {
           spellsArray.push(...(character.spells as unknown as string[]));
         } else {
-          // Конвертируем CharacterSpell[] в string[] явно с использованием приведения типов
+          // Конвертируем CharacterSpell[] в string[]
           const spellObjects = character.spells as unknown as CharacterSpell[];
           spellsArray.push(...spellObjects.map(s => s.name));
         }

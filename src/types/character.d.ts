@@ -51,6 +51,7 @@ export interface Character {
   temporaryHp?: number;
   armorClass?: number;
   speed?: number;
+  initiative?: string | number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
   proficiencies?: {
@@ -121,7 +122,8 @@ export interface Character {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  initiative?: string | number;
+  
+  // Добавляем недостающие свойства
   lastDiceRoll?: {
     diceType: string;
     count: number;
