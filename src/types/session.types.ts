@@ -19,6 +19,8 @@ export interface TokenData {
   img?: string;
   name?: string;
   size?: number;
+  visible?: boolean;
+  type?: string;
   // Add any other needed properties
 }
 
@@ -89,6 +91,6 @@ export interface GameSessionWithOptionalFields extends GameSession {
   initiative?: Initiative[];
 }
 
-// Добавляем интерфейсы для инициативы боя
+// Добавляем алиасы для совместимости с BattleScenePage
 export type BattleInitiative = Initiative;
 export type SessionInitiative = Initiative;

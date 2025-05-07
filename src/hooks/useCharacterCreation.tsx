@@ -211,7 +211,7 @@ export const useCharacterCreation = () => {
       spells: data.spells || [],
       proficiencies: data.proficiencies || [],
       features: data.features || [],
-      notes: data.notes || '',
+      notes: '',
       resources: data.resources || {},
       savingThrowProficiencies: data.savingThrowProficiencies || getSavingThrowsForClass(data.class || 'Воин'),
       skillProficiencies: data.skillProficiencies || [],

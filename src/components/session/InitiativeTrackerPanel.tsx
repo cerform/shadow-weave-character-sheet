@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +8,23 @@ import { Initiative, TokenData } from '@/types/session.types';
 
 interface InitiativeTrackerPanelProps {
   initiatives: Initiative[];
-  onUpdateInitiatives: (initiatives: Initiative[]) => void;
-  tokens?: TokenData[];
+  tokens: TokenData[];
+  battleActive: boolean;
+  sessionId: string;
+  onUpdateInitiative: (newInitiative: Initiative[]) => void;
+  onToggleBattle: () => void;
+  onNextTurn: () => void;
 }
 
-const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({ initiatives, onUpdateInitiatives, tokens = [] }) => {
+const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({
+  initiatives,
+  tokens,
+  battleActive,
+  sessionId,
+  onUpdateInitiative,
+  onToggleBattle,
+  onNextTurn
+}) => {
   const [newName, setNewName] = useState('');
   const [newInitiative, setNewInitiative] = useState<number>(10);
   const [sortedInitiatives, setSortedInitiatives] = useState<Initiative[]>([]);
@@ -41,7 +52,7 @@ const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({ initiat
       isActive: false
     };
     
-    onUpdateInitiatives([...initiatives, newEntry]);
+    onUpdateInitiative([...initiatives, newEntry]);
     setNewName('');
     setNewInitiative(10);
   };

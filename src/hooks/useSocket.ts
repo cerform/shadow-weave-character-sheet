@@ -11,6 +11,7 @@ interface SocketService {
   off: (event: string, callback: (...args: any[]) => void) => void;
   roomCode?: string;
   nickname?: string;
+  sendMessage?: (message: any) => void;
 }
 
 export interface SocketContextType {
@@ -39,10 +40,11 @@ export const useSocket = (): SocketContextType => {
   }, []);
 
   const sendMessage = useCallback((message: string) => {
-    (socketService as SocketService).sendChatMessage({
+    const socket = socketService as SocketService;
+    socket.sendChatMessage({
       message: message,
-      roomCode: (socketService as SocketService).roomCode || '',
-      nickname: (socketService as SocketService).nickname || 'Guest'
+      roomCode: socket.roomCode || '',
+      nickname: socket.nickname || 'Guest'
     });
     setLastUpdate(new Date());
   }, []);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useSessionStore from '@/stores/sessionStore';
@@ -20,11 +19,23 @@ interface GameSessionWithOptionalFields extends Omit<GameSession, 'dmId'> {
   updatedAt?: string;
 }
 
+interface SocketService {
+  connect: (roomCode: string, playerName: string, characterId?: string) => void;
+  disconnect: () => void;
+  sendChatMessage: (data: { message: string, roomCode: string, nickname: string }) => void;
+  on: (event: string, callback: (...args: any[]) => void) => void;
+  off: (event: string, callback: (...args: any[]) => void) => void;
+  roomCode?: string;
+  nickname?: string;
+  updateToken?: (token: TokenData) => void;
+  sendMessage: (message: any) => void;
+}
+
 const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<GameSessionWithOptionalFields | null>(null);
   const [tokens, setTokens] = useState<TokenData[]>([]);
-  const [selectedTokenId, setSelectedTokenId] = useState<number | string | null>(null);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [background, setBackground] = useState<string | null>(null);
   const [battleActive, setBattleActive] = useState<boolean>(false);
   const [initiative, setInitiative] = useState<Initiative[]>([]);
@@ -86,7 +97,7 @@ const DMSessionPage: React.FC = () => {
         socketService.connect(gameSession.code, 'Мастер подземелий', undefined);
       } catch (error) {
         console.error('Ошибка при загрузке сессии:', error);
-        setError('Произошла ошибка при загрузке сессии. Попробуйте обновить страницу.');
+        setError('Произошла ошибка при загрузке сессии. Попробуйте об��овить страницу.');
       } finally {
         setIsLoading(false);
       }
@@ -331,7 +342,7 @@ const DMSessionPage: React.FC = () => {
           <Card className="h-full">
             <CardContent className="p-4">
               <InitiativeTrackerPanel 
-                initiative={initiative}
+                initiatives={initiative} 
                 tokens={tokens}
                 battleActive={battleActive}
                 sessionId={session.id}
@@ -360,8 +371,8 @@ const DMSessionPage: React.FC = () => {
                         </p>
                       </div>
                       <div className="flex items-center">
-                        <span className={`h-3 w-3 rounded-full mr-2 ${player.isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                        {player.isConnected ? 'В сети' : 'Не в сети'}
+                        <span className={`h-3 w-3 rounded-full mr-2 ${player.connected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        {player.connected ? 'В сети' : 'Не в сети'}
                       </div>
                     </div>
                   ))}

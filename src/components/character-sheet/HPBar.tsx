@@ -1,325 +1,197 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Shield, Minus, Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Character } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
+import { Heart, Shield, Plus, Minus } from 'lucide-react';
 
-interface HPBarProps {
-  currentHp: number;
-  maxHp: number;
-  temporaryHp: number;
-  onUpdate: (updates: {
-    currentHp?: number;
-    temporaryHp?: number;
-  }) => void;
+export interface HPBarProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const HPBar: React.FC<HPBarProps> = ({
-  currentHp,
-  maxHp,
-  temporaryHp,
-  onUpdate
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const HPBar: React.FC<HPBarProps> = ({ character, onUpdate }) => {
+  const { toast } = useToast();
   const [damageAmount, setDamageAmount] = useState<number>(0);
   const [healAmount, setHealAmount] = useState<number>(0);
   const [tempHPAmount, setTempHPAmount] = useState<number>(0);
-  const { toast } = useToast();
 
-  // Рассчитываем процент здоровья для отображения прогресс-бара
-  const healthPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
-  
-  // Определяем цвет полосы здоровья в зависимости от процента
-  const getHealthColor = () => {
-    if (healthPercent > 60) return 'bg-green-500';
-    if (healthPercent > 30) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  // Обработчик получения урона
-  const handleTakeDamage = (amount: number) => {
-    if (amount <= 0) {
-      toast({
-        title: "Ошибка",
-        description: "Урон должен быть положительным числом",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Сначала урон идет по временным хитам
-    let remainingDamage = amount;
-    let newTempHP = temporaryHp;
+  const handleDamage = () => {
+    if (!damageAmount) return;
     
-    if (temporaryHp > 0) {
-      if (temporaryHp >= remainingDamage) {
-        newTempHP = temporaryHp - remainingDamage;
-        remainingDamage = 0;
+    let tempHP = character.temporaryHp || 0;
+    let currentHP = character.currentHp;
+    const damageValue = Math.max(0, damageAmount);
+    
+    // First apply damage to temp HP
+    if (tempHP > 0) {
+      if (tempHP >= damageValue) {
+        tempHP -= damageValue;
+        onUpdate({ temporaryHp: tempHP });
+        toast({
+          title: "Урон поглощен",
+          description: `${damageValue} урона поглощено временными хитами.`
+        });
+        setDamageAmount(0);
+        return;
       } else {
-        remainingDamage = remainingDamage - temporaryHp;
-        newTempHP = 0;
+        // Some damage goes to temp HP, rest to regular HP
+        const remainingDamage = damageValue - tempHP;
+        tempHP = 0;
+        currentHP = Math.max(0, currentHP - remainingDamage);
+        onUpdate({ temporaryHp: tempHP, currentHp: currentHP });
+        toast({
+          title: "Урон получен",
+          description: `${tempHP} урона поглощено временными хитами, ${remainingDamage} урона нанесено персонажу.`
+        });
+        setDamageAmount(0);
+        return;
       }
     }
-
-    // Оставшийся урон идет по основным хитам
-    const newCurrentHP = Math.max(0, currentHp - remainingDamage);
-
-    // Сохраняем изменения
-    onUpdate({
-      currentHp: newCurrentHP,
-      temporaryHp: newTempHP
-    });
-
-    // Уведомляем пользователя
-    toast({
-      title: "Урон получен",
-      description: `Получен урон: ${amount}. Осталось ХП: ${newCurrentHP}${newTempHP > 0 ? ` (+ ${newTempHP} врем.)` : ''}`,
-    });
-
-    // Закрываем диалог
-    setIsOpen(false);
+    
+    // All damage goes to regular HP
+    currentHP = Math.max(0, currentHP - damageValue);
+    onUpdate({ currentHp: currentHP });
+    
+    if (currentHP === 0) {
+      toast({
+        title: "Персонаж без сознания!",
+        description: "Хиты упали до 0, персонаж теряет сознание и должен делать спасброски от смерти.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Урон получен",
+        description: `${damageValue} урона нанесено персонажу.`
+      });
+    }
+    
     setDamageAmount(0);
   };
 
-  // Обработчик лечения
-  const handleHeal = (amount: number) => {
-    if (amount <= 0) {
-      toast({
-        title: "Ошибка",
-        description: "Лечение должно быть положительным числом",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Лечение не может превысить максимальные хиты
-    const newCurrentHP = Math.min(maxHp, currentHp + amount);
-
-    // Сохраняем изменения
-    onUpdate({ currentHp: newCurrentHP });
-
-    // Уведомляем пользователя
+  const handleHeal = () => {
+    if (!healAmount) return;
+    
+    const healValue = Math.max(0, healAmount);
+    const newHP = Math.min(character.maxHp, character.currentHp + healValue);
+    
+    onUpdate({ currentHp: newHP });
+    
     toast({
       title: "Лечение получено",
-      description: `Восстановлено ХП: ${amount}. Текущие ХП: ${newCurrentHP}${temporaryHp > 0 ? ` (+ ${temporaryHp} врем.)` : ''}`,
+      description: `Восстановлено ${healValue} хитов.`
     });
-
-    // Закрываем диалог
-    setIsOpen(false);
+    
     setHealAmount(0);
   };
 
-  // Обработчик добавления временных хитов
-  const handleAddTempHP = (amount: number) => {
-    if (amount <= 0) {
-      toast({
-        title: "Ошибка",
-        description: "Временные хиты должны быть положительным числом",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Временные хиты не складываются, берем наибольшее значение
-    const newTempHP = Math.max(temporaryHp, amount);
-
-    // Сохраняем изменения
+  const handleAddTempHP = () => {
+    if (!tempHPAmount) return;
+    
+    const tempValue = Math.max(0, tempHPAmount);
+    // Temporary HP doesn't stack, use the higher value
+    const newTempHP = Math.max(character.temporaryHp || 0, tempValue);
+    
     onUpdate({ temporaryHp: newTempHP });
-
-    // Уведомляем пользователя
+    
     toast({
-      title: "Получены временные хиты",
-      description: `Временные хиты: ${newTempHP}`,
+      title: "Временные хиты получены",
+      description: `Получено ${tempValue} временных хитов.`
     });
-
-    // Закрываем диалог
-    setIsOpen(false);
+    
     setTempHPAmount(0);
   };
 
+  const hpPercentage = Math.max(0, Math.min(100, (character.currentHp / character.maxHp) * 100));
+  
   return (
-    <Card className="relative">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center space-x-1">
-            <Heart className="h-5 w-5 text-red-500" />
-            <span className="font-medium">Здоровье</span>
+    <div className="bg-card border rounded-lg p-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-medium mb-1 flex items-center">
+          <Heart className="w-5 h-5 mr-2 text-red-500" />
+          Хиты
+        </h3>
+        
+        <div className="w-full h-6 bg-muted rounded-full overflow-hidden mb-2">
+          <div 
+            className="h-full rounded-full transition-all duration-500"
+            style={{ 
+              width: `${hpPercentage}%`,
+              backgroundColor: hpPercentage > 50 ? 'rgb(34, 197, 94)' : 
+                              hpPercentage > 25 ? 'rgb(234, 179, 8)' : 
+                              'rgb(239, 68, 68)'
+            }}
+          ></div>
+        </div>
+        
+        <div className="flex justify-between mb-2 text-sm">
+          <div>Текущие: {character.currentHp}</div>
+          <div className="font-medium">/ {character.maxHp}</div>
+          {character.temporaryHp > 0 && (
+            <div className="text-primary ml-2">(+{character.temporaryHp} временных)</div>
+          )}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <div className="flex items-center mb-1">
+            <Minus className="w-4 h-4 mr-1 text-red-500" />
+            <span className="text-xs">Урон</span>
           </div>
-          <div className="text-right">
-            <span className="font-bold">{currentHp}/{maxHp}</span>
-            {temporaryHp > 0 && (
-              <span className="ml-1 text-cyan-400">+{temporaryHp}</span>
-            )}
+          <div className="flex">
+            <Input 
+              type="number" 
+              min="0"
+              value={damageAmount || ''}
+              onChange={(e) => setDamageAmount(parseInt(e.target.value) || 0)}
+              className="h-8"
+            />
+            <Button variant="destructive" size="sm" onClick={handleDamage} className="ml-1 h-8 px-2">
+              <Minus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
         
-        {/* Полоса здоровья */}
-        <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden mt-1 mb-3">
-          <div 
-            className={`h-full ${getHealthColor()} transition-all duration-300`}
-            style={{ width: `${healthPercent}%` }}
-          />
-        </div>
-
-        {/* Кнопки управления хитами */}
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <div className="grid grid-cols-3 gap-2">
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center"
-                onClick={() => setIsOpen(true)}
-              >
-                <Minus className="h-4 w-4 mr-1 text-red-500" />
-                Урон
-              </Button>
-            </DialogTrigger>
-            
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center"
-                onClick={() => setIsOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-1 text-green-500" />
-                Лечение
-              </Button>
-            </DialogTrigger>
-            
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center"
-                onClick={() => setIsOpen(true)}
-              >
-                <Shield className="h-4 w-4 mr-1 text-cyan-400" />
-                Врем. ХП
-              </Button>
-            </DialogTrigger>
+        <div>
+          <div className="flex items-center mb-1">
+            <Plus className="w-4 h-4 mr-1 text-green-500" />
+            <span className="text-xs">Лечение</span>
           </div>
-          
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Изменение хитов</DialogTitle>
-            </DialogHeader>
-            
-            <Tabs defaultValue="damage">
-              <TabsList className="grid grid-cols-3 mb-4">
-                <TabsTrigger value="damage">Урон</TabsTrigger>
-                <TabsTrigger value="heal">Лечение</TabsTrigger>
-                <TabsTrigger value="temp">Временные ХП</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="damage" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="damage-amount">Количество урона</Label>
-                  <Input
-                    id="damage-amount"
-                    type="number"
-                    min="0"
-                    value={damageAmount}
-                    onChange={(e) => setDamageAmount(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <Slider
-                  value={[damageAmount]}
-                  min={0}
-                  max={maxHp}
-                  step={1}
-                  onValueChange={(value) => setDamageAmount(value[0])}
-                />
-                <div className="text-sm text-muted-foreground">
-                  Текущие ХП: {currentHp}/{maxHp} {temporaryHp > 0 ? `(+${temporaryHp} врем.)` : ''}
-                </div>
-                <DialogFooter>
-                  <Button 
-                    onClick={() => handleTakeDamage(damageAmount)}
-                    variant="destructive"
-                  >
-                    Получить урон
-                  </Button>
-                </DialogFooter>
-              </TabsContent>
-              
-              <TabsContent value="heal" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="heal-amount">Количество лечения</Label>
-                  <Input
-                    id="heal-amount"
-                    type="number"
-                    min="0"
-                    value={healAmount}
-                    onChange={(e) => setHealAmount(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <Slider
-                  value={[healAmount]}
-                  min={0}
-                  max={maxHp - currentHp}
-                  step={1}
-                  onValueChange={(value) => setHealAmount(value[0])}
-                />
-                <div className="text-sm text-muted-foreground">
-                  Текущие ХП: {currentHp}/{maxHp}
-                </div>
-                <DialogFooter>
-                  <Button 
-                    onClick={() => handleHeal(healAmount)}
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Получить лечение
-                  </Button>
-                </DialogFooter>
-              </TabsContent>
-              
-              <TabsContent value="temp" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="temp-amount">Временные хиты</Label>
-                  <Input
-                    id="temp-amount"
-                    type="number"
-                    min="0"
-                    value={tempHPAmount}
-                    onChange={(e) => setTempHPAmount(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <Slider
-                  value={[tempHPAmount]}
-                  min={0}
-                  max={Math.max(20, temporaryHp * 2)}
-                  step={1}
-                  onValueChange={(value) => setTempHPAmount(value[0])}
-                />
-                <div className="text-sm text-muted-foreground">
-                  Текущие временные ХП: {temporaryHp}
-                </div>
-                <div className="text-sm text-cyan-400/80">
-                  Временные хиты не складываются. Используется наибольшее значение.
-                </div>
-                <DialogFooter>
-                  <Button 
-                    onClick={() => handleAddTempHP(tempHPAmount)}
-                    variant="default"
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                  >
-                    Получить временные ХП
-                  </Button>
-                </DialogFooter>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+          <div className="flex">
+            <Input 
+              type="number" 
+              min="0"
+              value={healAmount || ''}
+              onChange={(e) => setHealAmount(parseInt(e.target.value) || 0)}
+              className="h-8"
+            />
+            <Button variant="default" size="sm" onClick={handleHeal} className="ml-1 h-8 px-2 bg-green-500 hover:bg-green-600">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div>
+          <div className="flex items-center mb-1">
+            <Shield className="w-4 h-4 mr-1 text-blue-500" />
+            <span className="text-xs">Врем. хиты</span>
+          </div>
+          <div className="flex">
+            <Input 
+              type="number" 
+              min="0"
+              value={tempHPAmount || ''}
+              onChange={(e) => setTempHPAmount(parseInt(e.target.value) || 0)}
+              className="h-8"
+            />
+            <Button variant="secondary" size="sm" onClick={handleAddTempHP} className="ml-1 h-8 px-2">
+              <Shield className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

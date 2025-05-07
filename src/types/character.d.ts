@@ -38,8 +38,8 @@ export interface Character {
     failures: number;
   };
   inspiration: boolean;
-  conditions: string[]; // Add this field
-  inventory: any[]; // Add this field
+  conditions: string[]; // Explicitly defined
+  inventory: any[]; // Explicitly defined
   equipment: any[];
   spells: CharacterSpell[];
   proficiencies: string[];
@@ -52,7 +52,7 @@ export interface Character {
       name?: string;
       shortRestRecover?: boolean;
       longRestRecover?: boolean;
-      recoveryType?: string; // Добавляем поле recoveryType
+      recoveryType?: string;
     };
   };
   savingThrowProficiencies: string[];
@@ -69,7 +69,7 @@ export interface Character {
   gold: number;
   initiative: number;
   lastDiceRoll: DiceResult;
-  languages: string[]; // Add this field
+  languages: string[]; // Explicitly defined
   subrace?: string;
   spellSlots?: Record<number, { max: number; used: number; available?: number; }>;
 }

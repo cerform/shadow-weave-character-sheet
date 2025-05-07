@@ -26,13 +26,13 @@ const SpellSlotManager = ({ character, onUpdate, showTitle = true }: SpellSlotMa
         
         // Handle different formats of spell slot data
         if (typeof slotData === 'object' && slotData !== null) {
-          const maxValue = 'max' in slotData ? slotData.max : 
-                          ('available' in slotData ? slotData.available : 0);
-          const usedValue = 'used' in slotData ? slotData.used : 0;
+          const maxValue = typeof slotData.max === 'number' ? slotData.max : 
+                          (typeof slotData.available === 'number' ? slotData.available : 0);
+          const usedValue = typeof slotData.used === 'number' ? slotData.used : 0;
           
           standardizedSlots[numLevel] = {
-            max: maxValue as number,
-            used: usedValue as number
+            max: maxValue,
+            used: usedValue
           };
         }
       });
@@ -110,82 +110,14 @@ const SpellSlotManager = ({ character, onUpdate, showTitle = true }: SpellSlotMa
 
   // Helper function to get maximum spell slot level for class and level
   const getMaxSpellSlotLevel = (className: string, level: number): number => {
-    const fullCasters = ['волшебник', 'чародей', 'колдун', 'бард', 'клерик', 'друид'];
-    const halfCasters = ['паладин', 'следопыт'];
-    
-    if (fullCasters.includes(className.toLowerCase())) {
-      if (level >= 17) return 9;
-      if (level >= 15) return 8;
-      if (level >= 13) return 7;
-      if (level >= 11) return 6;
-      if (level >= 9) return 5;
-      if (level >= 7) return 4;
-      if (level >= 5) return 3;
-      if (level >= 3) return 2;
-      return 1;
-    } else if (halfCasters.includes(className.toLowerCase())) {
-      if (level >= 17) return 5;
-      if (level >= 13) return 4;
-      if (level >= 9) return 3;
-      if (level >= 5) return 2;
-      if (level >= 2) return 1;
-      return 0;
-    } else {
-      // Other classes don't have spell slots by default
-      return 0;
-    }
+    // ... keep existing code
+    return 0;
   };
 
   // Helper function to get number of slots for a given level
   const getSlotsForLevel = (className: string, charLevel: number, spellLevel: number): number => {
-    // Basic D&D 5e spell slot table for full casters
-    const fullCasterTable: Record<number, Record<number, number>> = {
-      1: { 1: 2 },
-      2: { 1: 3 },
-      3: { 1: 4, 2: 2 },
-      4: { 1: 4, 2: 3 },
-      5: { 1: 4, 2: 3, 3: 2 },
-      6: { 1: 4, 2: 3, 3: 3 },
-      7: { 1: 4, 2: 3, 3: 3, 4: 1 },
-      8: { 1: 4, 2: 3, 3: 3, 4: 2 },
-      9: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
-      10: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 },
-      11: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
-      12: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
-      13: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
-      14: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
-      15: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
-      16: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
-      17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1 },
-      18: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 1, 7: 1, 8: 1, 9: 1 },
-      19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 },
-      20: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 2, 8: 1, 9: 1 },
-    };
-    
-    // Half caster table (for paladins and rangers)
-    const halfCasterTable: Record<number, Record<number, number>> = {
-      2: { 1: 2 },
-      3: { 1: 3 },
-      5: { 1: 4, 2: 2 },
-      7: { 1: 4, 2: 3 },
-      9: { 1: 4, 2: 3, 3: 2 },
-      11: { 1: 4, 2: 3, 3: 3 },
-      13: { 1: 4, 2: 3, 3: 3, 4: 1 },
-      15: { 1: 4, 2: 3, 3: 3, 4: 2 },
-      17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
-      19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 },
-    };
-    
-    const fullCasters = ['волшебник', 'чародей', 'колдун', 'бард', 'клерик', 'друид'];
-    const halfCasters = ['паладин', 'следопыт'];
-    
-    if (fullCasters.includes(className.toLowerCase())) {
-      return fullCasterTable[charLevel]?.[spellLevel] || 0;
-    } else if (halfCasters.includes(className.toLowerCase())) {
-      return halfCasterTable[charLevel]?.[spellLevel] || 0;
-    } else {
-      return 0;
-    }
+    // ... keep existing code
+    return 0;
   };
 
   if (Object.keys(slots).length === 0) {

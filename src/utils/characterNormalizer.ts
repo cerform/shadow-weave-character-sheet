@@ -41,8 +41,8 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
     },
     deathSaves: character.deathSaves || { successes: 0, failures: 0 },
     inspiration: character.inspiration === undefined ? false : character.inspiration,
-    conditions: character.conditions || [], // Now properly initialized
-    inventory: character.inventory || [], // Now properly initialized
+    conditions: Array.isArray(character.conditions) ? character.conditions : [],
+    inventory: Array.isArray(character.inventory) ? character.inventory : [],
     equipment: character.equipment || [],
     spells: character.spells || [],
     proficiencies: character.proficiencies || [],
@@ -65,7 +65,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       rolls: character.lastDiceRoll?.rolls || [],
       total: character.lastDiceRoll?.total || 0,
     },
-    languages: character.languages || [], // Now properly initialized
+    languages: Array.isArray(character.languages) ? character.languages : [],
     subrace: character.subrace || ''
   } as Character;
 

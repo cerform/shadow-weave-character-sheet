@@ -14,8 +14,6 @@ export const performShortRest = (character: Character, hitDiceToUse: number = 0)
     hitDice: {
       ...character.hitDice,
       used: character.hitDice.used + hitDiceToUse,
-      // This line had an error - removing "available" as it's not in the type
-      // available: character.hitDice.total - character.hitDice.used - hitDiceToUse
     }
   };
   
@@ -64,12 +62,6 @@ export const performLongRest = (character: Character): Partial<Character> => {
     temporaryHp: 0,
     // Reset death saving throws
     deathSaves: { successes: 0, failures: 0 },
-    // Reset conditions that end on a long rest
-    conditions: character.conditions ? character.conditions.filter(condition => {
-      // List conditions that don't end on long rest
-      const persistentConditions = ['cursed', 'diseased'];
-      return persistentConditions.includes(condition.toLowerCase());
-    }) : [],
     // Reset half of used Hit Dice (minimum of 1)
     hitDice: {
       ...character.hitDice,
@@ -83,6 +75,15 @@ export const performLongRest = (character: Character): Partial<Character> => {
       return acc;
     }, {} as Record<number, { max: number; used: number }>) : undefined
   };
+  
+  // Reset conditions that end on a long rest
+  if ('conditions' in character && Array.isArray(character.conditions)) {
+    updatedCharacter.conditions = character.conditions.filter(condition => {
+      // List conditions that don't end on long rest
+      const persistentConditions = ['cursed', 'diseased'];
+      return persistentConditions.includes(condition.toLowerCase());
+    });
+  }
   
   // Reset all resources
   if (character.resources) {
