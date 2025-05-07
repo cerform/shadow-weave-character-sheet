@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Label } from '@/components/ui/label';
@@ -37,50 +38,47 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Исправляем проблему с ошибкой TS2872, проверяя сначала, что fixed определён, затем, что это объект
-    const fixedBonuses = abilityBonuses.fixed;
-    
-    if (fixedBonuses !== undefined && 
-        typeof fixedBonuses === 'object' && 
-        fixedBonuses !== null && 
-        Object.keys(fixedBonuses).length > 0) {
-      
-      const updates: Partial<Character> = {};
-      const updatedAbilities = { ...character.abilities } || {
-        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
-      };
-      
-      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
-        const abilityKey = ability as keyof typeof updatedAbilities;
-        if (abilityKey in updatedAbilities) {
-          const currentValue = updatedAbilities[abilityKey] || 10;
-          updatedAbilities[abilityKey] = currentValue + bonus;
-          
-          const shortKeyMap: Record<string, string> = {
-            'strength': 'STR', 'dexterity': 'DEX', 'constitution': 'CON', 
-            'intelligence': 'INT', 'wisdom': 'WIS', 'charisma': 'CHA'
-          };
-          
-          const longKeyMap: Record<string, string> = {
-            'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 
-            'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'
-          };
-          
-          if (abilityKey in shortKeyMap) {
-            const shortKey = shortKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
-            updatedAbilities[shortKey] = currentValue + bonus;
-          } else if (abilityKey in longKeyMap) {
-            const longKey = longKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
-            updatedAbilities[longKey] = currentValue + bonus;
-          }
-        }
-      });
-      
-      updates.abilities = updatedAbilities;
-      updateCharacter(updates);
+    // Исправляем проверку на наличие fixed бонусов, избегая TS2872
+    if (!abilityBonuses.fixed || Object.keys(abilityBonuses.fixed).length === 0) {
+      return;
     }
-  }, [abilityBonuses.fixed]);
+    
+    const updates: Partial<Character> = {};
+    const updatedAbilities = { ...character.abilities } || {
+      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+    };
+    
+    // Теперь мы знаем, что fixed существует и имеет ключи
+    Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
+      const abilityKey = ability as keyof typeof updatedAbilities;
+      if (abilityKey in updatedAbilities) {
+        const currentValue = updatedAbilities[abilityKey] || 10;
+        updatedAbilities[abilityKey] = currentValue + bonus;
+        
+        const shortKeyMap: Record<string, string> = {
+          'strength': 'STR', 'dexterity': 'DEX', 'constitution': 'CON', 
+          'intelligence': 'INT', 'wisdom': 'WIS', 'charisma': 'CHA'
+        };
+        
+        const longKeyMap: Record<string, string> = {
+          'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 
+          'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'
+        };
+        
+        if (abilityKey in shortKeyMap) {
+          const shortKey = shortKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
+          updatedAbilities[shortKey] = currentValue + bonus;
+        } else if (abilityKey in longKeyMap) {
+          const longKey = longKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
+          updatedAbilities[longKey] = currentValue + bonus;
+        }
+      }
+    });
+    
+    updates.abilities = updatedAbilities;
+    updateCharacter(updates);
+  }, [abilityBonuses.fixed, character.abilities, updateCharacter]);
 
   // Обработчик выбора характеристики
   const handleAbilitySelect = (ability: string, index: number) => {
@@ -118,13 +116,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     // но поскольку мы не храним это состояние, мы будем применять все бонусы заново
     
     // Применяем фиксированные бонусы (если есть)
-    const fixedBonuses = abilityBonuses.fixed;
-    
-    if (fixedBonuses !== undefined && 
-        typeof fixedBonuses === 'object' && 
-        fixedBonuses !== null) {
-      
-      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
+    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
+      Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
         const abilityKey = ability as keyof typeof updatedAbilities;
         if (abilityKey in updatedAbilities) {
           const baseValue = abilityKey.includes('STR') || 
@@ -167,29 +160,26 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   // Сколько осталось распределить бонусов
   const remainingBonuses = abilityBonuses.amount - selectedAbilities.filter(Boolean).length;
 
+  // Проверяем наличие фиксированных бонусов
+  const hasFixedBonuses = abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0;
+
   return (
     <Card className="mt-4">
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {(() => {
-            const fixedBonuses = abilityBonuses.fixed;
-            return fixedBonuses !== undefined && 
-                   typeof fixedBonuses === 'object' && 
-                   fixedBonuses !== null && 
-                   Object.keys(fixedBonuses).length > 0 ? (
-              <div className="mb-2">
-                <p>Фиксированные бонусы:</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {Object.entries(fixedBonuses).map(([ability, bonus]) => (
-                    <Badge key={ability} variant="outline" className="bg-amber-900/20">
-                      {abilities.find(a => a.key === ability)?.name} +{bonus}
-                    </Badge>
-                  ))}
-                </div>
+          {hasFixedBonuses && (
+            <div className="mb-2">
+              <p>Фиксированные бонусы:</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {Object.entries(abilityBonuses.fixed!).map(([ability, bonus]) => (
+                  <Badge key={ability} variant="outline" className="bg-amber-900/20">
+                    {abilities.find(a => a.key === ability)?.name} +{bonus}
+                  </Badge>
+                ))}
               </div>
-            ) : null;
-          })()}
+            </div>
+          )}
           
           {abilityBonuses.amount > 0 && (
             <p className="mt-2">

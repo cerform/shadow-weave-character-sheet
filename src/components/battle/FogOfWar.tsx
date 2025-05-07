@@ -12,7 +12,7 @@ const FogOfWar: React.FC<FogOfWarProps> = ({ lights, scale, mapOffset }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {lights.map((light) => {
-        // Properly access position properties
+        // Safely access position properties
         const { position } = light;
         const scaledX = position.x * scale + mapOffset.x;
         const scaledY = position.y * scale + mapOffset.y;

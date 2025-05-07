@@ -35,12 +35,14 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
     return level === 0 ? "Заговор" : `${level} уровень`;
   };
 
+  const hasActiveFilters = activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0;
+
   return (
     <Card className="mb-6 border border-accent/20">
       <CardContent className="p-4 pt-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-medium">Фильтры</h3>
-          {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+          {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-accent">
               Сбросить
             </Button>
