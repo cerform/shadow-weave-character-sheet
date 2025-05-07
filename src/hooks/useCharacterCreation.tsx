@@ -1,22 +1,16 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
-import { toast } from 'sonner';
-import { getModifierFromAbilityScore } from "@/utils/characterUtils";
-import { getCurrentUid } from "@/utils/authHelpers";
-import { saveCharacterToFirestore } from "@/services/characterService";
 
 export const useCharacterCreation = () => {
-  // Initialize with complete character object including all required and optional properties
-  const [character, setCharacter] = useState<Character>({
-    id: '',
-    userId: '',
+  // Базовое состояние для создания персонажа
+  const [characterData, setCharacterData] = useState<Partial<Character>>({
     name: '',
     race: '',
     class: '',
-    level: 1,
     background: '',
-    alignment: '',
-    experience: 0,
+    level: 1,
+    alignment: 'Нейтральный',
     abilities: {
       strength: 10,
       dexterity: 10,
@@ -25,352 +19,233 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    proficiencyBonus: 2,
-    armorClass: 10,
     maxHp: 10,
-    currentHp: 10,
-    gold: 0,
-    equipment: [],
-    spells: [],
-    proficiencies: [],
-    features: [],
-    languages: [],
-    additionalClasses: {}
+    currentHp: 10
   });
 
-  const [characterReady, setCharacterReady] = useState<boolean>(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
-  const [alreadySaved, setAlreadySaved] = useState<boolean>(false);
+  // Текущий шаг создания персонажа
+  const [currentStep, setCurrentStep] = useState(1);
+  
+  // Состояние для отслеживания подклассов и уровня
+  const [classInfo, setClassInfo] = useState<{level: number; subclass?: string}>({
+    level: 1,
+    subclass: undefined
+  });
 
-  // Автоматическое сохранение персонажа, когда он готов
-  useEffect(() => {
-    const autoSaveCharacter = async () => {
-      // Добавляем проверку на alreadySaved, чтобы избежать дублирующих сохранений
-      if (characterReady && autoSaveEnabled && !alreadySaved && !character.id) {
-        const uid = getCurrentUid();
-        if (!uid) {
-          console.warn("No user ID available, can't auto-save character");
-          return;
-        }
+  // Обновление базовой информации персонажа
+  const updateBasicInfo = useCallback((info: Partial<Character>) => {
+    setCharacterData(prev => ({ ...prev, ...info }));
+  }, []);
 
-        try {
-          const characterId = await saveCharacterToFirestore(character, uid);
-          if (characterId) {
-            console.log("✅ Character auto-saved to Firestore with ID:", characterId);
-            // Обновляем ID персонажа в локальном состоянии
-            setCharacter(prev => ({...prev, id: characterId}));
-            setAlreadySaved(true); // Отмечаем, что персонаж уже сохранен
-            toast.success("Ваш персонаж был автоматически сохранен");
-          }
-        } catch (error) {
-          console.error("❌ Error during character auto-save:", error);
-          toast.error("Не удалось автоматически сохранить персонажа");
-        }
+  // Обновление способностей
+  const updateAbilities = useCallback((abilities: Record<string, number>) => {
+    setCharacterData(prev => ({ ...prev, abilities: { ...prev.abilities, ...abilities } }));
+  }, []);
+
+  // Выбор расы
+  const selectRace = useCallback((race: string) => {
+    setCharacterData(prev => ({ ...prev, race }));
+  }, []);
+
+  // Выбор класса
+  const selectClass = useCallback((className: string) => {
+    setCharacterData(prev => ({ ...prev, class: className }));
+    
+    // Обновление хитдайса в зависимости от класса
+    const hitDiceType = getHitDiceForClass(className);
+    setCharacterData(prev => ({
+      ...prev,
+      hitDice: {
+        total: prev.level || 1,
+        used: 0,
+        type: hitDiceType
       }
+    }));
+  }, []);
+
+  // Выбор подкласса
+  const selectSubclass = useCallback((subclass: string) => {
+    setClassInfo(prev => ({ ...prev, subclass }));
+  }, []);
+
+  // Выбор мировоззрения
+  const selectAlignment = useCallback((alignment: string) => {
+    setCharacterData(prev => ({ ...prev, alignment }));
+  }, []);
+
+  // Выбор предыстории
+  const selectBackground = useCallback((background: string) => {
+    setCharacterData(prev => ({ ...prev, background }));
+  }, []);
+
+  // Установка уровня
+  const setLevel = useCallback((level: number) => {
+    setCharacterData(prev => ({ ...prev, level }));
+    setClassInfo(prev => ({ ...prev, level }));
+  }, []);
+
+  // Расчет здоровья
+  const calculateHealth = useCallback(() => {
+    const conModifier = Math.floor((characterData.abilities?.constitution || 10) - 10) / 2;
+    const hitDiceValue = getHitDiceValueForClass(characterData.class || '');
+    const level = characterData.level || 1;
+    
+    // Для первого уровня максимальное значение хит-дайса + модификатор телосложения
+    let maxHP = hitDiceValue + conModifier;
+    
+    // Для остальных уровней среднее значение хит-дайса + модификатор телосложения
+    if (level > 1) {
+      const averageRoll = Math.ceil(hitDiceValue / 2) + 0.5;
+      maxHP += (level - 1) * (averageRoll + conModifier);
+    }
+    
+    setCharacterData(prev => ({
+      ...prev,
+      maxHp: Math.max(1, Math.floor(maxHP)),
+      currentHp: Math.max(1, Math.floor(maxHP))
+    }));
+  }, [characterData.abilities?.constitution, characterData.class, characterData.level]);
+
+  // Завершение создания персонажа
+  const finalizeCharacter = useCallback((): Character => {
+    // Рассчитываем бонус мастерства
+    const profBonus = Math.floor((characterData.level || 1) / 4) + 2;
+    
+    // Получаем модификатор ловкости для расчета класса брони
+    const dexModifier = Math.floor((characterData.abilities?.dexterity || 10) - 10) / 2;
+    
+    // Финализируем персонажа
+    const finalCharacter: Character = {
+      id: Date.now().toString(),
+      userId: '',
+      name: characterData.name || 'Безымянный',
+      race: characterData.race || 'Человек',
+      class: characterData.class || 'Воин',
+      level: characterData.level || 1,
+      background: characterData.background || '',
+      alignment: characterData.alignment || 'Нейтральный',
+      experience: 0,
+      abilities: characterData.abilities || {
+        strength: 10,
+        dexterity: 10,
+        constitution: 10,
+        intelligence: 10,
+        wisdom: 10,
+        charisma: 10
+      },
+      proficiencyBonus: profBonus,
+      armorClass: 10 + dexModifier,
+      maxHp: characterData.maxHp || 10,
+      currentHp: characterData.maxHp || 10,
+      temporaryHp: 0,
+      hitDice: {
+        total: characterData.level || 1,
+        used: 0,
+        type: getHitDiceForClass(characterData.class || 'Воин')
+      },
+      deathSaves: {
+        successes: 0,
+        failures: 0
+      },
+      inspiration: false,
+      inventory: [],
+      equipment: [],
+      spells: [],
+      proficiencies: [],
+      features: [],
+      notes: '',
+      resources: {},
+      savingThrowProficiencies: getSavingThrowsForClass(characterData.class || 'Воин'),
+      skillProficiencies: [],
+      expertise: [],
+      skillBonuses: {},
+      spellcasting: getSpellcastingForClass(characterData.class || 'Воин'),
+      gold: 0,
+      initiative: dexModifier,
+      lastDiceRoll: { formula: '', rolls: [], total: 0 },
+      conditions: [],
+      languages: []
     };
+    
+    return finalCharacter;
+  }, [characterData]);
 
-    autoSaveCharacter();
-  }, [characterReady, autoSaveEnabled, character, alreadySaved]);
-
-  const updateCharacter = (updates: Partial<Character>) => {
-    // Если обновляются abilities, также обновляем и stats для совместимости
-    if (updates.abilities) {
-      // Make sure we include both old and new properties when updating abilities
-      const { strength, dexterity, constitution, intelligence, wisdom, charisma } = updates.abilities;
-      
-      updates.stats = {
-        strength: strength || updates.abilities.STR || character.abilities?.strength || 10,
-        dexterity: dexterity || updates.abilities.DEX || character.abilities?.dexterity || 10,
-        constitution: constitution || updates.abilities.CON || character.abilities?.constitution || 10,
-        intelligence: intelligence || updates.abilities.INT || character.abilities?.intelligence || 10,
-        wisdom: wisdom || updates.abilities.WIS || character.abilities?.wisdom || 10,
-        charisma: charisma || updates.abilities.CHA || character.abilities?.charisma || 10
-      };
-    }
-    // Если обновляются stats, также обновляем и abilities для совместимости
-    else if (updates.stats) {
-      updates.abilities = {
-        // Keep existing STR, DEX, etc. properties
-        STR: character.abilities?.STR || 10,
-        DEX: character.abilities?.DEX || 10,
-        CON: character.abilities?.CON || 10,
-        INT: character.abilities?.INT || 10,
-        WIS: character.abilities?.WIS || 10,
-        CHA: character.abilities?.CHA || 10,
-        // Update with new values
-        strength: updates.stats.strength || 10,
-        dexterity: updates.stats.dexterity || 10,
-        constitution: updates.stats.constitution || 10,
-        intelligence: updates.stats.intelligence || 10,
-        wisdom: updates.stats.wisdom || 10,
-        charisma: updates.stats.charisma || 10
-      };
-    }
-    
-    // Добавляем userId из текущего авторизованного пользователя, если он доступен
-    const uid = getCurrentUid();
-    if (uid && !character.userId) {
-      updates.userId = uid;
-    }
-    
-    // Проверяем и удаляем undefined значения
-    const cleanedUpdates = { ...updates };
-    Object.keys(cleanedUpdates).forEach(key => {
-      if (cleanedUpdates[key] === undefined) {
-        delete cleanedUpdates[key];
-      }
-    });
-    
-    // Если обновляется ID и ранее не было ID, отмечаем персонажа как сохраненный
-    if (updates.id && !character.id) {
-      setAlreadySaved(true);
-    }
-    
-    setCharacter(prev => ({ ...prev, ...cleanedUpdates }));
-    console.log("Персонаж обновлен:", { ...character, ...cleanedUpdates });
-  };
-
-  // Функция для проверки готовности персонажа к сохранению
-  const checkCharacterReady = (char: Character = character) => {
-    // Проверяем наличие обязательных полей
-    const isReady = !!(
-      char.name && 
-      char.race && 
-      char.class && 
-      char.level
-    );
-    
-    setCharacterReady(isReady);
-    return isReady;
-  };
-
-  // Функция для включения автосохранения и проверки готовности персонажа
-  const enableAutoSave = () => {
-    const isReady = checkCharacterReady();
-    setAutoSaveEnabled(true);
-    return isReady;
-  };
-
-  // Проверяем, является ли класс магическим
-  const checkMagicClass = (characterClass = '') => {
-    const magicClasses = ["Бард", "Волшебник", "Жрец", "Колдун", "Следопыт", "Чародей", "Паладин", "Друид"];
-    return magicClasses.includes(characterClass);
-  };
-
-  // Получаем общий уровень персонажа (основной + мультикласс)
-  const getTotalLevel = (character: Character): number => {
-    let totalLevel = character.level;
-    
-    if (character.additionalClasses && character.additionalClasses.length > 0) {
-      character.additionalClasses.forEach(cls => {
-        totalLevel += cls.level;
-      });
-    }
-    
-    return totalLevel;
-  };
-
-  // Получаем бонус мастерства на основе общего уровня
-  const getProficiencyBonus = (level: number): number => {
-    if (level < 5) return 2;
-    if (level < 9) return 3;
-    if (level < 13) return 4;
-    if (level < 17) return 5;
-    return 6; // 17+ уровень
-  };
-
-  // Вычисляем модификатор характеристики
-  const getModifier = (score: number): string => {
-    const modifier = getModifierFromAbilityScore(score);
-    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-  };
-  
-  // Получаем особенности подкласса, доступные для текущего уровня
-  const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?: string, level?: number): string[] => {
-    if (!characterSubclass) return [];
-    
-    // Simple example implementation
-    return [
-      `${characterSubclass} (подкласс ${characterClass})`
-    ];
-  };
-  
-  // Получаем доступные классовые особенности на основе уровня
-  const getClassFeatures = (characterClass: string, level: number): string[] => {
-    // Simple implementation
-    return [];
-  };
-  
-  // Рассчитываем опыт необходимый для текущего уровня
-  const getRequiredXP = (level: number): number => {
-    const xpByLevel = [
-      0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
-      85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
-    ];
-    
-    const adjustedLevel = Math.min(20, Math.max(1, level));
-    return xpByLevel[adjustedLevel - 1];
-  };
-  
-  // Расчет количества очков для распределения характеристик в зависимости от уровня
-  const getAbilityScorePointsByLevel = (basePoints: number = 27): number => {
-    let totalPoints = basePoints;
-    
-    // Add level-based bonuses
-    if (character.level >= 5) totalPoints += 3;
-    if (character.level >= 10) totalPoints += 2; // Total +5 at level 10
-    if (character.level >= 15) totalPoints += 2; // Total +7 at level 15
-    
-    return totalPoints;
-  };
-  
-  // Обработчик для изменения уровня персонажа
-  const handleLevelChange = (level: number) => {
-    // Проверяем, не превышает ли общий уровень 20 с учетом мультикласса
-    let additionalLevels = 0;
-    if (character.additionalClasses) {
-      additionalLevels = character.additionalClasses.reduce(
-        (total, cls) => total + cls.level, 0
-      );
-    }
-    
-    if (level + additionalLevels > 20) {
-      toast.error(`Общий уровень персонажа не может прев��шать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
-      return;
-    }
-    
-    if (level >= 1 && level <= 20) {
-      // Обновляем уровень в состоянии персонажа
-      updateCharacter({ level });
-      
-      // Опционально: здесь можно добавить логику изменения доступных
-      // заклинаний, особенностей класса и подкласса в зависимости от уровня
-      
-      console.log(`Уровень персонажа изменен на ${level}`);
-    } else {
-      toast.error("Уровень должен быть от 1 до 20");
+  // Вспомогательные функции
+  const getHitDiceForClass = (className: string): string => {
+    switch (className.toLowerCase()) {
+      case 'варвар': return 'd12';
+      case 'паладин':
+      case 'воин':
+      case 'следопыт': return 'd10';
+      case 'бард':
+      case 'клерик':
+      case 'друид':
+      case 'монах':
+      case 'плут':
+      case 'колдун': return 'd8';
+      case 'чародей':
+      case 'волшебник': return 'd6';
+      default: return 'd8';
     }
   };
   
-  // Получаем все классы персонажа (основной + мультикласс)
-  const getAllClasses = (character: Character): string[] => {
-    const allClasses = [character.class];
-    
-    if (character.additionalClasses && character.additionalClasses.length > 0) {
-      character.additionalClasses.forEach(cls => {
-        allClasses.push(cls.class);
-      });
+  const getHitDiceValueForClass = (className: string): number => {
+    const diceType = getHitDiceForClass(className);
+    switch (diceType) {
+      case 'd12': return 12;
+      case 'd10': return 10;
+      case 'd8': return 8;
+      case 'd6': return 6;
+      default: return 8;
     }
-    
-    return allClasses.filter(Boolean) as string[];
   };
   
-  // Функция для конвертации данных в тип Character
-  const convertToCharacter = (characterData: any): Character => {
-    return characterData as Character;
-  };
-
-  // Функция для добавления мультикласса
-  const addMulticlass = (newClass: string, level: number, subclass?: string) => {
-    // Ensure additionalClasses exists
-    const currentAdditionalClasses = character.additionalClasses || {};
-    
-    // Add new class
-    setCharacter(prev => ({
-      ...prev,
-      additionalClasses: {
-        ...currentAdditionalClasses,
-        [newClass]: {
-          level,
-          subclass
-        }
-      }
-    }));
+  const getSavingThrowsForClass = (className: string): string[] => {
+    switch (className.toLowerCase()) {
+      case 'варвар': return ['strength', 'constitution'];
+      case 'бард': return ['dexterity', 'charisma'];
+      case 'клерик': return ['wisdom', 'charisma'];
+      case 'друид': return ['intelligence', 'wisdom'];
+      case 'воин': return ['strength', 'constitution'];
+      case 'монах': return ['strength', 'dexterity'];
+      case 'паладин': return ['wisdom', 'charisma'];
+      case 'следопыт': return ['strength', 'dexterity'];
+      case 'плут': return ['dexterity', 'intelligence'];
+      case 'чародей': return ['constitution', 'charisma'];
+      case 'колдун': return ['wisdom', 'charisma'];
+      case 'волшебник': return ['intelligence', 'wisdom'];
+      default: return ['strength', 'dexterity'];
+    }
   };
   
-  // Функция для удаления мультикласса
-  const removeMulticlass = (className: string) => {
-    // Check if additionalClasses exists
-    if (!character.additionalClasses) return;
-    
-    // Create a new object without the specified class
-    const newAdditionalClasses = { ...character.additionalClasses };
-    delete newAdditionalClasses[className];
-    
-    setCharacter(prev => ({
-      ...prev,
-      additionalClasses: newAdditionalClasses
-    }));
+  const getSpellcastingForClass = (className: string): { ability?: string } => {
+    switch (className.toLowerCase()) {
+      case 'бард': 
+      case 'чародей':
+      case 'колдун':
+      case 'паладин': return { ability: 'charisma' };
+      case 'клерик':
+      case 'друид':
+      case 'следопыт': return { ability: 'wisdom' };
+      case 'волшебник': return { ability: 'intelligence' };
+      default: return {};
+    }
   };
 
-  return { 
-    character, 
-    updateCharacter, 
-    isMagicClass: () => checkMagicClass(character.class), 
-    getProficiencyBonus,
-    getModifier,
-    getAvailableSubclassFeatures,
-    getClassFeatures,
-    getRequiredXP,
-    handleLevelChange,
-    getTotalLevel,
-    getAllClasses,
-    getAbilityScorePointsByLevel,
-    convertToCharacter,
-    characterReady,
-    checkCharacterReady,
-    enableAutoSave,
-    autoSaveEnabled,
-    alreadySaved  // Добавляем новое свойство для отслеживания состояния сохранения
+  return {
+    characterData,
+    currentStep,
+    classInfo,
+    setCurrentStep,
+    updateBasicInfo,
+    updateAbilities,
+    selectRace,
+    selectClass,
+    selectSubclass,
+    selectAlignment,
+    selectBackground,
+    setLevel,
+    calculateHealth,
+    finalizeCharacter
   };
 };
-
-// Вспомогательные функции для использования вне хука
-export const getProficiencyBonus = (level: number): number => {
-  if (level < 5) return 2;
-  if (level < 9) return 3;
-  if (level < 13) return 4;
-  if (level < 17) return 5;
-  return 6; // 17+ уровень
-};
-
-export const getAvailableSubclassFeatures = (characterClass: string, characterSubclass?: string, level?: number): string[] => {
-  if (!characterSubclass) return [];
-  
-  // Simple example implementation
-  return [
-    `${characterSubclass} (подкласс ${characterClass})`
-  ];
-};
-
-export const getClassFeatures = (characterClass: string, level: number): string[] => {
-  // Simple implementation
-  return [];
-};
-
-export const getRequiredXP = (level: number): number => {
-  const xpByLevel = [
-    0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000,
-    85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000
-  ];
-  
-  const adjustedLevel = Math.min(20, Math.max(1, level));
-  return xpByLevel[adjustedLevel - 1];
-};
-
-export const getAbilityScorePointsByLevel = (level: number, basePoints: number = 27): number => {
-  let totalPoints = basePoints;
-  
-  // Add level-based bonuses
-  if (level >= 5) totalPoints += 3;
-  if (level >= 10) totalPoints += 2; // Total +5 at level 10
-  if (level >= 15) totalPoints += 2; // Total +7 at level 15
-  
-  return totalPoints;
-};
-
-export const convertToCharacter = (characterData: any): Character => {
-  return characterData as Character;
-};
-
-export default useCharacterCreation;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,13 +6,27 @@ import { Label } from '@/components/ui/label';
 import { Character, DiceResult } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Token } from '@/stores/battleStore';
 
 interface DicePanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+  compactMode?: boolean;
+  isDM?: boolean;
+  tokens?: Token[];
+  selectedTokenId?: number | null;
+  onSelectToken?: (id: number | null) => void;
 }
 
-const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
+const DicePanel: React.FC<DicePanelProps> = ({ 
+  character, 
+  onUpdate, 
+  compactMode = false,
+  isDM = false,
+  tokens = [],
+  selectedTokenId = null,
+  onSelectToken = () => {}
+}) => {
   const [diceType, setDiceType] = useState('d20');
   const [reason, setReason] = useState('');
   const { toast } = useToast();
@@ -28,22 +43,25 @@ const DicePanel: React.FC<DicePanelProps> = ({ character, onUpdate }) => {
 
     // Преобразуем в правильный формат DiceResult
     const diceResult: DiceResult = {
-      formula: `${count}${diceType}+${modifier}`, // Добавляем требуемое поле formula
+      formula: `${count}${diceType}${modifier !== 0 ? (modifier > 0 ? '+' : '') + modifier : ''}`,
       rolls: rolls,
       total: total,
-      diceType: diceType,  // Сохраняем старые поля для обратной совместимости
+      diceType: diceType,
+      count: count,
+      modifier: modifier,
       label: label || reason,
+      timestamp: new Date().toISOString()
     };
 
     // Обновляем персонажа с результатами броска
     onUpdate({
       lastDiceRoll: diceResult
-    });
+    } as Partial<Character>);
   };
   
-  const rollFormula = (character.lastDiceRoll?.diceType ? 
-    `${character.lastDiceRoll?.count || 1}${character.lastDiceRoll?.diceType || 'd20'}${character.lastDiceRoll?.modifier > 0 ? '+' + character.lastDiceRoll?.modifier : character.lastDiceRoll?.modifier < 0 ? character.lastDiceRoll?.modifier : ''}` : 
-    '');
+  const rollFormula = character.lastDiceRoll?.diceType ? 
+    `${character.lastDiceRoll.count || 1}${character.lastDiceRoll.diceType || 'd20'}${character.lastDiceRoll.modifier ? (character.lastDiceRoll.modifier > 0 ? '+' + character.lastDiceRoll.modifier : character.lastDiceRoll.modifier) : ''}` : 
+    '';
 
   return (
     <div className="bg-card rounded-md p-4 space-y-4">
