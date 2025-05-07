@@ -23,6 +23,8 @@ export const calculateProficiencyBonus = (level: number): number => {
   return Math.floor((level - 1) / 4) + 2;
 };
 
+import { Character } from '@/types/character';
+
 /**
  * Создает персонажа с базовыми значениями
  */
@@ -77,7 +79,4 @@ export const createDefaultCharacter = (): Character => {
   };
 };
 
-import { Character } from '@/types/character';
-
-// Make sure this function is properly exported
-export { createDefaultCharacter };
+// Removed the duplicate export here

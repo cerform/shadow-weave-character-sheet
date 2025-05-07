@@ -27,14 +27,14 @@ interface CharacterSheetProps {
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdate }) => {
+const CharacterSheet = ({ character, onUpdate }: CharacterSheetProps) => {
   return (
     <div className="bg-card bg-opacity-90 rounded-lg shadow-lg border border-primary/20 p-4">
       <CharacterHeader character={character} onUpdate={onUpdate} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <div className="lg:col-span-2">
-          <CharacterInfoHeader character={character} onUpdate={onUpdate} />
+          <CharacterInfoHeader character={character} />
         </div>
         <div>
           <HPBar character={character} onUpdate={onUpdate} />
@@ -67,4 +67,5 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdate }) 
   );
 };
 
+// Make sure to export the component as default
 export default CharacterSheet;

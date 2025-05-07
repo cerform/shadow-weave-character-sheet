@@ -13,11 +13,12 @@ export interface CharacterContextType {
   setCharacter: (character: Character) => void;
   createCharacter: (characterData: Partial<Character>) => Character;
   updateCharacter: (character: Character) => void;
-  deleteCharacter: (id: string) => void;
+  deleteCharacter: (id: string) => Promise<void>;
   saveCurrentCharacter: () => Promise<Character | null>;
   getUserCharacters: (userId: string) => Promise<Character[]>;
   refreshCharacters: () => Promise<void>;
   character?: Character; // Для обратной совместимости
+  getCharacterById?: (id: string) => Promise<Character | null>;
 }
 
 const CharacterContext = createContext<CharacterContextType>({
@@ -29,7 +30,7 @@ const CharacterContext = createContext<CharacterContextType>({
   setCharacter: () => {},
   createCharacter: () => createDefaultCharacter(),
   updateCharacter: () => {},
-  deleteCharacter: () => {},
+  deleteCharacter: async () => {},
   saveCurrentCharacter: async () => null,
   getUserCharacters: async () => [],
   refreshCharacters: async () => {}
@@ -73,7 +74,7 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const deleteCharacter = (id: string) => {
+  const deleteCharacter = async (id: string) => {
     setCharacters(characters.filter(c => c.id !== id));
     if (currentCharacter?.id === id) {
       setCurrentCharacter(null);
@@ -115,6 +116,26 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
     console.log('Обновление списка персонажей');
   };
 
+  // Добавляем метод для получения персонажа по ID
+  const getCharacterById = async (id: string): Promise<Character | null> => {
+    // Сначала ищем в текущем списке
+    const foundCharacter = characters.find(c => c.id === id);
+    if (foundCharacter) return foundCharacter;
+    
+    // Имитация загрузки из хранилища если не найдено в памяти
+    try {
+      const storedChar = localStorage.getItem(`character_${id}`);
+      if (storedChar) {
+        const parsedChar = JSON.parse(storedChar) as Character;
+        return parsedChar;
+      }
+    } catch (e) {
+      console.error("Ошибка при загрузке персонажа из хранилища:", e);
+    }
+    
+    return null;
+  };
+
   return (
     <CharacterContext.Provider 
       value={{ 
@@ -130,6 +151,7 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
         saveCurrentCharacter,
         getUserCharacters,
         refreshCharacters,
+        getCharacterById,
         character: currentCharacter // Для обратной совместимости
       }}
     >
