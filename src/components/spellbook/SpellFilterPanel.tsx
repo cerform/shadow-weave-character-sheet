@@ -23,6 +23,16 @@ interface SpellFilterPanelProps {
 const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // Убедимся, что filters существует и имеет все необходимые поля
+  const safeFilters = {
+    name: filters?.name || '',
+    level: filters?.level || '',
+    school: filters?.school || '',
+    characterClass: filters?.characterClass || '',
+    ritual: Boolean(filters?.ritual),
+    concentration: Boolean(filters?.concentration)
+  };
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, name: e.target.value }));
   };
@@ -78,7 +88,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
         <Input
           id="spell-name"
           placeholder="Поиск по названию..."
-          value={filters.name}
+          value={safeFilters.name}
           onChange={handleNameChange}
         />
       </div>
@@ -86,7 +96,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
       <div className={fieldContainerClass}>
         <Label htmlFor="spell-level" className="mb-1 block">Уровень:</Label>
         <Select 
-          value={filters.level || 'any'}
+          value={safeFilters.level || 'any'}
           onValueChange={handleLevelChange}
         >
           <SelectTrigger id="spell-level">
@@ -107,7 +117,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
       <div className={fieldContainerClass}>
         <Label htmlFor="spell-school" className="mb-1 block">Школа магии:</Label>
         <Select 
-          value={filters.school || 'any'}
+          value={safeFilters.school || 'any'}
           onValueChange={handleSchoolChange}
         >
           <SelectTrigger id="spell-school">
@@ -125,7 +135,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
       <div className={fieldContainerClass}>
         <Label htmlFor="spell-class" className="mb-1 block">Класс:</Label>
         <Select 
-          value={filters.characterClass || 'any'}
+          value={safeFilters.characterClass || 'any'}
           onValueChange={handleClassChange}
         >
           <SelectTrigger id="spell-class">
@@ -144,7 +154,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
         <div className="flex items-center space-x-2">
           <Checkbox 
             id="ritual"
-            checked={filters.ritual}
+            checked={safeFilters.ritual}
             onCheckedChange={toggleRitual}
           />
           <Label htmlFor="ritual" className="cursor-pointer">Ритуальное</Label>
@@ -153,7 +163,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters
         <div className="flex items-center space-x-2">
           <Checkbox 
             id="concentration"
-            checked={filters.concentration}
+            checked={safeFilters.concentration}
             onCheckedChange={toggleConcentration}
           />
           <Label htmlFor="concentration" className="cursor-pointer">Требует концентрации</Label>
