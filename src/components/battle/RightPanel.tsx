@@ -153,6 +153,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
     console.log('Character update called from RightPanel', updates);
   };
 
+  const handleInitiativeChange = (value: string | number) => {
+    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    onUpdate({ initiative: numericValue });
+  };
+
   return (
     <div className="h-full flex flex-col space-y-2 p-2">
       <Tabs defaultValue="tokens" className="flex-1">
@@ -278,7 +283,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       Раскрыть весь туман
                     </Button>
                     <Button size="sm" variant="outline" onClick={onResetFog}>
-                      Сбросить ��уман
+                      Сбросить туман
                     </Button>
                   </div>
                 )}

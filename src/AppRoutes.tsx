@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
@@ -31,7 +32,8 @@ const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requi
     return <Navigate to="/auth" replace />;
   }
   
-  if (requireDM && user?.role !== 'dm') {
+  // Check for role or isDM property
+  if (requireDM && !(user?.role === 'dm' || user?.isDM)) {
     return <Navigate to="/" replace />;
   }
   

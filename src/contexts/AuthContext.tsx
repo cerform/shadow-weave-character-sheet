@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -89,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("Создан новый пользователь:", user.id);
       }
     } catch (error) {
-      console.error("Ошибка при сохранении пользователя в Firestore:", error);
+      console.error("Ошибка при сохра��ении пользователя в Firestore:", error);
     }
   };
 
@@ -139,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (err) {
         console.error("Error in auth state listener", err);
-        setError(err instanceof Error ? err.message : String(err));
+        setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setLoading(false);
       }
@@ -163,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     } finally {
       setLoading(false);
@@ -190,7 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     } finally {
       setLoading(false);
@@ -212,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Вы успешно вышли из системы");
     } catch (err) {
       console.error("Logout error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     } finally {
       setLoading(false);
@@ -261,7 +260,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return null;
     } catch (err) {
       console.error("Google login error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err : new Error(String(err)));
       toast.error("Не удалось войти через Google: " + (err instanceof Error ? err.message : String(err)));
       throw err;
     } finally {
@@ -297,7 +296,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Ваш профиль успешно обновлен");
     } catch (err) {
       console.error("Profile update error:", err);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     }
   };

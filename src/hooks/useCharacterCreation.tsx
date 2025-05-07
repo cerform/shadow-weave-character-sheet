@@ -199,7 +199,7 @@ export const useCharacterCreation = () => {
     return totalLevel;
   };
 
-  // Получаем бонус мастерства на основе общего уровня
+  // Получаем бонус мастерства на ��снове общего уровня
   const getProficiencyBonus = (level: number): number => {
     if (level < 5) return 2;
     if (level < 9) return 3;
@@ -343,6 +343,51 @@ export const useCharacterCreation = () => {
         ...character,
         additionalClasses: [...character.additionalClasses, className]
       });
+    }
+  };
+
+  const updateAdditionalClass = (index: number, updates: Partial<any>) => {
+    if (!additionalClasses) {
+      console.warn('No additionalClasses found when trying to update');
+      return;
+    }
+
+    const updatedClasses = [...additionalClasses];
+    updatedClasses[index] = {
+      ...updatedClasses[index],
+      ...updates,
+      // Convert level from string to number if it exists
+      ...(updates.level !== undefined ? { level: Number(updates.level) } : {}),
+    };
+
+    setAdditionalClasses(updatedClasses);
+  };
+
+  const updateCharacterLevel = () => {
+    if (!character.class && !additionalClasses?.length) {
+      return 1;
+    }
+
+    let totalLevel = character.class ? Number(character.level || 1) : 0;
+    
+    additionalClasses?.forEach(cls => {
+      if (cls && cls.level) {
+        totalLevel += Number(cls.level);
+      }
+    });
+
+    return totalLevel || 1;
+  };
+
+  const handleApplyBackground = (background: any) => {
+    const backgroundClassName = typeof background === 'object' && background.class ? 
+      String(background.class) : '';
+
+    if (backgroundClassName) {
+      setCharacter(prev => ({
+        ...prev,
+        background: backgroundClassName
+      }));
     }
   };
 
