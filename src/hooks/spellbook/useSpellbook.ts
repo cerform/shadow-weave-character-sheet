@@ -4,11 +4,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 import { spells } from '@/data/spells';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 export const useSpellbook = () => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Состояния для фильтрации
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -182,6 +184,7 @@ export const useSpellbook = () => {
     handleClose,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    isMobile
   };
 };

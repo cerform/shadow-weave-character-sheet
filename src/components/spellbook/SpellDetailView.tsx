@@ -9,6 +9,7 @@ import { BookOpen, X } from 'lucide-react';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface SpellDetailViewProps {
   spell: SpellData | null;
@@ -24,6 +25,7 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   if (!spell) return null;
 
@@ -53,14 +55,14 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden bg-card/90 backdrop-blur-md p-0">
+      <DialogContent className={`max-w-3xl max-h-[90vh] overflow-hidden bg-card/90 backdrop-blur-md p-0 ${isMobile ? 'w-[95vw]' : ''}`}>
         <DialogHeader className="p-6 bg-accent/10 sticky top-0 z-10">
           <div className="flex justify-between items-start">
             <div>
               <DialogTitle className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
                 {spell.name}
               </DialogTitle>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <Badge>{spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}</Badge>
                 <Badge variant="outline">{spell.school}</Badge>
                 {spell.ritual && <Badge variant="secondary">Ритуал</Badge>}
@@ -78,9 +80,9 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
           </div>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[calc(90vh-200px)] px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 space-y-4">
+        <ScrollArea className={`max-h-[calc(90vh-200px)] px-6 py-4 ${isMobile ? 'px-4' : ''}`}>
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-6`}>
+            <div className={`${isMobile ? '' : 'md:col-span-1'} space-y-4`}>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Время накладывания</h3>
                 <p>{spell.castingTime}</p>
@@ -117,7 +119,7 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
               )}
             </div>
             
-            <div className="md:col-span-2">
+            <div className={`${isMobile ? '' : 'md:col-span-2'}`}>
               <div className="space-y-4">
                 <h3 className="text-lg font-medium" style={{ color: currentTheme.accent }}>Описание</h3>
                 <div className="text-pretty whitespace-pre-line">

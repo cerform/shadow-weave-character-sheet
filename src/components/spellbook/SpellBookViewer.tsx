@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookOpen, Filter, Plus } from 'lucide-react';
+import { Search, BookOpen, Filter, Plus, LayoutGrid, LayoutList } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { spells as allSpells } from '@/data/spells';
@@ -16,11 +16,18 @@ import SpellImportModal from './SpellImportModal';
 import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { SpellData } from '@/types/spells';
 import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import SpellCard from './SpellCard';
+import SpellList from './SpellList';
+import SpellTable from './SpellTable';
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [viewMode, setViewMode] = useState<'cards' | 'list' | 'table'>(isMobile ? 'list' : 'cards');
   
   const {
     filteredSpells,
@@ -57,6 +64,103 @@ const SpellBookViewer: React.FC = () => {
     return acc;
   }, {} as Record<number, SpellData[]>);
 
+  // Функция выбора режима отображения на основе ширины экрана и выбранного режима
+  const renderSpellView = (spells: SpellData[]) => {
+    if (viewMode === 'list' || (isMobile && viewMode !== 'table')) {
+      return (
+        <SpellList 
+          spells={spells} 
+          getBadgeColor={getBadgeColor} 
+          getSchoolBadgeColor={getSchoolBadgeColor}
+          currentTheme={currentTheme}
+          handleOpenSpell={handleOpenSpell}
+          formatClasses={formatClasses}
+        />
+      );
+    } else if (viewMode === 'table' && !isMobile) {
+      return (
+        <SpellTable
+          spells={spells}
+          onSpellClick={handleOpenSpell}
+          currentTheme={currentTheme}
+        />
+      );
+    } else {
+      return (
+        <ScrollArea className="h-[60vh] pr-4">
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
+            {spells.map(spell => (
+              isMobile ? (
+                <SpellCard 
+                  key={spell.name} 
+                  spell={spell}
+                  onClick={() => handleOpenSpell(spell)}
+                  currentTheme={currentTheme}
+                />
+              ) : (
+                <Card 
+                  key={spell.name} 
+                  className="spell-card hover:bg-accent/10 transition-all cursor-pointer"
+                  onClick={() => handleOpenSpell(spell)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex flex-col">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-bold text-lg" style={{ color: currentTheme.textColor }}>
+                          {spell.name}
+                        </h3>
+                        <Badge 
+                          style={{ 
+                            backgroundColor: getBadgeColor(spell.level),
+                            color: '#fff'
+                          }}
+                          className="ml-2"
+                        >
+                          {spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge 
+                          variant="outline" 
+                          style={{ 
+                            borderColor: getSchoolBadgeColor(spell.school),
+                            color: getSchoolBadgeColor(spell.school)
+                          }}
+                        >
+                          {spell.school}
+                        </Badge>
+                        
+                        {spell.ritual && <Badge variant="outline">Ритуал</Badge>}
+                        {spell.concentration && <Badge variant="outline">Концентрация</Badge>}
+                      </div>
+                      
+                      <div className="mt-3 text-sm text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>Время накл.:</span>
+                          <span>{spell.castingTime}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Дистанция:</span>
+                          <span>{spell.range}</span>
+                        </div>
+                        {spell.classes && (
+                          <div className="mt-2 text-xs">
+                            <span className="text-muted-foreground">Классы: </span>
+                            <span>{formatClasses(spell.classes)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            ))}
+          </div>
+        </ScrollArea>
+      );
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 px-4 md:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -76,6 +180,36 @@ const SpellBookViewer: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 pr-4 h-9 w-[200px] md:w-[250px]"
             />
+          </div>
+          
+          {/* Кнопки переключения режимов просмотра */}
+          <div className="flex border rounded-md">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-9 px-2"
+              onClick={() => setViewMode('cards')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-9 px-2"
+              onClick={() => setViewMode('list')}
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            {!isMobile && (
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-9 px-2 hidden md:flex"
+                onClick={() => setViewMode('table')}
+              >
+                <span className="ml-1">Таблица</span>
+              </Button>
+            )}
           </div>
           
           <Button 
@@ -154,67 +288,7 @@ const SpellBookViewer: React.FC = () => {
             </CardHeader>
             <CardContent>
               {spellsData.length > 0 ? (
-                <ScrollArea className="h-[60vh] pr-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {spellsData.map(spell => (
-                      <Card 
-                        key={spell.name} 
-                        className="spell-card hover:bg-accent/10 transition-all cursor-pointer"
-                        onClick={() => handleOpenSpell(spell)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex flex-col">
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-bold text-lg" style={{ color: currentTheme.textColor }}>
-                                {spell.name}
-                              </h3>
-                              <Badge 
-                                style={{ 
-                                  backgroundColor: getBadgeColor(spell.level),
-                                  color: '#fff'
-                                }}
-                                className="ml-2"
-                              >
-                                {spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}
-                              </Badge>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2">
-                              <Badge 
-                                variant="outline" 
-                                style={{ 
-                                  borderColor: getSchoolBadgeColor(spell.school),
-                                  color: getSchoolBadgeColor(spell.school)
-                                }}
-                              >
-                                {spell.school}
-                              </Badge>
-                              
-                              {spell.ritual && <Badge variant="outline">Ритуал</Badge>}
-                              {spell.concentration && <Badge variant="outline">Концентрация</Badge>}
-                            </div>
-                            
-                            <div className="mt-3 text-sm text-muted-foreground">
-                              <div className="flex justify-between">
-                                <span>Время накл.:</span>
-                                <span>{spell.castingTime}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Дистанция:</span>
-                                <span>{spell.range}</span>
-                              </div>
-                              {spell.classes && (
-                                <div className="mt-2 text-xs">
-                                  <span className="text-muted-foreground">Классы: </span>
-                                  <span>{formatClasses(spell.classes)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
+                renderSpellView(spellsData)
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-20" />
@@ -245,58 +319,7 @@ const SpellBookViewer: React.FC = () => {
               </CardHeader>
               <CardContent>
                 {spellsByLevel[level]?.length > 0 ? (
-                  <ScrollArea className="h-[60vh] pr-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {spellsByLevel[level].map(spell => (
-                        <Card 
-                          key={spell.name} 
-                          className="spell-card hover:bg-accent/10 transition-all cursor-pointer"
-                          onClick={() => handleOpenSpell(spell)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex flex-col">
-                              <div className="flex justify-between items-start">
-                                <h3 className="font-bold text-lg" style={{ color: currentTheme.textColor }}>
-                                  {spell.name}
-                                </h3>
-                              </div>
-                              <div className="mt-2 flex items-center gap-2">
-                                <Badge 
-                                  variant="outline" 
-                                  style={{ 
-                                    borderColor: getSchoolBadgeColor(spell.school),
-                                    color: getSchoolBadgeColor(spell.school)
-                                  }}
-                                >
-                                  {spell.school}
-                                </Badge>
-                                
-                                {spell.ritual && <Badge variant="outline">Ритуал</Badge>}
-                                {spell.concentration && <Badge variant="outline">Концентрация</Badge>}
-                              </div>
-                              
-                              <div className="mt-3 text-sm text-muted-foreground">
-                                <div className="flex justify-between">
-                                  <span>Время накл.:</span>
-                                  <span>{spell.castingTime}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Дистанция:</span>
-                                  <span>{spell.range}</span>
-                                </div>
-                                {spell.classes && (
-                                  <div className="mt-2 text-xs">
-                                    <span className="text-muted-foreground">Классы: </span>
-                                    <span>{formatClasses(spell.classes)}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  renderSpellView(spellsByLevel[level])
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-20" />
