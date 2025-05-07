@@ -74,6 +74,7 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
       setIsLoading(true);
       try {
         const allSpells = getAllSpells();
+        console.log('Loaded spells:', allSpells.length);
         setSpells(allSpells);
         setFilteredSpells(allSpells);
       } catch (error) {
