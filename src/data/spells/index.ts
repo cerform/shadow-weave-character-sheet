@@ -1,3 +1,4 @@
+
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
@@ -34,9 +35,11 @@ export const spells: CharacterSpell[] = [
 export const ensureSpellIds = (spellsList: CharacterSpell[]): CharacterSpell[] => {
   return spellsList.map(spell => {
     if (!spell.id) {
+      // Создаем ID на основе имени заклинания
+      const id = createSpellId(spell.name);
       return {
         ...spell,
-        id: createSpellId(spell.name)
+        id
       };
     }
     return spell;
@@ -127,7 +130,7 @@ export const getAllSpells = (): SpellData[] => {
   
   // Преобразуем CharacterSpell[] в SpellData[]
   const convertedSpells = spellsWithIds.map(spell => ({
-    id: spell.id,
+    id: spell.id || createSpellId(spell.name), // Убедимся, что ID точно есть
     name: spell.name,
     name_en: spell.name_en,
     level: spell.level,

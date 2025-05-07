@@ -29,22 +29,28 @@ const SpellProviderContent: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
       
+      // Проверяем наличие id в заклинаниях
+      const validSpells = allSpells.filter(spell => !!spell.id);
+      if (validSpells.length !== allSpells.length) {
+        console.warn(`SpellProvider: Найдено ${allSpells.length - validSpells.length} заклинаний без ID`);
+      }
+      
       // Устанавливаем заклинания в контекст
-      setSpells(allSpells);
-      setFilteredSpells(allSpells);
-      console.log('SpellProvider: Заклинания установлены в контекст:', allSpells.length);
+      setSpells(validSpells);
+      setFilteredSpells(validSpells);
+      console.log('SpellProvider: Заклинания установлены в контекст:', validSpells.length);
       
       // Сохраняем в локальное хранилище для быстрой загрузки
       try {
         localStorage.setItem('spellbook_cache_timestamp', Date.now().toString());
-        localStorage.setItem('spellbook_cache', JSON.stringify(allSpells.slice(0, 20)));
+        localStorage.setItem('spellbook_cache', JSON.stringify(validSpells.slice(0, 50)));
         console.log('SpellProvider: Кэш сохранен');
       } catch (storageError) {
         console.warn('SpellProvider: Не удалось сохранить кэш', storageError);
       }
 
       // Показываем уведомление об успешной загрузке
-      toast.success(`Загружено ${allSpells.length} заклинаний`);
+      toast.success(`Загружено ${validSpells.length} заклинаний`);
     } catch (error) {
       console.error('SpellProvider: Ошибка загрузки заклинаний:', error);
       toast.error('Произошла ошибка при загрузке книги заклинаний');
@@ -77,6 +83,17 @@ const SpellProviderContent: React.FC<{ children: React.ReactNode }> = ({ childre
       loadSpellsData();
     }
   }, [spells.length, loadAttempted, loadSpellsData]);
+
+  // Добавляем возможность принудительно перезагрузить заклинания
+  const handleRefresh = useCallback(() => {
+    setLoadAttempted(false);
+    loadSpellsData();
+  }, [loadSpellsData]);
+
+  // Сохраняем функцию перезагрузки в глобальном объекте для доступа из других компонентов
+  useEffect(() => {
+    (window as any).reloadSpellbook = handleRefresh;
+  }, [handleRefresh]);
 
   console.log('SpellProvider: Рендеринг, количество заклинаний:', spells.length);
   
