@@ -1,96 +1,46 @@
+import { SpellData, SpellFilter } from '@/types/spells';
+import { cantrips } from './cantrips';
+import { level0 } from './level0';
+import { level1 } from './level1';
+import { level2 } from './level2';
+import { level3 } from './level3';
+import { level4 } from './level4';
+import { level5 } from './level5';
+import { level6 } from './level6';
+import { level7 } from './level7';
+import { level8 } from './level8';
+import { level9 } from './level9';
+import { filterSpells } from '@/utils/spellHelpers';
 
-import { SpellData } from '@/types/spells';
-import { getAllSpells as fetchAllSpells } from '@/data/spells/index';
-import { convertCharacterSpellToSpellData } from '@/types/spells';
-
-// Импортируем все заклинания из директории spells
-const importedSpells = fetchAllSpells();
-
-// Преобразуем заклинания в формат SpellData
-export const spells: SpellData[] = importedSpells.map(spell => convertCharacterSpellToSpellData(spell));
-
-// Добавляем сюда несколько примеров заклинаний для быстрого доступа
-// В случае если импорт не сработает, у нас будет хотя бы минимальный набор заклинаний
-const exampleSpells: SpellData[] = [
-  {
-    id: 'light',
-    name: 'Свет',
-    level: 0,
-    school: 'Воплощение',
-    castingTime: '1 действие',
-    range: 'Касание',
-    components: 'В, С, М (светлячок или фосфоресцирующий мох)',
-    duration: '1 час',
-    description: 'Вы касаетесь одного предмета, размер которого не превышает 10 фт. в любом измерении. Пока заклинание активно, предмет испускает яркий свет в радиусе 20 фут. и тусклый свет в радиусе ещё 20 фт. Свет может быть любого цвета на ваш выбор. Полное укрытие блокирует свет. Если вы нацеливаетесь на предмет, несомый или носимый другим существом, это существо должно совершить спасбросок Ловкости, чтобы избежать этого заклинания.',
-    classes: ['Бард', 'Жрец', 'Чародей', 'Волшебник'],
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 'fireball',
-    name: 'Огненный шар',
-    level: 3,
-    school: 'Воплощение',
-    castingTime: '1 действие',
-    range: '150 футов',
-    components: 'В, С, М (крошечный шарик летучей серы и селитры, кусочек гуано нетопыря)',
-    duration: 'Мгновенная',
-    description: 'Яркая вспышка вырывается из точки, выбранной вами в пределах дальности, и затем раскрывается с низким ревом в огненный взрыв. Все существа в пределах сферы с радиусом 20 фт. с центром в этой точке должны совершить спасбросок Ловкости. Цель получает урон огнём 8к6 при провале, или половину этого урона при успехе. Огонь огибает углы. Он воспламеняет горючие предметы, которые никто не несёт и не носит.',
-    classes: ['Волшебник', 'Чародей'],
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 'cure-wounds',
-    name: 'Лечение ран',
-    level: 1,
-    school: 'Преобразование',
-    castingTime: '1 действие',
-    range: 'Касание',
-    components: 'В, С',
-    duration: 'Мгновенная',
-    description: 'Существо, которого вы касаетесь, восстанавливает количество хитов, равное 1к8 + ваш модификатор заклинательной характеристики. Это заклинание не оказывает никакого эффекта на нежить и конструктов.',
-    classes: ['Бард', 'Жрец', 'Друид', 'Паладин', 'Следопыт'],
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 'shield',
-    name: 'Щит',
-    level: 1,
-    school: 'Ограждение',
-    castingTime: '1 реакция, которую вы совершаете, когда вас атакуют или вы попадаете под действие заклинания волшебная стрела',
-    range: 'На себя',
-    components: 'В, С',
-    duration: '1 раунд',
-    description: 'Невидимый барьер магической силы появляется и защищает вас. До начала вашего следующего хода вы получаете бонус +5 к КД, в том числе и против вызвавшей реакцию атаки, и вы не получаете урон от волшебной стрелы.',
-    classes: ['Волшебник', 'Чародей'],
-    ritual: false,
-    concentration: false
-  },
-  {
-    id: 'hold-person',
-    name: 'Удержание личности',
-    level: 2,
-    school: 'Очарование',
-    castingTime: '1 действие',
-    range: '60 футов',
-    components: 'В, С, М (небольшой кусочек железа)',
-    duration: 'Концентрация, вплоть до 1 минуты',
-    description: 'Выберите гуманоида, которого видите в пределах дистанции. Цель должна преуспеть в спасброске Мудрости, иначе она становится парализованной на время действия заклинания. В конце каждого своего хода цель может совершить ещё один спасбросок Мудрости. При успехе заклинание на этой цели оканчивается.',
-    classes: ['Бард', 'Жрец', 'Друид', 'Чародей', 'Волшебник', 'Колдун'],
-    ritual: false,
-    concentration: true
-  }
+// Объединяем все списки заклинаний
+const allSpells = [
+  ...cantrips,
+  ...level0,
+  ...level1,
+  ...level2,
+  ...level3,
+  ...level4,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9
 ];
 
-// Если импортированный список пустой, используем набор примеров
-export const allSpells: SpellData[] = spells.length > 0 ? spells : exampleSpells;
-
-// Функция для получения всех заклинаний
-export function getAllSpellsData(): SpellData[] {
+// Экспортируем функцию для получения всех заклинаний
+export function getAllSpells(): SpellData[] {
   return allSpells;
 }
 
-// Экспортируем функцию getAllSpells для обратной совместимости
-export const getAllSpells = getAllSpellsData;
+// Функция получения заклинаний для определенного класса
+export function getSpellsByClass(className: string): SpellData[] {
+  return allSpells.filter(spell => {
+    const classes = Array.isArray(spell.classes)
+      ? spell.classes
+      : [spell.classes];
+    return classes.includes(className);
+  });
+}
+
+// Экспортируем функцию фильтрации заклинаний
+export { filterSpells };

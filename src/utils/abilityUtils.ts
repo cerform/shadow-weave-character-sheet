@@ -31,7 +31,7 @@ export const abilityFullNames: Record<AbilityName, string> = {
   'constitution': 'Телосложение',
   'intelligence': 'Интеллект',
   'wisdom': 'Мудрость',
-  'charisma': 'Харизма',
+  'charisма': 'Харизма',
   'STR': 'Сила',
   'DEX': 'Ловкость',
   'CON': 'Телосложение',

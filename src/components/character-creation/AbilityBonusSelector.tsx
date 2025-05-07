@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
-import { RaceDetails, AbilityScoreIncrease } from '@/types/character';
 import { AbilityName, abilityNames, abilityFullNames } from '@/utils/abilityUtils';
 
 interface AbilityBonusSelectorProps {
@@ -22,12 +21,12 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   abilityBonuses
 }) => {
   const [selectedAbilities, setSelectedAbilities] = useState<Record<string, boolean>>({});
-  const [bonuses, setBonuses] = useState<Record<string, number>>({});
+  const [bonuses, setBonuses] = useState<Partial<Record<string, number>>>({});
   
   // Инициализация выбранных способностей и бонусов
   useEffect(() => {
     const initial: Record<string, boolean> = {};
-    const initialBonuses: Record<string, number> = {};
+    const initialBonuses: Partial<Record<string, number>> = {};
     
     // Если есть фиксированные бонусы, применяем их
     if (abilityBonuses.fixed) {
@@ -64,7 +63,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     
     // Обновляем характеристики персонажа
     updateCharacter({
-      abilityBonuses: finalBonuses,
+      abilityBonuses: finalBonuses as any,
       selectedAbilities: Object.keys(selectedAbilities).filter(key => selectedAbilities[key])
     });
     
