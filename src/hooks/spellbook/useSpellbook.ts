@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -30,19 +31,22 @@ export const useSpellbook = () => {
   });
 
   // Создаем списки всех уровней, школ и классов
-  const allSpells = useMemo(() => spells, []);
+  const allSpells = useMemo(() => spells || [], []);  // Гарантируем, что здесь будет массив
 
   const allLevels = useMemo(() => {
+    if (!allSpells || allSpells.length === 0) return [];
     const levels = new Set(allSpells.map(spell => spell.level));
     return Array.from(levels).sort((a, b) => a - b);
   }, [allSpells]);
 
   const allSchools = useMemo(() => {
+    if (!allSpells || allSpells.length === 0) return [];
     const schools = new Set(allSpells.map(spell => spell.school || 'Универсальная'));
     return Array.from(schools).filter(Boolean).sort();
   }, [allSpells]);
 
   const allClasses = useMemo(() => {
+    if (!allSpells || allSpells.length === 0) return [];
     const classes = new Set<string>();
     allSpells.forEach(spell => {
       if (typeof spell.classes === 'string') {
@@ -56,6 +60,8 @@ export const useSpellbook = () => {
 
   // Отфильтрованные заклинания
   const filteredSpells = useMemo(() => {
+    if (!allSpells || allSpells.length === 0) return [];
+    
     return allSpells.filter(spell => {
       // Фильтр по поисковому запросу
       if (filters.searchTerm && !spell.name.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
