@@ -1,4 +1,3 @@
-
 import { cantrips } from "./cantrips";
 import { level1 } from "./level1";
 import { level2 } from "./level2";
@@ -113,33 +112,22 @@ export const getSpellSchools = (): string[] => {
 
 // Export a function to get all spells
 export const getAllSpells = (): SpellData[] => {
+  console.log('getAllSpells: Начинаю загрузку заклинаний');
+  
   // Проверяем, что массив spells не пуст
   if (spells.length === 0) {
-    console.warn('Массив заклинаний пуст. Проверьте импорты заклинаний.');
-    
-    // Добавляем тестовое заклинание, чтобы убедиться, что функция работает
-    return [{
-      id: 'test-spell',
-      name: 'Тестовое заклинание',
-      level: 0,
-      school: 'Воплощение',
-      castingTime: '1 действие',
-      range: '30 футов',
-      components: 'В, С',
-      duration: 'Мгновенная',
-      description: 'Тестовое заклинание для отладки.',
-      classes: ['Волшебник']
-    }];
+    console.error('getAllSpells: Массив заклинаний пуст. Проверьте импорты заклинаний.');
+    return [];
   }
   
-  console.log('Загружаю заклинания, всего:', spells.length);
+  console.log('getAllSpells: Найдено заклинаний:', spells.length);
   
   // Убедимся, что все заклинания имеют id
   const spellsWithIds = ensureSpellIds(spells);
   
   // Преобразуем CharacterSpell[] в SpellData[]
-  return spellsWithIds.map(spell => ({
-    id: spell.id || createSpellId(spell.name),
+  const convertedSpells = spellsWithIds.map(spell => ({
+    id: spell.id,
     name: spell.name,
     name_en: spell.name_en,
     level: spell.level,
@@ -160,6 +148,9 @@ export const getAllSpells = (): SpellData[] => {
     higherLevels: spell.higherLevels || spell.higherLevel || '',
     materials: spell.materials || ''
   }));
+
+  console.log('getAllSpells: Преобразовано заклинаний:', convertedSpells.length);
+  return convertedSpells;
 };
 
 // Filter spells based on provided filters

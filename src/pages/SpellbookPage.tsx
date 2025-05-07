@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import { useTheme } from '@/hooks/use-theme';
 import ThemeSelector from '@/components/ThemeSelector';
@@ -7,9 +7,15 @@ import NavigationButtons from '@/components/ui/NavigationButtons';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import SpellProvider from '@/components/spellbook/SpellProvider';
+import { toast } from 'sonner';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
+
+  useEffect(() => {
+    // Показываем информационное сообщение при загрузке страницы
+    toast.info("Загружаем книгу заклинаний D&D 5e");
+  }, []);
 
   return (
     <BackgroundWrapper>

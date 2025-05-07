@@ -5,14 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Filter, AlertCircle } from "lucide-react";
+import { Search, BookOpen, Filter, AlertCircle, RefreshCcw } from "lucide-react";
 import SpellDetailModal from './SpellDetailModal';
 import SpellFilterPanel from './SpellFilterPanel';
 import SpellTable from './SpellTable';
+import SpellList from './SpellList';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { useTheme } from '@/hooks/use-theme';
 import { toast } from 'sonner';
-import SpellList from './SpellList';
 
 const SpellBookViewer: React.FC = () => {
   const { themeStyles } = useTheme();
@@ -42,6 +42,7 @@ const SpellBookViewer: React.FC = () => {
     toggleClass,
     clearFilters,
     isLoading,
+    setIsLoading,
   } = useSpellbook();
 
   useEffect(() => {
@@ -50,18 +51,18 @@ const SpellBookViewer: React.FC = () => {
     console.log("SpellBookViewer: Отфильтрованных заклинаний:", filteredSpells.length);
     
     // Показываем уведомление только при первой загрузке
-    if (initialLoad && spells.length > 0) {
+    if (initialLoad && !isLoading && spells.length > 0) {
       toast.success(`Загружено ${spells.length} заклинаний`);
       setInitialLoad(false);
     }
-  }, [spells.length, filteredSpells.length, initialLoad]);
+  }, [spells.length, filteredSpells.length, initialLoad, isLoading]);
 
-  useEffect(() => {
-    // Отслеживаем изменение числа отфильтрованных заклинаний
-    if (!initialLoad) {
-      console.log("SpellBookViewer: Обновлены отфильтрованные заклинания:", filteredSpells.length);
-    }
-  }, [filteredSpells.length, initialLoad]);
+  const handleReloadSpells = () => {
+    setIsLoading(true);
+    setInitialLoad(true);
+    // Перезагружаем страницу для обновления заклинаний
+    window.location.reload();
+  };
   
   return (
     <div className="space-y-6">
@@ -95,13 +96,14 @@ const SpellBookViewer: React.FC = () => {
           <Button
             variant="outline"
             className="gap-2"
+            onClick={handleReloadSpells}
             style={{
               borderColor: themeStyles?.accent,
               color: themeStyles?.textColor,
             }}
           >
-            <Filter className="h-4 w-4" />
-            Фильтры
+            <RefreshCcw className="h-4 w-4" />
+            Обновить
           </Button>
         </div>
       </div>
@@ -124,6 +126,7 @@ const SpellBookViewer: React.FC = () => {
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          <span className="ml-2" style={{ color: themeStyles?.textColor }}>Загрузка заклинаний...</span>
         </div>
       ) : spells.length === 0 ? (
         <div className="text-center py-12 bg-black/30 rounded-lg border border-accent/20">
@@ -136,7 +139,7 @@ const SpellBookViewer: React.FC = () => {
           </p>
           <Button
             variant="default"
-            onClick={() => window.location.reload()}
+            onClick={handleReloadSpells}
           >
             Перезагрузить страницу
           </Button>
