@@ -12,6 +12,7 @@ import { level7 } from "./level7";
 import { level8 } from "./level8";
 import { level9 } from "./level9";
 import { CharacterSpell } from "@/types/character";
+import { SpellData } from "@/types/spells";
 
 // Combine all spell levels into a single array
 export const spells: CharacterSpell[] = [
@@ -94,4 +95,89 @@ export const getSpellSchools = (): string[] => {
   });
   
   return Array.from(schools);
+};
+
+// Export a function to get all spells
+export const getAllSpells = (): SpellData[] => {
+  return spells.map(spell => ({
+    id: spell.id || spell.name,
+    name: spell.name,
+    name_en: spell.name_en,
+    level: spell.level,
+    school: spell.school || '',
+    castingTime: spell.castingTime || '',
+    range: spell.range || '',
+    components: spell.components || '',
+    duration: spell.duration || '',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    prepared: spell.prepared,
+    higherLevel: spell.higherLevel || spell.higherLevels,
+    higherLevels: spell.higherLevels || spell.higherLevel,
+    materials: spell.materials
+  }));
+};
+
+// Filter spells based on provided filters
+export const filterSpells = (spells: SpellData[], filters: any): SpellData[] => {
+  if (!filters) return spells;
+  
+  return spells.filter(spell => {
+    // Filter by name
+    if (filters.name && !spell.name.toLowerCase().includes(filters.name.toLowerCase())) {
+      return false;
+    }
+    
+    // Filter by level
+    if (filters.level !== undefined) {
+      if (Array.isArray(filters.level)) {
+        if (filters.level.length > 0 && !filters.level.includes(spell.level)) {
+          return false;
+        }
+      } else if (filters.level !== spell.level) {
+        return false;
+      }
+    }
+    
+    // Filter by school
+    if (filters.school) {
+      if (Array.isArray(filters.school)) {
+        if (filters.school.length > 0 && !filters.school.includes(spell.school)) {
+          return false;
+        }
+      } else if (filters.school !== spell.school) {
+        return false;
+      }
+    }
+    
+    // Filter by class
+    if (filters.class) {
+      const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+      
+      if (Array.isArray(filters.class)) {
+        if (filters.class.length > 0 && !filters.class.some((c: string) => spellClasses.includes(c))) {
+          return false;
+        }
+      } else if (!spellClasses.includes(filters.class)) {
+        return false;
+      }
+    }
+    
+    // Filter by ritual
+    if (filters.ritual !== undefined && spell.ritual !== filters.ritual) {
+      return false;
+    }
+    
+    // Filter by concentration
+    if (filters.concentration !== undefined && spell.concentration !== filters.concentration) {
+      return false;
+    }
+    
+    return true;
+  });
 };
