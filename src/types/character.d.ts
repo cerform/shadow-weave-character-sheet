@@ -230,4 +230,3 @@ export interface LevelFeature {
   class?: string;
   required?: boolean;
 }
-
