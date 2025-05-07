@@ -187,8 +187,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <span>Раунд: {battleState.round}</span>
           )}
         </div>
-        {/* Исправляем ошибку, добавляя поддержку className в NavigationButtons */}
-        <NavigationButtons />
+        <NavigationButtons className="!flex-row" />
       </div>
     </div>
   );

@@ -1,81 +1,60 @@
-
 import { Character } from '@/types/character';
 
-/**
- * Нормализует данные персонажа, исправляя распространенные проблемы
- * @param character Исходный объект персонажа
- * @returns Нормализованные данные персонажа
- */
-export function normalizeCharacterData(character: Character): Character {
-  if (!character) return character;
-  
-  // Создаем копию объекта для модификации
-  const normalized: Character = { ...character };
-  
-  // Убедимся, что обязательные поля существуют
-  normalized.name = normalized.name || 'Безымянный персонаж';
-  normalized.level = normalized.level ?? 1;
-  normalized.experience = normalized.experience ?? 0;
-  
-  // Разрешаем несоответствия между полями класса
-  if (normalized.class && !normalized.className) {
-    normalized.className = normalized.class;
-  } else if (!normalized.class && normalized.className) {
-    normalized.class = normalized.className;
-  }
-  
-  // Нормализация данных о характеристиках
-  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-  
-  // Проверяем существование объекта stats
-  if (!normalized.stats) {
-    normalized.stats = {};
-  }
-  
-  // Проходим по всем характеристикам
-  abilities.forEach(ability => {
-    // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
-      normalized.stats[ability] = normalized[ability];
-    } 
-    // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-    
-    // Если значения различаются, приоритет у поля stats
-    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-  });
-  
-  // Убедимся, что массивы инициализированы
-  if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
-  if (!Array.isArray(normalized.features)) normalized.features = [];
-  if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  if (!Array.isArray(normalized.languages)) normalized.languages = [];
-  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
-  
-  // Проверяем наличие userId
-  if (!normalized.userId) {
-    console.warn(`Персонаж '${normalized.name}' не имеет userId`);
-  }
-  
-  return normalized;
-}
+export const normalizeCharacter = (character: any): Character => {
+  if (!character) return {} as Character;
 
-/**
- * Нормализует массив персонажей
- * @param characters Массив персонажей
- * @returns Нормализованный массив персонажей
- */
-export function normalizeCharacters(characters: Character[]): Character[] {
-  if (!Array.isArray(characters)) {
-    console.error('normalizeCharacters: не массив', characters);
-    return [];
+  // Create a normalized character object
+  const normalizedCharacter: Character = {
+    ...character,
+    // Ensure basic properties exist
+    name: character.name || '',
+    level: character.level || 1,
+    class: character.class || character.className || '',
+    race: character.race || '',
+    background: character.background || '',
+    alignment: character.alignment || '',
+    
+    // Normalize ability scores
+    strength: character.strength || 10,
+    dexterity: character.dexterity || 10,
+    constitution: character.constitution || 10,
+    intelligence: character.intelligence || 10,
+    wisdom: character.wisdom || 10,
+    charisma: character.charisma || 10,
+    
+    // Normalize HP values
+    maxHp: character.maxHp || 0,
+    currentHp: character.currentHp !== undefined ? character.currentHp : character.maxHp || 0,
+    tempHp: character.tempHp || character.temporaryHp || 0,
+    
+    // Normalize other combat stats
+    armorClass: character.armorClass || 10,
+    initiative: character.initiative || 0,
+    speed: character.speed || '30',
+    
+    // Normalize skills
+    skills: character.skills ? Object.fromEntries(
+      Object.entries(character.skills).map(([key, value]) => [key, normalizeSkill(value)])
+    ) : {},
+  };
+
+  return normalizedCharacter;
+};
+
+const normalizeSkill = (skill: any) => {
+  if (typeof skill === 'object') {
+    // Return a properly structured skill object
+    return {
+      proficient: skill.proficient || false,
+      expertise: skill.expertise || false,
+      value: skill.value || 0,
+      bonus: skill.bonus || 0
+    };
   }
-  
-  return characters
-    .filter(char => char !== null && char !== undefined)
-    .map(normalizeCharacterData);
-}
+  return {
+    proficient: false,
+    expertise: false,
+    value: 0,
+    bonus: 0
+  };
+};

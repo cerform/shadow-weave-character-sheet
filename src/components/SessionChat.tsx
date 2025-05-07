@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CustomScrollArea } from '@/components/ui/custom-scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { AlertCircle } from 'lucide-react';
@@ -136,42 +136,40 @@ const SessionChat: React.FC<SessionChatProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow p-0 px-4">
-        <CustomScrollArea className="h-[350px] pr-4">
-          <div ref={scrollRef} className="h-full overflow-auto">
-            {!isConnected && (
-              <Alert variant="warning" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Соединение с сервером не установлено. Сообщения сохраняются локально.
-                </AlertDescription>
-              </Alert>
+        <ScrollArea className="h-[350px] pr-4" ref={scrollRef}>
+          {!isConnected && (
+            <Alert variant="warning" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Соединение с сервером не установлено. Сообщения сохраняются локально.
+              </AlertDescription>
+            </Alert>
+          )}
+          <div className="space-y-4 pt-2">
+            {chatMessages.length > 0 ? chatMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`p-3 rounded-lg ${
+                  msg.sender === (playerName || (user?.displayName || 'Гость'))
+                    ? 'bg-primary/10 ml-auto max-w-[80%]'
+                    : 'bg-muted max-w-[80%]'
+                }`}
+              >
+                <div className="font-semibold text-sm flex justify-between items-center mb-1">
+                  <span>{msg.sender}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              </div>
+            )) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Нет сообщений. Будьте первым, кто напишет!
+              </div>
             )}
-            <div className="space-y-4 pt-2">
-              {chatMessages.length > 0 ? chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`p-3 rounded-lg ${
-                    msg.sender === (playerName || (user?.displayName || 'Гость'))
-                      ? 'bg-primary/10 ml-auto max-w-[80%]'
-                      : 'bg-muted max-w-[80%]'
-                  }`}
-                >
-                  <div className="font-semibold text-sm flex justify-between items-center mb-1">
-                    <span>{msg.sender}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                </div>
-              )) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Нет сообщений. Будьте первым, кто напишет!
-                </div>
-              )}
-            </div>
           </div>
-        </CustomScrollArea>
+        </ScrollArea>
       </CardContent>
       <CardFooter className="pt-1">
         <div className="flex w-full gap-2">

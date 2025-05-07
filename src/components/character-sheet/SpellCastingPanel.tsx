@@ -1,284 +1,146 @@
-
-import React, { useState, useEffect } from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { Character, CharacterSpell } from '@/types/character';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import SpellSlotManager from './SpellSlotManager';
+import { useTheme } from '@/hooks/use-theme';
 
-interface SpellCastingPanelProps {
-  character?: Character;
+export interface SpellCastingPanelProps {
+  character: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
 }
 
-const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCharacter }) => {
-  const { character: contextCharacter, updateCharacter } = useCharacter();
-  const { theme } = useTheme();
-  const { toast } = useToast();
+const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character, onUpdate }) => {
+  const updateSpellSlot = (level: number, used: number) => {
+    if (!character.spellSlots || !onUpdate) return;
   
-  const character = propCharacter || contextCharacter;
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
-  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
-  const [spellsByLevel, setSpellsByLevel] = useState<Record<number, CharacterSpell[]>>({});
-  const [spellDialogOpen, setSpellDialogOpen] = useState(false);
-  
-  // Группируем заклинания по уровням
-  useEffect(() => {
-    if (character?.spells && Array.isArray(character.spells)) {
-      const grouped: Record<number, CharacterSpell[]> = {};
-      
-      character.spells.forEach(spell => {
-        if (typeof spell === 'string') {
-          // Если заклинание представлено строкой, создаем минимальный объект
-          const basicSpell: CharacterSpell = {
-            name: spell,
-            level: 0, // По умолчанию считаем заговором
-            prepared: true
-          };
-          
-          grouped[0] = [...(grouped[0] || []), basicSpell];
-        } else {
-          // Работаем с объектом заклинания
-          const level = spell.level || 0;
-          grouped[level] = [...(grouped[level] || []), spell];
-        }
-      });
-      
-      // Сортируем заклинания внутри каждого уровня по имени
-      Object.keys(grouped).forEach(level => {
-        grouped[Number(level)].sort((a, b) => a.name.localeCompare(b.name));
-      });
-      
-      setSpellsByLevel(grouped);
-    }
-  }, [character?.spells]);
-  
-  // Обработчик выбора заклинания для просмотра/использования
-  const handleSelectSpell = (spell: CharacterSpell) => {
-    setSelectedSpell(spell);
-    setSpellDialogOpen(true);
-  };
-  
-  // Обработчик использования заклинания
-  const handleCastSpell = (level: number) => {
-    if (!character || !selectedSpell) return;
+    const spellSlots = { ...character.spellSlots };
     
-    // Проверяем наличие ячеек заклинаний выбранного уровня
-    const spellSlots = character.spellSlots;
-    
-    if (!spellSlots || !spellSlots[level]) {
-      toast({
-        title: "Невозможно использовать заклинание",
-        description: `У вас нет ячеек заклинаний ${level} уровня.`,
-        variant: "destructive"
-      });
-      return;
+    // Обновляем количество использованных слотов
+    if (spellSlots[level]) {
+      spellSlots[level] = {
+        ...spellSlots[level],
+        used
+      };
     }
     
-    // Проверяем, есть ли доступные ячейки
-    if (spellSlots[level].used >= spellSlots[level].max) {
-      toast({
-        title: "Невозможно использовать заклинание",
-        description: `У вас закончились ячейки заклинаний ${level} уровня.`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Используем ячейку заклинания
-    const newSpellSlots = { ...character.spellSlots };
-    newSpellSlots[level].used++;
-    
-    // Обновляем персонажа
-    updateCharacter({ spellSlots: newSpellSlots });
-    
-    // Сообщаем об использовании заклинания
-    toast({
-      title: `Заклинание ${selectedSpell.name} использовано`,
-      description: `Использована ячейка заклинаний ${level} уровня.`,
+    onUpdate({
+      spellSlots
     });
-    
-    // Закрываем диалог
-    setSpellDialogOpen(false);
   };
+
+  // Получаем тему для стилизации
+  const { theme } = useTheme();
   
-  // Проверяем, является ли класс магическим
-  const isMagicClass = () => {
-    if (!character?.class) return false;
-    
-    const magicClasses = ['жрец', 'волшебник', 'бард', 'друид', 'колдун', 'чародей', 'паладин', 'следопыт', 'изобретатель'];
-    return magicClasses.includes(character.class.toLowerCase());
-  };
+  // Определяем класс персонажа для отображения соответствующей информации
+  const characterClass = character.class?.toLowerCase() || '';
   
-  // Если персонаж не является заклинателем, не отображаем панель
-  if (!character || !isMagicClass() || !character.spells || character.spells.length === 0) {
+  // Определяем, является ли класс заклинателем
+  const isSpellcaster = ['волшебник', 'жрец', 'друид', 'бард', 'чародей', 'колдун', 'паладин', 'следопыт', 'wizard', 'cleric', 'druid', 'bard', 'sorcerer', 'warlock', 'paladin', 'ranger'].includes(characterClass);
+  
+  // Если персонаж не заклинатель, не отображаем панель
+  if (!isSpellcaster) {
     return null;
   }
   
+  // Получаем информацию о ячейках заклинаний
+  const spellSlots = character.spellSlots || {};
+  
+  // Определяем максимальный уровень заклинаний для отображения
+  const maxSpellLevel = 9;
+  
+  // Определяем характеристику заклинаний
+  let spellcastingAbility = 'intelligence';
+  if (['жрец', 'друид', 'cleric', 'druid'].includes(characterClass)) {
+    spellcastingAbility = 'wisdom';
+  } else if (['бард', 'чародей', 'колдун', 'паладин', 'bard', 'sorcerer', 'warlock', 'paladin'].includes(characterClass)) {
+    spellcastingAbility = 'charisma';
+  }
+  
+  // Получаем модификатор характеристики заклинаний
+  const getAbilityModifier = (ability: string): number => {
+    const abilityScore = character.abilities?.[ability as keyof typeof character.abilities] || 10;
+    return Math.floor((abilityScore - 10) / 2);
+  };
+  
+  const spellcastingModifier = getAbilityModifier(spellcastingAbility);
+  
+  // Рассчитываем СЛ заклинаний и бонус атаки
+  const spellSaveDC = 8 + (character.proficiencyBonus || 2) + spellcastingModifier;
+  const spellAttackBonus = (character.proficiencyBonus || 2) + spellcastingModifier;
+
   return (
-    <Card className="mb-4 border-accent/30" style={{ backgroundColor: currentTheme.cardBackground }}>
-      <CardHeader>
-        <CardTitle style={{ color: currentTheme.textColor }}>Книга заклинаний</CardTitle>
+    <Card className="mb-4">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Заклинательные ячейки</CardTitle>
       </CardHeader>
       <CardContent>
-        <SpellSlotManager character={character} showTitle={false} />
-        
-        <div className="mt-4">
-          {/* Отображаем заклинания, сгруппированные по уровню */}
-          {Object.keys(spellsByLevel)
-            .map(Number)
-            .sort((a, b) => a - b)
-            .map(level => (
-              <div key={`spell-level-${level}`} className="mb-4">
-                <h4 className="text-lg font-semibold mb-2" style={{ color: currentTheme.textColor }}>
-                  {level === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {spellsByLevel[level].map((spell, index) => (
-                    <Card 
-                      key={`spell-${level}-${index}`}
-                      className="p-2 cursor-pointer hover:border-accent transition-all"
-                      style={{ 
-                        backgroundColor: currentTheme.background,
-                        borderColor: spell.prepared ? currentTheme.accent : currentTheme.cardBackground
-                      }}
-                      onClick={() => handleSelectSpell(spell)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium" style={{ color: currentTheme.textColor }}>
-                          {spell.name}
-                        </span>
-                        {spell.prepared && (
-                          <span className="text-xs px-1 rounded-sm" style={{ backgroundColor: currentTheme.accent + '30', color: currentTheme.accent }}>
-                            Подготовлено
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground" style={{ color: currentTheme.mutedTextColor }}>
-                        {spell.school || 'Универсальная'}, {spell.castingTime || '1 действие'}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
-      </CardContent>
-      
-      {/* Диалог для просмотра и использования заклинания */}
-      <Dialog open={spellDialogOpen} onOpenChange={setSpellDialogOpen}>
-        <DialogContent style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}>
-          <DialogHeader>
-            <DialogTitle style={{ color: currentTheme.accent }}>{selectedSpell?.name}</DialogTitle>
-          </DialogHeader>
-          
-          <div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="px-2 py-1 bg-accent/20 rounded-sm text-xs">
-                {selectedSpell?.level === 0 ? 'Заговор' : `${selectedSpell?.level} уровень`}
-              </span>
-              {selectedSpell?.school && (
-                <span className="px-2 py-1 bg-accent/20 rounded-sm text-xs">
-                  {selectedSpell.school}
-                </span>
-              )}
-              {selectedSpell?.ritual && (
-                <span className="px-2 py-1 bg-accent/20 rounded-sm text-xs">
-                  Ритуал
-                </span>
-              )}
-              {selectedSpell?.concentration && (
-                <span className="px-2 py-1 bg-accent/20 rounded-sm text-xs">
-                  Концентрация
-                </span>
-              )}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="text-center p-2 border rounded-md">
+            <div className="text-sm text-muted-foreground">Характеристика</div>
+            <div className="font-bold">
+              {spellcastingAbility === 'intelligence' ? 'Интеллект' : 
+               spellcastingAbility === 'wisdom' ? 'Мудрость' : 'Харизма'}
             </div>
-            
-            <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-              <div>
-                <strong>Время накладывания:</strong> {selectedSpell?.castingTime || '1 действие'}
-              </div>
-              <div>
-                <strong>Дистанция:</strong> {selectedSpell?.range || 'На себя'}
-              </div>
-              <div>
-                <strong>Компоненты:</strong> {selectedSpell?.components || 'В, С'}
-              </div>
-              <div>
-                <strong>Длительность:</strong> {selectedSpell?.duration || 'Мгновенная'}
-              </div>
-            </div>
-            
-            <ScrollArea className="h-[200px] mb-4">
-              <div className="text-sm whitespace-pre-line">
-                {typeof selectedSpell?.description === 'string' 
-                  ? selectedSpell.description 
-                  : Array.isArray(selectedSpell?.description) 
-                    ? selectedSpell.description.join('\n\n') 
-                    : 'Описание отсутствует'}
-              </div>
-            </ScrollArea>
-            
-            {/* Кнопки использования заклинания для разных уровней ячеек */}
-            {selectedSpell && selectedSpell.level > 0 && character.spellSlots && (
-              <div className="mt-4">
-                <h4 className="font-semibold mb-2">Использовать заклинание:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(character.spellSlots)
-                    .map(Number)
-                    .filter(slotLevel => slotLevel >= selectedSpell.level)
-                    .map(slotLevel => {
-                      const slot = character.spellSlots![slotLevel];
-                      const remainingSlots = slot.max - slot.used;
-                      
-                      return (
-                        <Button
-                          key={`cast-level-${slotLevel}`}
-                          variant="outline"
-                          disabled={remainingSlots <= 0}
-                          onClick={() => handleCastSpell(slotLevel)}
-                          style={{ 
-                            borderColor: currentTheme.accent,
-                            color: remainingSlots > 0 ? currentTheme.accent : currentTheme.mutedTextColor
-                          }}
-                        >
-                          {slotLevel} уровень ({remainingSlots}/{slot.max})
-                        </Button>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-            
-            {/* Для заговоров просто кнопка использования */}
-            {selectedSpell && selectedSpell.level === 0 && (
-              <div className="mt-4">
-                <Button 
-                  onClick={() => {
-                    toast({
-                      title: `Заклинание ${selectedSpell.name} использовано`,
-                      description: `Заговор не расходует ячейки заклинаний.`,
-                    });
-                    setSpellDialogOpen(false);
-                  }}
-                  style={{ 
-                    backgroundColor: currentTheme.accent,
-                    color: currentTheme.cardBackground
-                  }}
-                >
-                  Использовать заговор
-                </Button>
-              </div>
-            )}
           </div>
-        </DialogContent>
-      </Dialog>
+          
+          <div className="text-center p-2 border rounded-md">
+            <div className="text-sm text-muted-foreground">СЛ заклинаний</div>
+            <div className="font-bold">{spellSaveDC}</div>
+          </div>
+          
+          <div className="text-center p-2 border rounded-md">
+            <div className="text-sm text-muted-foreground">Бонус атаки</div>
+            <div className="font-bold">+{spellAttackBonus}</div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-5 gap-2">
+          {Array.from({ length: maxSpellLevel }, (_, i) => i + 1).map(level => {
+            const slot = spellSlots[level] || { max: 0, used: 0 };
+            
+            // Если у персонажа нет ячеек этого уровня, не отображаем
+            if (slot.max === 0) return null;
+            
+            return (
+              <div key={level} className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">Уровень {level}</div>
+                <div className="flex justify-center space-x-1">
+                  {Array.from({ length: slot.max }, (_, i) => {
+                    const isUsed = i < slot.used;
+                    return (
+                      <button
+                        key={i}
+                        className={`w-6 h-6 rounded-full border ${
+                          isUsed ? 'bg-muted border-muted-foreground' : 'bg-background border-primary'
+                        }`}
+                        onClick={() => onUpdate && updateSpellSlot(level, isUsed ? i : i + 1)}
+                        disabled={!onUpdate}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Дополнительные ресурсы для определенных классов */}
+        {characterClass === 'чародей' || characterClass === 'sorcerer' ? (
+          <div className="mt-4 p-2 border rounded-md">
+            <div className="text-sm text-muted-foreground mb-1">Очки чародейства</div>
+            <div className="flex items-center justify-between">
+              <span>Текущие: {character.sorceryPoints?.current || 0}</span>
+              <span>Максимум: {character.sorceryPoints?.max || character.level}</span>
+            </div>
+          </div>
+        ) : null}
+        
+        {/* Для колдуна показываем восстановление ячеек на коротком отдыхе */}
+        {(characterClass === 'колдун' || characterClass === 'warlock') && (
+          <div className="mt-4 text-sm text-muted-foreground text-center">
+            Ячейки восстанавливаются после короткого отдыха
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };

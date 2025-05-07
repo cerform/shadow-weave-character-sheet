@@ -1,33 +1,35 @@
 
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from 'sonner';
+import { AuthProvider } from './contexts/AuthContext';
+import { CharacterProvider } from './contexts/CharacterContext';
+import { SpellbookProvider } from './contexts/SpellbookContext';
+import { UserThemeProvider } from '@/hooks/use-user-theme';
 import { ThemeProvider } from '@/components/theme-provider';
-import { UserThemeProvider } from '@/contexts/UserThemeContext';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import AppRoutes from './AppRoutes';
-import { queryClient } from './queryClient';
-import './App.css';
+import { SocketProvider } from './contexts/SocketContext';
 
+// Компонент для применения темы глобально
 const App = () => {
+  console.log('App: Инициализация приложения');
+  
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="dnd-ui-theme">
-      <UserThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <TooltipProvider>
-              <div>
-                <AppRoutes />
-                <Toaster />
-                <SonnerToaster position="top-center" closeButton />
-              </div>
-            </TooltipProvider>
-          </BrowserRouter>
-        </QueryClientProvider>
-      </UserThemeProvider>
-    </ThemeProvider>
+    <UserThemeProvider>
+      <ThemeProvider defaultTheme="dark" attribute="class">
+        <AuthProvider>
+          <CharacterProvider>
+            <SpellbookProvider>
+              <SocketProvider>
+                <Router>
+                  <AppRoutes />
+                  <Toaster />
+                </Router>
+              </SocketProvider>
+            </SpellbookProvider>
+          </CharacterProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </UserThemeProvider>
   );
 };
 

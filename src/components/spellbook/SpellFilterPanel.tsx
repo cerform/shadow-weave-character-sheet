@@ -1,186 +1,112 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { SpellFilters } from '@/hooks/spellbook/types';
-import { SchoolFilterMapping } from '@/hooks/spellbook/filterUtils';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { X } from "lucide-react";
 
 interface SpellFilterPanelProps {
-  filters: SpellFilters;
-  setFilters: React.Dispatch<React.SetStateAction<SpellFilters>>;
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
 }
 
-const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({ filters, setFilters }) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
-  // Убедимся, что filters существует и имеет все необходимые поля
-  const safeFilters = {
-    name: filters?.name || '',
-    level: filters?.level || '',
-    school: filters?.school || '',
-    characterClass: filters?.characterClass || '',
-    ritual: Boolean(filters?.ritual),
-    concentration: Boolean(filters?.concentration)
+const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
+  allLevels,
+  allSchools,
+  allClasses,
+  activeLevel,
+  activeSchool,
+  activeClass,
+  toggleLevel,
+  toggleSchool,
+  toggleClass,
+  clearFilters
+}) => {
+  // Преобразование уровня в строку
+  const getLevelText = (level: number): string => {
+    return level === 0 ? "Заговор" : `${level} уровень`;
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters(prev => ({ ...prev, name: e.target.value }));
-  };
+  const hasActiveFilters = activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0;
 
-  const handleLevelChange = (value: string) => {
-    setFilters(prev => ({ ...prev, level: value === 'any' ? '' : value }));
-  };
-
-  const handleSchoolChange = (value: string) => {
-    setFilters(prev => ({ ...prev, school: value === 'any' ? '' : value }));
-  };
-
-  const handleClassChange = (value: string) => {
-    setFilters(prev => ({ ...prev, characterClass: value === 'any' ? '' : value }));
-  };
-
-  const toggleRitual = (checked: boolean | string) => {
-    setFilters(prev => ({ ...prev, ritual: Boolean(checked) }));
-  };
-
-  const toggleConcentration = (checked: boolean | string) => {
-    setFilters(prev => ({ ...prev, concentration: Boolean(checked) }));
-  };
-
-  const handleResetFilters = () => {
-    setFilters({
-      name: '',
-      level: '',
-      school: '',
-      characterClass: '',
-      ritual: false,
-      concentration: false
-    });
-  };
-
-  // Классы для D&D 5e
-  const classes = [
-    'Бард', 'Варвар', 'Воин', 'Волшебник', 'Друид', 'Жрец', 
-    'Колдун', 'Монах', 'Паладин', 'Плут', 'Следопыт', 'Чародей',
-    'Искуситель'
-  ];
-
-  const fieldContainerClass = isMobile ? "mb-4" : "mb-6";
-  
   return (
-    <div className={`space-y-4 ${isMobile ? 'p-1' : 'p-4'} rounded-md bg-opacity-50 bg-black`}>
-      <h2 className="text-lg font-semibold mb-3">Фильтры</h2>
-      
-      <Separator className="my-3" />
-      
-      <div className={fieldContainerClass}>
-        <Label htmlFor="spell-name" className="mb-1 block">Название:</Label>
-        <Input
-          id="spell-name"
-          placeholder="Поиск по названию..."
-          value={safeFilters.name}
-          onChange={handleNameChange}
-        />
-      </div>
-      
-      <div className={fieldContainerClass}>
-        <Label htmlFor="spell-level" className="mb-1 block">Уровень:</Label>
-        <Select 
-          value={safeFilters.level || 'any'}
-          onValueChange={handleLevelChange}
-        >
-          <SelectTrigger id="spell-level">
-            <SelectValue placeholder="Любой уровень" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="any">Любой уровень</SelectItem>
-            <SelectItem value="0">Заговор</SelectItem>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-              <SelectItem key={level} value={level.toString()}>
-                {level} уровень
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className={fieldContainerClass}>
-        <Label htmlFor="spell-school" className="mb-1 block">Школа магии:</Label>
-        <Select 
-          value={safeFilters.school || 'any'}
-          onValueChange={handleSchoolChange}
-        >
-          <SelectTrigger id="spell-school">
-            <SelectValue placeholder="Любая школа" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="any">Любая школа</SelectItem>
-            {Object.entries(SchoolFilterMapping).map(([key, value]) => (
-              <SelectItem key={key} value={key}>{value}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className={fieldContainerClass}>
-        <Label htmlFor="spell-class" className="mb-1 block">Класс:</Label>
-        <Select 
-          value={safeFilters.characterClass || 'any'}
-          onValueChange={handleClassChange}
-        >
-          <SelectTrigger id="spell-class">
-            <SelectValue placeholder="Любой класс" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="any">Любой класс</SelectItem>
-            {classes.map(characterClass => (
-              <SelectItem key={characterClass} value={characterClass}>{characterClass}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="flex flex-col space-y-3">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="ritual"
-            checked={safeFilters.ritual}
-            onCheckedChange={toggleRitual}
-          />
-          <Label htmlFor="ritual" className="cursor-pointer">Ритуальное</Label>
+    <Card className="mb-6 border border-accent/20">
+      <CardContent className="p-4 pt-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Фильтры</h3>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-accent">
+              Сбросить
+            </Button>
+          )}
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="concentration"
-            checked={safeFilters.concentration}
-            onCheckedChange={toggleConcentration}
-          />
-          <Label htmlFor="concentration" className="cursor-pointer">Требует концентрации</Label>
+
+        {/* Фильтр по уровням */}
+        <div className="mb-4">
+          <h4 className="text-sm font-medium mb-2">Уровень</h4>
+          <div className="flex flex-wrap gap-2">
+            {allLevels.map(level => (
+              <Badge
+                key={`level-${level}`}
+                variant={activeLevel.includes(level) ? "default" : "outline"}
+                className={`cursor-pointer ${
+                  activeLevel.includes(level) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
+                onClick={() => toggleLevel(level)}
+              >
+                {getLevelText(level)}
+              </Badge>
+            ))}
+          </div>
         </div>
-      </div>
-      
-      {isMobile && (
-        <div className="pt-2">
-          <button
-            onClick={handleResetFilters}
-            className="text-sm text-blue-400 hover:text-blue-300 underline"
-          >
-            Сбросить фильтры
-          </button>
+
+        {/* Фильтр по школам */}
+        <div className="mb-4">
+          <h4 className="text-sm font-medium mb-2">Школа</h4>
+          <div className="flex flex-wrap gap-2">
+            {allSchools.map(school => (
+              <Badge
+                key={`school-${school}`}
+                variant={activeSchool.includes(school) ? "default" : "outline"}
+                className={`cursor-pointer ${
+                  activeSchool.includes(school) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
+                onClick={() => toggleSchool(school)}
+              >
+                {school}
+              </Badge>
+            ))}
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Фильтр по классам */}
+        <div>
+          <h4 className="text-sm font-medium mb-2">Класс</h4>
+          <div className="flex flex-wrap gap-2">
+            {allClasses.map(className => (
+              <Badge
+                key={`class-${className}`}
+                variant={activeClass.includes(className) ? "default" : "outline"}
+                className={`cursor-pointer ${
+                  activeClass.includes(className) ? "bg-accent hover:bg-accent/80" : "bg-background hover:bg-accent/10"
+                }`}
+                onClick={() => toggleClass(className)}
+              >
+                {className}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

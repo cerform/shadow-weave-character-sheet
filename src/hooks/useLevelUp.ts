@@ -1,84 +1,662 @@
 
-import { useState, useCallback } from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { useToast } from '@/hooks/use-toast';
 
-const useLevelUp = () => {
-  const { character, setCharacter, updateCharacter, saveCurrentCharacter } = useCharacter();
-  const [isLevelingUp, setIsLevelingUp] = useState(false);
-  const { toast } = useToast();
+interface UseLevelUpProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
 
-  const handleLevelUp = async () => {
-    setIsLevelingUp(true);
-    if (!character) {
-      setIsLevelingUp(false);
-      return;
-    }
+const useLevelUp = ({ character, onUpdate }: UseLevelUpProps) => {
+  const [level, setLevel] = useState(character?.level || 1);
 
-    const newLevel = character.level + 1;
+  useEffect(() => {
+    setLevel(character?.level || 1);
+  }, [character?.level]);
 
-    // Проверяем, не превышает ли новый уровень максимальный уровень (20)
-    if (newLevel > 20) {
-      setIsLevelingUp(false);
-      toast({
-        title: "Максимальный уровень",
-        description: "Вы достигли максимального уровня!",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleLevelUp = () => {
+    const newLevel = level + 1;
+    setLevel(newLevel);
+    onUpdate({ level: newLevel });
+  };
 
-    try {
-      // Обновляем данные о заклинаниях для магических классов
-      if (character.class) {
-        const spellsInfo = calculateAvailableSpellsByClassAndLevel(character.class, newLevel);
-        console.log('Новые данные о заклинаниях:', spellsInfo);
-        
-        // Обновляем персонажа с новыми данными о заклинаниях и уровнем
-        updateCharacter({
-          level: newLevel,
-          // Используем правильные названия полей для Character
-          spellcasting: {
-            // Обновляем информацию о заклинаниях
-            preparedSpellsLimit: spellsInfo.knownSpells
-          },
-          // Если нужно, добавляем другие поля для заклинаний
-          // Этих полей нет в типе Character, поэтому мы не можем их обновить напрямую
-          // maxSpellLevel: spellsInfo.maxLevel
-        });
-        
-        // Сохраняем обновленного персонажа
-        await saveCurrentCharacter();
-        
-        toast({
-          title: "Уровень повышен!",
-          description: `Персонаж достиг ${newLevel} уровня.`,
-        });
-      } else {
-        // Для не-магических классов просто обновляем уровень
-        updateCharacter({ level: newLevel });
-        await saveCurrentCharacter();
-        
-        toast({
-          title: "Уровень повышен!",
-          description: `Персонаж достиг ${newLevel} уровня.`,
-        });
-      }
-    } catch (error) {
-      console.error("Ошибка при повышении уровня:", error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось повысить уровень персонажа.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLevelingUp(false);
+  const handleLevelDown = () => {
+    const newLevel = Math.max(1, level - 1);
+    setLevel(newLevel);
+    onUpdate({ level: newLevel });
+  };
+
+  const fighterHitDice = {
+    1: { total: 1, used: 0, dieType: 'd10', value: '1d10' },
+    2: { total: 2, used: 0, dieType: 'd10', value: '2d10' },
+    3: { total: 3, used: 0, dieType: 'd10', value: '3d10' },
+    4: { total: 4, used: 0, dieType: 'd10', value: '4d10' },
+    5: { total: 5, used: 0, dieType: 'd10', value: '5d10' },
+    6: { total: 6, used: 0, dieType: 'd10', value: '6d10' },
+    7: { total: 7, used: 0, dieType: 'd10', value: '7d10' },
+    8: { total: 8, used: 0, dieType: 'd10', value: '8d10' },
+    9: { total: 9, used: 0, dieType: 'd10', value: '9d10' },
+    10: { total: 10, used: 0, dieType: 'd10', value: '10d10' },
+    11: { total: 11, used: 0, dieType: 'd10', value: '11d10' },
+    12: { total: 12, used: 0, dieType: 'd10', value: '12d10' },
+    13: { total: 13, used: 0, dieType: 'd10', value: '13d10' },
+    14: { total: 14, used: 0, dieType: 'd10', value: '14d10' },
+    15: { total: 15, used: 0, dieType: 'd10', value: '15d10' },
+    16: { total: 16, used: 0, dieType: 'd10', value: '16d10' },
+    17: { total: 17, used: 0, dieType: 'd10', value: '17d10' },
+    18: { total: 18, used: 0, dieType: 'd10', value: '18d10' },
+    19: { total: 19, used: 0, dieType: 'd10', value: '19d10' },
+    20: { total: 20, used: 0, dieType: 'd10', value: '20d10' },
+  };
+
+  const wizardSpellSlots = {
+    1: {
+      1: { max: 1, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    2: {
+      1: { max: 2, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    3: {
+      1: { max: 3, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    4: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    5: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 2, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    6: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    7: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 1, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    8: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 2, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    9: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 1, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    10: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    11: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    12: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    13: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    14: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    15: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    16: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    17: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    18: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    19: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 2, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    20: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 2, used: 0 },
+      7: { max: 2, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+  };
+
+  const clericSpellSlots = {
+    1: {
+      1: { max: 2, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    2: {
+      1: { max: 3, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    3: {
+      1: { max: 4, used: 0 },
+      2: { max: 2, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    4: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    5: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 2, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    6: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    7: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 1, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    8: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 2, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    9: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 1, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    10: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    11: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    12: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    13: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    14: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    15: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    16: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 0, used: 0 },
+    },
+    17: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 2, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    18: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 1, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    19: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 2, used: 0 },
+      7: { max: 1, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+    20: {
+      1: { max: 4, used: 0 },
+      2: { max: 3, used: 0 },
+      3: { max: 3, used: 0 },
+      4: { max: 3, used: 0 },
+      5: { max: 3, used: 0 },
+      6: { max: 2, used: 0 },
+      7: { max: 2, used: 0 },
+      8: { max: 1, used: 0 },
+      9: { max: 1, used: 0 },
+    },
+  };
+
+  const warlockSpellSlots = {
+    1: {
+      1: { max: 1, used: 0 },
+      2: { max: 0, used: 0 }
+    },
+    2: {
+      1: { max: 2, used: 0 },
+      2: { max: 0, used: 0 }
+    },
+    3: {
+      1: { max: 0, used: 0 },
+      2: { max: 2, used: 0 }
+    },
+    4: {
+      1: { max: 0, used: 0 },
+      2: { max: 2, used: 0 }
+    },
+    5: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 2, used: 0 }
+    },
+    6: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 2, used: 0 }
+    },
+    7: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 2, used: 0 }
+    },
+    8: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 2, used: 0 }
+    },
+    9: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 2, used: 0 }
+    },
+    10: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 2, used: 0 }
+    },
+    11: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 3, used: 0 }
+    },
+    12: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 3, used: 0 }
+    },
+    13: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 3, used: 0 }
+    },
+    14: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 3, used: 0 }
+    },
+    15: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 3, used: 0 }
+    },
+    16: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 3, used: 0 }
+    },
+    17: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
+    },
+    18: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
+    },
+    19: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
+    },
+    20: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
     }
   };
 
-  return { handleLevelUp, isLevelingUp };
+  return {
+    level,
+    handleLevelUp,
+    handleLevelDown,
+    fighterHitDice,
+    wizardSpellSlots,
+    clericSpellSlots,
+    warlockSpellSlots
+  };
 };
 
 export default useLevelUp;

@@ -4,7 +4,7 @@ import { Character } from '@/types/character';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { getAbilityModifierValue } from '@/utils/abilityUtils';
+import { getAbilityModifier } from '@/utils/abilityUtils'; // Исправляем импорт
 
 interface SkillsPanelProps {
   character: Character;
@@ -59,7 +59,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     
     // Получаем модификатор характеристики
     const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 10;
-    const abilityMod = getAbilityModifierValue(abilityScore);
+    const abilityMod = getAbilityModifier(abilityScore);
     
     // Вычисляем значение навыка
     const profBonus = character.proficiencyBonus || 2;
@@ -81,40 +81,33 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     };
     
     // Обновляем персонажа
-    let updatedProficiencies = character.proficiencies ? { 
-      ...character.proficiencies 
-    } : {};
+    let updatedProficiencies = { 
+      ...character.proficiencies
+    };
     
     // Проверяем тип proficiencies и обновляем соответственно
     if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
-      // Создаем или обновляем массив навыков
+      // Создаем массив навыков, если его нет
+      const skillsList = updatedProficiencies.skills || [];
+      
       if (!currentSkill.proficient) {
         // Добавляем навык в список владений
-        if ('skills' in updatedProficiencies && Array.isArray(updatedProficiencies.skills)) {
-          updatedProficiencies = {
-            ...updatedProficiencies,
-            skills: [...updatedProficiencies.skills, skillKey]
-          };
-        } else {
-          updatedProficiencies = {
-            ...updatedProficiencies,
-            skills: [skillKey]
-          };
-        }
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: [...skillsList, skillKey]
+        };
       } else {
         // Удаляем навык из списка владений
-        if ('skills' in updatedProficiencies && Array.isArray(updatedProficiencies.skills)) {
-          updatedProficiencies = {
-            ...updatedProficiencies,
-            skills: updatedProficiencies.skills.filter(skill => skill !== skillKey)
-          };
-        }
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: skillsList.filter(skill => skill !== skillKey)
+        };
       }
     }
     
     onUpdate({
       skills: updatedSkills,
-      proficiencies: updatedProficiencies as Character['proficiencies']
+      proficiencies: updatedProficiencies
     });
     
     // Показываем уведомление

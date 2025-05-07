@@ -1,34 +1,32 @@
 
-export interface UserType {
-  uid?: string;
-  id?: string; // Добавляем id для совместимости
-  email: string;
+// Типы для пользователей и аутентификации
+export interface User {
+  uid: string;
+  id?: string;
+  email?: string;
   displayName?: string;
-  username?: string;
   photoURL?: string;
+  role: 'player' | 'dm' | 'admin';
   isDM?: boolean;
+  username?: string;
   characterName?: string;
-  characterClass?: string;
-  characterRace?: string;
-  characterLevel?: string;
-  characterBio?: string;
-  characterGuild?: string;
-  role?: string; // Добавляем свойство role
-  lastLogin?: Date;
-  createdAt?: Date;
+  // Include any other user properties
 }
 
+// Add necessary types for other files
+export type UserType = User;
 export interface AuthContextType {
-  currentUser: UserType | null;
-  user: UserType | null; // Добавляем user как алиас для currentUser
-  isAuthenticated: boolean;
+  user: User | null;
+  currentUser: User | null;
+  loading: boolean;
+  error: Error | null | string;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  googleLogin: () => Promise<UserType | null>; // Добавляем googleLogin
+  loginWithGoogle?: () => Promise<void>;
+  logout: () => Promise<void>;
   register: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
   signup: (email: string, password: string, displayName?: string, isDM?: boolean) => Promise<void>;
-  logout: () => Promise<void>;
-  loading: boolean;
-  error: string | null;
-  updateProfile: (data: Partial<UserType>) => Promise<void>;
+  googleLogin: (redirectToPath?: string) => Promise<UserType | null>;
+  isAuthenticated: boolean;
+  updateProfile?: (data: Partial<UserType>) => Promise<void>;
+  // Include other auth context properties
 }

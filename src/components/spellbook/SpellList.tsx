@@ -1,48 +1,115 @@
 
 import React from 'react';
-import { CharacterSpell } from '@/types/character';
-import SpellCard from './SpellCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SpellData } from '@/types/spells';
 
 interface SpellListProps {
-  spells: CharacterSpell[];
-  isLoading?: boolean;
-  compactMode?: boolean;
+  spells: SpellData[];
+  getBadgeColor: (level: number) => string;
+  getSchoolBadgeColor: (school: string) => string;
+  currentTheme: any;
+  handleOpenSpell: (spell: SpellData) => void;
+  formatClasses: (classes: string[] | string | undefined) => string;
 }
 
-const SpellList: React.FC<SpellListProps> = ({ spells, isLoading = false, compactMode }) => {
-  const isMobile = useMediaQuery("(max-width: 768px)") || compactMode;
-
-  if (isLoading) {
-    return (
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}`}>
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className={`${isMobile ? 'h-20' : 'h-48'} w-full rounded-md`} />
-        ))}
-      </div>
-    );
-  }
-
-  if (spells.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-lg">Заклинания не найдены</p>
-        <p className="text-sm opacity-70 mt-2">Попробуйте изменить параметры фильтрации</p>
-      </div>
-    );
-  }
-
+const SpellList: React.FC<SpellListProps> = ({
+  spells,
+  getBadgeColor,
+  getSchoolBadgeColor,
+  currentTheme,
+  handleOpenSpell,
+  formatClasses,
+}) => {
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}`}>
-      {spells.map(spell => (
-        <SpellCard 
-          key={spell.id || `${spell.name}-${spell.level}`} 
-          spell={spell}
-          compactMode={compactMode}
-        />
-      ))}
-    </div>
+    <ScrollArea className="h-[70vh]">
+      <div className="p-4 space-y-4">
+        {spells.length > 0 ? (
+          spells.map((spell, index) => (
+            <Card 
+              key={spell.id !== undefined ? String(spell.id) : `spell-${index}`} 
+              className="spell-card border border-accent hover:border-primary cursor-pointer transition-all"
+              onClick={() => handleOpenSpell(spell)}
+              style={{
+                backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)'}`
+              }}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-bold" style={{color: currentTheme.textColor || 'white'}}>{spell.name}</h4>
+                  <Badge
+                    variant="outline"
+                    style={{
+                      backgroundColor: currentTheme.accent,
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}
+                  >
+                    {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
+                  </Badge>
+                </div>
+                <div className="flex items-center text-sm mb-2 flex-wrap gap-2">
+                  <Badge
+                    variant="outline"
+                    style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}
+                  >
+                    {spell.school}
+                  </Badge>
+                  {spell.ritual && (
+                    <Badge variant="outline" style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}>
+                      Ритуал
+                    </Badge>
+                  )}
+                  {spell.concentration && (
+                    <Badge variant="outline" style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      color: currentTheme.textColor || 'white',
+                      borderColor: currentTheme.accent
+                    }}>
+                      Концентрация
+                    </Badge>
+                  )}
+                </div>
+                <Separator className="my-2 bg-accent/30" />
+                <div className="grid grid-cols-2 gap-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
+                  <div>
+                    <span className="font-semibold">Время накладывания:</span> {spell.castingTime}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Дистанция:</span> {spell.range}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Компоненты:</span> {spell.components}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Длительность:</span> {spell.duration}
+                  </div>
+                </div>
+                {spell.classes && (
+                  <div className="mt-2 text-sm" style={{color: currentTheme.textColor || 'white'}}>
+                    <span className="font-semibold">Классы:</span> {formatClasses(spell.classes)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Заклинания не найдены. Попробуйте изменить критерии поиска.
+          </div>
+        )}
+      </div>
+    </ScrollArea>
   );
 };
 

@@ -1,159 +1,129 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-
-// Импортируем страницы
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import AuthPage from './pages/AuthPage';
+import { useAuth } from './hooks/use-auth';
+import ProfilePage from './pages/ProfilePage';
 import SpellbookPage from './pages/SpellbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
-import ProfilePage from './pages/ProfilePage';
-import HandbookPage from './pages/HandbookPage';
-import CharacterViewPage from './pages/CharacterViewPage';
-import DMDashboardPage from './pages/DMDashboardPage';
-import PlayerDashboardPage from './pages/PlayerDashboardPage';
-import BattleScenePage from './pages/BattleScenePage';
-import UnauthorizedPage from './pages/UnauthorizedPage';
-import DebugPage from './pages/DebugPage';
-import DndSpellsPage from './pages/DndSpellsPage';
+import CharacterSheetPage from './pages/CharacterSheetPage';
 import CharactersListPage from './pages/CharactersListPage';
-import DMSessionManager from './pages/DMSessionManager';
-import JoinGameSession from './pages/JoinGameSession';
-import DicePage from './pages/DicePage';
+import AuthPage from './pages/AuthPage';
+import Index from './pages/Index';
 
-// Ленивая загрузка страниц, зависящих от WebSocket
-const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
-const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
+// Импорт созданных нами компонентов
+import MobileAppLayout from './components/mobile-app/MobileAppLayout';
+import MobileCharacterSheet from './components/character-sheet/MobileCharacterSheet';
+import MobileCharacterCreationPage from './pages/MobileCharacterCreationPage';
+import SpellProvider from './components/spellbook/SpellProvider';
 
-// Импорт хука для защиты маршрутов
-import { useProtectedRoute } from './hooks/use-auth';
+// Добавим компоненты для недостающих страниц
+import HandbookPage from './pages/HandbookPage'; 
+import HandbookCategoryPage from './pages/HandbookCategoryPage';
+import DmPage from './pages/DmPage';
+import BattleMapPage from './pages/BattleMapPage';
+import NotFoundPage from './pages/NotFoundPage';
 
-// Компонент Fallback для ленивой загрузки
-const LazyLoading = () => (
-  <div className="flex items-center justify-center h-screen w-full">
-    <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-  </div>
-);
-
-// Компонент для защиты маршрутов DM
-const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessDMDashboard } = useProtectedRoute();
+// Простой компонент для защиты маршрутов
+const RequireAuth = ({ children, requireDM }: { children: React.ReactNode, requireDM: boolean }) => {
+  // Используем авторизацию без явного приведения типов
+  const auth = useAuth();
+  const { isAuthenticated, currentUser } = auth;
   
-  if (loading) {
-    return <LazyLoading />;
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
   }
   
-  if (!canAccessDMDashboard) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Компонент для защиты маршрутов игрока
-const ProtectedPlayerRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessPlayerDashboard } = useProtectedRoute();
-  
-  if (loading) {
-    return <LazyLoading />;
-  }
-  
-  if (!canAccessPlayerDashboard) {
-    return <Navigate to="/unauthorized" replace />;
+  // Check for role or isDM property
+  if (requireDM && !(currentUser?.role === 'dm' || currentUser?.isDM)) {
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Компонент для маршрутизации на основе роли
-const RoleBasedRedirect = () => {
-  const { loading, isDM, isPlayer } = useProtectedRoute();
+const AppRoutes = () => {
+  // Используем авторизацию без явного приведения типов
+  const auth = useAuth();
+  const { isAuthenticated } = auth;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  if (loading) {
-    return <LazyLoading />;
-  }
+  // Определяем, является ли устройство мобильным
+  const [isMobile, setIsMobile] = useState(false);
   
-  if (isDM) {
-    return <Navigate to="/dm" replace />;
-  }
-  
-  if (isPlayer) {
-    return <Navigate to="/player" replace />;
-  }
-  
-  return <Navigate to="/auth" replace />;
-};
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    // Логируем информацию о маршрутизации
+    console.log('AppRoutes: инициализация маршрутизации');
+    console.log('AppRoutes: isAuthenticated =', isAuthenticated);
+    console.log('AppRoutes: isMobile =', isMobile);
+    
+    setLoading(false);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isAuthenticated]);
 
-const AppRoutes: React.FC = () => {
-  console.log('AppRoutes: Инициализация маршрутов');
-  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="/dashboard" element={<RoleBasedRedirect />} />
+      {/* Публичные маршруты */}
+      <Route path="/" element={<Index />} />
       
-      {/* Добавляем страницу заклинаний D&D */}
-      <Route path="/dnd-spells" element={<DndSpellsPage />} />
-      
-      {/* Добавляем страницу кубиков */}
-      <Route path="/dice" element={<DicePage />} />
-      
-      {/* Маршруты DM с защитой */}
-      <Route path="/dm" element={
-        <ProtectedDMRoute>
-          <DMDashboardPage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/dm-session/:id" element={
-        <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <GameRoomPage />
-          </React.Suspense>
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle/:sessionId" element={
-        <ProtectedDMRoute>
-          <BattleScenePage />
-        </ProtectedDMRoute>
-      } />
-      
-      {/* Новые маршруты для игровых сессий */}
-      <Route path="/dm-session" element={<DMSessionManager />} />
-      <Route path="/join-game" element={<JoinGameSession />} />
-      
-      {/* Маршруты игрока с защитой */}
-      <Route path="/player" element={
-        <ProtectedPlayerRoute>
-          <PlayerDashboardPage />
-        </ProtectedPlayerRoute>
-      } />
-      <Route path="/join-session" element={
-        <ProtectedPlayerRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <JoinSessionPage />
-          </React.Suspense>
-        </ProtectedPlayerRoute>
-      } />
-      
-      {/* Перенаправление для исправленных URL */}
-      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
-      
-      {/* Добавляем маршрут для отладки */}
-      <Route path="/debug" element={<DebugPage />} />
-      
-      {/* Общедоступные маршруты */}
-      <Route path="/spellbook" element={<SpellbookPage />} />
-      <Route path="/character-creation" element={<CharacterCreationPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
+      {/* Руководства */}
       <Route path="/handbook" element={<HandbookPage />} />
-      <Route path="/character/:id" element={<CharacterViewPage />} />
-      <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/handbook/:category" element={<HandbookCategoryPage />} />
+      <Route path="/spellbook" element={<SpellbookPage />} />
       
-      {/* Маршрут для неизвестных путей */}
-      <Route path="*" element={<NotFound />} />
+      {/* Персонажи и управление ими */}
+      <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/character-creation" element={isMobile ? <MobileCharacterCreationPage /> : <CharacterCreationPage />} />
+      <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
+      <Route path="/character/:id" element={<CharacterSheetPage />} />
+      
+      {/* Аутентификация */}
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<Navigate to="/auth" replace />} />
+      <Route path="/register" element={<Navigate to="/auth" replace />} />
+      
+      {/* Защищенные маршруты */}
+      <Route
+        path="/profile"
+        element={
+          <RequireAuth requireDM={false}>
+            <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      
+      {/* DM Only Routes */}
+      <Route
+        path="/dm"
+        element={
+          <RequireAuth requireDM={true}>
+            <DmPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/battle"
+        element={
+          <RequireAuth requireDM={true}>
+            <BattleMapPage />
+          </RequireAuth>
+        }
+      />
+      
+      {/* Fallback маршрут */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

@@ -1,153 +1,215 @@
 
-// Обновлен файл SpellBookViewer.tsx для добавления адаптивности
-// Обратите внимание: я не меняю логику, а только UI для мобильных устройств
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { SearchIcon, FilterIcon, X } from "lucide-react";
 import SpellList from './SpellList';
+import SpellTable from './SpellTable';
+import SpellDetailModal from './SpellDetailModal';
 import SpellFilterPanel from './SpellFilterPanel';
 import { useSpellbook } from '@/hooks/spellbook';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { Button } from '@/components/ui/button';
-import { Filter, RefreshCw } from 'lucide-react';
-import {
-  Sheet, 
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { useTheme } from '@/hooks/use-theme';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Определение интерфейса для SpellFilterPanel
+interface SpellFilterPanelProps {
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+}
 
 const SpellBookViewer: React.FC = () => {
-  const { spells, loadSpells, isLoading, filters, setFilters } = useSpellbook();
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [activeTab, setActiveTab] = useState("all");
+  const {
+    filteredSpells,
+    searchTerm,
+    setSearchTerm,
+    allLevels,
+    allSchools,
+    allClasses,
+    activeLevel,
+    activeSchool,
+    activeClass,
+    toggleLevel,
+    toggleSchool,
+    toggleClass,
+    clearFilters,
+    selectedSpell,
+    isModalOpen,
+    handleOpenSpell,
+    handleClose,
+    getBadgeColor,
+    getSchoolBadgeColor,
+    formatClasses,
+    isLoading,
+    loading
+  } = useSpellbook();
+
+  // Определяем isLoading, чтобы избежать ошибок
+  const isDataLoading = isLoading || loading;
+
+  const [viewMode, setViewMode] = useState<string>('list');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const { theme, themeStyles } = useTheme();
+
+  // Это нужно для обновления UI при изменении searchTerm
+  const [searchValue, setSearchValue] = useState<string>(searchTerm);
   
   useEffect(() => {
-    loadSpells();
-  }, []);
+    setSearchValue(searchTerm);
+  }, [searchTerm]);
 
-  const handleRefresh = () => {
-    loadSpells();
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchValue(newValue);
+    setSearchTerm(newValue);
   };
 
-  // Проверяем, что spells определён и является массивом
-  const validSpells = Array.isArray(spells) ? spells : [];
+  const toggleFilters = () => {
+    setShowFilters(prev => !prev);
+  };
 
-  // Группируем заклинания по уровням для табов с защитой от undefined
-  const spellsByLevel: Record<string, any[]> = {
-    'all': validSpells,
-    '0': validSpells.filter(spell => spell && spell.level === 0),
-    '1': validSpells.filter(spell => spell && spell.level === 1),
-    '2': validSpells.filter(spell => spell && spell.level === 2),
-    '3': validSpells.filter(spell => spell && spell.level === 3),
-    '4': validSpells.filter(spell => spell && spell.level === 4),
-    '5': validSpells.filter(spell => spell && spell.level === 5),
-    '6': validSpells.filter(spell => spell && spell.level === 6),
-    '7': validSpells.filter(spell => spell && spell.level === 7),
-    '8': validSpells.filter(spell => spell && spell.level === 8),
-    '9': validSpells.filter(spell => spell && spell.level === 9),
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchValue('');
+  };
+
+  const currentTheme = themeStyles || {
+    backgroundColor: '#0f1729', // Темно-синий фон
+    cardBackground: 'rgba(0, 0, 0, 0.75)',
+    textColor: '#ffffff',
+    accent: '#3b82f6' // Синий акцент
   };
 
   return (
-    <div className="relative">
-      {isMobile ? (
-        // Мобильная версия
-        <div className="flex flex-col space-y-4">
-          <div className="flex justify-between items-center">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" /> Фильтры
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[85%] sm:w-[350px]">
-                <div className="py-4">
-                  <SpellFilterPanel 
-                    filters={filters} 
-                    setFilters={setFilters} 
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
-            
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="flex items-center gap-1"
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+        <div className="relative flex-1 w-full sm:w-auto">
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск заклинаний..."
+            value={searchValue}
+            onChange={handleSearchChange}
+            className="pl-10 pr-10 bg-black/20 border-accent/30"
+          />
+          {searchValue && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              {isLoading ? 'Загрузка...' : 'Обновить'}
-            </Button>
-          </div>
-          
-          <Tabs defaultValue="all" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-            <div className="overflow-x-auto pb-2">
-              <TabsList className="h-9 w-auto inline-flex whitespace-nowrap">
-                <TabsTrigger value="all" className="h-8">Все</TabsTrigger>
-                <TabsTrigger value="0" className="h-8">Заговоры</TabsTrigger>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                  <TabsTrigger key={level} value={level.toString()} className="h-8">
-                    {level} ур.
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-            
-            {Object.keys(spellsByLevel).map(level => (
-              <TabsContent key={level} value={level} className="mt-2">
-                <SpellList 
-                  spells={spellsByLevel[level]} 
-                  isLoading={isLoading} 
-                  compactMode={isMobile} 
-                />
-              </TabsContent>
-            ))}
+              <X className="h-4 w-4 text-muted-foreground hover:text-accent" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleFilters}
+            className={`${
+              showFilters ? 'bg-accent text-white' : 'bg-black/20'
+            } border-accent/30`}
+          >
+            <FilterIcon className="mr-1 h-4 w-4" />
+            Фильтры
+            {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs bg-accent/30 rounded-full">
+                {activeLevel.length + activeSchool.length + activeClass.length}
+              </span>
+            )}
+          </Button>
+
+          <Tabs 
+            defaultValue="list" 
+            value={viewMode} 
+            onValueChange={setViewMode} 
+            className="hidden sm:flex"
+          >
+            <TabsList className="bg-black/20 border border-accent/30">
+              <TabsTrigger value="list">Список</TabsTrigger>
+              <TabsTrigger value="table">Таблица</TabsTrigger>
+            </TabsList>
           </Tabs>
         </div>
+      </div>
+
+      {showFilters && (
+        <SpellFilterPanel
+          allLevels={allLevels}
+          allSchools={allSchools}
+          allClasses={allClasses}
+          activeLevel={activeLevel}
+          activeSchool={activeSchool}
+          activeClass={activeClass}
+          toggleLevel={toggleLevel}
+          toggleSchool={toggleSchool}
+          toggleClass={toggleClass}
+          clearFilters={clearFilters}
+        />
+      )}
+
+      {isDataLoading ? (
+        <div className="space-y-4 mt-8">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
       ) : (
-        // Десктопная версия
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <SpellFilterPanel 
-              filters={filters} 
-              setFilters={setFilters}
-            />
-            <div className="mt-4">
-              <Button 
-                onClick={handleRefresh} 
-                disabled={isLoading}
-                variant="outline"
-                className="w-full"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                {isLoading ? 'Загрузка...' : 'Обновить список'}
-              </Button>
-            </div>
+        <>
+          <div className="mb-4 text-sm text-muted-foreground">
+            Найдено заклинаний: <span className="font-semibold">{filteredSpells.length}</span>
           </div>
-          
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">Все заклинания</TabsTrigger>
-                <TabsTrigger value="0">Заговоры</TabsTrigger>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                  <TabsTrigger key={level} value={level.toString()}>
-                    {level} уровень
-                  </TabsTrigger>
-                ))}
+
+          <Tabs value={viewMode} className="w-full">
+            <TabsContent value="list">
+              <SpellList
+                spells={filteredSpells}
+                getBadgeColor={getBadgeColor}
+                getSchoolBadgeColor={getSchoolBadgeColor}
+                currentTheme={currentTheme}
+                handleOpenSpell={handleOpenSpell}
+                formatClasses={formatClasses}
+              />
+            </TabsContent>
+
+            <TabsContent value="table">
+              <SpellTable
+                spells={filteredSpells}
+                onSpellClick={handleOpenSpell}
+                currentTheme={currentTheme}
+              />
+            </TabsContent>
+          </Tabs>
+
+          <div className="sm:hidden mt-6">
+            <Tabs defaultValue="list" value={viewMode} onValueChange={setViewMode}>
+              <TabsList className="w-full bg-black/20 border border-accent/30">
+                <TabsTrigger value="list" className="flex-1">
+                  Список
+                </TabsTrigger>
+                <TabsTrigger value="table" className="flex-1">
+                  Таблица
+                </TabsTrigger>
               </TabsList>
-              
-              {Object.keys(spellsByLevel).map(level => (
-                <TabsContent key={level} value={level}>
-                  <SpellList 
-                    spells={spellsByLevel[level]} 
-                    isLoading={isLoading}
-                  />
-                </TabsContent>
-              ))}
             </Tabs>
           </div>
-        </div>
+
+          {selectedSpell && (
+            <SpellDetailModal
+              spell={selectedSpell}
+              open={isModalOpen}
+              onClose={handleClose}
+            />
+          )}
+        </>
       )}
     </div>
   );

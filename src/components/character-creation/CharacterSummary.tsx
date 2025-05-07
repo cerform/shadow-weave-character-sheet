@@ -27,6 +27,8 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     } else {
       // Объект с weapons, armor, items
       const equipParts = [];
+      
+      // Нам нужно проверить, что character.equipment - это объект с weapons, armor, items
       const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
       
       if (equip.weapons && equip.weapons.length > 0) {
@@ -62,6 +64,37 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     
     return 'Нет особенностей';
   };
+
+  // Безопасно отображаем инициативу
+  const displayInitiative = () => {
+    if (character.initiative !== undefined) {
+      if (typeof character.initiative === 'number') {
+        return character.initiative >= 0 ? `+${character.initiative}` : `${character.initiative}`;
+      }
+      return character.initiative;
+    }
+    return '–';
+  };
+  
+  // Безопасное отображение навыков
+  const displaySkills = () => {
+    if (!character.proficiencies || typeof character.proficiencies !== 'object') {
+      return 'Нет навыков';
+    }
+    
+    // Если proficiencies - массив строк
+    if (Array.isArray(character.proficiencies)) {
+      return character.proficiencies.length > 0 ? character.proficiencies.join(', ') : 'Нет навыков';
+    }
+    
+    // Если proficiencies - объект с полем skills
+    const skills = character.proficiencies.skills;
+    if (skills && Array.isArray(skills)) {
+      return skills.length > 0 ? skills.join(', ') : 'Нет навыков';
+    }
+    
+    return 'Нет навыков';
+  };
   
   return (
     <Card className="w-full">
@@ -91,7 +124,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
               <h4 className="font-medium mb-1">Базовые параметры:</h4>
               <div className="space-y-1 text-sm">
                 <div>КД: {character.armorClass || '–'}</div>
-                <div>Инициатива: {character.initiative !== undefined ? character.initiative : '–'}</div>
+                <div>Инициатива: {displayInitiative()}</div>
                 <div>Скорость: {character.speed || '–'}</div>
                 <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
                 <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
@@ -102,10 +135,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
           <div>
             <h4 className="font-medium mb-1">Владения и навыки:</h4>
             <p className="text-sm">
-              {character.proficiencies && typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && 
-                'skills' in character.proficiencies && character.proficiencies.skills ? 
-                formatList(character.proficiencies.skills) : 
-                'Нет навыков'}
+              {displaySkills()}
             </p>
           </div>
           

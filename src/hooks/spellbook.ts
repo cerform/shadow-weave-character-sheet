@@ -1,5 +1,8 @@
 
-// Реэкспорт хуков и утилит из модуля
-export * from './spellbook/index';
-export { useSpellbook } from './spellbook/index';
-export default { useSpellbook };
+import { useContext } from 'react';
+import { SpellbookContext, useSpellbook as contextUseSpellbook } from '@/contexts/SpellbookContext';
+
+// Экспортируем функцию для получения контекста
+export const useSpellbook = contextUseSpellbook;
+
+export default useSpellbook;
