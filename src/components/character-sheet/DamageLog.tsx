@@ -1,66 +1,131 @@
-import React from 'react';
-
-// Update the HitPointEvent type to include 'heal' as a valid type
-export type HitPointEventType = 'damage' | 'healing' | 'temp' | 'tempHP' | 'death-save' | 'heal';
-
-export interface HitPointEvent {
-  type: HitPointEventType;
-  value: number;
-  timestamp: number;
-  source?: string;
-}
-
-// Update the DamageLog component to properly handle the 'heal' event type
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HitPointEvent } from '@/types/character';
+import { formatDistance } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { Heart, Shield, Skull } from 'lucide-react';
 
 interface DamageLogProps {
-    damageLog: HitPointEvent[];
+  events: HitPointEvent[];
+  maxEvents?: number;
 }
 
-const DamageLog: React.FC<DamageLogProps> = ({ damageLog }) => {
-    const sortedLog = [...damageLog].sort((a, b) => b.timestamp - a.timestamp);
-
-    const getEventText = (event: HitPointEvent) => {
-        switch (event.type) {
-            case 'damage':
-                return `Получено ${event.value} урона`;
-            case 'healing':
-                return `Восстановлено ${event.value} здоровья`;
-            case 'temp':
-                return `Получено ${event.value} временного здоровья`;
-            case 'tempHP':
-                return `Получено ${event.value} временных HP`;
-            case 'death-save':
-                return `Спасбросок от смерти: ${event.value > 0 ? 'Успех' : 'Провал'}`;
-            case 'heal':
-                return `Вылечено ${event.value} здоровья`;
-            default:
-                return 'Неизвестное событие';
-        }
-    };
-
-    return (
-        <Card>
-            <CardContent className="p-2">
-                <h3 className="text-sm font-semibold mb-2">История изменений HP</h3>
-                <ScrollArea className="h-[200px] w-full">
-                    <div className="flex flex-col">
-                        {sortedLog.map((event, index) => (
-                            <div key={index} className="py-1 px-2 border-b border-border last:border-none">
-                                <p className="text-xs">{getEventText(event)}</p>
-                            </div>
-                        ))}
-                        {sortedLog.length === 0 && (
-                            <div className="py-2 px-3 text-center text-muted-foreground">
-                                Нет записей об изменении здоровья.
-                            </div>
-                        )}
-                    </div>
-                </ScrollArea>
-            </CardContent>
-        </Card>
-    );
+const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
+  const [displayEvents, setDisplayEvents] = useState<HitPointEvent[]>([]);
+  
+  // Обновляем отображаемые события при изменении списка
+  useEffect(() => {
+    // Сортируем события по времени (самые новые сверху)
+    const sortedEvents = [...events].sort((a, b) => {
+      const timeA = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp as Date).getTime();
+      const timeB = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp as Date).getTime();
+      return timeB - timeA;
+    });
+    
+    // Ограничиваем количество отображаемых событий
+    const limited = sortedEvents.slice(0, maxEvents);
+    setDisplayEvents(limited);
+  }, [events, maxEvents]);
+  
+  // Если нет событий, не отображаем блок
+  if (displayEvents.length === 0) {
+    return null;
+  }
+  
+  // Форматирование числа с плюсом или минусом
+  const formatAmount = (type: HitPointEvent['type'], amount: number): string => {
+    if (type === 'damage') {
+      return `-${amount}`;
+    } else if (type === 'healing' || type === 'heal') {
+      return `+${amount}`;
+    } else if (type === 'tempHP' || type === 'temp') {
+      return `+${amount} (врем)`;
+    } else {
+      return `${amount}`;
+    }
+  };
+  
+  // Получение класса для типа события
+  const getEventClass = (type: HitPointEvent['type']): string => {
+    switch (type) {
+      case 'damage':
+        return 'text-red-500';
+      case 'healing':
+      case 'heal':
+        return 'text-emerald-500';
+      case 'tempHP':
+      case 'temp':
+        return 'text-blue-400';
+      case 'death-save':
+        return 'text-purple-500';
+      default:
+        return 'text-gray-400';
+    }
+  };
+  
+  // Получение иконки для типа события
+  const getEventIcon = (type: HitPointEvent['type']) => {
+    switch (type) {
+      case 'damage':
+        return <Skull className="h-4 w-4 text-red-500" />;
+      case 'healing':
+      case 'heal':
+        return <Heart className="h-4 w-4 text-emerald-500" />;
+      case 'tempHP':
+      case 'temp':
+        return <Shield className="h-4 w-4 text-blue-400" />;
+      case 'death-save':
+        return <Skull className="h-4 w-4 text-purple-500" />;
+      default:
+        return null;
+    }
+  };
+  
+  // Форматирование временных меток (например, "5 минут назад")
+  const formatTimestamp = (timestamp: number | Date): string => {
+    try {
+      const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
+      return formatDistance(date, new Date(), { 
+        addSuffix: true,
+        locale: ru 
+      });
+    } catch (error) {
+      return 'неизвестно когда';
+    }
+  };
+  
+  return (
+    <Card className="border-t-4 border-t-primary/50 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">История урона и исцеления</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[200px] pr-4">
+          <div className="px-4 pb-4 space-y-3">
+            {displayEvents.map((event, index) => (
+              <div key={event.id || index} className="flex items-start gap-3 py-2">
+                <div className="mt-1">
+                  {getEventIcon(event.type)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{event.source}</span>
+                    <span className={`font-semibold ${getEventClass(event.type)}`}>
+                      {formatAmount(event.type, event.amount)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatTimestamp(event.timestamp)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default DamageLog;

@@ -1,3 +1,4 @@
+
 export interface Character {
   id?: string;
   name: string;
@@ -59,7 +60,7 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  // Поддержка обоих типов equipment
+  // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
     weapons?: string[];
     armor?: string;
@@ -145,7 +146,6 @@ export interface Character {
     max: number;
     current: number;
   };
-  additionalClasses?: string[];
 }
 
 export interface CharacterSpell {

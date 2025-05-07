@@ -1,224 +1,148 @@
+
 import React, { useState, useEffect } from 'react';
-import { Character, Item } from '@/types/character';
-import { Button } from '@/components/ui/button';
+import { Character } from '@/types/character';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import { Plus, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CharacterEquipmentProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-// Вспомогательная функция для проверки типа объекта
-function isItem(item: string | Item): item is Item {
-  return typeof item === 'object' && item !== null;
-}
-
 const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUpdate }) => {
-  const [newEquipmentName, setNewEquipmentName] = useState('');
-  const [newEquipmentQuantity, setNewEquipmentQuantity] = useState(1);
-  const [newEquipmentType, setNewEquipmentType] = useState('');
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editedItemName, setEditedItemName] = useState('');
-  const [editedItemQuantity, setEditedItemQuantity] = useState(1);
-  const [editedItemType, setEditedItemType] = useState('');
-
+  const { toast } = useToast();
+  
+  // Состояние для оружия, брони и предметов
+  const [weapons, setWeapons] = useState<string[]>([]);
+  const [armor, setArmor] = useState<string>('');
+  const [items, setItems] = useState<string[]>([]);
+  const [gold, setGold] = useState<number>(0);
+  
+  // Инициализация начальных значений из character
   useEffect(() => {
-    // Initialize local state when character.equipment changes
-    if (character.equipment && Array.isArray(character.equipment)) {
-      // No specific initialization needed for this component
-    }
-  }, [character.equipment]);
-
-  const handleAddItem = () => {
-    if (newEquipmentName.trim() === '') {
-      return;
-    }
-
-    const newItem: Item = {
-      name: newEquipmentName,
-      quantity: newEquipmentQuantity,
-      type: newEquipmentType,
-    };
-
-    let updatedEquipment: (Item | string)[] = [];
-    
+    // Проверяем наличие экипировки и её тип
     if (character.equipment) {
       if (Array.isArray(character.equipment)) {
-        updatedEquipment = [...character.equipment, newItem];
+        // Если это массив Item объектов, преобразуем в строки
+        const weaponItems = character.equipment
+          .filter(item => item.type === 'weapon')
+          .map(item => item.name);
+        setWeapons(weaponItems);
+        
+        const armorItem = character.equipment
+          .find(item => item.type === 'armor');
+        setArmor(armorItem?.name || '');
+        
+        const otherItems = character.equipment
+          .filter(item => item.type !== 'weapon' && item.type !== 'armor')
+          .map(item => item.name);
+        setItems(otherItems);
       } else {
-        // Конвертируем объект в массив Item для нового формата
-        const items: Item[] = [];
-        if (character.equipment.weapons) {
-          character.equipment.weapons.forEach(w => items.push({ name: w, quantity: 1, type: 'weapon' }));
-        }
-        if (character.equipment.armor) {
-          items.push({ name: character.equipment.armor, quantity: 1, type: 'armor' });
-        }
-        if (character.equipment.items) {
-          character.equipment.items.forEach(i => items.push({ name: i, quantity: 1 }));
-        }
-        updatedEquipment = [...items, newItem];
+        // Если это объект с weapons, armor, items
+        const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
+        setWeapons(equip.weapons || []);
+        setArmor(equip.armor || '');
+        setItems(equip.items || []);
       }
-    } else {
-      updatedEquipment = [newItem];
     }
-
-    onUpdate({ equipment: updatedEquipment });
-    setNewEquipmentName('');
-    setNewEquipmentQuantity(1);
-    setNewEquipmentType('');
+    
+    // Инициализация золота
+    setGold(character.gold || 0);
+  }, [character.equipment, character.gold]);
+  
+  // Функция обновления оружия
+  const handleWeaponsChange = (value: string) => {
+    const weaponsList = value.split(',').map(w => w.trim()).filter(w => w !== '');
+    setWeapons(weaponsList);
   };
-
-  const handleRemoveItem = (index: number) => {
-    if (!character.equipment || !Array.isArray(character.equipment)) {
-      return;
-    }
-
-    const updatedEquipment = [...character.equipment];
-    updatedEquipment.splice(index, 1);
-    onUpdate({ equipment: updatedEquipment as (Item | string)[] });
+  
+  // Функция обновления предметов
+  const handleItemsChange = (value: string) => {
+    const itemsList = value.split(',').map(i => i.trim()).filter(i => i !== '');
+    setItems(itemsList);
   };
-
-  const handleStartEdit = (item: Item) => {
-    setEditingItemId(item.name);
-    setEditedItemName(item.name);
-    setEditedItemQuantity(item.quantity);
-    setEditedItemType(item.type || '');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingItemId(null);
-  };
-
-  const handleSaveEdit = (index: number) => {
-    if (!character.equipment || !Array.isArray(character.equipment)) {
-      return;
-    }
-
-    const updatedEquipment = [...character.equipment];
-    const itemToUpdate: Item = {
-      name: editedItemName,
-      quantity: editedItemQuantity,
-      type: editedItemType,
+  
+  // Сохранение экипировки
+  const saveEquipment = () => {
+    // Создаем новый объект экипировки
+    const updatedEquipment = {
+      weapons: weapons,
+      armor: armor,
+      items: items
     };
-    updatedEquipment[index] = itemToUpdate;
-
-    onUpdate({ equipment: updatedEquipment });
-    setEditingItemId(null);
-  };
-  
-  // В местах использования item.type и item.name,
-  // добавляем проверку через isItem:
-  
-  // Например:
-  const renderItem = (item: string | Item, index: number) => {
-    if (isItem(item)) {
-      if (editingItemId === item.name) {
-        return (
-          <div key={item.name} className="flex items-center space-x-2">
-            <Input
-              type="text"
-              value={editedItemName}
-              onChange={(e) => setEditedItemName(e.target.value)}
-              className="w-24"
-            />
-            <Input
-              type="number"
-              value={String(editedItemQuantity)}
-              onChange={(e) => setEditedItemQuantity(Number(e.target.value))}
-              className="w-16"
-            />
-            <Input
-              type="text"
-              value={editedItemType}
-              onChange={(e) => setEditedItemType(e.target.value)}
-              className="w-24"
-            />
-            <Button size="sm" onClick={() => handleSaveEdit(index)}>
-              Сохранить
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-              Отмена
-            </Button>
-          </div>
-        );
-      } else {
-        return (
-          <div key={item.name} className="flex items-center justify-between">
-            <div>
-              <span>{item.name}</span>
-              {item.type && <span className="ml-2 text-sm text-gray-500">({item.type})</span>}
-              {item.quantity > 1 && <span className="ml-2 text-sm text-gray-500">x{item.quantity}</span>}
-            </div>
-            <div>
-              <Button size="sm" onClick={() => handleStartEdit(item)}>
-                Редактировать
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleRemoveItem(index)}>
-                <X className="h-4 w-4 mr-2" />
-                Удалить
-              </Button>
-            </div>
-          </div>
-        );
-      }
-    } else {
-      return <div key={item}>{item}</div>;
-    }
+    
+    // Обновляем персонажа
+    onUpdate({ 
+      equipment: updatedEquipment,
+      gold: gold
+    });
+    
+    toast({
+      title: "Экипировка обновлена",
+      description: "Ваша экипировка и золото успешно обновлены.",
+    });
   };
   
   return (
     <Card className="w-full">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Снаряжение</h2>
-        <div className="mb-4">
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label htmlFor="newItemName">Название:</Label>
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="weapons">Оружие (через запятую)</Label>
+            <Textarea 
+              id="weapons"
+              value={weapons.join(", ")}
+              onChange={(e) => handleWeaponsChange(e.target.value)}
+              placeholder="Длинный меч, кинжал, лук..."
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="armor">Доспехи</Label>
+            <Input
+              id="armor"
+              value={armor}
+              onChange={(e) => setArmor(e.target.value)}
+              placeholder="Кольчуга, кожаный доспех..."
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="items">Предметы (через запятую)</Label>
+            <Textarea
+              id="items"
+              value={items.join(", ")}
+              onChange={(e) => handleItemsChange(e.target.value)}
+              placeholder="Рюкзак, верёвка 50 футов, фонарь..."
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="gold">Золото</Label>
+            <div className="flex items-center space-x-2 mt-1">
               <Input
-                type="text"
-                id="newItemName"
-                value={newEquipmentName}
-                onChange={(e) => setNewEquipmentName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="newItemQuantity">Количество:</Label>
-              <Input
+                id="gold"
                 type="number"
-                id="newItemQuantity"
-                value={String(newEquipmentQuantity)}
-                onChange={(e) => setNewEquipmentQuantity(Number(e.target.value))}
-                min="1"
+                value={gold}
+                onChange={(e) => setGold(Number(e.target.value) || 0)}
+                min={0}
               />
-            </div>
-            <div>
-              <Label htmlFor="newItemType">Тип:</Label>
-              <Input
-                type="text"
-                id="newItemType"
-                value={newEquipmentType}
-                onChange={(e) => setNewEquipmentType(e.target.value)}
-              />
+              <span>зм</span>
             </div>
           </div>
-          <Button className="mt-2" onClick={handleAddItem}>
-            <Plus className="h-4 w-4 mr-2" />
-            Добавить
+          
+          <Button onClick={saveEquipment} className="w-full">
+            Сохранить экипировку
           </Button>
         </div>
-        <div>
-          {character.equipment && Array.isArray(character.equipment) ? (
-            character.equipment.map((item, index) => renderItem(item, index))
-          ) : (
-            <p>Нет снаряжения.</p>
-          )}
-        </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

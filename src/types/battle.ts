@@ -1,161 +1,25 @@
-import { Character } from './character';
-
-export interface Token {
-  id: number;
-  characterId?: string;
-  name: string;
-  type: 'player' | 'monster' | 'npc';
-  hp: {
-    current: number;
-    max: number;
-    temp?: number;
-  };
-  initiative?: number;
-  position: {
-    x: number;
-    y: number;
-  };
-  size: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
-  color?: string;
-  conditions?: string[];
-  image?: string;
-  isVisible?: boolean;
-  isActive?: boolean;
-  notes?: string;
-}
-
-export interface BattleMap {
-  id: string;
-  name: string;
-  background?: string;
-  grid?: {
-    enabled: boolean;
-    size: number;
-    color: string;
-    opacity: number;
-  };
-  tokens: Token[];
-  size: {
-    width: number;
-    height: number;
-  };
-  fog?: {
-    enabled: boolean;
-    areas: Array<{
-      type: 'rectangle' | 'circle' | 'polygon';
-      points: Array<{x: number, y: number}>;
-      revealed: boolean;
-    }>;
-  };
-  annotations?: Array<{
-    id: string;
-    type: 'text' | 'line' | 'arrow' | 'circle' | 'rectangle';
-    position: {
-      x: number;
-      y: number;
-    };
-    text?: string;
-    color: string;
-    size: number;
-    points?: Array<{x: number, y: number}>;
-  }>;
-  lastUpdated?: string;
-}
-
-export interface DicePanelProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-  compactMode?: boolean;  // Добавлено поле compactMode
-  isDM?: boolean;
-  tokens?: Token[];
-  selectedTokenId?: number;
-  onSelectToken?: (id: number) => void;
-}
-
-// Обновляем типы для компонентов боя
-export interface LightSource {
-  id: string | number; // Note: Keep this as string for compatibility
-  position: { x: number; y: number };
-  radius: number;
-  color?: string;
-  intensity?: number;
-  enabled?: boolean;
-  type?: string;
-  attachedToTokenId?: number;
-}
 
 export interface VisibleArea {
-  id: string;
-  points: Array<{ x: number; y: number }>;
-  type: 'rectangle' | 'circle' | 'polygon';
-  x?: number; // Позиция X для областей видимости
-  y?: number; // Позиция Y для областей видимости
-  radius?: number; // Радиус для круглых областей видимости
-  tokenId?: number; // ID токена, связанного с областью видимости
+  x: number;
+  y: number;
+  radius: number;
+  tokenId: number;
 }
 
-// Добавляем интерфейс для панелей заклинаний и компонентов
-export interface SpellCastingPanelProps {
-  character: Character;
-  onUpdate?: (updates: Partial<Character>) => void;
+// Добавляем привязку к SessionStore
+export interface TokenOwner {
+  userId: string;
+  userName: string;
 }
 
-export interface SpellPanelProps {
-  character: Character;
-  spells?: any[];
-  onUpdate?: (newSpells: any) => void;
-}
-
-export interface CharacterComponentProps {
-  character: Character;
-  onUpdate?: (updates: Partial<Character>) => void;
-}
-
-// Добавляем интерфейсы для MobileCharacterCreationPage
-export interface CharacterRaceSelectionProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterSubraceSelectionProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterClassSelectionProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterLevelSelectionProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterAbilityScoresProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterBackgroundProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  backgrounds: any[];
-}
-
-export interface CharacterHitPointsCalculatorProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterBasicInfoProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-}
-
-export interface CharacterSpellSelectionProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
+// Тип для источника света
+export interface LightSource {
+  id: number;
+  type: 'torch' | 'lantern' | 'daylight' | 'custom';
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  intensity: number;
+  attachedToTokenId?: number;
 }

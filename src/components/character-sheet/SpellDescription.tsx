@@ -111,10 +111,10 @@ export const SpellDescription: React.FC<SpellDescriptionProps> = ({ spell, open,
           <p className="text-sm whitespace-pre-line" style={{ color: currentTheme.textColor }}>{spell.description}</p>
         </div>
         
-        {(spell.higherLevel) && (
+        {spell.higherLevels && (
           <div className="pt-4 border-t mt-4" style={{ borderColor: `${currentTheme.accent}60` }}>
             <h3 className="font-medium mb-2" style={{ color: currentTheme.textColor }}>На более высоких уровнях</h3>
-            <p className="text-sm" style={{ color: currentTheme.textColor }}>{spell.higherLevel}</p>
+            <p className="text-sm" style={{ color: currentTheme.textColor }}>{spell.higherLevels}</p>
           </div>
         )}
         

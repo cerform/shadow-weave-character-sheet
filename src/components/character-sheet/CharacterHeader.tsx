@@ -1,7 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Character } from '@/types/character';
-import { normalizeCharacter } from '@/utils/characterNormalizer';
+import { normalizeCharacterData } from '@/utils/characterNormalizer';
 
 interface CharacterHeaderProps {
   character: Character;

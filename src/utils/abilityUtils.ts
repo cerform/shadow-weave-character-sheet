@@ -1,46 +1,30 @@
 
 /**
- * Вычисляет модификатор характеристики на основе значения характеристики
- * @param abilityScore значение характеристики
- * @returns строковое представление модификатора характеристики (например, "+3" или "-1")
+ * Вычисляет модификатор характеристики на основе значения
+ * @param score Значение характеристики
+ * @returns модификатор характеристики
  */
-export function getAbilityModifierString(abilityScore?: number): string {
-  if (abilityScore === undefined || abilityScore === null) {
-    return '—'; // Возвращаем тире для неопределенных значений
-  }
-  
-  const modifier = Math.floor((abilityScore - 10) / 2);
+export function getAbilityModifierValue(score: number | undefined): number {
+  if (score === undefined) return 0;
+  return Math.floor((score - 10) / 2);
+}
+
+/**
+ * Возвращает строковое представление модификатора с плюсом или минусом
+ * @param score Значение характеристики
+ * @returns Строка вида "+2" или "-1"
+ */
+export function getAbilityModifierString(score: number | undefined): string {
+  if (score === undefined) return "+0";
+  const modifier = getAbilityModifierValue(score);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 }
 
 /**
- * Вычисляет числовой модификатор характеристики на основе значения характеристики
- * @param abilityScore значение характеристики
- * @returns числовой модификатор характеристики
+ * Вычисляет бонус мастерства на основе уровня
+ * @param level Уровень персонажа
+ * @returns бонус мастерства
  */
-export function getAbilityModifier(abilityScore?: number): number {
-  if (abilityScore === undefined || abilityScore === null) {
-    return 0; // Возвращаем 0 для неопределенных значений
-  }
-  
-  return Math.floor((abilityScore - 10) / 2);
-}
-
-/**
- * Проверяет является ли класс персонажа магическим
- * @param characterClass название класса персонажа
- * @returns true если класс магический, иначе false
- */
-export function isMagicClass(characterClass?: string): boolean {
-  if (!characterClass) return false;
-  
-  const magicClasses = [
-    'Бард', 'Волшебник', 'Друид', 'Жрец', 'Колдун', 
-    'Паладин', 'Следопыт', 'Чародей',
-    // Английские варианты для совместимости
-    'Bard', 'Wizard', 'Druid', 'Cleric', 'Warlock',
-    'Paladin', 'Ranger', 'Sorcerer'
-  ];
-  
-  return magicClasses.includes(characterClass);
+export function getProficiencyBonus(level: number): number {
+  return Math.floor((level - 1) / 4) + 2;
 }

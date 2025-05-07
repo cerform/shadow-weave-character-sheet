@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { LightSource } from "@/types/battle";
 
@@ -374,7 +373,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
         ...state.mapSettings,
         lightSources: [...state.mapSettings.lightSources, { 
           ...lightSource, 
-          id: String(Date.now())  // Convert to string to match LightSource.id type
+          id: Date.now() 
         }]
       }
     }));
@@ -384,9 +383,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     set((state) => ({
       mapSettings: {
         ...state.mapSettings,
-        lightSources: state.mapSettings.lightSources.filter(light => 
-          String(light.id) !== String(id)  // Convert both to string for comparison
-        )
+        lightSources: state.mapSettings.lightSources.filter(light => light.id !== id)
       }
     }));
   },
@@ -396,7 +393,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       mapSettings: {
         ...state.mapSettings,
         lightSources: state.mapSettings.lightSources.map(light => 
-          String(light.id) === String(id) ? { ...light, ...updates } : light  // Convert both to string
+          light.id === id ? { ...light, ...updates } : light
         )
       }
     }));
@@ -416,7 +413,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       mapSettings: {
         ...state.mapSettings,
         lightSources: state.mapSettings.lightSources.map(light => 
-          String(light.id) === String(lightId) ? { ...light, attachedToTokenId: tokenId } : light
+          light.id === lightId ? { ...light, attachedToTokenId: tokenId } : light
         )
       }
     }));

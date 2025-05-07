@@ -1,267 +1,174 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { SpellData, SpellFilter, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
-import { CharacterSpell } from '@/types/character';
-import { applyAllFilters } from './filterUtils';
-import { getAllSpellsData } from '@/data/spells';
 
-// Don't redefine SpellFilter type here, use the imported one
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { spells } from '@/data/spells';
 
-export function useSpellbook(initialSpells: SpellData[] = []) {
-  const { toast } = useToast();
-  const [spells, setSpells] = useState<SpellData[]>(initialSpells.length > 0 ? initialSpells : getAllSpellsData());
-  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+export const useSpellbook = () => {
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+
+  // Состояния для фильтрации
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
   const [activeClass, setActiveClass] = useState<string[]>([]);
-  const [filter, setFilter] = useState<SpellFilter>({
-    search: '',
-    level: [],
-    school: [],
-    className: [],
-    ritual: null,
-    concentration: null
-  });
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // Загрузка заклинаний при первой инициализации
-  useEffect(() => {
-    if (initialSpells.length === 0) {
-      setLoading(true);
-      try {
-        const allAvailableSpells = getAllSpellsData();
-        console.log(`Загружено ${allAvailableSpells.length} заклинаний`);
-        setSpells(allAvailableSpells);
-      } catch (err) {
-        console.error("Ошибка загрузки заклинаний:", err);
-        setError("Не удалось загрузить заклинания");
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [initialSpells]);
+  // Создаем списки всех уровней, школ и классов
+  const allSpells = useMemo(() => spells, []);
 
-  // Получение уникальных значений для фильтров
   const allLevels = useMemo(() => {
-    const levels = new Set<number>();
-    spells.forEach(spell => levels.add(spell.level));
+    const levels = new Set(allSpells.map(spell => spell.level));
     return Array.from(levels).sort((a, b) => a - b);
-  }, [spells]);
+  }, [allSpells]);
 
   const allSchools = useMemo(() => {
-    const schools = new Set<string>();
-    spells.forEach(spell => schools.add(spell.school));
-    return Array.from(schools).sort();
-  }, [spells]);
+    const schools = new Set(allSpells.map(spell => spell.school || 'Универсальная'));
+    return Array.from(schools).filter(Boolean).sort();
+  }, [allSpells]);
 
   const allClasses = useMemo(() => {
     const classes = new Set<string>();
-    spells.forEach(spell => {
-      if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => classes.add(cls));
-      } else if (typeof spell.classes === 'string') {
+    allSpells.forEach(spell => {
+      if (typeof spell.classes === 'string') {
         classes.add(spell.classes);
+      } else if (Array.isArray(spell.classes)) {
+        spell.classes.forEach(cls => classes.add(cls));
       }
     });
-    return Array.from(classes).sort();
-  }, [spells]);
+    return Array.from(classes).filter(Boolean).sort();
+  }, [allSpells]);
 
   // Отфильтрованные заклинания
   const filteredSpells = useMemo(() => {
-    return applyAllFilters(
-      spells, 
-      filter.search, 
-      filter.level, 
-      filter.school,
-      filter.className,
-      filter.ritual,
-      filter.concentration
+    return allSpells.filter(spell => {
+      // Фильтр по поисковому запросу
+      if (searchTerm && !spell.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      // Фильтр по уровню
+      if (activeLevel.length > 0 && !activeLevel.includes(spell.level)) {
+        return false;
+      }
+
+      // Фильтр по школе
+      if (activeSchool.length > 0 && !activeSchool.includes(spell.school || 'Универсальная')) {
+        return false;
+      }
+
+      // Фильтр по классу
+      if (activeClass.length > 0) {
+        if (typeof spell.classes === 'string') {
+          if (!activeClass.includes(spell.classes)) {
+            return false;
+          }
+        } else if (Array.isArray(spell.classes)) {
+          if (!spell.classes.some(cls => activeClass.includes(cls))) {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allSpells, searchTerm, activeLevel, activeSchool, activeClass]);
+
+  // Функции для фильтрации
+  const toggleLevel = useCallback((level: number) => {
+    setActiveLevel(prev => 
+      prev.includes(level) 
+        ? prev.filter(l => l !== level) 
+        : [...prev, level]
     );
-  }, [spells, filter]);
+  }, []);
 
-  // Функции для обновления фильтров
-  const updateFilter = (updates: Partial<SpellFilter>) => {
-    setFilter(prev => ({ ...prev, ...updates }));
-  };
+  const toggleSchool = useCallback((school: string) => {
+    setActiveSchool(prev => 
+      prev.includes(school) 
+        ? prev.filter(s => s !== school) 
+        : [...prev, school]
+    );
+  }, []);
 
-  // Обработчики для изменения фильтров
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    updateFilter({ search: value });
-  };
+  const toggleClass = useCallback((className: string) => {
+    setActiveClass(prev => 
+      prev.includes(className) 
+        ? prev.filter(c => c !== className) 
+        : [...prev, className]
+    );
+  }, []);
 
-  const toggleLevel = (level: number) => {
-    const newActiveLevels = [...activeLevel];
-    const index = newActiveLevels.indexOf(level);
-    
-    if (index === -1) {
-      newActiveLevels.push(level);
-    } else {
-      newActiveLevels.splice(index, 1);
-    }
-    
-    setActiveLevel(newActiveLevels);
-    updateFilter({ level: newActiveLevels });
-  };
-
-  const toggleSchool = (school: string) => {
-    const newActiveSchools = [...activeSchool];
-    const index = newActiveSchools.indexOf(school);
-    
-    if (index === -1) {
-      newActiveSchools.push(school);
-    } else {
-      newActiveSchools.splice(index, 1);
-    }
-    
-    setActiveSchool(newActiveSchools);
-    updateFilter({ school: newActiveSchools });
-  };
-
-  const toggleClass = (className: string) => {
-    const newActiveClasses = [...activeClass];
-    const index = newActiveClasses.indexOf(className);
-    
-    if (index === -1) {
-      newActiveClasses.push(className);
-    } else {
-      newActiveClasses.splice(index, 1);
-    }
-    
-    setActiveClass(newActiveClasses);
-    updateFilter({ className: newActiveClasses });
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
+  const clearFilters = useCallback(() => {
     setActiveLevel([]);
     setActiveSchool([]);
     setActiveClass([]);
-    setFilter({
-      search: '',
-      level: [],
-      school: [],
-      className: [],
-      ritual: null,
-      concentration: null
-    });
-  };
+    setSearchTerm('');
+  }, []);
 
-  // Обработчики для модального окна
-  const handleOpenSpell = (spell: SpellData) => {
+  // Функции для модального окна с деталями заклинания
+  const handleOpenSpell = useCallback((spell: SpellData) => {
     setSelectedSpell(spell);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsModalOpen(false);
-  };
+    setSelectedSpell(null);
+  }, []);
 
-  // Вспомогательные функции для UI
-  const getBadgeColor = (level: number): string => {
-    switch (level) {
-      case 0: return '#6b7280'; // gray-500
-      case 1: return '#6366f1'; // indigo-500
-      case 2: return '#3b82f6'; // blue-500
-      case 3: return '#06b6d4'; // cyan-500
-      case 4: return '#14b8a6'; // teal-500
-      case 5: return '#22c55e'; // green-500
-      case 6: return '#eab308'; // yellow-500
-      case 7: return '#f97316'; // orange-500
-      case 8: return '#ef4444'; // red-500
-      case 9: return '#a855f7'; // purple-500
-      default: return '#6b7280'; // gray-500
-    }
-  };
+  // Функции для отображения
+  const getBadgeColor = useCallback((level: number): string => {
+    const colors = {
+      0: "#6b7280", // заговор - серый
+      1: "#10b981", // 1 уровень - зеленый
+      2: "#3b82f6", // 2 уровень - синий
+      3: "#8b5cf6", // 3 уровень - фиолетовый
+      4: "#ec4899", // 4 уровень - розовый
+      5: "#f59e0b", // 5 уровень - оранжевый
+      6: "#ef4444", // 6 уровень - красный
+      7: "#6366f1", // 7 уровень - индиго
+      8: "#0ea5e9", // 8 уровень - голубой
+      9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
+    };
+    return colors[level as keyof typeof colors] || colors[0];
+  }, []);
 
-  const getSchoolBadgeColor = (school: string): string => {
-    switch (school.toLowerCase()) {
-      case 'огонь': return '#ef4444'; // red-500
-      case 'вода': return '#3b82f6'; // blue-500
-      case 'земля': return '#92400e'; // amber-700
-      case 'воздух': return '#7dd3fc'; // sky-300
-      case 'воплощение': return '#f97316'; // orange-500
-      case 'некромантия': return '#581c87'; // purple-900
-      case 'преобразование': return '#16a34a'; // green-600
-      case 'ограждение': return '#f59e0b'; // amber-500
-      case 'иллюзия': return '#ec4899'; // pink-400
-      case 'очарование': return '#d946ef'; // purple-500
-      case 'прорицание': return '#06b6d4'; // cyan-500
-      default: return '#64748b'; // slate-500
-    }
-  };
+  const getSchoolBadgeColor = useCallback((school: string): string => {
+    const colors: {[key: string]: string} = {
+      "Преобразование": "#10b981",
+      "Воплощение": "#ef4444",
+      "Очарование": "#8b5cf6",
+      "Прорицание": "#f59e0b",
+      "Ограждение": "#3b82f6",
+      "Иллюзия": "#ec4899",
+      "Некромантия": "#6b7280",
+      "Вызов": "#0ea5e9",
+      "Универсальная": "#6b7280"
+    };
+    return colors[school] || "#6b7280";
+  }, []);
 
-  const formatClasses = (classes: string[] | string | undefined): string => {
-    if (!classes) {
-      return '';
-    }
-    
-    if (Array.isArray(classes)) {
-      return classes.join(', ');
-    }
-    
-    return classes;
-  };
-
-  // Функции для управления заклинаниями
-  const setAllSpells = (spellsData: SpellData[]) => {
-    setSpells(spellsData);
-  };
-
-  const addSpell = (spell: SpellData) => {
-    setSpells(prev => {
-      if (!prev.some(s => s.id === spell.id)) {
-        return [...prev, spell];
-      }
-      return prev;
-    });
-  };
-
-  const removeSpell = (spellId: string | number) => {
-    setSpells(prev => prev.filter(spell => spell.id !== spellId));
-    setSelectedSpells(prev => prev.filter(spell => spell.id !== spellId));
-  };
-
-  const toggleSpellSelection = (spell: SpellData) => {
-    setSelectedSpells(prev => {
-      const exists = prev.some(s => s.id === spell.id);
-      
-      if (exists) {
-        return prev.filter(s => s.id !== spell.id);
-      } else {
-        return [...prev, spell];
-      }
-    });
-  };
-
-  const isSpellSelected = (spellId: string | number): boolean => {
-    return selectedSpells.some(spell => spell.id === spellId);
-  };
+  const formatClasses = useCallback((classes: string[] | string | undefined): string => {
+    if (!classes) return "";
+    if (typeof classes === "string") return classes;
+    return classes.join(", ");
+  }, []);
 
   return {
-    spells,
     filteredSpells,
-    selectedSpells,
-    filter,
-    loading,
-    error,
-    setAllSpells,
-    addSpell,
-    removeSpell,
-    toggleSpellSelection,
-    isSpellSelected,
-    updateFilter,
-    setSelectedSpells,
-    // Дополнительные возвращаемые значения для совместимости с SpellBookViewer
     searchTerm,
-    setSearchTerm: handleSearchChange,
+    setSearchTerm,
     activeLevel,
     activeSchool,
     activeClass,
+    currentTheme,
     allLevels,
     allSchools,
     allClasses,
@@ -277,4 +184,4 @@ export function useSpellbook(initialSpells: SpellData[] = []) {
     getSchoolBadgeColor,
     formatClasses
   };
-}
+};

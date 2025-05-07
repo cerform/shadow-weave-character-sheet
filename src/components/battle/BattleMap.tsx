@@ -226,11 +226,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
     
     // Создаем видимую область тумана войны
     if (fogDrawMode === "reveal") {
-      // Добавляем новую область видимости с обновленным типом
+      // Добавляем новую область видимости
       const newArea: VisibleArea = {
-        id: `manual-area-${Date.now()}`,
-        points: [{ x, y }],
-        type: 'circle',
         x,
         y,
         radius: fogBrushSize,
@@ -256,14 +253,11 @@ const BattleMap: React.FC<BattleMapProps> = ({
     // Удаляем старую область для этого токена, если она есть
     const newVisibleAreas = visibleAreas.filter(area => area.tokenId !== tokenId);
     
-    // Добавляем новую область видимости, соответствующую типу VisibleArea
+    // Добавляем новую область видимости
     newVisibleAreas.push({
-      id: `token-${tokenId}-area-${Date.now()}`,
-      points: [{ x: x, y: y }],
-      type: 'circle',
-      x: x,
-      y: y,
-      radius: 150, // Радиус видимости
+      x, 
+      y, 
+      radius: 150, // Радиус видимости, можно настроить
       tokenId
     });
     

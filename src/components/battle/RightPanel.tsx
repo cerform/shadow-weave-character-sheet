@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import TokensPanel from './TokensPanel';
 import InitiativeTracker from './InitiativeTracker';
@@ -14,12 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Token } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
 import { createDefaultCharacter } from '@/utils/characterUtils';
-import { Character } from '@/types/character';
 
 interface RightPanelProps {
   tokens: Token[];
   selectedTokenId: number | null;
-  onSelectToken: (id: number) => void;
+  onSelectToken: (id: number | null) => void;
   onAddToken: (token: Token) => void;
   onRemoveToken: (id: number) => void;
   onStartBattle: () => void;
@@ -46,8 +44,6 @@ interface RightPanelProps {
   onRemoveLightSource?: (id: number) => void;
   onUpdateLightSource?: (id: number, updates: Partial<Omit<LightSource, 'id'>>) => void;
   onAttachLightToToken?: (lightId: number, tokenId: number | undefined) => void;
-  onUpdateTokenHP?: (id: number, hp: number) => void;
-  onRemoveCondition?: (tokenId: number, conditionIndex: number) => void;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -79,9 +75,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onAddLightSource = () => {},
   onRemoveLightSource = () => {},
   onUpdateLightSource = () => {},
-  onAttachLightToToken = () => {},
-  onUpdateTokenHP = () => {},
-  onRemoveCondition = () => {}
+  onAttachLightToToken = () => {}
 }) => {
   const [tokenName, setTokenName] = useState('');
   const [tokenType, setTokenType] = useState<"player" | "monster" | "npc" | "boss">("monster");
@@ -128,50 +122,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
   
   const dummyCharacter = createDefaultCharacter();
   
-  const handleSelectToken = (id: number) => {
-    onSelectToken(id);
-  };
-
-  const handleTokenHPChange = (id: number, newHP: number) => {
-    onUpdateTokenHP(id, newHP);
-  };
-
-  const handleRemoveCondition = (tokenId: number, conditionIndex: number) => {
-    onRemoveCondition(tokenId, conditionIndex);
-  };
-  
-  // Fix number conversions
-  const handleOnRemoveLight = (id: string) => {
-    onRemoveLightSource(parseInt(id, 10));
-  };
-  
-  const handleOnAttachLight = (lightId: string, tokenId?: string) => {
-    onAttachLightToToken(parseInt(lightId, 10), tokenId ? parseInt(tokenId, 10) : undefined);
-  };
-  
-  // Dummy function for character updates
-  const handleCharacterUpdate = (updates: Partial<Character>) => {
-    console.log('Character update called from RightPanel', updates);
-  };
-
-  // Обработчик изменения инициативы - преобразуем string -> number явно
-  const handleInitiativeChange = (value: string | number) => {
-    let numValue: number;
-    
-    if (typeof value === 'string') {
-      numValue = parseInt(value, 10);
-    } else {
-      numValue = value;
-    }
-    
-    // Используем локальную функцию для обработки обновлений
-    const localOnUpdate = (updates: any) => {
-      console.log('Initiative updated:', updates);
-    };
-    
-    localOnUpdate({ initiative: numValue });
-  };
-
   return (
     <div className="h-full flex flex-col space-y-2 p-2">
       <Tabs defaultValue="tokens" className="flex-1">
@@ -212,14 +162,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => handleOnAttachLight(String(light.id), undefined)}
+                      onClick={() => onAttachLightToToken(light.id, undefined)}
                     >
                       Открепить
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => handleOnRemoveLight(String(light.id))}
+                      onClick={() => onRemoveLightSource(light.id)}
                     >
                       Удалить
                     </Button>
@@ -325,7 +275,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              onClick={() => onRemoveLightSource(Number(light.id))}
+                              onClick={() => onRemoveLightSource(light.id)}
                             >
                               Удалить
                             </Button>
@@ -409,11 +359,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
       <Card className="p-4">
         <DicePanel 
           character={dummyCharacter} 
-          onUpdate={handleCharacterUpdate}
+          onUpdate={() => {}} 
+          compactMode={true} 
           isDM={isDM} 
           tokens={tokens} 
-          selectedTokenId={selectedTokenId || 0}
-          onSelectToken={onSelectToken}
+          selectedTokenId={selectedTokenId} 
+          onSelectToken={onSelectToken} 
         />
       </Card>
     </div>

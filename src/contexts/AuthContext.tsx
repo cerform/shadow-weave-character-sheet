@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -47,7 +48,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [loginInProgress, setLoginInProgress] = useState<boolean>(false);
 
   // Функция для сохранения информации о пользователе в Firestore
   const saveUserToFirestore = async (user: UserType) => {
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("Создан новый пользователь:", user.id);
       }
     } catch (error) {
-      console.error("Ошибка при сохра����ении пользователя в Firestore:", error);
+      console.error("Ошибка при сохранении пользователя в Firestore:", error);
     }
   };
 
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (err) {
         console.error("Error in auth state listener", err);
-        handleError(err);
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -152,7 +152,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      setLoginInProgress(true);
       console.log("Attempting login with email:", email);
       const firebaseUser = await loginWithEmail(email, password);
       if (firebaseUser) {
@@ -163,17 +162,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(transformedUser);
       }
     } catch (err) {
-      handleLoginError(err);
+      console.error("Login error:", err);
+      setError(err instanceof Error ? err.message : String(err));
+      throw err;
     } finally {
       setLoading(false);
-      setLoginInProgress(false);
     }
   };
 
   const signup = async (email: string, password: string, displayName: string, isDM: boolean = false) => {
     try {
       setLoading(true);
-      setLoginInProgress(true);
       console.log("Attempting signup:", email, displayName, isDM);
       const firebaseUser = await registerWithEmail(email, password);
       if (firebaseUser) {
@@ -190,10 +189,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(transformedUser);
       }
     } catch (err) {
-      handleLoginError(err);
+      console.error("Signup error:", err);
+      setError(err instanceof Error ? err.message : String(err));
+      throw err;
     } finally {
       setLoading(false);
-      setLoginInProgress(false);
     }
   };
 
@@ -212,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Вы успешно вышли из системы");
     } catch (err) {
       console.error("Logout error:", err);
-      handleError(err);
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setLoading(false);
@@ -261,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return null;
     } catch (err) {
       console.error("Google login error:", err);
-      handleError(err);
+      setError(err instanceof Error ? err.message : String(err));
       toast.error("Не удалось войти через Google: " + (err instanceof Error ? err.message : String(err)));
       throw err;
     } finally {
@@ -297,21 +297,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success("Ваш профиль успешно обновлен");
     } catch (err) {
       console.error("Profile update error:", err);
-      setError(err instanceof Error ? err.message : "Authentication error occurred.");
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     }
-  };
-
-  const handleError = (err: Error | unknown) => {
-    const errorMessage = err instanceof Error ? err.message : "Authentication error occurred.";
-    setError(errorMessage);
-  };
-
-  const handleLoginError = (error: any) => {
-    console.error("Login failed:", error);
-    setLoginInProgress(false);
-    // Convert Error object to string if necessary
-    setError(error instanceof Error ? error.message : String(error));
   };
 
   return (
@@ -335,5 +323,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;

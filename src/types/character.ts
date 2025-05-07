@@ -2,9 +2,9 @@ export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;
+  subrace?: string;  // Добавляем поле subrace
   class?: string;
-  className?: string;
+  className?: string; // Добавляем альтернатив��ое поле className
   subclass?: string;
   background?: string;
   level: number;
@@ -17,7 +17,7 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
-    // Алиасы для удобства
+    // Добавляем алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -25,7 +25,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  // Альтернативное поле stats для обратной совместимости
+  // Добавляем поле stats для обратной совместимости
   stats?: {
     strength: number;
     dexterity: number;
@@ -38,18 +38,16 @@ export interface Character {
     proficient: boolean;
     expertise?: boolean;
     value?: number;
-    bonus?: number;
   }>;
   hitPoints?: {
     current: number;
     maximum: number;
     temporary: number;
   };
-  // Алиасы для hitPoints
+  // Добавляем алиасы для hitPoints
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -59,16 +57,10 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[];
   } | string[];
-  // Поддержка обоих типов equipment
-  equipment?: (string | Item)[] | Item[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
-  } | string[];
-  features?: Feature[] | string[];
-  spells?: (string | CharacterSpell)[] | CharacterSpell[] | string[];
+  equipment?: Item[];
+  features?: string[];
+  spells?: CharacterSpell[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -77,6 +69,7 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  // Добавляем поля для gold
   gold?: number;
   deathSaves?: {
     successes: number;
@@ -89,56 +82,27 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string;
-  raceFeatures?: Feature[];
-  classFeatures?: Feature[];
-  backgroundFeatures?: Feature[];
-  feats?: Feature[];
-  gender?: string;
-  userId?: string;
-  abilityPointsUsed?: number;
-  updatedAt?: string;
-  createdAt?: string;
-  image?: string;
-  // Алиасы для характеристик
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  // Добавляем недостающие свойства
-  initiative?: string | number;
-  lastDiceRoll?: {
-    diceType: string;
-    count: number;
-    modifier: number;
-    rolls: number[];
-    total: number;
-    label: string;
-    timestamp: string;
-  };
-  hitDice?: {
-    total: number;
-    used: number;
-    dieType: string;
-    value: string;
-    remaining?: number;
-  };
-  resources?: Record<string, {
-    max: number;
-    used: number;
-    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
-  }>;
-  sorceryPoints?: {
-    max: number;
-    current: number;
-  };
-  // Дополнительные поля
-  savingThrowProficiencies?: string[];
-  skillProficiencies?: string[];
-  expertise?: string[];
-  skillBonuses?: Record<string, number>;
+  // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
+  raceFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  classFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  backgroundFeatures?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
+  feats?: {
+    name: string;
+    description: string;
+    level?: number;
+  }[];
   currency?: {
     cp?: number;
     sp?: number;
@@ -146,19 +110,22 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  spellcasting?: {
-    ability: string;
-    spellSaveDC: number;
-    spellAttackBonus: number;
-    spellsKnown?: number;
-    cantripsKnown?: number;
-    preparedSpellsLimit?: number;
-  };
-  additionalClasses?: string[];
-  languages?: string[];
-  preparedSpellsLimit?: number;
-  creationDate?: string;
-  lastUpdated?: string;
+  // Added properties for timestamps
+  updatedAt?: string;
+  createdAt?: string;
+  // Added property for character image
+  image?: string;
+  // Пользовательские поля
+  gender?: string; // Добавляем поле gender
+  userId?: string; // Добавляем поле userId для связи с пользователем
+  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
+  // Добавляем поля для обратной совместимости
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
 }
 
 export interface CharacterSpell {
@@ -169,7 +136,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[];
+  description?: string | string[]; // Поддерживает как строку, так и массив строк
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
@@ -197,9 +164,9 @@ export interface Item {
 
 export interface Feature {
   name: string;
+  source: string;
   description: string;
   level?: number;
-  source?: string;
 }
 
 export interface PlayerCharacter extends Character {
@@ -216,7 +183,7 @@ export const ABILITY_SCORE_CAPS = {
 // Add HitPointEvent for DamageLog
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'healing' | 'temp' | 'healing' | 'tempHP' | 'death-save';
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
   amount: number;
   source?: string;
   timestamp: number | Date;

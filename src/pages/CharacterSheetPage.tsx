@@ -1,193 +1,172 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Character } from '@/types/character';
-import CharacterSheet from '@/components/character-sheet/CharacterSheet';
-import MobileCharacterSheet from '@/components/character-sheet/MobileCharacterSheet';
-import { useToast } from '@/hooks/use-toast';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { auth } from '@/lib/firebase';
-import { getCurrentUid } from '@/utils/authHelpers';
+import { useCharacter } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
+import { useSocket } from '@/contexts/SocketContext';
+import { createDefaultCharacter } from '@/utils/characterUtils';
+import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 
-const CharacterSheetPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+const CharacterSheetPage = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { getCharacterById } = useCharacter(); // Используем контекст персонажей
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const { character, setCharacter } = useCharacter();
+  const { toast } = useToast();
+  const { isConnected, sessionData, connect } = useSocket();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  // Определяем, является ли устройство мобильным
-  const [isMobile, setIsMobile] = useState(false);
-  
+  // Загружаем персонажа при инициализации
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    if (!character || (id && character.id !== id)) {
+      loadCharacter(id);
+    }
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  // Проверка авторизации
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Проверяем, авторизован ли пользователь
-      const userId = getCurrentUid();
-      if (!userId) {
-        console.log('CharacterSheetPage: Пользователь не авторизован');
-        toast({
-          title: "Требуется авторизация",
-          description: "Пожалуйста, войдите в систему для просмотра персонажей",
-          variant: "destructive",
-        });
-        navigate('/');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate, toast]);
-  
-  useEffect(() => {
-    const loadCharacter = async () => {
-      if (!id) {
-        setError('ID персонажа не указан');
-        setLoading(false);
-        return;
-      }
-      
-      // Проверяем, что пользователь авторизован
-      if (!auth.currentUser) {
-        console.log('CharacterSheetPage: Пользователь не авторизован');
-        setError('Требуется авторизация');
-        setLoading(false);
-        return;
-      }
-      
+    // Проверяем, есть ли активная сессия
+    const savedSession = localStorage.getItem('active-session');
+    if (savedSession && isConnected) {
       try {
-        console.log('CharacterSheetPage: Загрузка персонажа с ID:', id);
-        setLoading(true);
-        setError(null);
-        
-        // Используем метод getCharacterById из контекста CharacterContext
-        const data = await getCharacterById(id);
-        
-        if (!data) {
-          console.error('CharacterSheetPage: Персонаж не найден');
-          setError('Персонаж не найден');
-          toast({
-            title: "Ошибка",
-            description: "Персонаж не найден или у вас нет доступа",
-            variant: "destructive",
-          });
-        } else {
-          console.log('CharacterSheetPage: Персонаж успешно загружен:', data.name);
-          setCharacter(data);
+        const parsedSession = JSON.parse(savedSession);
+        if (parsedSession && parsedSession.sessionCode) {
+          // Если есть сессия и персонаж, подключаемся к сессии
+          if (character) {
+            // Используем обновленный метод connect, передавая только обязательный параметр
+            connect(parsedSession.sessionCode);
+          }
         }
-      } catch (error: any) {
-        console.error('CharacterSheetPage: Ошибка загрузки персонажа:', error);
-        
-        // Специальная обработка ошибки доступа
-        if (error.code === 'permission-denied') {
-          setError('У вас нет доступа к этому персонажу');
-          toast({
-            title: "Ошибка доступа",
-            description: "У вас нет прав для просмотра этого персонажа",
-            variant: "destructive",
-          });
-        } else {
-          setError('Ошибка при загрузке персонажа');
-          toast({
-            title: "Ошибка",
-            description: "Не удалось загрузить персонажа",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error("Ошибка при загрузке данных сессии:", error);
       }
-    };
+    }
+  }, [id, character, isConnected]);
+
+  const loadCharacter = async (characterId?: string) => {
+    setLoading(true);
+    setError('');
     
-    loadCharacter();
-  }, [id, toast, getCharacterById]);
-  
-  const handleUpdateCharacter = (updates: Partial<Character>) => {
-    if (character) {
-      const updatedCharacter = { ...character, ...updates };
-      setCharacter(updatedCharacter);
-      
-      // Здесь можно добавить логику для сохранения обновлений на сервере
-      console.log('Character updated:', updatedCharacter);
+    try {
+      // Если указан ID, загружаем конкретного персонажа
+      if (characterId) {
+        const savedCharacter = localStorage.getItem(`character_${characterId}`);
+        
+        if (savedCharacter) {
+          const loadedCharacter = JSON.parse(savedCharacter);
+          setCharacter(loadedCharacter);
+          localStorage.setItem('last-selected-character', characterId);
+          console.log(`Загружен персонаж: ${loadedCharacter.name}`);
+        } else {
+          setError(`Персонаж с ID ${characterId} не найден.`);
+          setCharacter(createDefaultCharacter());
+        }
+      } 
+      // Иначе проверяем, есть ли сохраненный последний персонаж
+      else {
+        const lastCharacterId = localStorage.getItem('last-selected-character');
+        if (lastCharacterId) {
+          loadCharacter(lastCharacterId);
+        } else {
+          // Создаем нового персонажа, если нет сохраненных
+          const newCharacter = createDefaultCharacter();
+          setCharacter(newCharacter);
+          console.log('Создан новый персонаж');
+        }
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке персонажа:', err);
+      setError('Не удалось загрузить персонажа. Пожалуйста, попробуйте еще раз.');
+      setCharacter(createDefaultCharacter());
+    } finally {
+      setLoading(false);
     }
   };
-  
+
+  const handleUpdateCharacter = (updates: Partial<Character>) => {
+    if (!character) return;
+    
+    const updatedCharacter = { ...character, ...updates };
+    setCharacter(updatedCharacter);
+    
+    // Сохраняем персонажа в localStorage
+    localStorage.setItem(`character_${character.id}`, JSON.stringify(updatedCharacter));
+    localStorage.setItem('last-selected-character', character.id);
+    
+    console.log('Персонаж обновлен:', updatedCharacter);
+  };
+
+  const handleBack = () => {
+    navigate('/characters');
+  };
+
   if (loading) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex flex-col justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" 
-               style={{ borderColor: currentTheme.accent }}>
-          </div>
-          <p className="mt-4 text-lg" style={{ color: currentTheme.textColor }}>
-            Загрузка персонажа...
-          </p>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Загрузка персонажа...</p>
         </div>
-      </BackgroundWrapper>
+      </div>
     );
   }
-  
-  if (error || !character) {
+
+  if (error) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex flex-col justify-center items-center p-8">
-          <Card className="max-w-md w-full bg-black/70">
-            <CardHeader>
-              <CardTitle className="text-red-500">
-                Ошибка
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-6">{error || 'Персонаж не найден'}</p>
-              <Button onClick={() => navigate('/characters')} className="w-full">
-                <ArrowLeft size={16} className="mr-2" />
-                Вернуться к списку персонажей
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-500 mb-4">Ошибка</h2>
+          <p>{error}</p>
+          <Button onClick={handleBack} className="mt-4">Вернуться к списку персонажей</Button>
         </div>
-      </BackgroundWrapper>
+      </div>
     );
   }
-  
+
   return (
-    <BackgroundWrapper>
-      <div className="container mx-auto p-4">
-        <div className="mb-4">
-          <Button variant="outline" onClick={() => navigate('/characters')}>
-            <ArrowLeft size={16} className="mr-2" />
-            Назад к списку
+    <div className="min-h-screen bg-background p-4">
+      {/* Session indicator */}
+      {isConnected && sessionData && (
+        <div className="bg-green-900/20 border border-green-700 rounded-lg p-2 mb-4 text-sm flex justify-between items-center">
+          <div>
+            <span className="font-medium">Подключено к сессии: </span>
+            <span>{sessionData.name || sessionData.code}</span>
+          </div>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-green-500 hover:text-green-400"
+            onClick={() => navigate('/session')}
+          >
+            Перейти в сессию
           </Button>
         </div>
+      )}
+      
+      {/* Navigation buttons */}
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <Button 
+          variant="outline" 
+          onClick={handleBack}
+          className="mb-2 sm:mb-0"
+        >
+          ← К списку персонажей
+        </Button>
         
-        {isMobile ? (
-          <MobileCharacterSheet character={character} onUpdate={handleUpdateCharacter} />
+        {/* Conditional session buttons */}
+        {!isConnected ? (
+          <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
         ) : (
-          <CharacterSheet character={character} onUpdate={handleUpdateCharacter} />
+          <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
         )}
       </div>
-    </BackgroundWrapper>
+      
+      {/* Character sheet */}
+      {character && (
+        <CharacterSheet 
+          character={character} 
+          onUpdate={handleUpdateCharacter}
+        />
+      )}
+    </div>
   );
 };
 
