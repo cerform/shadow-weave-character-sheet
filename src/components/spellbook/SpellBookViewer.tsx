@@ -28,19 +28,22 @@ const SpellBookViewer: React.FC = () => {
     loadSpells();
   };
 
-  // Группируем заклинания по уровням для табов
+  // Проверяем, что spells определён и является массивом
+  const validSpells = Array.isArray(spells) ? spells : [];
+
+  // Группируем заклинания по уровням для табов с защитой от undefined
   const spellsByLevel: Record<string, any[]> = {
-    'all': spells,
-    '0': spells.filter(spell => spell.level === 0),
-    '1': spells.filter(spell => spell.level === 1),
-    '2': spells.filter(spell => spell.level === 2),
-    '3': spells.filter(spell => spell.level === 3),
-    '4': spells.filter(spell => spell.level === 4),
-    '5': spells.filter(spell => spell.level === 5),
-    '6': spells.filter(spell => spell.level === 6),
-    '7': spells.filter(spell => spell.level === 7),
-    '8': spells.filter(spell => spell.level === 8),
-    '9': spells.filter(spell => spell.level === 9),
+    'all': validSpells,
+    '0': validSpells.filter(spell => spell && spell.level === 0),
+    '1': validSpells.filter(spell => spell && spell.level === 1),
+    '2': validSpells.filter(spell => spell && spell.level === 2),
+    '3': validSpells.filter(spell => spell && spell.level === 3),
+    '4': validSpells.filter(spell => spell && spell.level === 4),
+    '5': validSpells.filter(spell => spell && spell.level === 5),
+    '6': validSpells.filter(spell => spell && spell.level === 6),
+    '7': validSpells.filter(spell => spell && spell.level === 7),
+    '8': validSpells.filter(spell => spell && spell.level === 8),
+    '9': validSpells.filter(spell => spell && spell.level === 9),
   };
 
   return (
