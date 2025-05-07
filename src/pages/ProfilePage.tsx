@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Camera, Scroll, BookOpen, Shield, Crown, Sword } from "lucide-react";
@@ -28,7 +29,6 @@ const ProfilePage = () => {
   const [characterGuild, setCharacterGuild] = useState<string>("");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Получаем текущую тему для стилизации
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -68,32 +68,19 @@ const ProfilePage = () => {
       updateProfile({
         username,
         photoURL: avatarUrl,
+        // Добавляем данные о персонаже
+        characterName,
+        characterClass,
+        characterRace,
+        characterLevel,
+        characterBio,
+        characterGuild
       });
       
       toast({
         title: "Профиль обновлен",
         description: "Данные вашего персонажа успешно сохранены",
       });
-    }
-  };
-
-  const updateUser = async (data: Partial<any>) => {
-    try {
-      setIsSaving(true);
-      await updateProfile(data);
-      toast({
-        title: "Профиль обновлен",
-        description: "Ваш профиль был успешно обновлен."
-      });
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить профиль.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
 

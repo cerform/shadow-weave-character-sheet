@@ -1,96 +1,170 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
-import CharacterSheet from '@/components/character-sheet/CharacterSheet';
-import MobileCharacterSheet from '@/components/character-sheet/MobileCharacterSheet';
 import { useToast } from '@/hooks/use-toast';
+import { useSocket } from '@/contexts/SocketContext';
+import { createDefaultCharacter } from '@/utils/characterUtils';
+import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 
-// Correct import from service
-import { getCharacter } from '@/services/characterService';
-
-interface CharacterSheetPageProps {
-  // No renderMobileVersion prop here
-}
-
-const CharacterSheetPage: React.FC<CharacterSheetPageProps> = () => {
-  const { id } = useParams<{ id: string }>();
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const CharacterSheetPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { character, setCharacter } = useCharacter();
   const { toast } = useToast();
+  const { isConnected, sessionData, connect } = useSocket();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  // Determine if the device is mobile
-  const [isMobile, setIsMobile] = useState(false);
-  
+  // Загружаем персонажа при инициализации
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    if (!character || (id && character.id !== id)) {
+      loadCharacter(id);
+    }
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  useEffect(() => {
-    const loadCharacter = async () => {
-      if (!id) {
-        setError('No character ID provided');
-        setLoading(false);
-        return;
-      }
-      
+    // Проверяем, есть ли активная сессия
+    const savedSession = localStorage.getItem('active-session');
+    if (savedSession && isConnected) {
       try {
-        // Use the correct function
-        const data = await getCharacter(id);
-        setCharacter(data);
+        const parsedSession = JSON.parse(savedSession);
+        if (parsedSession && parsedSession.sessionCode) {
+          // Если есть сессия и персонаж, подключаемся к сессии
+          if (character) {
+            // Используем обновленный метод connect, передавая только обязательный параметр
+            connect(parsedSession.sessionCode);
+          }
+        }
       } catch (error) {
-        setError('Error loading character');
-        console.error('Error loading character:', error);
-        toast({
-          title: "Ошибка",
-          description: "Не удалось загрузить персонажа",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+        console.error("Ошибка при загрузке данных сессии:", error);
       }
-    };
+    }
+  }, [id, character, isConnected]);
+
+  const loadCharacter = async (characterId?: string) => {
+    setLoading(true);
+    setError('');
     
-    loadCharacter();
-  }, [id, toast]);
-  
-  const handleUpdateCharacter = (updates: Partial<Character>) => {
-    if (character) {
-      const updatedCharacter = { ...character, ...updates };
-      setCharacter(updatedCharacter);
-      
-      // Here you would typically save the character to the backend
-      console.log('Character updated:', updatedCharacter);
+    try {
+      // Если указан ID, загружаем конкретного персонажа
+      if (characterId) {
+        const savedCharacter = localStorage.getItem(`character_${characterId}`);
+        
+        if (savedCharacter) {
+          const loadedCharacter = JSON.parse(savedCharacter);
+          setCharacter(loadedCharacter);
+          localStorage.setItem('last-selected-character', characterId);
+          console.log(`Загружен персонаж: ${loadedCharacter.name}`);
+        } else {
+          setError(`Персонаж с ID ${characterId} не найден.`);
+          setCharacter(createDefaultCharacter());
+        }
+      } 
+      // Иначе проверяем, есть ли сохраненный последний персонаж
+      else {
+        const lastCharacterId = localStorage.getItem('last-selected-character');
+        if (lastCharacterId) {
+          loadCharacter(lastCharacterId);
+        } else {
+          // Создаем нового персонажа, если нет сохраненных
+          const newCharacter = createDefaultCharacter();
+          setCharacter(newCharacter);
+          console.log('Создан новый персонаж');
+        }
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке персонажа:', err);
+      setError('Не удалось загрузить персонажа. Пожалуйста, попробуйте еще раз.');
+      setCharacter(createDefaultCharacter());
+    } finally {
+      setLoading(false);
     }
   };
-  
+
+  const handleUpdateCharacter = (updates: Partial<Character>) => {
+    if (!character) return;
+    
+    const updatedCharacter = { ...character, ...updates };
+    setCharacter(updatedCharacter);
+    
+    // Сохраняем персонажа в localStorage
+    localStorage.setItem(`character_${character.id}`, JSON.stringify(updatedCharacter));
+    localStorage.setItem('last-selected-character', character.id);
+    
+    console.log('Персонаж обновлен:', updatedCharacter);
+  };
+
+  const handleBack = () => {
+    navigate('/characters');
+  };
+
   if (loading) {
-    return <div className="p-8 text-center">Загрузка персонажа...</div>;
-  }
-  
-  if (error || !character) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-2xl font-bold text-red-500">Ошибка</h2>
-        <p>{error || 'Персонаж не найден'}</p>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Загрузка персонажа...</p>
+        </div>
       </div>
     );
   }
-  
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-500 mb-4">Ошибка</h2>
+          <p>{error}</p>
+          <Button onClick={handleBack} className="mt-4">Вернуться к списку персонажей</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-4">
-      {isMobile ? (
-        <MobileCharacterSheet character={character} onUpdate={handleUpdateCharacter} />
-      ) : (
-        <CharacterSheet character={character} onUpdate={handleUpdateCharacter} />
+    <div className="min-h-screen bg-background p-4">
+      {/* Session indicator */}
+      {isConnected && sessionData && (
+        <div className="bg-green-900/20 border border-green-700 rounded-lg p-2 mb-4 text-sm flex justify-between items-center">
+          <div>
+            <span className="font-medium">Подключено к сессии: </span>
+            <span>{sessionData.name || sessionData.code}</span>
+          </div>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-green-500 hover:text-green-400"
+            onClick={() => navigate('/session')}
+          >
+            Перейти в сессию
+          </Button>
+        </div>
+      )}
+      
+      {/* Navigation buttons */}
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <Button 
+          variant="outline" 
+          onClick={handleBack}
+          className="mb-2 sm:mb-0"
+        >
+          ← К списку персонажей
+        </Button>
+        
+        {/* Conditional session buttons */}
+        {!isConnected ? (
+          <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
+        ) : (
+          <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
+        )}
+      </div>
+      
+      {/* Character sheet */}
+      {character && (
+        <CharacterSheet 
+          character={character} 
+          onUpdate={handleUpdateCharacter}
+        />
       )}
     </div>
   );

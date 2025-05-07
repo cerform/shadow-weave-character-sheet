@@ -5,7 +5,6 @@ import { themes } from '@/lib/themes';
 interface UserThemeContextProps {
   activeTheme: string;
   setUserTheme: (theme: string) => void;
-  currentTheme?: typeof themes.default;
 }
 
 const UserThemeContext = createContext<UserThemeContextProps>({
@@ -15,7 +14,6 @@ const UserThemeContext = createContext<UserThemeContextProps>({
 
 export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
   const [activeTheme, setActiveTheme] = useState<string>('default');
-  const [initialized, setInitialized] = useState(false);
   
   useEffect(() => {
     try {
@@ -34,26 +32,11 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
         document.documentElement.setAttribute('data-theme', savedUserTheme);
         document.body.className = '';
         document.body.classList.add(`theme-${savedUserTheme}`);
-        
-        // Устанавливаем CSS-переменные из темы
-        applyThemeStyles(savedUserTheme);
       }
-      setInitialized(true);
     } catch (e) {
       console.error('Error loading user theme:', e);
-      setInitialized(true);
     }
   }, []);
-  
-  const applyThemeStyles = (themeName: string) => {
-    const currentTheme = themes[themeName as keyof typeof themes] || themes.default;
-    document.documentElement.style.setProperty('--background', currentTheme.background);
-    document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
-    document.documentElement.style.setProperty('--primary', currentTheme.primary);
-    document.documentElement.style.setProperty('--accent', currentTheme.accent);
-    document.documentElement.style.setProperty('--text', currentTheme.textColor);
-    document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
-  };
   
   const setUserTheme = (theme: string) => {
     // Проверяем, что тема существует
@@ -73,20 +56,11 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
     document.body.className = '';
     document.body.classList.add(`theme-${theme}`);
     
-    // Применяем CSS-переменные из темы
-    applyThemeStyles(theme);
-    
     console.log("User theme set to:", theme);
   };
   
-  const currentTheme = themes[activeTheme as keyof typeof themes] || themes.default;
-  
   return (
-    <UserThemeContext.Provider value={{ 
-      activeTheme, 
-      setUserTheme,
-      currentTheme
-    }}>
+    <UserThemeContext.Provider value={{ activeTheme, setUserTheme }}>
       {children}
     </UserThemeContext.Provider>
   );
@@ -97,11 +71,7 @@ export const useUserTheme = () => {
   
   if (context === undefined) {
     console.warn('useUserTheme must be used within a UserThemeProvider');
-    return { 
-      activeTheme: 'default', 
-      setUserTheme: (theme: string) => {},
-      currentTheme: themes.default 
-    };
+    return { activeTheme: 'default', setUserTheme: (theme: string) => {} };
   }
   
   return context;

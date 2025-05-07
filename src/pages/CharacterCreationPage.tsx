@@ -22,8 +22,7 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const characterCreation = useCharacterCreation();
-  const { form, updateCharacter, isMagicClass, convertToCharacter } = characterCreation;
+  const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
   const [races] = useState(getAllRaces());
   const [classes] = useState(getAllClasses());
   const [backgrounds] = useState(getAllBackgrounds());
@@ -53,12 +52,12 @@ const CharacterCreationPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (form.race) {
-      fetchSubraces(form.race);
+    if (character.race) {
+      fetchSubraces(character.race);
     } else {
       setSubracesForRace(null);
     }
-  }, [form.race, fetchSubraces]);
+  }, [character.race, fetchSubraces]);
 
   // Define steps for the character creation process
   const steps = useMemo(() => {
@@ -67,66 +66,66 @@ const CharacterCreationPage: React.FC = () => {
         id: 0, 
         name: "Раса", 
         description: "Выбор расы персонажа",
-        completed: !!form.race
+        completed: !!character.race
       },
       { 
         id: 1, 
         name: "Подраса", 
         description: "Выбор подрасы персонажа",
-        completed: !subracesForRace?.length || !!form.subrace
+        completed: !subracesForRace?.length || !!character.subrace
       },
       { 
         id: 2, 
         name: "Класс", 
         description: "Выбор класса персонажа",
-        completed: !!form.class
+        completed: !!character.class
       },
       { 
         id: 3, 
         name: "Уровень", 
         description: "Выбор уровня персонажа",
-        completed: !!form.level
+        completed: !!character.level
       },
       { 
         id: 4, 
         name: "Характеристики", 
         description: "Распределение характеристик",
-        completed: form.strength !== 10 || 
-                 form.dexterity !== 10 || 
-                 form.constitution !== 10 || 
-                 form.intelligence !== 10 || 
-                 form.wisdom !== 10 || 
-                 form.charisma !== 10
+        completed: character.strength !== 10 || 
+                 character.dexterity !== 10 || 
+                 character.constitution !== 10 || 
+                 character.intelligence !== 10 || 
+                 character.wisdom !== 10 || 
+                 character.charisma !== 10
       },
       { 
         id: 5, 
         name: "Предыстория", 
         description: "Выбор предыстории персонажа",
-        completed: !!form.background
+        completed: !!character.background
       },
       { 
         id: 6, 
         name: "Здоровье", 
         description: "Определение очков здоровья",
-        completed: !!form.maxHp && form.maxHp > 0
+        completed: !!character.maxHp && character.maxHp > 0
       },
       { 
         id: 7, 
         name: "Снаряжение", 
         description: "Выбор снаряжения",
-        completed: !!form.equipment && getEquipmentLength(form.equipment) > 0
+        completed: !!character.equipment && getEquipmentLength(character.equipment) > 0
       },
       { 
         id: 8, 
         name: "Детали", 
         description: "Персональные детали",
-        completed: !!form.name
+        completed: !!character.name
       },
       { 
         id: 9, 
         name: "Заклинания", 
         description: "Выбор заклинаний",
-        completed: !isMagicClass() || (!!form.spells && form.spells.length > 0)
+        completed: !isMagicClass() || (!!character.spells && character.spells.length > 0)
       },
       { 
         id: 10, 
@@ -135,7 +134,7 @@ const CharacterCreationPage: React.FC = () => {
         completed: false
       }
     ];
-  }, [form, subracesForRace, isMagicClass]);
+  }, [character, subracesForRace, isMagicClass]);
 
   // Filter steps if needed (for example, skip subrace step if no subraces)
   const visibleSteps = useMemo(() => {
@@ -277,7 +276,7 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Check required fields
-      if (!form.name || !form.race || !form.class) {
+      if (!character.name || !character.race || !character.class) {
         toast({
           title: "Ошибка",
           description: "Пожалуйста, заполните все обязательные поля (Имя, Раса, Класс).",
@@ -287,7 +286,7 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Prepare character for saving
-      const characterToSave = convertToCharacter(form);
+      const characterToSave = convertToCharacter(character);
 
       // Save character to database
       const newCharacter = await createCharacter(characterToSave);
@@ -315,7 +314,7 @@ const CharacterCreationPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [form, convertToCharacter, navigate, toast]);
+  }, [character, convertToCharacter, navigate, toast]);
 
   // Calculate whether 'Next' button should be allowed based on current step
   const canProceedToNextStep = useMemo(() => {
@@ -377,7 +376,7 @@ const CharacterCreationPage: React.FC = () => {
           <CardContent className="p-6">
             <CharacterCreationContent
               currentStep={visibleSteps[currentStep]?.id || 0}
-              character={form}
+              character={character}
               updateCharacter={updateCharacter}
               nextStep={nextStep}
               prevStep={prevStep}

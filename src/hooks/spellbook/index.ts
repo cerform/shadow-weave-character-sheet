@@ -1,25 +1,9 @@
 
-import { SpellData, SpellFilter } from '@/types/spells';
-import { CharacterSpell } from '@/types/character';
-import { getAllSpells, filterSpells } from '@/data/spells';
-import { useContext } from 'react';
-import { SpellbookContext, useSpellbook } from '@/contexts/SpellbookContext';
+// Экспортируем все хуки и утилиты для спеллбука
+export * from './useSpellbook';
+export * from './filterUtils';
+import { useSpellbook } from './useSpellbook';
+export default useSpellbook;
 
-// Re-export the useSpellbook hook from SpellbookContext
-export { useSpellbook } from '@/contexts/SpellbookContext';
-
-// This function remains for backward compatibility
-export function useSpellbookManager() {
-  // Use basic functionality from the context
-  const context = useSpellbook();
-
-  return {
-    spells: context.spells,
-    filteredSpells: context.filteredSpells,
-    filter: context.filters,
-    setFilter: context.setFilters,
-    loading: context.loading
-  };
-}
-
-export default useSpellbookManager;
+// Экспортируем вспомогательные функции из типов
+export { convertCharacterSpellToSpellData, convertSpellArray, convertSpellDataToCharacterSpell } from '@/types/spells';

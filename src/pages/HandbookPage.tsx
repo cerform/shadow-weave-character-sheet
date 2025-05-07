@@ -1,237 +1,151 @@
 
-import React, { useState } from 'react';
-import { Character } from '@/types/character';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search } from 'lucide-react';
-import { races } from '@/data/handbook/races';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import HandbookSidebar from '@/components/handbook/HandbookSidebar';
+import RacesList from '@/components/handbook/RacesList';
+import RaceDetails from '@/components/handbook/RaceDetails';
+import ClassesList from '@/components/handbook/ClassesList';
+import ClassDetails from '@/components/handbook/ClassDetails';
+import BackgroundsList from '@/components/handbook/BackgroundsList';
+import BackgroundDetails from '@/components/handbook/BackgroundDetails';
+import { getAllRaces, getAllRaceSources } from '@/data/races';
+import { getAllClasses, getAllClassSources } from '@/data/classes';
+import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import ThemeSelector from '@/components/ThemeSelector';
+import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 
-interface HandbookTabProps {
-  character: Character;
-}
-
-interface RaceDetailPageProps {
-  race: any;
-  onBack: () => void;
-}
-
-const RaceDetailPage: React.FC<RaceDetailPageProps> = ({ race, onBack }) => {
-  const abilityScoreIncrease = race.abilityScoreIncrease || {};
-  const hasSubraces = race.subraces && race.subraces.length > 0;
-
-  return (
-    <div>
-      <Button variant="outline" onClick={onBack} className="mb-4">
-        Назад к списку рас
-      </Button>
-      <Card>
-        <CardHeader>
-          <CardTitle>{race.name}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">{race.description}</p>
-
-          <section className="mb-4">
-            <h3 className="text-lg font-semibold mb-2">Бонусы характеристик</h3>
-            <ul className="list-disc pl-5">
-              {abilityScoreIncrease.all && <li>Все характеристики: +{abilityScoreIncrease.all}</li>}
-              {abilityScoreIncrease.strength && <li>Сила: +{abilityScoreIncrease.strength}</li>}
-              {abilityScoreIncrease.dexterity && <li>Ловкость: +{abilityScoreIncrease.dexterity}</li>}
-              {abilityScoreIncrease.constitution && <li>Телосложение: +{abilityScoreIncrease.constitution}</li>}
-              {abilityScoreIncrease.intelligence && <li>Интеллект: +{abilityScoreIncrease.intelligence}</li>}
-              {abilityScoreIncrease.wisdom && <li>Мудрость: +{abilityScoreIncrease.wisdom}</li>}
-              {abilityScoreIncrease.charisma && <li>Харизма: +{abilityScoreIncrease.charisma}</li>}
-              {abilityScoreIncrease.custom && <li>Другое: {abilityScoreIncrease.custom}</li>}
-            </ul>
-          </section>
-
-          {hasSubraces && (
-            <section className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Подрасы</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {race.subraces.map((subrace: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent>
-                      <h4 className="font-medium">{subrace.name}</h4>
-                      <p className="text-sm text-muted-foreground">{subrace.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-export const HandbookTab: React.FC<HandbookTabProps> = ({ character }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('rules');
-  const [selectedRace, setSelectedRace] = useState<any>(null);
-
-  const handleRaceClick = (race: any) => {
-    setSelectedRace(race);
-  };
-
-  const handleBackToList = () => {
-    setSelectedRace(null);
-  };
-
-  const rulesContent = `
-# Правила D&D 5e
-
-## Основы
-- **Проверки характеристик**: бросок d20 + модификатор характеристики
-- **Спасброски**: бросок d20 + модификатор характеристики + бонус мастерства (если есть)
-- **Атаки**: бросок d20 + модификатор характеристики + бонус мастерства
-- **Сложность проверки (DC)**: число, которое нужно превысить при броске
-
-## Бой
-- **Инициатива**: бросок d20 + модификатор Ловкости
-- **Действия в бою**: Действие, бонусное действие, движение, реакция
-- **Укрытие**: +2 к AC (половинное), +5 к AC (три четверти), полное укрытие
-
-## Заклинания
-- **Уровни заклинаний**: от 0 (заговоры) до 9
-- **Компоненты**: вербальный (V), соматический (S), материальный (M)
-- **Время накладывания**: от 1 действия до нескольких часов
-- **Дистанция**: от прикосновения до сотен километров
-- **Длительность**: мгновенная, концентрация, минуты, часы, дни
-
-## Отдых
-- **Короткий отдых**: 1 час, восстанавливает Кость Хит-Поинтов
-- **Продолжительный отдых**: 8 часов, восстанавливает HP, половину Костей Хит-Поинтов, заклинания
-`;
-
-  const classesContent = `
-# Классы в D&D 5e
-
-## Воин (Fighter)
-Специалист в военном деле и владении оружием. Обладает высокой выживаемостью и наносит стабильный урон.
-
-## Варвар (Barbarian)
-Свирепый воин, полагающийся на ярость для усиления в бою. Имеет высокое здоровье и способность переносить урон.
-
-## Плут (Rogue)
-Мастер скрытности и манипуляций. Наносит высокий урон по одиночной цели благодаря скрытой атаке.
-
-## Монах (Monk)
-Мастер боевых искусств, использующий ки для выполнения невероятных физических подвигов.
-
-## Паладин (Paladin)
-Святой воин, сочетающий боевые навыки и божественную магию. Обладает способностью исцелять и защищать.
-
-## Следопыт (Ranger)
-Охотник и разведчик, использующий знания природы для выслеживания врагов.
-
-## Чародей (Sorcerer)
-Врожденный заклинатель, магические силы которого идут изнутри.
-
-## Волшебник (Wizard)
-Ученый маг, изучающий тайны магии и записывающий заклинания в книгу.
-
-## Колдун (Warlock)
-Заклинатель, получивший силы от могущественного покровителя.
-
-## Бард (Bard)
-Вдохновляющий исполнитель, сочетающий музыку с магией.
-
-## Жрец (Cleric)
-Проводник божественной воли, носитель веры и силы своего божества.
-
-## Друид (Druid)
-Хранитель природы, способный принимать формы животных.
-`;
-
-  const racesContent = `
-# Расы в D&D 5e
-`;
-
-  const filteredContent = () => {
-    const content = {
-      rules: rulesContent,
-      classes: classesContent,
-      races: racesContent,
-    }[activeTab as 'rules' | 'classes' | 'races'] || '';
-    
-    if (!searchTerm) return content;
-    
-    // Простая фильтрация по поисковому запросу
-    return content
-      .split('\n')
-      .filter(line => line.toLowerCase().includes(searchTerm.toLowerCase()))
-      .join('\n');
-  };
-  
-  if (selectedRace) {
-    return <RaceDetailPage race={selectedRace} onBack={handleBackToList} />;
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Справочник D&D 5e</CardTitle>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Поиск по справочнику..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="rules" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="rules">Правила</TabsTrigger>
-            <TabsTrigger value="classes">Классы</TabsTrigger>
-            <TabsTrigger value="races">Расы</TabsTrigger>
-          </TabsList>
-          
-          <ScrollArea className="h-[400px] whitespace-pre-wrap">
-            {activeTab === 'races' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {races.map((race) => (
-                  <Card key={race.name} className="cursor-pointer" onClick={() => handleRaceClick(race)}>
-                    <CardContent>
-                      <CardTitle>{race.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{race.description.substring(0, 100)}...</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="handbook-content prose prose-sm max-w-none dark:prose-invert">
-                {filteredContent()}
-              </div>
-            )}
-          </ScrollArea>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Add default export for HandbookPage
 const HandbookPage: React.FC = () => {
-  // Mock character data for HandbookTab
-  const mockCharacter: Character = {
-    name: "",
-    level: 1
+  // Состояния для данных
+  const [races, setRaces] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [backgrounds, setBackgrounds] = useState<any[]>([]);
+  
+  // Состояния для UI
+  const [activeSection, setActiveSection] = useState('races');
+  const [selectedRace, setSelectedRace] = useState<any>(null);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [selectedBackground, setSelectedBackground] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Состояния для фильтров
+  const [sources, setSources] = useState<string[]>([]);
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  
+  // Получаем тему
+  const { theme, themeStyles } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themeStyles || themes[themeKey] || themes.default;
+  
+  // Загрузка данных при инициализации
+  useEffect(() => {
+    setRaces(getAllRaces());
+    setClasses(getAllClasses());
+    setBackgrounds(getAllBackgrounds());
+    
+    // Получаем уникальные источники из всех типов данных
+    const raceSources = getAllRaceSources();
+    const classSources = getAllClassSources();
+    const backgroundSources = getAllBackgroundSources();
+    
+    // Объединяем и делаем уникальными
+    const allSources = [...new Set([...raceSources, ...classSources, ...backgroundSources])];
+    setSources(allSources);
+  }, []);
+  
+  // Сброс выбранного элемента при смене раздела
+  useEffect(() => {
+    setSelectedRace(null);
+    setSelectedClass(null);
+    setSelectedBackground(null);
+    setSearchQuery('');
+  }, [activeSection]);
+  
+  // Рендеринг содержимого
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'races':
+        return selectedRace 
+          ? <RaceDetails race={selectedRace} onBack={() => setSelectedRace(null)} /> 
+          : <RacesList 
+              races={races} 
+              searchQuery={searchQuery} 
+              selectedSources={selectedSources} 
+              setSelectedRace={setSelectedRace} 
+            />;
+      case 'classes':
+        return selectedClass 
+          ? <ClassDetails cls={selectedClass} onBack={() => setSelectedClass(null)} /> 
+          : <ClassesList 
+              classes={classes} 
+              searchQuery={searchQuery} 
+              selectedSources={selectedSources} 
+              setSelectedClass={setSelectedClass} 
+            />;
+      case 'backgrounds':
+        return selectedBackground 
+          ? <BackgroundDetails background={selectedBackground} onBack={() => setSelectedBackground(null)} /> 
+          : <BackgroundsList 
+              backgrounds={backgrounds} 
+              searchQuery={searchQuery} 
+              selectedSources={selectedSources} 
+              setSelectedBackground={setSelectedBackground} 
+            />;
+      default:
+        return (
+          <div 
+            className="p-6"
+            style={{ color: currentTheme.textColor }}
+          >
+            Выберите категорию из справочника.
+          </div>
+        );
+    }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Справочник D&D 5e</h1>
-      <HandbookTab character={mockCharacter} />
-    </div>
+    <BackgroundWrapper>
+      {/* Навигационная панель */}
+      <div className="p-4 flex items-center justify-between">
+        <NavigationButtons className="flex-shrink-0" />
+        <ThemeSelector />
+      </div>
+      
+      <div className="flex flex-1 overflow-hidden">
+        {/* Боковая панель */}
+        <HandbookSidebar 
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          sources={sources}
+          selectedSources={selectedSources}
+          setSelectedSources={setSelectedSources}
+        />
+        
+        {/* Основное содержимое */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 
+                className="text-3xl font-bold"
+                style={{ color: currentTheme.accent, textShadow: `0 0 10px ${currentTheme.accent}80` }}
+              >
+                {activeSection === 'races' && 'Расы'}
+                {activeSection === 'classes' && 'Классы'}
+                {activeSection === 'backgrounds' && 'Предыстории'}
+              </h1>
+            </div>
+            
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+      
+      <FloatingDiceButton />
+    </BackgroundWrapper>
   );
 };
 

@@ -1,60 +1,30 @@
 
 /**
- * Расчёт модификатора характеристики
+ * Вычисляет модификатор характеристики на основе значения
+ * @param score Значение характеристики
+ * @returns модификатор характеристики
  */
-export const getAbilityModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
+export function getAbilityModifierValue(score: number | undefined): number {
+  if (score === undefined) return 0;
+  return Math.floor((score - 10) / 2);
+}
 
 /**
- * Получение строкового представления модификатора характеристики (+X или -X)
+ * Возвращает строковое представление модификатора с плюсом или минусом
+ * @param score Значение характеристики
+ * @returns Строка вида "+2" или "-1"
  */
-export const getAbilityModifierString = (abilityScore: number): string => {
-  const modifier = getAbilityModifier(abilityScore);
+export function getAbilityModifierString(score: number | undefined): string {
+  if (score === undefined) return "+0";
+  const modifier = getAbilityModifierValue(score);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-};
+}
 
 /**
- * Получение названия характеристики
+ * Вычисляет бонус мастерства на основе уровня
+ * @param level Уровень персонажа
+ * @returns бонус мастерства
  */
-export const getAbilityName = (ability: string): string => {
-  const abilityMap: Record<string, string> = {
-    'STR': 'СИЛ',
-    'DEX': 'ЛОВ',
-    'CON': 'ВЫН',
-    'INT': 'ИНТ',
-    'WIS': 'МДР',
-    'CHA': 'ХАР',
-    'strength': 'СИЛ',
-    'dexterity': 'ЛОВ',
-    'constitution': 'ВЫН',
-    'intelligence': 'ИНТ',
-    'wisdom': 'МДР',
-    'charisma': 'ХАР'
-  };
-  
-  return abilityMap[ability] || ability;
-};
-
-/**
- * Массив сокращенных названий характеристик
- */
-export const abilityNames = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-
-/**
- * Полные названия характеристик
- */
-export const abilityFullNames: Record<string, string> = {
-  'STR': 'Сила',
-  'DEX': 'Ловкость',
-  'CON': 'Выносливость',
-  'INT': 'Интеллект',
-  'WIS': 'Мудрость',
-  'CHA': 'Харизма',
-  'strength': 'Сила',
-  'dexterity': 'Ловкость',
-  'constitution': 'Выносливость',
-  'intelligence': 'Интеллект',
-  'wisdom': 'Мудрость',
-  'charisma': 'Харизма'
-};
+export function getProficiencyBonus(level: number): number {
+  return Math.floor((level - 1) / 4) + 2;
+}

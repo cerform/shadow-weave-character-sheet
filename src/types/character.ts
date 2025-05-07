@@ -1,25 +1,11 @@
-
-// Define Item interface instead of importing it
-export interface Item {
-  name: string;
-  quantity: number;
-  weight?: number;
-  description?: string;
-  type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
-}
-
 export interface Character {
   id?: string;
-  userId?: string; // Add userId property to Character interface
   name: string;
   race?: string;
+  subrace?: string;  // Добавляем поле subrace
   class?: string;
-  className?: string;
+  className?: string; // Добавляем альтернатив��ое поле className
   subclass?: string;
-  subrace?: string;  // Поле подрасы
   background?: string;
   level: number;
   experience?: number;
@@ -39,6 +25,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
+  // Добавляем поле stats для обратной совместимости
   stats?: {
     strength: number;
     dexterity: number;
@@ -49,44 +36,31 @@ export interface Character {
   };
   skills?: Record<string, {
     proficient: boolean;
-    expertise?: boolean; // Make sure expertise is defined
+    expertise?: boolean;
     value?: number;
-    bonus?: number;
   }>;
   hitPoints?: {
     current: number;
     maximum: number;
     temporary: number;
   };
+  // Добавляем алиасы для hitPoints
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
-  savingThrows?: Record<string, boolean> | string[];
-  savingThrowProficiencies?: Record<string, boolean>;
-  skillProficiencies?: string[];
-  expertise?: string[];
-  skillBonuses?: Record<string, number>;
-  selectedAbilities?: string[];
-  abilityBonuses?: Record<string, number>;
+  savingThrows?: Record<string, boolean>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[];
   } | string[];
-  // Поддержка обоих типов equipment
-  equipment?: Item[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
-  };
-  features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[];
+  equipment?: Item[];
+  features?: string[];
+  spells?: CharacterSpell[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -95,6 +69,7 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
+  // Добавляем поля для gold
   gold?: number;
   deathSaves?: {
     successes: number;
@@ -107,7 +82,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string;
+  // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
   raceFeatures?: {
     name: string;
     description: string;
@@ -128,57 +103,40 @@ export interface Character {
     description: string;
     level?: number;
   }[];
-  gender?: string;
-  abilityPointsUsed?: number;
+  currency?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
+  // Added properties for timestamps
   updatedAt?: string;
   createdAt?: string;
+  // Added property for character image
   image?: string;
+  // Пользовательские поля
+  gender?: string; // Добавляем поле gender
+  userId?: string; // Добавляем поле userId для связи с пользователем
+  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
+  // Добавляем поля для обратной совместимости
   strength?: number;
   dexterity?: number;
   constitution?: number;
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  initiative?: string | number;
-  lastUpdated?: string | number;
-  lastDiceRoll?: {
-    diceType: string;
-    count: number;
-    modifier: number;
-    rolls: number[];
-    total: number;
-    label: string;
-    timestamp: string;
-  };
-  hitDice?: {
-    total: number;
-    used: number;
-    dieType: string;
-    value: string;
-    remaining?: number;
-  };
-  resources?: Record<string, {
-    max: number;
-    used: number;
-    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
-  }>;
-  sorceryPoints?: {
-    max: number;
-    current: number;
-  };
-  additionalClasses?: string[];
 }
 
 export interface CharacterSpell {
   name: string;
-  name_en?: string; // Added name_en property
   level: number;
   school?: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[];
+  description?: string | string[]; // Поддерживает как строку, так и массив строк
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
@@ -193,6 +151,17 @@ export interface CharacterSpell {
   materials?: string;
 }
 
+export interface Item {
+  name: string;
+  quantity: number;
+  weight?: number;
+  description?: string;
+  type?: string;
+  equipped?: boolean;
+  cost?: number;
+  costUnit?: string;
+}
+
 export interface Feature {
   name: string;
   source: string;
@@ -201,7 +170,7 @@ export interface Feature {
 }
 
 export interface PlayerCharacter extends Character {
-  userId: string; // This makes it required in PlayerCharacter
+  userId: string;
 }
 
 // Export ability score caps
@@ -210,41 +179,6 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24
 };
-
-// Add interfaces needed by other components
-export interface RaceDetails {
-  name: string;
-  description: string;
-  abilityScoreIncrease: AbilityScoreIncrease;
-  size: string;
-  speed: number;
-  languages: string[];
-  traits: { name: string; description: string }[];
-  vision: string;
-  source: string;
-  subraces?: (string | SubraceDetails)[];
-}
-
-// Интерфейс для деталей подрасы
-export interface SubraceDetails {
-  name: string;
-  description: string;
-  abilityScoreIncrease?: AbilityScoreIncrease;
-  traits?: string[] | { name: string; description: string }[];
-}
-
-// Интерфейс для увеличения характеристик
-export interface AbilityScoreIncrease {
-  [key: string]: number | string | Record<string, number>;
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  all?: number;
-  custom?: number | string;
-}
 
 // Add HitPointEvent for DamageLog
 export interface HitPointEvent {

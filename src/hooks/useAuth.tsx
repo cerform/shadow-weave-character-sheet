@@ -1,26 +1,35 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthContextType } from '@/types/auth';
+
+interface User {
+  id: string;
+  email: string | null;
+  isDM?: boolean;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  currentUser: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+}
 
 // Create Context with a default value
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   currentUser: null,
-  loading: false,
-  error: null,
   login: async () => {},
   logout: async () => {},
-  register: async () => {},
-  signup: async () => {},
-  googleLogin: async () => null
+  register: async () => {}
 });
 
 // Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Check for saved user on mount
   useEffect(() => {
@@ -37,83 +46,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Mock login function
   const login = async (email: string, password: string) => {
-    try {
-      // In a real app, you'd make an API call here
-      const mockUser: User = { 
-        uid: '123', 
-        id: '123', 
-        email: email, 
-        isDM: email.includes('dm'),
-        role: email.includes('dm') ? 'dm' : 'player' 
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return Promise.resolve();
-    } catch (e) {
-      const err = e as Error;
-      setError(err.message || String(err));
-      throw e;
-    }
+    // In a real app, you'd make an API call here
+    const mockUser = { id: '123', email: email, isDM: email.includes('dm') };
+    setUser(mockUser);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    return Promise.resolve();
   };
 
   // Mock logout function
   const logout = async () => {
-    try {
-      setUser(null);
-      localStorage.removeItem('user');
-      return Promise.resolve();
-    } catch (e) {
-      const err = e as Error;
-      setError(err.message || String(err));
-      throw e;
-    }
+    setUser(null);
+    localStorage.removeItem('user');
+    return Promise.resolve();
   };
 
   // Mock register function
-  const register = async (email: string, password: string, displayName?: string, isDM?: boolean) => {
-    try {
-      // In a real app, you'd make an API call here
-      const mockUser: User = { 
-        uid: '123', 
-        id: '123', 
-        email: email,
-        displayName,
-        isDM,
-        role: isDM ? 'dm' : 'player'
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return Promise.resolve();
-    } catch (e) {
-      const err = e as Error;
-      setError(err.message || String(err));
-      throw e;
-    }
-  };
-
-  // Alias for register
-  const signup = register;
-
-  // Mock Google login
-  const googleLogin = async (redirectToPath?: string): Promise<User | null> => {
-    try {
-      // In a real app, you'd implement real Google Auth
-      const mockUser: User = { 
-        uid: '789', 
-        id: '789', 
-        email: 'google@example.com',
-        displayName: 'Google User',
-        isDM: false,
-        role: 'player'
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return mockUser;
-    } catch (e) {
-      const err = e as Error;
-      setError(err.message || String(err));
-      return null;
-    }
+  const register = async (email: string, password: string) => {
+    // In a real app, you'd make an API call here
+    const mockUser = { id: '123', email: email };
+    setUser(mockUser);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    return Promise.resolve();
   };
 
   return (
@@ -124,11 +77,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentUser: user, 
         login, 
         logout, 
-        register,
-        signup,
-        googleLogin,
-        loading,
-        error
+        register
       }}
     >
       {!loading && children}

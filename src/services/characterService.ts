@@ -30,6 +30,7 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 
 /**
  * Получение персонажей конкретного пользователя
+ * @param userId ID пользователя
  * @returns Массив персонажей
  */
 export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
@@ -125,9 +126,6 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
     throw error;
   }
 };
-
-// Add this alias to fix the import issue
-export const getCharacterById = getCharacter;
 
 /**
  * Сохранение персонажа
