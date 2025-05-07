@@ -34,6 +34,9 @@ export interface SpellbookContextProps {
   activeClass: string[];
   loading: boolean;
   loadSpellsForClass: (className: string) => SpellData[]; // Добавлено
+  setSpells: (spells: SpellData[]) => void;
+  setFilteredSpells: (spells: SpellData[]) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
@@ -84,7 +87,9 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
       }
     };
 
-    loadSpells();
+    if (spells.length === 0) {
+      loadSpells();
+    }
   }, []);
 
   // Фильтрация заклинаний при изменении фильтров или поискового текста
@@ -352,7 +357,10 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
         activeSchool,
         activeClass,
         loading,
-        loadSpellsForClass
+        loadSpellsForClass,
+        setSpells,
+        setFilteredSpells,
+        setIsLoading
       }}
     >
       {children}

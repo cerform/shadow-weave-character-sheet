@@ -1,23 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, BookOpen, Filter } from "lucide-react";
 import SpellDetailModal from './SpellDetailModal';
 import SpellFilterPanel from './SpellFilterPanel';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { SpellData } from '@/types/spells';
-import { getAllSpells } from '@/data/spells/index';
 import { useTheme } from '@/hooks/use-theme';
 
 const SpellBookViewer: React.FC = () => {
   const { themeStyles } = useTheme();
   const {
-    spells,
     filteredSpells,
     searchText,
     setSearchText,
@@ -40,19 +36,7 @@ const SpellBookViewer: React.FC = () => {
     clearFilters,
     isLoading,
   } = useSpellbook();
-
-  const [initialized, setInitialized] = useState(false);
-
-  // Загрузка заклинаний при первой отрисовке
-  useEffect(() => {
-    if (!initialized && spells.length === 0) {
-      // Если нет заклинаний, загружаем их из данных
-      const allSpells = getAllSpells();
-      console.log('Загружено заклинаний:', allSpells.length);
-      setInitialized(true);
-    }
-  }, [initialized, spells]);
-
+  
   return (
     <div className="space-y-6">
       {/* Панель поиска */}
@@ -104,9 +88,9 @@ const SpellBookViewer: React.FC = () => {
         </div>
       ) : filteredSpells.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSpells.map((spell: SpellData) => (
+          {filteredSpells.map((spell) => (
             <Card
-              key={spell.id}
+              key={spell.id || spell.name}
               className="h-full cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleOpenSpell(spell)}
               style={{

@@ -99,6 +99,7 @@ export const getSpellSchools = (): string[] => {
 
 // Export a function to get all spells
 export const getAllSpells = (): SpellData[] => {
+  // Важно: вместо использования пустого массива, возвращаем данные из импортированных файлов
   return spells.map(spell => ({
     id: spell.id || spell.name,
     name: spell.name,
