@@ -48,7 +48,9 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     // Make sure all required CharacterSpell properties are set
     name: spell.name,
     level: spell.level,
-    id: spell.id // Передаем id из SpellData в CharacterSpell
+    id: spell.id.toString(), // Преобразуем id в строку
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
   };
 };
 

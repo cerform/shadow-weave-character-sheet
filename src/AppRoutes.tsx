@@ -6,6 +6,7 @@ import ProfilePage from './pages/ProfilePage';
 import SpellbookPage from './pages/SpellbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
 import CharacterSheetPage from './pages/CharacterSheetPage';
+import CharactersListPage from './pages/CharactersListPage';
 import AuthPage from './pages/AuthPage';
 import Index from './pages/Index';
 
@@ -17,7 +18,6 @@ import MobileCharacterCreationPage from './pages/MobileCharacterCreationPage';
 // Временные компоненты-заглушки для недостающих страниц
 const Handbook = () => <div>Справочник</div>;
 const HandbookCategory = () => <div>Категория справочника</div>;
-const CharactersPage = () => <div>Список персонажей</div>;
 const NotFoundPage = () => <div>Страница не найдена</div>;
 const DMPage = () => <div>Страница мастера</div>;
 const BattleMap = () => <div>Карта боя</div>;
@@ -58,32 +58,35 @@ const AppRoutes = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
+    // Логируем информацию о маршрутизации
+    console.log('AppRoutes: инициализация маршрутизации');
+    console.log('AppRoutes: isAuthenticated =', isAuthenticated);
+    console.log('AppRoutes: isMobile =', isMobile);
+    
+    setLoading(false);
+    
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isAuthenticated]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
+  }
 
   return (
     <Routes>
       {/* Публичные маршруты */}
-      <Route path="/" element={isMobile ? <MobileAppLayout>Добро пожаловать</MobileAppLayout> : <Index />} />
+      <Route path="/" element={<Index />} />
       
       {/* Руководства */}
       <Route path="/handbook" element={<Handbook />} />
       <Route path="/handbook/:category" element={<HandbookCategory />} />
       <Route path="/spellbook" element={<SpellbookPage />} />
       
-      {/* Создание персонажа и управление ими */}
-      <Route 
-        path="/character-creation" 
-        element={isMobile ? <MobileCharacterCreationPage /> : <CharacterCreationPage />} 
-      />
-      
-      {/* Используем компонент-обертку для передачи пропсов */}
-      <Route 
-        path="/character-sheet/:id" 
-        element={<CharacterSheetPage />} 
-      />
-      
-      <Route path="/characters" element={<CharactersPage />} />
+      {/* Персонажи и управление ими */}
+      <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/character-creation" element={isMobile ? <MobileCharacterCreationPage /> : <CharacterCreationPage />} />
+      <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
+      <Route path="/character/:id" element={<Navigate to={`/character-sheet/:id`} replace />} />
       
       {/* Аутентификация */}
       <Route path="/auth" element={<AuthPage />} />

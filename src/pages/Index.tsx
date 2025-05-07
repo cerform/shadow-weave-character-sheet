@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/use-theme';
+import { useUserTheme } from '@/hooks/use-user-theme';
 import { themes } from '@/lib/themes';
 import { 
   Wand2, BookMarked, BookOpen, Dices, PlusCircle, 
@@ -12,17 +12,19 @@ import {
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ThemeSelector from '@/components/ThemeSelector';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+import CharactersList from '@/components/home/CharactersList';
 
 const Index = () => {
   const { user } = useAuth();
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const { activeTheme, currentTheme } = useUserTheme();
+  const themeKey = (activeTheme || 'default') as keyof typeof themes;
+  const theme = currentTheme || themes[themeKey] || themes.default;
   const [loadFadeIn, setLoadFadeIn] = useState(false);
 
   useEffect(() => {
     // Задержка для эффекта последовательного появления
     setLoadFadeIn(true);
+    console.log('Index: страница загружена, тема:', activeTheme);
   }, []);
 
   const menuItems = [
@@ -83,21 +85,21 @@ const Index = () => {
           <h1 
             className="text-5xl font-bold font-philosopher relative group"
             style={{ 
-              color: currentTheme.accent,
-              textShadow: `0 0 10px ${currentTheme.accent}60`
+              color: theme.accent,
+              textShadow: `0 0 10px ${theme.accent}60`
             }}
           >
             <span>Dungeons & Dragons 5e</span>
             <Sparkles 
               className="absolute -top-4 -right-8 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
-              style={{ color: currentTheme.accent }}
+              style={{ color: theme.accent }}
             />
             {/* Декоративный элемент под заголовком */}
             <div
               className="h-1 w-3/4 mt-2 rounded"
               style={{
-                background: `linear-gradient(90deg, transparent, ${currentTheme.accent}, transparent)`,
-                boxShadow: `0 0 8px ${currentTheme.accent}70`
+                background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`,
+                boxShadow: `0 0 8px ${theme.accent}70`
               }}
             />
           </h1>
@@ -116,9 +118,9 @@ const Index = () => {
               <div 
                 className={`p-6 rounded-lg transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg flex flex-col h-full ${loadFadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 style={{ 
-                  backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.75)',
+                  backgroundColor: theme.cardBackground || 'rgba(0, 0, 0, 0.75)',
                   borderLeft: `4px solid ${item.color}`,
-                  boxShadow: `0 4px 12px ${currentTheme.accent}30`,
+                  boxShadow: `0 4px 12px ${theme.accent}30`,
                   transitionDelay: `${item.delay}s`,
                   borderRadius: '0.5rem',
                   backdropFilter: 'blur(10px)'
@@ -146,13 +148,13 @@ const Index = () => {
                 </div>
                 <h3 
                   className="text-xl font-semibold mb-2 font-philosopher" 
-                  style={{ color: currentTheme.textColor }}
+                  style={{ color: theme.textColor }}
                 >
                   {item.title}
                 </h3>
                 <p 
                   className="text-sm" 
-                  style={{ color: `${currentTheme.textColor}90` }}
+                  style={{ color: `${theme.textColor}90` }}
                 >
                   {item.description}
                 </p>
@@ -162,7 +164,7 @@ const Index = () => {
                     className="w-full btn-magic"
                     style={{ 
                       borderColor: item.color,
-                      color: currentTheme.textColor,
+                      color: theme.textColor,
                     }}
                   >
                     Перейти
@@ -173,6 +175,9 @@ const Index = () => {
           ))}
         </div>
 
+        {/* Отображаем список персонажей */}
+        <CharactersList />
+
         {/* Декоративный элемент-меч внизу страницы с ссылкой на страницу авторизации */}
         <div className="mt-12 mb-6 flex justify-center">
           <Link to="/auth">
@@ -180,8 +185,8 @@ const Index = () => {
               size={32} 
               className="opacity-80 hover:opacity-100 animate-pulse-accent transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ 
-                color: currentTheme.accent,
-                filter: `drop-shadow(0 0 6px ${currentTheme.accent})` 
+                color: theme.accent,
+                filter: `drop-shadow(0 0 6px ${theme.accent})` 
               }}
             />
           </Link>
