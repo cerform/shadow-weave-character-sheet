@@ -10,9 +10,9 @@ interface BattleMapProps {
   setTokens: React.Dispatch<React.SetStateAction<TokenData[]>> | ((token: TokenData) => void);
   background: string | null;
   setBackground: (background: string | null) => void;
-  onUpdateTokenPosition: (id: string, x: number, y: number) => void; // Изменили тип id на string
-  onSelectToken: (id: string | null) => void; // Изменили тип id на string
-  selectedTokenId: string | null; // Изменили тип на string
+  onUpdateTokenPosition: (id: string, x: number, y: number) => void;
+  onSelectToken: (id: string | null) => void;
+  selectedTokenId: string | null;
   initiative?: Initiative[];
   battleActive?: boolean;
 }
@@ -28,7 +28,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   initiative = [],
   battleActive = false
 }) => {
-  const [draggingToken, setDraggingToken] = useState<string | null>(null); // Изменили тип на string
+  const [draggingToken, setDraggingToken] = useState<string | null>(null);
   const [mapDimensions, setMapDimensions] = useState({ width: 1000, height: 800 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -50,7 +50,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   // Создание нового токена
   const handleCreateToken = () => {
     const newToken: TokenData = {
-      id: Date.now().toString(), // Преобразуем в строку
+      id: Date.now().toString(),
       name: `Токен ${tokens.length + 1}`,
       img: '/placeholder-token.png', // заглушка, в реальном приложении нужно заменить
       x: Math.random() * mapDimensions.width / 2,
@@ -71,7 +71,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   };
 
   // Начало перетаскивания токена
-  const handleTokenDragStart = (e: React.MouseEvent, tokenId: string) => { // Изменили тип на string
+  const handleTokenDragStart = (e: React.MouseEvent, tokenId: string) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -203,8 +203,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
               style={{
                 left: token.x,
                 top: token.y,
-                width: token.size,
-                height: token.size,
+                width: token.size || 50,
+                height: token.size || 50,
                 transform: 'translate(-50%, -50%)',
                 zIndex: token.id === draggingToken ? 100 : 10
               }}
@@ -237,7 +237,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 key={init.id}
                 className={`p-1 rounded ${init.isActive ? 'bg-primary/20' : ''}`}
               >
-                {init.name}: {init.initiative} {/* Заменили roll на initiative */}
+                {init.name}: {init.initiative}
               </div>
             ))}
           </div>
@@ -248,4 +248,3 @@ const BattleMap: React.FC<BattleMapProps> = ({
 };
 
 export default BattleMap;
-

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
@@ -23,7 +24,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   availableSpells,
   onSpellChange,
 }) => {
-  const { character, setCharacter } = useCharacter();
+  const { currentCharacter } = useCharacter();
   const { selectedSpells } = useSpellbook();
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +33,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const currentTheme = themes[themeKey] || themes.default;
 
   // Получаем модификатор способности для заклинаний
-  const abilityModifier = character ? getSpellcastingAbilityModifier(character) : 0;
+  const abilityModifier = currentCharacter ? getSpellcastingAbilityModifier(currentCharacter) : 0;
 
   // Вычисляем доступные заклинания
   const { maxSpellLevel, cantripsCount, knownSpells } = calculateAvailableSpellsByClassAndLevel(
@@ -76,7 +77,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Проверяем, изучено ли заклинание
   const isSpellKnown = (spell: SpellData) => {
-    return character.spells && character.spells.some(s => {
+    return currentCharacter?.spells && currentCharacter.spells.some(s => {
       if (typeof s === 'string') return s === spell.name;
       return s.id === spell.id || s.name === spell.name;
     });

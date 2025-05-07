@@ -38,10 +38,12 @@ const SessionChat: React.FC<SessionChatProps> = ({
       const newMessage: ChatMessage = {
         id: data.id || Date.now().toString(),
         senderId: data.senderId || 'system',
+        sender: data.nickname || playerName,
         senderName: data.nickname || playerName,
+        message: data.message,
         content: data.message,
         timestamp: data.timestamp || new Date().toISOString(),
-        type: 'text'
+        type: 'message'
       };
       addMessage(newMessage);
     };
@@ -50,10 +52,12 @@ const SessionChat: React.FC<SessionChatProps> = ({
       const rollMessage: ChatMessage = {
         id: data.id || Date.now().toString(),
         senderId: data.senderId || 'system',
+        sender: data.playerName || 'Система',
         senderName: data.playerName || 'Система',
+        message: `${data.reason ? data.reason + ': ' : ''}${data.formula}`,
         content: `${data.reason ? data.reason + ': ' : ''}${data.formula}`,
         timestamp: data.timestamp || new Date().toISOString(),
-        type: 'roll',
+        type: 'dice',
         rollResult: {
           formula: data.formula,
           rolls: data.rolls || [],
@@ -117,21 +121,21 @@ const SessionChat: React.FC<SessionChatProps> = ({
           ) : (
             messages.map((msg) => (
               <div key={msg.id} className="mb-2">
-                {msg.type === 'text' ? (
+                {msg.type === 'message' ? (
                   <div className="bg-secondary/10 rounded-lg p-2">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium">{msg.senderName}</span>
+                      <span className="font-medium">{msg.senderName || msg.sender}</span>
                       <span className="text-muted-foreground">{formatTime(msg.timestamp)}</span>
                     </div>
-                    <p>{msg.content}</p>
+                    <p>{msg.content || msg.message}</p>
                   </div>
-                ) : msg.type === 'roll' ? (
+                ) : msg.type === 'dice' ? (
                   <div className="bg-primary/5 rounded-lg p-2">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium">{msg.senderName} бросает кубики</span>
+                      <span className="font-medium">{msg.senderName || msg.sender} бросает кубики</span>
                       <span className="text-muted-foreground">{formatTime(msg.timestamp)}</span>
                     </div>
-                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-sm">{msg.content || msg.message}</p>
                     {msg.rollResult && (
                       <div className="mt-1 flex items-center gap-2">
                         <span className="font-bold text-primary">
@@ -146,7 +150,7 @@ const SessionChat: React.FC<SessionChatProps> = ({
                 ) : (
                   <div className="bg-muted/30 rounded-lg p-2">
                     <div className="text-center text-muted-foreground text-sm">
-                      {msg.content}
+                      {msg.content || msg.message}
                     </div>
                   </div>
                 )}

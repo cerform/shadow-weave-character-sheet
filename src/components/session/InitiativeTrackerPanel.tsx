@@ -1,374 +1,257 @@
-// Import React and required components
+
 import React, { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowUp, ArrowDown, Edit, Trash2, PlayCircle, PauseCircle, FastForward, Plus, Dices } from "lucide-react";
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { ArrowUpCircle, ArrowDownCircle, Plus, Trash2 } from 'lucide-react';
+import { Initiative, TokenData } from '@/types/session.types';
 
 interface InitiativeTrackerPanelProps {
-  initiative: Initiative[];
-  tokens: TokenData[];
-  battleActive: boolean;
-  sessionId: string;
-  onUpdateInitiative: (initiative: Initiative[]) => void;
-  onToggleBattle: () => void;
-  onNextTurn: () => void;
+  initiatives: Initiative[];
+  onUpdateInitiatives: (initiatives: Initiative[]) => void;
+  tokens?: TokenData[];
 }
 
-const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({
-  initiative,
-  tokens,
-  battleActive,
-  sessionId,
-  onUpdateInitiative,
-  onToggleBattle,
-  onNextTurn
-}) => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newEntryName, setNewEntryName] = useState('');
-  const [newEntryRoll, setNewEntryRoll] = useState<number>(10);
-  const [editingEntry, setEditingEntry] = useState<Initiative | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({ initiatives, onUpdateInitiatives, tokens = [] }) => {
+  const [newName, setNewName] = useState('');
+  const [newInitiative, setNewInitiative] = useState<number>(10);
+  const [sortedInitiatives, setSortedInitiatives] = useState<Initiative[]>([]);
+  const [activeInitiativeId, setActiveInitiativeId] = useState<string | null>(null);
 
-  // Handle drag-and-drop reordering
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  // Sort initiatives when they change
+  useEffect(() => {
+    const sorted = [...initiatives].sort((a, b) => b.initiative - a.initiative);
+    setSortedInitiatives(sorted);
     
-    const reordered = Array.from(initiative);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
-    
-    // Update active status if needed
-    const updatedInitiative: Initiative[] = reordered.map(item => ({
-      ...item
-    }));
-    
-    onUpdateInitiative(updatedInitiative);
-  };
+    // Set active initiative if none is set
+    if (sorted.length > 0 && !sorted.some(i => i.isActive)) {
+      handleSetActive(sorted[0].id);
+    }
+  }, [initiatives]);
 
-  // Handle adding a new entry
-  const handleAddEntry = () => {
-    if (!newEntryName) return;
+  // Add new initiative
+  const handleAddInitiative = () => {
+    if (!newName.trim()) return;
     
     const newEntry: Initiative = {
-      id: `init-${Date.now()}`,
-      tokenId: 0, // Default placeholder
-      name: newEntryName,
-      roll: newEntryRoll,
-      isActive: initiative.length === 0 // First entry is active by default
+      id: Date.now().toString(),
+      name: newName,
+      initiative: newInitiative,
+      isActive: false
     };
     
-    const updatedInitiative: Initiative[] = [...initiative, newEntry];
-    // Sort by initiative roll in descending order
-    updatedInitiative.sort((a, b) => b.roll - a.roll);
-    
-    onUpdateInitiative(updatedInitiative);
-    setNewEntryName('');
-    setNewEntryRoll(10);
-    setIsAddDialogOpen(false);
+    onUpdateInitiatives([...initiatives, newEntry]);
+    setNewName('');
+    setNewInitiative(10);
   };
 
-  // Handle removing an entry
-  const handleRemoveEntry = (id: string) => {
-    const updatedInitiative: Initiative[] = initiative.filter(item => item.id !== id);
-    
-    // If active entry was removed, set the first entry as active
-    if (updatedInitiative.length > 0 && !updatedInitiative.some(item => item.isActive)) {
-      updatedInitiative[0].isActive = true;
-    }
-    
-    onUpdateInitiative(updatedInitiative);
+  // Remove initiative
+  const handleRemoveInitiative = (id: string) => {
+    const updatedInitiatives = initiatives.filter(i => i.id !== id);
+    onUpdateInitiatives(updatedInitiatives);
   };
 
-  // Handle moving an entry up in the list
-  const handleMoveUp = (index: number) => {
-    if (index <= 0) return;
-    
-    const updatedInitiative: Initiative[] = [...initiative];
-    [updatedInitiative[index - 1], updatedInitiative[index]] = 
-      [updatedInitiative[index], updatedInitiative[index - 1]];
-    
-    onUpdateInitiative(updatedInitiative);
-  };
-
-  // Handle moving an entry down in the list
-  const handleMoveDown = (index: number) => {
-    if (index >= initiative.length - 1) return;
-    
-    const updatedInitiative: Initiative[] = [...initiative];
-    [updatedInitiative[index], updatedInitiative[index + 1]] = 
-      [updatedInitiative[index + 1], updatedInitiative[index]];
-    
-    onUpdateInitiative(updatedInitiative);
-  };
-
-  // Handle setting an entry as active
+  // Set active initiative
   const handleSetActive = (id: string) => {
-    const updatedInitiative: Initiative[] = initiative.map(item => ({
-      ...item,
-      isActive: item.id === id
+    const updatedInitiatives = initiatives.map(i => ({
+      ...i,
+      isActive: i.id === id
     }));
     
-    onUpdateInitiative(updatedInitiative);
+    setActiveInitiativeId(id);
+    onUpdateInitiatives(updatedInitiatives);
   };
 
-  // Handle opening edit dialog
-  const handleEditClick = (entry: Initiative) => {
-    setEditingEntry(entry);
-    setIsEditDialogOpen(true);
+  // Move to next initiative in order
+  const handleNextInitiative = () => {
+    if (sortedInitiatives.length === 0) return;
+    
+    const activeIndex = sortedInitiatives.findIndex(i => i.isActive);
+    const nextIndex = activeIndex === sortedInitiatives.length - 1 ? 0 : activeIndex + 1;
+    
+    handleSetActive(sortedInitiatives[nextIndex].id);
   };
 
-  // Handle saving edited entry
-  const handleSaveEdit = () => {
-    if (!editingEntry) return;
+  // Move to previous initiative in order
+  const handlePrevInitiative = () => {
+    if (sortedInitiatives.length === 0) return;
     
-    const updatedInitiative: Initiative[] = initiative.map(item => 
-      item.id === editingEntry.id ? editingEntry : item
-    );
+    const activeIndex = sortedInitiatives.findIndex(i => i.isActive);
+    const prevIndex = activeIndex <= 0 ? sortedInitiatives.length - 1 : activeIndex - 1;
     
-    onUpdateInitiative(updatedInitiative);
-    setIsEditDialogOpen(false);
-    setEditingEntry(null);
+    handleSetActive(sortedInitiatives[prevIndex].id);
   };
 
-  // Handle rolling initiative for all tokens
-  const handleRollAll = () => {
-    // Create entries for tokens that don't already have initiative
-    const existingTokenIds = initiative.map(item => item.tokenId);
-    const newEntries: Initiative[] = [];
+  // Roll initiative for all
+  const handleRollAllInitiative = () => {
+    const updatedInitiatives = initiatives.map(i => ({
+      ...i,
+      initiative: Math.floor(Math.random() * 20) + 1 // d20 roll
+    }));
     
-    tokens.forEach(token => {
-      if (!existingTokenIds.includes(token.id)) {
-        // Roll 1d20
-        const roll = Math.floor(Math.random() * 20) + 1;
-        newEntries.push({
-          id: `init-${Date.now()}-${token.id}`,
-          tokenId: token.id,
-          name: token.name,
-          roll,
-          isActive: false
-        });
+    onUpdateInitiatives(updatedInitiatives);
+  };
+
+  // Roll initiative for one
+  const handleRollInitiative = (id: string) => {
+    const updatedInitiatives = initiatives.map(i => {
+      if (i.id === id) {
+        return {
+          ...i,
+          initiative: Math.floor(Math.random() * 20) + 1 // d20 roll
+        };
       }
+      return i;
     });
     
-    const updatedInitiative: Initiative[] = [...initiative, ...newEntries];
-    // Sort by initiative roll
-    updatedInitiative.sort((a, b) => b.roll - a.roll);
+    onUpdateInitiatives(updatedInitiatives);
+  };
+
+  // Update initiative value manually
+  const handleUpdateInitiative = (id: string, value: string) => {
+    const initiativeValue = parseInt(value) || 0;
     
-    // Set the first entry as active
-    if (updatedInitiative.length > 0) {
-      updatedInitiative[0].isActive = true;
+    const updatedInitiatives = initiatives.map(i => {
+      if (i.id === id) {
+        return {
+          ...i,
+          initiative: initiativeValue
+        };
+      }
+      return i;
+    });
+    
+    onUpdateInitiatives(updatedInitiatives);
+  };
+
+  // Reset all initiatives
+  const handleResetInitiatives = () => {
+    onUpdateInitiatives([]);
+  };
+
+  // Add token to initiative
+  const handleAddTokenToInitiative = (token: TokenData) => {
+    if (!token || !token.name) return;
+    
+    const existingIndex = initiatives.findIndex(i => i.tokenId === token.id);
+    
+    if (existingIndex !== -1) {
+      // Token already has initiative, just roll for it
+      handleRollInitiative(initiatives[existingIndex].id);
+      return;
     }
     
-    onUpdateInitiative(updatedInitiative);
+    const newEntry: Initiative = {
+      id: Date.now().toString(),
+      name: token.name,
+      initiative: Math.floor(Math.random() * 20) + 1,
+      isActive: false,
+      tokenId: token.id
+    };
+    
+    onUpdateInitiatives([...initiatives, newEntry]);
   };
 
   return (
-    <div className="initiative-tracker p-2 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <h3 className="text-lg font-bold">Инициатива</h3>
-          {battleActive && (
-            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-              Бой активен
-            </span>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex justify-between items-center">
+          <span>Отслеживание инициативы</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handlePrevInitiative} title="Предыдущий участник">
+              <ArrowUpCircle className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleNextInitiative} title="Следующий участник">
+              <ArrowDownCircle className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRollAllInitiative} title="Перебросить все">
+              d20
+            </Button>
+            <Button size="sm" variant="destructive" onClick={handleResetInitiatives} title="Очистить">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-1 overflow-hidden flex flex-col gap-4">
+        {/* Initiative list */}
+        <div className="flex-1 overflow-y-auto">
+          {sortedInitiatives.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Добавьте участников боя, чтобы отслеживать инициативу
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {sortedInitiatives.map((init) => (
+                <div 
+                  key={init.id} 
+                  className={`flex items-center justify-between p-2 rounded-md ${
+                    init.isActive ? 'bg-primary/20 border border-primary/30' : 'bg-secondary/10'
+                  }`}
+                  onClick={() => handleSetActive(init.id)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium">{init.name}</div>
+                    {init.tokenId && (
+                      <div className="text-xs text-muted-foreground">(Токен)</div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={init.initiative}
+                      onChange={(e) => handleUpdateInitiative(init.id, e.target.value)}
+                      className="w-16 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveInitiative(init.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant={battleActive ? "destructive" : "default"} onClick={onToggleBattle}>
-            {battleActive ? (
-              <>
-                <PauseCircle className="mr-1 h-4 w-4" /> Завершить бой
-              </>
-            ) : (
-              <>
-                <PlayCircle className="mr-1 h-4 w-4" /> Начать бой
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {battleActive && (
-        <div className="my-2 flex gap-2">
-          <Button variant="outline" onClick={onNextTurn} className="w-full">
-            <FastForward className="mr-1 h-4 w-4" /> Следующий ход
-          </Button>
-          <Button variant="outline" onClick={handleRollAll} className="whitespace-nowrap">
-            <Dices className="mr-1 h-4 w-4" /> Ролл всем
-          </Button>
-        </div>
-      )}
-
-      {battleActive ? (
-        initiative.length > 0 ? (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="initiative-list">
-              {(provided) => (
-                <div
-                  className="flex-1 overflow-y-auto space-y-2 p-1"
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                >
-                  {initiative.map((item, index) => {
-                    const token = tokens.find(t => t.id === item.tokenId);
-                    
-                    return (
-                      <Draggable key={item.id} draggableId={item.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`flex items-center border rounded-lg p-2 ${
-                              snapshot.isDragging ? 'bg-accent/50' : item.isActive ? 'bg-accent/30 border-primary' : 'bg-card'
-                            }`}
-                          >
-                            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-accent rounded-full mr-2">
-                              <span className="font-bold">{item.roll}</span>
-                            </div>
-                            
-                            {token && token.img && (
-                              <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
-                                <img src={token.img} alt={token.name} className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                            
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{item.name}</p>
-                            </div>
-                            
-                            <div className="flex gap-1 items-center">
-                              {item.isActive && (
-                                <span className="px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded">
-                                  Ход
-                                </span>
-                              )}
-                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleMoveUp(index)}>
-                                <ArrowUp className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleMoveDown(index)}>
-                                <ArrowDown className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEditClick(item)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleRemoveEntry(item.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              {!item.isActive && (
-                                <Button size="sm" variant="outline" onClick={() => handleSetActive(item.id)}>
-                                  Активный
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  })}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-4">Добавьте участников в список инициативы</p>
-          </div>
-        )
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground">Нажмите "Начать бой", чтобы активировать трекер инициативы</p>
-        </div>
-      )}
-
-      {battleActive && (
-        <div className="mt-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setIsAddDialogOpen(true)}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Добавить существо
-          </Button>
-        </div>
-      )}
-
-      {/* Dialog for adding new initiative entry */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Добавить в инициативу</DialogTitle>
-            <DialogDescription>
-              Введите имя существа и значение инициативы
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1">Имя</label>
+        
+        {/* Add new initiative form */}
+        <div className="border-t pt-4">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Label htmlFor="name">Имя участника</Label>
               <Input
                 id="name"
-                value={newEntryName}
-                onChange={(e) => setNewEntryName(e.target.value)}
-                placeholder="Имя существа"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Имя"
               />
             </div>
-            <div>
-              <label htmlFor="initiative" className="block text-sm font-medium mb-1">Инициатива</label>
+            <div className="w-20">
+              <Label htmlFor="initiative">Инициатива</Label>
               <Input
                 id="initiative"
                 type="number"
-                value={newEntryRoll}
-                onChange={(e) => setNewEntryRoll(parseInt(e.target.value) || 0)}
+                value={newInitiative}
+                onChange={(e) => setNewInitiative(parseInt(e.target.value) || 0)}
               />
             </div>
+            <Button onClick={handleAddInitiative} disabled={!newName.trim()}>
+              <Plus className="h-4 w-4 mr-1" />
+              Добавить
+            </Button>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleAddEntry}>Добавить</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog for editing initiative entry */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Редактировать</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <label htmlFor="edit-name" className="block text-sm font-medium mb-1">Имя</label>
-              <Input
-                id="edit-name"
-                value={editingEntry?.name || ''}
-                onChange={(e) => setEditingEntry(prev => prev ? { ...prev, name: e.target.value } : null)}
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-initiative" className="block text-sm font-medium mb-1">Инициатива</label>
-              <Input
-                id="edit-initiative"
-                type="number"
-                value={editingEntry?.roll || 0}
-                onChange={(e) => setEditingEntry(prev => prev ? { ...prev, roll: parseInt(e.target.value) || 0 } : null)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSaveEdit}>Сохранить</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

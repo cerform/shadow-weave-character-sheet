@@ -131,7 +131,10 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
       <SpellCastingPanel character={character} />
       
       {/* Панель ячеек заклинаний */}
-      <SpellSlotManager character={character} />
+      <SpellSlotManager 
+        character={character} 
+        onUpdate={onUpdate}
+      />
       
       {/* Информация о подготовке заклинаний */}
       {needsPreparation() && (

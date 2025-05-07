@@ -26,4 +26,3 @@ export {
 export const useSpellbook = (): SpellbookContextType => {
   return useSpellbookContext();
 };
-

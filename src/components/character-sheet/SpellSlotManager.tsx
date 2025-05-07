@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { calculateAbilityModifier } from '@/utils/characterUtils';
@@ -16,9 +17,10 @@ import { useCharacter } from '@/contexts/CharacterContext';
 interface SpellSlotManagerProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+  showTitle?: boolean;
 }
 
-const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate }) => {
+const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate, showTitle = true }) => {
   const [spellcastingAbility, setSpellcastingAbility] = useState(character.spellcasting?.ability || 'intelligence');
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -39,12 +41,14 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate
   const updateSpellcasting = (updates: any) => {
     if (!character.spellcasting) {
       onUpdate({
+        ...character,
         spellcasting: {
           ...updates
         }
       });
     } else {
       onUpdate({
+        ...character,
         spellcasting: {
           ...character.spellcasting,
           ...updates
@@ -55,50 +59,62 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate
 
   const handleSlotChange = (level: number, change: number) => {
     if (!character.spellSlots) {
-      const initialSlots = {};
+      const initialSlots: Record<number, { max: number; used: number }> = {};
       for (let i = 1; i <= maxLevel; i++) {
-        initialSlots[i] = { available: 0, used: 0 };
+        initialSlots[i] = { max: 0, used: 0 };
       }
-      onUpdate({ spellSlots: initialSlots });
+      onUpdate({
+        ...character,
+        spellSlots: initialSlots
+      });
       return;
     }
     
-    const currentSlots = character.spellSlots[level] || { available: 0, used: 0 };
-    const newAvailable = Math.max(0, currentSlots.available + change);
+    const currentSlots = character.spellSlots[level] || { max: 0, used: 0 };
+    const newMax = Math.max(0, (currentSlots.max || 0) + change);
     
     const updatedSlots = {
       ...character.spellSlots,
       [level]: {
-        ...currentSlots,
-        available: newAvailable
+        max: newMax,
+        used: currentSlots.used || 0
       }
     };
     
-    onUpdate({ spellSlots: updatedSlots });
+    onUpdate({
+      ...character,
+      spellSlots: updatedSlots
+    });
   };
 
   const handleSlotUsed = (level: number, change: number) => {
     if (!character.spellSlots) {
-      const initialSlots = {};
+      const initialSlots: Record<number, { max: number; used: number }> = {};
       for (let i = 1; i <= maxLevel; i++) {
-        initialSlots[i] = { available: 0, used: 0 };
+        initialSlots[i] = { max: 0, used: 0 };
       }
-      onUpdate({ spellSlots: initialSlots });
+      onUpdate({
+        ...character,
+        spellSlots: initialSlots
+      });
       return;
     }
     
-    const currentSlots = character.spellSlots[level] || { available: 0, used: 0 };
-    const newUsed = Math.max(0, Math.min(currentSlots.available, currentSlots.used + change));
+    const currentSlots = character.spellSlots[level] || { max: 0, used: 0 };
+    const newUsed = Math.max(0, Math.min(currentSlots.max || 0, (currentSlots.used || 0) + change));
     
     const updatedSlots = {
       ...character.spellSlots,
       [level]: {
-        ...currentSlots,
+        max: currentSlots.max || 0,
         used: newUsed
       }
     };
     
-    onUpdate({ spellSlots: updatedSlots });
+    onUpdate({
+      ...character,
+      spellSlots: updatedSlots
+    });
   };
 
   // Обработчик сброса слотов заклинаний после короткого отдыха
@@ -116,15 +132,18 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate
       }
       
       // Сбрасываем использованные слоты
-      Object.keys(updatedCharacter.spellSlots).forEach(level => {
-        if (parseInt(level) <= maxLevel) {
-          updatedCharacter.spellSlots[parseInt(level)] = {
-            ...updatedCharacter.spellSlots[parseInt(level)],
+      const updatedSlots = { ...updatedCharacter.spellSlots };
+      Object.keys(updatedSlots).forEach(level => {
+        const lvl = parseInt(level);
+        if (lvl <= maxLevel) {
+          updatedSlots[lvl] = {
+            ...updatedSlots[lvl],
             used: 0
           };
         }
       });
       
+      updatedCharacter.spellSlots = updatedSlots;
       updateCharacter(updatedCharacter);
       toast({
         title: "Слоты заклинаний восстановлены",
@@ -154,9 +173,11 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate
   return (
     <div className="grid gap-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Слоты заклинаний</CardTitle>
-        </CardHeader>
+        {showTitle && (
+          <CardHeader>
+            <CardTitle>Слоты заклинаний</CardTitle>
+          </CardHeader>
+        )}
         <CardContent className="grid gap-4">
           <div>
             <Label htmlFor="spellcastingAbility">Базовая характеристика</Label>
@@ -215,68 +236,71 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate
         <CardContent className="p-0">
           <ScrollArea className="h-[300px]">
             <div className="space-y-2 p-4">
-              {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
-                <Card key={level} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
-                  <CardContent className="flex items-center justify-between p-3">
-                    <div style={{color: currentTheme.textColor}}>
-                      {level}-й уровень
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleSlotChange(level, 1)}
-                      >
-                        +
-                      </Button>
-                      <Input
-                        type="number"
-                        className="w-16 text-center"
-                        value={character.spellSlots?.[level]?.available || 0}
-                        readOnly
-                        style={{
-                          backgroundColor: currentTheme.cardBackground,
-                          borderColor: currentTheme.accent,
-                          color: currentTheme.textColor
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleSlotChange(level, -1)}
-                      >
-                        -
-                      </Button>
-                      <Separator orientation="vertical" className="h-6 bg-accent/30" />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleSlotUsed(level, 1)}
-                      >
-                        Использовать
-                      </Button>
-                      <Input
-                        type="number"
-                        className="w-16 text-center"
-                        value={character.spellSlots?.[level]?.used || 0}
-                        readOnly
-                        style={{
-                          backgroundColor: currentTheme.cardBackground,
-                          borderColor: currentTheme.accent,
-                          color: currentTheme.textColor
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleSlotUsed(level, -1)}
-                      >
-                        Восстановить
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => {
+                const slotInfo = character.spellSlots?.[level] || { max: 0, used: 0 };
+                return (
+                  <Card key={level} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
+                    <CardContent className="flex items-center justify-between p-3">
+                      <div style={{color: currentTheme.textColor}}>
+                        {level}-й уровень
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSlotChange(level, 1)}
+                        >
+                          +
+                        </Button>
+                        <Input
+                          type="number"
+                          className="w-16 text-center"
+                          value={slotInfo.max || 0}
+                          readOnly
+                          style={{
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.accent,
+                            color: currentTheme.textColor
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSlotChange(level, -1)}
+                        >
+                          -
+                        </Button>
+                        <Separator orientation="vertical" className="h-6 bg-accent/30" />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSlotUsed(level, 1)}
+                        >
+                          Использовать
+                        </Button>
+                        <Input
+                          type="number"
+                          className="w-16 text-center"
+                          value={slotInfo.used || 0}
+                          readOnly
+                          style={{
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.accent,
+                            color: currentTheme.textColor
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSlotUsed(level, -1)}
+                        >
+                          Восстановить
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </ScrollArea>
         </CardContent>

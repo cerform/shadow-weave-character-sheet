@@ -11,7 +11,7 @@ export const useCharacterCreation = () => {
     level: 1,
     alignment: 'Нейтральный',
     abilities: {
-      // Обеспечиваем совместимость с обоими форматами
+      // Добавляем обе формы абилок для полной совместимости
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -47,7 +47,13 @@ export const useCharacterCreation = () => {
   const updateAbilities = useCallback((abilities: Record<string, number>) => {
     // Обеспечиваем обновление в обоих форматах
     const updatedAbilities = { 
-      ...characterData.abilities,
+      ...(characterData.abilities || {}),
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10,
       STR: 10,
       DEX: 10,
       CON: 10,
@@ -223,7 +229,7 @@ export const useCharacterCreation = () => {
       case 'плут':
       case 'колдун': return 'd8';
       case 'чародей':
-      case 'волшебник': return 'd6';
+      case 'в��лшебник': return 'd6';
       default: return 'd8';
     }
   };

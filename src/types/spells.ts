@@ -16,6 +16,13 @@ export interface SpellData {
   prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
+  // Добавляем отсутствующие поля
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  higherLevel?: string;
+  higherLevels?: string;
 }
 
 // Функция для конвертации CharacterSpell в SpellData
@@ -33,7 +40,13 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     classes: spell.classes || [],
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
-    concentration: spell.concentration || false
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    materials: spell.materials || '',
+    higherLevel: spell.higherLevel || '',
+    higherLevels: spell.higherLevels || ''
   };
 };
 
@@ -52,7 +65,13 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     classes: spell.classes,
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
-    concentration: spell.concentration || false
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    materials: spell.materials || '',
+    higherLevel: spell.higherLevel || '',
+    higherLevels: spell.higherLevels || ''
   };
 };
 
@@ -63,4 +82,3 @@ export const convertSpellArray = <T extends SpellData | CharacterSpell>(
 ): any[] => {
   return spells.map(spell => converter(spell));
 };
-

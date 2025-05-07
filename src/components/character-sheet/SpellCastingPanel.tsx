@@ -15,7 +15,7 @@ interface SpellCastingPanelProps {
 }
 
 const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCharacter }) => {
-  const { character: contextCharacter, updateCharacter } = useCharacter();
+  const { character: contextCharacter, updateCharacter, onUpdate } = useCharacter();
   const { theme } = useTheme();
   const { toast } = useToast();
   
@@ -129,6 +129,39 @@ const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCh
     };
     
     updateCharacter(updatedCharacter);
+  };
+  
+  // Обработчик сброса слотов заклинаний после короткого отдыха
+  const handleResetAfterShortRest = () => {
+    const currentChar = character;
+    
+    if (!currentChar) return;
+    
+    // Магический архетип воина, колдун и некоторые другие классы восстанавливают слоты после короткого отдыха
+    if (['колдун', 'warlock'].includes(currentChar.class?.toLowerCase() || '')) {
+      const updatedCharacter = { ...currentChar };
+      
+      if (!updatedCharacter.spellSlots) {
+        updatedCharacter.spellSlots = {};
+      }
+      
+      // Сбрасываем использованные слоты
+      Object.keys(updatedCharacter.spellSlots).forEach(level => {
+        if (parseInt(level) <= 9) {
+          updatedCharacter.spellSlots[parseInt(level)] = {
+            ...updatedCharacter.spellSlots[parseInt(level)],
+            used: 0
+          };
+        }
+      });
+      
+      // Используем onUpdate вместо updateCharacter
+      onUpdate(updatedCharacter);
+      toast({
+        title: "Слоты заклинаний восстановлены",
+        description: `Восстановлены слоты заклинаний для ${currentChar.name}`,
+      });
+    }
   };
   
   // Проверяем, является ли класс магическим

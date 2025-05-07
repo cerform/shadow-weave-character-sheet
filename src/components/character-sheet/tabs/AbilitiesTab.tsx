@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Character } from '@/types/character';
-import { calculateProficiencyBonus, getAbilityModifier } from '@/utils/characterUtils';
+import { calculateAbilityModifier, calculateProficiencyBonus } from '@/utils/characterUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -177,7 +177,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   // Получаем модификатор характеристики
   const getModifier = (ability: string): number => {
     const abilityScore = character[ability as keyof Character] as number || 10;
-    return getAbilityModifier(abilityScore);
+    return calculateAbilityModifier(abilityScore);
   };
 
   // Получаем бонус спасброска
@@ -546,7 +546,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                       );
                     }
                     
-                    // Возвращаем null для невалидных данных
+                    // Возвр���щаем null для невалидных данных
                     return null;
                   })}
                 </div>
@@ -636,7 +636,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                       );
                     }
                     
-                    // Возвр��щаем null для невалидных данных
+                    // Возвр���щаем null для невалидных данных
                     return null;
                   })}
                 </div>

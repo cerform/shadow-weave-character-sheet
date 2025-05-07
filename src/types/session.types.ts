@@ -1,3 +1,4 @@
+
 // Add the Initiative and TokenData types if they don't exist
 export interface Initiative {
   id: string;
@@ -21,16 +22,26 @@ export interface TokenData {
   // Add any other needed properties
 }
 
-// Добавляем интерфейс для сообщений чата
+// Модифицируем интерфейс для сообщений чата
 export interface ChatMessage {
   id: string;
   sender: string;
   message: string;
   timestamp: string;
   type?: 'message' | 'system' | 'dice';
+  // Добавляем дополнительные поля
+  senderName?: string;
+  content?: string;
+  rollResult?: {
+    formula: string;
+    rolls: number[];
+    total: number;
+    reason?: string;
+  };
+  senderId?: string;
 }
 
-// Добавляем интерфейс для игровой сессии
+// Модифицируем интерфейс для игровой сессии
 export interface GameSession {
   id: string;
   name: string;
@@ -39,4 +50,11 @@ export interface GameSession {
   players: any[]; // Можно детализировать тип игроков при необходимости
   createdAt: string;
   description?: string;
+  // Добавляем недостающие поля
+  updatedAt?: string;
+  isActive?: boolean;
 }
+
+// Добавляем интерфейс для инициативы боя
+export interface BattleInitiative extends Initiative {}
+export interface SessionInitiative extends Initiative {}
