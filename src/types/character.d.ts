@@ -122,6 +122,7 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   initiative?: string | number;
+  // Добавляем недостающие свойства
   lastDiceRoll?: {
     diceType: string;
     count: number;

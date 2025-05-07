@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { UserThemeProvider } from '@/contexts/UserThemeContext';
-import TooltipProvider from '@/components/providers/TooltipProvider';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import AppRoutes from './AppRoutes';
 import './App.css';
 
