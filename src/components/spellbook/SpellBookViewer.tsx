@@ -168,24 +168,26 @@ const SpellBookViewer: React.FC = () => {
             Найдено заклинаний: <span className="font-semibold">{filteredSpells.length}</span>
           </div>
 
-          <TabsContent value="list" className={viewMode === 'list' ? 'block' : 'hidden'}>
-            <SpellList
-              spells={filteredSpells}
-              getBadgeColor={getBadgeColor}
-              getSchoolBadgeColor={getSchoolBadgeColor}
-              currentTheme={currentTheme}
-              handleOpenSpell={handleOpenSpell}
-              formatClasses={formatClasses}
-            />
-          </TabsContent>
+          <Tabs value={viewMode} className="w-full">
+            <TabsContent value="list">
+              <SpellList
+                spells={filteredSpells}
+                getBadgeColor={getBadgeColor}
+                getSchoolBadgeColor={getSchoolBadgeColor}
+                currentTheme={currentTheme}
+                handleOpenSpell={handleOpenSpell}
+                formatClasses={formatClasses}
+              />
+            </TabsContent>
 
-          <TabsContent value="table" className={viewMode === 'table' ? 'block' : 'hidden'}>
-            <SpellTable
-              spells={filteredSpells}
-              onSpellClick={handleOpenSpell}
-              currentTheme={currentTheme}
-            />
-          </TabsContent>
+            <TabsContent value="table">
+              <SpellTable
+                spells={filteredSpells}
+                onSpellClick={handleOpenSpell}
+                currentTheme={currentTheme}
+              />
+            </TabsContent>
+          </Tabs>
 
           <div className="sm:hidden mt-6">
             <Tabs defaultValue="list" value={viewMode} onValueChange={setViewMode}>
