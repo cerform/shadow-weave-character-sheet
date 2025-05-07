@@ -36,13 +36,11 @@ const DMSessionPage: React.FC = () => {
       setError(null);
       
       try {
-        // Сначала загружаем все сессии, если они еще не загружены
-        if (sessionStore.sessions.length === 0) {
-          await sessionStore.fetchSessions();
-        }
+        // Загружаем все сессии из хранилища
+        const sessions = await sessionStore.fetchSessions();
         
         // Ищем нужную сессию по ID
-        const foundSession = sessionStore.sessions.find(s => s.id === sessionId);
+        const foundSession = sessions.find(s => s.id === sessionId);
         
         if (!foundSession) {
           setError('Сессия не найдена. Проверьте ID сессии или создайте новую.');
@@ -50,7 +48,9 @@ const DMSessionPage: React.FC = () => {
           return;
         }
         
-        // Устанавливаем текущую сессию
+        console.log('Найдена сессия:', foundSession);
+        
+        // Устанавливаем текущую сессию без вызова повторного обновления
         setSession(foundSession);
         
         // Устанавливаем другие параметры из сессии
@@ -69,12 +69,6 @@ const DMSessionPage: React.FC = () => {
         
         // Подключаем WebSocket
         socketService.connect(foundSession.code, 'Мастер подземелий', undefined);
-        
-        // Обновляем текущую сессию в хранилище
-        sessionStore.updateSession({ 
-          id: foundSession.id, 
-          updatedAt: new Date().toISOString() 
-        });
       } catch (error) {
         console.error('Ошибка при загрузке сессии:', error);
         setError('Произошла ошибка при загрузке сессии. Попробуйте обновить страницу.');
@@ -85,11 +79,11 @@ const DMSessionPage: React.FC = () => {
     
     loadSession();
     
-    // Отключаем WebSocket при размонтировании
+    // Отключаемся от WebSocket при размонтировании
     return () => {
       socketService.disconnect();
     };
-  }, [sessionId, sessionStore]);
+  }, [sessionId]);  // Убираем sessionStore из зависимостей, чтобы избежать зацикливания
 
   // Обновление позиции токена
   const handleUpdateTokenPosition = async (id: number, x: number, y: number) => {
@@ -268,7 +262,7 @@ const DMSessionPage: React.FC = () => {
                       <div>
                         <p className="font-medium">{player.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {player.character?.name || "Персонаж не выбран"}
+                          {player.characterId ? "Персонаж выбран" : "Персонаж не выбран"}
                         </p>
                       </div>
                       <div className="flex items-center">

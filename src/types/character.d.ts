@@ -18,7 +18,6 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
-    // Добавляем алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -51,7 +50,7 @@ export interface Character {
   temporaryHp?: number;
   armorClass?: number;
   speed?: number;
-  initiative?: string | number;
+  initiative?: number | string;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
   savingThrowProficiencies?: Record<string, boolean>;
@@ -62,14 +61,13 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  // Поддержка обоих типов equipment
-  equipment?: Item[] | {
+  equipment?: any[] | {
     weapons?: string[];
     armor?: string;
     items?: string[];
   };
-  features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[];
+  features?: any[] | string[];
+  spells?: any[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -117,7 +115,6 @@ export interface Character {
   updatedAt?: string;
   createdAt?: string;
   image?: string;
-  // Добавляем недостающие свойства
   strength?: number;
   dexterity?: number;
   constitution?: number;
@@ -158,6 +155,7 @@ export interface Character {
 }
 
 export interface CharacterSpell {
+  id?: string;
   name: string;
   level: number;
   school?: string;
@@ -165,68 +163,49 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[];
-  classes?: string[] | string;
-  source?: string;
-  ritual?: boolean;
-  concentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
+  description?: string;
   prepared?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
-  id?: string | number;
-  materials?: string;
 }
 
 export interface Item {
+  id?: string;
   name: string;
-  quantity: number;
+  type?: string;
+  quantity?: number;
   weight?: number;
   description?: string;
-  type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
+  value?: number;
 }
 
 export interface Feature {
+  id?: string;
   name: string;
-  source: string;
   description: string;
+  source?: string;
   level?: number;
 }
 
 export interface PlayerCharacter extends Character {
-  userId: string;
+  player?: string;
+  campaign?: string;
 }
 
-// Export ability score caps
 export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
+  min: 1,
+  max: 30,
 };
 
-// Add HitPointEvent for DamageLog
 export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'temp' | 'healing' | 'tempHP' | 'death-save';
-  amount: number;
+  type: 'damage' | 'healing' | 'temp' | 'max';
+  value: number;
   source?: string;
-  timestamp: number | Date;
-  previousHP?: number;
-  newHP?: number;
+  timestamp: string;
 }
 
-// Add LevelFeature interface for useLevelFeatures hook
 export interface LevelFeature {
-  id: string;
-  level: number;
   name: string;
   description: string;
-  type: string;
-  class?: string;
-  required?: boolean;
+  level: number;
+  optional?: boolean;
+  selected?: boolean;
 }

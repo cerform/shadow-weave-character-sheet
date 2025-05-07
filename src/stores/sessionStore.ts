@@ -24,18 +24,35 @@ const useSessionStore = create<SessionStore>((set, get) => ({
       // Попытка загрузки сессий из localStorage
       const savedSessions = localStorage.getItem('dnd-sessions');
       const sessions = savedSessions ? JSON.parse(savedSessions) : [];
-      set({ sessions });
+      
+      // Обновляем состояние только если сессии действительно изменились
+      const currentSessions = get().sessions;
+      if (JSON.stringify(sessions) !== JSON.stringify(currentSessions)) {
+        set({ sessions });
+      }
+      
       return sessions;
     } catch (error) {
       console.error("Ошибка при загрузке сессий:", error);
-      return [];
+      return get().sessions;
     }
   },
   
   createSession: (name, description) => {
     try {
-      // Получаем текущего пользователя
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      // Получаем текущего пользователя - заменяем на значение из localStorage
+      const currentUser = { uid: 'local-user' };
+      try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.uid) {
+            currentUser.uid = parsedUser.uid;
+          }
+        }
+      } catch (e) {
+        console.error("Ошибка при получении пользователя:", e);
+      }
       
       // Генерируем код сессии
       const generateSessionCode = (): string => {
@@ -50,7 +67,7 @@ const useSessionStore = create<SessionStore>((set, get) => ({
         players: [],
         createdAt: new Date().toISOString(),
         description,
-        dmId: currentUser?.uid,
+        dmId: currentUser.uid,
         isActive: true
       };
       
