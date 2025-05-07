@@ -1,26 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Character } from '@/types/character';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import MobileCharacterSheet from '@/components/character-sheet/MobileCharacterSheet';
 import { useToast } from '@/hooks/use-toast';
+import { useCharacter } from '@/contexts/CharacterContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-// Correct import from service
-import { getCharacter } from '@/services/characterService';
-
-interface CharacterSheetPageProps {
-  // No renderMobileVersion prop here
-}
-
-const CharacterSheetPage: React.FC<CharacterSheetPageProps> = () => {
+const CharacterSheetPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { getCharacterById } = useCharacter(); // Используем контекст персонажей
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
   
-  // Determine if the device is mobile
+  // Определяем, является ли устройство мобильным
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -37,18 +42,34 @@ const CharacterSheetPage: React.FC<CharacterSheetPageProps> = () => {
   useEffect(() => {
     const loadCharacter = async () => {
       if (!id) {
-        setError('No character ID provided');
+        setError('ID персонажа не указан');
         setLoading(false);
         return;
       }
       
       try {
-        // Use the correct function
-        const data = await getCharacter(id);
-        setCharacter(data);
+        console.log('CharacterSheetPage: Загрузка персонажа с ID:', id);
+        setLoading(true);
+        setError(null);
+        
+        // Используем метод getCharacterById из контекста CharacterContext
+        const data = await getCharacterById(id);
+        
+        if (!data) {
+          console.error('CharacterSheetPage: Персонаж не найден');
+          setError('Персонаж не найден');
+          toast({
+            title: "Ошибка",
+            description: "Персонаж не найден",
+            variant: "destructive",
+          });
+        } else {
+          console.log('CharacterSheetPage: Персонаж успешно загружен:', data.name);
+          setCharacter(data);
+        }
       } catch (error) {
-        setError('Error loading character');
-        console.error('Error loading character:', error);
+        console.error('CharacterSheetPage: Ошибка загрузки персонажа:', error);
+        setError('Ошибка при загрузке персонажа');
         toast({
           title: "Ошибка",
           description: "Не удалось загрузить персонажа",
@@ -60,39 +81,73 @@ const CharacterSheetPage: React.FC<CharacterSheetPageProps> = () => {
     };
     
     loadCharacter();
-  }, [id, toast]);
+  }, [id, toast, getCharacterById]);
   
   const handleUpdateCharacter = (updates: Partial<Character>) => {
     if (character) {
       const updatedCharacter = { ...character, ...updates };
       setCharacter(updatedCharacter);
       
-      // Here you would typically save the character to the backend
+      // Здесь можно добавить логику для сохранения обновлений на сервере
       console.log('Character updated:', updatedCharacter);
     }
   };
   
   if (loading) {
-    return <div className="p-8 text-center">Загрузка персонажа...</div>;
+    return (
+      <BackgroundWrapper>
+        <div className="min-h-screen flex flex-col justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" 
+               style={{ borderColor: currentTheme.accent }}>
+          </div>
+          <p className="mt-4 text-lg" style={{ color: currentTheme.textColor }}>
+            Загрузка персонажа...
+          </p>
+        </div>
+      </BackgroundWrapper>
+    );
   }
   
   if (error || !character) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-2xl font-bold text-red-500">Ошибка</h2>
-        <p>{error || 'Персонаж не найден'}</p>
-      </div>
+      <BackgroundWrapper>
+        <div className="min-h-screen flex flex-col justify-center items-center p-8">
+          <Card className="max-w-md w-full bg-black/70">
+            <CardHeader>
+              <CardTitle className="text-red-500">
+                Ошибка
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-6">{error || 'Персонаж не найден'}</p>
+              <Button onClick={() => navigate('/characters')} className="w-full">
+                <ArrowLeft size={16} className="mr-2" />
+                Вернуться к списку персонажей
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </BackgroundWrapper>
     );
   }
   
   return (
-    <div className="container mx-auto p-4">
-      {isMobile ? (
-        <MobileCharacterSheet character={character} onUpdate={handleUpdateCharacter} />
-      ) : (
-        <CharacterSheet character={character} onUpdate={handleUpdateCharacter} />
-      )}
-    </div>
+    <BackgroundWrapper>
+      <div className="container mx-auto p-4">
+        <div className="mb-4">
+          <Button variant="outline" onClick={() => navigate('/characters')}>
+            <ArrowLeft size={16} className="mr-2" />
+            Назад к списку
+          </Button>
+        </div>
+        
+        {isMobile ? (
+          <MobileCharacterSheet character={character} onUpdate={handleUpdateCharacter} />
+        ) : (
+          <CharacterSheet character={character} onUpdate={handleUpdateCharacter} />
+        )}
+      </div>
+    </BackgroundWrapper>
   );
 };
 
