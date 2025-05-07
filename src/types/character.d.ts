@@ -48,7 +48,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number;
+  temporaryHp?: number;  // Добавляем temporaryHp
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -58,7 +58,7 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[];
+    skills?: string[]; // Добавляем skills в proficiencies
   } | string[];
   // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
@@ -88,7 +88,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string;
+  notes?: string; // Добавляем notes
   raceFeatures?: {
     name: string;
     description: string;
@@ -121,7 +121,7 @@ export interface Character {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  initiative?: string | number;
+  initiative?: string | number; // Добавляем initiative
   // Добавляем недостающие свойства
   lastDiceRoll?: {
     diceType: string;
