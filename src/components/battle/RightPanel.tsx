@@ -402,3 +402,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
 };
 
 export default RightPanel;
+
+interface DicePanelProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+  isDM?: boolean;
+  tokens?: Token[];
+  selectedTokenId?: number;
+  onSelectToken?: (id: number) => void;
+}

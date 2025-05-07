@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SpellCastingPanel from '../SpellCastingPanel';
@@ -9,6 +9,20 @@ import SpellPanel from '../SpellPanel';
 interface SpellsTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+}
+
+// Update SpellCastingPanel props interface
+interface SpellCastingPanelProps {
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+}
+
+// Update SpellPanel props interface
+interface SpellPanelProps {
+  character: Character;
+  spells: (string | CharacterSpell)[];
+  onUpdate: (newSpells: any) => void;
+  level: number;
 }
 
 const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {

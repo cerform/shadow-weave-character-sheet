@@ -12,3 +12,25 @@ export const getItemDisplayText = (item: string | Item): string => {
   }
   return String(item);
 };
+
+// Add the missing utility functions
+export const getItemName = (item: string | Item): string => {
+  if (isItem(item)) {
+    return item.name;
+  }
+  return String(item);
+};
+
+export const getItemType = (item: string | Item): string => {
+  if (isItem(item)) {
+    return item.type || 'предмет';
+  }
+  return 'предмет';
+};
+
+export const getItemQuantity = (item: string | Item): number => {
+  if (isItem(item)) {
+    return item.quantity || 1;
+  }
+  return 1;
+};

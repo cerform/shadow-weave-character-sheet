@@ -8,3 +8,12 @@ export interface User {
   role?: 'player' | 'dm' | 'admin';
   // Include any other user properties
 }
+
+// Add necessary types for other files
+export type UserType = User;
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  error: Error | null;
+  // Include other auth context properties
+}
