@@ -1,8 +1,8 @@
 
-import { CharacterSpell } from './character';
+import { CharacterSpell } from '@/types/character';
 
 export interface SpellData {
-  id: string;
+  id: string | number;
   name: string;
   level: number;
   school: string;
@@ -12,73 +12,64 @@ export interface SpellData {
   duration: string;
   description: string | string[];
   classes: string[] | string;
+  source?: string;
   ritual?: boolean;
   concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  materials?: string;
+  prepared?: boolean;
   higherLevel?: string;
   higherLevels?: string;
-  prepared?: boolean;
-  source?: string;
+  materials?: string;
 }
 
 export interface SpellFilter {
+  name?: string;
   level?: number | number[];
   school?: string | string[];
   class?: string | string[];
-  name?: string;
   ritual?: boolean;
   concentration?: boolean;
 }
 
 // Функция для преобразования CharacterSpell в SpellData
-export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
+export function convertCharacterSpellToSpellData(spell: CharacterSpell | string): SpellData {
+  if (typeof spell === 'string') {
+    // Возвращаем минимальную структуру, если передана только строка
+    return {
+      id: spell,
+      name: spell,
+      level: 0,
+      school: '',
+      castingTime: '',
+      range: '',
+      components: '',
+      duration: '',
+      description: '',
+      classes: []
+    };
+  }
+  
   return {
-    id: spell.id?.toString() || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+    id: spell.id || spell.name,
     name: spell.name,
     level: spell.level,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || 'В, С, М',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || 'Нет описания',
+    school: spell.school || '',
+    castingTime: spell.castingTime || '',
+    range: spell.range || '',
+    components: spell.components || '',
+    duration: spell.duration || '',
+    description: spell.description || '',
     classes: spell.classes || [],
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
     verbal: spell.verbal,
     somatic: spell.somatic,
     material: spell.material,
-    materials: spell.materials,
-    higherLevel: spell.higherLevel || spell.higherLevels,
     prepared: spell.prepared,
-    source: spell.source
-  };
-}
-
-// Функция для преобразования SpellData в CharacterSpell
-export function convertSpellDataToCharacterSpell(spellData: SpellData): CharacterSpell {
-  return {
-    id: spellData.id,
-    name: spellData.name,
-    level: spellData.level,
-    school: spellData.school,
-    castingTime: spellData.castingTime,
-    range: spellData.range,
-    components: spellData.components,
-    duration: spellData.duration,
-    description: spellData.description,
-    classes: Array.isArray(spellData.classes) ? spellData.classes : [spellData.classes],
-    ritual: spellData.ritual || false,
-    concentration: spellData.concentration || false,
-    verbal: spellData.verbal,
-    somatic: spellData.somatic,
-    material: spellData.material,
-    materials: spellData.materials,
-    higherLevel: spellData.higherLevel || spellData.higherLevels,
-    prepared: spellData.prepared,
-    source: spellData.source
+    higherLevel: spell.higherLevel || spell.higherLevels,
+    higherLevels: spell.higherLevels || spell.higherLevel,
+    materials: spell.materials
   };
 }

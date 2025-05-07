@@ -64,3 +64,9 @@ export function getAbilityModifier(score: number): number {
 export function formatModifier(modifier: number): string {
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 }
+
+// Добавляем новую функцию для получения модификатора как строки
+export function getAbilityModifierString(score: number): string {
+  const modifier = getAbilityModifier(score);
+  return formatModifier(modifier);
+}

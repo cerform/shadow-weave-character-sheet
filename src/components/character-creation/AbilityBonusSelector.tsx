@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
-import { AbilityName, abilityNames, abilityFullNames } from '@/utils/abilityUtils';
+import { abilityNames, abilityFullNames } from '@/utils/abilityUtils';
 
 interface AbilityBonusSelectorProps {
   character: Character;
@@ -63,7 +63,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     
     // Обновляем характеристики персонажа
     updateCharacter({
-      abilityBonuses: finalBonuses as any,
+      abilityBonuses: finalBonuses,
       selectedAbilities: Object.keys(selectedAbilities).filter(key => selectedAbilities[key])
     });
     
@@ -126,7 +126,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {Object.entries(abilityBonuses.fixed).map(([ability, value]) => (
                 <div key={ability} className="flex items-center justify-between p-2 border rounded">
-                  <span>{abilityFullNames[ability as AbilityName] || ability}</span>
+                  <span>{abilityFullNames[ability as keyof typeof abilityFullNames] || ability}</span>
                   <span className="text-green-500">+{value}</span>
                 </div>
               ))}
@@ -148,7 +148,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
                   onClick={() => handleAbilitySelect(ability)}
                   className="justify-between"
                 >
-                  <span>{abilityFullNames[ability as AbilityName] || ability}</span>
+                  <span>{abilityFullNames[ability as keyof typeof abilityFullNames] || ability}</span>
                   {selectedAbilities[ability] && <span className="ml-2 text-green-500">+1</span>}
                 </Button>
               ))}

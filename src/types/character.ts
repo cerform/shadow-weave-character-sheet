@@ -1,3 +1,4 @@
+
 // Import necessary types
 import { Item } from './character';
 
@@ -9,6 +10,7 @@ export interface Character {
   class?: string;
   className?: string;
   subclass?: string;
+  subrace?: string;  // Добавляем поле подрасы
   background?: string;
   level: number;
   experience?: number;
@@ -55,6 +57,12 @@ export interface Character {
   speed?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
+  savingThrowProficiencies?: Record<string, boolean>;  // Добавляем это свойство
+  skillProficiencies?: string[];  // Добавляем это свойство
+  expertise?: string[];  // Добавляем это свойство
+  skillBonuses?: Record<string, number>;  // Добавляем это свойство
+  selectedAbilities?: string[];  // Добавляем это свойство
+  abilityBonuses?: Record<string, number>;  // Добавляем это свойство
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -138,6 +146,7 @@ export interface Character {
     used: number;
     dieType: string;
     value: string;
+    remaining?: number;
   };
   resources?: Record<string, {
     max: number;
@@ -196,7 +205,7 @@ export interface PlayerCharacter extends Character {
   userId: string;
 }
 
-// Export ability score caps - this is what was missing
+// Export ability score caps
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,
   EPIC_CAP: 22,

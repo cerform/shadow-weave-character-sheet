@@ -1,18 +1,24 @@
 
-import { useContext } from 'react';
-import { SpellbookContext } from '@/contexts/SpellbookContext';
-import { getSpellsByClass, getAllSpells } from '@/data/spells/index';
+import { SpellData, SpellFilter } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
+import { getAllSpells, filterSpells } from '@/data/spells';
 
-// Экспортируем хук для использования контекста
-export const useSpellbook = () => {
-  const context = useContext(SpellbookContext);
-  
-  if (context === undefined) {
-    throw new Error('useSpellbook must be used within a SpellbookProvider');
-  }
-  
-  return context;
-};
+export function useSpellbook() {
+  // Здесь будем использовать импорт из data/spells
+  const allSpells = getAllSpells();
 
-// Экспортируем хук по умолчанию
-export default useSpellbook;
+  const loadSpellsForClass = (className: string) => {
+    // Логика для загрузки заклинаний для конкретного класса
+    console.log(`Loading spells for class: ${className}`);
+    return allSpells.filter(spell => {
+      const classes = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+      return classes.some(c => c?.toLowerCase() === className?.toLowerCase());
+    });
+  };
+
+  return {
+    spells: allSpells,
+    loadSpellsForClass,
+    filterSpells: (filters: SpellFilter) => filterSpells(allSpells, filters)
+  };
+}
