@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -68,12 +68,12 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
   
   // Сохранение экипировки
   const saveEquipment = () => {
-    // Создаем новый объект экипировки
-    const updatedEquipment = {
-      weapons: weapons,
-      armor: armor,
-      items: items
-    };
+    // Создаем новый объект экипировки в формате совместимом с типом
+    const updatedEquipment: Item[] = [
+      ...weapons.map(name => ({ name, quantity: 1, type: 'weapon' })),
+      ...(armor ? [{ name: armor, quantity: 1, type: 'armor' }] : []),
+      ...items.map(name => ({ name, quantity: 1 }))
+    ];
     
     // Обновляем персонажа
     onUpdate({ 
