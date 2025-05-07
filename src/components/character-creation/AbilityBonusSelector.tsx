@@ -38,7 +38,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    if (abilityBonuses.fixed) {
+    // Fix the "always truthy" error by checking if fixed is defined AND has entries
+    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,

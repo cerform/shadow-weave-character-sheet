@@ -1,4 +1,3 @@
-
 import { SpellData } from '@/types/spells';
 
 /**
@@ -32,6 +31,50 @@ export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] =>
       materials: spell.materials || ''
     };
   });
+};
+
+/**
+ * Преобразует объект в формат SpellData
+ * Добавлен для совместимости с hooks/spellbook/index.ts
+ */
+export const convertToSpellData = (spell: any): SpellData => {
+  if (!spell) {
+    return {
+      id: `spell-${Math.random().toString(36).substr(2, 9)}`,
+      name: 'Безымянное заклинание',
+      level: 0,
+      school: 'Универсальная',
+      castingTime: '1 действие',
+      range: 'Касание',
+      components: 'В, С',
+      duration: 'Мгновенная',
+      description: 'Нет описания',
+      classes: []
+    };
+  }
+  
+  // Проверяем, что у заклинания есть необходимые свойства
+  const id = spell.id || `spell-${spell.name?.replace(/\s+/g, '-').toLowerCase() || Math.random().toString(36).substr(2, 9)}`;
+  
+  return {
+    id,
+    name: spell.name || 'Безымянное заклинание',
+    level: typeof spell.level === 'number' ? spell.level : 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'Касание',
+    components: spell.components || 'В, С',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || 'Нет описания',
+    classes: spell.classes || [],
+    ritual: !!spell.ritual,
+    concentration: !!spell.concentration,
+    verbal: !!spell.verbal,
+    somatic: !!spell.somatic,
+    material: !!spell.material,
+    materials: spell.materials || '',
+    higherLevel: spell.higherLevel || spell.higherLevels || ''
+  };
 };
 
 /**
