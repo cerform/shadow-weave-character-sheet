@@ -15,6 +15,7 @@
     "@fontsource/cormorant": "^5.2.5",
     "@fontsource/merriweather": "^5.0.8",
     "@fontsource/philosopher": "^5.2.5",
+    "@hello-pangea/dnd": "^16.3.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

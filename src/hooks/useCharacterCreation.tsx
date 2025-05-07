@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 
@@ -12,12 +11,19 @@ export const useCharacterCreation = () => {
     level: 1,
     alignment: 'Нейтральный',
     abilities: {
+      // Обеспечиваем совместимость с обоими форматами
       strength: 10,
       dexterity: 10,
       constitution: 10,
       intelligence: 10,
       wisdom: 10,
-      charisma: 10
+      charisma: 10,
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10
     },
     maxHp: 10,
     currentHp: 10
@@ -39,8 +45,33 @@ export const useCharacterCreation = () => {
 
   // Обновление способностей
   const updateAbilities = useCallback((abilities: Record<string, number>) => {
-    setCharacterData(prev => ({ ...prev, abilities: { ...prev.abilities, ...abilities } }));
-  }, []);
+    // Обеспечиваем обновление в обоих форматах
+    const updatedAbilities = { ...characterData.abilities };
+    
+    Object.entries(abilities).forEach(([key, value]) => {
+      if (key === 'strength' || key === 'STR') {
+        updatedAbilities.strength = value;
+        updatedAbilities.STR = value;
+      } else if (key === 'dexterity' || key === 'DEX') {
+        updatedAbilities.dexterity = value;
+        updatedAbilities.DEX = value;
+      } else if (key === 'constitution' || key === 'CON') {
+        updatedAbilities.constitution = value;
+        updatedAbilities.CON = value;
+      } else if (key === 'intelligence' || key === 'INT') {
+        updatedAbilities.intelligence = value;
+        updatedAbilities.INT = value;
+      } else if (key === 'wisdom' || key === 'WIS') {
+        updatedAbilities.wisdom = value;
+        updatedAbilities.WIS = value;
+      } else if (key === 'charisma' || key === 'CHA') {
+        updatedAbilities.charisma = value;
+        updatedAbilities.CHA = value;
+      }
+    });
+    
+    setCharacterData(prev => ({ ...prev, abilities: updatedAbilities }));
+  }, [characterData.abilities]);
 
   // Выбор расы
   const selectRace = useCallback((race: string) => {
@@ -49,16 +80,14 @@ export const useCharacterCreation = () => {
 
   // Выбор класса
   const selectClass = useCallback((className: string) => {
-    setCharacterData(prev => ({ ...prev, class: className }));
-    
-    // Обновление хитдайса в зависимости от класса
-    const hitDiceType = getHitDiceForClass(className);
     setCharacterData(prev => ({
       ...prev,
+      class: className,
       hitDice: {
         total: prev.level || 1,
         used: 0,
-        type: hitDiceType
+        type: getHitDiceForClass(className),
+        dieType: getHitDiceForClass(className)
       }
     }));
   }, []);
@@ -86,7 +115,9 @@ export const useCharacterCreation = () => {
 
   // Расчет здоровья
   const calculateHealth = useCallback(() => {
-    const conModifier = Math.floor((characterData.abilities?.constitution || 10) - 10) / 2;
+    if (!characterData.abilities) return;
+    
+    const conModifier = Math.floor((characterData.abilities.constitution || 10) - 10) / 2;
     const hitDiceValue = getHitDiceValueForClass(characterData.class || '');
     const level = characterData.level || 1;
     
@@ -104,7 +135,7 @@ export const useCharacterCreation = () => {
       maxHp: Math.max(1, Math.floor(maxHP)),
       currentHp: Math.max(1, Math.floor(maxHP))
     }));
-  }, [characterData.abilities?.constitution, characterData.class, characterData.level]);
+  }, [characterData.abilities, characterData.class, characterData.level]);
 
   // Завершение создания персонажа
   const finalizeCharacter = useCallback((): Character => {
@@ -118,7 +149,7 @@ export const useCharacterCreation = () => {
     const finalCharacter: Character = {
       id: Date.now().toString(),
       userId: '',
-      name: characterData.name || 'Безымянный',
+      name: characterData.name || 'Новый персонаж',
       race: characterData.race || 'Человек',
       class: characterData.class || 'Воин',
       level: characterData.level || 1,

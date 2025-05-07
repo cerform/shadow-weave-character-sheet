@@ -1,32 +1,15 @@
-
 // Import React and required components
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Icons } from '@/components/ui/icons';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Initiative, TokenData } from '@/types/session.types';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
-  ArrowUp, 
-  ArrowDown, 
-  Edit, 
-  Trash2, 
-  PlayCircle, 
-  PauseCircle, 
-  FastForward,
-  Plus,
-  Dices
-} from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowUp, ArrowDown, Edit, Trash2, PlayCircle, PauseCircle, FastForward, Plus, Dices } from "lucide-react";
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { useToast } from '@/hooks/use-toast';
 
 interface InitiativeTrackerPanelProps {
   initiative: Initiative[];

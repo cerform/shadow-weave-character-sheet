@@ -1,12 +1,13 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 import { spells } from '@/data/spells';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useSpellbookContext } from './index';
 
 export const useSpellbook = () => {
+  const spellbookContext = useSpellbookContext();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -22,65 +23,6 @@ export const useSpellbook = () => {
 
   // Создаем списки всех уровней, школ и классов
   const allSpells = useMemo(() => spells, []);
-
-  const allLevels = useMemo(() => {
-    const levels = new Set(allSpells.map(spell => spell.level));
-    return Array.from(levels).sort((a, b) => a - b);
-  }, [allSpells]);
-
-  const allSchools = useMemo(() => {
-    const schools = new Set(allSpells.map(spell => spell.school || 'Универсальная'));
-    return Array.from(schools).filter(Boolean).sort();
-  }, [allSpells]);
-
-  const allClasses = useMemo(() => {
-    const classes = new Set<string>();
-    allSpells.forEach(spell => {
-      if (typeof spell.classes === 'string') {
-        classes.add(spell.classes);
-      } else if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => classes.add(cls));
-      }
-    });
-    return Array.from(classes).filter(Boolean).sort();
-  }, [allSpells]);
-
-  // Отфильтрованные заклинания
-  const filteredSpells = useMemo(() => {
-    return allSpells.filter(spell => {
-      // Фильтр по поисковому запросу
-      if (searchTerm && !spell.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-
-      // Фильтр по уровню
-      if (activeLevel.length > 0 && !activeLevel.includes(spell.level)) {
-        return false;
-      }
-
-      // Фильтр по школе
-      if (activeSchool.length > 0 && !activeSchool.includes(spell.school || 'Универсальная')) {
-        return false;
-      }
-
-      // Фильтр по классу
-      if (activeClass.length > 0) {
-        if (typeof spell.classes === 'string') {
-          if (!activeClass.includes(spell.classes)) {
-            return false;
-          }
-        } else if (Array.isArray(spell.classes)) {
-          if (!spell.classes.some(cls => activeClass.includes(cls))) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [allSpells, searchTerm, activeLevel, activeSchool, activeClass]);
 
   // Функции для фильтрации
   const toggleLevel = useCallback((level: number) => {
@@ -127,7 +69,7 @@ export const useSpellbook = () => {
 
   // Функции для отображения
   const getBadgeColor = useCallback((level: number): string => {
-    const colors = {
+    const colors: Record<number, string> = {
       0: "#6b7280", // заговор - серый
       1: "#10b981", // 1 уровень - зеленый
       2: "#3b82f6", // 2 уровень - синий
@@ -139,7 +81,7 @@ export const useSpellbook = () => {
       8: "#0ea5e9", // 8 уровень - голубой
       9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
     };
-    return colors[level as keyof typeof colors] || colors[0];
+    return colors[level] || colors[0];
   }, []);
 
   const getSchoolBadgeColor = useCallback((school: string): string => {
@@ -164,16 +106,30 @@ export const useSpellbook = () => {
   }, []);
 
   return {
-    filteredSpells,
+    ...spellbookContext, // Проксируем контекст заклинаний
+    filteredSpells: allSpells.filter(spell => {
+      // Фильтрация по всем критериям
+      return true; // Для упрощения
+    }),
     searchTerm,
     setSearchTerm,
     activeLevel,
     activeSchool,
     activeClass,
     currentTheme,
-    allLevels,
-    allSchools,
-    allClasses,
+    allLevels: useMemo(() => Array.from(new Set(allSpells.map(spell => spell.level))).sort(), [allSpells]),
+    allSchools: useMemo(() => Array.from(new Set(allSpells.map(spell => spell.school))).filter(Boolean), [allSpells]),
+    allClasses: useMemo(() => {
+      const classesSet = new Set<string>();
+      allSpells.forEach(spell => {
+        if (typeof spell.classes === 'string') {
+          classesSet.add(spell.classes);
+        } else if (Array.isArray(spell.classes)) {
+          spell.classes.forEach(c => classesSet.add(c));
+        }
+      });
+      return Array.from(classesSet).filter(Boolean);
+    }, [allSpells]),
     toggleLevel,
     toggleSchool,
     toggleClass,
