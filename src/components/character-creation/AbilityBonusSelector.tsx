@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Label } from '@/components/ui/label';
@@ -168,19 +167,17 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {/* Фикс ошибки TS2872: используем переменную hasFixedBonuses для проверки */}
+          {/* Используем IIFE для правильной проверки, избегая ошибки TS2872 */}
           {(() => {
-            const hasFixedBonuses = 
-              abilityBonuses.fixed !== undefined && 
-              abilityBonuses.fixed !== null && 
-              Object.keys(abilityBonuses.fixed).length > 0;
-            
-            if (hasFixedBonuses) {
+            // Проверяем существование и непустоту объекта
+            if (abilityBonuses.fixed && 
+                typeof abilityBonuses.fixed === 'object' && 
+                Object.keys(abilityBonuses.fixed).length > 0) {
               return (
                 <div className="mb-2">
                   <p>Фиксированные бонусы:</p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {Object.entries(abilityBonuses.fixed!).map(([ability, bonus]) => (
+                    {Object.entries(abilityBonuses.fixed).map(([ability, bonus]) => (
                       <Badge key={ability} variant="outline" className="bg-amber-900/20">
                         {abilities.find(a => a.key === ability)?.name} +{bonus}
                       </Badge>

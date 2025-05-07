@@ -6,16 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookOpen, Filter, Plus } from 'lucide-react';
+import { Search, BookOpen, Filter, Plus, Loader } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { spells as allSpells } from '@/data/spells';
 import SpellDetailView from './SpellDetailView';
 import SpellFilterPanel from './SpellFilterPanel';
 import SpellImportModal from './SpellImportModal';
-import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
+import { useSpellbook } from '@/hooks/spellbook';
 import { SpellData } from '@/types/spells';
-import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
@@ -42,20 +40,27 @@ const SpellBookViewer: React.FC = () => {
     handleClose,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    isLoading
   } = useSpellbook();
 
   const [showFilters, setShowFilters] = useState(false);
   const [showImport, setShowImport] = useState(false);
 
-  // Преобразуем CharacterSpell[] в SpellData[]
-  const spellsData: SpellData[] = convertCharacterSpellsToSpellData(filteredSpells);
-
   // Группировка заклинаний по уровням для отображения на вкладках
   const spellsByLevel = allLevels.reduce((acc, level) => {
-    acc[level] = spellsData.filter(spell => spell.level === level);
+    acc[level] = filteredSpells.filter(spell => spell.level === level);
     return acc;
   }, {} as Record<number, SpellData[]>);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <Loader className="h-12 w-12 animate-spin mb-4 text-primary" />
+        <p className="text-lg">Загрузка заклинаний...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 px-4 md:px-6">
@@ -144,7 +149,7 @@ const SpellBookViewer: React.FC = () => {
                 className="flex items-center"
               >
                 <BookOpen className="h-5 w-5 mr-2" /> 
-                Все заклинания
+                Все заклинания ({filteredSpells.length})
                 {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
                   <Badge variant="outline" className="ml-2">
                     Активны фильтры
@@ -153,12 +158,12 @@ const SpellBookViewer: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {spellsData.length > 0 ? (
+              {filteredSpells.length > 0 ? (
                 <ScrollArea className="h-[60vh] pr-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {spellsData.map(spell => (
+                    {filteredSpells.map(spell => (
                       <Card 
-                        key={spell.name} 
+                        key={`${spell.id}-${spell.name}`} 
                         className="spell-card hover:bg-accent/10 transition-all cursor-pointer"
                         onClick={() => handleOpenSpell(spell)}
                       >
@@ -239,7 +244,7 @@ const SpellBookViewer: React.FC = () => {
             <Card className="bg-card/70 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle style={{ color: currentTheme.textColor }}>
-                  {level === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
+                  {level === 0 ? 'Заговоры' : `Заклинания ${level} уровня`} ({spellsByLevel[level]?.length || 0})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -248,7 +253,7 @@ const SpellBookViewer: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {spellsByLevel[level].map(spell => (
                         <Card 
-                          key={spell.name} 
+                          key={`${spell.id}-${spell.name}-${level}`} 
                           className="spell-card hover:bg-accent/10 transition-all cursor-pointer"
                           onClick={() => handleOpenSpell(spell)}
                         >

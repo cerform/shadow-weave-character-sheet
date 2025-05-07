@@ -1,3 +1,4 @@
+
 import { SpellData } from '@/types/spells';
 
 /**
@@ -35,7 +36,6 @@ export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] =>
 
 /**
  * Преобразует объект в формат SpellData
- * Добавлен для совместимости с hooks/spellbook/index.ts
  */
 export const convertToSpellData = (spell: any): SpellData => {
   if (!spell) {
