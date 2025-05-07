@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -211,7 +210,7 @@ export const ABILITY_SCORE_CAPS = {
 // Add HitPointEvent for DamageLog
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
+  type: 'damage' | 'healing' | 'temp' | 'healing' | 'tempHP' | 'death-save';
   amount: number;
   source?: string;
   timestamp: number | Date;
