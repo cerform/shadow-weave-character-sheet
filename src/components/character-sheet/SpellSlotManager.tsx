@@ -1,258 +1,292 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Character } from '@/types/character';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { calculateAbilityModifier } from '@/utils/characterUtils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { classData } from '@/data/classes/index'; // Исправлен импорт
 import { useToast } from '@/hooks/use-toast';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 interface SpellSlotManagerProps {
-  character?: Character;
-  showTitle?: boolean;
-  compact?: boolean;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
-const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ 
-  character: propCharacter, 
-  showTitle = true,
-  compact = false
-}) => {
-  const { character: contextCharacter, updateCharacter } = useCharacter();
-  const { toast } = useToast();
+const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({ character, onUpdate }) => {
+  const [spellcastingAbility, setSpellcastingAbility] = useState(character.spellcasting?.ability || 'intelligence');
   const { theme } = useTheme();
+  const { toast } = useToast();
+  const { updateCharacter } = useCharacter();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  
-  const character = propCharacter || contextCharacter;
-  
-  // Состояние для ячеек заклинаний
-  const [spellSlots, setSpellSlots] = useState<Record<string, { max: number; used: number }>>({});
-  
-  // Получение максимального количества ячеек на основе класса и уровня
-  const getMaxSpellSlots = (characterClass: string, level: number): Record<number, { max: number; used: number }> => {
-    // Получаем данные о классе
-    const classInfo = classData[characterClass];
-    if (!classInfo || !classInfo.spellcasting || !classInfo.spellcasting.spellSlots) {
-      return {};
-    }
+  const maxLevel = 9;
+
+  const handleSpellcastingAbilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newAbility = e.target.value;
+    setSpellcastingAbility(newAbility);
     
-    // Создаем объект с ячейками заклинаний
-    const slots: Record<number, { max: number; used: number }> = {};
-    
-    // Для каждого уровня заклинаний получаем количество ячеек
-    for (let spellLevel = 1; spellLevel <= 9; spellLevel++) {
-      const slotsByLevel = classInfo.spellcasting.spellSlots[spellLevel];
-      
-      if (slotsByLevel && Array.isArray(slotsByLevel) && slotsByLevel[level - 1] > 0) {
-        slots[spellLevel] = {
-          max: slotsByLevel[level - 1],
-          used: 0 // По умолчанию ни одна ячейка не использована
-        };
-      }
-    }
-    
-    return slots;
-  };
-  
-  // Инициализация ячеек заклинаний при загрузке персонажа
-  useEffect(() => {
-    if (character && character.class) {
-      // Если у персонажа уже есть сохраненные ячейки заклинаний, используем их
-      if (character.spellSlots) {
-        setSpellSlots(character.spellSlots);
-      } else {
-        // Иначе получаем ячейки заклинаний на основе класса и уровня
-        const maxSlots = getMaxSpellSlots(character.class, character.level);
-        setSpellSlots(maxSlots);
-        
-        // Сохраняем начальное состояние ячеек в персонажа
-        updateSpellSlots(maxSlots);
-      }
-    }
-  }, [character?.class, character?.level, character?.spellSlots]);
-  
-  // Обработчик использования ячейки заклинаний
-  const handleUseSpellSlot = (level: number) => {
-    if (!spellSlots[level]) return;
-    
-    if (spellSlots[level].used < spellSlots[level].max) {
-      const newSpellSlots = {
-        ...spellSlots,
-        [level]: {
-          ...spellSlots[level],
-          used: spellSlots[level].used + 1
-        }
-      };
-      
-      setSpellSlots(newSpellSlots);
-      updateSpellSlots(newSpellSlots);
-      
-      toast({
-        title: "Ячейка заклинания использована",
-        description: `Использована ячейка заклинания ${level} уровня`,
-      });
-    }
-  };
-  
-  // Обработчик восстановления ячейки заклинаний
-  const handleRestoreSpellSlot = (level: number) => {
-    if (!spellSlots[level]) return;
-    
-    if (spellSlots[level].used > 0) {
-      const newSpellSlots = {
-        ...spellSlots,
-        [level]: {
-          ...spellSlots[level],
-          used: spellSlots[level].used - 1
-        }
-      };
-      
-      setSpellSlots(newSpellSlots);
-      updateSpellSlots(newSpellSlots);
-      
-      toast({
-        title: "Ячейка заклинания восстановлена",
-        description: `Восстановлена ячейка заклинания ${level} уровня`,
-      });
-    }
-  };
-  
-  // Обработчик восстановления всех ячеек заклинаний (после отдыха)
-  const handleRestoreAllSpellSlots = () => {
-    const newSpellSlots = { ...spellSlots };
-    
-    // Сбрасываем счетчики использованных ячеек
-    for (const level in newSpellSlots) {
-      newSpellSlots[level].used = 0;
-    }
-    
-    setSpellSlots(newSpellSlots);
-    updateSpellSlots(newSpellSlots);
-    
-    toast({
-      title: "Ячейки заклинаний восстановлены",
-      description: "Все ячейки заклинаний восстановлены после отдыха",
+    updateSpellcasting({
+      ability: newAbility
     });
   };
+  
+  const updateSpellcasting = (updates: any) => {
+    if (!character.spellcasting) {
+      onUpdate({
+        spellcasting: {
+          ...updates
+        }
+      });
+    } else {
+      onUpdate({
+        spellcasting: {
+          ...character.spellcasting,
+          ...updates
+        }
+      });
+    }
+  };
 
-  // Не отображаем компонент, если у персонажа нет магических способностей
-  if (!character || !character.class) return null;
-  
-  // Проверяем, является ли класс магическим
-  const characterClass = character.class.toLowerCase();
-  const isMagicUser = ['жрец', 'волшебник', 'бард', 'друид', 'колдун', 'чародей', 'паладин', 'следопыт', 'изобретатель'].includes(characterClass);
-  
-  if (!isMagicUser) return null;
+  const handleSlotChange = (level: number, change: number) => {
+    if (!character.spellSlots) {
+      const initialSlots = {};
+      for (let i = 1; i <= maxLevel; i++) {
+        initialSlots[i] = { available: 0, used: 0 };
+      }
+      onUpdate({ spellSlots: initialSlots });
+      return;
+    }
+    
+    const currentSlots = character.spellSlots[level] || { available: 0, used: 0 };
+    const newAvailable = Math.max(0, currentSlots.available + change);
+    
+    const updatedSlots = {
+      ...character.spellSlots,
+      [level]: {
+        ...currentSlots,
+        available: newAvailable
+      }
+    };
+    
+    onUpdate({ spellSlots: updatedSlots });
+  };
 
-  // Проверяем наличие ячеек заклинаний
-  const hasSpellSlots = Object.keys(spellSlots).length > 0;
-  
-  if (!hasSpellSlots) return null;
-  
+  const handleSlotUsed = (level: number, change: number) => {
+    if (!character.spellSlots) {
+      const initialSlots = {};
+      for (let i = 1; i <= maxLevel; i++) {
+        initialSlots[i] = { available: 0, used: 0 };
+      }
+      onUpdate({ spellSlots: initialSlots });
+      return;
+    }
+    
+    const currentSlots = character.spellSlots[level] || { available: 0, used: 0 };
+    const newUsed = Math.max(0, Math.min(currentSlots.available, currentSlots.used + change));
+    
+    const updatedSlots = {
+      ...character.spellSlots,
+      [level]: {
+        ...currentSlots,
+        used: newUsed
+      }
+    };
+    
+    onUpdate({ spellSlots: updatedSlots });
+  };
+
+  // Обработчик сброса слотов заклинаний после короткого отдыха
+  const handleResetAfterShortRest = () => {
+    const currentChar = character;
+    
+    if (!currentChar) return;
+    
+    // Магический архетип воина, колдун и некоторые другие классы восстанавливают слоты после короткого отдыха
+    if (['колдун', 'warlock'].includes(currentChar.class?.toLowerCase() || '')) {
+      const updatedCharacter = { ...currentChar };
+      
+      if (!updatedCharacter.spellSlots) {
+        updatedCharacter.spellSlots = {};
+      }
+      
+      // Сбрасываем использованные слоты
+      Object.keys(updatedCharacter.spellSlots).forEach(level => {
+        if (parseInt(level) <= maxLevel) {
+          updatedCharacter.spellSlots[parseInt(level)] = {
+            ...updatedCharacter.spellSlots[parseInt(level)],
+            used: 0
+          };
+        }
+      });
+      
+      updateCharacter(updatedCharacter);
+      toast({
+        title: "Слоты заклинаний восстановлены",
+        description: `Восстановлены слоты заклинаний для ${currentChar.name}`,
+      });
+    }
+  };
+
+  const getSpellModifier = useCallback(() => {
+    if (!character.abilities) return 0;
+    
+    const ability = character.spellcasting?.ability || 'intelligence';
+    const abilityScore = character.abilities[ability as keyof typeof character.abilities] || 10;
+    return calculateAbilityModifier(abilityScore);
+  }, [character]);
+
+  const getSpellSaveDC = useCallback(() => {
+    const profBonus = character.proficiencyBonus || 2;
+    return 8 + profBonus + getSpellModifier();
+  }, [character, getSpellModifier]);
+
+  const getSpellAttackBonus = useCallback(() => {
+    const profBonus = character.proficiencyBonus || 2;
+    return profBonus + getSpellModifier();
+  }, [character, getSpellModifier]);
+
   return (
-    <Card className={`border-accent/30 ${compact ? 'p-2' : ''}`} style={{ backgroundColor: currentTheme.cardBackground }}>
-      {showTitle && (
-        <CardHeader className={compact ? 'p-2' : ''}>
-          <CardTitle className="flex justify-between items-center text-lg" style={{ color: currentTheme.textColor }}>
-            <span>Ячейки заклинаний</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleRestoreAllSpellSlots}
-                    style={{ color: currentTheme.accent }}
-                  >
-                    Восстановить все
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Восстановить все ячейки заклинаний (после отдыха)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </CardTitle>
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Слоты заклинаний</CardTitle>
         </CardHeader>
-      )}
-      <CardContent className={compact ? 'p-2' : ''}>
-        <div className="grid grid-cols-3 gap-2">
-          {Object.entries(spellSlots).map(([level, { max, used }]) => (
-            <div 
-              key={`spell-slot-${level}`} 
-              className="flex flex-col items-center border rounded-md p-2"
-              style={{ borderColor: currentTheme.accent + '50' }}
+        <CardContent className="grid gap-4">
+          <div>
+            <Label htmlFor="spellcastingAbility">Базовая характеристика</Label>
+            <select
+              id="spellcastingAbility"
+              className="w-full p-2 border rounded"
+              value={spellcastingAbility}
+              onChange={handleSpellcastingAbilityChange}
+              style={{
+                backgroundColor: currentTheme.cardBackground,
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
             >
-              <span className="text-sm font-bold mb-1" style={{ color: currentTheme.textColor }}>
-                {level} уровень
-              </span>
-              <div className="flex space-x-1 mb-1">
-                {Array.from({ length: max }).map((_, index) => (
-                  <Badge
-                    key={index}
-                    variant={index < (max - used) ? "default" : "outline"}
-                    style={{
-                      backgroundColor: index < (max - used) ? currentTheme.accent : 'transparent',
-                      borderColor: currentTheme.accent,
-                      color: index < (max - used) ? currentTheme.cardBackground : currentTheme.accent
-                    }}
-                  >
-                    ⬤
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex space-x-1 mt-1">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  disabled={used >= max}
-                  onClick={() => handleUseSpellSlot(Number(level))}
-                  style={{ 
-                    borderColor: currentTheme.accent, 
-                    color: currentTheme.accent
-                  }}
-                  className="px-2 py-0 h-6 text-xs"
-                >
-                  -
-                </Button>
-                <span className="text-sm font-medium" style={{ color: currentTheme.textColor }}>
-                  {max - used}/{max}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  disabled={used <= 0}
-                  onClick={() => handleRestoreSpellSlot(Number(level))}
-                  style={{ 
-                    borderColor: currentTheme.accent, 
-                    color: currentTheme.accent
-                  }}
-                  className="px-2 py-0 h-6 text-xs"
-                >
-                  +
-                </Button>
-              </div>
+              <option value="strength">Сила</option>
+              <option value="dexterity">Ловкость</option>
+              <option value="constitution">Телосложение</option>
+              <option value="intelligence">Интеллект</option>
+              <option value="wisdom">Мудрость</option>
+              <option value="charisma">Харизма</option>
+            </select>
+          </div>
+          <div>
+            <Label>Сложность спасброска</Label>
+            <Input
+              type="text"
+              value={getSpellSaveDC()}
+              readOnly
+              style={{
+                backgroundColor: currentTheme.cardBackground,
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
+            />
+          </div>
+          <div>
+            <Label>Бонус атаки заклинанием</Label>
+            <Input
+              type="text"
+              value={getSpellAttackBonus()}
+              readOnly
+              style={{
+                backgroundColor: currentTheme.cardBackground,
+                borderColor: currentTheme.accent,
+                color: currentTheme.textColor
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Управление слотами</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <ScrollArea className="h-[300px]">
+            <div className="space-y-2 p-4">
+              {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
+                <Card key={level} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
+                  <CardContent className="flex items-center justify-between p-3">
+                    <div style={{color: currentTheme.textColor}}>
+                      {level}-й уровень
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleSlotChange(level, 1)}
+                      >
+                        +
+                      </Button>
+                      <Input
+                        type="number"
+                        className="w-16 text-center"
+                        value={character.spellSlots?.[level]?.available || 0}
+                        readOnly
+                        style={{
+                          backgroundColor: currentTheme.cardBackground,
+                          borderColor: currentTheme.accent,
+                          color: currentTheme.textColor
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleSlotChange(level, -1)}
+                      >
+                        -
+                      </Button>
+                      <Separator orientation="vertical" className="h-6 bg-accent/30" />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleSlotUsed(level, 1)}
+                      >
+                        Использовать
+                      </Button>
+                      <Input
+                        type="number"
+                        className="w-16 text-center"
+                        value={character.spellSlots?.[level]?.used || 0}
+                        readOnly
+                        style={{
+                          backgroundColor: currentTheme.cardBackground,
+                          borderColor: currentTheme.accent,
+                          color: currentTheme.textColor
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleSlotUsed(level, -1)}
+                      >
+                        Восстановить
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+      
+      <Button onClick={handleResetAfterShortRest}>
+        Восстановить слоты после короткого отдыха
+      </Button>
+    </div>
   );
 };
 
 export default SpellSlotManager;
-
-// Fix the updateCharacter calls that use partial characters
-const updateSpellSlots = (newSlots: Record<number, { max: number; used: number }>) => {
-  if (character) {
-    const updatedCharacter = { 
-      ...character, 
-      spellSlots: newSlots 
-    };
-    updateCharacter(updatedCharacter);
-  }
-};

@@ -46,7 +46,15 @@ export const useCharacterCreation = () => {
   // Обновление способностей
   const updateAbilities = useCallback((abilities: Record<string, number>) => {
     // Обеспечиваем обновление в обоих форматах
-    const updatedAbilities = { ...characterData.abilities };
+    const updatedAbilities = { 
+      ...characterData.abilities,
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10
+    };
     
     Object.entries(abilities).forEach(([key, value]) => {
       if (key === 'strength' || key === 'STR') {

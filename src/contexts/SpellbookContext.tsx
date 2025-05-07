@@ -6,6 +6,26 @@ import { SpellData } from '@/types/spells';
 export interface SpellbookContextType {
   selectedSpells: CharacterSpell[];
   availableSpells: SpellData[];
+  filteredSpells?: SpellData[];
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+  activeLevel?: number[];
+  activeSchool?: string[];
+  activeClass?: string[];
+  allLevels?: number[];
+  allSchools?: string[];
+  allClasses?: string[];
+  selectedSpell?: SpellData | null;
+  isModalOpen?: boolean;
+  toggleLevel?: (level: number) => void;
+  toggleSchool?: (school: string) => void;
+  toggleClass?: (className: string) => void;
+  clearFilters?: () => void;
+  handleOpenSpell?: (spell: SpellData) => void;
+  handleClose?: () => void;
+  getBadgeColor?: (level: number) => string;
+  getSchoolBadgeColor?: (school: string) => string;
+  formatClasses?: (classes: string[] | string | undefined) => string;
   addSpell: (spell: SpellData | CharacterSpell) => void;
   removeSpell: (spellId: string) => void;
   getSpellLimits: (characterClass: string, level: number) => { maxKnown: number; maxPrepared: number };
@@ -32,6 +52,95 @@ interface SpellbookProviderProps {
 export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }) => {
   const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
+  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);
+  const [activeClass, setActiveClass] = useState<string[]>([]);
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Расчет всех возможных значений для фильтров
+  const allLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const allSchools = [
+    'Воплощение', 'Некромантия', 'Преобразование', 'Прорицание',
+    'Призыв', 'Очарование', 'Иллюзия', 'Ограждение', 'Универсальная'
+  ];
+  const allClasses = [
+    'Бард', 'Жрец', 'Друид', 'Волшебник',
+    'Колдун', 'Чародей', 'Паладин', 'Следопыт'
+  ];
+
+  // Методы для управления фильтрами
+  const toggleLevel = (level: number) => {
+    setActiveLevel(prev => 
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
+    );
+  };
+
+  const toggleSchool = (school: string) => {
+    setActiveSchool(prev => 
+      prev.includes(school) ? prev.filter(s => s !== school) : [...prev, school]
+    );
+  };
+
+  const toggleClass = (className: string) => {
+    setActiveClass(prev => 
+      prev.includes(className) ? prev.filter(c => c !== className) : [...prev, className]
+    );
+  };
+
+  const clearFilters = () => {
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setSearchTerm('');
+  };
+
+  // Методы для модального окна
+  const handleOpenSpell = (spell: SpellData) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+  };
+
+  // Методы для отображения
+  const getBadgeColor = (level: number): string => {
+    const colors = [
+      'bg-gray-200', 'bg-red-200', 'bg-orange-200', 'bg-amber-200',
+      'bg-yellow-200', 'bg-green-200', 'bg-emerald-200', 'bg-teal-200',
+      'bg-sky-200', 'bg-indigo-200'
+    ];
+    return level >= 0 && level <= 9 ? colors[level] : 'bg-purple-200';
+  };
+
+  const getSchoolBadgeColor = (school: string): string => {
+    const schoolColors: Record<string, string> = {
+      'Воплощение': 'bg-red-200',
+      'Некромантия': 'bg-green-200',
+      'Преобразование': 'bg-blue-200',
+      'Прорицание': 'bg-purple-200',
+      'Призыв': 'bg-yellow-200',
+      'Очарование': 'bg-pink-200',
+      'Иллюзия': 'bg-indigo-200',
+      'Ограждение': 'bg-orange-200',
+      'Универсальная': 'bg-gray-200'
+    };
+    return schoolColors[school] || 'bg-gray-200';
+  };
+
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return '';
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    }
+    
+    return classes;
+  };
 
   const addSpell = (spell: SpellData | CharacterSpell) => {
     const characterSpell: CharacterSpell = {
@@ -86,6 +195,26 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   const value = {
     selectedSpells,
     availableSpells,
+    filteredSpells,
+    searchTerm,
+    setSearchTerm,
+    activeLevel,
+    activeSchool,
+    activeClass,
+    allLevels,
+    allSchools,
+    allClasses,
+    selectedSpell,
+    isModalOpen,
+    toggleLevel,
+    toggleSchool,
+    toggleClass,
+    clearFilters,
+    handleOpenSpell,
+    handleClose,
+    getBadgeColor,
+    getSchoolBadgeColor,
+    formatClasses,
     addSpell,
     removeSpell,
     getSpellLimits,
@@ -101,5 +230,4 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   );
 };
 
-// Remove this import which was causing circular dependency
-// export { useSpellbookContext } from '@/hooks/spellbook';
+// Убираем импорт, который вызывал циклическую зависимость

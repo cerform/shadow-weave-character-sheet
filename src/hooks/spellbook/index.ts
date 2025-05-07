@@ -2,6 +2,8 @@
 // Экспортируем все хуки и утилиты для спеллбука
 export * from './useSpellbook';
 export * from './filterUtils';
+export * from './types';
+
 import { useContext } from 'react';
 import { SpellbookContext, SpellbookContextType } from '@/contexts/SpellbookContext';
 
@@ -14,9 +16,14 @@ export const useSpellbookContext = (): SpellbookContextType => {
 };
 
 // Экспортируем вспомогательные функции из типов
-export { convertCharacterSpellToSpellData, convertSpellArray, convertSpellDataToCharacterSpell } from '@/types/spells';
+export { 
+  convertCharacterSpellToSpellData, 
+  convertSpellArray, 
+  convertSpellDataToCharacterSpell 
+} from '@/types/spells';
 
 // Export this function explicitly
 export const useSpellbook = (): SpellbookContextType => {
   return useSpellbookContext();
 };
+

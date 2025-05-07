@@ -107,6 +107,30 @@ const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCh
     setSpellDialogOpen(false);
   };
   
+  // Обработчик обновления характеристики для заклинаний
+  const handleAbilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newAbility = e.target.value;
+    const currentChar = character;
+    
+    if (!currentChar || !currentChar.spellcasting) {
+      return;
+    }
+    
+    // Создаем копию спеллкастинг-объекта с новой характеристикой
+    const updatedSpellcasting = {
+      ...currentChar.spellcasting,
+      ability: newAbility
+    };
+    
+    // Обновляем персонажа с новым спеллкастинг-объектом
+    const updatedCharacter = {
+      ...currentChar,
+      spellcasting: updatedSpellcasting
+    };
+    
+    updateCharacter(updatedCharacter);
+  };
+  
   // Проверяем, является ли класс магическим
   const isMagicClass = () => {
     if (!character?.class) return false;

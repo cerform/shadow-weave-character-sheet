@@ -636,7 +636,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                       );
                     }
                     
-                    // Возвращаем null для невалидных данных
+                    // Возвр��щаем null для невалидных данных
                     return null;
                   })}
                 </div>

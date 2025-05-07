@@ -10,9 +10,9 @@ interface BattleMapProps {
   setTokens: React.Dispatch<React.SetStateAction<TokenData[]>> | ((token: TokenData) => void);
   background: string | null;
   setBackground: (background: string | null) => void;
-  onUpdateTokenPosition: (id: number, x: number, y: number) => void;
-  onSelectToken: (id: number | null) => void;
-  selectedTokenId: number | null;
+  onUpdateTokenPosition: (id: string, x: number, y: number) => void; // Изменили тип id на string
+  onSelectToken: (id: string | null) => void; // Изменили тип id на string
+  selectedTokenId: string | null; // Изменили тип на string
   initiative?: Initiative[];
   battleActive?: boolean;
 }
@@ -28,7 +28,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   initiative = [],
   battleActive = false
 }) => {
-  const [draggingToken, setDraggingToken] = useState<number | null>(null);
+  const [draggingToken, setDraggingToken] = useState<string | null>(null); // Изменили тип на string
   const [mapDimensions, setMapDimensions] = useState({ width: 1000, height: 800 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -50,19 +50,17 @@ const BattleMap: React.FC<BattleMapProps> = ({
   // Создание нового токена
   const handleCreateToken = () => {
     const newToken: TokenData = {
-      id: Date.now(),
+      id: Date.now().toString(), // Преобразуем в строку
       name: `Токен ${tokens.length + 1}`,
       img: '/placeholder-token.png', // заглушка, в реальном приложении нужно заменить
       x: Math.random() * mapDimensions.width / 2,
       y: Math.random() * mapDimensions.height / 2,
-      size: 50,
-      type: 'npc',
-      visible: true
+      size: 50
     };
     
     if (typeof setTokens === 'function') {
       // Проверяем тип функции setTokens
-      if (setTokens.length === 1) {
+      if ('length' in setTokens && setTokens.length === 1) {
         // Если это функция, которая принимает один аргумент - новый токен
         (setTokens as (token: TokenData) => void)(newToken);
       } else {
@@ -73,7 +71,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
   };
 
   // Начало перетаскивания токена
-  const handleTokenDragStart = (e: React.MouseEvent, tokenId: number) => {
+  const handleTokenDragStart = (e: React.MouseEvent, tokenId: string) => { // Изменили тип на string
     e.preventDefault();
     e.stopPropagation();
     
@@ -210,11 +208,11 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 transform: 'translate(-50%, -50%)',
                 zIndex: token.id === draggingToken ? 100 : 10
               }}
-              onMouseDown={(e) => handleTokenDragStart(e, token.id as number)}
+              onMouseDown={(e) => handleTokenDragStart(e, token.id)}
             >
               <img 
-                src={token.img || '/placeholder-token.png'} 
-                alt={token.name} 
+                src={token.img || token.image || '/placeholder-token.png'} 
+                alt={token.name || 'Token'} 
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
@@ -239,7 +237,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 key={init.id}
                 className={`p-1 rounded ${init.isActive ? 'bg-primary/20' : ''}`}
               >
-                {init.name}: {init.roll}
+                {init.name}: {init.initiative} {/* Заменили roll на initiative */}
               </div>
             ))}
           </div>
@@ -250,3 +248,4 @@ const BattleMap: React.FC<BattleMapProps> = ({
 };
 
 export default BattleMap;
+
