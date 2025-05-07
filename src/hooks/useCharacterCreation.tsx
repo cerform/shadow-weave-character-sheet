@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -32,18 +33,20 @@ const defaultCharacterState: Character = {
   armorClass: 10,
   initiative: 0,
   speed: 30,
-  hitPoints: 0,
-  maxHitPoints: 0,
-  temporaryHitPoints: 0,
+  hitPoints: {
+    current: 0,
+    maximum: 0,
+    temporary: 0
+  },
   proficiencyBonus: 2,
   abilities: initialAbilityScores,
   savingThrows: {
-    strength: 0,
-    dexterity: 0,
-    constitution: 0,
-    intelligence: 0,
-    wisdom: 0,
-    charisma: 0,
+    strength: false,
+    dexterity: false,
+    constitution: false,
+    intelligence: false,
+    wisdom: false,
+    charisma: false,
   },
   skills: {},
   equipment: [],
@@ -90,7 +93,7 @@ const useCharacterCreation = () => {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedBackground, setSelectedBackground] = useState<string | null>(null);
   const [selectedAlignment, setSelectedAlignment] = useState<string | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<string | null>('1');
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -119,35 +122,41 @@ const useCharacterCreation = () => {
       const wisModifier = calculateModifier(updatedAbilities.wisdom);
       const chaModifier = calculateModifier(updatedAbilities.charisma);
 
+      // Создадим безопасную версию объекта proficiencies для доступа к tools
+      const safeProficiencies = prevForm.proficiencies || { tools: [], weapons: [], armor: [], languages: [], skills: [] };
+      const tools = Array.isArray(safeProficiencies.tools) ? safeProficiencies.tools : [];
+
       const updatedSavingThrows = {
-        strength: strModifier,
-        dexterity: dexModifier,
-        constitution: conModifier,
-        intelligence: intModifier,
-        wisdom: wisModifier,
-        charisma: chaModifier,
+        strength: false,
+        dexterity: false,
+        constitution: false,
+        intelligence: false,
+        wisdom: false,
+        charisma: false,
       };
 
+      // Обновляем безопасно, предполагая что skills может быть объектом
       const updatedSkills = {
         ...prevForm.skills,
-        acrobatics: calculateSkillCheckBonus(dexModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('acrobatics')),
-        animalHandling: calculateSkillCheckBonus(wisModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('animalHandling')),
-        arcana: calculateSkillCheckBonus(intModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('arcana')),
-        athletics: calculateSkillCheckBonus(strModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('athletics')),
-        deception: calculateSkillCheckBonus(chaModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('deception')),
-        history: calculateSkillCheckBonus(intModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('history')),
-        insight: calculateSkillCheckBonus(wisModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('insight')),
-        intimidation: calculateSkillCheckBonus(chaModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('intimidation')),
-        investigation: calculateSkillCheckBonus(intModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('investigation')),
-        medicine: calculateSkillCheckBonus(wisModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('medicine')),
-        nature: calculateSkillCheckBonus(intModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('nature')),
-        perception: calculateSkillCheckBonus(wisModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('perception')),
-        performance: calculateSkillCheckBonus(chaModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('performance')),
-        persuasion: calculateSkillCheckBonus(chaModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('persuasion')),
-        religion: calculateSkillCheckBonus(intModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('religion')),
-        sleightOfHand: calculateSkillCheckBonus(dexModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('sleightOfHand')),
-        stealth: calculateSkillCheckBonus(dexModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('stealth')),
-        survival: calculateSkillCheckBonus(wisModifier, prevForm.proficiencyBonus, prevForm.proficiencies.tools.includes('survival')),
+        // Безопасно проверяем наличие навыка в списке владений
+        acrobatics: tools.includes('acrobatics'),
+        animalHandling: tools.includes('animalHandling'),
+        arcana: tools.includes('arcana'),
+        athletics: tools.includes('athletics'),
+        deception: tools.includes('deception'),
+        history: tools.includes('history'),
+        insight: tools.includes('insight'),
+        intimidation: tools.includes('intimidation'),
+        investigation: tools.includes('investigation'),
+        medicine: tools.includes('medicine'),
+        nature: tools.includes('nature'),
+        perception: tools.includes('perception'),
+        performance: tools.includes('performance'),
+        persuasion: tools.includes('persuasion'),
+        religion: tools.includes('religion'),
+        sleightOfHand: tools.includes('sleightOfHand'),
+        stealth: tools.includes('stealth'),
+        survival: tools.includes('survival'),
       };
 
       return {
@@ -174,36 +183,38 @@ const useCharacterCreation = () => {
       class: classValue,
     }));
 
-    const levelNum = parseInt(selectedLevel || '1', 10);
-
     const additionalClasses = availableClasses.find(
       c => c.name.toLowerCase() === classValue.toLowerCase()
     );
 
     if (additionalClasses) {
-      const classLevel = parseInt(additionalClasses.level, 10) || 1;
+      // Преобразуем строковый уровень в число
+      const classLevel = parseInt(additionalClasses.level || '1', 10);
       const proficiencyBonus = calculateProficiencyBonus(classLevel);
       const hitDice = additionalClasses.hitDice;
-      const hitPoints = calculateMaxHP(hitDice, calculateModifier(prevForm.abilities.constitution), classLevel);
-      const savingThrows = additionalClasses.savingThrows;
-      const skills = additionalClasses.skills;
-      const equipment = additionalClasses.equipment;
-      const proficiencies = additionalClasses.proficiencies;
-      const features = additionalClasses.features;
+      
+      // Обеспечиваем безопасный доступ к abilities prevForm
+      const constitutionMod = calculateModifier(prevForm.abilities?.constitution || 10);
+      const hitPoints = calculateMaxHP(hitDice, constitutionMod, classLevel);
 
+      // Обновляем персонажа с учетом новых типов данных
       return {
         ...prevForm,
         class: classValue,
         level: classLevel,
         proficiencyBonus: proficiencyBonus,
         hitDice: hitDice,
-        hitPoints: hitPoints,
-        maxHitPoints: hitPoints,
-        savingThrows: savingThrows,
-        skills: skills,
-        equipment: equipment,
-        proficiencies: proficiencies,
-        features: features,
+        hitPoints: {
+          current: hitPoints,
+          maximum: hitPoints,
+          temporary: 0
+        },
+        // Оставшиеся поля добавляем при наличии соответствующих данных у класса
+        // ...(additionalClasses.savingThrows ? { savingThrows: additionalClasses.savingThrows } : {}),
+        // ...(additionalClasses.skills ? { skills: additionalClasses.skills } : {}),
+        // ...(additionalClasses.equipment ? { equipment: additionalClasses.equipment } : {}),
+        // ...(additionalClasses.proficiencies ? { proficiencies: additionalClasses.proficiencies } : {}),
+        // ...(additionalClasses.features ? { features: additionalClasses.features } : {})
       };
     }
 
@@ -222,20 +233,21 @@ const useCharacterCreation = () => {
     );
 
     if (additionalBackground) {
-      const skills = additionalBackground.skills;
-      const equipment = additionalBackground.equipment;
-      const languages = additionalBackground.languages;
-      const features = additionalBackground.features;
-
+      // Безопасно обновляем персонажа, только если данные доступны
       return {
         ...prevForm,
-        skills: skills,
-        equipment: equipment,
-        proficiencies: {
-          ...prevForm.proficiencies,
-          languages: languages,
-        },
-        features: features,
+        background: backgroundValue,
+        // ...(additionalBackground.skills ? { skills: { ...prevForm.skills, ...additionalBackground.skills } } : {}),
+        // ...(additionalBackground.equipment ? { 
+        //   equipment: [...(prevForm.equipment || []), ...(additionalBackground.equipment || [])] 
+        // } : {}),
+        // proficiencies: {
+        //   ...prevForm.proficiencies,
+        //   ...(additionalBackground.languages ? { languages: additionalBackground.languages } : {})
+        // },
+        // ...(additionalBackground.features ? { 
+        //   features: [...(prevForm.features || []), ...(additionalBackground.features || [])]
+        // } : {})
       };
     }
 
@@ -255,20 +267,18 @@ const useCharacterCreation = () => {
       r => r.name.toLowerCase() === race.toLowerCase()
     );
 
-    if (additionalRace && additionalRace.class) {
-      const classStr = String(additionalRace.class) || '';
-      return classStr;
+    if (additionalRace && additionalRace.id) {
+      return additionalRace.id;
     }
 
     return null;
   };
 
   const resetForm = () => {
-    const currentLevel = parseInt(selectedLevel || '1', 10);
     setForm(prevForm => ({
       ...defaultCharacterState,
       id: uuidv4(),
-      level: currentLevel,
+      level: selectedLevel,
     }));
   };
 

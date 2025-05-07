@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Sparkles } from "lucide-react";
 import SpellCastingPanel from '../SpellCastingPanel';
 import SpellPanel from '../SpellPanel';
-import SpellSelectionModal from '../SpellSelectionModal';  // Исправлен импорт
+import SpellSelectionModal from '../SpellSelectionModal';  // Fixed import
 
 interface SpellsTabProps {
   character: Character;

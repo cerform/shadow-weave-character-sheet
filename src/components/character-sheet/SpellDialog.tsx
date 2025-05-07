@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SpellData } from '@/types/spells';
@@ -10,7 +11,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { normalizeSpells } from '@/utils/spellUtils';
 
-interface SpellDialogProps {
+export interface SpellDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   spell: SpellData;
