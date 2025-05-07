@@ -1,6 +1,9 @@
+
 // Import statements
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Spell, SpellList } from '@/types/spells';
+import { SpellData } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
 
 interface SpellbookContextType {
   allSpells: Spell[];
@@ -11,6 +14,16 @@ interface SpellbookContextType {
   removeSpellFromList: (spellListId: string, spellId: string) => void;
   renameSpellList: (spellListId: string, newName: string) => void;
   filterSpellsByClass: (className: string) => Spell[];
+  
+  // Добавляем отсутствующие свойства
+  selectedSpells?: CharacterSpell[];
+  availableSpells?: SpellData[];
+  addSpell: (spell: SpellData) => void;
+  removeSpell: (spellId: string) => void;
+  getSpellLimits?: () => any;
+  getSelectedSpellCount?: () => any;
+  saveCharacterSpells?: () => void;
+  loadSpellsForCharacter: (characterClass: string, level: number) => void;
 }
 
 const SpellbookContext = createContext<SpellbookContextType | undefined>(undefined);
@@ -19,6 +32,8 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [allSpells, setAllSpells] = useState<Spell[]>([]);
   const [spellLists, setSpellLists] = useState<SpellList[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
 
   useEffect(() => {
     if (!initialized) {
@@ -111,10 +126,52 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
       // If classes is a string, convert to array and check
       if (typeof spell.classes === 'string') {
-        return spell.classes.split(',').map(c => c.trim()).includes(className);
+        const classesArray = spell.classes.split(',').map(c => c.trim());
+        return classesArray.includes(className);
       }
       return false;
     });
+  };
+
+  // Добавляем новые методы
+  const addSpell = (spell: SpellData) => {
+    if (!spell) return;
+    
+    const characterSpell: CharacterSpell = {
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      description: spell.description,
+      id: spell.id
+    };
+    
+    setSelectedSpells(prev => [...prev, characterSpell]);
+  };
+  
+  const removeSpell = (spellId: string) => {
+    setSelectedSpells(prev => prev.filter(spell => spell.id !== spellId));
+  };
+  
+  const loadSpellsForCharacter = (characterClass: string, level: number) => {
+    // Здесь должна быть логика загрузки заклинаний для конкретного класса и уровня
+    console.log(`Loading spells for ${characterClass} (level ${level})`);
+    // Временная заглушка
+    const filteredSpells = allSpells.filter(spell => {
+      if (Array.isArray(spell.classes)) {
+        return spell.classes.includes(characterClass);
+      }
+      if (typeof spell.classes === 'string') {
+        return spell.classes.split(',').map(c => c.trim()).includes(characterClass);
+      }
+      return false;
+    });
+    
+    setAvailableSpells(filteredSpells as unknown as SpellData[]);
+  };
+  
+  const saveCharacterSpells = () => {
+    // Логика сохранения заклинаний персонажа
+    console.log("Saving character spells");
   };
 
   return (
@@ -126,7 +183,14 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       addSpellToList,
       removeSpellFromList,
       renameSpellList,
-      filterSpellsByClass
+      filterSpellsByClass,
+      // Добавляем новые свойства
+      selectedSpells,
+      availableSpells,
+      addSpell,
+      removeSpell,
+      saveCharacterSpells,
+      loadSpellsForCharacter
     }}>
       {children}
     </SpellbookContext.Provider>

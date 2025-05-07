@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ const CreateSessionForm: React.FC<CreateSessionFormProps> = ({
           />
           {errors.name && (
             <p className="text-sm text-red-500 mt-1" role="alert">
-              {errors.name.message}
+              {String(errors.name.message)}
             </p>
           )}
         </div>

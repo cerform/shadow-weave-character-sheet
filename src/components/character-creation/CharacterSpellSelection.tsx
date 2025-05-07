@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -429,9 +428,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           ) : (
             filteredSpells.map((spell) => {
               const isAdded = isSpellKnown(spell);
-              const canAdd = spell.level === 0 
-                ? cantripsKnown < cantripsCount 
-                : spellsKnown < knownSpells;
+              const canAdd = (spell.level === 0) 
+                ? (cantripsKnown < cantripsCount) 
+                : (spellsKnown < knownSpells);
               
               return (
                 <Card key={spell.id || spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>

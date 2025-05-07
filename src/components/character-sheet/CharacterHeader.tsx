@@ -1,8 +1,8 @@
-
-import React, { useEffect } from 'react';
-import { Card } from "@/components/ui/card";
+import React from 'react';
 import { Character } from '@/types/character';
-import { normalizeCharacterData } from '@/utils/characterNormalizer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { normalizeCharacter } from '@/utils/characterNormalizer';
 
 interface CharacterHeaderProps {
   character: Character;
@@ -64,24 +64,35 @@ export const CharacterHeader = ({ character, onUpdate }: CharacterHeaderProps) =
   if (!character) {
     return (
       <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-        <h1 className="text-2xl font-bold text-center mb-2 animate-pulse">
-          Загрузка персонажа...
-        </h1>
+        <CardHeader>
+          <CardTitle>Загрузка персонажа...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            <h1 className="text-2xl font-bold text-center mb-2 animate-pulse">
+              Загрузка персонажа...
+            </h1>
+          </CardDescription>
+        </CardContent>
       </Card>
     );
   }
 
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <h1 className="text-2xl font-bold text-center mb-2">
-        {character.name || 'Безымянный герой'}
-      </h1>
-      <div className="flex justify-center items-center gap-2">
-        <span className="text-muted-foreground">{getCharacterClass()}</span>
-        {character.level !== undefined && (
-          <span className="text-muted-foreground">Уровень {character.level}</span>
-        )}
-      </div>
+      <CardHeader>
+        <CardTitle>{character.name || 'Безымянный герой'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>
+          <div className="flex justify-center items-center gap-2">
+            <span className="text-muted-foreground">{getCharacterClass()}</span>
+            {character.level !== undefined && (
+              <span className="text-muted-foreground">Уровень {character.level}</span>
+            )}
+          </div>
+        </CardDescription>
+      </CardContent>
     </Card>
   );
 };

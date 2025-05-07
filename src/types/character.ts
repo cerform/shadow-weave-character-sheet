@@ -159,6 +159,7 @@ export interface Character {
     total: number;
     used: number;
     type: string;
+    dieType?: string; // Добавляем поддержку устаревшего свойства для обратной совместимости
   };
   resources?: {
     [key: string]: {
@@ -255,8 +256,11 @@ export interface DiceResult {
   rolls: number[];
   total: number;
   diceType?: string;
+  count?: number;
+  modifier?: number;
   nickname?: string;
   result?: number;
   label?: string;
   reason?: string;
+  timestamp?: string;
 }
