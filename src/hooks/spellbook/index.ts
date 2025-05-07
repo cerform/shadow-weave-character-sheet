@@ -3,8 +3,7 @@
 export * from './useSpellbook';
 export * from './filterUtils';
 export * from './types';
-import { useSpellbook } from './useSpellbook';
-export default useSpellbook;
+export { useSpellbook } from './useSpellbook';
 
 // Экспортируем вспомогательные функции из типов
 export { convertCharacterSpellToSpellData, convertSpellArray, convertSpellDataToCharacterSpell } from '@/types/spells';

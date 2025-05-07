@@ -1,32 +1,15 @@
 
-import { SpellData } from '@/types/spells';
-
+// Типы для фильтрации заклинаний в SpellbookViewer
 export interface SpellFilters {
-  level?: number | null;
-  school?: string | null;
-  class?: string | null;
-  searchTerm?: string;
+  name?: string;
+  level?: string;
+  school?: string;
+  characterClass?: string;
   ritual?: boolean;
   concentration?: boolean;
 }
 
-export interface SpellbookContextType {
-  selectedSpells: SpellData[];
-  availableSpells: SpellData[];
-  setSelectedSpells: (spells: SpellData[]) => void;
-  addSpell: (spell: SpellData) => void;
-  removeSpell: (spellId: string) => void;
-  canAddSpell: (spell: SpellData) => boolean;
-  getSpellLimits: () => { cantrips: number; spells: number };
-  getSelectedSpellCount: () => { cantrips: number; spells: number };
-  saveCharacterSpells: () => void;
-  isSpellAvailableForClass: (spell: SpellData) => boolean;
-  loadSpellsForCharacter: (characterClass: string, level: number) => void;
-  
-  // Добавляем необходимые свойства для SpellBookViewer
-  spells: SpellData[];
-  loadSpells: () => void;
-  isLoading: boolean;
-  filters: SpellFilters;
-  setFilters: (filters: SpellFilters) => void;
+// Маппинг школ магии для фильтрации
+export interface SchoolMapping {
+  [key: string]: string;
 }

@@ -1,5 +1,5 @@
 
-import { useContext } from 'react';
-import { SpellbookContext } from '@/contexts/SpellbookContext';
-
-export const useSpellbook = () => useContext(SpellbookContext);
+// Реэкспорт хуков и утилит из модуля
+export * from './spellbook/index';
+export { useSpellbook } from './spellbook/index';
+export default { useSpellbook };

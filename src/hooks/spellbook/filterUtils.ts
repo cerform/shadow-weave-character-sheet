@@ -1,8 +1,6 @@
 
-import { SpellData } from '@/types/spells';
-
-// Маппинг школ магии для удобного отображения
-export const SchoolFilterMapping: { [key: string]: string } = {
+// Маппинг школ магии для фильтрации и отображения
+export const SchoolFilterMapping = {
   'abjuration': 'Ограждение',
   'conjuration': 'Вызов',
   'divination': 'Прорицание',
@@ -10,107 +8,17 @@ export const SchoolFilterMapping: { [key: string]: string } = {
   'evocation': 'Воплощение',
   'illusion': 'Иллюзия',
   'necromancy': 'Некромантия',
-  'transmutation': 'Преобразование'
+  'transmutation': 'Преобразование',
+  'universal': 'Универсальная'
 };
 
-/**
- * Фильтрует заклинания по поисковому запросу
- */
-export const filterBySearchTerm = (spells: SpellData[], searchTerm: string): SpellData[] => {
-  if (!searchTerm) return spells;
-  
-  const searchLower = searchTerm.toLowerCase();
-  return spells.filter(spell => {
-    const nameMatch = spell.name.toLowerCase().includes(searchLower);
-    
-    const schoolMatch = spell.school && spell.school.toLowerCase().includes(searchLower);
-    
-    let descMatch = false;
-    if (spell.description) {
-      if (Array.isArray(spell.description)) {
-        descMatch = spell.description.join(' ').toLowerCase().includes(searchLower);
-      } else {
-        descMatch = String(spell.description).toLowerCase().includes(searchLower);
-      }
-    }
-    
-    return nameMatch || schoolMatch || descMatch;
-  });
+// Функция для получения русского названия школы по английскому
+export const getSchoolLocalName = (school: string): string => {
+  return SchoolFilterMapping[school.toLowerCase()] || school;
 };
 
-/**
- * Фильтрует заклинания по уровню
- */
-export const filterByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
-  if (!levels || levels.length === 0) return spells;
-  return spells.filter(spell => levels.includes(spell.level));
-};
-
-/**
- * Фильтрует заклинания по школе магии
- */
-export const filterBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
-  if (!schools || schools.length === 0) return spells;
-  return spells.filter(spell => spell.school && schools.includes(spell.school));
-};
-
-/**
- * Фильтрует заклинания по классу
- */
-export const filterByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
-  if (!classes || classes.length === 0) return spells;
-  
-  return spells.filter(spell => {
-    if (!spell.classes) return false;
-    
-    // Обрабатываем случай, когда classes это строка
-    if (typeof spell.classes === 'string') {
-      const spellClassLower = spell.classes.toLowerCase();
-      return classes.some(c => spellClassLower.includes(c.toLowerCase()));
-    }
-    
-    // Обрабатываем случай, когда classes это массив строк
-    if (Array.isArray(spell.classes)) {
-      return spell.classes.some(spellClass => {
-        if (typeof spellClass === 'string') {
-          const spellClassLower = spellClass.toLowerCase();
-          return classes.some(c => spellClassLower.includes(c.toLowerCase()));
-        }
-        return false;
-      });
-    }
-    
-    return false;
-  });
-};
-
-/**
- * Применяет все фильтры к списку заклинаний
- */
-export const applyAllFilters = (
-  spells: SpellData[], 
-  searchTerm: string = '', 
-  levels: number[] = [], 
-  schools: string[] = [],
-  classes: string[] = []
-): SpellData[] => {
-  let filtered = spells;
-  
-  if (searchTerm) {
-    filtered = filterBySearchTerm(filtered, searchTerm);
-  }
-  
-  if (levels && levels.length > 0) {
-    filtered = filterByLevel(filtered, levels);
-  }
-  
-  if (schools && schools.length > 0) {
-    filtered = filterBySchool(filtered, schools);
-  }
-  
-  if (classes && classes.length > 0) {
-    filtered = filterByClass(filtered, classes);
-  }
-  
-  return filtered;
+// Функция для получения английского названия школы по русскому
+export const getSchoolEnglishName = (localName: string): string => {
+  const entry = Object.entries(SchoolFilterMapping).find(([_, value]) => value === localName);
+  return entry ? entry[0] : localName;
 };
