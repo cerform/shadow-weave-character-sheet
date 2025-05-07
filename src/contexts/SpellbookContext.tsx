@@ -1,12 +1,14 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
-import { CharacterSpell } from '@/types/character';
+import { CharacterSpell, Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
 import { filterSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
+import { convertCharacterSpellToSpellData } from '@/types/spells';
 
-interface SpellbookContextProps {
+export interface SpellbookContextProps {
   spells: SpellData[];
   filteredSpells: SpellData[];
   searchTerm: string;
@@ -17,6 +19,8 @@ interface SpellbookContextProps {
   allLevels: number[];
   allSchools: string[];
   allClasses: string[];
+  selectedSpells: SpellData[]; // Добавляем selectedSpells
+  setSelectedSpells: (spells: SpellData[]) => void; // Добавляем сеттер для selectedSpells
   toggleLevel: (level: number) => void;
   toggleSchool: (school: string) => void;
   toggleClass: (className: string) => void;
@@ -32,11 +36,12 @@ interface SpellbookContextProps {
   formatClasses: (classes: string | string[]) => string;
 }
 
-const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
+export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
 
 export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
+  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]); // Добавляем state для selectedSpells
   const [searchTerm, setSearchTerm] = useState('');
   const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
@@ -49,7 +54,11 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Получаем все уровни, школы и классы из заклинаний
   const allLevels = [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
   const allSchools = [...new Set(spells.map(spell => spell.school))];
-  const allClasses = [...new Set(spells.flatMap(spell => spell.classes))].filter(Boolean);
+  const allClasses = [...new Set(spells.flatMap(spell => {
+    if (Array.isArray(spell.classes)) return spell.classes;
+    else if (typeof spell.classes === 'string') return [spell.classes];
+    return [];
+  }))].filter(Boolean);
 
   // Цвета для уровней заклинаний
   const levelColors: Record<number, string> = {
@@ -124,8 +133,18 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const allSpellsData = getAllSpells();
       const classAndLevelSpells = filterSpellsByClassAndLevel(allSpellsData, className, undefined);
-      setSpells(classAndLevelSpells);
-      setFilteredSpells(classAndLevelSpells);
+      
+      // Преобразуем CharacterSpell в SpellData если необходимо
+      const spellDataArray = classAndLevelSpells.map(spell => {
+        if ('id' in spell && typeof spell.id !== 'undefined') {
+          return spell as SpellData;
+        } else {
+          return convertCharacterSpellToSpellData(spell as CharacterSpell);
+        }
+      });
+      
+      setSpells(spellDataArray);
+      setFilteredSpells(spellDataArray);
     } catch (error) {
       console.error("Error loading spells for character:", error);
       toast({
@@ -215,6 +234,8 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     activeLevel,
     activeSchool,
     activeClass,
+    selectedSpells, // Добавляем в контекст
+    setSelectedSpells, // Добавляем в контекст
     allLevels,
     allSchools,
     allClasses,

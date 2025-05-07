@@ -1,62 +1,81 @@
 
-// Импорт массивов заклинаний из разделенных файлов
-import { spells } from './spells/index';
-export * from './spells/index';
+import { SpellData } from '@/types/spells';
 
-// Функция получения деталей заклинания по имени
-export const getSpellDetails = (spellName: string) => {
-  // Используем импортированный массив заклинаний
-  return spells.find((spell) => spell.name === spellName) || null;
-};
+// Пример массива с несколькими заклинаниями для тестирования
+export const spells: SpellData[] = [
+  {
+    id: 'light',
+    name: 'Свет',
+    level: 0,
+    school: 'Воплощение',
+    castingTime: '1 действие',
+    range: 'Касание',
+    components: 'В, С, М (светлячок или фосфоресцирующий мох)',
+    duration: '1 час',
+    description: 'Вы касаетесь одного предмета, размер которого не превышает 10 фт. в любом измерении. Пока заклинание активно, предмет испускает яркий свет в радиусе 20 фут. и тусклый свет в радиусе ещё 20 фт. Свет может быть любого цвета на ваш выбор. Полное укрытие блокирует свет. Если вы нацеливаетесь на предмет, несомый или носимый другим существом, это существо должно совершить спасбросок Ловкости, чтобы избежать этого заклинания.',
+    classes: ['Бард', 'Жрец', 'Чародей', 'Волшебник'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'fireball',
+    name: 'Огненный шар',
+    level: 3,
+    school: 'Воплощение',
+    castingTime: '1 действие',
+    range: '150 футов',
+    components: 'В, С, М (крошечный шарик летучей серы и селитры, кусочек гуано нетопыря)',
+    duration: 'Мгновенная',
+    description: 'Яркая вспышка вырывается из точки, выбранной вами в пределах дальности, и затем раскрывается с низким ревом в огненный взрыв. Все существа в пределах сферы с радиусом 20 фт. с центром в этой точке должны совершить спасбросок Ловкости. Цель получает урон огнём 8к6 при провале, или половину этого урона при успехе. Огонь огибает углы. Он воспламеняет горючие предметы, которые никто не несёт и не носит.',
+    classes: ['Волшебник', 'Чародей'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'cure-wounds',
+    name: 'Лечение ран',
+    level: 1,
+    school: 'Преобразование',
+    castingTime: '1 действие',
+    range: 'Касание',
+    components: 'В, С',
+    duration: 'Мгновенная',
+    description: 'Существо, которого вы касаетесь, восстанавливает количество хитов, равное 1к8 + ваш модификатор заклинательной характеристики. Это заклинание не оказывает никакого эффекта на нежить и конструктов.',
+    classes: ['Бард', 'Жрец', 'Друид', 'Паладин', 'Следопыт'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'shield',
+    name: 'Щит',
+    level: 1,
+    school: 'Ограждение',
+    castingTime: '1 реакция, которую вы совершаете, когда вас атакуют или вы попадаете под действие заклинания волшебная стрела',
+    range: 'На себя',
+    components: 'В, С',
+    duration: '1 раунд',
+    description: 'Невидимый барьер магической силы появляется и защищает вас. До начала вашего следующего хода вы получаете бонус +5 к КД, в том числе и против вызвавшей реакцию атаки, и вы не получаете урон от волшебной стрелы.',
+    classes: ['Волшебник', 'Чародей'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'hold-person',
+    name: 'Удержание личности',
+    level: 2,
+    school: 'Очарование',
+    castingTime: '1 действие',
+    range: '60 футов',
+    components: 'В, С, М (небольшой кусочек железа)',
+    duration: 'Концентрация, вплоть до 1 минуты',
+    description: 'Выберите гуманоида, которого видите в пределах дистанции. Цель должна преуспеть в спасброске Мудрости, иначе она становится парализованной на время действия заклинания. В конце каждого своего хода цель может совершить ещё один спасбросок Мудрости. При успехе заклинание на этой цели оканчивается.',
+    classes: ['Бард', 'Жрец', 'Друид', 'Чародей', 'Волшебник', 'Колдун'],
+    ritual: false,
+    concentration: true
+  }
+];
 
-// Функция получения всех заклинаний
-export const getAllSpells = () => {
+// Функция для получения всех заклинаний
+export function getAllSpells(): SpellData[] {
   return spells;
-};
-
-// Функция получения заклинаний по классу
-export const getSpellsByClass = (className: string) => {
-  const lowerClassName = className.toLowerCase();
-  
-  // Соответствие между русскими и английскими названиями классов
-  const classNameMapping: Record<string, string[]> = {
-    'жрец': ['cleric', 'жрец'],
-    'волшебник': ['wizard', 'волшебник'],
-    'друид': ['druid', 'друид'],
-    'бард': ['bard', 'бард'],
-    'колдун': ['warlock', 'колдун'],
-    'чародей': ['sorcerer', 'чародей'],
-    'паладин': ['paladin', 'паладин'],
-    'следопыт': ['ranger', 'следопыт']
-  };
-  
-  // Получаем все возможные варианты названия класса
-  const possibleClassNames = classNameMapping[lowerClassName] || [lowerClassName];
-  
-  console.log(`Looking for spells for class: ${className}, possible names:`, possibleClassNames);
-  // Фильтруем заклинания по классу
-  return spells.filter((spell) => {
-    if (!spell.classes) return false;
-    
-    const spellClasses = typeof spell.classes === 'string' 
-      ? [spell.classes.toLowerCase()] 
-      : spell.classes.map(c => typeof c === 'string' ? c.toLowerCase() : '');
-    
-    // Проверяем, есть ли хотя бы одно совпадение между возможными именами класса и классами заклинания
-    const matches = spellClasses.some(cls => possibleClassNames.includes(cls));
-    return matches;
-  });
-};
-
-// Функция получения заклинаний по уровню
-export const getSpellsByLevel = (level: number) => {
-  return spells.filter((spell) => spell.level === level);
-};
-
-// Функция получения заклинаний по школе магии
-export const getSpellsBySchool = (school: string) => {
-  const lowerSchool = school.toLowerCase();
-  return spells.filter((spell) => {
-    return typeof spell.school === 'string' && spell.school.toLowerCase() === lowerSchool;
-  });
-};
+}

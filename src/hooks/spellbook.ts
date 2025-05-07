@@ -1,5 +1,8 @@
 
 import { useContext } from 'react';
-import { SpellbookContext } from '@/contexts/SpellbookContext';
+import { SpellbookContext, useSpellbook as contextUseSpellbook } from '@/contexts/SpellbookContext';
 
-export const useSpellbook = () => useContext(SpellbookContext);
+// Экспортируем функцию для получения контекста
+export const useSpellbook = contextUseSpellbook;
+
+export default useSpellbook;

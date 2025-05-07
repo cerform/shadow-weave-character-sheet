@@ -51,9 +51,15 @@ export const useCharacterCreation = () => {
     },
     proficiencyBonus: 2,
     abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
       strength: 10,
       dexterity: 10,
-      constitution: 10, 
+      constitution: 10,
       intelligence: 10,
       wisdom: 10,
       charisma: 10
@@ -122,20 +128,96 @@ export const useCharacterCreation = () => {
       
       // Process skill proficiencies from class or background
       if (updates.proficiencies) {
-        const updatedProficiencies = { ...prevForm.proficiencies, ...updates.proficiencies };
-        
-        // Ensure tools is properly populated
-        const tools = Array.isArray(updatedProficiencies.tools) 
-          ? updatedProficiencies.tools 
-          : updatedProficiencies.tools?.tools || [];
-          
-        // Return normalized proficiencies
-        updates.proficiencies = {
-          armor: Array.isArray(updatedProficiencies.armor) ? updatedProficiencies.armor : updatedProficiencies.armor?.armor || [],
-          weapons: Array.isArray(updatedProficiencies.weapons) ? updatedProficiencies.weapons : updatedProficiencies.weapons?.weapons || [],
-          tools: tools,
-          languages: Array.isArray(updatedProficiencies.languages) ? updatedProficiencies.languages : updatedProficiencies.languages?.languages || []
+        const updatedProficiencies = { 
+          ...prevForm.proficiencies as any, 
+          ...updates.proficiencies as any 
         };
+        
+        // Проверяем структуру данных и нормализуем
+        if (typeof updatedProficiencies === 'object') {
+          // Если структура - массив, преобразуем в объект
+          if (Array.isArray(updatedProficiencies)) {
+            updates.proficiencies = {
+              armor: [],
+              weapons: [],
+              tools: [],
+              languages: updatedProficiencies
+            };
+          } else {
+            // Если структура - объект, проверяем все необходимые свойства
+            const armor = Array.isArray(updatedProficiencies.armor) 
+              ? updatedProficiencies.armor 
+              : [];
+            
+            const weapons = Array.isArray(updatedProficiencies.weapons) 
+              ? updatedProficiencies.weapons 
+              : [];
+            
+            const tools = Array.isArray(updatedProficiencies.tools) 
+              ? updatedProficiencies.tools 
+              : [];
+              
+            const languages = Array.isArray(updatedProficiencies.languages) 
+              ? updatedProficiencies.languages 
+              : [];
+            
+            updates.proficiencies = {
+              armor, 
+              weapons,
+              tools,
+              languages
+            };
+          }
+        }
+      }
+
+      // Обработка abilities для добавления алиасов
+      if (updates.abilities) {
+        const updatedAbilities = { ...updates.abilities };
+        
+        // Копируем значения из STR -> strength и наоборот
+        if (updatedAbilities.STR !== undefined && updatedAbilities.strength === undefined) {
+          updatedAbilities.strength = updatedAbilities.STR;
+        } else if (updatedAbilities.strength !== undefined && updatedAbilities.STR === undefined) {
+          updatedAbilities.STR = updatedAbilities.strength;
+        }
+        
+        // DEX -> dexterity
+        if (updatedAbilities.DEX !== undefined && updatedAbilities.dexterity === undefined) {
+          updatedAbilities.dexterity = updatedAbilities.DEX;
+        } else if (updatedAbilities.dexterity !== undefined && updatedAbilities.DEX === undefined) {
+          updatedAbilities.DEX = updatedAbilities.dexterity;
+        }
+        
+        // CON -> constitution
+        if (updatedAbilities.CON !== undefined && updatedAbilities.constitution === undefined) {
+          updatedAbilities.constitution = updatedAbilities.CON;
+        } else if (updatedAbilities.constitution !== undefined && updatedAbilities.CON === undefined) {
+          updatedAbilities.CON = updatedAbilities.constitution;
+        }
+        
+        // INT -> intelligence
+        if (updatedAbilities.INT !== undefined && updatedAbilities.intelligence === undefined) {
+          updatedAbilities.intelligence = updatedAbilities.INT;
+        } else if (updatedAbilities.intelligence !== undefined && updatedAbilities.INT === undefined) {
+          updatedAbilities.INT = updatedAbilities.intelligence;
+        }
+        
+        // WIS -> wisdom
+        if (updatedAbilities.WIS !== undefined && updatedAbilities.wisdom === undefined) {
+          updatedAbilities.wisdom = updatedAbilities.WIS;
+        } else if (updatedAbilities.wisdom !== undefined && updatedAbilities.WIS === undefined) {
+          updatedAbilities.WIS = updatedAbilities.wisdom;
+        }
+        
+        // CHA -> charisma
+        if (updatedAbilities.CHA !== undefined && updatedAbilities.charisma === undefined) {
+          updatedAbilities.charisma = updatedAbilities.CHA;
+        } else if (updatedAbilities.charisma !== undefined && updatedAbilities.CHA === undefined) {
+          updatedAbilities.CHA = updatedAbilities.charisma;
+        }
+        
+        updates.abilities = updatedAbilities;
       }
       
       return { ...prevForm, ...updates, lastUpdated: new Date().toISOString() };

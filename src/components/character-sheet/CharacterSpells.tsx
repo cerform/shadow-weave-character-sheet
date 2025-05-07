@@ -1,14 +1,41 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SpellPanel from './SpellPanel';
-import { CharacterSpell } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { convertToSpellData, getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 import { SpellData } from '@/types/spells';
 import SpellSelectionModal from './SpellSelectionModal';
 import SpellDialog from './SpellDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, Book } from 'lucide-react';
+
+// Создаем компонент SpellCastingPanel
+const SpellCastingPanel: React.FC<{ character: Character }> = ({ character }) => {
+  const abilityModifier = getSpellcastingAbilityModifier(character);
+  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level || 1) / 4);
+  
+  const spellSaveDC = 8 + abilityModifier + proficiencyBonus;
+  const spellAttackBonus = abilityModifier + proficiencyBonus;
+  
+  return (
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <h3 className="text-sm font-medium">СЛ заклинания</h3>
+            <p className="text-2xl font-bold">{spellSaveDC}</p>
+          </div>
+          <div className="text-center">
+            <h3 className="text-sm font-medium">Бонус атаки</h3>
+            <p className="text-2xl font-bold">+{spellAttackBonus}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface CharacterSpellsProps {
   character: Character;
@@ -26,7 +53,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({ character, onUpdate }
     setIsSpellSelectionOpen(false);
   };
   
-  const handleSpellUpdate = (updatedSpells: CharacterSpell[]) => {
+  const handleSpellUpdate = (updatedSpells: any) => {
     onUpdate({ spells: updatedSpells });
   };
   
@@ -199,7 +226,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({ character, onUpdate }
         isOpen={isSpellSelectionOpen}
         onClose={handleCloseSpellSelection}
         character={character}
-        onUpdate={handleSpellUpdate}
+        onUpdate={onUpdate}
       />
     </div>
   );

@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Plus, Book } from 'lucide-react';
 import SpellPanel from '../SpellPanel';
-import SpellCastingPanel from '../SpellCastingPanel';
 import SpellSelectionModal from '../SpellSelectionModal';
 import { convertToSpellData, getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 

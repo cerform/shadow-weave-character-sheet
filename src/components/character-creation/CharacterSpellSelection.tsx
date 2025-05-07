@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { Character } from '@/types/character';
-import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier, convertToSpellData } from '@/utils/spellUtils';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   prevStep
 }) => {
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
-  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
+  const [localSelectedSpells, setLocalSelectedSpells] = useState<SpellData[]>([]);
   const { spells: allSpells, loadSpellsForClass } = useSpellbook();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -45,27 +45,23 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   useEffect(() => {
     if (character.spells && character.spells.length > 0) {
       const spellsData = character.spells.map(spell => {
-        if (typeof spell === 'string') {
-          const found = allSpells.find(s => s.name === spell);
-          return found || { id: spell, name: spell, level: 0, school: '', classes: [] };
-        }
-        return spell;
+        return convertToSpellData(spell);
       });
-      setSelectedSpells(spellsData as SpellData[]);
+      setLocalSelectedSpells(spellsData);
     }
-  }, [character.spells, allSpells]);
+  }, [character.spells]);
 
   // Обработчик выбора заклинания
   const handleSpellChange = (spell: SpellData, isAdding: boolean) => {
     let updatedSpells: SpellData[];
     
     if (isAdding) {
-      updatedSpells = [...selectedSpells, spell];
+      updatedSpells = [...localSelectedSpells, spell];
     } else {
-      updatedSpells = selectedSpells.filter(s => s.id !== spell.id);
+      updatedSpells = localSelectedSpells.filter(s => s.id !== spell.id);
     }
     
-    setSelectedSpells(updatedSpells);
+    setLocalSelectedSpells(updatedSpells);
     
     // Обновляем персонажа
     updateCharacter({ 
@@ -118,10 +114,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </p>
         
         <div className="mt-4">
-          <h3 className="font-medium mb-2">Выбранные заклинания ({selectedSpells.length})</h3>
+          <h3 className="font-medium mb-2">Выбранные заклинания ({localSelectedSpells.length})</h3>
           <div className="flex flex-wrap gap-2 mb-4">
-            {selectedSpells.length > 0 ? (
-              selectedSpells.map(spell => (
+            {localSelectedSpells.length > 0 ? (
+              localSelectedSpells.map(spell => (
                 <Badge 
                   key={spell.id} 
                   variant="secondary"
@@ -148,7 +144,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           <ScrollArea className="h-64">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {group.spells.map(spell => {
-                const isSelected = selectedSpells.some(s => s.id === spell.id);
+                const isSelected = localSelectedSpells.some(s => s.id === spell.id);
                 return (
                   <Card 
                     key={spell.id} 

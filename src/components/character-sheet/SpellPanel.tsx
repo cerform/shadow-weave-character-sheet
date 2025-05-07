@@ -25,7 +25,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
       if (typeof spell === 'string') {
         return spell !== spellId;
       }
-      return spell.id !== spellId;
+      return spell.id?.toString() !== spellId;
     });
     
     onUpdate(updatedSpells);
@@ -52,7 +52,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
           <ScrollArea className="max-h-64">
             <div className="space-y-2">
               {spells.map((spell, index) => {
-                const spellId = typeof spell === 'string' ? spell : spell.id || spell.name || '';
+                const spellId = typeof spell === 'string' ? spell : spell.id?.toString() || spell.name || '';
                 const spellName = typeof spell === 'string' ? spell : spell.name || spellId;
                 
                 return (
@@ -101,7 +101,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
           onOpenChange={handleCloseDialog}
           spell={convertToSpellData(
             spells.find(s => 
-              (typeof s === 'string' ? s : s.id || s.name) === openSpellId
+              (typeof s === 'string' ? s : s.id?.toString() || s.name) === openSpellId
             ) || openSpellId
           )}
           character={character}
