@@ -22,11 +22,12 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClos
   if (!spell) return null;
 
   // Преобразуем описание в удобный для отображения формат
-  const formattedDescription = typeof spell.description === 'string'
-    ? spell.description
-    : Array.isArray(spell.description)
-      ? spell.description.join('\n\n')
-      : '';
+  const formattedDescription = React.useMemo(() => {
+    if (!spell.description) return '';
+    if (typeof spell.description === 'string') return spell.description;
+    if (Array.isArray(spell.description)) return spell.description.join('\n\n');
+    return '';
+  }, [spell.description]);
 
   // Форматирование уровня заклинания
   const spellLevelText = spell.level === 0

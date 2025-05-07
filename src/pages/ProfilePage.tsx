@@ -68,13 +68,6 @@ const ProfilePage = () => {
       updateProfile({
         username,
         photoURL: avatarUrl,
-        // Добавляем данные о персонаже
-        characterName,
-        characterClass,
-        characterRace,
-        characterLevel,
-        characterBio,
-        characterGuild
       });
       
       toast({

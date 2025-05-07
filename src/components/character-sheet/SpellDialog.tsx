@@ -33,6 +33,14 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
   const spellSaveDC = 8 + abilityModifier + proficiencyBonus;
   const spellAttackBonus = abilityModifier + proficiencyBonus;
   
+  // Форматирование описания
+  const formattedDescription = React.useMemo(() => {
+    if (!spell.description) return '';
+    if (typeof spell.description === 'string') return spell.description;
+    if (Array.isArray(spell.description)) return spell.description.join('\n\n');
+    return '';
+  }, [spell.description]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -78,11 +86,7 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
           
           <div>
             <div className="text-sm whitespace-pre-wrap">
-              {typeof spell.description === 'string' 
-                ? spell.description 
-                : Array.isArray(spell.description) 
-                  ? spell.description.join('\n\n')
-                  : ''}
+              {formattedDescription}
             </div>
           </div>
           

@@ -1,4 +1,3 @@
-
 import { CharacterSpell } from '@/types/character';
 import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
@@ -64,7 +63,7 @@ export const getSpellLevel = (spell: CharacterSpell | string): number => {
  */
 export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    id: spell.id?.toString() || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
     level: spell.level || 0,
     school: spell.school || 'Универсальная',
@@ -72,7 +71,7 @@ export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): S
     range: spell.range || 'На себя',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
+    description: spell.description || 'Нет описания',
     classes: spell.classes || [],
     prepared: spell.prepared || false,
     ritual: spell.ritual || false,
