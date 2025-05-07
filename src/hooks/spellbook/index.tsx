@@ -14,5 +14,8 @@ export const useSpellbook = () => {
 // Реэкспортируем хук для обеспечения обратной совместимости
 export { useSpellbook as default };
 
-// Также экспортируем другие функции из модуля spellbook
-// (добавьте здесь другие экспорты при необходимости)
+// Импортируем и реэкспортируем другие утилиты
+export * from './filterUtils';
+export * from './importUtils';
+export * from './themeUtils';
+export * from './types';
