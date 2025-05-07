@@ -93,3 +93,70 @@ export const calculateProficiencyBonus = (level: number): number => {
 export function isType<T>(value: any, ...types: any[]): value is T {
   return types.some(type => typeof value === type);
 }
+
+// Экспортируем функцию getAbilityModifier, которая используется в нескольких компонентах
+export const getAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+// Добавляем getNumericModifier как синоним для getAbilityModifier для совместимости
+export const getNumericModifier = getAbilityModifier;
+
+// Функция для создания персонажа по умолчанию
+import { Character } from '@/types/character';
+import { v4 as uuidv4 } from 'uuid';
+
+export const createDefaultCharacter = (): Character => {
+  return {
+    id: uuidv4(),
+    name: '',
+    race: '',
+    class: '',
+    background: '',
+    alignment: '',
+    level: 1,
+    experience: 0,
+    armorClass: 10,
+    initiative: 0,
+    speed: 30,
+    hitPoints: {
+      current: 8,
+      maximum: 8,
+      temporary: 0
+    },
+    proficiencyBonus: 2,
+    abilities: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10, 
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    savingThrows: {
+      strength: false,
+      dexterity: false,
+      constitution: false,
+      intelligence: false,
+      wisdom: false, 
+      charisma: false
+    },
+    skills: {},
+    equipment: [],
+    proficiencies: {
+      armor: [],
+      weapons: [],
+      tools: [],
+      languages: []
+    },
+    features: [],
+    spells: [],
+    spellSlots: {},
+    resources: {},
+    notes: '',
+    isNPC: false,
+    isTemplate: false,
+    creationDate: new Date().toISOString(),
+    lastUpdated: new Date().toISOString()
+  };
+};

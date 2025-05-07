@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Character } from '@/types/character';
-import { calculateProficiencyBonus, getAbilityModifier } from '@/utils/characterUtils';
+import { calculateProficiencyBonus } from '@/utils/characterUtils';
+import { getAbilityModifier } from '@/utils/abilityUtils'; // Исправляем импорт
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -636,7 +637,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                       );
                     }
                     
-                    // Возвращаем null для невалидных данных
+                    // Возвращаем null для не��алидных данных
                     return null;
                   })}
                 </div>

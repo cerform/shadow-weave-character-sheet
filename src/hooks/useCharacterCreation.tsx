@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { Character } from '@/types/character';
 import {
-  initialAbilityScores,
   calculateModifier,
   calculateSkillCheckBonus,
   calculateArmorClass,
   calculateMaxHP,
   calculateProficiencyBonus,
+  initialAbilityScores
 } from '@/utils/characterUtils';
 import {
   availableRacesData,
@@ -61,17 +61,6 @@ const defaultCharacterState: Character = {
   spellSlots: {},
   resources: {},
   notes: '',
-  age: 0,
-  height: '',
-  weight: '',
-  eyes: '',
-  skin: '',
-  hair: '',
-  personalityTraits: '',
-  ideals: '',
-  bonds: '',
-  flaws: '',
-  backstory: '',
   isNPC: false,
   isTemplate: false,
   campaignId: '',
@@ -124,7 +113,13 @@ export const useCharacterCreation = () => {
 
       // Создадим безопасную версию объекта proficiencies для доступа к tools
       const safeProficiencies = prevForm.proficiencies || { tools: [], weapons: [], armor: [], languages: [] };
-      const tools = Array.isArray(safeProficiencies.tools) ? safeProficiencies.tools : [];
+      
+      // Безопасная проверка наличия свойства tools
+      const tools = Array.isArray(safeProficiencies) 
+        ? [] // если это массив, то tools - пустой массив
+        : Array.isArray(safeProficiencies.tools) 
+          ? safeProficiencies.tools 
+          : []; // иначе берем tools из объекта или создаем пустой массив
 
       const updatedSavingThrows = {
         strength: false,
@@ -138,25 +133,6 @@ export const useCharacterCreation = () => {
       // Обновляем безопасно, предполагая что skills может быть объектом
       const updatedSkills = {
         ...prevForm.skills,
-        // Безопасно проверяем наличие навыка в списке владений
-        acrobatics: tools.includes('acrobatics'),
-        animalHandling: tools.includes('animalHandling'),
-        arcana: tools.includes('arcana'),
-        athletics: tools.includes('athletics'),
-        deception: tools.includes('deception'),
-        history: tools.includes('history'),
-        insight: tools.includes('insight'),
-        intimidation: tools.includes('intimidation'),
-        investigation: tools.includes('investigation'),
-        medicine: tools.includes('medicine'),
-        nature: tools.includes('nature'),
-        perception: tools.includes('perception'),
-        performance: tools.includes('performance'),
-        persuasion: tools.includes('persuasion'),
-        religion: tools.includes('religion'),
-        sleightOfHand: tools.includes('sleightOfHand'),
-        stealth: tools.includes('stealth'),
-        survival: tools.includes('survival'),
       };
 
       return {
@@ -194,11 +170,12 @@ export const useCharacterCreation = () => {
       const hitDice = additionalClass.hitDice;
       
       // Обеспечиваем безопасный доступ к abilities prevForm
-      const constitutionMod = calculateModifier(prevForm.abilities?.constitution || 10);
+      const constitution = form.abilities?.constitution || 10;
+      const constitutionMod = calculateModifier(constitution);
       const hitPoints = calculateMaxHP(hitDice, constitutionMod, classLevel);
 
-      // Обновляем персонажа с учетом новых типов данных
-      return {
+      // Обновляем форму с учетом новых значений
+      setForm(prevForm => ({
         ...prevForm,
         class: classValue,
         level: classLevel,
@@ -209,16 +186,8 @@ export const useCharacterCreation = () => {
           maximum: hitPoints,
           temporary: 0
         },
-        // Оставшиеся поля добавляем при наличии соответствующих данных у класса
-        // ...(additionalClasses.savingThrows ? { savingThrows: additionalClasses.savingThrows } : {}),
-        // ...(additionalClasses.skills ? { skills: additionalClasses.skills } : {}),
-        // ...(additionalClasses.equipment ? { equipment: additionalClasses.equipment } : {}),
-        // ...(additionalClasses.proficiencies ? { proficiencies: additionalClasses.proficiencies } : {}),
-        // ...(additionalClasses.features ? { features: additionalClasses.features } : {})
-      };
+      }));
     }
-
-    return prevForm;
   };
 
   const updateBackground = (backgroundValue: string) => {
@@ -233,25 +202,12 @@ export const useCharacterCreation = () => {
     );
 
     if (additionalBackground) {
-      // Безопасно обновляем персонажа, только если данные доступны
-      return {
+      // Безопасно обновляем персонажа
+      setForm(prevForm => ({
         ...prevForm,
         background: backgroundValue,
-        // ...(additionalBackground.skills ? { skills: { ...prevForm.skills, ...additionalBackground.skills } } : {}),
-        // ...(additionalBackground.equipment ? { 
-        //   equipment: [...(prevForm.equipment || []), ...(additionalBackground.equipment || [])] 
-        // } : {}),
-        // proficiencies: {
-        //   ...prevForm.proficiencies,
-        //   ...(additionalBackground.languages ? { languages: additionalBackground.languages } : {})
-        // },
-        // ...(additionalBackground.features ? { 
-        //   features: [...(prevForm.features || []), ...(additionalBackground.features || [])]
-        // } : {})
-      };
+      }));
     }
-
-    return prevForm;
   };
 
   const updateAlignment = (alignmentValue: string) => {
@@ -275,11 +231,11 @@ export const useCharacterCreation = () => {
   };
 
   const resetForm = () => {
-    setForm(prevForm => ({
+    setForm({
       ...defaultCharacterState,
       id: uuidv4(),
       level: selectedLevel,
-    }));
+    });
   };
   
   // Add isMagicClass functionality

@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Character } from '@/types/character';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { getAbilityModifier } from '@/utils/characterUtils';
+import { getAbilityModifier } from '@/utils/abilityUtils'; // Исправляем импорт
 
 interface SkillsPanelProps {
   character: Character;

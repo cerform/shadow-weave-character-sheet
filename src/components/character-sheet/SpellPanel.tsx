@@ -118,6 +118,9 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, spells, onUpdate, le
             components: '',
             duration: '',
             description: '',
+            classes: [],
+            ritual: false,
+            concentration: false
           }}
           character={character}
         />
