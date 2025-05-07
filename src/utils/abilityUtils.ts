@@ -44,3 +44,15 @@ export function isMagicClass(characterClass?: string): boolean {
   
   return magicClasses.includes(characterClass);
 }
+
+// Добавляем новые типы для AbilityBonusSelector
+export type AbilityName = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+
+export const abilityNames: AbilityName[] = [
+  'strength',
+  'dexterity', 
+  'constitution', 
+  'intelligence', 
+  'wisdom', 
+  'charisma'
+];

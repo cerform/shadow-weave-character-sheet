@@ -100,3 +100,64 @@ export const getSpellSchools = (): string[] => {
 export const getAllSpells = (): CharacterSpell[] => {
   return spells;
 };
+
+// Добавляем функцию filterSpells, которая фильтрует заклинания по различным параметрам
+export const filterSpells = (params: {
+  level?: number | number[],
+  className?: string,
+  school?: string,
+  name?: string,
+  ritual?: boolean,
+  concentration?: boolean
+}): CharacterSpell[] => {
+  return spells.filter(spell => {
+    // Фильтр по уровню
+    if (params.level !== undefined) {
+      if (Array.isArray(params.level)) {
+        if (!params.level.includes(spell.level)) return false;
+      } else if (spell.level !== params.level) {
+        return false;
+      }
+    }
+    
+    // Фильтр по классу
+    if (params.className && spell.classes) {
+      const normalizedClassName = params.className.toLowerCase();
+      let classMatch = false;
+      
+      if (Array.isArray(spell.classes)) {
+        classMatch = spell.classes.some(c => 
+          typeof c === 'string' && c.toLowerCase() === normalizedClassName
+        );
+      } else if (typeof spell.classes === 'string') {
+        classMatch = spell.classes.toLowerCase() === normalizedClassName;
+      }
+      
+      if (!classMatch) return false;
+    }
+    
+    // Фильтр по школе магии
+    if (params.school && spell.school && 
+        spell.school.toLowerCase() !== params.school.toLowerCase()) {
+      return false;
+    }
+    
+    // Фильтр по названию
+    if (params.name && spell.name && 
+        !spell.name.toLowerCase().includes(params.name.toLowerCase())) {
+      return false;
+    }
+    
+    // Фильтр по ритуалу
+    if (params.ritual !== undefined && spell.ritual !== params.ritual) {
+      return false;
+    }
+    
+    // Фильтр по концентрации
+    if (params.concentration !== undefined && spell.concentration !== params.concentration) {
+      return false;
+    }
+    
+    return true;
+  });
+};

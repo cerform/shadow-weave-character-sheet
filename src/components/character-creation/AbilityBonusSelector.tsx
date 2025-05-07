@@ -3,30 +3,42 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
-import { Character, RaceDetails, AbilityScoreIncrease } from '@/types/character';
+import { Character, RaceDetails } from '@/types/character';
 import { AbilityName, abilityNames } from '@/utils/abilityUtils';
 
 interface AbilityBonusSelectorProps {
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
   raceDetails?: RaceDetails;
+  abilityBonuses?: {
+    amount: number;
+    options?: string[];
+    fixed?: Record<string, number>;
+  };
 }
 
 const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   character,
   updateCharacter,
-  raceDetails
+  raceDetails,
+  abilityBonuses: propAbilityBonuses
 }) => {
   const [selectedAbilities, setSelectedAbilities] = useState<AbilityName[]>([]);
   const [remainingPoints, setRemainingPoints] = useState<number>(0);
 
-  // Get ability bonuses from race details
-  const abilityBonuses = raceDetails?.abilityBonuses || { fixed: {}, choice: { count: 0, options: [] } };
+  // Get ability bonuses from race details or from props
+  const abilityBonuses = propAbilityBonuses || 
+    (raceDetails?.abilityBonuses || { fixed: {}, choice: { count: 0, options: [] } });
 
   // Calculate fixed bonuses for each ability
-  const fixedBonuses: Record<string, number> = abilityBonuses.fixed || {};
-  const choiceCount = abilityBonuses.choice?.count || 0;
-  const choiceOptions = abilityBonuses.choice?.options || [];
+  const fixedBonuses: Record<string, number> = 
+    propAbilityBonuses?.fixed || raceDetails?.abilityBonuses?.fixed || {};
+    
+  const choiceCount = propAbilityBonuses?.amount || 
+    raceDetails?.abilityBonuses?.choice?.count || 0;
+    
+  const choiceOptions = propAbilityBonuses?.options || 
+    raceDetails?.abilityBonuses?.choice?.options || [];
 
   useEffect(() => {
     // Reset selections when race changes
@@ -34,24 +46,26 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     setRemainingPoints(choiceCount);
     
     // Apply fixed bonuses
-    const fixedAbilityUpdates: Record<string, number> = {};
-    
-    if (raceDetails && abilityBonuses.fixed) {
+    if ((raceDetails && raceDetails.abilityBonuses?.fixed) || 
+        (propAbilityBonuses && propAbilityBonuses.fixed)) {
+      const fixedAbilityUpdates: Partial<Character['abilities']> = {};
+      
       Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
-        const currentAbilityValue = character.abilities?.[ability as AbilityName] || 0;
-        fixedAbilityUpdates[ability] = currentAbilityValue + bonus;
+        const abilityKey = ability as AbilityName;
+        const currentAbilityValue = character.abilities?.[abilityKey] || 0;
+        fixedAbilityUpdates[abilityKey] = currentAbilityValue + bonus;
       });
+      
+      if (Object.keys(fixedAbilityUpdates).length > 0) {
+        updateCharacter({ 
+          abilities: { 
+            ...(character.abilities || {}), 
+            ...fixedAbilityUpdates 
+          } 
+        });
+      }
     }
-    
-    if (Object.keys(fixedAbilityUpdates).length > 0) {
-      updateCharacter({ 
-        abilities: { 
-          ...(character.abilities || {}), 
-          ...fixedAbilityUpdates 
-        } 
-      });
-    }
-  }, [raceDetails, choiceCount]);
+  }, [raceDetails, choiceCount, propAbilityBonuses]);
 
   // Handle ability selection
   const toggleAbility = (ability: AbilityName) => {
@@ -61,32 +75,44 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       setRemainingPoints(prev => prev + 1);
       
       // Update character ability
-      const currentAbilityValue = character.abilities?.[ability] || 0;
-      updateCharacter({
-        abilities: {
-          ...(character.abilities || {}),
+      if (character.abilities) {
+        const currentAbilityValue = character.abilities[ability] || 0;
+        const updatedAbilities = {
+          ...character.abilities,
           [ability]: currentAbilityValue - 1 // Subtract bonus
-        }
-      });
+        };
+        
+        updateCharacter({
+          abilities: updatedAbilities
+        });
+      }
     } else if (remainingPoints > 0) {
       // Select ability
       setSelectedAbilities(prev => [...prev, ability]);
       setRemainingPoints(prev => prev - 1);
       
       // Update character ability
-      const currentAbilityValue = character.abilities?.[ability] || 0;
-      updateCharacter({
-        abilities: {
-          ...(character.abilities || {}),
+      if (character.abilities) {
+        const currentAbilityValue = character.abilities[ability] || 0;
+        const updatedAbilities = {
+          ...character.abilities,
           [ability]: currentAbilityValue + 1 // Add bonus
-        }
-      });
+        };
+        
+        updateCharacter({
+          abilities: updatedAbilities
+        });
+      }
     }
   };
 
   // Fixed bonuses display
   const renderFixedBonuses = () => {
-    if (!abilityBonuses.fixed || Object.keys(abilityBonuses.fixed).length === 0) {
+    const fixedBonusExists = 
+      (propAbilityBonuses?.fixed && Object.keys(propAbilityBonuses.fixed).length > 0) ||
+      (raceDetails?.abilityBonuses?.fixed && Object.keys(raceDetails.abilityBonuses.fixed).length > 0);
+    
+    if (!fixedBonusExists) {
       return null;
     }
     
@@ -133,7 +159,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
           
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {choiceOptions.map((ability) => {
-              const isSelected = selectedAbilities.includes(ability);
+              const abilityName = ability as AbilityName;
+              const isSelected = selectedAbilities.includes(abilityName);
               const isDisabled = !isSelected && remainingPoints === 0;
               
               return (
@@ -143,7 +170,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
                     ${isSelected ? 'bg-primary/10 border-primary' : 'hover:bg-accent/20'} 
                     ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
-                  onClick={() => !isDisabled && toggleAbility(ability)}
+                  onClick={() => !isDisabled && toggleAbility(abilityName)}
                 >
                   <span>{ability} +1</span>
                   {isSelected && <Check className="h-4 w-4 text-primary" />}

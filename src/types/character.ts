@@ -234,3 +234,25 @@ export interface LevelFeature {
   class?: string;
   required?: boolean;
 }
+
+// Добавляем недостающие интерфейсы
+export interface RaceDetails {
+  name?: string;
+  description?: string;
+  abilityBonuses?: {
+    fixed: Record<string, number>;
+    choice: {
+      count: number;
+      options: string[];
+    };
+  };
+  traits?: string[];
+  languages?: string[];
+  speed?: number;
+  size?: string;
+  vision?: string;
+}
+
+export interface AbilityScoreIncrease {
+  [key: string]: number | string;
+}

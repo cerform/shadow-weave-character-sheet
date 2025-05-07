@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -88,7 +87,7 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
           // Даем одну черту
           setAvailableFeats(1);
         }
-        // Иначе применяем стандартные бонусы расы
+        // Иначе применяем стандартн��е бонусы расы
         else {
           setAbilityBonuses({
             amount: selectableAmount,
@@ -193,7 +192,11 @@ const CharacterSubraceSelection: React.FC<CharacterSubraceSelectionProps> = ({
         <AbilityBonusSelector
           character={character}
           updateCharacter={updateCharacter}
-          abilityBonuses={abilityBonuses}
+          abilityBonuses={{
+            amount: abilityBonuses.amount,
+            options: abilityBonuses.options,
+            fixed: abilityBonuses.fixed
+          }}
         />
       )}
 
