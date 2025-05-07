@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Label } from '@/components/ui/label';
@@ -37,16 +38,18 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Применяем бонусы только если fixed существует и не пустой объект
-    const fixedBonuses = abilityBonuses.fixed ?? null;
-    if (fixedBonuses && typeof fixedBonuses === 'object' && Object.keys(fixedBonuses).length > 0) {
+    // Корректно проверяем наличие fixed бонусов и их содержимое
+    if (abilityBonuses.fixed && 
+        typeof abilityBonuses.fixed === 'object' && 
+        Object.keys(abilityBonuses.fixed).length > 0) {
+      
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
         strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
       };
       
-      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
+      Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
         const abilityKey = ability as keyof typeof updatedAbilities;
         if (abilityKey in updatedAbilities) {
           const currentValue = updatedAbilities[abilityKey] || 10;
@@ -113,9 +116,10 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     // но поскольку мы не храним это состояние, мы будем применять все бонусы заново
     
     // Применяем фиксированные бонусы (если есть)
-    const fixedBonuses = abilityBonuses.fixed ?? null;
-    if (fixedBonuses && typeof fixedBonuses === 'object') {
-      Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
+    if (abilityBonuses.fixed && 
+        typeof abilityBonuses.fixed === 'object') {
+      
+      Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
         const abilityKey = ability as keyof typeof updatedAbilities;
         if (abilityKey in updatedAbilities) {
           const baseValue = abilityKey.includes('STR') || 
@@ -163,22 +167,20 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {/* Исправляем проверку существования объекта fixed и его содержимого */}
-          {(() => {
-            const fixedBonuses = abilityBonuses.fixed ?? null;
-            return fixedBonuses && typeof fixedBonuses === 'object' && Object.keys(fixedBonuses).length > 0 ? (
-              <div className="mb-2">
-                <p>Фиксированные бонусы:</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {Object.entries(fixedBonuses).map(([ability, bonus]) => (
-                    <Badge key={ability} variant="outline" className="bg-amber-900/20">
-                      {abilities.find(a => a.key === ability)?.name} +{bonus}
-                    </Badge>
-                  ))}
-                </div>
+          {abilityBonuses.fixed && 
+           typeof abilityBonuses.fixed === 'object' && 
+           Object.keys(abilityBonuses.fixed).length > 0 && (
+            <div className="mb-2">
+              <p>Фиксированные бонусы:</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {Object.entries(abilityBonuses.fixed).map(([ability, bonus]) => (
+                  <Badge key={ability} variant="outline" className="bg-amber-900/20">
+                    {abilities.find(a => a.key === ability)?.name} +{bonus}
+                  </Badge>
+                ))}
               </div>
-            ) : null;
-          })()}
+            </div>
+          )}
           
           {abilityBonuses.amount > 0 && (
             <p className="mt-2">
