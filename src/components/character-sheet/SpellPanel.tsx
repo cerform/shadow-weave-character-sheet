@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Plus, BookOpen } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import SpellDialog from './SpellDialog'; // Correct import
+import SpellDialog from './SpellDialog'; // Default import
 
 export interface SpellPanelProps {
   character: Character;

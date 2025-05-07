@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 
@@ -622,3 +623,40 @@ const useLevelUp = ({ character, onUpdate }: UseLevelUpProps) => {
       7: { max: 0, used: 0 },
       8: { max: 0, used: 0 },
       9: { max: 3, used: 0 }
+    },
+    19: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
+    },
+    20: {
+      1: { max: 0, used: 0 },
+      2: { max: 0, used: 0 },
+      3: { max: 0, used: 0 },
+      4: { max: 0, used: 0 },
+      5: { max: 0, used: 0 },
+      6: { max: 0, used: 0 },
+      7: { max: 0, used: 0 },
+      8: { max: 0, used: 0 },
+      9: { max: 3, used: 0 }
+    }
+  };
+
+  return {
+    level,
+    handleLevelUp,
+    handleLevelDown,
+    fighterHitDice,
+    wizardSpellSlots,
+    clericSpellSlots,
+    warlockSpellSlots
+  };
+};
+
+export default useLevelUp;

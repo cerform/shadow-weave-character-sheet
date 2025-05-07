@@ -80,7 +80,7 @@ const defaultCharacterState: Character = {
   lastUpdated: new Date().toISOString(),
 };
 
-const useCharacterCreation = () => {
+export const useCharacterCreation = () => {
   const [form, setForm] = useState<Character>(defaultCharacterState);
   const [availableRaces, setAvailableRaces] = useState(availableRacesData);
   const [availableClasses, setAvailableClasses] = useState(availableClassesData);
@@ -123,7 +123,7 @@ const useCharacterCreation = () => {
       const chaModifier = calculateModifier(updatedAbilities.charisma);
 
       // Создадим безопасную версию объекта proficiencies для доступа к tools
-      const safeProficiencies = prevForm.proficiencies || { tools: [], weapons: [], armor: [], languages: [], skills: [] };
+      const safeProficiencies = prevForm.proficiencies || { tools: [], weapons: [], armor: [], languages: [] };
       const tools = Array.isArray(safeProficiencies.tools) ? safeProficiencies.tools : [];
 
       const updatedSavingThrows = {
@@ -183,15 +183,15 @@ const useCharacterCreation = () => {
       class: classValue,
     }));
 
-    const additionalClasses = availableClasses.find(
+    const additionalClass = availableClasses.find(
       c => c.name.toLowerCase() === classValue.toLowerCase()
     );
 
-    if (additionalClasses) {
+    if (additionalClass) {
       // Преобразуем строковый уровень в число
-      const classLevel = parseInt(additionalClasses.level || '1', 10);
+      const classLevel = parseInt(additionalClass.level || '1', 10);
       const proficiencyBonus = calculateProficiencyBonus(classLevel);
-      const hitDice = additionalClasses.hitDice;
+      const hitDice = additionalClass.hitDice;
       
       // Обеспечиваем безопасный доступ к abilities prevForm
       const constitutionMod = calculateModifier(prevForm.abilities?.constitution || 10);
@@ -281,6 +281,12 @@ const useCharacterCreation = () => {
       level: selectedLevel,
     }));
   };
+  
+  // Add isMagicClass functionality
+  const isMagicClass = () => {
+    const magicClasses = ["волшебник", "жрец", "бард", "чародей", "колдун", "друид", "паладин", "следопыт"];
+    return magicClasses.some(c => form.class.toLowerCase().includes(c.toLowerCase()));
+  };
 
   return {
     form,
@@ -305,6 +311,7 @@ const useCharacterCreation = () => {
     getAdditionalRace,
     resetForm,
     setSelectedLevel,
+    isMagicClass,
   };
 };
 

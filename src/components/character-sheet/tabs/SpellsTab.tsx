@@ -1,137 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { Character, CharacterSpell } from '@/types/character';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Sparkles } from "lucide-react";
-import SpellCastingPanel from '../SpellCastingPanel';
+
+import React, { useState } from 'react';
+import { Character } from '@/types/character';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SpellPanel from '../SpellPanel';
-import SpellSelectionModal from '../SpellSelectionModal';  // Fixed import
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Book, Plus } from 'lucide-react';
+import SpellSelectionModal from '../SpellSelectionModal';
 
 interface SpellsTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-interface SpellsByLevel {
-  [level: number]: (string | CharacterSpell)[];
-}
-
 const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
-  const [spellsByLevel, setSpellsByLevel] = useState<SpellsByLevel>({});
   const [isSpellModalOpen, setIsSpellModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
-
-  // Группируем заклинания по уровням
-  useEffect(() => {
-    const groupedSpells: SpellsByLevel = {};
-    
-    // Инициализируем все уровни пустыми массивами от 0 до 9
-    for (let i = 0; i <= 9; i++) {
-      groupedSpells[i] = [];
-    }
-    
-    // Сгруппируем заклинания по уровням
-    if (character.spells) {
-      character.spells.forEach(spell => {
-        const spellLevel = typeof spell === 'string' ? 0 : (spell.level || 0);
-        if (!groupedSpells[spellLevel]) {
-          groupedSpells[spellLevel] = [];
-        }
-        groupedSpells[spellLevel].push(spell);
-      });
-    }
-    
-    setSpellsByLevel(groupedSpells);
-  }, [character.spells]);
-
-  // Обработчик для обновления заклинаний на определенном уровне
-  const handleUpdateSpellsForLevel = (level: number, newSpells: (string | CharacterSpell)[]) => {
-    // Создаем новый список всех заклинаний, заменив заклинания указанного уровня
-    const allSpells = [...(character.spells || [])];
-    
-    // Находим и удаляем заклинания указанного уровня
-    const filteredSpells = allSpells.filter(spell => {
+  
+  // Группировка заклинаний по уровням
+  const spellsByLevel: Record<number, (string | any)[]> = {
+    0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: []
+  };
+  
+  if (character.spells && Array.isArray(character.spells)) {
+    character.spells.forEach((spell) => {
+      const level = typeof spell === 'string' ? 0 : spell.level || 0;
+      if (!spellsByLevel[level]) {
+        spellsByLevel[level] = [];
+      }
+      spellsByLevel[level].push(spell);
+    });
+  }
+  
+  const handleSpellUpdate = (level: number, newSpells: any[]) => {
+    // Обновляем только заклинания указанного уровня
+    const updatedSpells = [...(character.spells || [])].filter(spell => {
       if (typeof spell === 'string') {
-        // Предполагаем, что строковые заклинания это заговоры (уровень 0)
-        return level !== 0;
+        return spellsByLevel[level].every(s => typeof s === 'string' ? s !== spell : s.id !== spell);
       }
       return spell.level !== level;
     });
     
-    // Добавляем новые заклинания этого уровня
-    const updatedSpells = [...filteredSpells, ...newSpells];
+    // Добавляем обновленные заклинания нужного уровня
+    updatedSpells.push(...newSpells);
     
-    // Обновляем персонажа
-    onUpdate({
-      spells: updatedSpells
-    });
+    onUpdate({ spells: updatedSpells });
   };
-
+  
+  const openSpellModal = () => {
+    setIsSpellModalOpen(true);
+  };
+  
+  const closeSpellModal = () => {
+    setIsSpellModalOpen(false);
+  };
+  
   return (
     <div className="space-y-4">
-      {/* Основная информация о заклинаниях */}
-      <SpellCastingPanel 
-        character={character} 
-        onUpdate={onUpdate}
-      />
-      
-      {/* Вкладки для заклинаний разных уровней */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 md:grid-cols-6">
-          <TabsTrigger value="all">Все</TabsTrigger>
-          <TabsTrigger value="cantrips"><Sparkles className="h-4 w-4 mr-1" /> Заговоры</TabsTrigger>
-          <TabsTrigger value="1">Уровень 1</TabsTrigger>
-          <TabsTrigger value="2">Уровень 2</TabsTrigger>
-          <TabsTrigger value="3">Уровень 3+</TabsTrigger>
-          <TabsTrigger value="prepared">Подготовленные</TabsTrigger>
-        </TabsList>
-        
-        {/* Содержимое вкладки "Все" */}
-        <TabsContent value="all" className="space-y-4">
-          <ScrollArea className="h-[calc(100vh-320px)]">
-            <SpellPanel 
-              character={character}
-              spells={spellsByLevel[0] || []}
-              onUpdate={(newSpells) => handleUpdateSpellsForLevel(0, newSpells)}
-              level={0}
-            />
-            
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-              spellsByLevel[level] && spellsByLevel[level].length > 0 && (
-                <SpellPanel 
-                  key={level}
-                  character={character}
-                  spells={spellsByLevel[level] || []}
-                  onUpdate={(newSpells) => handleUpdateSpellsForLevel(level, newSpells)}
-                  level={level}
-                />
-              )
-            ))}
-          </ScrollArea>
-        </TabsContent>
-        
-        {/* Остальные вкладки могут быть добавлены по аналогии */}
-      </Tabs>
-      
-      {/* Кнопка добавления заклинаний */}
-      <div className="flex justify-center mt-4">
-        <Button onClick={() => setIsSpellModalOpen(true)}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Добавить заклинания
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Заклинания</h3>
+        <Button onClick={openSpellModal}>
+          <Plus className="h-4 w-4 mr-2" />
+          Добавить заклинание
         </Button>
       </div>
       
+      <Tabs defaultValue="all">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">Все</TabsTrigger>
+          <TabsTrigger value="cantrips">Заговоры</TabsTrigger>
+          <TabsTrigger value="prepared">Подготовленные</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all" className="space-y-4">
+          <ScrollArea className="h-[65vh] pr-4">
+            {/* Заговоры */}
+            <SpellPanel 
+              character={character}
+              spells={spellsByLevel[0]} 
+              onUpdate={(newSpells) => handleSpellUpdate(0, newSpells)} 
+              level={0}
+            />
+            
+            {/* Заклинания по уровням */}
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => (
+              <SpellPanel
+                key={level}
+                character={character}
+                spells={spellsByLevel[level] || []}
+                onUpdate={(newSpells) => handleSpellUpdate(level, newSpells)}
+                level={level}
+              />
+            ))}
+            
+            {/* Если нет заклинаний вообще */}
+            {Object.values(spellsByLevel).every(arr => !arr.length) && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Book className="mx-auto h-8 w-8 mb-2" />
+                <p>У персонажа нет заклинаний</p>
+                <Button variant="outline" onClick={openSpellModal} className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить заклинание
+                </Button>
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
+        
+        <TabsContent value="cantrips" className="space-y-4">
+          <SpellPanel 
+            character={character}
+            spells={spellsByLevel[0]} 
+            onUpdate={(newSpells) => handleSpellUpdate(0, newSpells)} 
+            level={0}
+          />
+        </TabsContent>
+        
+        <TabsContent value="prepared" className="space-y-4">
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Функционал подготовки заклинаний в разработке.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
       {/* Модальное окно для выбора заклинаний */}
-      {isSpellModalOpen && (
-        <SpellSelectionModal 
-          isOpen={isSpellModalOpen}
-          onClose={() => setIsSpellModalOpen(false)}
-          character={character}
-          onUpdate={onUpdate}
-        />
-      )}
+      <SpellSelectionModal 
+        isOpen={isSpellModalOpen} 
+        onClose={closeSpellModal} 
+        character={character} 
+        onUpdate={onUpdate}
+      />
     </div>
   );
 };
