@@ -1,9 +1,18 @@
-// Import necessary types
-import { Item } from './character';
+
+// Define Item interface instead of importing it
+export interface Item {
+  name: string;
+  quantity: number;
+  weight?: number;
+  description?: string;
+  type?: string;
+  equipped?: boolean;
+  cost?: number;
+  costUnit?: string;
+}
 
 export interface Character {
   id?: string;
-  userId?: string;
   name: string;
   race?: string;
   class?: string;
@@ -55,7 +64,7 @@ export interface Character {
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
-  savingThrows?: Record<string, boolean>;
+  savingThrows?: Record<string, boolean> | string[];
   savingThrowProficiencies?: Record<string, boolean>;
   skillProficiencies?: string[];
   expertise?: string[];
@@ -119,7 +128,6 @@ export interface Character {
     level?: number;
   }[];
   gender?: string;
-  userId?: string;
   abilityPointsUsed?: number;
   updatedAt?: string;
   createdAt?: string;
@@ -162,6 +170,7 @@ export interface Character {
 
 export interface CharacterSpell {
   name: string;
+  name_en?: string; // Added name_en property
   level: number;
   school?: string;
   castingTime?: string;
@@ -181,17 +190,6 @@ export interface CharacterSpell {
   higherLevels?: string;
   id?: string | number;
   materials?: string;
-}
-
-export interface Item {
-  name: string;
-  quantity: number;
-  weight?: number;
-  description?: string;
-  type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
 }
 
 export interface Feature {

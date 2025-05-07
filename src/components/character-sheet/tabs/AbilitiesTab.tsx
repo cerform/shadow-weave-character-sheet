@@ -20,17 +20,48 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const [intelligence, setIntelligence] = useState(character.intelligence || 10);
   const [wisdom, setWisdom] = useState(character.wisdom || 10);
   const [charisma, setCharisma] = useState(character.charisma || 10);
+  
+  // Initialize as empty arrays if not present
   const [savingThrows, setSavingThrows] = useState<string[]>(
-    character.savingThrows || []
-  );
-  const [skills, setSkills] = useState<string[]>(
-    character.skills || []
-  );
-  const [expertise, setExpertise] = useState<string[]>(
-    character.expertise || []
+    Array.isArray(character.savingThrows) ? character.savingThrows : []
   );
   
+  const [skills, setSkills] = useState<string[]>(
+    Array.isArray(character.skills) ? 
+      Object.keys(character.skills).filter(key => character.skills && character.skills[key]?.proficient) : 
+      []
+  );
+  
+  const [expertise, setExpertise] = useState<string[]>(
+    Array.isArray(character.expertise) ? character.expertise : []
+  );
+  
+  // Helper function for checking if a skill has expertise
+  const hasExpertise = (skill: string) => {
+    return Array.isArray(expertise) && expertise.includes(skill);
+  };
+  
   useEffect(() => {
+    // Convert arrays to record objects for the character update
+    const savingThrowsRecord: Record<string, boolean> = {};
+    savingThrows.forEach(ability => {
+      savingThrowsRecord[ability] = true;
+    });
+    
+    const skillsRecord: Record<string, { proficient: boolean }> = {};
+    skills.forEach(skill => {
+      skillsRecord[skill] = { proficient: true };
+    });
+    
+    // Update expertise in the skills record
+    expertise.forEach(skill => {
+      if (skillsRecord[skill]) {
+        skillsRecord[skill] = { ...skillsRecord[skill], expertise: true };
+      } else {
+        skillsRecord[skill] = { proficient: false, expertise: true };
+      }
+    });
+    
     onUpdate({
       strength,
       dexterity,
@@ -38,8 +69,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       intelligence,
       wisdom,
       charisma,
-      savingThrows,
-      skills,
+      savingThrows: savingThrowsRecord,
+      skills: skillsRecord,
       expertise
     });
   }, [strength, dexterity, constitution, intelligence, wisdom, charisma, savingThrows, skills, expertise, onUpdate]);
@@ -58,7 +89,6 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     }
     
     setSavingThrows(newSavingThrows);
-    onUpdate({ savingThrows: newSavingThrows });
   };
   
   const handleSkillChange = (skill: string) => {
@@ -71,7 +101,6 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     }
     
     setSkills(newSkills);
-    onUpdate({ skills: newSkills });
   };
   
   const handleExpertiseChange = (skill: string) => {
@@ -84,11 +113,6 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     }
     
     setExpertise(newExpertise);
-    onUpdate({ expertise: newExpertise });
-  };
-  
-  const hasExpertise = (skill: string) => {
-    return Array.isArray(expertise) && expertise.includes(skill);
   };
   
   return (

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +20,7 @@ interface RaceDetailPageProps {
 }
 
 const RaceDetailPage: React.FC<RaceDetailPageProps> = ({ race, onBack }) => {
-  const abilityBonuses = race.abilityScoreIncrease || {};
+  const abilityScoreIncrease = race.abilityScoreIncrease || {};
   const hasSubraces = race.subraces && race.subraces.length > 0;
 
   return (
@@ -37,14 +38,14 @@ const RaceDetailPage: React.FC<RaceDetailPageProps> = ({ race, onBack }) => {
           <section className="mb-4">
             <h3 className="text-lg font-semibold mb-2">Бонусы характеристик</h3>
             <ul className="list-disc pl-5">
-              {abilityBonuses.all && <li>Все характеристики: +{abilityBonuses.all}</li>}
-              {abilityBonuses.strength && <li>Сила: +{abilityBonuses.strength}</li>}
-              {abilityBonuses.dexterity && <li>Ловкость: +{abilityBonuses.dexterity}</li>}
-              {abilityBonuses.constitution && <li>Телосложение: +{abilityBonuses.constitution}</li>}
-              {abilityBonuses.intelligence && <li>Интеллект: +{abilityBonuses.intelligence}</li>}
-              {abilityBonuses.wisdom && <li>Мудрость: +{abilityBonuses.wisdom}</li>}
-              {abilityBonuses.charisma && <li>Харизма: +{abilityBonuses.charisma}</li>}
-              {abilityBonuses.custom && <li>Другое: +{abilityBonuses.custom}</li>}
+              {abilityScoreIncrease.all && <li>Все характеристики: +{abilityScoreIncrease.all}</li>}
+              {abilityScoreIncrease.strength && <li>Сила: +{abilityScoreIncrease.strength}</li>}
+              {abilityScoreIncrease.dexterity && <li>Ловкость: +{abilityScoreIncrease.dexterity}</li>}
+              {abilityScoreIncrease.constitution && <li>Телосложение: +{abilityScoreIncrease.constitution}</li>}
+              {abilityScoreIncrease.intelligence && <li>Интеллект: +{abilityScoreIncrease.intelligence}</li>}
+              {abilityScoreIncrease.wisdom && <li>Мудрость: +{abilityScoreIncrease.wisdom}</li>}
+              {abilityScoreIncrease.charisma && <li>Харизма: +{abilityScoreIncrease.charisma}</li>}
+              {abilityScoreIncrease.custom && <li>Другое: {abilityScoreIncrease.custom}</li>}
             </ul>
           </section>
 
@@ -52,7 +53,7 @@ const RaceDetailPage: React.FC<RaceDetailPageProps> = ({ race, onBack }) => {
             <section className="mb-6">
               <h3 className="text-lg font-semibold mb-2">Подрасы</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {race.subraces.map((subrace, index) => (
+                {race.subraces.map((subrace: any, index: number) => (
                   <Card key={index}>
                     <CardContent>
                       <h4 className="font-medium">{subrace.name}</h4>
@@ -217,3 +218,21 @@ export const HandbookTab: React.FC<HandbookTabProps> = ({ character }) => {
     </Card>
   );
 };
+
+// Add default export for HandbookPage
+const HandbookPage: React.FC = () => {
+  // Mock character data for HandbookTab
+  const mockCharacter: Character = {
+    name: "",
+    level: 1
+  };
+
+  return (
+    <div className="container mx-auto py-6">
+      <h1 className="text-3xl font-bold mb-6">Справочник D&D 5e</h1>
+      <HandbookTab character={mockCharacter} />
+    </div>
+  );
+};
+
+export default HandbookPage;

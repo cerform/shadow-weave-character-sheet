@@ -4,7 +4,7 @@ import { CharacterSpell } from '@/types/character';
 export interface SpellData {
   id: string | number;
   name: string;
-  name_en?: string;
+  name_en?: string; // Added to match CharacterSpell
   level: number;
   school: string;
   castingTime: string;

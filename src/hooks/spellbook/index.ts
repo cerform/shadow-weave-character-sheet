@@ -3,7 +3,7 @@ import { SpellData, SpellFilter } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { getAllSpells, filterSpells } from '@/data/spells';
 import { useContext } from 'react';
-import { SpellbookContext, useSpellbook as useContextSpellbook } from '@/contexts/SpellbookContext';
+import { SpellbookContext, useSpellbook } from '@/contexts/SpellbookContext';
 
 // Re-export the useSpellbook hook from SpellbookContext
 export { useSpellbook } from '@/contexts/SpellbookContext';
@@ -11,7 +11,7 @@ export { useSpellbook } from '@/contexts/SpellbookContext';
 // This function remains for backward compatibility
 export function useSpellbookManager() {
   // Use basic functionality from the context
-  const context = useContextSpellbook();
+  const context = useSpellbook();
 
   return {
     spells: context.spells,
