@@ -8,10 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { auth } from '@/lib/firebase';
+import { getCurrentUid } from '@/utils/authHelpers';
 
 const CharacterSheetPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,10 +41,37 @@ const CharacterSheetPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
+  // Проверка авторизации
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Проверяем, авторизован ли пользователь
+      const userId = getCurrentUid();
+      if (!userId) {
+        console.log('CharacterSheetPage: Пользователь не авторизован');
+        toast({
+          title: "Требуется авторизация",
+          description: "Пожалуйста, войдите в систему для просмотра персонажей",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate, toast]);
+  
   useEffect(() => {
     const loadCharacter = async () => {
       if (!id) {
         setError('ID персонажа не указан');
+        setLoading(false);
+        return;
+      }
+      
+      // Проверяем, что пользователь авторизован
+      if (!auth.currentUser) {
+        console.log('CharacterSheetPage: Пользователь не авторизован');
+        setError('Требуется авторизация');
         setLoading(false);
         return;
       }
@@ -60,21 +89,32 @@ const CharacterSheetPage: React.FC = () => {
           setError('Персонаж не найден');
           toast({
             title: "Ошибка",
-            description: "Персонаж не найден",
+            description: "Персонаж не найден или у вас нет доступа",
             variant: "destructive",
           });
         } else {
           console.log('CharacterSheetPage: Персонаж успешно загружен:', data.name);
           setCharacter(data);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('CharacterSheetPage: Ошибка загрузки персонажа:', error);
-        setError('Ошибка при загрузке персонажа');
-        toast({
-          title: "Ошибка",
-          description: "Не удалось загрузить персонажа",
-          variant: "destructive",
-        });
+        
+        // Специальная обработка ошибки доступа
+        if (error.code === 'permission-denied') {
+          setError('У вас нет доступа к этому персонажу');
+          toast({
+            title: "Ошибка доступа",
+            description: "У вас нет прав для просмотра этого персонажа",
+            variant: "destructive",
+          });
+        } else {
+          setError('Ошибка при загрузке персонажа');
+          toast({
+            title: "Ошибка",
+            description: "Не удалось загрузить персонажа",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }
