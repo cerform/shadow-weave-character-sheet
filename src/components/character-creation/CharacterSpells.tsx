@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 import NavigationButtons from './NavigationButtons';
 import CharacterSpellSelection from './CharacterSpellSelection';
-import { useSpellbook } from '@/contexts/SpellbookContext';
+import { useSpellbook } from '@/hooks/spellbook'; // Fixed import path
 
 interface CharacterSpellsProps {
   character: Character;

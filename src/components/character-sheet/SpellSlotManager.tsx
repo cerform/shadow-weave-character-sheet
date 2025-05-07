@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
@@ -71,7 +70,7 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
         setSpellSlots(maxSlots);
         
         // Сохраняем начальное состояние ячеек в персонажа
-        updateCharacter({ spellSlots: maxSlots });
+        updateSpellSlots(maxSlots);
       }
     }
   }, [character?.class, character?.level, character?.spellSlots]);
@@ -90,7 +89,7 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
       };
       
       setSpellSlots(newSpellSlots);
-      updateCharacter({ spellSlots: newSpellSlots });
+      updateSpellSlots(newSpellSlots);
       
       toast({
         title: "Ячейка заклинания использована",
@@ -113,7 +112,7 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
       };
       
       setSpellSlots(newSpellSlots);
-      updateCharacter({ spellSlots: newSpellSlots });
+      updateSpellSlots(newSpellSlots);
       
       toast({
         title: "Ячейка заклинания восстановлена",
@@ -132,7 +131,7 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
     }
     
     setSpellSlots(newSpellSlots);
-    updateCharacter({ spellSlots: newSpellSlots });
+    updateSpellSlots(newSpellSlots);
     
     toast({
       title: "Ячейки заклинаний восстановлены",
@@ -246,3 +245,14 @@ const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
 };
 
 export default SpellSlotManager;
+
+// Fix the updateCharacter calls that use partial characters
+const updateSpellSlots = (newSlots: Record<number, { max: number; used: number }>) => {
+  if (character) {
+    const updatedCharacter = { 
+      ...character, 
+      spellSlots: newSlots 
+    };
+    updateCharacter(updatedCharacter);
+  }
+};

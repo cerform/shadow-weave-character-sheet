@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character, CharacterSpell } from '@/types/character';
@@ -91,7 +90,8 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         return s;
       });
       
-      updateCharacter({ spells: updatedSpells });
+      const updatedCharacter = { ...character, spells: updatedSpells };
+      updateCharacter(updatedCharacter);
     }
   };
   

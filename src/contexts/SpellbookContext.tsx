@@ -101,4 +101,5 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   );
 };
 
-export { useSpellbookContext } from '@/hooks/spellbook';
+// Remove this import which was causing circular dependency
+// export { useSpellbookContext } from '@/hooks/spellbook';

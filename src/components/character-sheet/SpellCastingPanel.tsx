@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character, CharacterSpell } from '@/types/character';
@@ -96,7 +95,7 @@ const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCh
     newSpellSlots[level].used++;
     
     // Обновляем персонажа
-    updateCharacter({ spellSlots: newSpellSlots });
+    updateSpellSlots(newSpellSlots);
     
     // Сообщаем об использовании заклинания
     toast({
@@ -281,6 +280,14 @@ const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character: propCh
       </Dialog>
     </Card>
   );
+};
+
+// Fix the updateCharacter calls that use partial characters
+const updateSpellSlots = (slots: any) => {
+  if (character) {
+    const updatedCharacter = { ...character, spellSlots: slots };
+    updateCharacter(updatedCharacter);
+  }
 };
 
 export default SpellCastingPanel;

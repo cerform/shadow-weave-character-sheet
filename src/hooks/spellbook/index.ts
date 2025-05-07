@@ -13,7 +13,10 @@ export const useSpellbookContext = (): SpellbookContextType => {
   return context;
 };
 
-export { useSpellbook } from './useSpellbook';
-
 // Экспортируем вспомогательные функции из типов
 export { convertCharacterSpellToSpellData, convertSpellArray, convertSpellDataToCharacterSpell } from '@/types/spells';
+
+// Export this function explicitly
+export const useSpellbook = (): SpellbookContextType => {
+  return useSpellbookContext();
+};

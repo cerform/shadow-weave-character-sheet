@@ -1,11 +1,4 @@
 
-import { useContext } from 'react';
-import { SpellbookContext, SpellbookContextType } from '@/contexts/SpellbookContext';
-
-export const useSpellbook = (): SpellbookContextType => {
-  const context = useContext(SpellbookContext);
-  if (context === undefined) {
-    throw new Error('useSpellbook must be used within a SpellbookProvider');
-  }
-  return context;
-};
+// Этот файл теперь просто реэкспортирует из нового модуля для обратной совместимости
+export * from './spellbook/index';
+export { useSpellbook, useSpellbookContext } from './spellbook/index';
