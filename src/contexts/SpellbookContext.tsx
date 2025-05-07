@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell, Character } from '@/types/character';
@@ -34,6 +33,7 @@ export interface SpellbookContextProps {
   getBadgeColor: (level: number) => string;
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string | string[]) => string;
+  isLoading: boolean; // Добавляем свойство isLoading
 }
 
 export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
@@ -48,8 +48,27 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeClass, setActiveClass] = useState<string[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Добавляем state для isLoading
   const { theme } = useTheme();
   const { toast } = useToast();
+
+  // Загрузка заклинаний при инициализации
+  useEffect(() => {
+    const loadSpells = async () => {
+      try {
+        setIsLoading(true);
+        const allSpellsData = getAllSpells();
+        setSpells(allSpellsData);
+        setFilteredSpells(allSpellsData);
+      } catch (error) {
+        console.error("Error loading spells:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadSpells();
+  }, []);
 
   // Получаем все уровни, школы и классы из заклинаний
   const allLevels = [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
@@ -251,7 +270,8 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleClose,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    isLoading // Добавляем isLoading в контекст
   };
 
   return (

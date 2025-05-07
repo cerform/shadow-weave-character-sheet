@@ -38,11 +38,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
     // Правильно проверяем наличие fixed и убеждаемся, что объект не пустой
-    const hasFixedBonuses = abilityBonuses.fixed !== undefined && 
-                           abilityBonuses.fixed !== null && 
-                           Object.keys(abilityBonuses.fixed).length > 0;
-                           
-    if (hasFixedBonuses) {
+    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
@@ -167,27 +163,19 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {/* Используем IIFE для правильной проверки, избегая ошибки TS2872 */}
-          {(() => {
-            // Проверяем существование и непустоту объекта
-            if (abilityBonuses.fixed && 
-                typeof abilityBonuses.fixed === 'object' && 
-                Object.keys(abilityBonuses.fixed).length > 0) {
-              return (
-                <div className="mb-2">
-                  <p>Фиксированные бонусы:</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {Object.entries(abilityBonuses.fixed).map(([ability, bonus]) => (
-                      <Badge key={ability} variant="outline" className="bg-amber-900/20">
-                        {abilities.find(a => a.key === ability)?.name} +{bonus}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })()}
+          {/* Исправляем проверку на существование и непустоту объекта */}
+          {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
+            <div className="mb-2">
+              <p>Фиксированные бонусы:</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {Object.entries(abilityBonuses.fixed).map(([ability, bonus]) => (
+                  <Badge key={ability} variant="outline" className="bg-amber-900/20">
+                    {abilities.find(a => a.key === ability)?.name} +{bonus}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           
           {abilityBonuses.amount > 0 && (
             <p className="mt-2">
