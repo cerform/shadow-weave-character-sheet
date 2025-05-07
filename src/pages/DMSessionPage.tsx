@@ -1,355 +1,229 @@
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { getSessionById, getSessionTokens, updateToken, removeToken } from '@/services/sessionService';
+import { GameSession, TokenData, Initiative } from '@/types/session.types';
+import { useToast } from '@/hooks/use-toast';
 import { socketService } from '@/services/socket';
-import DiceRoller from '@/components/session/DiceRoller';
-import SessionChat from '@/components/session/SessionChat';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import useSessionStore from '@/stores/sessionStore';
-import { Session } from '@/types/session';
-import { useAuth } from '@/hooks/use-auth';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  ArrowLeft,
-  Send,
-  Clock,
-  UserPlus
-} from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BattleMap from '@/components/battle/BattleMap';
+import SessionChat from '@/components/SessionChat';
 
-// Define the Player type since it doesn't exist in session.ts
-interface Player {
-  id: string;
-  name: string;
-  character?: any;
-  connected: boolean;
-}
-
-const DMSessionPage = () => {
+const DMSessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
-  const sessionStore = useSessionStore();
-  const { sessions, fetchSessions, endSession } = sessionStore;
-  const { currentUser } = useAuth(); // Используем currentUser из useAuth вместо sessionStore
-  const { isAuthenticated } = useAuth();
-  const [currentSession, setCurrentSession] = useState<any | null>(null);
-  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [isEndingSession, setIsEndingSession] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [session, setSession] = useState<GameSession | null>(null);
+  const [tokens, setTokens] = useState<TokenData[]>([]);
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [background, setBackground] = useState<string | null>(null);
+  const [battleActive, setBattleActive] = useState<boolean>(false);
+  const [initiative, setInitiative] = useState<Initiative[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('map');
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
+  // Загружаем данные сессии
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/auth');
-      return;
-    }
+    if (!sessionId) return;
     
     const loadSession = async () => {
-      await fetchSessions();
+      try {
+        const sessionData = await getSessionById(sessionId);
+        if (!sessionData) {
+          toast({
+            title: 'Ошибка',
+            description: 'Сессия не найдена',
+            variant: 'destructive',
+          });
+          navigate('/dm');
+          return;
+        }
+        
+        setSession(sessionData);
+        setBattleActive(sessionData.battleActive || false);
+        
+        if (sessionData.map?.background) {
+          setBackground(sessionData.map.background);
+        }
+        
+        if (sessionData.initiative) {
+          setInitiative(sessionData.initiative);
+        }
+        
+        // Загружаем токены
+        const sessionTokens = await getSessionTokens(sessionId);
+        setTokens(sessionTokens || []);
+        
+        // Подключаем WebSocket
+        socketService.connect(sessionData.code, 'Мастер подземелий', undefined);
+      } catch (error) {
+        console.error('Ошибка при загрузке сессии:', error);
+        toast({
+          title: 'Ошибка',
+          description: 'Произошла ошибка при загрузке сессии',
+          variant: 'destructive',
+        });
+      }
     };
     
     loadSession();
-  }, [isAuthenticated, navigate, fetchSessions]);
+    
+    // Отключаем WebSocket при размонтировании
+    return () => {
+      socketService.disconnect();
+    };
+  }, [sessionId, navigate, toast]);
 
-  // Select the current session when sessions load or ID changes
-  useEffect(() => {
-    if (sessions && sessionId) {
-      const session = sessions.find(s => s.id === sessionId);
-      
-      if (session) {
-        setCurrentSession(session);
-      } else {
-        // Session not found, navigate back
-        navigate('/dm');
-        toast({
-          title: "Сессия не найдена",
-          variant: "destructive"
-        });
+  // Обновление позиции токена
+  const handleUpdateTokenPosition = async (id: number, x: number, y: number) => {
+    const updatedTokens = tokens.map(token => 
+      token.id === id ? { ...token, x, y } : token
+    );
+    
+    setTokens(updatedTokens);
+    
+    const updatedToken = updatedTokens.find(token => token.id === id);
+    if (updatedToken && sessionId) {
+      try {
+        await updateToken(sessionId, updatedToken);
+        // Отправляем обновление через WebSocket
+        socketService.updateToken(updatedToken);
+      } catch (error) {
+        console.error('Ошибка при обновлении токена:', error);
       }
     }
-  }, [sessions, sessionId, navigate, toast]);
-
-  const handleEndSession = () => {
-    if (sessionId && endSession) {
-      endSession(sessionId);
-      navigate('/dm');
-      toast({
-        title: "Сессия успешно завершена",
-      });
-    }
   };
 
-  const handleAddPlayer = () => {
-    if (!newPlayerName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите имя игрока",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Add player logic would go here
-    
-    setNewPlayerName('');
-    setIsAddingPlayer(false);
-    toast({
-      title: "Успех",
-      description: `Игрок ${newPlayerName} добавлен в сессию`
-    });
+  // Выбор токена
+  const handleSelectToken = (id: number | null) => {
+    setSelectedTokenId(id);
   };
 
-  const handleSendMessage = () => {
+  // Отправка сообщения в чат
+  const handleSendMessage = (message: string) => {
     if (!message.trim()) return;
     
-    const newMessage = {
-      id: Date.now().toString(),
-      sender: currentUser?.displayName || 'DM', // Use displayName instead of name
-      content: message,
-      timestamp: new Date().toISOString(),
-      isDM: true
+    const chatMessage = {
+      message,
+      roomCode: session?.code || '',
+      nickname: 'Мастер подземелий'
     };
     
-    setMessages(prev => [...prev, newMessage]);
-    setMessage('');
-    
-    // In a real app, you'd send this via socket
+    socketService.sendChatMessage(chatMessage);
   };
 
-  if (!currentSession) {
+  // Обработка запросов на бросок кубиков
+  const handleDiceRoll = (formula: string, reason?: string) => {
+    socketService.sendRoll({ formula, reason });
+  };
+
+  // Если данные сессии еще не загружены
+  if (!session || !sessionId) {
     return (
-      <div className="container p-6">
-        <h1>Загрузка сессии...</h1>
-        <Button onClick={() => navigate('/dm')}>Вернуться к списку сессий</Button>
+      <div className="container mx-auto p-4 flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Загрузка сессии...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-6 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/dm')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Назад
-          </Button>
-          <h1 className="text-3xl font-bold">{currentSession.name}</h1>
-          <div className="px-2 py-1 rounded bg-green-100 text-green-800 text-sm">
-            Код: {currentSession.code}
-          </div>
+    <div className="container mx-auto p-2 h-[calc(100vh-4rem)]">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h1 className="text-2xl font-bold">{session.name}</h1>
+          <p className="text-muted-foreground">Код сессии: {session.code}</p>
         </div>
-        
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive">Завершить сессию</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Завершение сессии приведет к удалению всей информации о ней. Это действие нельзя отменить.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction onClick={handleEndSession}>Завершить</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex gap-2">
+          <Button
+            variant={battleActive ? "destructive" : "default"}
+            onClick={() => setBattleActive(!battleActive)}
+          >
+            {battleActive ? 'Завершить бой' : 'Начать бой'}
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/dm')}>
+            Выйти из сессии
+          </Button>
+        </div>
       </div>
-      
-      {currentSession.description && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <p>{currentSession.description}</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-3rem)]">
+        <TabsList>
+          <TabsTrigger value="map">Карта</TabsTrigger>
+          <TabsTrigger value="players">Игроки ({session.players.length})</TabsTrigger>
+          <TabsTrigger value="chat">Чат</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="map" className="h-full">
+          <div className="h-full">
+            <BattleMap 
+              tokens={tokens}
+              setTokens={(newToken) => {
+                if (typeof newToken === 'function') {
+                  setTokens(newToken);
+                } else {
+                  setTokens(prevTokens => [...prevTokens, newToken]);
+                }
+              }}
+              background={background}
+              setBackground={setBackground}
+              onUpdateTokenPosition={handleUpdateTokenPosition}
+              onSelectToken={handleSelectToken}
+              selectedTokenId={selectedTokenId}
+              initiative={initiative}
+              battleActive={battleActive}
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="players" className="h-full">
+          <Card className="h-full">
             <CardHeader>
-              <CardTitle>Участники сессии</CardTitle>
-              <CardDescription>Игроки, присоединившиеся к вашей сессии</CardDescription>
+              <CardTitle>Игроки в сессии</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Имя</TableHead>
-                      <TableHead>Персонаж</TableHead>
-                      <TableHead>Статус</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentSession.players && currentSession.players.length > 0 ? (
-                      currentSession.players.map((player: Player) => (
-                        <TableRow key={player.id}>
-                          <TableCell className="font-medium">{player.name}</TableCell>
-                          <TableCell>
-                            {player.character ? player.character.name : 'Не выбран'}
-                          </TableCell>
-                          <TableCell>
-                            <div className={`w-3 h-3 rounded-full ${player.connected ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
-                            {player.connected ? 'Онлайн' : 'Оффлайн'}
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              Просмотр
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4">
-                          Нет игроков в сессии
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              <div className="mt-4">
-                <Button onClick={() => setIsAddingPlayer(true)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Добавить игрока
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Панель управления игрой</CardTitle>
-              <CardDescription>Инструменты Мастера Подземелий</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate(`/battle/${sessionId}`)}>Карта боя</Button>
-              <Button>Генератор событий</Button>
-              <Button>Бestiарий</Button>
-              <Button>Таблицы лута</Button>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <Card className="h-[500px] flex flex-col">
-            <CardHeader>
-              <CardTitle>Чат сессии</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow overflow-y-auto min-h-[300px] p-4">
-              {messages.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  Здесь будут отображаться сообщения
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map(msg => (
-                    <div key={msg.id} className={`p-2 rounded-lg ${msg.isDM ? 'bg-amber-100 ml-6' : 'bg-blue-100 mr-6'}`}>
-                      <div className="font-bold flex justify-between">
-                        <span>{msg.sender}</span>
-                        <span className="text-xs text-gray-500">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Date(msg.timestamp).toLocaleTimeString()}
-                        </span>
+              {session.players.length > 0 ? (
+                <div className="space-y-4">
+                  {session.players.map((player) => (
+                    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{player.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {player.character?.name || "Персонаж не выбран"}
+                        </p>
                       </div>
-                      <div>{msg.content}</div>
+                      <div className="flex items-center">
+                        <span className={`h-3 w-3 rounded-full mr-2 ${player.isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        {player.isConnected ? 'В сети' : 'Не в сети'}
+                      </div>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className="text-center p-8">
+                  <p className="text-muted-foreground">В сессии пока нет игроков</p>
+                  <p className="mt-2 text-sm">Поделитесь кодом сессии: <span className="font-bold">{session.code}</span></p>
+                </div>
               )}
             </CardContent>
-            <div className="p-4 border-t flex">
-              <Input 
-                placeholder="Введите сообщение..." 
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-grow"
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <Button onClick={handleSendMessage} className="ml-2">
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
           </Card>
-          
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Заметки</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <textarea 
-                className="w-full h-40 p-2 border rounded"
-                placeholder="Записи для Мастера..."
-              ></textarea>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      <Dialog open={isAddingPlayer} onOpenChange={setIsAddingPlayer}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Добавить игрока</DialogTitle>
-            <DialogDescription>
-              Добавьте нового игрока в сессию
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Имя игрока</Label>
-              <Input 
-                id="name" 
-                value={newPlayerName} 
-                onChange={(e) => setNewPlayerName(e.target.value)} 
-                placeholder="Введите имя игрока"
-              />
-            </div>
+        </TabsContent>
+        
+        <TabsContent value="chat" className="h-full">
+          <div className="h-full">
+            <SessionChat 
+              messages={[]}
+              onSendMessage={handleSendMessage}
+              sessionCode={session.code}
+              playerName="Мастер подземелий"
+              roomCode={session.code}
+            />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingPlayer(false)}>Отмена</Button>
-            <Button onClick={handleAddPlayer}>Добавить</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
