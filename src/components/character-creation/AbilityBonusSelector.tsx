@@ -38,8 +38,9 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Исправляем проверку на наличие fixed бонусов, избегая TS2872
-    if (!abilityBonuses.fixed || Object.keys(abilityBonuses.fixed).length === 0) {
+    // Исправляем проверку на наличие fixed бонусов
+    const fixedBonuses = abilityBonuses.fixed;
+    if (!fixedBonuses) {
       return;
     }
     
@@ -50,7 +51,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     };
     
     // Теперь мы знаем, что fixed существует и имеет ключи
-    Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
+    Object.entries(fixedBonuses).forEach(([ability, bonus]) => {
       const abilityKey = ability as keyof typeof updatedAbilities;
       if (abilityKey in updatedAbilities) {
         const currentValue = updatedAbilities[abilityKey] || 10;
@@ -161,7 +162,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   const remainingBonuses = abilityBonuses.amount - selectedAbilities.filter(Boolean).length;
 
   // Проверяем наличие фиксированных бонусов
-  const hasFixedBonuses = abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0;
+  const hasFixedBonuses = !!abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0;
 
   return (
     <Card className="mt-4">
