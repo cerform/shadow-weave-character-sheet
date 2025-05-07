@@ -53,7 +53,10 @@ export interface Character {
   initiative?: number | string;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
-  savingThrowProficiencies?: Record<string, boolean>;
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: Record<string, number>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -61,7 +64,7 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  equipment?: any[] | {
+  equipment?: Item[] | string[] | {
     weapons?: string[];
     armor?: string;
     items?: string[];
@@ -112,6 +115,12 @@ export interface Character {
   gender?: string;
   userId?: string;
   abilityPointsUsed?: number;
+  additionalClasses?: string[];
+  spellcasting?: {
+    ability?: string;
+    class?: string;
+    level?: number;
+  };
   updatedAt?: string;
   createdAt?: string;
   image?: string;
@@ -175,6 +184,9 @@ export interface Item {
   weight?: number;
   description?: string;
   value?: number;
+  equipped?: boolean;
+  cost?: number;
+  costUnit?: string;
 }
 
 export interface Feature {
@@ -208,4 +220,13 @@ export interface LevelFeature {
   level: number;
   optional?: boolean;
   selected?: boolean;
+}
+
+export interface DiceResult {
+  nickname: string;
+  diceType: string;
+  result: number;
+  rolls?: number[];
+  total?: number;
+  label?: string;
 }

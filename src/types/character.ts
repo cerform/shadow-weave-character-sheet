@@ -56,6 +56,10 @@ export interface Character {
   initiative?: number | string;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
+  savingThrowProficiencies?: string[]; // Добавлено
+  skillProficiencies?: string[]; // Добавлено
+  expertise?: string[]; // Добавлено
+  skillBonuses?: Record<string, number>; // Добавлено
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -63,7 +67,11 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  equipment?: Item[];
+  equipment?: Item[] | string[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   features?: string[];
   spells?: CharacterSpell[];
   spellSlots?: Record<number, { max: number; used: number }>;
@@ -125,6 +133,12 @@ export interface Character {
   gender?: string;
   userId?: string;
   abilityPointsUsed?: number;
+  additionalClasses?: string[]; // Добавлено
+  spellcasting?: {
+    ability?: string;
+    class?: string;
+    level?: number;
+  };
   // Добавляем поля для обратной совместимости
   strength?: number;
   dexterity?: number;
@@ -231,4 +245,14 @@ export interface LevelFeature {
   type: string;
   class?: string;
   required?: boolean;
+}
+
+// Определение типа для результатов броска кубиков
+export interface DiceResult {
+  nickname: string;
+  diceType: string;
+  result: number;
+  rolls?: number[];
+  total?: number;
+  label?: string;
 }

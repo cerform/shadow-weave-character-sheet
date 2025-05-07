@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -87,8 +86,7 @@ const CreateSessionForm: React.FC = () => {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isCreating || !name.trim()}
-            loading={isCreating}
+            disabled={isCreating}
           >
             {isCreating ? 'Создание...' : 'Создать сессию'}
           </Button>

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
-import { socketService, DiceResult } from "@/services/socket";
+import { socketService } from "@/services/socket";
+import { DiceResult } from "@/types/character"; // Используем тип DiceResult из character.ts
 
 interface DiceRollerProps {
   roomCode: string;
@@ -10,16 +11,21 @@ const DiceRoller: React.FC<DiceRollerProps> = ({ roomCode }) => {
   const [results, setResults] = useState<DiceResult[]>([]);
 
   const rollDice = (diceType: string) => {
-    socketService.sendRoll(`1${diceType}`);
+    socketService.sendRoll({
+      formula: `1${diceType}`,
+      reason: `Бросок ${diceType}`
+    });
   };
 
   useEffect(() => {
-    const unsubscribe = socketService.on("diceResult", (result: DiceResult) => {
+    const handleDiceResult = (result: DiceResult) => {
       setResults((prev) => [...prev, result]);
-    });
+    };
+
+    socketService.on("diceResult", handleDiceResult);
 
     return () => {
-      unsubscribe();
+      socketService.off("diceResult", handleDiceResult);
     };
   }, []);
 
