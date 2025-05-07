@@ -1,8 +1,17 @@
 
 import { SpellData } from '@/types/spells';
+import { getAllSpells } from '@/data/spells/index';
+import { convertCharacterSpellToSpellData } from '@/types/spells';
 
-// Пример массива с несколькими заклинаниями для тестирования
-export const spells: SpellData[] = [
+// Импортируем все заклинания из директории spells
+const importedSpells = getAllSpells();
+
+// Преобразуем заклинания в формат SpellData
+export const spells: SpellData[] = importedSpells.map(spell => convertCharacterSpellToSpellData(spell));
+
+// Добавляем сюда несколько примеров заклинаний для быстрого доступа
+// В случае если импорт не сработает, у нас будет хотя бы минимальный набор заклинаний
+const exampleSpells: SpellData[] = [
   {
     id: 'light',
     name: 'Свет',
@@ -75,7 +84,10 @@ export const spells: SpellData[] = [
   }
 ];
 
+// Если импортированный список пустой, используем набор примеров
+export const allSpells: SpellData[] = spells.length > 0 ? spells : exampleSpells;
+
 // Функция для получения всех заклинаний
-export function getAllSpells(): SpellData[] {
-  return spells;
+export function getAllSpellsData(): SpellData[] {
+  return allSpells;
 }

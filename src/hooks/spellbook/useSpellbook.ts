@@ -1,15 +1,15 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SpellData, SpellFilter, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { applyAllFilters } from './filterUtils';
+import { getAllSpellsData } from '@/data/spells';
 
 // Don't redefine SpellFilter type here, use the imported one
 
 export function useSpellbook(initialSpells: SpellData[] = []) {
   const { toast } = useToast();
-  const [spells, setSpells] = useState<SpellData[]>(initialSpells);
+  const [spells, setSpells] = useState<SpellData[]>(initialSpells.length > 0 ? initialSpells : getAllSpellsData());
   const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -27,6 +27,23 @@ export function useSpellbook(initialSpells: SpellData[] = []) {
     ritual: null,
     concentration: null
   });
+
+  // Загрузка заклинаний при первой инициализации
+  useEffect(() => {
+    if (initialSpells.length === 0) {
+      setLoading(true);
+      try {
+        const allAvailableSpells = getAllSpellsData();
+        console.log(`Загружено ${allAvailableSpells.length} заклинаний`);
+        setSpells(allAvailableSpells);
+      } catch (err) {
+        console.error("Ошибка загрузки заклинаний:", err);
+        setError("Не удалось загрузить заклинания");
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [initialSpells]);
 
   // Получение уникальных значений для фильтров
   const allLevels = useMemo(() => {

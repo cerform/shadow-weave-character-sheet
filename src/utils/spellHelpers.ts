@@ -1,48 +1,49 @@
 
 import { SpellData } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
 
 /**
- * Преобразует массив заклинаний в формат SpellData
+ * Получает все уникальные классы из списка заклинаний
  */
-export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
-  if (!spells || !Array.isArray(spells)) {
-    return [];
-  }
+export function getAllSpellClasses(spells: SpellData[]): string[] {
+  const classes = new Set<string>();
   
-  return spells.map(spell => {
-    // Проверяем, что у заклинания есть необходимые свойства
-    const id = spell.id || `spell-${spell.name?.replace(/\s+/g, '-').toLowerCase() || Math.random().toString(36).substr(2, 9)}`;
-    
-    return {
-      id,
-      name: spell.name || 'Безымянное заклинание',
-      level: typeof spell.level === 'number' ? spell.level : 0,
-      school: spell.school || 'Универсальная',
-      castingTime: spell.castingTime || '1 действие',
-      range: spell.range || 'Касание',
-      components: spell.components || 'В, С',
-      duration: spell.duration || 'Мгновенная',
-      description: spell.description || 'Нет описания',
-      classes: spell.classes || [],
-      ritual: !!spell.ritual,
-      concentration: !!spell.concentration,
-      verbal: !!spell.verbal,
-      somatic: !!spell.somatic,
-      material: !!spell.material,
-      materials: spell.materials || ''
-    };
+  spells.forEach(spell => {
+    if (Array.isArray(spell.classes)) {
+      spell.classes.forEach(cls => classes.add(cls));
+    } else if (typeof spell.classes === 'string') {
+      classes.add(spell.classes);
+    }
   });
-};
+  
+  return [...classes].sort();
+}
 
 /**
- * Преобразует объект в формат SpellData
+ * Получает все уникальные школы магии из списка заклинаний
  */
-export const convertToSpellData = (spell: any): SpellData => {
-  if (!spell) {
+export function getAllSpellSchools(spells: SpellData[]): string[] {
+  const schools = new Set<string>();
+  
+  spells.forEach(spell => {
+    if (spell.school) {
+      schools.add(spell.school);
+    }
+  });
+  
+  return [...schools].sort();
+}
+
+/**
+ * Конвертирует заклинание из формата CharacterSpell в SpellData
+ */
+export function convertToSpellData(spell: CharacterSpell | string): SpellData {
+  if (typeof spell === 'string') {
+    // Если передана строка, создаем минимальный объект SpellData
     return {
-      id: `spell-${Math.random().toString(36).substr(2, 9)}`,
-      name: 'Безымянное заклинание',
-      level: 0,
+      id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+      name: spell,
+      level: 0, // По умолчанию заговор
       school: 'Универсальная',
       castingTime: '1 действие',
       range: 'Касание',
@@ -53,13 +54,11 @@ export const convertToSpellData = (spell: any): SpellData => {
     };
   }
   
-  // Проверяем, что у заклинания есть необходимые свойства
-  const id = spell.id || `spell-${spell.name?.replace(/\s+/g, '-').toLowerCase() || Math.random().toString(36).substr(2, 9)}`;
-  
+  // Проверяем, что spell - это объект и у него есть все необходимые поля
   return {
-    id,
-    name: spell.name || 'Безымянное заклинание',
-    level: typeof spell.level === 'number' ? spell.level : 0,
+    id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+    name: spell.name,
+    level: spell.level || 0,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'Касание',
@@ -67,70 +66,18 @@ export const convertToSpellData = (spell: any): SpellData => {
     duration: spell.duration || 'Мгновенная',
     description: spell.description || 'Нет описания',
     classes: spell.classes || [],
-    ritual: !!spell.ritual,
-    concentration: !!spell.concentration,
-    verbal: !!spell.verbal,
-    somatic: !!spell.somatic,
-    material: !!spell.material,
-    materials: spell.materials || '',
-    higherLevel: spell.higherLevel || spell.higherLevels || ''
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials
   };
-};
+}
 
 /**
- * Получает название уровня заклинания
+ * Конвертирует массив заклинаний CharacterSpell в массив SpellData
  */
-export const getSpellLevelName = (level: number): string => {
-  switch (level) {
-    case 0: return 'Заговор';
-    case 1: return '1-й уровень';
-    case 2: return '2-й уровень';
-    case 3: return '3-й уровень';
-    case 4: return '4-й уровень';
-    case 5: return '5-й уровень';
-    case 6: return '6-й уровень';
-    case 7: return '7-й уровень';
-    case 8: return '8-й уровень';
-    case 9: return '9-й уровень';
-    default: return `${level}-й уровень`;
-  }
-};
-
-/**
- * Получает количество заклинаний определенного уровня
- */
-export const getSpellCountByLevel = (spells: SpellData[], level: number): number => {
-  return spells.filter(spell => spell.level === level).length;
-};
-
-/**
- * Получает все уникальные школы магии из списка заклинаний
- */
-export const getAllSpellSchools = (spells: SpellData[]): string[] => {
-  const schools = new Set<string>();
-  spells.forEach(spell => {
-    if (spell.school) {
-      schools.add(spell.school);
-    }
-  });
-  return Array.from(schools).sort();
-};
-
-/**
- * Получает все уникальные классы из списка заклинаний
- */
-export const getAllSpellClasses = (spells: SpellData[]): string[] => {
-  const classes = new Set<string>();
-  
-  spells.forEach(spell => {
-    if (spell.classes) {
-      if (typeof spell.classes === 'string') {
-        classes.add(spell.classes);
-      } else if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => classes.add(cls));
-      }
-    }
-  });
-  
-  return Array.from(classes).sort();
-};
+export function convertCharacterSpellsToSpellData(spells: CharacterSpell[]): SpellData[] {
+  return spells.map(spell => convertToSpellData(spell));
+}
