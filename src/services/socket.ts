@@ -1,146 +1,287 @@
 
-import io, { Socket } from 'socket.io-client';
+import { TokenData } from '@/types/session.types';
 
-// Определение типов для результатов бросков кубиков
-export interface DiceResult {
-  nickname: string;
-  userId?: string;
-  diceType: string;
-  result: number;
-  timestamp?: number;
+class SocketService {
+  private socket: WebSocket | null = null;
+  private callbacks: Record<string, Function[]> = {};
+  private sessionCode: string | null = null;
+  private playerName: string | null = null;
+  private characterId: string | undefined;
+
+  // Подключение к WebSocket серверу
+  connect(sessionCode: string, playerName: string, characterId?: string): void {
+    this.sessionCode = sessionCode;
+    this.playerName = playerName;
+    this.characterId = characterId;
+    
+    console.log(`Попытка подключения к сессии: ${sessionCode}`);
+    
+    // В реальном приложении здесь был бы WebSocket
+    // Для демо просто имитируем успешное подключение
+    setTimeout(() => {
+      this.trigger('connected', { sessionCode, playerName });
+      console.log(`Подключено к сессии: ${sessionCode}`);
+    }, 500);
+  }
+
+  // Отключение от WebSocket сервера
+  disconnect(): void {
+    if (this.socket) {
+      // this.socket.close();
+      this.socket = null;
+    }
+    
+    this.sessionCode = null;
+    this.playerName = null;
+    this.characterId = undefined;
+    this.callbacks = {};
+    
+    console.log('Отключено от сессии');
+  }
+
+  // Отправка сообщения в чат
+  sendChatMessage(message: { message: string, roomCode: string, nickname: string }): void {
+    if (!this.sessionCode) {
+      console.error('Не подключено к сессии');
+      return;
+    }
+    
+    const payload = {
+      type: 'chat',
+      data: {
+        ...message,
+        timestamp: new Date().toISOString(),
+        id: Date.now().toString()
+      }
+    };
+    
+    // В реальном приложении здесь был бы this.socket.send(JSON.stringify(payload))
+    console.log('Отправка сообщения:', payload);
+    
+    // Имитируем получение эхо
+    setTimeout(() => {
+      this.trigger('message', payload.data);
+    }, 100);
+  }
+
+  // Отправка запроса на бросок кубиков
+  sendRoll(rollRequest: { formula: string, reason?: string }): void {
+    if (!this.sessionCode) {
+      console.error('Не подключено к сессии');
+      return;
+    }
+    
+    const payload = {
+      type: 'roll',
+      data: {
+        ...rollRequest,
+        playerName: this.playerName,
+        characterId: this.characterId,
+        timestamp: new Date().toISOString(),
+        id: Date.now().toString()
+      }
+    };
+    
+    // В реальном приложении здесь был бы this.socket.send(JSON.stringify(payload))
+    console.log('Отправка запроса на бросок:', payload);
+    
+    // Имитируем результат броска
+    setTimeout(() => {
+      const rolls = [Math.ceil(Math.random() * 20)];
+      const total = rolls[0] + (rollRequest.formula.includes('+') ? 
+        Number(rollRequest.formula.split('+')[1].trim()) : 0);
+        
+      this.trigger('roll', {
+        formula: rollRequest.formula,
+        rolls,
+        total,
+        reason: rollRequest.reason,
+        playerName: this.playerName,
+        characterId: this.characterId,
+        timestamp: new Date().toISOString(),
+        id: Date.now().toString()
+      });
+    }, 500);
+  }
+
+  // Обновление токена на карте
+  updateToken(token: TokenData): void {
+    if (!this.sessionCode) {
+      console.error('Не подключено к сессии');
+      return;
+    }
+    
+    const payload = {
+      type: 'token-update',
+      data: token
+    };
+    
+    // В реальном приложении здесь был бы this.socket.send(JSON.stringify(payload))
+    console.log('Обновление токена:', payload);
+    
+    // Имитируем получение обновления
+    setTimeout(() => {
+      this.trigger('token-update', token);
+    }, 100);
+  }
+
+  // Регистрация обработчика события
+  on(event: string, callback: Function): void {
+    if (!this.callbacks[event]) {
+      this.callbacks[event] = [];
+    }
+    this.callbacks[event].push(callback);
+  }
+
+  // Удаление обработчика события
+  off(event: string, callback: Function): void {
+    if (this.callbacks[event]) {
+      this.callbacks[event] = this.callbacks[event].filter(cb => cb !== callback);
+    }
+  }
+
+  // Вызов обработчиков для события
+  private trigger(event: string, data: any): void {
+    if (this.callbacks[event]) {
+      this.callbacks[event].forEach(callback => callback(data));
+    }
+  }
+
+  // Получение информации о текущем соединении
+  getConnectionInfo() {
+    return {
+      isConnected: this.sessionCode !== null,
+      sessionCode: this.sessionCode,
+      playerName: this.playerName,
+      characterId: this.characterId
+    };
+  }
+
+  // Проверка активности соединения
+  isConnected(): boolean {
+    return this.sessionCode !== null;
+  }
 }
 
-// Определение типов для сообщений чата
-export interface ChatMessage {
-  roomCode: string;
-  userId?: string;
-  username?: string;
-  message: string;
-  timestamp?: number;
+// Создаем и экспортируем синглтон для сервиса
+export const socketService = new SocketService();
+
+// Создаем React Context для WebSocket сервиса
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+interface SocketContextType {
+  isConnected: boolean;
+  connect: (sessionCode: string, playerName?: string, characterId?: string) => void;
+  disconnect: () => void;
+  sendChatMessage: (message: { message: string, roomCode: string, nickname: string }) => void;
+  sendRoll: (rollRequest: { formula: string, reason?: string }) => void;
+  sendUpdate: (data: any) => void;
+  updateToken: (token: TokenData) => void;
+  sessionData: { code: string; name?: string } | null;
 }
 
-// Определение API сервера с поддержкой резервного значения
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const SocketContext = createContext<SocketContextType>({
+  isConnected: false,
+  connect: () => {},
+  disconnect: () => {},
+  sendChatMessage: () => {},
+  sendRoll: () => {},
+  sendUpdate: () => {},
+  updateToken: () => {},
+  sessionData: null
+});
 
-// Определяем настройки для сокета
-const socketOptions = {
-  autoConnect: false,          // Отключаем автоподключение
-  reconnection: true,          // Включаем переподключение
-  reconnectionAttempts: 3,     // Ограничиваем количество попыток
-  reconnectionDelay: 1000,     // Интервал между попытками (1 секунда)
-  timeout: 5000,               // Таймаут подключения (5 секунд)
-  transports: ['websocket', 'polling'], // Разрешаем WebSocket и polling
-  secure: true                 // Используем защищенное соединение если доступно
+export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [sessionData, setSessionData] = useState<{ code: string; name?: string } | null>(null);
+
+  useEffect(() => {
+    // Попытка восстановления соединения при монтировании компонента
+    const connectionInfo = socketService.getConnectionInfo();
+    setIsConnected(connectionInfo.isConnected);
+    
+    if (connectionInfo.sessionCode) {
+      setSessionData({
+        code: connectionInfo.sessionCode
+      });
+    }
+    
+    // Регистрируем обработчики
+    const handleConnect = (data: any) => {
+      setIsConnected(true);
+      setSessionData({
+        code: data.sessionCode,
+        name: data.sessionName
+      });
+    };
+    
+    const handleDisconnect = () => {
+      setIsConnected(false);
+      setSessionData(null);
+    };
+    
+    socketService.on('connected', handleConnect);
+    socketService.on('disconnected', handleDisconnect);
+    
+    return () => {
+      socketService.off('connected', handleConnect);
+      socketService.off('disconnected', handleDisconnect);
+    };
+  }, []);
+
+  // Подключение к сессии
+  const connect = (sessionCode: string, playerName: string = 'Игрок', characterId?: string) => {
+    socketService.connect(sessionCode, playerName, characterId);
+  };
+
+  // Отключение от сессии
+  const disconnect = () => {
+    socketService.disconnect();
+    setIsConnected(false);
+    setSessionData(null);
+  };
+
+  // Отправка сообщения в чат
+  const sendChatMessage = (message: { message: string, roomCode: string, nickname: string }) => {
+    socketService.sendChatMessage(message);
+  };
+
+  // Отправка запроса на бросок кубиков
+  const sendRoll = (rollRequest: { formula: string, reason?: string }) => {
+    socketService.sendRoll(rollRequest);
+  };
+
+  // Отправка обновления персонажа
+  const sendUpdate = (data: any) => {
+    const payload = {
+      type: 'update',
+      data
+    };
+    
+    console.log('Отправка обновления:', payload);
+  };
+
+  // Обновление токена на карте
+  const updateToken = (token: TokenData) => {
+    socketService.updateToken(token);
+  };
+
+  return (
+    <SocketContext.Provider
+      value={{
+        isConnected,
+        connect,
+        disconnect,
+        sendChatMessage,
+        sendRoll,
+        sendUpdate,
+        updateToken,
+        sessionData
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
 };
 
-// Создание экземпляра Socket.io с улучшенными настройками
-export const socket: Socket = io(SERVER_URL, socketOptions);
-
-// Регистрируем слушатели событий сокета
-socket.on('connect', () => {
-  console.log('[SOCKET] Соединение установлено, ID:', socket.id);
-});
-
-socket.on('connect_error', (error) => {
-  console.error('[SOCKET] Ошибка соединения:', error);
-});
-
-socket.on('disconnect', (reason) => {
-  console.log('[SOCKET] Соединение закрыто. Причина:', reason);
-});
-
-// Сервис для работы с сокетами с улучшенной обработкой ошибок
-export const socketService = {
-  connect: (sessionCode: string, playerName: string, characterId?: string) => {
-    // Проверяем, что сокет не подключен, прежде чем пытаться подключиться
-    if (!socket.connected) {
-      try {
-        console.log(`[SOCKET] Начало подключения к сессии ${sessionCode}`);
-        
-        // Регистрируем одноразовый обработчик успешного подключения
-        const connectHandler = () => {
-          console.log(`[SOCKET] Подключено к сессии ${sessionCode}`);
-          socket.emit('joinRoom', { roomCode: sessionCode, nickname: playerName, characterId });
-        };
-        
-        socket.once('connect', connectHandler);
-        
-        // Устанавливаем таймаут для соединения
-        setTimeout(() => {
-          socket.off('connect', connectHandler);
-          if (!socket.connected) {
-            console.error('[SOCKET] Таймаут подключения');
-          }
-        }, 5000); // 5-секундный таймаут
-        
-        socket.connect();
-        return true;
-      } catch (error) {
-        console.error("[SOCKET] Ошибка при подключении сокета:", error);
-        return false;
-      }
-    }
-    return socket.connected; // Возвращаем текущее состояние соединения
-  },
-
-  disconnect: () => {
-    // Проверяем, что сокет подключен, прежде чем пытаться отключиться
-    if (socket.connected) {
-      try {
-        socket.disconnect();
-        console.log('[SOCKET] Отключено');
-        return true;
-      } catch (error) {
-        console.error('[SOCKET] Ошибка при отключении:', error);
-        return false;
-      }
-    }
-    return true;
-  },
-
-  sendChatMessage: (message: string) => {
-    if (socket.connected) {
-      socket.emit('chatMessage', { message });
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя отправить сообщение: сокет не подключен");
-      return false;
-    }
-  },
-
-  sendRoll: (formula: string, reason?: string) => {
-    if (socket.connected) {
-      socket.emit('rollDice', { formula, reason });
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя отправить бросок: сокет не подключен");
-      return false;
-    }
-  },
-
-  updateToken: (token: any) => {
-    if (socket.connected) {
-      socket.emit('updateToken', token);
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя обновить токен: сокет не подключен");
-      return false;
-    }
-  },
-  
-  // Улучшенная проверка состояния соединения
-  isConnected: () => {
-    return socket && socket.connected;
-  },
-  
-  on: (event: string, callback: (...args: any[]) => void) => {
-    socket.on(event, callback);
-    return () => socket.off(event, callback);
-  },
-  
-  off: (event: string, callback?: (...args: any[]) => void) => {
-    socket.off(event, callback);
-  },
-};
-
-export default socketService;
+export const useSocket = () => useContext(SocketContext);

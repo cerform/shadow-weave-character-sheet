@@ -1,3 +1,4 @@
+
 export interface Character {
   id?: string;
   name: string;
@@ -115,14 +116,13 @@ export interface Character {
   updatedAt?: string;
   createdAt?: string;
   image?: string;
+  // Добавляем недостающие свойства
   strength?: number;
   dexterity?: number;
   constitution?: number;
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  
-  // Добавляем недостающие свойства
   lastDiceRoll?: {
     diceType: string;
     count: number;
