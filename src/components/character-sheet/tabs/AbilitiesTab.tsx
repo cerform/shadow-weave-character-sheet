@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { getAbilityModifierString, getAbilityName } from '@/utils/abilityUtils';
 
 interface AbilitiesTabProps {
   character: Character;
@@ -14,208 +14,503 @@ interface AbilitiesTabProps {
 }
 
 const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
-  const [editMode, setEditMode] = useState(false);
-  const [localStats, setLocalStats] = useState({
-    strength: character.stats?.strength || 10,
-    dexterity: character.stats?.dexterity || 10,
-    constitution: character.stats?.constitution || 10,
-    intelligence: character.stats?.intelligence || 10,
-    wisdom: character.stats?.wisdom || 10,
-    charisma: character.stats?.charisma || 10,
-  });
-
-  const handleStatChange = (ability: string, value: number) => {
-    setLocalStats(prev => ({ ...prev, [ability]: value }));
+  const [strength, setStrength] = useState(character.strength || 10);
+  const [dexterity, setDexterity] = useState(character.dexterity || 10);
+  const [constitution, setConstitution] = useState(character.constitution || 10);
+  const [intelligence, setIntelligence] = useState(character.intelligence || 10);
+  const [wisdom, setWisdom] = useState(character.wisdom || 10);
+  const [charisma, setCharisma] = useState(character.charisma || 10);
+  const [savingThrows, setSavingThrows] = useState<string[]>(
+    character.savingThrows || []
+  );
+  const [skills, setSkills] = useState<string[]>(
+    character.skills || []
+  );
+  const [expertise, setExpertise] = useState<string[]>(
+    character.expertise || []
+  );
+  
+  useEffect(() => {
+    onUpdate({
+      strength,
+      dexterity,
+      constitution,
+      intelligence,
+      wisdom,
+      charisma,
+      savingThrows,
+      skills,
+      expertise
+    });
+  }, [strength, dexterity, constitution, intelligence, wisdom, charisma, savingThrows, skills, expertise, onUpdate]);
+  
+  const abilityModifier = (abilityScore: number) => {
+    return Math.floor((abilityScore - 10) / 2);
   };
-
-  const handleSaveStats = () => {
-    onUpdate({ stats: localStats });
-    setEditMode(false);
-  };
-
-  // Handle saving throw proficiency toggle
-  const toggleSavingThrowProficiency = (ability: string) => {
-    const currentProficiencies = character.savingThrowProficiencies || {};
+  
+  const handleSavingThrowChange = (ability: string) => {
+    let newSavingThrows: string[] = [...savingThrows];
     
-    // Create a new object to avoid mutation
-    const updatedProficiencies = { ...currentProficiencies };
-    updatedProficiencies[ability] = !updatedProficiencies[ability];
-    
-    onUpdate({ savingThrowProficiencies: updatedProficiencies });
-  };
-
-  // Handle skill proficiency toggle
-  const toggleSkillProficiency = (skill: string) => {
-    const currentProficiencies = character.skillProficiencies || {};
-    const currentExpertise = character.expertise || {};
-    
-    // Check if the skill has expertise before toggling proficiency
-    const hasExpertise = Boolean(currentExpertise[skill]);
-    
-    // If the skill has expertise and we're removing proficiency,
-    // we need to remove expertise too
-    if (hasExpertise && currentProficiencies[skill]) {
-      const updatedExpertise = { ...currentExpertise };
-      delete updatedExpertise[skill];
-      
-      onUpdate({
-        skillProficiencies: {
-          ...currentProficiencies,
-          [skill]: false
-        },
-        expertise: updatedExpertise
-      });
+    if (newSavingThrows.includes(ability)) {
+      newSavingThrows = newSavingThrows.filter(s => s !== ability);
     } else {
-      onUpdate({
-        skillProficiencies: {
-          ...currentProficiencies,
-          [skill]: !currentProficiencies[skill]
-        }
-      });
+      newSavingThrows.push(ability);
     }
+    
+    setSavingThrows(newSavingThrows);
+    onUpdate({ savingThrows: newSavingThrows });
   };
-
-  // Handle expertise toggle
-  const toggleExpertise = (skill: string) => {
-    const currentExpertise = character.expertise || {};
-    const currentProficiencies = character.skillProficiencies || {};
+  
+  const handleSkillChange = (skill: string) => {
+    let newSkills: string[] = [...skills];
     
-    // Expertise requires proficiency
-    if (!currentProficiencies[skill]) {
-      // Optionally, show a message or prevent toggling
-      return;
-    }
-    
-    const updatedExpertise = { ...currentExpertise };
-    if (updatedExpertise[skill]) {
-      delete updatedExpertise[skill];
+    if (newSkills.includes(skill)) {
+      newSkills = newSkills.filter(s => s !== skill);
     } else {
-      updatedExpertise[skill] = true;
+      newSkills.push(skill);
     }
     
-    onUpdate({ expertise: updatedExpertise });
+    setSkills(newSkills);
+    onUpdate({ skills: newSkills });
   };
-
-  const skills = [
-    { name: 'acrobatics', ability: 'dexterity', label: 'Акробатика' },
-    { name: 'animalHandling', ability: 'wisdom', label: 'Уход за животными' },
-    { name: 'arcana', ability: 'intelligence', label: 'Магия' },
-    { name: 'athletics', ability: 'strength', label: 'Атлетика' },
-    { name: 'deception', ability: 'charisma', label: 'Обман' },
-    { name: 'history', ability: 'intelligence', label: 'История' },
-    { name: 'insight', ability: 'wisdom', label: 'Проницательность' },
-    { name: 'intimidation', ability: 'charisma', label: 'Запугивание' },
-    { name: 'investigation', ability: 'intelligence', label: 'Расследование' },
-    { name: 'medicine', ability: 'wisdom', label: 'Медицина' },
-    { name: 'nature', ability: 'intelligence', label: 'Природа' },
-    { name: 'perception', ability: 'wisdom', label: 'Внимательность' },
-    { name: 'performance', ability: 'charisma', label: 'Выступление' },
-    { name: 'persuasion', ability: 'charisma', label: 'Убеждение' },
-    { name: 'religion', ability: 'intelligence', label: 'Религия' },
-    { name: 'sleightOfHand', ability: 'dexterity', label: 'Ловкость рук' },
-    { name: 'stealth', ability: 'dexterity', label: 'Скрытность' },
-    { name: 'survival', ability: 'wisdom', label: 'Выживание' },
-  ];
-
-  const savingThrows = [
-    'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'
-  ];
-
+  
+  const handleExpertiseChange = (skill: string) => {
+    let newExpertise: string[] = [...expertise];
+    
+    if (newExpertise.includes(skill)) {
+      newExpertise = newExpertise.filter(e => e !== skill);
+    } else {
+      newExpertise.push(skill);
+    }
+    
+    setExpertise(newExpertise);
+    onUpdate({ expertise: newExpertise });
+  };
+  
+  const hasExpertise = (skill: string) => {
+    return Array.isArray(expertise) && expertise.includes(skill);
+  };
+  
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Характеристики</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-3 md:grid-cols-6 gap-4">
-          {Object.entries(localStats).map(([ability, value]) => (
-            <div key={ability} className="space-y-2">
-              <Label>{getAbilityName(ability)}</Label>
-              {editMode ? (
-                <Input
-                  type="number"
-                  value={value}
-                  onChange={(e) => handleStatChange(ability, parseInt(e.target.value))}
-                />
-              ) : (
-                <div className="p-2 border rounded">{value} ({getAbilityModifierString(value)})</div>
-              )}
+    <ScrollArea className="h-[65vh] pr-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Основные характеристики */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Характеристики</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="strength">Сила</Label>
+              <Input
+                type="number"
+                id="strength"
+                value={strength}
+                onChange={(e) => setStrength(Number(e.target.value))}
+              />
+              <span>({abilityModifier(strength)})</span>
             </div>
-          ))}
-        </CardContent>
-        <div className="p-4 border-t">
-          {editMode ? (
-            <div className="flex justify-end">
-              <button onClick={handleSaveStats} className="px-4 py-2 bg-green-500 text-white rounded">Сохранить</button>
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="dexterity">Ловкость</Label>
+              <Input
+                type="number"
+                id="dexterity"
+                value={dexterity}
+                onChange={(e) => setDexterity(Number(e.target.value))}
+              />
+              <span>({abilityModifier(dexterity)})</span>
             </div>
-          ) : (
-            <div className="flex justify-end">
-              <button onClick={() => setEditMode(true)} className="px-4 py-2 bg-blue-500 text-white rounded">Редактировать</button>
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="constitution">Телосложение</Label>
+              <Input
+                type="number"
+                id="constitution"
+                value={constitution}
+                onChange={(e) => setConstitution(Number(e.target.value))}
+              />
+              <span>({abilityModifier(constitution)})</span>
             </div>
-          )}
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Спасброски</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {savingThrows.map(ability => (
-              <div key={ability} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`saving-throw-${ability}`}
-                  checked={character.savingThrowProficiencies?.[ability] || false}
-                  onCheckedChange={() => toggleSavingThrowProficiency(ability)}
-                />
-                <Label htmlFor={`saving-throw-${ability}`}>
-                  {getAbilityName(ability)} ({getAbilityModifierString(localStats[ability] || 10)})
-                </Label>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Навыки</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="max-h-64">
-            <div className="space-y-2">
-              {skills.map(skill => (
-                <div key={skill.name} className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`skill-${skill.name}`}
-                        checked={character.skillProficiencies?.[skill.name] || false}
-                        onCheckedChange={() => toggleSkillProficiency(skill.name)}
-                      />
-                      <Label htmlFor={`skill-${skill.name}`}>
-                        {skill.label} ({getAbilityModifierString(localStats[skill.ability] || 10)})
-                      </Label>
-                    </div>
-                  </div>
-                  <div>
-                    {character.skillProficiencies?.[skill.name] && (
-                      <Checkbox
-                        id={`expertise-${skill.name}`}
-                        checked={character.expertise?.[skill.name] || false}
-                        onCheckedChange={() => toggleExpertise(skill.name)}
-                        disabled={!character.skillProficiencies?.[skill.name]}
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="intelligence">Интеллект</Label>
+              <Input
+                type="number"
+                id="intelligence"
+                value={intelligence}
+                onChange={(e) => setIntelligence(Number(e.target.value))}
+              />
+              <span>({abilityModifier(intelligence)})</span>
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="wisdom">Мудрость</Label>
+              <Input
+                type="number"
+                id="wisdom"
+                value={wisdom}
+                onChange={(e) => setWisdom(Number(e.target.value))}
+              />
+              <span>({abilityModifier(wisdom)})</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="charisma">Харизма</Label>
+              <Input
+                type="number"
+                id="charisma"
+                value={charisma}
+                onChange={(e) => setCharisma(Number(e.target.value))}
+              />
+              <span>({abilityModifier(charisma)})</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Спасброски */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Спасброски</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-strength"
+                checked={savingThrows.includes('strength')}
+                onCheckedChange={() => handleSavingThrowChange('strength')}
+              />
+              <Label htmlFor="saving-strength">Сила ({abilityModifier(strength)})</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-dexterity"
+                checked={savingThrows.includes('dexterity')}
+                onCheckedChange={() => handleSavingThrowChange('dexterity')}
+              />
+              <Label htmlFor="saving-dexterity">Ловкость ({abilityModifier(dexterity)})</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-constitution"
+                checked={savingThrows.includes('constitution')}
+                onCheckedChange={() => handleSavingThrowChange('constitution')}
+              />
+              <Label htmlFor="saving-constitution">Телосложение ({abilityModifier(constitution)})</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-intelligence"
+                checked={savingThrows.includes('intelligence')}
+                onCheckedChange={() => handleSavingThrowChange('intelligence')}
+              />
+              <Label htmlFor="saving-intelligence">Интеллект ({abilityModifier(intelligence)})</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-wisdom"
+                checked={savingThrows.includes('wisdom')}
+                onCheckedChange={() => handleSavingThrowChange('wisdom')}
+              />
+              <Label htmlFor="saving-wisdom">Мудрость ({abilityModifier(wisdom)})</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="saving-charisma"
+                checked={savingThrows.includes('charisma')}
+                onCheckedChange={() => handleSavingThrowChange('charisma')}
+              />
+              <Label htmlFor="saving-charisma">Харизма ({abilityModifier(charisma)})</Label>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Навыки */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Навыки</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-athletics">Атлетика (Сила)</Label>
+              <Checkbox
+                id="skill-athletics"
+                checked={skills.includes('athletics')}
+                onCheckedChange={() => handleSkillChange('athletics')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-acrobatics">Акробатика (Ловкость)</Label>
+              <Checkbox
+                id="skill-acrobatics"
+                checked={skills.includes('acrobatics')}
+                onCheckedChange={() => handleSkillChange('acrobatics')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-stealth">Скрытность (Ловкость)</Label>
+              <Checkbox
+                id="skill-stealth"
+                checked={skills.includes('stealth')}
+                onCheckedChange={() => handleSkillChange('stealth')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-arcana">Магия (Интеллект)</Label>
+              <Checkbox
+                id="skill-arcana"
+                checked={skills.includes('arcana')}
+                onCheckedChange={() => handleSkillChange('arcana')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-history">История (Интеллект)</Label>
+              <Checkbox
+                id="skill-history"
+                checked={skills.includes('history')}
+                onCheckedChange={() => handleSkillChange('history')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-investigation">Анализ (Интеллект)</Label>
+              <Checkbox
+                id="skill-investigation"
+                checked={skills.includes('investigation')}
+                onCheckedChange={() => handleSkillChange('investigation')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-nature">Природа (Интеллект)</Label>
+              <Checkbox
+                id="skill-nature"
+                checked={skills.includes('nature')}
+                onCheckedChange={() => handleSkillChange('nature')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-religion">Религия (Интеллект)</Label>
+              <Checkbox
+                id="skill-religion"
+                checked={skills.includes('religion')}
+                onCheckedChange={() => handleSkillChange('religion')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-animal-handling">Уход за животными (Мудрость)</Label>
+              <Checkbox
+                id="skill-animal-handling"
+                checked={skills.includes('animal-handling')}
+                onCheckedChange={() => handleSkillChange('animal-handling')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-insight">Проницательность (Мудрость)</Label>
+              <Checkbox
+                id="skill-insight"
+                checked={skills.includes('insight')}
+                onCheckedChange={() => handleSkillChange('insight')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-medicine">Медицина (Мудрость)</Label>
+              <Checkbox
+                id="skill-medicine"
+                checked={skills.includes('medicine')}
+                onCheckedChange={() => handleSkillChange('medicine')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-perception">Внимательность (Мудрость)</Label>
+              <Checkbox
+                id="skill-perception"
+                checked={skills.includes('perception')}
+                onCheckedChange={() => handleSkillChange('perception')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-survival">Выживание (Мудрость)</Label>
+              <Checkbox
+                id="skill-survival"
+                checked={skills.includes('survival')}
+                onCheckedChange={() => handleSkillChange('survival')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-deception">Обман (Харизма)</Label>
+              <Checkbox
+                id="skill-deception"
+                checked={skills.includes('deception')}
+                onCheckedChange={() => handleSkillChange('deception')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-intimidation">Запугивание (Харизма)</Label>
+              <Checkbox
+                id="skill-intimidation"
+                checked={skills.includes('intimidation')}
+                onCheckedChange={() => handleSkillChange('intimidation')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-performance">Выступление (Харизма)</Label>
+              <Checkbox
+                id="skill-performance"
+                checked={skills.includes('performance')}
+                onCheckedChange={() => handleSkillChange('performance')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="skill-persuasion">Убеждение (Харизма)</Label>
+              <Checkbox
+                id="skill-persuasion"
+                checked={skills.includes('persuasion')}
+                onCheckedChange={() => handleSkillChange('persuasion')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Владение */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Владение и экспертиза</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-athletics">Атлетика (Сила)</Label>
+              <Checkbox
+                id="expertise-athletics"
+                checked={hasExpertise('athletics')}
+                onCheckedChange={() => handleExpertiseChange('athletics')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-acrobatics">Акробатика (Ловкость)</Label>
+              <Checkbox
+                id="expertise-acrobatics"
+                checked={hasExpertise('acrobatics')}
+                onCheckedChange={() => handleExpertiseChange('acrobatics')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-stealth">Скрытность (Ловкость)</Label>
+              <Checkbox
+                id="expertise-stealth"
+                checked={hasExpertise('stealth')}
+                onCheckedChange={() => handleExpertiseChange('stealth')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-arcana">Магия (Интеллект)</Label>
+              <Checkbox
+                id="expertise-arcana"
+                checked={hasExpertise('arcana')}
+                onCheckedChange={() => handleExpertiseChange('arcana')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-history">История (Интеллект)</Label>
+              <Checkbox
+                id="expertise-history"
+                checked={hasExpertise('history')}
+                onCheckedChange={() => handleExpertiseChange('history')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-investigation">Анализ (Интеллект)</Label>
+              <Checkbox
+                id="expertise-investigation"
+                checked={hasExpertise('investigation')}
+                onCheckedChange={() => handleExpertiseChange('investigation')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-nature">Природа (Интеллект)</Label>
+              <Checkbox
+                id="expertise-nature"
+                checked={hasExpertise('nature')}
+                onCheckedChange={() => handleExpertiseChange('nature')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-religion">Религия (Интеллект)</Label>
+              <Checkbox
+                id="expertise-religion"
+                checked={hasExpertise('religion')}
+                onCheckedChange={() => handleExpertiseChange('religion')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-animal-handling">Уход за животными (Мудрость)</Label>
+              <Checkbox
+                id="expertise-animal-handling"
+                checked={hasExpertise('animal-handling')}
+                onCheckedChange={() => handleExpertiseChange('animal-handling')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-insight">Проницательность (Мудрость)</Label>
+              <Checkbox
+                id="expertise-insight"
+                checked={hasExpertise('insight')}
+                onCheckedChange={() => handleExpertiseChange('insight')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-medicine">Медицина (Мудрость)</Label>
+              <Checkbox
+                id="expertise-medicine"
+                checked={hasExpertise('medicine')}
+                onCheckedChange={() => handleExpertiseChange('medicine')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-perception">Внимательность (Мудрость)</Label>
+              <Checkbox
+                id="expertise-perception"
+                checked={hasExpertise('perception')}
+                onCheckedChange={() => handleExpertiseChange('perception')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-survival">Выживание (Мудрость)</Label>
+              <Checkbox
+                id="expertise-survival"
+                checked={hasExpertise('survival')}
+                onCheckedChange={() => handleExpertiseChange('survival')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-deception">Обман (Харизма)</Label>
+              <Checkbox
+                id="expertise-deception"
+                checked={hasExpertise('deception')}
+                onCheckedChange={() => handleExpertiseChange('deception')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-intimidation">Запугивание (Харизма)</Label>
+              <Checkbox
+                id="expertise-intimidation"
+                checked={hasExpertise('intimidation')}
+                onCheckedChange={() => handleExpertiseChange('intimidation')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-performance">Выступление (Харизма)</Label>
+              <Checkbox
+                id="expertise-performance"
+                checked={hasExpertise('performance')}
+                onCheckedChange={() => handleExpertiseChange('performance')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="expertise-persuasion">Убеждение (Харизма)</Label>
+              <Checkbox
+                id="expertise-persuasion"
+                checked={hasExpertise('persuasion')}
+                onCheckedChange={() => handleExpertiseChange('persuasion')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </ScrollArea>
   );
 };
 

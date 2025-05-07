@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { SpellData, SpellFilter } from '@/types/spells';
 import { getAllSpells } from '@/data/spells';
@@ -17,6 +16,7 @@ export interface SpellbookContextProps {
   toggleSchool: (school: string) => void;
   toggleClass: (className: string) => void;
   selectedSpell: SpellData | null;
+  selectedSpells?: SpellData[]; // Добавлено
   handleOpenSpell: (spell: SpellData) => void;
   handleClose: () => void;
   isModalOpen: boolean;
@@ -33,6 +33,7 @@ export interface SpellbookContextProps {
   activeSchool: string[];
   activeClass: string[];
   loading: boolean;
+  loadSpellsForClass: (className: string) => SpellData[]; // Добавлено
 }
 
 export const SpellbookContext = createContext<SpellbookContextProps | undefined>(undefined);
@@ -48,6 +49,7 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
   const [searchText, setSearchText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -332,6 +334,7 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
         toggleSchool,
         toggleClass,
         selectedSpell,
+        selectedSpells,
         handleOpenSpell,
         handleClose,
         isModalOpen,
@@ -347,7 +350,8 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
         activeLevel,
         activeSchool,
         activeClass,
-        loading
+        loading,
+        loadSpellsForClass
       }}
     >
       {children}

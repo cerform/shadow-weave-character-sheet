@@ -4,6 +4,7 @@ import { CharacterSpell } from '@/types/character';
 export interface SpellData {
   id: string | number;
   name: string;
+  name_en?: string;
   level: number;
   school: string;
   castingTime: string;
@@ -54,6 +55,7 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell | string)
   return {
     id: spell.id || spell.name,
     name: spell.name,
+    name_en: spell.name_en,
     level: spell.level,
     school: spell.school || '',
     castingTime: spell.castingTime || '',
@@ -79,6 +81,7 @@ export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpe
   return {
     id: spell.id,
     name: spell.name,
+    name_en: spell.name_en,
     level: spell.level,
     school: spell.school,
     castingTime: spell.castingTime,
