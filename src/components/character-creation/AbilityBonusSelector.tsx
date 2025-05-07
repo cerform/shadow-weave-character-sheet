@@ -22,6 +22,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   abilityBonuses
 }) => {
   const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
+  
+  // Используем правильный тип для availablePoints
   const [availablePoints, setAvailablePoints] = useState<number>(abilityBonuses.amount || 0);
   
   // Список доступных характеристик
@@ -38,19 +40,40 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
   useEffect(() => {
     if (abilityBonuses.fixed) {
       const updates: Partial<Character> = {};
+      const updatedAbilities = { ...character.abilities } || {
+        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+      };
       
       Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
-        const currentValue = character.abilities?.[ability as keyof typeof character.abilities] || 10;
-        updates[ability as keyof Character] = currentValue + bonus;
-        
-        if (character.abilities) {
-          updates.abilities = {
-            ...character.abilities,
-            [ability]: currentValue + bonus
+        const abilityKey = ability as keyof typeof updatedAbilities;
+        // Проверяем, что такое свойство существует
+        if (abilityKey in updatedAbilities) {
+          const currentValue = updatedAbilities[abilityKey] || 10;
+          updatedAbilities[abilityKey] = currentValue + bonus;
+          
+          // Добавляем также соответствующее короткое свойство
+          const shortKeyMap: Record<string, string> = {
+            'strength': 'STR', 'dexterity': 'DEX', 'constitution': 'CON', 
+            'intelligence': 'INT', 'wisdom': 'WIS', 'charisma': 'CHA'
           };
+          
+          const longKeyMap: Record<string, string> = {
+            'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 
+            'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'
+          };
+          
+          if (abilityKey in shortKeyMap) {
+            const shortKey = shortKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
+            updatedAbilities[shortKey] = currentValue + bonus;
+          } else if (abilityKey in longKeyMap) {
+            const longKey = longKeyMap[abilityKey as string] as keyof typeof updatedAbilities;
+            updatedAbilities[longKey] = currentValue + bonus;
+          }
         }
       });
       
+      updates.abilities = updatedAbilities;
       updateCharacter(updates);
     }
   }, [abilityBonuses.fixed]);
@@ -77,33 +100,59 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применение бонусов к характеристикам
   const applyAbilityBonuses = (selected: string[]) => {
-    // Сначала сбрасываем все бонусы от расы
-    const resetUpdates: Partial<Character> = {};
+    // Получаем базовые характеристики (с учетом уже примененных фиксированных бонусов)
     const baseAbilities = character.abilities || {
-      strength: 10, dexterity: 10, constitution: 10,
-      intelligence: 10, wisdom: 10, charisma: 10
+      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
     };
     
-    // Применяем фиксированные бонусы
-    const updates: Partial<Character> = { abilities: { ...baseAbilities } };
+    // Создаем копию для обновления
+    const updatedAbilities = { ...baseAbilities };
+    
+    // Сбрасываем все "выборные" бонусы (не фиксированные)
+    // Для этого нам нужно знать, какие характеристики были ранее выбраны,
+    // но поскольку мы не храним это состояние, мы будем применять все бонусы заново
+    
+    // Применяем фиксированные бонусы (если есть)
     if (abilityBonuses.fixed) {
       Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
-        const abilityKey = ability as keyof typeof baseAbilities;
-        updates.abilities![abilityKey] = baseAbilities[abilityKey] + bonus;
-        updates[abilityKey] = baseAbilities[abilityKey] + bonus;
+        const abilityKey = ability as keyof typeof updatedAbilities;
+        if (abilityKey in updatedAbilities) {
+          const baseValue = abilityKey.includes('STR') || 
+                          abilityKey.includes('DEX') || 
+                          abilityKey.includes('CON') || 
+                          abilityKey.includes('INT') || 
+                          abilityKey.includes('WIS') || 
+                          abilityKey.includes('CHA') ? 10 : 10;
+          updatedAbilities[abilityKey] = baseValue + bonus;
+        }
       });
     }
     
     // Применяем выбранные бонусы
     selected.forEach(ability => {
       if (ability) {
-        const abilityKey = ability as keyof typeof baseAbilities;
-        updates.abilities![abilityKey] = (updates.abilities![abilityKey] || baseAbilities[abilityKey]) + 1;
-        updates[abilityKey] = (updates[abilityKey] as number || baseAbilities[abilityKey]) + 1;
+        const abilityKey = ability as keyof typeof updatedAbilities;
+        const shortKey = ability === 'strength' ? 'STR' : 
+                       ability === 'dexterity' ? 'DEX' : 
+                       ability === 'constitution' ? 'CON' : 
+                       ability === 'intelligence' ? 'INT' : 
+                       ability === 'wisdom' ? 'WIS' : 
+                       ability === 'charisma' ? 'CHA' : '';
+        
+        if (abilityKey in updatedAbilities) {
+          updatedAbilities[abilityKey] = (updatedAbilities[abilityKey] || 10) + 1;
+          
+          // Обновляем также короткое имя свойства
+          if (shortKey && shortKey in updatedAbilities) {
+            updatedAbilities[shortKey as keyof typeof updatedAbilities] = 
+              (updatedAbilities[shortKey as keyof typeof updatedAbilities] || 10) + 1;
+          }
+        }
       }
     });
     
-    updateCharacter(updates);
+    updateCharacter({ abilities: updatedAbilities });
   };
 
   // Сколько осталось распределить бонусов

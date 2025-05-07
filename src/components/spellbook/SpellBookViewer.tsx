@@ -170,10 +170,9 @@ const SpellBookViewer: React.FC = () => {
                               </h3>
                               <Badge 
                                 style={{ 
-                                  backgroundColor: getBadgeColor(spell.level),
-                                  color: '#fff'
+                                  backgroundColor: getBadgeColor(spell.level)
                                 }}
-                                className="ml-2"
+                                className="text-white ml-2"
                               >
                                 {spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}
                               </Badge>

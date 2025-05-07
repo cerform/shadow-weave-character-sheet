@@ -19,6 +19,8 @@ export interface SpellData {
   material?: boolean;
   materials?: string;
   higherLevel?: string;
+  // Add higherLevels as an alias for higherLevel for compatibility
+  higherLevels?: string;
   source?: string;
 }
 

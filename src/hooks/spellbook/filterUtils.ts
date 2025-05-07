@@ -1,6 +1,6 @@
 
 import { SpellData } from '@/types/spells';
-import { SpellFilter } from './useSpellbook';
+import { SpellFilter } from '@/types/spells';
 
 /**
  * Фильтрует заклинания по поисковому запросу

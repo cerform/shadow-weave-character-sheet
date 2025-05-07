@@ -124,11 +124,11 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
                   {formattedDescription}
                 </div>
                 
-                {(spell.higherLevel || spell.higherLevels) && (
+                {spell.higherLevel && (
                   <>
                     <Separator className="my-4" />
                     <h3 className="text-lg font-medium" style={{ color: currentTheme.accent }}>На более высоких уровнях</h3>
-                    <p className="text-pretty">{spell.higherLevel || spell.higherLevels}</p>
+                    <p className="text-pretty">{spell.higherLevel}</p>
                   </>
                 )}
               </div>

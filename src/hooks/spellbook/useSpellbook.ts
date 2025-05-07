@@ -3,16 +3,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SpellData, SpellFilter, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
-import { filterSpells } from './filterUtils';
+import { applyAllFilters } from './filterUtils';
 
-export type SpellFilter = {
-  search: string;
-  level: number[];
-  school: string[];
-  className: string[];
-  ritual: boolean | null;
-  concentration: boolean | null;
-};
+// Don't redefine SpellFilter type here, use the imported one
 
 export function useSpellbook(initialSpells: SpellData[] = []) {
   const { toast } = useToast();
@@ -62,7 +55,15 @@ export function useSpellbook(initialSpells: SpellData[] = []) {
 
   // Отфильтрованные заклинания
   const filteredSpells = useMemo(() => {
-    return filterSpells(spells, filter);
+    return applyAllFilters(
+      spells, 
+      filter.search, 
+      filter.level, 
+      filter.school,
+      filter.className,
+      filter.ritual,
+      filter.concentration
+    );
   }, [spells, filter]);
 
   // Функции для обновления фильтров
@@ -144,36 +145,36 @@ export function useSpellbook(initialSpells: SpellData[] = []) {
   };
 
   // Вспомогательные функции для UI
-  const getBadgeColor = (level: number) => {
+  const getBadgeColor = (level: number): string => {
     switch (level) {
-      case 0: return { bg: 'bg-gray-500', text: 'text-white' };
-      case 1: return { bg: 'bg-indigo-500', text: 'text-white' };
-      case 2: return { bg: 'bg-blue-500', text: 'text-white' };
-      case 3: return { bg: 'bg-cyan-500', text: 'text-white' };
-      case 4: return { bg: 'bg-teal-500', text: 'text-white' };
-      case 5: return { bg: 'bg-green-500', text: 'text-white' };
-      case 6: return { bg: 'bg-yellow-500', text: 'text-black' };
-      case 7: return { bg: 'bg-orange-500', text: 'text-white' };
-      case 8: return { bg: 'bg-red-500', text: 'text-white' };
-      case 9: return { bg: 'bg-purple-600', text: 'text-white' };
-      default: return { bg: 'bg-gray-500', text: 'text-white' };
+      case 0: return '#6b7280'; // gray-500
+      case 1: return '#6366f1'; // indigo-500
+      case 2: return '#3b82f6'; // blue-500
+      case 3: return '#06b6d4'; // cyan-500
+      case 4: return '#14b8a6'; // teal-500
+      case 5: return '#22c55e'; // green-500
+      case 6: return '#eab308'; // yellow-500
+      case 7: return '#f97316'; // orange-500
+      case 8: return '#ef4444'; // red-500
+      case 9: return '#a855f7'; // purple-500
+      default: return '#6b7280'; // gray-500
     }
   };
 
-  const getSchoolBadgeColor = (school: string) => {
+  const getSchoolBadgeColor = (school: string): string => {
     switch (school.toLowerCase()) {
-      case 'огонь': return { bg: 'bg-red-500', text: 'text-white' };
-      case 'вода': return { bg: 'bg-blue-500', text: 'text-white' };
-      case 'земля': return { bg: 'bg-amber-700', text: 'text-white' };
-      case 'воздух': return { bg: 'bg-sky-300', text: 'text-black' };
-      case 'воплощение': return { bg: 'bg-orange-500', text: 'text-white' };
-      case 'некромантия': return { bg: 'bg-purple-900', text: 'text-white' };
-      case 'преобразование': return { bg: 'bg-green-600', text: 'text-white' };
-      case 'ограждение': return { bg: 'bg-amber-500', text: 'text-black' };
-      case 'иллюзия': return { bg: 'bg-pink-400', text: 'text-white' };
-      case 'очарование': return { bg: 'bg-purple-500', text: 'text-white' };
-      case 'прорицание': return { bg: 'bg-cyan-500', text: 'text-white' };
-      default: return { bg: 'bg-slate-500', text: 'text-white' };
+      case 'огонь': return '#ef4444'; // red-500
+      case 'вода': return '#3b82f6'; // blue-500
+      case 'земля': return '#92400e'; // amber-700
+      case 'воздух': return '#7dd3fc'; // sky-300
+      case 'воплощение': return '#f97316'; // orange-500
+      case 'некромантия': return '#581c87'; // purple-900
+      case 'преобразование': return '#16a34a'; // green-600
+      case 'ограждение': return '#f59e0b'; // amber-500
+      case 'иллюзия': return '#ec4899'; // pink-400
+      case 'очарование': return '#d946ef'; // purple-500
+      case 'прорицание': return '#06b6d4'; // cyan-500
+      default: return '#64748b'; // slate-500
     }
   };
 
