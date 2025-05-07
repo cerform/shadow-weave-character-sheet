@@ -1,4 +1,3 @@
-
 // Add the Initiative and TokenData types if they don't exist
 export interface Initiative {
   id: string;
@@ -68,10 +67,10 @@ export interface SessionPlayer {
   name?: string;
   userId?: string;
   characterId?: string;
-  connected?: boolean;
+  connected?: boolean; // используем connected вместо isConnected
 }
 
-// Для DM сессий
+// Для DM сессий - добавляем свойство chat и updatedAt
 export interface DMSession extends GameSession {
   // Специфические поля для DM
   updatedAt: string;

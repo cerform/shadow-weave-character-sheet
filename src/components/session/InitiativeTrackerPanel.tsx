@@ -1,265 +1,232 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ArrowUpCircle, ArrowDownCircle, Plus, Trash2 } from 'lucide-react';
+import { PlusCircle, Play, Pause, SkipForward, UserCircle, X, MoveDown, MoveUp } from 'lucide-react';
 import { Initiative, TokenData } from '@/types/session.types';
 
-interface InitiativeTrackerPanelProps {
+export interface InitiativeTrackerPanelProps {
   initiatives: Initiative[];
   tokens: TokenData[];
   battleActive: boolean;
   sessionId: string;
-  onUpdateInitiative: (newInitiative: Initiative[]) => void;
+  onUpdateInitiatives: (newInitiative: Initiative[]) => void;
   onToggleBattle: () => void;
   onNextTurn: () => void;
 }
 
-const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({
+export const InitiativeTrackerPanel: React.FC<InitiativeTrackerPanelProps> = ({
   initiatives,
   tokens,
   battleActive,
   sessionId,
-  onUpdateInitiative,
+  onUpdateInitiatives,
   onToggleBattle,
   onNextTurn
 }) => {
-  const [newName, setNewName] = useState('');
-  const [newInitiative, setNewInitiative] = useState<number>(10);
-  const [sortedInitiatives, setSortedInitiatives] = useState<Initiative[]>([]);
-  const [activeInitiativeId, setActiveInitiativeId] = useState<string | null>(null);
+  const [newCharacterName, setNewCharacterName] = useState('');
+  const [newInitiativeRoll, setNewInitiativeRoll] = useState('');
 
-  // Sort initiatives when they change
-  useEffect(() => {
-    const sorted = [...initiatives].sort((a, b) => b.initiative - a.initiative);
-    setSortedInitiatives(sorted);
-    
-    // Set active initiative if none is set
-    if (sorted.length > 0 && !sorted.some(i => i.isActive)) {
-      handleSetActive(sorted[0].id);
-    }
-  }, [initiatives]);
-
-  // Add new initiative
+  // Обработчик добавления нового участника инициативы
   const handleAddInitiative = () => {
-    if (!newName.trim()) return;
+    if (!newCharacterName || !newInitiativeRoll) return;
     
-    const newEntry: Initiative = {
-      id: Date.now().toString(),
-      name: newName,
-      initiative: newInitiative,
+    const roll = parseInt(newInitiativeRoll);
+    if (isNaN(roll)) return;
+    
+    const newInitiative: Initiative = {
+      id: `manual-${Date.now()}`,
+      name: newCharacterName,
+      initiative: roll,
+      roll: roll,
       isActive: false
     };
     
-    onUpdateInitiative([...initiatives, newEntry]);
-    setNewName('');
-    setNewInitiative(10);
+    const updatedInitiatives = [...initiatives, newInitiative]
+      .sort((a, b) => b.initiative - a.initiative);
+    
+    onUpdateInitiatives(updatedInitiatives);
+    
+    setNewCharacterName('');
+    setNewInitiativeRoll('');
   };
 
-  // Remove initiative
+  // Обработчик удаления участника инициативы
   const handleRemoveInitiative = (id: string) => {
-    const updatedInitiatives = initiatives.filter(i => i.id !== id);
+    const updatedInitiatives = initiatives.filter(init => init.id !== id);
     onUpdateInitiatives(updatedInitiatives);
   };
 
-  // Set active initiative
-  const handleSetActive = (id: string) => {
-    const updatedInitiatives = initiatives.map(i => ({
-      ...i,
-      isActive: i.id === id
-    }));
+  // Обработчик перемещения участника вверх в списке инициативы
+  const handleMoveUp = (index: number) => {
+    if (index <= 0) return;
     
-    setActiveInitiativeId(id);
-    onUpdateInitiatives(updatedInitiatives);
-  };
-
-  // Move to next initiative in order
-  const handleNextInitiative = () => {
-    if (sortedInitiatives.length === 0) return;
-    
-    const activeIndex = sortedInitiatives.findIndex(i => i.isActive);
-    const nextIndex = activeIndex === sortedInitiatives.length - 1 ? 0 : activeIndex + 1;
-    
-    handleSetActive(sortedInitiatives[nextIndex].id);
-  };
-
-  // Move to previous initiative in order
-  const handlePrevInitiative = () => {
-    if (sortedInitiatives.length === 0) return;
-    
-    const activeIndex = sortedInitiatives.findIndex(i => i.isActive);
-    const prevIndex = activeIndex <= 0 ? sortedInitiatives.length - 1 : activeIndex - 1;
-    
-    handleSetActive(sortedInitiatives[prevIndex].id);
-  };
-
-  // Roll initiative for all
-  const handleRollAllInitiative = () => {
-    const updatedInitiatives = initiatives.map(i => ({
-      ...i,
-      initiative: Math.floor(Math.random() * 20) + 1 // d20 roll
-    }));
+    const updatedInitiatives = [...initiatives];
+    const temp = updatedInitiatives[index - 1];
+    updatedInitiatives[index - 1] = updatedInitiatives[index];
+    updatedInitiatives[index] = temp;
     
     onUpdateInitiatives(updatedInitiatives);
   };
 
-  // Roll initiative for one
-  const handleRollInitiative = (id: string) => {
-    const updatedInitiatives = initiatives.map(i => {
-      if (i.id === id) {
-        return {
-          ...i,
-          initiative: Math.floor(Math.random() * 20) + 1 // d20 roll
-        };
-      }
-      return i;
+  // Обработчик перемещения участника вниз в списке инициативы
+  const handleMoveDown = (index: number) => {
+    if (index >= initiatives.length - 1) return;
+    
+    const updatedInitiatives = [...initiatives];
+    const temp = updatedInitiatives[index + 1];
+    updatedInitiatives[index + 1] = updatedInitiatives[index];
+    updatedInitiatives[index] = temp;
+    
+    onUpdateInitiatives(updatedInitiatives);
+  };
+
+  // Обработчик броска инициативы для всех токенов
+  const handleRollForAll = () => {
+    const newInitiatives: Initiative[] = [];
+    
+    // Создаем инициативу для каждого токена
+    tokens.forEach(token => {
+      const roll = Math.floor(Math.random() * 20) + 1;
+      newInitiatives.push({
+        id: token.id,
+        tokenId: token.id,
+        name: token.name || `Токен ${token.id}`,
+        initiative: roll,
+        roll: roll,
+        isActive: false
+      });
     });
     
-    onUpdateInitiatives(updatedInitiatives);
+    // Сортируем по значению инициативы
+    const sortedInitiatives = newInitiatives.sort((a, b) => b.initiative - a.initiative);
+    
+    // Устанавливаем активным первого участника
+    if (sortedInitiatives.length > 0) {
+      sortedInitiatives[0].isActive = true;
+    }
+    
+    onUpdateInitiatives(sortedInitiatives);
   };
 
-  // Update initiative value manually
-  const handleUpdateInitiative = (id: string, value: string) => {
-    const initiativeValue = parseInt(value) || 0;
-    
-    const updatedInitiatives = initiatives.map(i => {
-      if (i.id === id) {
-        return {
-          ...i,
-          initiative: initiativeValue
-        };
-      }
-      return i;
-    });
-    
-    onUpdateInitiatives(updatedInitiatives);
-  };
-
-  // Reset all initiatives
-  const handleResetInitiatives = () => {
+  // Обработчик очистки списка инициативы
+  const handleClearInitiative = () => {
     onUpdateInitiatives([]);
   };
 
-  // Add token to initiative
-  const handleAddTokenToInitiative = (token: TokenData) => {
-    if (!token || !token.name) return;
-    
-    const existingIndex = initiatives.findIndex(i => i.tokenId === token.id);
-    
-    if (existingIndex !== -1) {
-      // Token already has initiative, just roll for it
-      handleRollInitiative(initiatives[existingIndex].id);
-      return;
-    }
-    
-    const newEntry: Initiative = {
-      id: Date.now().toString(),
-      name: token.name,
-      initiative: Math.floor(Math.random() * 20) + 1,
-      isActive: false,
-      tokenId: token.id
-    };
-    
-    onUpdateInitiatives([...initiatives, newEntry]);
+  // Вспомогательная функция для получения URL изображения токена
+  const getTokenImage = (tokenId?: string) => {
+    if (!tokenId) return null;
+    const token = tokens.find(t => t.id === tokenId);
+    return token?.img || token?.image;
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex justify-between items-center">
-          <span>Отслеживание инициативы</span>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={handlePrevInitiative} title="Предыдущий участник">
-              <ArrowUpCircle className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleNextInitiative} title="Следующий участник">
-              <ArrowDownCircle className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleRollAllInitiative} title="Перебросить все">
-              d20
-            </Button>
-            <Button size="sm" variant="destructive" onClick={handleResetInitiatives} title="Очистить">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg">
+          Трекер инициативы
+          {battleActive && <span className="ml-2 text-green-500">(Активен)</span>}
         </CardTitle>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onToggleBattle}
+          >
+            {battleActive ? <Pause className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+            {battleActive ? 'Пауза' : 'Старт'}
+          </Button>
+          
+          {battleActive && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onNextTurn}
+            >
+              <SkipForward className="h-4 w-4 mr-1" />
+              Следующий
+            </Button>
+          )}
+        </div>
       </CardHeader>
-      
-      <CardContent className="flex-1 overflow-hidden flex flex-col gap-4">
-        {/* Initiative list */}
-        <div className="flex-1 overflow-y-auto">
-          {sortedInitiatives.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              Добавьте участников боя, чтобы отслеживать инициативу
+      <CardContent>
+        {/* Список инициативы */}
+        <div className="space-y-2 mb-4">
+          {initiatives.length === 0 ? (
+            <div className="text-center py-2 text-muted-foreground">
+              Список инициативы пуст
             </div>
           ) : (
-            <div className="space-y-2">
-              {sortedInitiatives.map((init) => (
-                <div 
-                  key={init.id} 
-                  className={`flex items-center justify-between p-2 rounded-md ${
-                    init.isActive ? 'bg-primary/20 border border-primary/30' : 'bg-secondary/10'
-                  }`}
-                  onClick={() => handleSetActive(init.id)}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="font-medium">{init.name}</div>
-                    {init.tokenId && (
-                      <div className="text-xs text-muted-foreground">(Токен)</div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={init.initiative}
-                      onChange={(e) => handleUpdateInitiative(init.id, e.target.value)}
-                      className="w-16 text-center"
-                      onClick={(e) => e.stopPropagation()}
+            initiatives.map((init, index) => (
+              <div 
+                key={init.id} 
+                className={`flex items-center justify-between p-2 rounded-md ${
+                  init.isActive ? 'bg-primary/20 border border-primary' : 'bg-secondary/10'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {getTokenImage(init.tokenId) ? (
+                    <img 
+                      src={getTokenImage(init.tokenId)!} 
+                      alt={init.name}
+                      className="w-8 h-8 rounded-full object-cover"
                     />
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveInitiative(init.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
+                  ) : (
+                    <UserCircle className="w-8 h-8 text-muted-foreground" />
+                  )}
+                  <span className="font-medium">{init.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-primary/10 px-2 py-0.5 rounded-full text-sm">
+                    {init.initiative}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveUp(index)}>
+                      <MoveUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveDown(index)}>
+                      <MoveDown className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveInitiative(init.id)}>
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
         
-        {/* Add new initiative form */}
-        <div className="border-t pt-4">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Label htmlFor="name">Имя участника</Label>
-              <Input
-                id="name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Имя"
-              />
-            </div>
-            <div className="w-20">
-              <Label htmlFor="initiative">Инициатива</Label>
-              <Input
-                id="initiative"
-                type="number"
-                value={newInitiative}
-                onChange={(e) => setNewInitiative(parseInt(e.target.value) || 0)}
-              />
-            </div>
-            <Button onClick={handleAddInitiative} disabled={!newName.trim()}>
-              <Plus className="h-4 w-4 mr-1" />
-              Добавить
-            </Button>
-          </div>
+        {/* Форма добавления нового участника */}
+        <div className="flex gap-2">
+          <Input 
+            placeholder="Имя" 
+            value={newCharacterName}
+            onChange={e => setNewCharacterName(e.target.value)}
+          />
+          <Input 
+            placeholder="Инициатива" 
+            value={newInitiativeRoll}
+            onChange={e => setNewInitiativeRoll(e.target.value)}
+            className="w-20"
+            type="number"
+          />
+          <Button onClick={handleAddInitiative}>
+            <PlusCircle className="h-4 w-4 mr-1" />
+            Добавить
+          </Button>
+        </div>
+        
+        {/* Дополнительные кнопки управления */}
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleRollForAll}>
+            Бросить для всех
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleClearInitiative}>
+            Очистить
+          </Button>
         </div>
       </CardContent>
     </Card>
