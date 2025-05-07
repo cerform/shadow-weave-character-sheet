@@ -23,10 +23,10 @@ export interface SpellbookContextType {
   isSpellAvailableForClass: (spell: SpellData) => boolean;
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
   
-  // Дополнительные свойства, используемые в SpellBookViewer
-  spells?: SpellData[];
-  loadSpells?: () => void;
-  isLoading?: boolean;
-  filters?: SpellFilters;
-  setFilters?: (filters: SpellFilters) => void;
+  // Добавляем необходимые свойства для SpellBookViewer
+  spells: SpellData[];
+  loadSpells: () => void;
+  isLoading: boolean;
+  filters: SpellFilters;
+  setFilters: (filters: SpellFilters) => void;
 }

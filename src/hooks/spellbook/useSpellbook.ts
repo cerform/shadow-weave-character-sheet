@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 import { spells } from '@/data/spells';
+import { SpellFilters } from './types';
 
 export const useSpellbook = () => {
   const { theme } = useTheme();
@@ -17,6 +17,17 @@ export const useSpellbook = () => {
   const [activeClass, setActiveClass] = useState<string[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Текущие фильтры для использования в компонентах
+  const [filters, setFilters] = useState<SpellFilters>({
+    searchTerm: '',
+    level: null,
+    school: null,
+    class: null,
+    ritual: false,
+    concentration: false
+  });
 
   // Создаем списки всех уровней, школ и классов
   const allSpells = useMemo(() => spells, []);
@@ -47,28 +58,28 @@ export const useSpellbook = () => {
   const filteredSpells = useMemo(() => {
     return allSpells.filter(spell => {
       // Фильтр по поисковому запросу
-      if (searchTerm && !spell.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (filters.searchTerm && !spell.name.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
         return false;
       }
 
       // Фильтр по уровню
-      if (activeLevel.length > 0 && !activeLevel.includes(spell.level)) {
+      if (filters.level !== null && spell.level !== filters.level) {
         return false;
       }
 
       // Фильтр по школе
-      if (activeSchool.length > 0 && !activeSchool.includes(spell.school || 'Универсальная')) {
+      if (filters.school !== null && spell.school !== filters.school) {
         return false;
       }
 
       // Фильтр по классу
-      if (activeClass.length > 0) {
+      if (filters.class !== null) {
         if (typeof spell.classes === 'string') {
-          if (!activeClass.includes(spell.classes)) {
+          if (spell.classes !== filters.class) {
             return false;
           }
         } else if (Array.isArray(spell.classes)) {
-          if (!spell.classes.some(cls => activeClass.includes(cls))) {
+          if (!spell.classes.includes(filters.class)) {
             return false;
           }
         } else {
@@ -76,9 +87,42 @@ export const useSpellbook = () => {
         }
       }
 
+      // Фильтр по ритуалу
+      if (filters.ritual && !spell.ritual) {
+        return false;
+      }
+
+      // Фильтр по концентрации
+      if (filters.concentration && !spell.concentration) {
+        return false;
+      }
+
       return true;
     });
-  }, [allSpells, searchTerm, activeLevel, activeSchool, activeClass]);
+  }, [allSpells, filters]);
+
+  // Функция загрузки заклинаний
+  const loadSpells = useCallback(() => {
+    setIsLoading(true);
+    
+    // Имитация загрузки данных
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    // Если бы здесь был реальный API-запрос:
+    // fetchSpells().then(data => {
+    //   setIsLoading(false);
+    // }).catch(error => {
+    //   console.error('Error loading spells:', error);
+    //   setIsLoading(false);
+    // });
+  }, []);
+
+  // Инициализируем загрузку заклинаний при первом рендере
+  useEffect(() => {
+    loadSpells();
+  }, [loadSpells]);
 
   // Функции для фильтрации
   const toggleLevel = useCallback((level: number) => {
@@ -125,7 +169,7 @@ export const useSpellbook = () => {
 
   // Функции для отображения
   const getBadgeColor = useCallback((level: number): string => {
-    const colors = {
+    const colors: Record<number, string> = {
       0: "#6b7280", // заговор - серый
       1: "#10b981", // 1 уровень - зеленый
       2: "#3b82f6", // 2 уровень - синий
@@ -137,7 +181,7 @@ export const useSpellbook = () => {
       8: "#0ea5e9", // 8 уровень - голубой
       9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
     };
-    return colors[level as keyof typeof colors] || colors[0];
+    return colors[level] || colors[0];
   }, []);
 
   const getSchoolBadgeColor = useCallback((school: string): string => {
@@ -178,10 +222,23 @@ export const useSpellbook = () => {
     clearFilters,
     selectedSpell,
     isModalOpen,
-    handleOpenSpell,
-    handleClose,
+    handleOpenSpell: (spell: SpellData) => {
+      setSelectedSpell(spell);
+      setIsModalOpen(true);
+    },
+    handleClose: () => {
+      setIsModalOpen(false);
+      setSelectedSpell(null);
+    },
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    
+    // Добавляем необходимые свойства для SpellBookViewer
+    spells: filteredSpells,
+    loadSpells,
+    isLoading,
+    filters,
+    setFilters
   };
 };
