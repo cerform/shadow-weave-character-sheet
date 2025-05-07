@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,20 +22,32 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const [wisdom, setWisdom] = useState(character.wisdom || 10);
   const [charisma, setCharisma] = useState(character.charisma || 10);
   
-  // Initialize as empty arrays if not present
-  const [savingThrows, setSavingThrows] = useState<string[]>(
-    Array.isArray(character.savingThrows) ? character.savingThrows : []
-  );
+  // Helper function to safely extract saving throws as string array
+  const getSavingThrowsAsArray = (): string[] => {
+    if (Array.isArray(character.savingThrows)) {
+      return character.savingThrows;
+    } else if (character.savingThrows && typeof character.savingThrows === 'object') {
+      return Object.keys(character.savingThrows).filter(key => character.savingThrows?.[key]);
+    }
+    return [];
+  };
   
-  const [skills, setSkills] = useState<string[]>(
-    Array.isArray(character.skills) ? 
-      Object.keys(character.skills).filter(key => character.skills && character.skills[key]?.proficient) : 
-      []
-  );
+  // Helper function to safely extract skills that have proficiency
+  const getSkillsWithProficiency = (): string[] => {
+    if (!character.skills) return [];
+    return Object.keys(character.skills).filter(key => character.skills?.[key]?.proficient);
+  };
   
-  const [expertise, setExpertise] = useState<string[]>(
-    Array.isArray(character.expertise) ? character.expertise : []
-  );
+  // Helper function to safely extract skills that have expertise
+  const getSkillsWithExpertise = (): string[] => {
+    if (!character.skills) return [];
+    return Object.keys(character.skills).filter(key => character.skills?.[key]?.expertise);
+  };
+  
+  // Initialize arrays with proper default values
+  const [savingThrows, setSavingThrows] = useState<string[]>(getSavingThrowsAsArray());
+  const [skills, setSkills] = useState<string[]>(getSkillsWithProficiency());
+  const [expertise, setExpertise] = useState<string[]>(character.expertise || getSkillsWithExpertise());
   
   // Helper function for checking if a skill has expertise
   const hasExpertise = (skill: string) => {
@@ -48,7 +61,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       savingThrowsRecord[ability] = true;
     });
     
-    const skillsRecord: Record<string, { proficient: boolean }> = {};
+    const skillsRecord: Record<string, { proficient: boolean; expertise?: boolean }> = {};
     skills.forEach(skill => {
       skillsRecord[skill] = { proficient: true };
     });

@@ -13,6 +13,7 @@ export interface Item {
 
 export interface Character {
   id?: string;
+  userId?: string; // Add userId property to Character interface
   name: string;
   race?: string;
   class?: string;
@@ -48,7 +49,7 @@ export interface Character {
   };
   skills?: Record<string, {
     proficient: boolean;
-    expertise?: boolean;
+    expertise?: boolean; // Make sure expertise is defined
     value?: number;
     bonus?: number;
   }>;
@@ -200,7 +201,7 @@ export interface Feature {
 }
 
 export interface PlayerCharacter extends Character {
-  userId: string;
+  userId: string; // This makes it required in PlayerCharacter
 }
 
 // Export ability score caps
