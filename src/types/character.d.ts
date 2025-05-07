@@ -1,3 +1,4 @@
+
 export interface Character {
   id?: string;
   name: string;
@@ -53,6 +54,7 @@ export interface Character {
   initiative?: string | number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
+  savingThrowProficiencies?: Record<string, boolean>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -228,3 +230,4 @@ export interface LevelFeature {
   class?: string;
   required?: boolean;
 }
+
