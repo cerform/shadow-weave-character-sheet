@@ -1,6 +1,16 @@
-
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
+
+/**
+ * Получает название уровня заклинания
+ */
+export const getSpellLevelName = (level: number): string => {
+  if (level === 0) {
+    return 'Заговор';
+  }
+  
+  return `${level}-й уровень`;
+};
 
 /**
  * Конвертирует заклинание персонажа (CharacterSpell) в SpellData
@@ -103,7 +113,7 @@ export const convertToSpellData = (spell: string | CharacterSpell | SpellData | 
     };
   }
   
-  // Если это строка, создаем базовое заклинание
+  // Если это ��трока, создаем базовое заклинание
   if (typeof spell === 'string') {
     return convertCharacterSpellToSpellData(spell);
   }
