@@ -1,5 +1,6 @@
 
 import { SpellData } from '@/types/spells';
+import { SpellFilter } from './useSpellbook';
 
 /**
  * Фильтрует заклинания по поисковому запросу
@@ -114,7 +115,7 @@ export const applyAllFilters = (
 };
 
 // Добавляем функцию filterSpells для совместимости с useSpellbook.ts
-export const filterSpells = (spells: SpellData[], filter: any): SpellData[] => {
+export const filterSpells = (spells: SpellData[], filter: SpellFilter): SpellData[] => {
   return applyAllFilters(
     spells, 
     filter.search, 

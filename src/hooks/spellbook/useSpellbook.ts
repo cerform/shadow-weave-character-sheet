@@ -1,6 +1,7 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { SpellData, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
+import { useState, useEffect, useMemo } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { SpellData, SpellFilter, convertSpellDataToCharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { filterSpells } from './filterUtils';
 
@@ -13,211 +14,215 @@ export type SpellFilter = {
   concentration: boolean | null;
 };
 
-export interface UseSpellbookProps {
-  initialSpells?: SpellData[];
-}
-
-export const useSpellbook = ({ initialSpells = [] }: UseSpellbookProps = {}) => {
+export function useSpellbook(initialSpells: SpellData[] = []) {
+  const { toast } = useToast();
   const [spells, setSpells] = useState<SpellData[]>(initialSpells);
-  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
+  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);
+  const [activeClass, setActiveClass] = useState<string[]>([]);
   const [filter, setFilter] = useState<SpellFilter>({
     search: '',
     level: [],
     school: [],
     className: [],
     ritual: null,
-    concentration: null,
+    concentration: null
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Состояние для SpellBookViewer
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Функции для обработки заклинаний для SpellBookViewer
-  const handleOpenSpell = useCallback((spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsModalOpen(true);
-  }, []);
-  
-  const handleClose = useCallback(() => {
-    setSelectedSpell(null);
-    setIsModalOpen(false);
-  }, []);
-  
-  // Функции для фильтров
-  const searchTerm = filter.search;
-  const setSearchTerm = (term: string) => updateFilter({ search: term });
-  
-  const activeLevel = filter.level;
-  const activeSchool = filter.school;
-  const activeClass = filter.className;
-  
-  // Получаем все уровни, школы и классы из заклинаний
-  const allLevels = [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
-  const allSchools = [...new Set(spells.map(spell => spell.school))];
-  const allClasses = [...new Set(spells.flatMap(spell => {
-    if (Array.isArray(spell.classes)) return spell.classes;
-    else if (typeof spell.classes === 'string') return [spell.classes];
-    return [];
-  }))].filter(Boolean);
-  
-  // Цвета для уровней заклинаний
-  const levelColors: Record<number, string> = {
-    0: '#808080',   // Grey
-    1: '#007bff',   // Blue
-    2: '#28a745',   // Green
-    3: '#dc3545',   // Red
-    4: '#ffc107',  // Yellow
-    5: '#17a2b8',   // Cyan
-    6: '#fd7e14',   // Orange
-    7: '#6f42c1',   // Indigo
-    8: '#e83e8c',   // Pink
-    9: '#6c757d'    // Dark Grey
-  };
 
-  // Цвета для школ магии
-  const schoolColors: Record<string, string> = {
-    Abjuration: '#4287f5',    // Blue
-    Conjuration: '#28a745',   // Green
-    Divination: '#ffc107',    // Yellow
-    Enchantment: '#e83e8c',   // Pink
-    Evocation: '#dc3545',     // Red
-    Illusion: '#6f42c1',      // Indigo
-    Necromancy: '#000000',    // Black
-    Transmutation: '#fd7e14'  // Orange
-  };
-  
-  // Функции для SpellBookViewer
-  const getBadgeColor = (level: number): string => {
-    return levelColors[level] || '#999';
-  };
+  // Получение уникальных значений для фильтров
+  const allLevels = useMemo(() => {
+    const levels = new Set<number>();
+    spells.forEach(spell => levels.add(spell.level));
+    return Array.from(levels).sort((a, b) => a - b);
+  }, [spells]);
 
-  const getSchoolBadgeColor = (school: string): string => {
-    return schoolColors[school] || '#999';
-  };
-  
-  const formatClasses = (classes: string | string[]): string => {
-    if (typeof classes === 'string') {
-      return classes;
-    }
-    return classes.join(', ');
-  };
-  
-  const toggleLevel = (level: number) => {
-    setFilter(prev => {
-      const newLevels = prev.level.includes(level) 
-        ? prev.level.filter(l => l !== level)
-        : [...prev.level, level];
-      return { ...prev, level: newLevels };
+  const allSchools = useMemo(() => {
+    const schools = new Set<string>();
+    spells.forEach(spell => schools.add(spell.school));
+    return Array.from(schools).sort();
+  }, [spells]);
+
+  const allClasses = useMemo(() => {
+    const classes = new Set<string>();
+    spells.forEach(spell => {
+      if (Array.isArray(spell.classes)) {
+        spell.classes.forEach(cls => classes.add(cls));
+      } else if (typeof spell.classes === 'string') {
+        classes.add(spell.classes);
+      }
     });
+    return Array.from(classes).sort();
+  }, [spells]);
+
+  // Отфильтрованные заклинания
+  const filteredSpells = useMemo(() => {
+    return filterSpells(spells, filter);
+  }, [spells, filter]);
+
+  // Функции для обновления фильтров
+  const updateFilter = (updates: Partial<SpellFilter>) => {
+    setFilter(prev => ({ ...prev, ...updates }));
+  };
+
+  // Обработчики для изменения фильтров
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    updateFilter({ search: value });
+  };
+
+  const toggleLevel = (level: number) => {
+    const newActiveLevels = [...activeLevel];
+    const index = newActiveLevels.indexOf(level);
+    
+    if (index === -1) {
+      newActiveLevels.push(level);
+    } else {
+      newActiveLevels.splice(index, 1);
+    }
+    
+    setActiveLevel(newActiveLevels);
+    updateFilter({ level: newActiveLevels });
   };
 
   const toggleSchool = (school: string) => {
-    setFilter(prev => {
-      const newSchools = prev.school.includes(school)
-        ? prev.school.filter(s => s !== school)
-        : [...prev.school, school];
-      return { ...prev, school: newSchools };
-    });
+    const newActiveSchools = [...activeSchool];
+    const index = newActiveSchools.indexOf(school);
+    
+    if (index === -1) {
+      newActiveSchools.push(school);
+    } else {
+      newActiveSchools.splice(index, 1);
+    }
+    
+    setActiveSchool(newActiveSchools);
+    updateFilter({ school: newActiveSchools });
   };
 
   const toggleClass = (className: string) => {
-    setFilter(prev => {
-      const newClasses = prev.className.includes(className)
-        ? prev.className.filter(c => c !== className)
-        : [...prev.className, className];
-      return { ...prev, className: newClasses };
-    });
-  };
-  
-  const clearFilters = () => {
-    setFilter({
-      search: '',
-      level: [],
-      school: [],
-      className: [],
-      ritual: null,
-      concentration: null,
-    });
-  };
-
-  // Функция для установки заклинаний
-  const setAllSpells = useCallback((spellsData: SpellData[]) => {
-    setSpells(spellsData);
-  }, []);
-
-  // Функция для добавления заклинаний из Character
-  const addSpellsFromCharacter = useCallback((characterSpells: CharacterSpell[]) => {
-    if (!characterSpells || characterSpells.length === 0) return;
+    const newActiveClasses = [...activeClass];
+    const index = newActiveClasses.indexOf(className);
     
-    const convertedSpells = characterSpells.map(spell => convertCharacterSpellToSpellData(spell));
-    setSpells(prev => {
-      // Объединяем и удаляем дубликаты по id
-      const combined = [...prev, ...convertedSpells];
-      const uniqueSpells = Array.from(
-        new Map(combined.map(spell => [spell.id, spell])).values()
-      );
-      return uniqueSpells;
-    });
-    
-    // Добавляем в выбранные заклинания
-    setSelectedSpells(prev => {
-      // Объединяем и удаляем дубликаты по id
-      const combined = [...prev, ...convertedSpells];
-      const uniqueSpells = Array.from(
-        new Map(combined.map(spell => [spell.id, spell])).values()
-      );
-      return uniqueSpells;
-    });
-  }, []);
-  
-  // Функция для выбора заклинания
-  const selectSpell = useCallback((spell: SpellData) => {
-    setSelectedSpells(prev => [...prev, spell]);
-  }, []);
-
-  // Функция для снятия выбора заклинания
-  const unselectSpell = useCallback((spellId: string | number) => {
-    setSelectedSpells(prev => prev.filter(spell => spell.id !== spellId));
-  }, []);
-
-  // Функция для проверки, выбрано ли заклинание
-  const isSpellSelected = useCallback((spellId: string | number) => {
-    return selectedSpells.some(spell => spell.id === spellId);
-  }, [selectedSpells]);
-
-  // Функция для установки фильтра
-  const updateFilter = useCallback((newFilter: Partial<SpellFilter>) => {
-    setFilter(prev => ({ ...prev, ...newFilter }));
-  }, []);
-
-  // Функция для сброса фильтра
-  const resetFilter = useCallback(() => {
-    setFilter({
-      search: '',
-      level: [],
-      school: [],
-      className: [],
-      ritual: null,
-      concentration: null,
-    });
-  }, []);
-
-  // Применение фильтра при его изменении
-  useEffect(() => {
-    const result = filterSpells(spells, filter);
-    setFilteredSpells(result);
-  }, [spells, filter]);
-  
-  // Инициализация начальными заклинаниями
-  useEffect(() => {
-    if (initialSpells && initialSpells.length > 0) {
-      setSpells(initialSpells);
+    if (index === -1) {
+      newActiveClasses.push(className);
+    } else {
+      newActiveClasses.splice(index, 1);
     }
-  }, [initialSpells]);
+    
+    setActiveClass(newActiveClasses);
+    updateFilter({ className: newActiveClasses });
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setFilter({
+      search: '',
+      level: [],
+      school: [],
+      className: [],
+      ritual: null,
+      concentration: null
+    });
+  };
+
+  // Обработчики для модального окна
+  const handleOpenSpell = (spell: SpellData) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+  };
+
+  // Вспомогательные функции для UI
+  const getBadgeColor = (level: number) => {
+    switch (level) {
+      case 0: return { bg: 'bg-gray-500', text: 'text-white' };
+      case 1: return { bg: 'bg-indigo-500', text: 'text-white' };
+      case 2: return { bg: 'bg-blue-500', text: 'text-white' };
+      case 3: return { bg: 'bg-cyan-500', text: 'text-white' };
+      case 4: return { bg: 'bg-teal-500', text: 'text-white' };
+      case 5: return { bg: 'bg-green-500', text: 'text-white' };
+      case 6: return { bg: 'bg-yellow-500', text: 'text-black' };
+      case 7: return { bg: 'bg-orange-500', text: 'text-white' };
+      case 8: return { bg: 'bg-red-500', text: 'text-white' };
+      case 9: return { bg: 'bg-purple-600', text: 'text-white' };
+      default: return { bg: 'bg-gray-500', text: 'text-white' };
+    }
+  };
+
+  const getSchoolBadgeColor = (school: string) => {
+    switch (school.toLowerCase()) {
+      case 'огонь': return { bg: 'bg-red-500', text: 'text-white' };
+      case 'вода': return { bg: 'bg-blue-500', text: 'text-white' };
+      case 'земля': return { bg: 'bg-amber-700', text: 'text-white' };
+      case 'воздух': return { bg: 'bg-sky-300', text: 'text-black' };
+      case 'воплощение': return { bg: 'bg-orange-500', text: 'text-white' };
+      case 'некромантия': return { bg: 'bg-purple-900', text: 'text-white' };
+      case 'преобразование': return { bg: 'bg-green-600', text: 'text-white' };
+      case 'ограждение': return { bg: 'bg-amber-500', text: 'text-black' };
+      case 'иллюзия': return { bg: 'bg-pink-400', text: 'text-white' };
+      case 'очарование': return { bg: 'bg-purple-500', text: 'text-white' };
+      case 'прорицание': return { bg: 'bg-cyan-500', text: 'text-white' };
+      default: return { bg: 'bg-slate-500', text: 'text-white' };
+    }
+  };
+
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) {
+      return '';
+    }
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    }
+    
+    return classes;
+  };
+
+  // Функции для управления заклинаниями
+  const setAllSpells = (spellsData: SpellData[]) => {
+    setSpells(spellsData);
+  };
+
+  const addSpell = (spell: SpellData) => {
+    setSpells(prev => {
+      if (!prev.some(s => s.id === spell.id)) {
+        return [...prev, spell];
+      }
+      return prev;
+    });
+  };
+
+  const removeSpell = (spellId: string | number) => {
+    setSpells(prev => prev.filter(spell => spell.id !== spellId));
+    setSelectedSpells(prev => prev.filter(spell => spell.id !== spellId));
+  };
+
+  const toggleSpellSelection = (spell: SpellData) => {
+    setSelectedSpells(prev => {
+      const exists = prev.some(s => s.id === spell.id);
+      
+      if (exists) {
+        return prev.filter(s => s.id !== spell.id);
+      } else {
+        return [...prev, spell];
+      }
+    });
+  };
+
+  const isSpellSelected = (spellId: string | number): boolean => {
+    return selectedSpells.some(spell => spell.id === spellId);
+  };
 
   return {
     spells,
@@ -226,9 +231,16 @@ export const useSpellbook = ({ initialSpells = [] }: UseSpellbookProps = {}) => 
     filter,
     loading,
     error,
-    // Для SpellBookViewer
+    setAllSpells,
+    addSpell,
+    removeSpell,
+    toggleSpellSelection,
+    isSpellSelected,
+    updateFilter,
+    setSelectedSpells,
+    // Дополнительные возвращаемые значения для совместимости с SpellBookViewer
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     activeLevel,
     activeSchool,
     activeClass,
@@ -245,18 +257,6 @@ export const useSpellbook = ({ initialSpells = [] }: UseSpellbookProps = {}) => 
     handleClose,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses,
-    // Стандартные методы
-    setAllSpells,
-    setSpells,
-    addSpellsFromCharacter,
-    selectSpell,
-    unselectSpell,
-    isSpellSelected,
-    updateFilter,
-    resetFilter,
-    setSelectedSpells
+    formatClasses
   };
-};
-
-export default useSpellbook;
+}
