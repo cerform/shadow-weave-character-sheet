@@ -99,7 +99,28 @@ export const getSpellSchools = (): string[] => {
 
 // Export a function to get all spells
 export const getAllSpells = (): SpellData[] => {
-  // Важно: вместо использования пустого массива, возвращаем данные из импортированных файлов
+  // Проверяем, что массив spells не пустой
+  if (spells.length === 0) {
+    console.warn('Массив заклинаний пуст. Проверьте импорты заклинаний.');
+    
+    // Добавляем тестовое заклинание, чтобы убедиться, что функция работает
+    return [{
+      id: 'test-spell',
+      name: 'Тестовое заклинание',
+      level: 0,
+      school: 'Воплощение',
+      castingTime: '1 действие',
+      range: '30 футов',
+      components: 'В, С',
+      duration: 'Мгновенная',
+      description: 'Тестовое заклинание для отладки.',
+      classes: ['Волшебник']
+    }];
+  }
+  
+  console.log('Загружаю заклинания, всего:', spells.length);
+  
+  // Преобразуем CharacterSpell[] в SpellData[]
   return spells.map(spell => ({
     id: spell.id || spell.name,
     name: spell.name,
