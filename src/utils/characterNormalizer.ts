@@ -37,12 +37,12 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       total: character.hitDice?.total || character.level || 1,
       used: character.hitDice?.used || 0,
       type: character.hitDice?.type || 'd8',
-      dieType: character.hitDice?.dieType || character.hitDice?.type || 'd8', // Добавляем поле dieType
+      dieType: character.hitDice?.dieType || character.hitDice?.type || 'd8',
     },
     deathSaves: character.deathSaves || { successes: 0, failures: 0 },
     inspiration: character.inspiration === undefined ? false : character.inspiration,
-    conditions: character.conditions || [], // Добавляем пустой массив для условий
-    inventory: character.inventory || [],
+    conditions: character.conditions || [], // Now properly initialized
+    inventory: character.inventory || [], // Now properly initialized
     equipment: character.equipment || [],
     spells: character.spells || [],
     proficiencies: character.proficiencies || [],
@@ -65,7 +65,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       rolls: character.lastDiceRoll?.rolls || [],
       total: character.lastDiceRoll?.total || 0,
     },
-    languages: character.languages || [],
+    languages: character.languages || [], // Now properly initialized
     subrace: character.subrace || ''
   } as Character;
 

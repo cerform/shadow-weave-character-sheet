@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { calculateAbilityModifier } from '@/utils/characterUtils';
@@ -317,4 +316,3 @@ export const useCharacterCreation = () => {
     updateCharacter: updateBasicInfo
   };
 };
-

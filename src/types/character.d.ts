@@ -1,4 +1,3 @@
-
 export interface Character {
   id: string;
   userId: string;
@@ -32,15 +31,15 @@ export interface Character {
     total: number;
     used: number;
     type: string;
-    dieType?: string; // Добавляем поддержку dieType
+    dieType?: string;
   };
   deathSaves: {
     successes: number;
     failures: number;
   };
   inspiration: boolean;
-  conditions: string[]; // Добавляем поле conditions
-  inventory: any[];
+  conditions: string[]; // Add this field
+  inventory: any[]; // Add this field
   equipment: any[];
   spells: CharacterSpell[];
   proficiencies: string[];
@@ -64,14 +63,15 @@ export interface Character {
   };
   spellcasting: {
     ability?: string;
-    saveDC?: number; // Добавляем поддержку saveDC
-    attackBonus?: number; // Добавляем поддержку attackBonus
+    saveDC?: number;
+    attackBonus?: number;
   };
   gold: number;
   initiative: number;
   lastDiceRoll: DiceResult;
-  languages: string[];
-  subrace?: string; // Добавляем поле subrace
+  languages: string[]; // Add this field
+  subrace?: string;
+  spellSlots?: Record<number, { max: number; used: number; available?: number; }>;
 }
 
 export interface CharacterSpell {

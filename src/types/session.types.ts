@@ -4,7 +4,7 @@ export interface Initiative {
   id: string;
   name: string;
   initiative: number;
-  roll?: number; // Добавляем поле roll
+  roll?: number;
   isActive: boolean;
   isPlayer?: boolean;
   tokenId?: string | number;
@@ -16,7 +16,7 @@ export interface TokenData {
   x: number;
   y: number;
   image?: string;
-  img?: string; // Добавляем альтернативное поле для изображения
+  img?: string;
   name?: string;
   size?: number;
   // Add any other needed properties
@@ -90,5 +90,5 @@ export interface GameSessionWithOptionalFields extends GameSession {
 }
 
 // Добавляем интерфейсы для инициативы боя
-export interface BattleInitiative extends Initiative {}
-export interface SessionInitiative extends Initiative {}
+export type BattleInitiative = Initiative;
+export type SessionInitiative = Initiative;

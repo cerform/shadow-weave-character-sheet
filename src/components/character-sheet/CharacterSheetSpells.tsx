@@ -14,13 +14,15 @@ import SpellSlotManager from './SpellSlotManager';
 
 interface CharacterSheetSpellsProps {
   character?: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
 }
 
-const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: propCharacter }) => {
+const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: propCharacter, onUpdate: propOnUpdate }) => {
   const { character: contextCharacter, updateCharacter } = useCharacter();
   const { theme } = useTheme();
   
   const character = propCharacter || contextCharacter;
+  const onUpdate = propOnUpdate || updateCharacter;
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
@@ -128,7 +130,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   return (
     <div className="space-y-4">
       {/* Панель использования заклинаний */}
-      <SpellCastingPanel character={character} />
+      <SpellCastingPanel character={character} onUpdate={onUpdate} />
       
       {/* Панель ячеек заклинаний */}
       <SpellSlotManager 

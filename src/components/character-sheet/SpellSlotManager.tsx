@@ -25,16 +25,14 @@ const SpellSlotManager = ({ character, onUpdate, showTitle = true }: SpellSlotMa
         if (isNaN(numLevel)) return;
         
         // Handle different formats of spell slot data
-        if ('max' in slotData) {
+        if (typeof slotData === 'object' && slotData !== null) {
+          const maxValue = 'max' in slotData ? slotData.max : 
+                          ('available' in slotData ? slotData.available : 0);
+          const usedValue = 'used' in slotData ? slotData.used : 0;
+          
           standardizedSlots[numLevel] = {
-            max: slotData.max,
-            used: slotData.used
-          };
-        } else if ('available' in slotData) {
-          // Convert 'available' format to 'max'
-          standardizedSlots[numLevel] = {
-            max: 'max' in slotData ? slotData.max : slotData.available,
-            used: slotData.used
+            max: maxValue as number,
+            used: usedValue as number
           };
         }
       });
