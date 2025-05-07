@@ -38,8 +38,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
 
   // Применяем фиксированные бонусы при инициализации
   useEffect(() => {
-    // Исправление проблемы с TypeScript 2872 - change the condition to properly check if fixed exists and is not empty
-    if (abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
+    // Правильное решение проблемы с TypeScript 2872 - проверяем что fixed существует и не undefined
+    if (abilityBonuses?.fixed && Object.keys(abilityBonuses.fixed).length > 0) {
       const updates: Partial<Character> = {};
       const updatedAbilities = { ...character.abilities } || {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
@@ -115,7 +115,7 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
     // но поскольку мы не храним это состояние, мы будем применять все бонусы заново
     
     // Применяем фиксированные бонусы (если есть)
-    if (abilityBonuses.fixed) {
+    if (abilityBonuses?.fixed) {
       Object.entries(abilityBonuses.fixed).forEach(([ability, bonus]) => {
         const abilityKey = ability as keyof typeof updatedAbilities;
         if (abilityKey in updatedAbilities) {
@@ -164,8 +164,8 @@ const AbilityBonusSelector: React.FC<AbilityBonusSelectorProps> = ({
       <CardHeader>
         <CardTitle>Увеличение характеристик</CardTitle>
         <CardDescription>
-          {/* Исправляем проверку на существование и непустоту объекта */}
-          {abilityBonuses.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
+          {/* Правильная проверка на существование и непустоту объекта */}
+          {abilityBonuses?.fixed && Object.keys(abilityBonuses.fixed).length > 0 && (
             <div className="mb-2">
               <p>Фиксированные бонусы:</p>
               <div className="flex flex-wrap gap-2 mt-1">
