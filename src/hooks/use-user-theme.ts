@@ -1,28 +1,62 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { ThemeType } from '@/hooks/use-theme';
+import { themes, Theme } from '@/lib/themes';
 
-interface UserThemeHook {
-  activeTheme: string;
-  setUserTheme: (theme: string) => void;
+interface UserThemeContextType {
+  activeTheme: ThemeType;
+  setUserTheme: (theme: ThemeType) => void;
+  currentTheme: Theme;
 }
 
-export const useUserTheme = (): UserThemeHook => {
-  const [activeTheme, setActiveTheme] = useState<string>('default');
-  
-  useEffect(() => {
-    // Try to get stored theme from localStorage on component mount
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme) {
-      setActiveTheme(storedTheme);
+const UserThemeContext = createContext<UserThemeContextType>({
+  activeTheme: 'default',
+  setUserTheme: () => {},
+  currentTheme: themes.default
+});
+
+export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [activeTheme, setActiveTheme] = useState<ThemeType>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('userTheme') as ThemeType || 'default';
+      return savedTheme;
     }
-  }, []);
+    return 'default';
+  });
   
-  const setUserTheme = (theme: string) => {
+  const currentTheme = themes[activeTheme] || themes.default;
+  
+  const setUserTheme = (theme: ThemeType) => {
     setActiveTheme(theme);
-    localStorage.setItem('theme', theme);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userTheme', theme);
+    }
   };
   
-  return { activeTheme, setUserTheme };
+  // Apply theme to document when theme changes
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', activeTheme);
+      // Apply CSS variables
+      document.documentElement.style.setProperty('--primary', currentTheme.primary);
+      document.documentElement.style.setProperty('--secondary', currentTheme.secondary);
+      document.documentElement.style.setProperty('--accent', currentTheme.accent);
+      document.documentElement.style.setProperty('--background', currentTheme.background);
+      document.documentElement.style.setProperty('--foreground', currentTheme.foreground);
+      document.documentElement.style.setProperty('--text-color', currentTheme.textColor);
+      document.documentElement.style.setProperty('--muted-text', currentTheme.mutedTextColor);
+      document.documentElement.style.setProperty('--card-background', currentTheme.cardBackground);
+    }
+  }, [activeTheme, currentTheme]);
+  
+  return (
+    <UserThemeContext.Provider value={{ activeTheme, setUserTheme, currentTheme }}>
+      {children}
+    </UserThemeContext.Provider>
+  );
 };
+
+export const useUserTheme = () => useContext(UserThemeContext);
 
 export default useUserTheme;
