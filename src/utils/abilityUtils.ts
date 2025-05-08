@@ -19,6 +19,15 @@ export const getAbilityModifier = (score: number): string => {
 };
 
 /**
+ * Синоним для getAbilityModifier для совместимости с существующим кодом
+ * @param score Значение характеристики
+ * @returns Модификатор со знаком (например, "+3" или "-1")
+ */
+export const getAbilityModifierString = (score: number): string => {
+  return getAbilityModifier(score);
+};
+
+/**
  * Проверяет, владеет ли персонаж спасброском
  * @param character Персонаж
  * @param ability Характеристика

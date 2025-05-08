@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { calculateAbilityModifier } from '@/utils/characterUtils';
+import { normalizeSpells } from '@/utils/spellUtils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -27,7 +29,11 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
 
   useEffect(() => {
     if (character.spells) {
-      setPreparedSpells(character.spells.filter(spell => spell.prepared));
+      // Используем normalizeSpells, чтобы преобразовать строки в объекты CharacterSpell
+      const normalizedSpells = normalizeSpells(character);
+      // Фильтруем только подготовленные заклинания
+      const prepared = normalizedSpells.filter(spell => spell.prepared);
+      setPreparedSpells(prepared);
     }
   }, [character.spells]);
 
@@ -60,7 +66,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
   const toggleSpellPreparation = (spell: CharacterSpell) => {
     if (!character.spells) return;
     
-    const updatedSpells = character.spells.map(s => {
+    const updatedSpells = normalizeSpells(character).map(s => {
       if (s.name === spell.name) {
         return { ...s, prepared: !s.prepared };
       }
@@ -150,13 +156,13 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Подготовленные заклинания</CardTitle>
+          <CardTitle>Список заклинаний</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[300px]">
             <div className="space-y-2 p-4">
-              {character.spells && character.spells.length > 0 ? (
-                character.spells.map((spell) => (
+              {normalizeSpells(character).length > 0 ? (
+                normalizeSpells(character).map((spell) => (
                   <Card key={spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
                     <CardContent className="flex items-center justify-between p-3">
                       <div style={{color: currentTheme.textColor}}>

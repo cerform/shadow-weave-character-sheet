@@ -81,7 +81,21 @@ export interface Character {
   spellAttackBonus?: number;
   spellSlots?: Record<string, { max: number; used: number; available?: number }>;
   spells?: (CharacterSpell | string)[];
-  // Новые поля, которые отсутствовали
+  // Добавляем недостающие свойства
+  expertise?: string[];
+  skillBonuses?: {[key: string]: number};
+  raceFeatures?: string[];
+  classFeatures?: string[];
+  backgroundFeatures?: string[];
+  feats?: string[];
+  appearance?: string;
+  currency?: {
+    copper?: number;
+    silver?: number;
+    electrum?: number;
+    gold?: number;
+    platinum?: number;
+  };
   conditions?: string[];
   inventory?: Item[];
   languages?: string[];
@@ -92,7 +106,7 @@ export interface Character {
   copper?: number;
   platinum?: number;
   electrum?: number;
-  userId?: string; // Добавлено для CharacterReview.tsx
+  userId?: string;
   // Добавляем поля для совместимости с компонентами создания персонажа
   abilities?: {
     strength: number;
@@ -135,7 +149,7 @@ export interface Character {
   };
 }
 
-// Определение CharacterSpell, чтобы убрать ошибки импорта
+// Определение CharacterSpell
 export interface CharacterSpell {
   id: string | number;
   name: string;
@@ -183,7 +197,17 @@ export interface DiceResult {
   timestamp?: string | number | Date;
 }
 
-// Добавляем константы для лимитов характеристик, используемые в CharacterLevelSelection и других компонентах
+// Определение HitPointEvent для журнала урона
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
+  value: number;
+  amount?: number;
+  source?: string;
+  timestamp: number | Date;
+}
+
+// Добавляем константы для лимитов характеристик
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,        // Базовый максимум для характеристик
   EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
@@ -192,4 +216,4 @@ export const ABILITY_SCORE_CAPS = {
 };
 
 // Добавляем экспорт для типов, которые используются в других файлах
-export type { CharacterSpell, Item, DiceResult };
+export type { CharacterSpell, Item, DiceResult, HitPointEvent };
