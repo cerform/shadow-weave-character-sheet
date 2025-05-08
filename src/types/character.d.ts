@@ -60,6 +60,7 @@ export interface Character {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
+    skills?: string[];
   };
   features?: CharacterFeature[] | {
     race: string[];

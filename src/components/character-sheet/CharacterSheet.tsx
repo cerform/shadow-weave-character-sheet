@@ -16,7 +16,7 @@ import SaveCharacterButton from './SaveCharacterButton';
 import CharacterExportPDF from './CharacterExportPDF';
 import { CharacterHeader } from './CharacterHeader';
 import LevelUpPanel from './LevelUpPanel';
-import { HPBar } from './HPBar';
+import HPBar from './HPBar';
 import DicePanel from './DicePanel';
 import ResourcePanel from './ResourcePanel';
 import RestPanel from './RestPanel';

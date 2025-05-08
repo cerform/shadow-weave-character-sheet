@@ -75,6 +75,7 @@ const HPBar: React.FC<HPBarProps> = ({ character, onUpdate }) => {
     // Обновляем персонажа
     onUpdate({ 
       hp: updatedCurrentHP,
+      currentHp: updatedCurrentHP,
       temporaryHp: updatedTempHP
     });
     
@@ -89,7 +90,8 @@ const HPBar: React.FC<HPBarProps> = ({ character, onUpdate }) => {
     
     // Обновляем персонажа
     onUpdate({ 
-      hp: updatedCurrentHP 
+      hp: updatedCurrentHP,
+      currentHp: updatedCurrentHP
     });
     
     setHealAmount(0);
