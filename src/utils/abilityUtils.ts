@@ -1,51 +1,39 @@
 
-import { Character } from '@/types/character';
-
 /**
- * Рассчитывает модификатор характеристики
+ * Вычисляет значение модификатора характеристики
  * @param score Значение характеристики
- * @returns Модификатор характеристики
+ * @returns Значение модификатора
  */
-export const getAbilityModifier = (score?: number): number => {
-  if (!score) return 0;
+export const getAbilityModifierValue = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
 
 /**
- * Рассчитывает модификатор характеристики персонажа
- * @param character Персонаж
- * @param ability Название характеристики
- * @returns Модификатор характеристики
- */
-export const getCharacterAbilityModifier = (character: any, ability: string): number => {
-  if (!character || !ability) return 0;
-  
-  // Проверяем наличие значения в разных местах
-  const score = character.abilities?.[ability] || 
-               character.stats?.[ability] || 
-               character[ability] || 
-               10;
-  
-  return getAbilityModifier(score);
-};
-
-/**
- * Возвращает строковое представление модификатора характеристики
+ * Вычисляет модификатор характеристики и возвращает его со знаком
  * @param score Значение характеристики
- * @returns Строка с модификатором (например, "+3" или "-1")
+ * @returns Модификатор со знаком (например, "+3" или "-1")
  */
-export const getAbilityModifierString = (score?: number): string => {
-  if (!score) return "+0";
-  
-  const modifier = getAbilityModifier(score);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+export const getAbilityModifier = (score: number): string => {
+  const mod = getAbilityModifierValue(score);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
 };
 
 /**
- * Рассчитывает бонус мастерства на основе уровня персонажа
- * @param level Уровень персонажа
- * @returns Бонус мастерства
+ * Проверяет, владеет ли персонаж спасброском
+ * @param character Персонаж
+ * @param ability Характеристика
+ * @returns true, если персонаж владеет спасброском
  */
-export const getProficiencyBonus = (level: number = 1): number => {
-  return Math.floor((level - 1) / 4) + 2;
+export const hasSavingThrowProficiency = (character: any, ability: string): boolean => {
+  if (!character) return false;
+  
+  if (character.savingThrows && character.savingThrows[ability]) {
+    return true;
+  }
+  
+  if (character.savingThrowProficiencies && Array.isArray(character.savingThrowProficiencies)) {
+    return character.savingThrowProficiencies.includes(ability);
+  }
+  
+  return false;
 };

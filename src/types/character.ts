@@ -37,9 +37,14 @@ export interface Character {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
+    skills?: string[]; // Добавляем навыки в proficiencies
   };
   skills: {
-    [key: string]: boolean | number | null | { bonus?: number; value?: number };
+    [key: string]: boolean | number | null | { 
+      bonus?: number; 
+      value?: number; 
+      proficient?: boolean; // Добавляем флаг владения навыком
+    };
   };
   savingThrows: {
     [key: string]: boolean;
@@ -65,6 +70,12 @@ export interface Character {
   bonds: string;
   flaws: string;
   backstory: string;
+  spellcasting?: {
+    ability: string;
+    saveDC?: number;
+    attackBonus?: number;
+    class?: string;
+  };
   spellcastingAbility?: string;
   spellSaveDC?: number;
   spellAttackBonus?: number;
@@ -109,6 +120,19 @@ export interface Character {
   subclass?: string;
   abilityPointsUsed?: number;
   lastDiceRoll?: DiceResult;
+  // Добавляем новое поле resources для управления ресурсами персонажа
+  resources?: Record<string, {
+    max: number;
+    used: number;
+    shortRestRecover?: boolean;
+    longRestRecover?: boolean;
+    description?: string;
+  }>;
+  // Добавляем поле для очков колдовства для чародея
+  sorceryPoints?: {
+    max: number;
+    current: number;
+  };
 }
 
 // Определение CharacterSpell, чтобы убрать ошибки импорта
@@ -159,16 +183,6 @@ export interface DiceResult {
   timestamp?: string | number | Date;
 }
 
-// Определение типа HitPointEvent для журнала здоровья
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
-  value: number;
-  amount?: number;
-  source?: string;
-  timestamp: number | Date;
-}
-
 // Добавляем константы для лимитов характеристик, используемые в CharacterLevelSelection и других компонентах
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,        // Базовый максимум для характеристик
@@ -178,4 +192,4 @@ export const ABILITY_SCORE_CAPS = {
 };
 
 // Добавляем экспорт для типов, которые используются в других файлах
-export type { CharacterSpell, Item, DiceResult, HitPointEvent };
+export type { CharacterSpell, Item, DiceResult };

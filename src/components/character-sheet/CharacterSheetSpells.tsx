@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character, CharacterSpell } from '@/types/character';
@@ -38,8 +39,15 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         if (typeof spell === 'string') {
           // Если заклинание представлено строкой, создаем минимальный объект
           const basicSpell: CharacterSpell = {
+            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
             name: spell,
             level: 0, // По умолчанию считаем заговором
+            school: 'Универсальная',
+            castingTime: '1 действие',
+            range: 'На себя',
+            components: '',
+            duration: 'Мгновенная',
+            description: 'Нет описания',
             prepared: true
           };
           
@@ -93,7 +101,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
       });
       
       const updatedCharacter = { ...character, spells: updatedSpells };
-      updateCharacter(updatedCharacter);
+      onUpdate(updatedCharacter);
     }
   };
   

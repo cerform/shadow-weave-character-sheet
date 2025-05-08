@@ -48,24 +48,40 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     return nameMap[skillKey] || skillKey;
   };
 
+  // Проверка владения навыком
+  const isSkillProficient = (skillKey: string): boolean => {
+    const skill = character.skills?.[skillKey];
+    
+    if (!skill) return false;
+    
+    if (typeof skill === 'boolean') return skill;
+    if (typeof skill === 'number') return skill > 0;
+    if (typeof skill === 'object' && skill !== null) {
+      return 'proficient' in skill ? !!skill.proficient : !!skill.bonus;
+    }
+    
+    return false;
+  };
+
   const toggleProficiency = (skillKey: string) => {
     // Получаем текущее значение навыка
     const currentSkills = character.skills || {};
-    const currentSkill = currentSkills[skillKey] || { proficient: false };
+    const isProficient = isSkillProficient(skillKey);
     
     // Определяем, к какой характеристике относится навык
     const ability = Object.entries(skillsByAbility)
       .find(([_, skills]) => skills.includes(skillKey))?.[0] || 'dexterity';
     
     // Получаем модификатор характеристики
-    const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 10;
+    const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 
+                         character[ability as keyof typeof character] || 10;
     const abilityMod = getAbilityModifierValue(abilityScore);
     
     // Вычисляем значение навыка
     const profBonus = character.proficiencyBonus || 2;
     let skillValue = abilityMod;
     
-    if (!currentSkill.proficient) {
+    if (!isProficient) {
       skillValue += profBonus;
     }
     
@@ -73,24 +89,21 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     const updatedSkills = {
       ...currentSkills,
       [skillKey]: {
-        ...currentSkill,
-        proficient: !currentSkill.proficient,
-        value: !currentSkill.proficient ? abilityMod + profBonus : abilityMod,
-        bonus: !currentSkill.proficient ? abilityMod + profBonus : abilityMod
+        proficient: !isProficient,
+        value: !isProficient ? abilityMod + profBonus : abilityMod,
+        bonus: !isProficient ? abilityMod + profBonus : abilityMod
       }
     };
     
     // Обновляем персонажа
-    let updatedProficiencies: any = { 
-      ...character.proficiencies
-    };
+    let updatedProficiencies: any = character.proficiencies || {};
     
     // Проверяем тип proficiencies и обновляем соответственно
     if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
       // Создаем массив навыков, если его нет
       const skillsList = (updatedProficiencies.skills || []) as string[];
       
-      if (!currentSkill.proficient) {
+      if (!isProficient) {
         // Добавляем навык в список владений
         updatedProficiencies = {
           ...updatedProficiencies,
@@ -113,7 +126,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     // Показываем уведомление
     toast({
       title: `Навык ${getSkillDisplayName(skillKey)}`,
-      description: !currentSkill.proficient 
+      description: !isProficient 
         ? "Добавлен в список владений" 
         : "Удален из списка владений",
     });
@@ -134,14 +147,14 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
               : 'Харизма'}</h4>
             
             {skills.map(skillKey => {
-              const skillInfo = character.skills?.[skillKey] || { proficient: false };
+              const isProficient = isSkillProficient(skillKey);
               return (
                 <div key={skillKey} className="flex items-center justify-between">
                   <span>{getSkillDisplayName(skillKey)}</span>
                   <div className="flex items-center gap-4">
-                    <span>{skillInfo.proficient ? '+' : ''}</span>
+                    <span>{isProficient ? '+' : ''}</span>
                     <Switch
-                      checked={skillInfo.proficient}
+                      checked={isProficient}
                       onCheckedChange={() => toggleProficiency(skillKey)}
                     />
                   </div>

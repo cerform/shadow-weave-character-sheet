@@ -12,6 +12,16 @@ npm install react react-dom @types/react @types/react-dom
 # Install shadcn components
 npm install @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group @radix-ui/react-switch @radix-ui/react-scroll-area class-variance-authority clsx tailwind-merge lucide-react
 
+# Make our scripts executable
+chmod +x install-vite-deps.sh
+chmod +x run-vite.sh
+if [ -f src/scripts/run-vite.sh ]; then
+  chmod +x src/scripts/run-vite.sh
+fi
+if [ -f src/scripts/start-vite.js ]; then
+  chmod +x src/scripts/start-vite.js
+fi
+
 # Check for vite.config.js or vite.config.ts
 if [ ! -f vite.config.js ] && [ ! -f vite.config.ts ]; then
   echo 'import { defineConfig } from "vite";
@@ -51,13 +61,7 @@ if [ ! -f index.html ]; then
   echo "Created index.html"
 fi
 
-# Make our scripts executable
-chmod +x install-vite-deps.sh
-if [ -f src/scripts/run-vite.sh ]; then
-  chmod +x src/scripts/run-vite.sh
-fi
-
 # Install local version of Vite in node_modules
 npm install --save-dev vite
 
-echo "Installation complete! Run 'npm run dev' to start the development server."
+echo "Installation complete! Run 'bash run-vite.sh' to start the development server."

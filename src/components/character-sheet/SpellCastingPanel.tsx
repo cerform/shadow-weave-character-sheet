@@ -1,67 +1,72 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { SpellDialog } from './SpellDialog';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
+import SpellDialog from './SpellDialog';
+import { useToast } from '@/hooks/use-toast';
 
-// Определяем тип CharacterSpell
-export interface CharacterSpell {
-  id: string | number;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string;
-  prepared?: boolean;
-  alwaysPrepared?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-  classes?: string[];
-  source?: string;
-}
-
-// Создаем интерфейсы для пропсов компонентов
-export interface SpellDialogProps {
-  open: boolean;
-  onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
-  spell: CharacterSpell;
-  onTogglePrepared?: () => void;
-}
-
-// Интерфейс для панели заклинаний
-export interface SpellCastingPanelProps {
+interface SpellCastingPanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character, onUpdate }) => {
+const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character, onUpdate }) => {
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
   const [showSpellDetails, setShowSpellDetails] = useState(false);
-
+  const { toast } = useToast();
+  
   // Группируем заклинания по уровням
   const spellsByLevel = React.useMemo(() => {
     const spells = character.spells || [];
     return spells.reduce((acc, spell) => {
-      const level = spell.level || 0;
-      if (!acc[level]) acc[level] = [];
-      acc[level].push(spell);
+      if (typeof spell === 'string') {
+        // Если заклинание представлено строкой, создаем минимальный объект
+        const basicSpell: CharacterSpell = {
+          id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+          name: spell,
+          level: 0,
+          school: 'Универсальная',
+          castingTime: '1 действие',
+          range: 'На себя',
+          components: '',
+          duration: 'Мгновенная',
+          description: 'Нет описания',
+          prepared: true
+        };
+        const level = 0;
+        if (!acc[level]) acc[level] = [];
+        acc[level].push(basicSpell);
+      } else {
+        const level = spell.level || 0;
+        if (!acc[level]) acc[level] = [];
+        acc[level].push(spell);
+      }
       return acc;
     }, {} as Record<number, CharacterSpell[]>);
   }, [character.spells]);
 
   // Обработчик подготовки заклинания
-  const togglePrepareSpell = (spellId: string | number) => {
-    const updatedSpells = (character.spells || []).map(spell => {
-      if (spell.id === spellId) {
-        return { ...spell, prepared: !spell.prepared };
+  const togglePrepareSpell = (spell: CharacterSpell) => {
+    const updatedSpells = (character.spells || []).map(s => {
+      if (typeof s === 'string') return s;
+      
+      if (s.id === spell.id || s.name === spell.name) {
+        return { ...s, prepared: !s.prepared };
       }
-      return spell;
+      return s;
     });
     
     onUpdate({ spells: updatedSpells });
+    
+    // Обновляем выбранное заклинание, если оно отображается в диалоге
+    if (selectedSpell && (selectedSpell.id === spell.id || selectedSpell.name === spell.name)) {
+      setSelectedSpell({ ...selectedSpell, prepared: !selectedSpell.prepared });
+    }
+    
+    toast({
+      title: spell.prepared ? "Заклинание убрано из подготовленных" : "Заклинание подготовлено",
+      description: spell.name,
+    });
   };
 
   // Открытие диалога детальной информации о заклинании
@@ -80,7 +85,7 @@ export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {spells.map((spell) => (
             <div 
-              key={spell.id} 
+              key={spell.id || spell.name} 
               className={`p-2 rounded-md cursor-pointer border flex justify-between items-center ${
                 spell.prepared ? 'bg-primary/10 border-primary' : 'bg-card border-border'
               }`}
@@ -98,7 +103,7 @@ export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character,
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    togglePrepareSpell(spell.id);
+                    togglePrepareSpell(spell);
                   }}
                 >
                   {spell.prepared ? 'Подготовлено' : 'Подготовить'}
@@ -130,7 +135,7 @@ export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character,
           open={showSpellDetails}
           onOpenChange={setShowSpellDetails}
           spell={selectedSpell}
-          onTogglePrepared={() => togglePrepareSpell(selectedSpell.id)}
+          onTogglePrepared={() => togglePrepareSpell(selectedSpell)}
         />
       )}
     </div>
