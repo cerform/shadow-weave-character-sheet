@@ -395,7 +395,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     };
   }, []);
 
-  // Отрисовка пути перетаскивания токена
+  // Отрисовка пут�� перетаскивания токена
   const renderDragPath = () => {
     if (dragPath.length < 2) return null;
 
@@ -712,7 +712,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                   }}
                 >
                   <div className="text-gray-500">
-                    Загрузите карту сражения (перетащите изображение или нажмите "Карта")
+                    Загрузите карт�� сражения (перетащите изображение или нажмите "Карта")
                   </div>
                 </div>
               )}

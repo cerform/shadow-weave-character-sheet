@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Paintbrush, Check } from "lucide-react";
 import { useUserTheme } from '@/hooks/use-user-theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, ThemeType } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 export const ThemeSelector = () => {
@@ -18,12 +18,12 @@ export const ThemeSelector = () => {
   
   // Получаем список тем в формате массива объектов
   const themesList = useMemo(() => [
-    { name: "default", label: "По умолчанию" },
-    { name: "warlock", label: "Чернокнижник" },
-    { name: "wizard", label: "Волшебник" },
-    { name: "druid", label: "Друид" },
-    { name: "warrior", label: "Воин" },
-    { name: "bard", label: "Бард" },
+    { name: "default" as ThemeType, label: "По умолчанию" },
+    { name: "warlock" as ThemeType, label: "Чернокнижник" },
+    { name: "wizard" as ThemeType, label: "Волшебник" },
+    { name: "druid" as ThemeType, label: "Друид" },
+    { name: "warrior" as ThemeType, label: "Воин" },
+    { name: "bard" as ThemeType, label: "Бард" },
   ], []);
 
   // Получаем текущую тему из контекстов и определяем стили
@@ -33,7 +33,7 @@ export const ThemeSelector = () => {
   // Синхронизируем темы между контекстами при инициализации
   useEffect(() => {
     if (activeTheme && theme !== activeTheme) {
-      setTheme(activeTheme);
+      setTheme(activeTheme as ThemeType);
       // Явно применяем CSS-переменные
       applyThemeToDom(activeTheme);
     }
@@ -52,14 +52,14 @@ export const ThemeSelector = () => {
     document.documentElement.style.setProperty('--foreground', selectedTheme.foreground);
     document.documentElement.style.setProperty('--primary', selectedTheme.primary);
     document.documentElement.style.setProperty('--accent', selectedTheme.accent);
-    document.documentElement.style.setProperty('--text', selectedTheme.textColor);
-    document.documentElement.style.setProperty('--card-bg', selectedTheme.cardBackground);
+    document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
+    document.documentElement.style.setProperty('--card-background', selectedTheme.cardBackground);
     
     console.log('Тема применена к DOM:', themeName);
   }, []);
 
   // Обработчик переключения тем
-  const handleThemeChange = useCallback((themeName: string) => {
+  const handleThemeChange = useCallback((themeName: ThemeType) => {
     if (themeName === currentThemeId) return;
     
     setUserTheme(themeName);
@@ -105,7 +105,7 @@ export const ThemeSelector = () => {
         }}
       >
         {themesList.map((themeItem) => {
-          const themeColor = themes[themeItem.name as keyof typeof themes]?.accent || themes.default.accent;
+          const themeColor = themes[themeItem.name]?.accent || themes.default.accent;
           const isActive = currentThemeId === themeItem.name;
           
           return (

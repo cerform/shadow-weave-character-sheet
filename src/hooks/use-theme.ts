@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 
-type ThemeType = 'default' | 'dark' | 'light' | 'fantasy';
+export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
 
 interface ThemeStore {
   theme: ThemeType;

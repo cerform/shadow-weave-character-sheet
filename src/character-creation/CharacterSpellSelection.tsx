@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, ThemeType } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 interface CharacterSpellSelectionProps {
@@ -29,7 +29,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
+  const themeKey = (theme || 'default') as ThemeType;
   const currentTheme = themes[themeKey] || themes.default;
 
   // Получаем модификатор способности для заклинаний
@@ -104,7 +104,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           className="w-full p-2 border rounded"
           onChange={handleSearchChange}
           style={{
-            backgroundColor: currentTheme.cardBackground,
+            backgroundColor: currentTheme.background,
             borderColor: currentTheme.accent,
             color: currentTheme.textColor
           }}
@@ -115,7 +115,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <div className="space-y-2">
           {filteredSpells.length > 0 ? (
             filteredSpells.map((spell) => (
-              <Card key={spell.id} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
+              <Card key={spell.id} style={{backgroundColor: currentTheme.background, borderColor: currentTheme.accent}}>
                 <CardContent className="flex items-center justify-between p-3">
                   <div style={{color: currentTheme.textColor}}>
                     {spell.name} ({spell.school}, {spell.level === 0 ? 'Заговор' : spell.level})

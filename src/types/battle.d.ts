@@ -52,3 +52,8 @@ export interface VisibleArea {
   radius: number;
   tokenId: number;
 }
+
+export interface TokenOwner {
+  userId: string;
+  userName: string;
+}

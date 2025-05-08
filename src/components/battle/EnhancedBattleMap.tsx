@@ -1,143 +1,150 @@
+
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Stage, Layer, Image, Circle } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Group } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
+import { Token, InitiativeItem, VisibleArea } from '@/types/battle';
 import TokenComponent from './TokenComponent';
-import GridOverlay from './GridOverlay';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
 interface EnhancedBattleMapProps {
-  backgroundImage: string | null;
   tokens: Token[];
-  selectedTokenId: number | null;
-  onSelectToken: (id: number | null) => void;
-  onUpdateTokenPosition: (id: number, x: number, y: number) => void;
-  gridVisible: boolean;
-  gridSize: { rows: number; cols: number };
-  zoom: number;
-  fogOfWar: boolean;
-  revealedAreas: { x: number; y: number; radius: number }[];
-  isDM?: boolean;
+  updateTokenPosition: (id: number, x: number, y: number) => void;
+  background?: string;
+  width: number;
+  height: number;
+  gridSize?: number;
+  initiative?: InitiativeItem[];
 }
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
-  backgroundImage,
   tokens,
-  selectedTokenId,
-  onSelectToken,
-  onUpdateTokenPosition,
-  gridVisible,
-  gridSize,
-  zoom,
-  fogOfWar,
-  revealedAreas,
-  isDM = true
+  updateTokenPosition,
+  background,
+  width = 800,
+  height = 600,
+  gridSize = 50,
+  initiative = []
 }) => {
   const stageRef = useRef<any>(null);
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
-  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const { theme } = useTheme();
+  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  // Load background image
-  useEffect(() => {
-    if (backgroundImage) {
-      const img = new Image();
-      img.src = backgroundImage;
-      img.onload = () => {
-        setImageElement(img);
-      };
-    } else {
-      setImageElement(null);
-    }
-  }, [backgroundImage]);
-  
-  // Update stage size on zoom or grid size change
-  useEffect(() => {
-    const calculateStageSize = () => {
-      const width = gridSize.cols * 100 * zoom;
-      const height = gridSize.rows * 100 * zoom;
-      setStageSize({ width, height });
-    };
+  // Find the active token in initiative
+  const activeToken = tokens.find(token => {
+    return initiative.some(init => init.tokenId === token.id && init.isActive);
+  });
+
+  // Handle token selection
+  const handleTokenClick = (id: number) => {
+    setSelectedTokenId(id === selectedTokenId ? null : id);
+  };
+
+  // Handle token position update
+  const handleTokenDragEnd = (id: number, e: KonvaEventObject<DragEvent>) => {
+    const pos = e.target.position();
     
-    calculateStageSize();
-  }, [gridSize, zoom]);
-  
-  // Handle token drag and drop
-  const handleTokenDragEnd = (e: KonvaEventObject<any>, id: number) => {
-    const x = Math.round(e.target.x() / (100 * zoom)) * 100 * zoom;
-    const y = Math.round(e.target.y() / (100 * zoom)) * 100 * zoom;
-    onUpdateTokenPosition(id, x, y);
-  };
-  
-  // Handle stage click to select tokens
-  const handleStageClick = (e: KonvaEventObject<any>) => {
-    if (e.target === stageRef.current) {
-      onSelectToken(null);
+    // Snap to grid if gridSize is provided
+    if (gridSize) {
+      const snappedX = Math.round(pos.x / gridSize) * gridSize;
+      const snappedY = Math.round(pos.y / gridSize) * gridSize;
+      updateTokenPosition(id, snappedX, snappedY);
+      return;
     }
+    
+    updateTokenPosition(id, pos.x, pos.y);
   };
   
+  // Draw grid
+  const renderGrid = () => {
+    if (!gridSize) return null;
+    
+    const gridLines = [];
+    
+    // Horizontal lines
+    for (let y = 0; y < height; y += gridSize) {
+      gridLines.push(
+        <Rect
+          key={`h-${y}`}
+          x={0}
+          y={y}
+          width={width}
+          height={1}
+          fill="rgba(255, 255, 255, 0.2)"
+        />
+      );
+    }
+    
+    // Vertical lines
+    for (let x = 0; x < width; x += gridSize) {
+      gridLines.push(
+        <Rect
+          key={`v-${x}`}
+          x={x}
+          y={0}
+          width={1}
+          height={height}
+          fill="rgba(255, 255, 255, 0.2)"
+        />
+      );
+    }
+    
+    return <Group>{gridLines}</Group>;
+  };
+
   return (
-    <div className="relative">
-      <Stage
-        width={stageSize.width}
-        height={stageSize.height}
-        ref={stageRef}
-        onClick={handleStageClick}
-      >
+    <motion.div 
+      className="relative border border-accent rounded-lg overflow-hidden"
+      style={{ borderColor: currentTheme.accent }}
+    >
+      <Stage width={width} height={height} ref={stageRef}>
         <Layer>
-          {imageElement && (
-            <Image
-              image={imageElement}
-              width={stageSize.width}
-              height={stageSize.height}
-            />
-          )}
-          {gridVisible && (
-            <GridOverlay
-              rows={gridSize.rows}
-              cols={gridSize.cols}
-              width={stageSize.width}
-              height={stageSize.height}
-              zoom={zoom}
-            />
-          )}
-          {fogOfWar && (
-            <motion.Rect
+          {/* Background */}
+          {background && (
+            <Rect
               x={0}
               y={0}
-              width={stageSize.width}
-              height={stageSize.height}
-              fill="black"
-              opacity={0.8}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
-              transition={{ duration: 0.3 }}
+              width={width}
+              height={height}
+              fillPatternImage={new Image(background)}
+              fillPatternRepeat="no-repeat"
+              fillPatternScale={{ x: 1, y: 1 }}
             />
           )}
-          {fogOfWar && revealedAreas && revealedAreas.map((area, index) => (
-            <Circle
-              key={index}
-              x={area.x}
-              y={area.y}
-              radius={area.radius * zoom}
-              fill="white"
-              opacity={1}
-              blendMode="destination-out"
-            />
-          ))}
-          {tokens.map((token) => (
-            <TokenComponent
-              key={token.id}
-              token={token}
-              isSelected={selectedTokenId === token.id}
-              onSelect={() => onSelectToken(token.id)}
-              onDragEnd={(e) => handleTokenDragEnd(e, token.id)}
-              draggable={isDM}
-              zoom={zoom}
-            />
-          ))}
+          
+          {/* Grid */}
+          {renderGrid()}
+          
+          {/* Tokens */}
+          {tokens.map((token) => {
+            const isActive = initiative.some(
+              (init) => init.tokenId === token.id && init.isActive
+            );
+            
+            return (
+              <Group
+                key={token.id}
+                x={token.x}
+                y={token.y}
+                draggable
+                onDragEnd={(e) => handleTokenDragEnd(token.id, e)}
+                onClick={() => handleTokenClick(token.id)}
+                onTap={() => handleTokenClick(token.id)}
+              >
+                <TokenComponent
+                  token={token}
+                  isSelected={token.id === selectedTokenId}
+                  isActive={isActive}
+                />
+              </Group>
+            );
+          })}
         </Layer>
       </Stage>
-    </div>
+    </motion.div>
   );
 };
 
