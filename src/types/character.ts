@@ -50,9 +50,9 @@ export interface Character {
   initiative: number;
   speed: number;
   equipment: string[] | Item[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
+    weapons?: string[] | Item[];
+    armor?: string | Item;
+    items?: string[] | Item[];
   };
   features: {
     race: string[];
@@ -176,3 +176,6 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
   ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
 };
+
+// Добавляем экспорт для типов, которые используются в других файлах
+export type { CharacterSpell, Item, DiceResult, HitPointEvent };

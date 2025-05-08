@@ -49,3 +49,33 @@ export const isEquipmentEmpty = (equipment: any): boolean => {
   }
   return true;
 };
+
+// Получение длины экипировки (количество элементов)
+export const getEquipmentLength = (equipment: any): number => {
+  if (!equipment) return 0;
+  
+  if (Array.isArray(equipment)) {
+    return equipment.length;
+  }
+  
+  if (typeof equipment === 'object') {
+    let count = 0;
+    const { weapons, armor, items } = equipment as { weapons?: any[], armor?: string, items?: any[] };
+    
+    if (weapons && Array.isArray(weapons)) {
+      count += weapons.length;
+    }
+    
+    if (armor && armor !== '') {
+      count += 1;
+    }
+    
+    if (items && Array.isArray(items)) {
+      count += items.length;
+    }
+    
+    return count;
+  }
+  
+  return 0;
+};

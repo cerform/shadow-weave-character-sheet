@@ -164,7 +164,7 @@ const SessionChat: React.FC<SessionChatProps> = ({
       <CardFooter className="p-2 mt-auto border-t">
         <div className="flex w-full gap-2">
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverTrigger>
               <Button variant="outline" size="icon">
                 <Dice6 className="h-5 w-5" />
               </Button>
