@@ -163,7 +163,6 @@ export interface Character {
   resources?: any;
   skillBonuses?: {[key: string]: number};
   spellcasting?: {ability?: string};
-  initiative?: number;
   lastDiceRoll?: DiceResult;
   languages?: string[];
   hitDice?: {
@@ -185,7 +184,6 @@ export interface Character {
   subclass?: string;
   abilityPointsUsed?: number;
   hp?: number;
-  maxHp?: number;
   personalityTraits?: string;
   ideals?: string;
   bonds?: string;
@@ -195,3 +193,11 @@ export interface Character {
   spellSaveDC?: number;
   spellAttackBonus?: number;
 }
+
+// Добавляем константы для лимитов характеристик
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,        // Базовый максимум для характеристик
+  EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
+  LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
+  ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
+};
