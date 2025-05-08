@@ -1,5 +1,4 @@
 
-
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -225,4 +224,3 @@ export const convertSpellsForState = (spells: CharacterSpell[] | (CharacterSpell
     return convertToSpellData(spell);
   });
 };
-

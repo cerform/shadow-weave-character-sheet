@@ -1,5 +1,4 @@
 
-
 export interface CharacterAbilities {
   strength: number;
   dexterity: number;
@@ -7,10 +6,16 @@ export interface CharacterAbilities {
   intelligence: number;
   wisdom: number;
   charisma: number;
+  STR?: number;
+  DEX?: number;
+  CON?: number;
+  INT?: number;
+  WIS?: number;
+  CHA?: number;
 }
 
 export interface CharacterSkills {
-  [key: string]: boolean | number;
+  [key: string]: boolean | number | null | { bonus?: number; value?: number };
 }
 
 export interface CharacterSpell {
@@ -66,14 +71,20 @@ export interface DiceResult {
   formula: string;
   rolls: number[];
   total: number;
+  diceType?: string;
+  count?: number;
+  modifier?: number;
+  label?: string;
+  timestamp?: string | number | Date;
 }
 
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'healing' | 'temp';
+  type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
   value: number;
+  amount?: number;
   source?: string;
-  timestamp: number;
+  timestamp: number | Date;
 }
 
 export interface CharacterFeature {
@@ -197,6 +208,14 @@ export interface Character {
   spellcastingAbility?: string;
   spellSaveDC?: number;
   spellAttackBonus?: number;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
 }
 
 // Добавляем константы для лимитов характеристик
@@ -206,4 +225,3 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
   ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
 };
-

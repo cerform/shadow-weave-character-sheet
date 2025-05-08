@@ -1,22 +1,15 @@
 
 #!/bin/bash
 
-# Core dependencies
-npm install react react-dom typescript
-npm install @types/react @types/react-dom @types/react-router-dom
-npm install vite @vitejs/plugin-react-swc
-npm install react-router-dom
-npm install @types/node --save-dev
+echo "Installing project dependencies..."
 
-# UI and styling
-npm install tailwindcss postcss autoprefixer --save-dev
-npm install class-variance-authority clsx tailwind-merge
-npm install lucide-react
+# Install project dependencies
+npm install
 
-# shadcn dependencies
-npm install @radix-ui/react-slot @radix-ui/react-tabs
-npm install @radix-ui/react-scroll-area
-npm install @radix-ui/react-separator
+# Make sure vite script is in package.json
+if ! grep -q '"dev": "vite"' package.json; then
+  sed -i 's/"scripts": {/"scripts": {\n    "dev": "vite",/g' package.json || \
+  sed -i '' 's/"scripts": {/"scripts": {\n    "dev": "vite",/g' package.json
+fi
 
-# Add vite dev command
-npx vite
+echo "Installation complete. Run 'npm run dev' to start the development server."

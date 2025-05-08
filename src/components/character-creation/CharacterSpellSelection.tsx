@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, safelyConvertSpellDescription, safelyConvertSpellClasses, convertSpellsForState } from '@/utils/spellUtils';
@@ -281,7 +280,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        // Исправление: преобразовываем description с использованием безопасной функции
+        // Fix: преобразовываем description и classes с использованием безопасных функций
         description: safelyConvertSpellDescription(spell.description),
         classes: safelyConvertSpellClasses(spell.classes),
         prepared: true // По умолчанию заклинания подготовлены
