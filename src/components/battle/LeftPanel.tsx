@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Token, Initiative } from '@/stores/battleStore'; // Import from store
+import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,8 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface LeftPanelProps {
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
-  initiative: Initiative[];
-  setInitiative: React.Dispatch<React.SetStateAction<Initiative[]>>;
+  initiative: InitiativeItem[];
+  setInitiative: React.Dispatch<React.SetStateAction<InitiativeItem[]>>;
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
   battleState: {

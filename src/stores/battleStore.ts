@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { InitiativeItem, Token } from '@/types/battle';
 
@@ -48,7 +47,8 @@ interface BattleStore {
   getCurrentCreature: () => Token | null;
 }
 
-export type { Token }; // Экспортируем тип для повторного использования
+// Экспортируем тип для повторного использования
+export type { Token, InitiativeItem }; 
 
 const useBattleStore = create<BattleStore>((set, get) => ({
   // Начальное состояние

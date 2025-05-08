@@ -1,12 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload, ImageIcon } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { Token, Initiative } from '@/stores/battleStore'; // Import from store
-import { VisibleArea } from '@/types/battle';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
+import TokenComponent from './TokenComponent';
+import TokenHealthBar from './TokenHealthBar';
+import GridOverlay from './GridOverlay';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -17,7 +13,7 @@ interface BattleMapProps {
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
   onSelectToken: (id: number | null) => void;
   selectedTokenId: number | null;
-  initiative: Initiative[];
+  initiative: InitiativeItem[];
   battleActive: boolean;
 }
 
