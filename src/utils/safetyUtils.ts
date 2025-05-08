@@ -1,109 +1,68 @@
 
 /**
- * Безопасно получает значение из вложенных объектов
- * @param obj Исходный объект
- * @param path Путь к свойству через точку
- * @param defaultValue Значение по умолчанию
+ * Безопасно получает длину оборудования персонажа
+ * @param character Персонаж
+ * @returns Количество предметов в инвентаре
  */
-export function safeGet<T>(obj: any, path: string, defaultValue: T): T {
-  if (!obj || typeof obj !== 'object') return defaultValue;
-  
-  const parts = path.split('.');
-  let current = obj;
-  
-  for (const part of parts) {
-    if (current === undefined || current === null || typeof current !== 'object') {
-      return defaultValue;
-    }
-    current = current[part];
+export const getEquipmentLength = (character: any): number => {
+  // Безопасно проверяем наличие массива equipment у персонажа
+  if (!character || !character.equipment || !Array.isArray(character.equipment)) {
+    return 0;
   }
-  
-  return current !== undefined && current !== null ? current as T : defaultValue;
-}
+  return character.equipment.length;
+};
 
 /**
- * Проверяет наличие свойства в объекте с поддержкой вложенности
- * @param obj Исходный объект
- * @param path Путь к свойству через точку
+ * Безопасно получает имя персонажа
+ * @param character Персонаж
+ * @returns Имя персонажа или дефолтное значение
  */
-export function safePropExists(obj: any, path: string): boolean {
-  if (!obj || typeof obj !== 'object') return false;
-  
-  const parts = path.split('.');
-  let current = obj;
-  
-  for (const part of parts) {
-    if (current === undefined || current === null || typeof current !== 'object') {
-      return false;
-    }
-    current = current[part];
+export const getSafeName = (character: any): string => {
+  if (!character || !character.name) {
+    return 'Безымянный персонаж';
   }
-  
-  return current !== undefined && current !== null;
-}
+  return character.name;
+};
 
 /**
- * Безопасное приведение свойств объекта к нужному типу
- * @param obj Исходный объект
- * @param fallback Объект с запасными значениями
+ * Безопасно получает расу персонажа
+ * @param character Персонаж
+ * @returns Раса персонажа или дефолтное значение
  */
-export function safeCast<T>(obj: any, fallback: T): T {
-  if (!obj) return fallback;
-  
-  const result = { ...fallback };
-  
-  for (const key in fallback) {
-    if (obj[key] !== undefined && obj[key] !== null) {
-      (result as any)[key] = obj[key];
-    }
+export const getSafeRace = (character: any): string => {
+  if (!character || !character.race) {
+    return 'Неизвестная раса';
   }
-  
-  return result;
-}
+  return character.race;
+};
 
 /**
- * Проверяет, является ли объект массивом и каждый его элемент соответствует типу
- * @param obj Проверяемый объект
- * @param typeChecker Функция для проверки типа элементов
+ * Безопасно получает класс персонажа
+ * @param character Персонаж
+ * @returns Класс персонажа или дефолтное значение
  */
-export function isTypedArray<T>(obj: any, typeChecker: (item: any) => boolean): obj is T[] {
-  return Array.isArray(obj) && obj.every(item => typeChecker(item));
-}
+export const getSafeClass = (character: any): string => {
+  if (!character) {
+    return 'Неизвестный класс';
+  }
+  // Проверяем разные варианты хранения класса
+  if (character.className) {
+    return character.className;
+  }
+  if (character.class) {
+    return character.class;
+  }
+  return 'Неизвестный класс';
+};
 
 /**
- * Преобразует значение в массив, если оно не является массивом
- * @param value Значение для преобразования
- * @returns Массив значений
+ * Безопасно получает уровень персонажа
+ * @param character Персонаж
+ * @returns Уровень персонажа или 1 по умолчанию
  */
-export function ensureArray<T>(value: T | T[] | undefined): T[] {
-  if (value === undefined) return [];
-  return Array.isArray(value) ? value : [value];
-}
-
-/**
- * Получает длину оборудования персонажа с учетом различных форматов хранения
- * @param equipment Оборудование персонажа
- * @returns Количество предметов оборудования
- */
-export function getEquipmentLength(equipment: any): number {
-  if (!equipment) return 0;
-  
-  if (Array.isArray(equipment)) {
-    return equipment.length;
+export const getSafeLevel = (character: any): number => {
+  if (!character || !character.level || isNaN(Number(character.level))) {
+    return 1;
   }
-  
-  if (typeof equipment === 'object') {
-    let count = 0;
-    
-    // Подсчет для разных категорий оборудования
-    if (Array.isArray(equipment.weapons)) count += equipment.weapons.length;
-    if (Array.isArray(equipment.tools)) count += equipment.tools.length;
-    if (Array.isArray(equipment.languages)) count += equipment.languages.length;
-    if (Array.isArray(equipment.items)) count += equipment.items.length;
-    if (equipment.armor) count += 1;
-    
-    return count;
-  }
-  
-  return 0;
-}
+  return Number(character.level);
+};
