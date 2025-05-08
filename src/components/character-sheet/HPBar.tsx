@@ -1,237 +1,187 @@
 
 import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Character } from '@/types/character';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Progress } from "@/components/ui/progress";
+import { Plus, Minus, Heart } from "lucide-react";
 
-export interface HPBarProps {
+interface HPBarProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
-  compactMode?: boolean;
 }
 
-export const HPBar: React.FC<HPBarProps> = ({
-  character, 
-  onUpdate, 
-  compactMode = false
-}) => {
+const HPBar: React.FC<HPBarProps> = ({ character, onUpdate }) => {
   const [damageAmount, setDamageAmount] = useState<number>(0);
   const [healAmount, setHealAmount] = useState<number>(0);
   const [tempHPAmount, setTempHPAmount] = useState<number>(0);
-  
-  // Получение текущего HP с учетом разных форматов данных
+
+  // Получаем текущие значения HP, с обратной совместимостью
   const getCurrentHP = (): number => {
-    return character.currentHp !== undefined 
-      ? character.currentHp 
-      : (character.hitPoints?.current || 0);
+    if (character.currentHp !== undefined) return character.currentHp;
+    if (character.hp !== undefined) return character.hp;
+    if (character.hitPoints?.current !== undefined) return character.hitPoints.current;
+    return 0;
   };
-  
-  // Получение максимального HP с учетом разных форматов данных
+
   const getMaxHP = (): number => {
-    return character.maxHp || character.hitPoints?.maximum || 0;
+    if (character.maxHp !== undefined) return character.maxHp;
+    if (character.hitPoints?.maximum !== undefined) return character.hitPoints.maximum;
+    return 0;
   };
-  
-  // Получение временного HP с учетом разных форматов данных
+
   const getTempHP = (): number => {
-    return character.temporaryHp || character.tempHp || character.hitPoints?.temporary || 0;
+    if (character.temporaryHp !== undefined) return character.temporaryHp;
+    if (character.hitPoints?.temporary !== undefined) return character.hitPoints.temporary;
+    return 0;
   };
+
+  const currentHP = getCurrentHP();
+  const maxHP = getMaxHP();
+  const tempHP = getTempHP();
+  const totalHP = maxHP > 0 ? maxHP : 1; // предотвращаем деление на ноль
+
+  const healthPercentage = Math.max(0, Math.min(100, (currentHP / totalHP) * 100));
   
-  // Обработчик урона
+  // Генерируем цвет индикатора в зависимости от уровня здоровья
+  const getHealthColor = (): string => {
+    if (healthPercentage <= 25) return "bg-red-600";
+    if (healthPercentage <= 50) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
+
   const handleDamage = () => {
-    const currentHP = getCurrentHP();
-    const tempHP = getTempHP();
+    if (damageAmount <= 0) return;
     
-    let newCurrentHP = currentHP;
-    let newTempHP = tempHP;
+    let updatedTempHP = tempHP;
+    let updatedCurrentHP = currentHP;
+    const damage = Math.max(0, damageAmount);
     
-    // Сначала урон идет во временные очки здоровья
-    if (tempHP > 0) {
-      if (damageAmount <= tempHP) {
-        newTempHP = tempHP - damageAmount;
+    // Сначала урон вычитается из временных хитов
+    if (updatedTempHP > 0) {
+      if (updatedTempHP >= damage) {
+        updatedTempHP -= damage;
       } else {
-        const remainingDamage = damageAmount - tempHP;
-        newTempHP = 0;
-        newCurrentHP = Math.max(0, currentHP - remainingDamage);
+        // Если временных хитов недостаточно, оставшийся урон вычитается из обычных хитов
+        const remainingDamage = damage - updatedTempHP;
+        updatedTempHP = 0;
+        updatedCurrentHP = Math.max(0, updatedCurrentHP - remainingDamage);
       }
     } else {
-      newCurrentHP = Math.max(0, currentHP - damageAmount);
+      // Если нет временных хитов, урон наносится напрямую
+      updatedCurrentHP = Math.max(0, updatedCurrentHP - damage);
     }
     
+    // Обновляем персонажа
     onUpdate({ 
-      currentHp: newCurrentHP,
-      temporaryHp: newTempHP,
-      hitPoints: {
-        current: newCurrentHP,
-        maximum: getMaxHP(),
-        temporary: newTempHP
-      }
+      hp: updatedCurrentHP,
+      temporaryHp: updatedTempHP
     });
     
     setDamageAmount(0);
   };
-  
-  // Обработчик лечения
+
   const handleHeal = () => {
-    const currentHP = getCurrentHP();
-    const maxHP = getMaxHP();
+    if (healAmount <= 0) return;
     
-    const newCurrentHP = Math.min(maxHP, currentHP + healAmount);
+    // Лечение не может превысить максимальное здоровье
+    const updatedCurrentHP = Math.min(maxHP, currentHP + Math.max(0, healAmount));
     
+    // Обновляем персонажа
     onUpdate({ 
-      currentHp: newCurrentHP,
-      hitPoints: {
-        current: newCurrentHP,
-        maximum: maxHP,
-        temporary: getTempHP()
-      }
+      hp: updatedCurrentHP 
     });
     
     setHealAmount(0);
   };
-  
-  // Обработчик добавления временных очков здоровья
-  const handleAddTempHP = () => {
-    const newTempHP = Math.max(getTempHP(), tempHPAmount);
+
+  const handleTempHP = () => {
+    if (tempHPAmount <= 0) return;
     
+    // Временные хиты не суммируются, а заменяются большим значением
+    const updatedTempHP = Math.max(tempHP, tempHPAmount);
+    
+    // Обновляем персонажа
     onUpdate({ 
-      temporaryHp: newTempHP,
-      hitPoints: {
-        current: getCurrentHP(),
-        maximum: getMaxHP(),
-        temporary: newTempHP
-      }
+      temporaryHp: updatedTempHP 
     });
     
     setTempHPAmount(0);
   };
-  
-  // Расчет процента для полосы здоровья
-  const calculateHPPercentage = (): number => {
-    const currentHP = getCurrentHP();
-    const maxHP = getMaxHP();
-    return maxHP > 0 ? (currentHP / maxHP) * 100 : 0;
-  };
-  
-  // Определение цвета полосы здоровья
-  const getHealthColor = (): string => {
-    const percentage = calculateHPPercentage();
-    if (percentage > 60) return 'bg-green-600';
-    if (percentage > 30) return 'bg-yellow-500';
-    return 'bg-red-600';
-  };
-  
+
   return (
-    <div className="bg-card rounded-md p-4 space-y-4">
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="font-medium">Здоровье</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">{getCurrentHP()}/{getMaxHP()}</span>
-            {getTempHP() > 0 && (
-              <span className="text-xs bg-blue-500/20 text-blue-300 px-1 rounded">
-                +{getTempHP()} вр.
-              </span>
-            )}
-          </div>
+    <div className="w-full space-y-2">
+      <div className="flex justify-between items-center">
+        <div className="text-sm font-medium">
+          HP: {currentHP} / {maxHP} {tempHP > 0 && `+ ${tempHP} temp`}
         </div>
-        
-        <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
-          <div 
-            className={`h-full ${getHealthColor()} transition-all duration-500`}
-            style={{ width: `${calculateHPPercentage()}%` }}
-          />
+        <div className="text-xs text-muted-foreground">
+          {healthPercentage.toFixed(0)}%
         </div>
       </div>
+      <Progress value={healthPercentage} className={getHealthColor()} />
       
-      {!compactMode && (
-        <>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label htmlFor="damage" className="text-xs">Урон</Label>
-              <div className="flex mt-1">
-                <Input
-                  id="damage"
-                  type="number"
-                  min="0"
-                  value={damageAmount || ''}
-                  onChange={(e) => setDamageAmount(parseInt(e.target.value) || 0)}
-                  className="rounded-r-none"
-                />
-                <Button 
-                  onClick={handleDamage} 
-                  variant="destructive" 
-                  className="rounded-l-none"
-                  disabled={damageAmount <= 0}
-                >
-                  ✓
-                </Button>
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="heal" className="text-xs">Лечение</Label>
-              <div className="flex mt-1">
-                <Input
-                  id="heal"
-                  type="number"
-                  min="0"
-                  value={healAmount || ''}
-                  onChange={(e) => setHealAmount(parseInt(e.target.value) || 0)}
-                  className="rounded-r-none"
-                />
-                <Button 
-                  onClick={handleHeal} 
-                  variant="default" 
-                  className="rounded-l-none bg-green-600 hover:bg-green-700"
-                  disabled={healAmount <= 0}
-                >
-                  ✓
-                </Button>
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="tempHP" className="text-xs">Врем. ОЗ</Label>
-              <div className="flex mt-1">
-                <Input
-                  id="tempHP"
-                  type="number"
-                  min="0"
-                  value={tempHPAmount || ''}
-                  onChange={(e) => setTempHPAmount(parseInt(e.target.value) || 0)}
-                  className="rounded-r-none"
-                />
-                <Button 
-                  onClick={handleAddTempHP} 
-                  variant="secondary" 
-                  className="rounded-l-none bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={tempHPAmount <= 0}
-                >
-                  ✓
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex justify-center">
+      <div className="grid grid-cols-3 gap-2 mt-3">
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              value={damageAmount}
+              onChange={(e) => setDamageAmount(Number(e.target.value))}
+              className="h-8"
+              min="0"
+            />
             <Button 
-              variant="outline" 
+              className="h-8 ml-1 bg-red-600 hover:bg-red-700" 
+              onClick={handleDamage}
               size="sm"
-              onClick={() => onUpdate({ 
-                currentHp: getMaxHP(),
-                hitPoints: {
-                  current: getMaxHP(),
-                  maximum: getMaxHP(),
-                  temporary: getTempHP()
-                }
-              })}
             >
-              Полное лечение
+              <Minus className="h-4 w-4" />
             </Button>
           </div>
-        </>
-      )}
+          <label className="text-xs text-muted-foreground">Урон</label>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              value={healAmount}
+              onChange={(e) => setHealAmount(Number(e.target.value))}
+              className="h-8"
+              min="0"
+            />
+            <Button 
+              className="h-8 ml-1 bg-green-600 hover:bg-green-700" 
+              onClick={handleHeal}
+              size="sm"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <label className="text-xs text-muted-foreground">Лечение</label>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <Input 
+              type="number"
+              value={tempHPAmount}
+              onChange={(e) => setTempHPAmount(Number(e.target.value))}
+              className="h-8"
+              min="0"
+            />
+            <Button 
+              className="h-8 ml-1 bg-blue-600 hover:bg-blue-700" 
+              onClick={handleTempHP}
+              size="sm"
+            >
+              <Heart className="h-4 w-4" />
+            </Button>
+          </div>
+          <label className="text-xs text-muted-foreground">Временные HP</label>
+        </div>
+      </div>
     </div>
   );
 };

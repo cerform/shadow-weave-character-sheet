@@ -14,10 +14,22 @@ import { validateCharacters } from '@/utils/debugUtils';
 
 interface CharactersTableProps {
   characters: Character[];
-  onDelete: (id: string) => Promise<void>;
+  loading?: boolean;
+  error?: string | null;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete }) => {
+// Экспортируем компонент с правильным именем
+export const CharactersTable: React.FC<CharactersTableProps> = ({ 
+  characters, 
+  loading = false,
+  error = null,
+  onView,
+  onEdit,
+  onDelete 
+}) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { theme } = useTheme();
@@ -27,21 +39,15 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   
   // Валидация массива персонажей при монтировании/обновлении
   useEffect(() => {
-    const validation = validateCharacters(characters);
-    setValidationReport(validation);
-    
-    if (!validation.valid) {
-      console.warn('CharactersTable: Найдены проблемы с данными персонажей:', validation);
+    if (typeof validateCharacters === 'function') {
+      const validation = validateCharacters(characters);
+      setValidationReport(validation);
+      
+      if (validation && !validation.valid) {
+        console.warn('CharactersTable: Найдены проблемы с данными персонажей:', validation);
+      }
     }
   }, [characters]);
-
-  // Функция открытия персонажа
-  const handleViewCharacter = (id: string) => {
-    console.log(`Открываем персонажа с ID: ${id}`);
-    // Сохраняем ID последнего выбранного персонажа
-    localStorage.setItem('last-selected-character', id);
-    navigate(`/character/${id}`);
-  };
 
   // Функция удаления персонажа с индикацией загрузки
   const handleDelete = async (id: string) => {
@@ -77,6 +83,37 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   const getCharacterRace = (character: Character): string => {
     return character.race || '—';
   };
+
+  // Если происходит загрузка, показываем индикатор
+  if (loading) {
+    return (
+      <Card className="bg-black/50 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p>Загрузка персонажей...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Если есть ошибка, показываем сообщение об ошибке
+  if (error) {
+    return (
+      <Card className="bg-black/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-red-500">Ошибка загрузки</CardTitle>
+          <CardDescription>{error}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => window.location.reload()}>
+            Попробовать снова
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Проверяем корректность массива персонажей
   if (!Array.isArray(characters)) {
@@ -216,7 +253,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => handleViewCharacter(character.id!)}
+                    onClick={() => onView(character.id!)}
                     title="Открыть"
                   >
                     <Eye size={16} />
@@ -224,7 +261,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => navigate(`/character/${character.id}`)}
+                    onClick={() => onEdit(character.id!)}
                     title="Редактировать"
                   >
                     <Edit size={16} />
@@ -253,4 +290,5 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   );
 };
 
+// Также экспортируем компонент по умолчанию для совместимости
 export default CharactersTable;

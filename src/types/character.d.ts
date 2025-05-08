@@ -1,33 +1,34 @@
 
 export interface Character {
   id: string;
-  userId: string;
+  userId?: string;
   name: string;
   race: string;
   class: string;
-  className?: string; // Added for compatibility with components expecting className
+  className?: string; // Добавляем для совместимости с компонентами
   level: number;
   background: string;
   alignment: string;
   experience: number;
-  abilities: {
+  abilities?: {
     strength: number;
     dexterity: number;
     constitution: number;
     intelligence: number;
     wisdom: number;
     charisma: number;
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
   };
-  proficiencyBonus: number;
+  proficiencyBonus?: number;
   armorClass: number;
   maxHp: number;
-  currentHp: number; // Added for HPBar component
+  currentHp?: number; // Добавляем для HPBar компонента
+  hp?: number; // Для обратной совместимости
   temporaryHp: number;
   hitDice: {
     total: number;
@@ -35,28 +36,38 @@ export interface Character {
     type: string;
     dieType?: string;
   };
-  hitPoints?: { // Add for backward compatibility
+  hitPoints?: { // Для обратной совместимости
     maximum: number;
     current: number;
     temporary: number;
   };
-  deathSaves: {
+  deathSaves?: {
     successes: number;
     failures: number;
   };
-  inspiration: boolean;
-  conditions: string[];
-  inventory: any[];
-  equipment: any[] | Item[];
-  spells: CharacterSpell[];
-  proficiencies: string[] | {
+  inspiration?: boolean;
+  conditions?: string[];
+  inventory?: any[];
+  equipment?: any[] | {
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+    armor?: string;
+    items?: string[];
+  };
+  spells?: CharacterSpell[];
+  proficiencies?: string[] | {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
   };
-  features: CharacterFeature[];
-  notes: string;
-  resources: {
+  features?: CharacterFeature[] | {
+    race: string[];
+    class: string[];
+    background: string[];
+  };
+  notes?: string;
+  resources?: {
     [key: string]: {
       max: number;
       used: number;
@@ -66,27 +77,68 @@ export interface Character {
       recoveryType?: string;
     };
   };
-  savingThrowProficiencies: string[];
-  skillProficiencies: string[];
-  skills?: {
-    [key: string]: number | { value: number; bonus: number; };
+  savingThrowProficiencies?: string[];
+  savingThrows?: {
+    [key: string]: boolean;
   };
-  expertise: string[];
-  skillBonuses: {
+  skillProficiencies?: string[];
+  skills?: {
+    [key: string]: boolean | number | { value: number; bonus: number; };
+  };
+  expertise?: string[];
+  skillBonuses?: {
     [key: string]: number;
   };
-  spellcasting: {
+  spellcasting?: {
     ability?: string;
     saveDC?: number;
     attackBonus?: number;
   };
-  gold: number;
-  initiative: number;
+  spellcastingAbility?: string;
+  spellSaveDC?: number;
+  spellAttackBonus?: number;
+  gold?: number;
+  silver?: number;
+  copper?: number;
+  platinum?: number;
+  electrum?: number;
+  currency?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
+  initiative?: number;
   speed?: string | number;
-  lastDiceRoll: DiceResult;
-  languages: string[];
+  lastDiceRoll?: DiceResult;
+  languages?: string[];
   subrace?: string;
   spellSlots?: Record<number | string, { max: number; used: number; available?: number; }>;
+  gender?: string;
+  subclass?: string;
+  abilityPointsUsed?: number;
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  backstory?: string;
+  appearance?: string;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+  portrait?: string;
 }
 
 export interface CharacterSpell {
@@ -99,9 +151,12 @@ export interface CharacterSpell {
   components: string;
   duration: string;
   description: string | string[];
-  prepared: boolean;
+  prepared?: boolean;
+  alwaysPrepared?: boolean;
   favorite?: boolean;
   tags?: string[];
+  ritual?: boolean;
+  concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
@@ -110,8 +165,6 @@ export interface CharacterSpell {
   higherLevels?: string;
   source?: string;
   classes?: string[] | string;
-  ritual?: boolean;
-  concentration?: boolean;
 }
 
 export interface CharacterFeature {
@@ -138,7 +191,6 @@ export interface DiceResult {
   reason?: string;
 }
 
-// Add the Item interface referenced in several components
 export interface Item {
   name: string;
   quantity: number;
@@ -149,7 +201,6 @@ export interface Item {
   properties?: string[];
 }
 
-// Add the HitPointEvent interface for DamageLog.tsx
 export interface HitPointEvent {
   id: string;
   type: 'damage' | 'heal' | 'temp';
@@ -158,7 +209,6 @@ export interface HitPointEvent {
   timestamp: string;
 }
 
-// Export ABILITY_SCORE_CAPS constants for CharacterLevelSelection
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,        // Базовый максимум для характеристик
   EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
