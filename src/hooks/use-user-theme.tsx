@@ -5,11 +5,13 @@ import { themes } from '@/lib/themes';
 interface UserThemeContextProps {
   activeTheme: string;
   setUserTheme: (theme: string) => void;
+  currentTheme?: typeof themes.default;
 }
 
 const UserThemeContext = createContext<UserThemeContextProps>({
   activeTheme: 'default',
-  setUserTheme: () => {}
+  setUserTheme: () => {},
+  currentTheme: themes.default
 });
 
 export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
@@ -59,8 +61,15 @@ export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
     console.log("User theme set to:", theme);
   };
   
+  // Получаем объект текущей темы
+  const currentTheme = themes[activeTheme as keyof typeof themes] || themes.default;
+  
   return (
-    <UserThemeContext.Provider value={{ activeTheme, setUserTheme }}>
+    <UserThemeContext.Provider value={{ 
+      activeTheme, 
+      setUserTheme, 
+      currentTheme 
+    }}>
       {children}
     </UserThemeContext.Provider>
   );
@@ -71,7 +80,11 @@ export const useUserTheme = () => {
   
   if (context === undefined) {
     console.warn('useUserTheme must be used within a UserThemeProvider');
-    return { activeTheme: 'default', setUserTheme: (theme: string) => {} };
+    return { 
+      activeTheme: 'default', 
+      setUserTheme: (theme: string) => {},
+      currentTheme: themes.default
+    };
   }
   
   return context;

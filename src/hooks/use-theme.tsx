@@ -5,11 +5,13 @@ import { themes } from '@/lib/themes';
 interface ThemeContextType {
   theme: string;
   setTheme: (theme: string) => void;
+  themeStyles?: typeof themes.default;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'default',
   setTheme: () => {},
+  themeStyles: themes.default
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,8 +32,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // Получаем стили текущей темы
+  const themeStyles = themes[theme as keyof typeof themes] || themes.default;
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, themeStyles }}>
       {children}
     </ThemeContext.Provider>
   );
