@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { InitiativeItem, Token } from '@/types/battle';
+import { Token, InitiativeItem, LightSource, VisibleArea } from '@/types/battle';
 
 interface BattleStore {
   // Состояние боя
@@ -47,8 +47,8 @@ interface BattleStore {
   getCurrentCreature: () => Token | null;
 }
 
-// Экспортируем тип для повторного использования
-export type { Token, InitiativeItem }; 
+// Экспортируем типы для повторного использования
+export type { Token, InitiativeItem, LightSource, VisibleArea }; 
 
 const useBattleStore = create<BattleStore>((set, get) => ({
   // Начальное состояние

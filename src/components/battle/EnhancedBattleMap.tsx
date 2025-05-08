@@ -4,6 +4,7 @@ import { Stage, Layer, Image, Circle } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
 import TokenComponent from './TokenComponent';
+import GridOverlay from './GridOverlay';
 
 interface EnhancedBattleMapProps {
   backgroundImage: string | null;

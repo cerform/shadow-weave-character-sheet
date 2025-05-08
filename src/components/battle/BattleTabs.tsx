@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
+import { Token, InitiativeItem } from '@/types/battle';
 import InitiativeTracker from './InitiativeTracker';
 import TokensPanel from './TokensPanel';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { useDeviceType } from '@/hooks/use-device-type';
+import { User, ArrowRight, RefreshCw, Skull, Crown } from 'lucide-react';
 
 interface BattleTabsProps {
   tokens: Token[];

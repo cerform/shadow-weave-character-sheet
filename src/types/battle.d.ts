@@ -45,3 +45,10 @@ export interface LightSource {
   flickering?: boolean;
   attachedToTokenId?: number;
 }
+
+export interface VisibleArea {
+  x: number;
+  y: number;
+  radius: number;
+  tokenId: number;
+}

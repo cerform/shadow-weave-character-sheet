@@ -1,82 +1,100 @@
 
 import React from 'react';
-import { Token } from '@/stores/battleStore';
+import { Token, InitiativeItem } from '@/types/battle';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { ArrowRight, RefreshCw } from 'lucide-react';
 
 interface InitiativeTrackerProps {
-  initiative: {
-    id: number;
-    tokenId: number;
-    name: string;
-    roll: number;
-    isActive: boolean;
-  }[];
+  initiative: InitiativeItem[];
   tokens: Token[];
-  battleActive: boolean;
+  onNextTurn?: () => void;
+  onRollInitiative?: () => void;
+  onSelectToken: (id: number | null) => void;
+  isDM?: boolean;
 }
 
-const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({ 
-  initiative, 
-  tokens, 
-  battleActive 
+const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
+  initiative,
+  tokens,
+  onNextTurn,
+  onRollInitiative,
+  onSelectToken,
+  isDM = true
 }) => {
   return (
-    <div className="initiative-tracker space-y-3">
-      <div className="flex justify-between items-center">
-        <h3 className="font-medium">Порядок инициативы</h3>
-        {battleActive && (
-          <div className="text-xs font-medium bg-green-500/20 text-green-500 px-2 py-0.5 rounded">
-            Бой активен
+    <div className="space-y-2">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium">Порядок инициативы</h3>
+        {isDM && (
+          <div className="flex gap-1">
+            <Button
+              onClick={onRollInitiative}
+              variant="outline"
+              size="sm"
+              className="h-8"
+            >
+              <RefreshCw size={14} className="mr-1" />
+              <span className="text-xs">Бросок</span>
+            </Button>
+            <Button
+              onClick={onNextTurn}
+              variant="outline"
+              size="sm"
+              className="h-8"
+            >
+              <ArrowRight size={14} className="mr-1" />
+              <span className="text-xs">Следующий</span>
+            </Button>
           </div>
         )}
       </div>
       
-      {initiative.length === 0 ? (
-        <div className="text-center p-3 text-muted-foreground bg-muted/20 rounded-md">
-          Нет данных инициативы. Начните бой для броска инициативы.
-        </div>
-      ) : (
+      <Separator className="my-2" />
+      
+      <ScrollArea className="h-[300px]">
         <div className="space-y-1">
           {initiative.map((item) => {
             const token = tokens.find(t => t.id === item.tokenId);
+            if (!token) return null;
             
             return (
               <div 
-                key={item.id} 
-                className={`flex items-center gap-2 p-2 rounded border
-                  ${item.isActive ? 'bg-primary/20 border-primary' : 'bg-card border-transparent'}`}
+                key={item.id}
+                className={`flex items-center p-2 rounded cursor-pointer ${
+                  item.isActive ? 'bg-primary/20 border border-primary' : 'bg-muted/10 border'
+                }`}
+                onClick={() => onSelectToken(token.id)}
               >
-                <div className="w-6 h-6 flex items-center justify-center bg-muted/30 rounded-full font-medium">
+                <div className="mr-2 w-6 h-6 flex items-center justify-center rounded-full bg-muted font-medium text-xs">
                   {item.roll}
                 </div>
                 
-                {token && (
+                <div className="flex items-center gap-2 flex-1">
                   <div 
-                    className="w-6 h-6 rounded-full bg-center bg-cover"
-                    style={{ 
-                      backgroundImage: `url(${token.img})`,
-                      border: `1px solid ${
-                        token.type === "boss" 
-                          ? "#ff5555" 
-                          : token.type === "monster" 
-                          ? "#ff9955" 
-                          : "#55ff55"
-                      }` 
-                    }}
+                    className="w-6 h-6 rounded-full overflow-hidden bg-center bg-cover"
+                    style={{backgroundImage: `url(${token.img})`}}
                   />
-                )}
-                
-                <div className="flex-1 truncate">{item.name}</div>
+                  <span className="text-sm">{token.name}</span>
+                </div>
                 
                 {item.isActive && (
-                  <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                  <div className="ml-2 text-xs font-semibold text-primary">
                     Текущий ход
                   </div>
                 )}
               </div>
             );
           })}
+          
+          {initiative.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              Инициатива не была брошена
+            </div>
+          )}
         </div>
-      )}
+      </ScrollArea>
     </div>
   );
 };

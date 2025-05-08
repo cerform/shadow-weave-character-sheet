@@ -1,8 +1,17 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
+import { Token, InitiativeItem, VisibleArea } from '@/types/battle';
 import TokenComponent from './TokenComponent';
 import TokenHealthBar from './TokenHealthBar';
 import GridOverlay from './GridOverlay';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { 
+  Mouse, Eraser, Grid, Eye, EyeOff, Lock, Unlock,
+  ZoomIn, ZoomOut, Upload, ImageIcon
+} from 'lucide-react';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -85,7 +94,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [mapRef.current]);
   
-  // Обновляем размер токена при его выборе
+  // Обновля��м размер токена при его выборе
   useEffect(() => {
     if (selectedTokenId) {
       const token = tokens.find(t => t.id === selectedTokenId);
@@ -283,7 +292,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, mapRect.width, mapRect.height);
     
-    // Очищаем области видимости
+    // Очищаем области ��идимости
     ctx.globalCompositeOperation = "destination-out" as GlobalCompositeOperation;
     visibleAreas.forEach(area => {
       const scaledX = area.x * zoom + mapOffset.x;
@@ -521,7 +530,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
             className="h-8 w-8"
             onClick={() => setMapTool("draw")}
           >
-            <div className="text-xs">✏️</div>
+            <div className="text-xs">✏���</div>
           </Button>
           <Button
             variant={mapTool === "fog" ? "default" : "outline"}
