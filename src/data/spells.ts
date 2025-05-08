@@ -1,92 +1,103 @@
 
 import { SpellData } from '@/types/spells';
 
-// Базовый набор заклинаний для разных классов
-const basicSpells: SpellData[] = [
+// Массив заклинаний
+export const spells: SpellData[] = [
   {
-    id: "magic-missile",
-    name: "Волшебная стрела",
-    level: 1,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "120 футов",
-    components: "В, С",
-    duration: "Мгновенная",
-    description: "Вы создаёте три светящиеся стрелы силового поля. Каждая из них попадает в существо по вашему выбору, которое вы можете видеть в пределах дистанции.",
-    classes: ["волшебник", "чародей"],
-  },
-  {
-    id: "cure-wounds",
-    name: "Лечение ран",
-    level: 1,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "Касание",
-    components: "В, С",
-    duration: "Мгновенная",
-    description: "Существо, которого вы касаетесь, восстанавливает количество хитов, равное 1к8 + ваш модификатор базовой характеристики.",
-    classes: ["жрец", "друид", "паладин", "бард"],
-  },
-  {
-    id: "light",
-    name: "Свет",
+    id: 'light',
+    name: 'Свет',
     level: 0,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "Касание",
-    components: "В, М (светлячок или фосфоресцирующий мох)",
-    duration: "1 час",
-    description: "Вы касаетесь одного предмета, размер которого не превышает 10 футов ни в одном измерении. Пока заклинание активно, предмет испускает яркий свет в радиусе 20 футов.",
-    classes: ["волшебник", "клирик", "друид", "бард", "чародей"],
+    school: 'Вызов',
+    castingTime: '1 действие',
+    range: 'Касание',
+    components: 'ВМ',
+    duration: '1 час',
+    description: ['Вы касаетесь одного объекта, не превышающего 10 футов в любом измерении. До окончания заклинания объект испускает яркий свет в радиусе 20 футов.'],
+    classes: ['Бард', 'Волшебник', 'Жрец'],
+    ritual: false,
+    concentration: false
   },
   {
-    id: "sacred-flame",
-    name: "Священное пламя",
+    id: 'mage-hand',
+    name: 'Волшебная рука',
     level: 0,
-    school: "Воплощение",
-    castingTime: "1 действие",
-    range: "60 футов",
-    components: "В, С",
-    duration: "Мгновенная",
-    description: "Подобное пламени сияние нисходит на существо, которое вы видите в пределах дистанции. Цель должна преуспеть в спасброске Ловкости, иначе она получает урон излучением 1к8.",
-    classes: ["жрец"],
+    school: 'Вызов',
+    castingTime: '1 действие',
+    range: '30 футов',
+    components: 'ВС',
+    duration: '1 минута',
+    description: ['Призрачная плавающая рука появляется в указанной вами точке.'],
+    classes: ['Бард', 'Волшебник', 'Чародей'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'mage-armor',
+    name: 'Волшебная броня',
+    level: 1,
+    school: 'Ограждение',
+    castingTime: '1 действие',
+    range: 'Касание',
+    components: 'ВСМ',
+    duration: '8 часов',
+    description: ['Вы касаетесь согласного существа, не носящего доспехи. Пока заклинание активно, КД существа равно 13 + его модификатор Ловкости.'],
+    classes: ['Волшебник'],
+    ritual: false,
+    concentration: false
+  },
+  {
+    id: 'healing-word',
+    name: 'Лечащее слово',
+    level: 1,
+    school: 'Вызов',
+    castingTime: '1 бонусное действие',
+    range: '60 футов',
+    components: 'В',
+    duration: 'Мгновенная',
+    description: ['Вы произносите слово исцеления и существо на ваш выбор, видимое вами в радиусе действия, восстанавливает 1d4 + ваш модификатор базовой характеристики хиты.'],
+    classes: ['Бард', 'Жрец', 'Друид'],
+    ritual: false,
+    concentration: false
   }
 ];
 
-// Функция получения всех заклинаний
+// Функция для получения всех заклинаний
 export const getAllSpells = (): SpellData[] => {
-  return basicSpells;
+  return spells;
 };
 
-// Функция получения заклинаний по классу
-export const getSpellsByClass = (className: string): SpellData[] => {
-  if (!className) return [];
+// Функция для получения заклинаний по классу
+export const getSpellsByClass = (characterClass: string): SpellData[] => {
+  const lowerClass = characterClass.toLowerCase();
   
-  const classLower = className.toLowerCase();
-  
-  // Создаём соответствие русских и английских названий классов
+  // Маппинг русских названий классов на английские
   const classMap: Record<string, string[]> = {
-    'волшебник': ['волшебник', 'wizard'],
-    'жрец': ['жрец', 'cleric'],
-    'друид': ['друид', 'druid'],
-    'бард': ['бард', 'bard'],
-    'паладин': ['паладин', 'paladin'],
-    'следопыт': ['следопыт', 'ranger'],
-    'колдун': ['колдун', 'warlock'],
-    'чародей': ['чародей', 'sorcerer']
+    'жрец': ['cleric', 'жрец'],
+    'волшебник': ['wizard', 'волшебник'],
+    'бард': ['bard', 'бард'],
+    'друид': ['druid', 'друид'],
+    'колдун': ['warlock', 'колдун'],
+    'чародей': ['sorcerer', 'чародей'],
+    'паладин': ['paladin', 'паладин'],
+    'следопыт': ['ranger', 'следопыт'],
+    'изобретатель': ['artificer', 'изобретатель']
   };
   
-  // Определяем допустимые названия для данного класса
-  const validClassNames = classMap[classLower] || [classLower];
+  const classesToSearch = classMap[lowerClass] || [lowerClass];
   
-  // Фильтруем заклинания по классу
-  return basicSpells.filter(spell => {
+  return spells.filter(spell => {
     if (!spell.classes) return false;
     
-    const spellClasses = Array.isArray(spell.classes) 
-      ? spell.classes.map(c => c.toLowerCase()) 
-      : [spell.classes.toLowerCase()];
-      
-    return spellClasses.some(c => validClassNames.includes(c));
+    // Проверяем, содержит ли массив классов заклинания нужный класс
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.some(spellClass => {
+        const lowerSpellClass = spellClass.toLowerCase();
+        return classesToSearch.includes(lowerSpellClass);
+      });
+    }
+    
+    // Если classes - строка
+    const lowerSpellClass = spell.classes.toLowerCase();
+    return classesToSearch.includes(lowerSpellClass);
   });
 };

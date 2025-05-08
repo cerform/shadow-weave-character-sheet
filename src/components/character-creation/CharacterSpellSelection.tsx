@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -56,6 +57,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [spellsKnown, setSpellsKnown] = useState(0);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [loadedSuccessfully, setLoadedSuccessfully] = useState(false);
+  const [themeStyles, setThemeStyles] = useState(currentTheme);
 
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
@@ -279,7 +281,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        description: spell.description,
+        // Исправление: преобразовываем description к единому типу массива строк
+        description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
         classes: spell.classes || [],
         prepared: true // По умолчанию заклинания подготовлены
       });
@@ -338,6 +341,14 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }, {});
   }, [spellsToFilter]);
 
+  // Получаем фон страницы
+  useEffect(() => {
+    setThemeStyles(currentTheme);
+  }, [currentTheme]);
+
+  // Фон страницы
+  const pageBackground = useMemo(() => `linear-gradient(to bottom, ${themeStyles.accent || '#333333'}20, ${themeStyles.cardBackground || 'rgba(0, 0, 0, 0.85)'})`, [themeStyles]);
+
   // Если не удалось загрузить заклинания после нескольких попыток
   if (loadAttempts >= 3 && !loadedSuccessfully && !loading) {
     return (
@@ -369,9 +380,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     );
   }
 
-  // Исправленная ошибка с конкатенацией строк
-  const pageBackground = useMemo(() => `linear-gradient(to bottom, ${themeStyles?.accent || '#333333'}20, ${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.85)'})`, [themeStyles]);
-
   return (
     <div className="flex flex-col h-full">
       <div className="mb-4">
@@ -387,7 +395,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        <Separator className={cn("my-2 bg-accent/30")} />
+        <Separator className="my-2" />
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -400,8 +408,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           }}
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full mb-4 flex flex-wrap">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
             <TabsTrigger value="all">
               Все ({spellsToFilter.length})
             </TabsTrigger>
@@ -417,7 +425,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea className={cn("flex-1")}>
+      <ScrollArea>
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">
