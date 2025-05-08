@@ -2,6 +2,7 @@
 import { Character, CharacterSpell } from '@/types/character';
 import { safeGet } from './safetyUtils';
 import { getAbilityModifier } from './abilityUtils';
+import { SpellData as SpellDataFromType } from '@/types/spells';
 
 /**
  * Тип SpellData для компонента отображения заклинаний
@@ -15,12 +16,12 @@ export interface SpellData {
   range: string;
   components: string;
   duration: string;
-  description: string;
+  description: string | string[];
   prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
   source?: string;
-  classes?: string[];
+  classes?: string[] | string;
 }
 
 /**
@@ -263,7 +264,7 @@ export function calculateAvailableSpellsByClassAndLevel(
  * Фильтрует заклинания по классу и уровню персонажа
  */
 export function filterSpellsByClassAndLevel(
-  spells: SpellData[],
+  spells: SpellData[] | SpellDataFromType[],
   characterClass: string,
   characterLevel: number
 ): SpellData[] {
@@ -298,13 +299,13 @@ export function filterSpellsByClassAndLevel(
     const validClasses = matchingClasses[classLower] || [classLower];
     
     return spellClasses.some(cls => validClasses.includes(cls));
-  });
+  }) as SpellData[];
 }
 
 /**
  * Преобразует заклинания для сохранения в состоянии персонажа
  */
-export function convertSpellsForState(spells: SpellData[]): CharacterSpell[] {
+export function convertSpellsForState(spells: SpellData[] | SpellDataFromType[]): CharacterSpell[] {
   return spells.map(spell => ({
     id: spell.id,
     name: spell.name,

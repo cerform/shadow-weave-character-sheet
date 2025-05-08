@@ -1,76 +1,80 @@
 
-import { Character } from '@/types/character';
-
 /**
- * Вычисляет модификатор характеристики по ее значению
- * @param abilityScore Значение характеристики
+ * Получает модификатор характеристики персонажа
+ * @param character Персонаж
+ * @param ability Название характеристики (strength, dexterity, etc.)
  * @returns Модификатор характеристики
  */
-export function getAbilityModifierValue(abilityScore: number): number {
+import { Character } from '../types/character';
+
+export function getAbilityModifier(character: Character, ability: string): number {
+  if (!character) return 0;
+  
+  let abilityScore = 10; // По умолчанию 10 (модификатор 0)
+  
+  // Проверяем, есть ли характеристика напрямую в объекте персонажа
+  const abilityMap: Record<string, keyof Character> = {
+    'strength': 'strength',
+    'dexterity': 'dexterity',
+    'constitution': 'constitution',
+    'intelligence': 'intelligence',
+    'wisdom': 'wisdom',
+    'charisma': 'charisma'
+  };
+  
+  const characterKey = abilityMap[ability.toLowerCase()];
+  if (characterKey && typeof character[characterKey] === 'number') {
+    abilityScore = character[characterKey] as number;
+  }
+  
+  // Если есть объект abilities, проверяем там
+  else if (character.abilities) {
+    const abilitiesKey = ability.toLowerCase() as keyof typeof character.abilities;
+    if (character.abilities[abilitiesKey] && typeof character.abilities[abilitiesKey] === 'number') {
+      abilityScore = character.abilities[abilitiesKey] as number;
+    }
+  }
+  
+  // Если есть объект stats, проверяем там
+  else if (character.stats) {
+    const statsKey = ability.toLowerCase() as keyof typeof character.stats;
+    if (character.stats[statsKey] && typeof character.stats[statsKey] === 'number') {
+      abilityScore = character.stats[statsKey] as number;
+    }
+  }
+  
+  // Вычисляем и возвращаем модификатор
   return Math.floor((abilityScore - 10) / 2);
 }
 
 /**
- * Форматирует модификатор характеристики со знаком + или -
- * @param modifier Числовой модификатор
- * @returns Строка с модификатором (например, "+3" или "-1")
+ * Вычисляет сложность спасброска для заклинаний персонажа
+ * @param character Персонаж
+ * @returns Сложность спасброска
  */
-export function formatAbilityModifier(modifier: number): string {
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-}
-
-/**
- * Получает значение характеристики персонажа с учетом разных форматов данных
- * @param character Объект персонажа
- * @param ability Название характеристики на английском (strength, dexterity, etc.)
- * @returns Значение характеристики
- */
-export function getAbilityValue(character: Character, ability: string): number {
+export function calculateSpellSaveDC(character: Character): number {
   if (!character) return 10;
   
-  // Проверяем наличие характеристики в разных местах с учетом регистра
-  if (character[ability as keyof Character] !== undefined) {
-    return character[ability as keyof Character] as number;
-  }
+  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level || 1) / 4);
+  const spellcastingAbility = character.spellcastingAbility || 'intelligence';
+  const abilityModifier = getAbilityModifier(character, spellcastingAbility);
   
-  // Проверяем в abilities
-  if (character.abilities && character.abilities[ability as keyof typeof character.abilities] !== undefined) {
-    return character.abilities[ability as keyof typeof character.abilities];
-  }
-  
-  // Проверяем в stats
-  if (character.stats && character.stats[ability as keyof typeof character.stats] !== undefined) {
-    return character.stats[ability as keyof typeof character.stats];
-  }
-  
-  // Проверяем аббревиатуры в abilities (STR, DEX и т.д.)
-  const abbrev = ability.substring(0, 3).toUpperCase();
-  if (character.abilities && character.abilities[abbrev as keyof typeof character.abilities] !== undefined) {
-    return character.abilities[abbrev as keyof typeof character.abilities];
-  }
-  
-  return 10; // Значение по умолчанию, если ничего не найдено
+  // Стандартная формула сложности: 8 + бонус мастерства + модификатор характеристики
+  return 8 + proficiencyBonus + abilityModifier;
 }
 
 /**
- * Получает модификатор характеристики персонажа
- * @param character Объект персонажа
- * @param ability Название характеристики на английском
- * @returns Модификатор характеристики
+ * Вычисляет бонус к атаке заклинаниями персонажа
+ * @param character Персонаж
+ * @returns Бонус к атаке заклинаниями
  */
-export function getAbilityModifier(character: Character, ability: string): number {
-  const abilityValue = getAbilityValue(character, ability);
-  return getAbilityModifierValue(abilityValue);
+export function calculateSpellAttackBonus(character: Character): number {
+  if (!character) return 0;
+  
+  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level || 1) / 4);
+  const spellcastingAbility = character.spellcastingAbility || 'intelligence';
+  const abilityModifier = getAbilityModifier(character, spellcastingAbility);
+  
+  // Стандартная формула бонуса: бонус мастерства + модификатор характеристики
+  return proficiencyBonus + abilityModifier;
 }
-
-/**
- * Получает форматированный модификатор характеристики персонажа
- * @param character Объект персонажа
- * @param ability Название характеристики на английском
- * @returns Форматированный модификатор характеристики
- */
-export function getFormattedAbilityModifier(character: Character, ability: string): string {
-  const modifier = getAbilityModifier(character, ability);
-  return formatAbilityModifier(modifier);
-}
-

@@ -70,8 +70,40 @@ export function isTypedArray<T>(obj: any, typeChecker: (item: any) => boolean): 
   return Array.isArray(obj) && obj.every(item => typeChecker(item));
 }
 
+/**
+ * Преобразует значение в массив, если оно не является массивом
+ * @param value Значение для преобразования
+ * @returns Массив значений
+ */
 export function ensureArray<T>(value: T | T[] | undefined): T[] {
   if (value === undefined) return [];
   return Array.isArray(value) ? value : [value];
 }
 
+/**
+ * Получает длину оборудования персонажа с учетом различных форматов хранения
+ * @param equipment Оборудование персонажа
+ * @returns Количество предметов оборудования
+ */
+export function getEquipmentLength(equipment: any): number {
+  if (!equipment) return 0;
+  
+  if (Array.isArray(equipment)) {
+    return equipment.length;
+  }
+  
+  if (typeof equipment === 'object') {
+    let count = 0;
+    
+    // Подсчет для разных категорий оборудования
+    if (Array.isArray(equipment.weapons)) count += equipment.weapons.length;
+    if (Array.isArray(equipment.tools)) count += equipment.tools.length;
+    if (Array.isArray(equipment.languages)) count += equipment.languages.length;
+    if (Array.isArray(equipment.items)) count += equipment.items.length;
+    if (equipment.armor) count += 1;
+    
+    return count;
+  }
+  
+  return 0;
+}
