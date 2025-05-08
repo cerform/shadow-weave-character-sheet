@@ -1,6 +1,7 @@
 
 import { Character } from '@/types/character';
-import { CharacterSpell } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 /**
  * Получает максимальный уровень заклинаний, который персонаж может использовать
@@ -160,15 +161,6 @@ export const calculateAvailableSpellsByClassAndLevel = (
 };
 
 /**
- * Тип заклинания для CharacterSpell
- */
-export interface CharacterSpellType extends CharacterSpell {
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-}
-
-/**
  * Обновляет статус подготовки заклинания
  */
 export const toggleSpellPreparation = (spell: CharacterSpell | string): CharacterSpell => {
@@ -180,4 +172,37 @@ export const toggleSpellPreparation = (spell: CharacterSpell | string): Characte
     ...spell,
     prepared: !spell.prepared
   };
+};
+
+/**
+ * Нормализует заклинания персонажа для работы с ними
+ */
+export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return { name: spell, level: 0 };
+    }
+    return spell;
+  });
+};
+
+/**
+ * Конвертирует заклинания в формат SpellData
+ */
+export const convertToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => ({
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
+  }));
 };

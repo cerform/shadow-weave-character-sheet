@@ -79,7 +79,7 @@ export interface DiceResult {
 }
 
 export interface HitPointEvent {
-  id: string;
+  id?: string;
   type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
   value: number;
   amount?: number;

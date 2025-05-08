@@ -1,120 +1,67 @@
 
 export interface Theme {
+  name: string;
+  id: string;
+  primary: string;
+  secondary: string;
   background: string;
-  cardBackground: string;
-  textColor: string;
-  mutedTextColor: string;
   accent: string;
-  accentHover: string;
-  borderColor: string;
-  buttonBackground: string;
-  buttonText: string;
-  danger: string;
-  success: string;
-  warning: string;
-  foreground?: string;
-  primary?: string;
-  backgroundGradient?: string;
-  backgroundBrightness?: string;
-  decorativeCorners?: boolean;
+  text: string;
+  cardBg: string;
+  className?: string;
 }
 
-export const themes: Record<string, Theme> = {
-  default: {
-    background: '#121212',
-    cardBackground: '#1e1e1e',
-    textColor: '#e0e0e0',
-    mutedTextColor: '#a0a0a0',
-    accent: '#3f51b5',
-    accentHover: '#303f9f',
-    borderColor: '#2a2a2a',
-    buttonBackground: '#3f51b5',
-    buttonText: '#ffffff',
-    danger: '#f44336',
-    success: '#4caf50',
-    warning: '#ff9800',
-    foreground: '#e0e0e0',
-    primary: '#3f51b5',
-    backgroundGradient: 'none',
-    backgroundBrightness: '100%',
-    decorativeCorners: false
+export const themes = [
+  {
+    id: 'classic',
+    name: 'Classic D&D',
+    primary: '#8B0000',
+    secondary: '#FFD700',
+    background: '#F5F5DC',
+    accent: '#8B4513',
+    text: '#000000',
+    cardBg: '#FFFFFF'
   },
-  light: {
-    background: '#f5f5f5',
-    cardBackground: '#ffffff',
-    textColor: '#212121',
-    mutedTextColor: '#757575',
-    accent: '#3f51b5',
-    accentHover: '#303f9f',
-    borderColor: '#e0e0e0',
-    buttonBackground: '#3f51b5',
-    buttonText: '#ffffff',
-    danger: '#f44336',
-    success: '#4caf50',
-    warning: '#ff9800',
-    foreground: '#212121',
-    primary: '#3f51b5',
-    backgroundGradient: 'none',
-    backgroundBrightness: '100%',
-    decorativeCorners: false
+  {
+    id: 'dark',
+    name: 'Dark Dungeon',
+    primary: '#4B0082',
+    secondary: '#9932CC',
+    background: '#1A1A1A',
+    accent: '#8B008B',
+    text: '#E0E0E0',
+    cardBg: '#2D2D2D'
   },
-  dark: {
-    background: '#121212',
-    cardBackground: '#1e1e1e',
-    textColor: '#e0e0e0',
-    mutedTextColor: '#a0a0a0',
-    accent: '#bb86fc',
-    accentHover: '#9f66f2',
-    borderColor: '#2a2a2a',
-    buttonBackground: '#bb86fc',
-    buttonText: '#000000',
-    danger: '#cf6679',
-    success: '#03dac6',
-    warning: '#ffb74d',
-    foreground: '#e0e0e0',
-    primary: '#bb86fc',
-    backgroundGradient: 'none',
-    backgroundBrightness: '100%',
-    decorativeCorners: false
+  {
+    id: 'forest',
+    name: 'Forest',
+    primary: '#006400',
+    secondary: '#228B22',
+    background: '#F5F5DC',
+    accent: '#556B2F',
+    text: '#000000',
+    cardBg: '#FFFFFF'
   },
-  sepia: {
-    background: '#f4ecd8',
-    cardBackground: '#fff8e7',
-    textColor: '#5d4037',
-    mutedTextColor: '#8d6e63',
-    accent: '#bf360c',
-    accentHover: '#8c2704',
-    borderColor: '#d7cbb9',
-    buttonBackground: '#bf360c',
-    buttonText: '#ffffff',
-    danger: '#c62828',
-    success: '#2e7d32',
-    warning: '#ef6c00',
-    foreground: '#5d4037',
-    primary: '#bf360c',
-    backgroundGradient: 'none',
-    backgroundBrightness: '100%',
-    decorativeCorners: false
+  {
+    id: 'ocean',
+    name: 'Ocean',
+    primary: '#000080',
+    secondary: '#4169E1',
+    background: '#F0F8FF',
+    accent: '#1E90FF',
+    text: '#000000',
+    cardBg: '#FFFFFF'
   },
-  fantasy: {
-    background: '#2c3e50',
-    cardBackground: '#34495e',
-    textColor: '#ecf0f1',
-    mutedTextColor: '#bdc3c7',
-    accent: '#8e44ad',
-    accentHover: '#6c3483',
-    borderColor: '#2a3b4c',
-    buttonBackground: '#8e44ad',
-    buttonText: '#ffffff',
-    danger: '#c0392b',
-    success: '#27ae60',
-    warning: '#f39c12',
-    foreground: '#ecf0f1',
-    primary: '#8e44ad',
-    backgroundGradient: 'linear-gradient(to bottom, #2c3e50, #1a252f)',
-    backgroundBrightness: '100%',
-    decorativeCorners: true
+  {
+    id: 'fire',
+    name: 'Fire',
+    primary: '#FF4500',
+    secondary: '#FF8C00',
+    background: '#FFFFE0',
+    accent: '#B22222',
+    text: '#000000',
+    cardBg: '#FFFFFF'
   }
-};
+];
 
 export default themes;
