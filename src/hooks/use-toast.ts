@@ -34,7 +34,7 @@ export const useToast = () => {
   return { toast, dismissToast, toasts };
 };
 
-// Add the missing toast export function
+// Экспортируем toast функцию для использования без хука
 export const toast = (options: ToastOptions) => {
   console.log('Toast:', options);
   return options;

@@ -37,7 +37,6 @@ export interface CharacterSpellSlots {
   [key: string]: SpellSlot;
 }
 
-// Add the Item interface that's missing
 export interface Item {
   id?: string;
   name: string;
@@ -54,15 +53,39 @@ export interface Item {
   stealthDisadvantage?: boolean;
 }
 
-export interface Character {
+export interface DiceResult {
+  formula: string;
+  rolls: number[];
+  total: number;
+}
+
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp';
+  value: number;
+  source?: string;
+  timestamp: number;
+}
+
+export interface CharacterFeature {
   id?: string;
   name: string;
-  race?: string;
-  class?: string;
-  background?: string;
+  source: string;
+  description: string;
   level?: number;
-  experience?: number;
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  race: string;
+  subrace?: string;
+  class: string;
+  className?: string; // Альтернативное название класса
+  level: number;
+  background?: string;
   alignment?: string;
+  experience?: number;
   abilities?: CharacterAbilities;
   strength?: number;
   dexterity?: number;
@@ -75,6 +98,9 @@ export interface Character {
     current: number;
     temporary?: number;
   };
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   initiative?: number;
@@ -83,8 +109,15 @@ export interface Character {
   savingThrows?: {
     [key: string]: boolean;
   };
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
   equipment?: string[];
-  features?: string[];
+  features?: {
+    race: string[];
+    class: string[];
+    background: string[];
+  } | string[];
   spells?: (CharacterSpell | string)[];
   spellSlots?: {
     [level: string]: SpellSlot;
@@ -97,6 +130,11 @@ export interface Character {
     gold?: number;
     platinum?: number;
   };
+  copper?: number;
+  silver?: number;
+  gold?: number;
+  platinum?: number;
+  electrum?: number;
   description?: {
     appearance?: string;
     backstory?: string;
@@ -108,23 +146,18 @@ export interface Character {
   userId?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
-  // Add missing properties
-  className?: string;
   inventory?: Item[];
-  proficiencies?: string[];
+  proficiencies?: string[] | {
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   resources?: any;
-  savingThrowProficiencies?: string[];
-  skillProficiencies?: string[];
-  expertise?: string[];
   skillBonuses?: {[key: string]: number};
   spellcasting?: {ability?: string};
-  gold?: number;
   initiative?: number;
-  lastDiceRoll?: {formula: string; rolls: number[]; total: number};
+  lastDiceRoll?: DiceResult;
   languages?: string[];
-  maxHp?: number;
-  currentHp?: number;
-  temporaryHp?: number;
   hitDice?: {
     total: number;
     used: number;
@@ -140,4 +173,7 @@ export interface Character {
   weapons?: Item[];
   armor?: Item[];
   tools?: Item[];
+  gender?: string;
+  subclass?: string;
+  abilityPointsUsed?: number;
 }

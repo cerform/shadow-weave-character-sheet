@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, safelyConvertSpellDescription, safelyConvertSpellClasses } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -281,9 +281,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        // Исправление: преобразовываем description к единому типу массива строк
-        description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
-        classes: spell.classes || [],
+        // Исправление: преобразовываем description с использованием безопасной функции
+        description: safelyConvertSpellDescription(spell.description),
+        classes: safelyConvertSpellClasses(spell.classes),
         prepared: true // По умолчанию заклинания подготовлены
       });
       
@@ -373,6 +373,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               onPrev={prevStep} 
               onNext={nextStep}
               nextLabel="Пропустить выбор заклинаний"
+              nextStep={nextStep}
+              prevStep={prevStep}
             />
           </div>
         )}
@@ -479,6 +481,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             onNext={handleSaveAndContinue}
             nextLabel="Сохранить и продолжить"
             allowNext={!loading}
+            nextStep={nextStep}
+            prevStep={prevStep}
           />
         </div>
       )}

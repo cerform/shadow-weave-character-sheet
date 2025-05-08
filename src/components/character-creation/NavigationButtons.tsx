@@ -10,7 +10,7 @@ interface NavigationButtonsProps {
   nextLabel?: string;
   allowPrev?: boolean;
   allowNext?: boolean;
-  // Add these missing properties that are being passed in various components
+  // Add these properties for compatibility with existing components
   nextStep?: () => void;
   prevStep?: () => void;
   isFirstStep?: boolean;
