@@ -1,3 +1,4 @@
+
 // Расширяем интерфейс Character, добавляя недостающие свойства
 export interface Character {
   id: string;
@@ -48,7 +49,7 @@ export interface Character {
   spellcastingAbility?: string;
   spellSaveDC?: number;
   spellAttackBonus?: number;
-  spellSlots?: Record<string, { max: number; used: number }>;
+  spellSlots?: Record<string, { max: number; used: number; available?: number }>;
   spells?: CharacterSpell[];
   // Новые поля, которые отсутствовали
   conditions?: string[];
@@ -61,6 +62,32 @@ export interface Character {
   copper?: number;
   platinum?: number;
   electrum?: number;
+  // Добавляем поля для совместимости с компонентами создания персонажа
+  abilities?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+    STR: number;
+    DEX: number;
+    CON: number;
+    INT: number;
+    WIS: number;
+    CHA: number;
+  };
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  gender?: string;
+  subclass?: string;
+  abilityPointsUsed?: number;
 }
 
 // Определение CharacterSpell, чтобы убрать ошибки импорта
@@ -81,3 +108,11 @@ export interface CharacterSpell {
   classes?: string[];
   source?: string;
 }
+
+// Добавляем константы для лимитов характеристик, используемые в CharacterLevelSelection и других компонентах
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,        // Базовый максимум для характеристик
+  EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
+  LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
+  ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
+};
