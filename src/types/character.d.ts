@@ -15,18 +15,18 @@ interface Character {
   skills: Record<string, { proficient: boolean; expertise: boolean; value: number }>;
   hp: number;
   maxHp: number;
-  temporaryHp: number; // Added temporaryHp
+  temporaryHp: number; 
   ac: number;
   proficiencyBonus: number;
   speed: number;
-  initiative: number; // Added initiative
+  initiative: number; 
   inspiration: boolean;
-  hitDice: { // Added hitDice
+  hitDice: {
     total: number;
     used: number;
     dieType: string;
   };
-  resources: Record<string, { // Added resources
+  resources: Record<string, {
     max: number;
     used: number;
     name: string;
@@ -41,7 +41,7 @@ interface Character {
     attack: number;
   };
   spellSlots: Record<string, { max: number; used: number }>;
-  sorceryPoints?: { // Added sorceryPoints
+  sorceryPoints?: {
     max: number;
     used: number;
   }; 
@@ -57,11 +57,11 @@ interface Character {
     tools: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[]; // Added skills
+    skills?: string[];
   };
   features: Feature[];
-  notes: string; // Added notes
-  lastDiceRoll?: { // Added lastDiceRoll
+  notes: string;
+  lastDiceRoll?: {
     type: string;
     result: number | number[];
     modifier: number;

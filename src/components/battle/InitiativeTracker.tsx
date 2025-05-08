@@ -1,10 +1,10 @@
 
 import React from 'react';
+import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Token, InitiativeItem } from '@/types/battle';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, RefreshCw } from 'lucide-react';
 
 interface InitiativeTrackerProps {
   initiative: InitiativeItem[];
@@ -13,7 +13,7 @@ interface InitiativeTrackerProps {
   onRollInitiative?: () => void;
   onSelectToken?: (id: number | null) => void;
   isDM?: boolean;
-  battleActive?: boolean; // Add the missing prop
+  battleActive?: boolean;
 }
 
 const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
