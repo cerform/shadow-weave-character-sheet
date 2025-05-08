@@ -1,16 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
-import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users, Dices } from "lucide-react";
+import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users, Dices, ChevronRight, ChevronDown } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ProfilePreview from '@/components/home/ProfilePreview';
-import CharactersList from '@/components/home/CharactersList';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import CharactersList from '@/components/home/CharactersList';
 
 const Home = () => {
   const { currentUser, isAuthenticated } = useAuth();
@@ -19,6 +20,7 @@ const Home = () => {
   const { theme } = useTheme();
   const currentThemeId = theme || 'default';
   const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
+  const [isCharactersOpen, setIsCharactersOpen] = useState(false);
 
   const handleNavigation = (path: string) => {
     console.log('Home: Переход на страницу', path);
@@ -51,8 +53,38 @@ const Home = () => {
             {/* Профиль пользователя (если авторизован) */}
             {isAuthenticated && <ProfilePreview />}
 
-            {/* Список персонажей пользователя */}
-            {isAuthenticated && <CharactersList />}
+            {/* Компактный блок для персонажей (если пользователь авторизован) */}
+            {isAuthenticated && (
+              <Collapsible 
+                open={isCharactersOpen} 
+                onOpenChange={setIsCharactersOpen}
+                className="mb-8 border border-primary/20 rounded-lg shadow-md bg-card/80 backdrop-blur-sm"
+              >
+                <div className="flex justify-between items-center p-4">
+                  <div className="flex items-center gap-2">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        {isCharactersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <h2 className="text-xl font-semibold">Мои персонажи</h2>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/character-creation')} 
+                    size="sm"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Создать персонажа
+                  </Button>
+                </div>
+                
+                <CollapsibleContent>
+                  <div className="px-4 pb-4">
+                    <CharactersList />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             {/* Основные карточки */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">

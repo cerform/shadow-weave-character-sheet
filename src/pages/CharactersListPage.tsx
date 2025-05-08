@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
+import CharacterNavigation from '@/components/characters/CharacterNavigation';
 
 const CharactersListPage: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -75,6 +75,9 @@ const CharactersListPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Добавляем компонент навигации */}
+      <CharacterNavigation />
+      
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}

@@ -56,7 +56,7 @@ export interface Character {
     items?: string[];
   };
   spells?: CharacterSpell[];
-  proficiencies?: string[] | {
+  proficiencies?: {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
@@ -66,6 +66,7 @@ export interface Character {
     race: string[];
     class: string[];
     background: string[];
+    length?: number;
   };
   notes?: string;
   resources?: {
@@ -140,6 +141,8 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   portrait?: string;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface CharacterSpell {
