@@ -3,6 +3,7 @@ import React from 'react';
 import { Group, Circle, Image as KonvaImage, Text } from 'react-konva';
 import { Token } from '@/types/battle';
 import useImage from 'use-image';
+import TokenHealthBar from './TokenHealthBar';
 
 interface TokenComponentProps {
   token: Token;

@@ -1,71 +1,44 @@
 
 import React from 'react';
-import { Rect, Group, Text } from 'react-konva';
 
 interface TokenHealthBarProps {
   currentHP: number;
   maxHP: number;
   width: number;
-  x: number;
-  y: number;
-  fontSize?: number;
+  showValue?: boolean;
 }
 
-const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
-  currentHP,
-  maxHP,
-  width,
-  x,
-  y,
-  fontSize = 12,
-}) => {
-  // Вычисляем процент оставшегося здоровья
+const TokenHealthBar: React.FC<TokenHealthBarProps> = ({ currentHP, maxHP, width, showValue = false }) => {
   const healthPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
-  const fillWidth = (width * healthPercent) / 100;
   
-  // Определяем цвет полоски здоровья
+  // Determine color based on health percentage
   const getHealthColor = () => {
-    if (healthPercent > 66) return '#4CAF50'; // Зеленый
-    if (healthPercent > 33) return '#FFEB3B'; // Желтый
-    return '#F44336'; // Красный
+    if (healthPercent > 66) return '#4CAF50'; // Green
+    if (healthPercent > 33) return '#FFC107'; // Yellow
+    return '#F44336'; // Red
   };
-
+  
   return (
-    <Group x={x} y={y}>
-      {/* Фон полоски здоровья */}
-      <Rect
-        width={width}
-        height={10}
-        fill="#333333"
-        cornerRadius={5}
-        stroke="#000000"
-        strokeWidth={1}
-      />
+    <div className="absolute -top-6 left-0" style={{ width: `${width}px` }}>
+      {/* Background */}
+      <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+        {/* Health bar */}
+        <div 
+          className="h-full transition-all duration-300 ease-in-out"
+          style={{ 
+            width: `${healthPercent}%`,
+            backgroundColor: getHealthColor()
+          }}
+        />
+      </div>
       
-      {/* Заполненная часть полоски здоровья */}
-      <Rect
-        width={fillWidth}
-        height={8}
-        fill={getHealthColor()}
-        cornerRadius={4}
-        y={1}
-        x={1}
-      />
-      
-      {/* Текст со значением здоровья */}
-      <Text
-        text={`${currentHP}/${maxHP}`}
-        fontSize={fontSize}
-        fill="white"
-        width={width}
-        align="center"
-        y={-15}
-        shadowColor="black"
-        shadowBlur={2}
-        shadowOffset={{ x: 1, y: 1 }}
-        shadowOpacity={0.8}
-      />
-    </Group>
+      {/* Display health values if showValue is true */}
+      {showValue && (
+        <div className="text-white text-xs text-center mt-0.5 text-shadow">
+          {currentHP}/{maxHP}
+        </div>
+      )}
+    </div>
   );
 };
 

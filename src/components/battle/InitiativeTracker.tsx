@@ -11,8 +11,9 @@ interface InitiativeTrackerProps {
   tokens: Token[];
   onNextTurn?: () => void;
   onRollInitiative?: () => void;
-  onSelectToken: (id: number | null) => void;
+  onSelectToken?: (id: number | null) => void;
   isDM?: boolean;
+  battleActive?: boolean; // Add the missing prop
 }
 
 const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
@@ -20,8 +21,9 @@ const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
   tokens,
   onNextTurn,
   onRollInitiative,
-  onSelectToken,
-  isDM = true
+  onSelectToken = () => {},
+  isDM = true,
+  battleActive = false
 }) => {
   return (
     <div className="space-y-2">
@@ -43,6 +45,7 @@ const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
               variant="outline"
               size="sm"
               className="h-8"
+              disabled={!battleActive}
             >
               <ArrowRight size={14} className="mr-1" />
               <span className="text-xs">Следующий</span>
@@ -65,7 +68,7 @@ const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
                 className={`flex items-center p-2 rounded cursor-pointer ${
                   item.isActive ? 'bg-primary/20 border border-primary' : 'bg-muted/10 border'
                 }`}
-                onClick={() => onSelectToken(token.id)}
+                onClick={() => onSelectToken?.(token.id)}
               >
                 <div className="mr-2 w-6 h-6 flex items-center justify-center rounded-full bg-muted font-medium text-xs">
                   {item.roll}

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Theme, themes } from '@/lib/themes';
-import { ThemeType } from '@/hooks/use-theme';
+import { ThemeType, useTheme } from '@/hooks/use-theme';
 
 interface UserThemeContextType {
   activeTheme: ThemeType;
@@ -16,6 +16,7 @@ const UserThemeContext = createContext<UserThemeContextType>({
 });
 
 export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const globalTheme = useTheme();
   const [activeTheme, setActiveTheme] = useState<ThemeType>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('userTheme') || 'default';
@@ -24,10 +25,19 @@ export const UserThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return 'default';
   });
 
+  // Sync with global theme
+  useEffect(() => {
+    if (globalTheme.theme !== activeTheme) {
+      globalTheme.setTheme(activeTheme);
+    }
+  }, [activeTheme, globalTheme]);
+
   const currentTheme = themes[activeTheme] || themes.default;
 
   const setUserTheme = (theme: ThemeType) => {
     setActiveTheme(theme);
+    globalTheme.setTheme(theme);
+    
     if (typeof window !== 'undefined') {
       localStorage.setItem('userTheme', theme);
     }

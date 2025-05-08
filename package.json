@@ -53,7 +53,7 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.3.0",
     "firebase": "^10.11.0",
-    "framer-motion": "^10.16.4",
+    "framer-motion": "^10.16.16",
     "html2pdf.js": "^0.10.3",
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.1",

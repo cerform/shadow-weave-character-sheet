@@ -1,8 +1,8 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Stage, Layer, Rect, Circle, Group } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { Token, InitiativeItem, VisibleArea } from '@/types/battle';
+import { Token, InitiativeItem } from '@/types/battle';
 import TokenComponent from './TokenComponent';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,14 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     return <Group>{gridLines}</Group>;
   };
 
+  // Create a backgroundPatternImage only if we have a background string
+  let backgroundImage = null;
+  if (background) {
+    const image = new Image();
+    image.src = background;
+    backgroundImage = image;
+  }
+
   return (
     <motion.div 
       className="relative border border-accent rounded-lg overflow-hidden"
@@ -103,13 +111,13 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
       <Stage width={width} height={height} ref={stageRef}>
         <Layer>
           {/* Background */}
-          {background && (
+          {backgroundImage && (
             <Rect
               x={0}
               y={0}
               width={width}
               height={height}
-              fillPatternImage={new Image(background)}
+              fillPatternImage={backgroundImage}
               fillPatternRepeat="no-repeat"
               fillPatternScale={{ x: 1, y: 1 }}
             />
