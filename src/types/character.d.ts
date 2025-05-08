@@ -166,7 +166,7 @@ export interface Character {
     ideals?: string;
     bonds?: string;
     flaws?: string;
-  };
+  } | string;
   userId?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -175,6 +175,7 @@ export interface Character {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
+    skills?: string[];
   };
   resources?: any;
   skillBonuses?: {[key: string]: number};
@@ -218,7 +219,7 @@ export interface Character {
   };
 }
 
-// Экспортируем CharacterSpell для использования в других компонентах
+// Экспортируем CharacterSpell и DiceResult для использования в других компонентах
 export { CharacterSpell, DiceResult };
 
 // Добавляем константы для лимитов характеристик
