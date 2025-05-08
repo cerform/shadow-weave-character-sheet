@@ -1,45 +1,19 @@
 
 #!/bin/bash
 
-# Устанавливаем основные зависимости
-npm install react react-dom typescript
-npm install @types/react @types/react-dom @types/react-router-dom
-npm install vite @vitejs/plugin-react-swc
-npm install react-router-dom
-npm install @types/node --save-dev
+echo "Installing dependencies..."
 
-# UI и стили
-npm install tailwindcss postcss autoprefixer --save-dev
-npm install class-variance-authority clsx tailwind-merge
-npm install lucide-react
+# Install Vite and necessary packages
+npm install --save-dev vite @vitejs/plugin-react-swc typescript
 
-# shadcn зависимости
-npm install @radix-ui/react-slot @radix-ui/react-tabs
-npm install @radix-ui/react-scroll-area
-npm install @radix-ui/react-separator
-npm install @radix-ui/react-label
-npm install @radix-ui/react-switch
-npm install @radix-ui/react-dropdown-menu
-npm install @radix-ui/react-popover
-npm install @radix-ui/react-radio-group
+# Install core React dependencies if they're not already installed
+npm install react react-dom @types/react @types/react-dom
 
-# Обновляем package.json скриптами для запуска
-echo '
-{
-  "name": "dnd-character-sheet",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  }
-}' > package.json.tmp
+# Install UI components
+npm install @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group @radix-ui/react-switch @radix-ui/react-scroll-area class-variance-authority clsx tailwind-merge lucide-react
 
-# Делаем скрипт выполняемым
+# Make our script executable
 chmod +x install-dependencies.sh
+chmod +x run-vite.sh
 
-echo "Зависимости установлены, теперь запустите:"
-echo "npm run dev"
+echo "Dependencies installed! Run 'bash run-vite.sh' to start the application."

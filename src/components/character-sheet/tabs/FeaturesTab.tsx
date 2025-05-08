@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Character } from '@/types/character';
@@ -19,6 +18,37 @@ interface NewFeature {
   level?: number;
   type: 'racial' | 'class' | 'background' | 'feat';
 }
+
+// Define a proper interface for features
+interface CharacterFeature {
+  name: string;
+  description: string;
+  level?: number;
+}
+
+// Helper function to normalize features (convert strings to objects)
+const normalizeFeature = (feature: string | CharacterFeature): CharacterFeature => {
+  if (typeof feature === 'string') {
+    return {
+      name: feature,
+      description: `Feature: ${feature}`,
+      level: 1
+    };
+  }
+  return feature;
+};
+
+// When displaying features, always use the normalized version:
+const displayFeature = (feature: string | CharacterFeature) => {
+  const normalizedFeature = normalizeFeature(feature);
+  return (
+    <div>
+      <h4>{normalizedFeature.name}</h4>
+      <p>{normalizedFeature.description}</p>
+      {normalizedFeature.level && <span>Level: {normalizedFeature.level}</span>}
+    </div>
+  );
+};
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<string>("all");
