@@ -1,83 +1,129 @@
 
 import { Character } from '@/types/character';
 
-export const normalizeCharacter = (character: Partial<Character>): Character => {
-  // Убедимся, что у всех полей есть дефолтные значения
-  const normalizedCharacter = {
-    id: character.id || '',
-    userId: character.userId || '',
-    name: character.name || 'Новый персонаж',
-    race: character.race || 'Человек',
-    class: character.class || 'Воин',
-    className: character.className || character.class || 'Воин', // Add className for backward compatibility
+/**
+ * Нормализует объект персонажа, обеспечивая правильное форматирование данных и заполнение обязательных полей
+ * @param character Исходный объект персонажа
+ * @returns Нормализованный объект персонажа
+ */
+export function normalizeCharacter(character: Partial<Character>): Character {
+  // Создаем базовую структуру персонажа
+  const normalizedCharacter: Character = {
+    id: character.id || generateRandomId(),
+    name: character.name || 'Безымянный герой',
+    race: character.race || '',
+    class: character.class || '',
+    className: character.className || character.class || '',
     level: character.level || 1,
     background: character.background || '',
-    alignment: character.alignment || 'Нейтральный',
+    alignment: character.alignment || '',
     experience: character.experience || 0,
-    abilities: {
-      strength: character.abilities?.strength || character.strength || 10,
-      dexterity: character.abilities?.dexterity || character.dexterity || 10,
-      constitution: character.abilities?.constitution || character.constitution || 10,
-      intelligence: character.abilities?.intelligence || character.intelligence || 10,
-      wisdom: character.abilities?.wisdom || character.wisdom || 10,
-      charisma: character.abilities?.charisma || character.charisma || 10,
-      // Добавляем алиасы
-      STR: character.abilities?.STR || character.abilities?.strength || character.strength || 10,
-      DEX: character.abilities?.DEX || character.abilities?.dexterity || character.dexterity || 10,
-      CON: character.abilities?.CON || character.abilities?.constitution || character.constitution || 10,
-      INT: character.abilities?.INT || character.abilities?.intelligence || character.intelligence || 10,
-      WIS: character.abilities?.WIS || character.abilities?.wisdom || character.wisdom || 10,
-      CHA: character.abilities?.CHA || character.abilities?.charisma || character.charisma || 10,
+    
+    // Характеристики
+    abilities: character.abilities || {
+      strength: character.strength || 10,
+      dexterity: character.dexterity || 10,
+      constitution: character.constitution || 10,
+      intelligence: character.intelligence || 10,
+      wisdom: character.wisdom || 10,
+      charisma: character.charisma || 10,
+      STR: character.strength || 10,
+      DEX: character.dexterity || 10,
+      CON: character.constitution || 10,
+      INT: character.intelligence || 10,
+      WIS: character.wisdom || 10,
+      CHA: character.charisma || 10,
     },
-    proficiencyBonus: character.proficiencyBonus || 2,
-    armorClass: character.armorClass || 10,
+    
+    // Здоровье
     maxHp: character.maxHp || character.hitPoints?.maximum || 10,
-    currentHp: character.currentHp || character.hitPoints?.current || 10,
-    temporaryHp: character.temporaryHp || character.tempHp || character.hitPoints?.temporary || 0,
-    hitDice: {
-      total: character.hitDice?.total || character.level || 1,
-      used: character.hitDice?.used || 0,
-      type: character.hitDice?.type || 'd8',
-      dieType: character.hitDice?.dieType || character.hitDice?.type || 'd8',
+    hp: character.hp || character.currentHp || character.hitPoints?.current || 10,
+    currentHp: character.currentHp || character.hp || character.hitPoints?.current || 10,
+    temporaryHp: character.temporaryHp || character.hitPoints?.temporary || 0,
+    
+    hitDice: character.hitDice || {
+      total: character.level || 1,
+      used: 0,
+      type: 'd8'
     },
-    hitPoints: {
-      maximum: character.maxHp || character.hitPoints?.maximum || 10,
-      current: character.currentHp || character.hitPoints?.current || 10,
-      temporary: character.temporaryHp || character.tempHp || character.hitPoints?.temporary || 0
-    },
-    deathSaves: character.deathSaves || { successes: 0, failures: 0 },
-    inspiration: character.inspiration === undefined ? false : character.inspiration,
-    conditions: Array.isArray(character.conditions) ? character.conditions : [],
-    inventory: Array.isArray(character.inventory) ? character.inventory : [],
-    equipment: character.equipment || [],
-    spells: character.spells || [],
-    proficiencies: character.proficiencies || [],
-    features: character.features || [],
-    notes: character.notes || '',
-    resources: character.resources || {},
-    savingThrowProficiencies: character.savingThrowProficiencies || [],
-    skillProficiencies: character.skillProficiencies || [],
-    expertise: character.expertise || [],
-    skillBonuses: character.skillBonuses || {},
-    skills: character.skills || {},
-    spellcasting: {
-      ability: character.spellcasting?.ability || 'intelligence',
-      saveDC: character.spellcasting?.saveDC || 0,
-      attackBonus: character.spellcasting?.attackBonus || 0,
-    },
-    gold: character.gold || 0,
+    
+    armorClass: character.armorClass || 10,
+    
+    // Инициатива и скорость
     initiative: character.initiative || 0,
-    lastDiceRoll: {
-      formula: character.lastDiceRoll?.formula || '',
-      rolls: character.lastDiceRoll?.rolls || [],
-      total: character.lastDiceRoll?.total || 0,
+    speed: character.speed || 30,
+    
+    // Профессии и навыки
+    proficiencyBonus: character.proficiencyBonus || 2,
+    proficiencies: character.proficiencies || {
+      weapons: [],
+      tools: [],
+      languages: [],
+      skills: []
     },
-    languages: Array.isArray(character.languages) ? character.languages : [],
-    subrace: character.subrace || '',
-    gender: character.gender || '',
-    subclass: character.subclass || '',
-    abilityPointsUsed: character.abilityPointsUsed || 0
-  } as Character;
-
+    
+    // Снаряжение
+    inventory: character.inventory || [],
+    equipment: character.equipment || {
+      weapons: [],
+      tools: [],
+      languages: [],
+      items: []
+    },
+    
+    // Особенности
+    features: character.features || {
+      race: [],
+      class: [],
+      background: []
+    },
+    
+    // Заклинания
+    spells: character.spells || [],
+    
+    // Прочее
+    notes: character.notes || '',
+  };
+  
+  // Обеспечиваем совместимость с разными форматами данных
+  if (!normalizedCharacter.hitPoints) {
+    normalizedCharacter.hitPoints = {
+      maximum: normalizedCharacter.maxHp,
+      current: normalizedCharacter.currentHp,
+      temporary: normalizedCharacter.temporaryHp
+    };
+  }
+  
+  // Копируем stats, если они есть
+  if (character.stats) {
+    normalizedCharacter.stats = { ...character.stats };
+  } else {
+    // Если stats нет, создаем их из abilities
+    normalizedCharacter.stats = {
+      strength: normalizedCharacter.abilities.strength,
+      dexterity: normalizedCharacter.abilities.dexterity,
+      constitution: normalizedCharacter.abilities.constitution,
+      intelligence: normalizedCharacter.abilities.intelligence,
+      wisdom: normalizedCharacter.abilities.wisdom,
+      charisma: normalizedCharacter.abilities.charisma
+    };
+  }
+  
+  // Обеспечиваем прямой доступ к характеристикам
+  normalizedCharacter.strength = normalizedCharacter.stats.strength;
+  normalizedCharacter.dexterity = normalizedCharacter.stats.dexterity;
+  normalizedCharacter.constitution = normalizedCharacter.stats.constitution;
+  normalizedCharacter.intelligence = normalizedCharacter.stats.intelligence;
+  normalizedCharacter.wisdom = normalizedCharacter.stats.wisdom;
+  normalizedCharacter.charisma = normalizedCharacter.stats.charisma;
+  
   return normalizedCharacter;
-};
+}
+
+/**
+ * Генерирует случайный идентификатор для персонажа
+ */
+function generateRandomId(): string {
+  return `char_${Math.random().toString(36).substring(2, 9)}`;
+}
+

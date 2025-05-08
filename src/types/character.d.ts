@@ -1,4 +1,5 @@
 
+
 export interface Character {
   id: string;
   userId?: string;
@@ -47,8 +48,8 @@ export interface Character {
   };
   inspiration?: boolean;
   conditions?: string[];
-  inventory?: any[];
-  equipment?: any[] | {
+  inventory?: Item[];
+  equipment?: Item[] | {
     weapons?: string[];
     tools?: string[];
     languages?: string[];
@@ -85,7 +86,7 @@ export interface Character {
   };
   skillProficiencies?: string[];
   skills?: {
-    [key: string]: boolean | number | { value: number; bonus: number; };
+    [key: string]: boolean | number | { value: number; bonus: number; proficient?: boolean };
   };
   expertise?: string[];
   skillBonuses?: {
@@ -145,6 +146,16 @@ export interface Character {
   updatedAt?: number;
 }
 
+export interface Item {
+  name: string;
+  quantity: number;
+  type?: string;
+  description?: string;
+  weight?: number;
+  cost?: number;
+  properties?: string[];
+}
+
 export interface CharacterSpell {
   id: string | number;
   name: string;
@@ -195,22 +206,13 @@ export interface DiceResult {
   reason?: string;
 }
 
-export interface Item {
-  name: string;
-  quantity: number;
-  type?: string;
-  description?: string;
-  weight?: number;
-  cost?: number;
-  properties?: string[];
-}
-
 export interface HitPointEvent {
   id: string;
-  type: 'damage' | 'heal' | 'temp';
+  type: 'damage' | 'heal' | 'temp' | 'death-save';
   amount: number;
   description?: string;
-  timestamp: string;
+  timestamp: string | Date;
+  source?: string;
 }
 
 export const ABILITY_SCORE_CAPS = {
@@ -219,3 +221,4 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
   ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
 };
+
