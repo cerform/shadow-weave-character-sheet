@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useSpellbook } from '@/hooks/spellbook'; // Fixed import path
+import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -369,6 +368,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       </div>
     );
   }
+
+  // Исправленная ошибка с конкатенацией строк
+  const pageBackground = useMemo(() => `linear-gradient(to bottom, ${themeStyles?.accent || '#333333'}20, ${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.85)'})`, [themeStyles]);
 
   return (
     <div className="flex flex-col h-full">

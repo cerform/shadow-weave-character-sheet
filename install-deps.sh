@@ -2,8 +2,10 @@
 #!/bin/bash
 
 # Core dependencies
-npm install vite @vitejs/plugin-react-swc react react-dom typescript
-npm install @types/react @types/react-dom react-router-dom @types/react-router-dom
+npm install react react-dom typescript
+npm install @types/react @types/react-dom @types/react-router-dom
+npm install vite @vitejs/plugin-react-swc
+npm install react-router-dom
 npm install @types/node --save-dev
 
 # UI and styling

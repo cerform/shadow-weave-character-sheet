@@ -24,16 +24,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    // Обновляем состояние, чтобы при следующем рендере показать fallback UI
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Логируем ошибку
     console.error('ErrorBoundary перехватил ошибку:', error, errorInfo);
     this.setState({ errorInfo });
-    
-    // Здесь можно отправить ошибку в сервис аналитики
   }
 
   resetError = () => {
@@ -42,12 +38,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render() {
     if (this.state.hasError) {
-      // Если есть пользовательский fallback, используем его
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Иначе используем дефолтный fallback UI
       return (
         <div className="p-6 max-w-xl mx-auto my-8 bg-card rounded-lg border border-red-500/50 shadow-lg">
           <h2 className="text-xl font-semibold text-red-500 mb-4">
@@ -89,7 +83,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       );
     }
 
-    // Если ошибок нет, рендерим детей
     return this.props.children;
   }
 }
