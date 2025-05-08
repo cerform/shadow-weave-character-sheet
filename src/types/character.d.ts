@@ -1,4 +1,5 @@
 
+
 export interface CharacterAbilities {
   strength: number;
   dexterity: number;
@@ -102,8 +103,8 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   hitPoints?: {
-    max: number;
     current: number;
+    maximum: number;
     temporary?: number;
   };
   maxHp?: number;
@@ -120,7 +121,11 @@ export interface Character {
   savingThrowProficiencies?: string[];
   skillProficiencies?: string[];
   expertise?: string[];
-  equipment?: string[];
+  equipment?: string[] | Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   features?: {
     race: string[];
     class: string[];
@@ -201,3 +206,4 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
   ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
 };
+

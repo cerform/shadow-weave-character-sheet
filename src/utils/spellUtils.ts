@@ -1,4 +1,5 @@
 
+
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -205,7 +206,23 @@ export const safelyConvertSpellClasses = (classes: string | string[] | undefined
   return classes;
 };
 
-// Добавляем функцию, которая отсутствует
-export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertToSpellData(spell));
+// Добавляем функцию конвертации для состояния
+export const convertSpellsForState = (spells: CharacterSpell[] | (CharacterSpell | string)[]): SpellData[] => {
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return convertToSpellData({
+        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: 'V, S',
+        duration: 'Мгновенная',
+        description: 'Нет описания'
+      });
+    }
+    return convertToSpellData(spell);
+  });
 };
+
