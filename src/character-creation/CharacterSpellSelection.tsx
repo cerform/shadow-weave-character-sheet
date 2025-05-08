@@ -286,6 +286,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
+        // Fix: преобразовываем description к строке вместо массива
         description: safelyConvertSpellDescription(spell.description),
         classes: safelyConvertSpellClasses(spell.classes),
         prepared: true // По умолчанию заклинания подготовлены

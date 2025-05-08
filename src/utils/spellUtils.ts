@@ -86,6 +86,10 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterS
         name: spell,
         level: 0, // по умолчанию - заговор
         school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: '',
+        duration: 'Мгновенная',
         description: 'Нет описания'
       };
     }
@@ -193,10 +197,10 @@ export const calculateAvailableSpellsByClassAndLevel = (
 };
 
 // Обновляем типы заклинаний, чтобы решить проблему с преобразованием string в string[]
-export const safelyConvertSpellDescription = (description: string | string[] | undefined): string[] => {
-  if (!description) return ['Нет описания'];
-  if (typeof description === 'string') return [description];
-  return description;
+export const safelyConvertSpellDescription = (description: string | string[] | undefined): string => {
+  if (!description) return 'Нет описания';
+  if (typeof description === 'string') return description;
+  return description.join('\n');
 };
 
 export const safelyConvertSpellClasses = (classes: string | string[] | undefined): string[] => {
@@ -223,4 +227,17 @@ export const convertSpellsForState = (spells: CharacterSpell[] | (CharacterSpell
     }
     return convertToSpellData(spell);
   });
+};
+
+// Добавляем функцию для проверки пустого оборудования
+export const isEquipmentEmpty = (equipment: any): boolean => {
+  if (!equipment) return true;
+  if (Array.isArray(equipment)) return equipment.length === 0;
+  if (typeof equipment === 'object') {
+    const { weapons, armor, items } = equipment as { weapons?: any[], armor?: string, items?: any[] };
+    return (!weapons || weapons.length === 0) && 
+           (!armor || armor === '') && 
+           (!items || items.length === 0);
+  }
+  return true;
 };

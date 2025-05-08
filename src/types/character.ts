@@ -6,6 +6,7 @@ export interface Character {
   race: string;
   subrace?: string;
   class: string;
+  className?: string; // Альтернативная запись для имени класса
   level: number;
   background: string;
   alignment: string;
@@ -18,28 +19,46 @@ export interface Character {
   charisma: number;
   hp: number;
   maxHp: number;
+  currentHp?: number; // Добавляем для совместимости
   temporaryHp: number;
+  hitPoints?: { // Добавляем для совместимости
+    current: number;
+    maximum: number;
+    temporary?: number;
+  };
   hitDice: {
     total: number;
     used: number;
     type: string;
+    dieType?: string;
   };
-  proficiencies: string[];
+  proficiencyBonus?: number;
+  proficiencies: string[] | {
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   skills: {
-    [key: string]: boolean;
+    [key: string]: boolean | number | null | { bonus?: number; value?: number };
   };
   savingThrows: {
     [key: string]: boolean;
   };
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
   armorClass: number;
   initiative: number;
   speed: number;
-  equipment: string[];
+  equipment: string[] | Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   features: {
     race: string[];
     class: string[];
     background: string[];
-  };
+  } | string[];
   description: string;
   personalityTraits: string;
   ideals: string;
@@ -50,10 +69,10 @@ export interface Character {
   spellSaveDC?: number;
   spellAttackBonus?: number;
   spellSlots?: Record<string, { max: number; used: number; available?: number }>;
-  spells?: CharacterSpell[];
+  spells?: (CharacterSpell | string)[];
   // Новые поля, которые отсутствовали
   conditions?: string[];
-  inventory?: any[];
+  inventory?: Item[];
   languages?: string[];
   portrait?: string;
   notes?: string;
@@ -62,6 +81,7 @@ export interface Character {
   copper?: number;
   platinum?: number;
   electrum?: number;
+  userId?: string; // Добавлено для CharacterReview.tsx
   // Добавляем поля для совместимости с компонентами создания персонажа
   abilities?: {
     strength: number;
@@ -70,12 +90,12 @@ export interface Character {
     intelligence: number;
     wisdom: number;
     charisma: number;
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
   };
   stats?: {
     strength: number;
@@ -88,6 +108,7 @@ export interface Character {
   gender?: string;
   subclass?: string;
   abilityPointsUsed?: number;
+  lastDiceRoll?: DiceResult;
 }
 
 // Определение CharacterSpell, чтобы убрать ошибки импорта
@@ -100,13 +121,52 @@ export interface CharacterSpell {
   range: string;
   components: string;
   duration: string;
-  description: string;
+  description: string | string[];
   prepared?: boolean;
   alwaysPrepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
-  classes?: string[];
+  classes?: string[] | string;
   source?: string;
+}
+
+// Определение типа Item для оборудования
+export interface Item {
+  id?: string;
+  name: string;
+  type?: string;
+  quantity?: number;
+  weight?: number;
+  description?: string;
+  cost?: number;
+  equipped?: boolean;
+  properties?: string[];
+  damage?: string;
+  armorClass?: number;
+  strengthRequired?: number;
+  stealthDisadvantage?: boolean;
+}
+
+// Определение типа DiceResult для результатов бросков
+export interface DiceResult {
+  formula: string;
+  rolls: number[];
+  total: number;
+  diceType?: string;
+  count?: number;
+  modifier?: number;
+  label?: string;
+  timestamp?: string | number | Date;
+}
+
+// Определение типа HitPointEvent для журнала здоровья
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
+  value: number;
+  amount?: number;
+  source?: string;
+  timestamp: number | Date;
 }
 
 // Добавляем константы для лимитов характеристик, используемые в CharacterLevelSelection и других компонентах
