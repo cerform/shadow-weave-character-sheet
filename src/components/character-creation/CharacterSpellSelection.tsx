@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, safelyConvertSpellDescription, safelyConvertSpellClasses, convertSpellsForState } from '@/utils/spellUtils';
@@ -57,6 +58,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [loadedSuccessfully, setLoadedSuccessfully] = useState(false);
   const [themeStyles, setThemeStyles] = useState(currentTheme);
+  
+  // Fix the string | string[] issue - ensure we handle both cases
+  const convertClassesToArray = (classes: string | string[] | undefined): string[] => {
+    if (!classes) return [];
+    if (typeof classes === 'string') return [classes];
+    return classes;
+  };
 
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
@@ -89,7 +97,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               components: spell.components || '',
               duration: spell.duration || 'Мгновенная',
               description: spell.description || ['Нет описания'],
-              classes: spell.classes || [],
+              classes: convertClassesToArray(spell.classes) || [],
               ritual: spell.ritual || false,
               concentration: spell.concentration || false
             } as SpellData));
@@ -396,7 +404,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        <Separator className="my-2" />
+        
+        <Separator />
+        
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -426,7 +436,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea>
+      <ScrollArea className="flex-1">
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">

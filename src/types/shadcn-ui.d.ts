@@ -6,6 +6,7 @@ declare module "@/components/ui/separator" {
     decorative?: boolean;
     orientation?: "horizontal" | "vertical";
     className?: string;
+    children?: React.ReactNode;
   }
 }
 
@@ -27,6 +28,7 @@ declare module "@/components/ui/tabs" {
     value: string;
     children?: React.ReactNode;
     className?: string;
+    key?: string;
   }
   
   export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -65,6 +67,7 @@ declare module "@/components/ui/dropdown-menu" {
 declare module "@/components/ui/label" {
   export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
     children?: React.ReactNode;
+    htmlFor?: string;
   }
 }
 
@@ -82,6 +85,7 @@ declare module "@/components/ui/radio-group" {
     value?: string;
     onValueChange?: (value: string) => void;
     children?: React.ReactNode;
+    className?: string;
   }
   
   export interface RadioGroupItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
