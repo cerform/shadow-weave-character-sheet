@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Rect } from 'react-konva';
 
 interface TokenHealthBarProps {
   currentHP: number;
@@ -9,36 +10,37 @@ interface TokenHealthBarProps {
 }
 
 const TokenHealthBar: React.FC<TokenHealthBarProps> = ({ currentHP, maxHP, width, showValue = false }) => {
-  const healthPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
+  const healthPercentage = Math.max(0, Math.min(1, currentHP / maxHP));
   
-  // Determine color based on health percentage
+  // Colors for different health ranges
   const getHealthColor = () => {
-    if (healthPercent > 66) return '#4CAF50'; // Green
-    if (healthPercent > 33) return '#FFC107'; // Yellow
-    return '#F44336'; // Red
+    if (healthPercentage > 0.6) return '#4CAF50';
+    if (healthPercentage > 0.3) return '#FFC107';
+    return '#F44336';
   };
   
   return (
-    <div className="absolute -top-6 left-0" style={{ width: `${width}px` }}>
-      {/* Background */}
-      <div className="h-2 bg-black/50 rounded-full overflow-hidden">
-        {/* Health bar */}
-        <div 
-          className="h-full transition-all duration-300 ease-in-out"
-          style={{ 
-            width: `${healthPercent}%`,
-            backgroundColor: getHealthColor()
-          }}
-        />
-      </div>
+    <>
+      {/* Health bar background */}
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={4}
+        fill="rgba(0,0,0,0.5)"
+        cornerRadius={2}
+      />
       
-      {/* Display health values if showValue is true */}
-      {showValue && (
-        <div className="text-white text-xs text-center mt-0.5 text-shadow">
-          {currentHP}/{maxHP}
-        </div>
-      )}
-    </div>
+      {/* Health indicator */}
+      <Rect
+        x={0}
+        y={0}
+        width={width * healthPercentage}
+        height={4}
+        fill={getHealthColor()}
+        cornerRadius={2}
+      />
+    </>
   );
 };
 

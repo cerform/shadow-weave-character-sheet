@@ -25,3 +25,5 @@ export const useDeviceType = (): DeviceType => {
 
   return deviceType;
 };
+
+export default useDeviceType;

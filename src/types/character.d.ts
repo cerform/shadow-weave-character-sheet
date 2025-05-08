@@ -30,6 +30,7 @@ interface Character {
     max: number;
     used: number;
     name: string;
+    recoveryType?: 'short-rest' | 'long-rest' | 'short' | 'long';
   }>;
   deathSaves: {
     successes: number;
@@ -43,7 +44,8 @@ interface Character {
   spellSlots: Record<string, { max: number; used: number }>;
   sorceryPoints?: {
     max: number;
-    used: number;
+    current?: number;
+    used?: number;
   }; 
   spells: CharacterSpell[];
   equipment: {
@@ -70,6 +72,9 @@ interface Character {
     disadvantage?: boolean;
     timestamp: number;
   };
+  // Add properties that were missing or needed across multiple components
+  currentHp?: number;
+  gender?: string;
 }
 
 export default Character;

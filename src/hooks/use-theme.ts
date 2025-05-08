@@ -1,7 +1,8 @@
 
 import { create } from 'zustand';
+import { themes } from '@/lib/themes';
 
-export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
+export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard' | 'cyberpunk';
 
 interface ThemeStore {
   theme: ThemeType;
@@ -12,7 +13,7 @@ interface ThemeStore {
 export const useTheme = create<ThemeStore>((set) => ({
   theme: 'default',
   setTheme: (theme) => set({ theme }),
-  themeStyles: undefined, // Initialize themeStyles
+  themeStyles: themes.default, // Initialize themeStyles with default theme
 }));
 
 export default useTheme;

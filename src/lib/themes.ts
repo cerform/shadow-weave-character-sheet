@@ -111,5 +111,17 @@ export const themes: Record<string, Theme> = {
     textColor: '#fef3c7',
     mutedTextColor: '#fbbf24',
     cardBackground: 'rgba(66, 32, 6, 0.8)'
+  },
+  cyberpunk: {
+    name: 'Cyberpunk',
+    primary: '#0ea5e9',
+    secondary: '#0284c7',
+    accent: '#22d3ee',
+    background: '#020617',
+    foreground: '#0f172a',
+    textColor: '#f0f9ff',
+    mutedTextColor: '#67e8f9',
+    cardBackground: 'rgba(2, 6, 23, 0.8)',
+    buttonText: '#ecfeff'
   }
 };
