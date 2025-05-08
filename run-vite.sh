@@ -1,15 +1,18 @@
 
 #!/bin/bash
 
-# Обеспечиваем доступность команды vite через npx
-echo "Запуск Vite через npx..."
-npx vite
-
-# Если в предыдущей команде была ошибка, попробуем установить vite локально
-if [ $? -ne 0 ]; then
-  echo "Установка Vite локально..."
+# Убеждаемся, что vite доступен
+if ! command -v vite &> /dev/null && ! [ -f ./node_modules/.bin/vite ]; then
+  echo "Vite не найден. Устанавливаем локально..."
   npm install --save-dev vite
-  
-  echo "Повторный запуск Vite..."
+fi
+
+# Запускаем vite
+echo "Запуск сервера разработки Vite..."
+if command -v vite &> /dev/null; then
+  vite
+elif [ -f ./node_modules/.bin/vite ]; then
+  ./node_modules/.bin/vite
+else
   npx vite
 fi

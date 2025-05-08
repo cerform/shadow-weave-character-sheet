@@ -12,6 +12,11 @@ export interface Theme {
   danger: string;
   success: string;
   warning: string;
+  foreground?: string;
+  primary?: string;
+  backgroundGradient?: string;
+  backgroundBrightness?: string;
+  decorativeCorners?: boolean;
 }
 
 export const themes: Record<string, Theme> = {
@@ -27,7 +32,12 @@ export const themes: Record<string, Theme> = {
     buttonText: '#ffffff',
     danger: '#f44336',
     success: '#4caf50',
-    warning: '#ff9800'
+    warning: '#ff9800',
+    foreground: '#e0e0e0',
+    primary: '#3f51b5',
+    backgroundGradient: 'none',
+    backgroundBrightness: '100%',
+    decorativeCorners: false
   },
   light: {
     background: '#f5f5f5',
@@ -41,7 +51,12 @@ export const themes: Record<string, Theme> = {
     buttonText: '#ffffff',
     danger: '#f44336',
     success: '#4caf50',
-    warning: '#ff9800'
+    warning: '#ff9800',
+    foreground: '#212121',
+    primary: '#3f51b5',
+    backgroundGradient: 'none',
+    backgroundBrightness: '100%',
+    decorativeCorners: false
   },
   dark: {
     background: '#121212',
@@ -55,7 +70,12 @@ export const themes: Record<string, Theme> = {
     buttonText: '#000000',
     danger: '#cf6679',
     success: '#03dac6',
-    warning: '#ffb74d'
+    warning: '#ffb74d',
+    foreground: '#e0e0e0',
+    primary: '#bb86fc',
+    backgroundGradient: 'none',
+    backgroundBrightness: '100%',
+    decorativeCorners: false
   },
   sepia: {
     background: '#f4ecd8',
@@ -69,7 +89,12 @@ export const themes: Record<string, Theme> = {
     buttonText: '#ffffff',
     danger: '#c62828',
     success: '#2e7d32',
-    warning: '#ef6c00'
+    warning: '#ef6c00',
+    foreground: '#5d4037',
+    primary: '#bf360c',
+    backgroundGradient: 'none',
+    backgroundBrightness: '100%',
+    decorativeCorners: false
   },
   fantasy: {
     background: '#2c3e50',
@@ -83,7 +108,12 @@ export const themes: Record<string, Theme> = {
     buttonText: '#ffffff',
     danger: '#c0392b',
     success: '#27ae60',
-    warning: '#f39c12'
+    warning: '#f39c12',
+    foreground: '#ecf0f1',
+    primary: '#8e44ad',
+    backgroundGradient: 'linear-gradient(to bottom, #2c3e50, #1a252f)',
+    backgroundBrightness: '100%',
+    decorativeCorners: true
   }
 };
 

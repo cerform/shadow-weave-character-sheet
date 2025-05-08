@@ -1,12 +1,18 @@
 
-// Расширяем интерфейс Character, добавляя недостающие свойства
+import { CharacterSpell } from './spells';
+
+export interface HitPointEvent {
+  type: 'damage' | 'healing' | 'temp' | 'max';
+  value: number;
+  source?: string;
+  timestamp: number;
+}
+
 export interface Character {
   id: string;
   name: string;
   race: string;
-  subrace?: string;
   class: string;
-  className?: string; // Альтернативная запись для имени класса
   level: number;
   background: string;
   alignment: string;
@@ -19,201 +25,44 @@ export interface Character {
   charisma: number;
   hp: number;
   maxHp: number;
-  currentHp?: number; // Добавляем для совместимости
   temporaryHp: number;
-  hitPoints?: { // Добавляем для совместимости
-    current: number;
-    maximum: number;
-    temporary?: number;
-  };
-  hitDice: {
-    total: number;
-    used: number;
-    type: string;
-    dieType?: string;
-  };
-  proficiencyBonus?: number;
-  proficiencies: string[] | {
-    weapons?: string[];
-    tools?: string[];
-    languages?: string[];
-    skills?: string[]; // Добавляем навыки в proficiencies
-  };
-  skills: {
-    [key: string]: boolean | number | null | { 
-      bonus?: number; 
-      value?: number; 
-      proficient?: boolean; // Добавляем флаг владения навыком
-    };
-  };
-  savingThrows: {
-    [key: string]: boolean;
-  };
-  savingThrowProficiencies?: string[];
-  skillProficiencies?: string[];
+  hitDice: { total: number; used: number; type: string; dieType?: string; };
+  proficiencyBonus: number;
+  proficiencies: string[];
+  skills: Record<string, boolean>;
+  savingThrows: Record<string, boolean>;
   armorClass: number;
   initiative: number;
   speed: number;
-  equipment: string[] | Item[] | {
-    weapons?: string[] | Item[];
-    armor?: string | Item;
-    items?: string[] | Item[];
-  };
-  features: {
-    race: string[];
-    class: string[];
-    background: string[];
-  } | string[];
+  equipment: any[];
+  features: string[];
   description: string;
   personalityTraits: string;
   ideals: string;
   bonds: string;
   flaws: string;
   backstory: string;
-  spellcasting?: {
-    ability: string;
-    saveDC?: number;
-    attackBonus?: number;
-    class?: string;
+  spells: (CharacterSpell | string)[];
+  abilities: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number; 
+    wisdom: number;
+    charisma: number;
   };
-  spellcastingAbility?: string;
-  spellSaveDC?: number;
-  spellAttackBonus?: number;
-  spellSlots?: Record<string, { max: number; used: number; available?: number }>;
-  spells?: (CharacterSpell | string)[];
-  // Добавляем недостающие свойства
+  raceFeatures?: (string | { name: string; description: string; level: number; })[];
+  classFeatures?: (string | { name: string; description: string; level: number; })[];
+  backgroundFeatures?: (string | { name: string; description: string; level: number; })[];
+  feats?: (string | { name: string; description: string; level: number; })[];
   expertise?: string[];
-  skillBonuses?: {[key: string]: number};
-  raceFeatures?: string[];
-  classFeatures?: string[];
-  backgroundFeatures?: string[];
-  feats?: string[];
+  skillBonuses?: Record<string, number>;
   appearance?: string;
   currency?: {
-    copper?: number;
-    silver?: number;
-    electrum?: number;
-    gold?: number;
-    platinum?: number;
-  };
-  conditions?: string[];
-  inventory?: Item[];
-  languages?: string[];
-  portrait?: string;
-  notes?: string;
-  gold?: number;
-  silver?: number;
-  copper?: number;
-  platinum?: number;
-  electrum?: number;
-  userId?: string;
-  // Добавляем поля для совместимости с компонентами создания персонажа
-  abilities?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-    STR?: number;
-    DEX?: number;
-    CON?: number;
-    INT?: number;
-    WIS?: number;
-    CHA?: number;
-  };
-  stats?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  gender?: string;
-  subclass?: string;
-  abilityPointsUsed?: number;
-  lastDiceRoll?: DiceResult;
-  // Добавляем новое поле resources для управления ресурсами персонажа
-  resources?: Record<string, {
-    max: number;
-    used: number;
-    shortRestRecover?: boolean;
-    longRestRecover?: boolean;
-    description?: string;
-  }>;
-  // Добавляем поле для очков колдовства для чародея
-  sorceryPoints?: {
-    max: number;
-    current: number;
+    cp?: number;
+    sp?: number;
+    gp?: number;
+    pp?: number;
+    ep?: number;
   };
 }
-
-// Определение CharacterSpell
-export interface CharacterSpell {
-  id: string | number;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string | string[];
-  prepared?: boolean;
-  alwaysPrepared?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-  classes?: string[] | string;
-  source?: string;
-}
-
-// Определение типа Item для оборудования
-export interface Item {
-  id?: string;
-  name: string;
-  type?: string;
-  quantity?: number;
-  weight?: number;
-  description?: string;
-  cost?: number;
-  equipped?: boolean;
-  properties?: string[];
-  damage?: string;
-  armorClass?: number;
-  strengthRequired?: number;
-  stealthDisadvantage?: boolean;
-}
-
-// Определение типа DiceResult для результатов бросков
-export interface DiceResult {
-  formula: string;
-  rolls: number[];
-  total: number;
-  diceType?: string;
-  count?: number;
-  modifier?: number;
-  label?: string;
-  timestamp?: string | number | Date;
-}
-
-// Определение HitPointEvent для журнала урона
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'heal' | 'temp' | 'tempHP' | 'death-save' | string;
-  value: number;
-  amount?: number;
-  source?: string;
-  timestamp: number | Date;
-}
-
-// Добавляем константы для лимитов характеристик
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,        // Базовый максимум для характеристик
-  EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
-  LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
-  ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
-};
-
-// Добавляем экспорт для типов, которые используются в других файлах
-export type { CharacterSpell, Item, DiceResult, HitPointEvent };

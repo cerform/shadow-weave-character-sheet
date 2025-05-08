@@ -1,19 +1,22 @@
 
 #!/bin/bash
 
-echo "Installing dependencies..."
+echo "Установка зависимостей проекта..."
 
-# Install Vite and necessary packages
+# Установка основных зависимостей
+npm install --save react react-dom @types/react @types/react-dom
+
+# Установка необходимых dev-зависимостей
 npm install --save-dev vite @vitejs/plugin-react-swc typescript
 
-# Install core React dependencies if they're not already installed
-npm install react react-dom @types/react @types/react-dom
+# Установка UI компонентов
+npm install --save @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu 
+npm install --save @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group 
+npm install --save @radix-ui/react-switch @radix-ui/react-scroll-area
+npm install --save class-variance-authority clsx tailwind-merge lucide-react
 
-# Install UI components
-npm install @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group @radix-ui/react-switch @radix-ui/react-scroll-area class-variance-authority clsx tailwind-merge lucide-react
-
-# Make our script executable
+# Делаем скрипты исполняемыми
 chmod +x install-dependencies.sh
 chmod +x run-vite.sh
 
-echo "Dependencies installed! Run 'bash run-vite.sh' to start the application."
+echo "Зависимости установлены! Для запуска приложения выполните 'bash run-vite.sh'"
