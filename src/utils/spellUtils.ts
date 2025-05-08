@@ -85,8 +85,8 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterS
         id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
         name: spell,
         level: 0, // по умолчанию - заговор
-        description: 'Нет описания',
-        school: 'Универсальная'
+        school: 'Универсальная',
+        description: 'Нет описания'
       };
     }
     return spell;
@@ -203,4 +203,9 @@ export const safelyConvertSpellClasses = (classes: string | string[] | undefined
   if (!classes) return [];
   if (typeof classes === 'string') return [classes];
   return classes;
+};
+
+// Добавляем функцию, которая отсутствует
+export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertToSpellData(spell));
 };

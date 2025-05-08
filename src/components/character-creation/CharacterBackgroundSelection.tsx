@@ -6,7 +6,7 @@ import NavigationButtons from './NavigationButtons';
 import SectionHeader from '@/components/ui/section-header';
 import { SelectionCard, SelectionCardGrid } from '@/components/ui/selection-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { isEquipmentEmpty } from '@/utils/safetyUtils';
 
 // Интерфейс для предыстории
@@ -47,6 +47,7 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
 }) => {
   const [selectedBackground, setSelectedBackground] = useState<string>(character.background || '');
   const [activeTab, setActiveTab] = useState<string>('description');
+  const { toast } = useToast();
 
   // Проверяем, есть ли предыстории
   useEffect(() => {
@@ -57,7 +58,7 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
         variant: "destructive"
       });
     }
-  }, [backgrounds]);
+  }, [backgrounds, toast]);
 
   // Найдем выбранную предысторию
   const currentBackground = backgrounds.find(bg => bg.name === selectedBackground);
@@ -86,9 +87,13 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
           proficiencyUpdates = [...character.proficiencies];
         } 
         // Иначе, если это объект, создаем новый массив
-        else if (character.proficiencies) {
+        else if (character.proficiencies && typeof character.proficiencies === 'object') {
           // Конвертируем объект в массив для обновления
-          const existingProficiencies = character.proficiencies;
+          const existingProficiencies = character.proficiencies as {
+            weapons?: string[];
+            tools?: string[];
+            languages?: string[];
+          };
           if (existingProficiencies.weapons) proficiencyUpdates.push(...existingProficiencies.weapons);
           if (existingProficiencies.tools) proficiencyUpdates.push(...existingProficiencies.tools);
           if (existingProficiencies.languages) proficiencyUpdates.push(...existingProficiencies.languages);
@@ -242,9 +247,11 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundProps> = ({
 
       <NavigationButtons
         allowNext={!!selectedBackground}
-        nextStep={handleNext}
-        prevStep={prevStep}
+        onNext={handleNext}
+        onPrev={prevStep}
         isFirstStep={false}
+        nextStep={nextStep}
+        prevStep={prevStep}
       />
     </div>
   );

@@ -35,7 +35,8 @@ export const useToast = () => {
 };
 
 // Экспортируем toast функцию для использования без хука
-export const toast = (options: ToastOptions) => {
+export const toast = (options: ToastOptions): Toast => {
+  const id = Math.random().toString(36).substring(2, 9);
   console.log('Toast:', options);
-  return options;
+  return { id, ...options };
 };

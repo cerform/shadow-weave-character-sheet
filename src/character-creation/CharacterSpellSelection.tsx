@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, safelyConvertSpellDescription, safelyConvertSpellClasses } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -170,7 +171,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
-    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. к��нт��кст
+    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. контекст
     if (propAvailableSpells && propAvailableSpells.length > 0) {
       return propAvailableSpells;
     } 
@@ -272,6 +273,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
+      // Добавляем заклинание в контекст
+      addSpell(spell);
+      
       // Также добавляем заклинание прямо в персонажа
       const updatedSpells = [...(character.spells || [])];
       updatedSpells.push({
@@ -283,10 +287,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        // Fix: ensure description is consistent - convert to array if it's a string
-        description: typeof spell.description === 'string' ? [spell.description] : spell.description || ['Нет описания'],
-        // Fix: ensure classes is consistently an array
-        classes: convertClassesToArray(spell.classes),
+        description: safelyConvertSpellDescription(spell.description),
+        classes: safelyConvertSpellClasses(spell.classes),
         prepared: true // По умолчанию заклинания подготовлены
       });
       
@@ -368,6 +370,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               onPrev={prevStep} 
               onNext={nextStep}
               nextLabel="Пропустить выбор заклинаний"
+              nextStep={nextStep}
+              prevStep={prevStep}
             />
           </div>
         )}
@@ -390,7 +394,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        <Separator className="my-2" style={{ backgroundColor: `${currentTheme.accent}30` }} />
+        <Separator className="my-2" />
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -403,8 +407,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           }}
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full mb-4 flex flex-wrap">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
             <TabsTrigger value="all">
               Все ({spellsToFilter.length})
             </TabsTrigger>
@@ -420,7 +424,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea>
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -445,7 +449,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     <div style={{color: currentTheme.textColor}}>
                       <div className="font-medium">{spell.name}</div>
                       <div className="text-xs">
-                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} урове��ь`}
+                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
                       </div>
                     </div>
                     <Button
@@ -474,6 +478,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             onNext={handleSaveAndContinue}
             nextLabel="Сохранить и продолжить"
             allowNext={!loading}
+            nextStep={nextStep}
+            prevStep={prevStep}
           />
         </div>
       )}

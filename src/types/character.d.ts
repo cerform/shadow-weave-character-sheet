@@ -26,11 +26,19 @@ export interface CharacterSpell {
   prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  source?: string;
+  higherLevel?: string;
+  alwaysPrepared?: boolean;
 }
 
 export interface SpellSlot {
   max: number;
   used: number;
+  available?: number;
 }
 
 export interface CharacterSpellSlots {
@@ -176,4 +184,14 @@ export interface Character {
   gender?: string;
   subclass?: string;
   abilityPointsUsed?: number;
+  hp?: number;
+  maxHp?: number;
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  backstory?: string;
+  spellcastingAbility?: string;
+  spellSaveDC?: number;
+  spellAttackBonus?: number;
 }
