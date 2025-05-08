@@ -57,6 +57,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [loadedSuccessfully, setLoadedSuccessfully] = useState(false);
 
+  // Fix the string | string[] issue - ensure we handle both cases
+  const convertClassesToArray = (classes: string | string[] | undefined): string[] => {
+    if (!classes) return [];
+    if (typeof classes === 'string') return [classes];
+    return classes;
+  };
+
   // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
     if (effectiveClass && !loadedSuccessfully && loadAttempts < 3) {
@@ -163,7 +170,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
-    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. конт��кст
+    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. к��нт��кст
     if (propAvailableSpells && propAvailableSpells.length > 0) {
       return propAvailableSpells;
     } 
@@ -265,9 +272,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      // Добавляем заклинание в контекст
-      addSpell(spell);
-      
       // Также добавляем заклинание прямо в персонажа
       const updatedSpells = [...(character.spells || [])];
       updatedSpells.push({
@@ -279,9 +283,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        description: spell.description,
-        // Convert classes to array if it's a string
-        classes: typeof spell.classes === 'string' ? [spell.classes] : spell.classes || [],
+        // Fix: ensure description is consistent - convert to array if it's a string
+        description: typeof spell.description === 'string' ? [spell.description] : spell.description || ['Нет описания'],
+        // Fix: ensure classes is consistently an array
+        classes: convertClassesToArray(spell.classes),
         prepared: true // По умолчанию заклинания подготовлены
       });
       

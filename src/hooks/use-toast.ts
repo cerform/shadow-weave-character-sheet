@@ -1,3 +1,6 @@
+
+import { useCallback, useState } from 'react';
+
 export interface Toast {
   id: string;
   title?: string;
@@ -13,11 +16,26 @@ interface ToastOptions {
   variant?: 'default' | 'destructive' | 'success';
 }
 
-// Временный заглушка для тостов, заменить на полноценную реализацию
 export const useToast = () => {
-  const toast = (options: ToastOptions) => {
-    console.log('Toast:', options);
-  };
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  return { toast };
+  const toast = useCallback((options: ToastOptions) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    const newToast = { id, ...options };
+    setToasts((prevToasts) => [...prevToasts, newToast]);
+    console.log('Toast:', options);
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+  }, []);
+
+  return { toast, dismissToast, toasts };
+};
+
+// Add the missing toast export function
+export const toast = (options: ToastOptions) => {
+  console.log('Toast:', options);
+  return options;
 };

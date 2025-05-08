@@ -10,6 +10,10 @@ interface NavigationButtonsProps {
   nextLabel?: string;
   allowPrev?: boolean;
   allowNext?: boolean;
+  // Add these missing properties that are being passed in various components
+  nextStep?: () => void;
+  prevStep?: () => void;
+  isFirstStep?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -19,21 +23,29 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = "Далее",
   allowPrev = true,
   allowNext = true,
+  // Use the passed props or fallback to onPrev/onNext
+  nextStep,
+  prevStep,
+  isFirstStep,
 }) => {
+  // Use either the direct handlers or the step handlers
+  const handlePrev = prevStep || onPrev;
+  const handleNext = nextStep || onNext;
+
   return (
     <div className="flex justify-between mt-4">
       <Button 
         variant="outline"
-        onClick={onPrev}
-        disabled={!onPrev || !allowPrev}
+        onClick={handlePrev}
+        disabled={!handlePrev || !allowPrev || isFirstStep}
         className="flex items-center"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         {prevLabel}
       </Button>
       <Button 
-        onClick={onNext}
-        disabled={!onNext || !allowNext}
+        onClick={handleNext}
+        disabled={!handleNext || !allowNext}
         className="flex items-center"
       >
         {nextLabel}

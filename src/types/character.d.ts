@@ -37,6 +37,23 @@ export interface CharacterSpellSlots {
   [key: string]: SpellSlot;
 }
 
+// Add the Item interface that's missing
+export interface Item {
+  id?: string;
+  name: string;
+  type?: string;
+  quantity?: number;
+  weight?: number;
+  description?: string;
+  cost?: number;
+  equipped?: boolean;
+  properties?: string[];
+  damage?: string;
+  armorClass?: number;
+  strengthRequired?: number;
+  stealthDisadvantage?: boolean;
+}
+
 export interface Character {
   id?: string;
   name: string;
@@ -91,4 +108,36 @@ export interface Character {
   userId?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  // Add missing properties
+  className?: string;
+  inventory?: Item[];
+  proficiencies?: string[];
+  resources?: any;
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: {[key: string]: number};
+  spellcasting?: {ability?: string};
+  gold?: number;
+  initiative?: number;
+  lastDiceRoll?: {formula: string; rolls: number[]; total: number};
+  languages?: string[];
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    type: string;
+    dieType?: string;
+  };
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  inspiration?: boolean;
+  conditions?: string[];
+  weapons?: Item[];
+  armor?: Item[];
+  tools?: Item[];
 }
