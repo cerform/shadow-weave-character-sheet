@@ -1,3 +1,3 @@
 
 #!/bin/bash
-npm install vite
+npm install vite react react-dom typescript

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,6 +12,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import CharactersList from '@/components/home/CharactersList';
+import { toast } from 'sonner';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 const Home = () => {
   const { currentUser, isAuthenticated } = useAuth();
@@ -20,7 +22,23 @@ const Home = () => {
   const { theme } = useTheme();
   const currentThemeId = theme || 'default';
   const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
-  const [isCharactersOpen, setIsCharactersOpen] = useState(false);
+  const [isCharactersOpen, setIsCharactersOpen] = useState(true);
+  const { refreshCharacters } = useCharacter();
+
+  // При монтировании компонента загружаем персонажей
+  useEffect(() => {
+    const loadCharacters = async () => {
+      console.log('Home: Компонент загружен, обновляем список персонажей');
+      try {
+        await refreshCharacters();
+      } catch (error) {
+        console.error('Home: Ошибка при загрузке персонажей', error);
+        toast.error('Не удалось загрузить персонажей');
+      }
+    };
+    
+    loadCharacters();
+  }, []);
 
   const handleNavigation = (path: string) => {
     console.log('Home: Переход на страницу', path);
