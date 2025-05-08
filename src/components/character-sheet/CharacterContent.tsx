@@ -33,7 +33,10 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Здоровье:</span>
               <div className="flex items-center">
-                <span style={{ color: currentTheme.textColor }}>{character.currentHp || 0}/{character.maxHp || 0}</span>
+                <span style={{ color: currentTheme.textColor }}>
+                  {character.currentHp !== undefined ? character.currentHp : (character.hitPoints?.current || 0)}/
+                  {character.maxHp || character.hitPoints?.maximum || 0}
+                </span>
               </div>
             </div>
             
@@ -72,7 +75,9 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
               // Определяем значение для отображения
               let displayValue: React.ReactNode = '';
               
-              if (typeof skillValue === 'number') {
+              if (skillValue === null) {
+                displayValue = '+0';
+              } else if (typeof skillValue === 'number') {
                 displayValue = skillValue >= 0 ? `+${skillValue}` : `${skillValue}`;
               } else if (typeof skillValue === 'object' && skillValue !== null) {
                 if ('bonus' in skillValue && skillValue.bonus !== undefined) {

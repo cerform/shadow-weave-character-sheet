@@ -1,9 +1,11 @@
+
 export interface Character {
   id: string;
   userId: string;
   name: string;
   race: string;
   class: string;
+  className?: string; // Added for compatibility with components expecting className
   level: number;
   background: string;
   alignment: string;
@@ -25,7 +27,7 @@ export interface Character {
   proficiencyBonus: number;
   armorClass: number;
   maxHp: number;
-  currentHp: number;
+  currentHp: number; // Added for HPBar component
   temporaryHp: number;
   hitDice: {
     total: number;
@@ -33,16 +35,25 @@ export interface Character {
     type: string;
     dieType?: string;
   };
+  hitPoints?: { // Add for backward compatibility
+    maximum: number;
+    current: number;
+    temporary: number;
+  };
   deathSaves: {
     successes: number;
     failures: number;
   };
   inspiration: boolean;
-  conditions: string[]; // Explicitly defined
-  inventory: any[]; // Explicitly defined
-  equipment: any[];
+  conditions: string[];
+  inventory: any[];
+  equipment: any[] | Item[];
   spells: CharacterSpell[];
-  proficiencies: string[];
+  proficiencies: string[] | {
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   features: CharacterFeature[];
   notes: string;
   resources: {
@@ -57,6 +68,9 @@ export interface Character {
   };
   savingThrowProficiencies: string[];
   skillProficiencies: string[];
+  skills?: {
+    [key: string]: number | { value: number; bonus: number; };
+  };
   expertise: string[];
   skillBonuses: {
     [key: string]: number;
@@ -68,14 +82,15 @@ export interface Character {
   };
   gold: number;
   initiative: number;
+  speed?: string | number;
   lastDiceRoll: DiceResult;
-  languages: string[]; // Explicitly defined
+  languages: string[];
   subrace?: string;
-  spellSlots?: Record<number, { max: number; used: number; available?: number; }>;
+  spellSlots?: Record<number | string, { max: number; used: number; available?: number; }>;
 }
 
 export interface CharacterSpell {
-  id?: string | number;
+  id: string | number;
   name: string;
   level: number;
   school: string;
@@ -122,3 +137,31 @@ export interface DiceResult {
   result?: number;
   reason?: string;
 }
+
+// Add the Item interface referenced in several components
+export interface Item {
+  name: string;
+  quantity: number;
+  type?: string;
+  description?: string;
+  weight?: number;
+  cost?: number;
+  properties?: string[];
+}
+
+// Add the HitPointEvent interface for DamageLog.tsx
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'heal' | 'temp';
+  amount: number;
+  description?: string;
+  timestamp: string;
+}
+
+// Export ABILITY_SCORE_CAPS constants for CharacterLevelSelection
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,        // Базовый максимум для характеристик
+  EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
+  LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
+  ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
+};

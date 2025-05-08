@@ -2,17 +2,26 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus } from 'lucide-react';
+import { Character } from '@/types/character';
 
 // Обновляем интерфейсы
 interface SpellSlot {
   max: number;
   used: number;
+  available?: number;
 }
 
-interface SpellSlotManagerProps {
+// Updated to include direct character reference for SpellSlotManager
+export interface SpellSlotManagerProps {
   spellSlots: Record<string, SpellSlot>;
   onUpdateSpellSlots: (newSlots: Record<string, SpellSlot>) => void;
+  character?: Character; // Make this optional for backward compatibility
 }
+
+export const SpellCastingComponentProps = {
+  character: {} as Character,
+  onUpdate: (_: Partial<Character>) => {}
+};
 
 export const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
   spellSlots,
@@ -24,7 +33,7 @@ export const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
     if (!slot) return;
 
     // Проверяем, доступны ли слоты для использования
-    const available = slot.max - slot.used;
+    const available = slot.available !== undefined ? slot.available : (slot.max - slot.used);
     if (available <= 0) return;
 
     const newSlots = {
@@ -32,6 +41,7 @@ export const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
       [level]: {
         ...slot,
         used: slot.used + 1,
+        available: available - 1
       },
     };
 
@@ -48,6 +58,7 @@ export const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
       [level]: {
         ...slot,
         used: slot.used - 1,
+        available: slot.available !== undefined ? slot.available + 1 : (slot.max - slot.used + 1)
       },
     };
 
@@ -69,39 +80,42 @@ export const SpellSlotManager: React.FC<SpellSlotManagerProps> = ({
       <div className="grid grid-cols-3 gap-2">
         {Object.entries(spellSlots)
           .filter(([level]) => level !== '0') // Исключаем заговоры
-          .map(([level, slot]) => (
-            <div 
-              key={level}
-              className="flex flex-col items-center p-2 border rounded-md"
-            >
-              <span className="text-xs font-medium">Ур. {level}</span>
-              <div className="flex items-center justify-center gap-2 mt-1">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-6 w-6" 
-                  onClick={() => handleRestoreSlot(level)}
-                  disabled={slot.used <= 0}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                
-                <span className="text-sm font-medium">
-                  {slot.max - slot.used}/{slot.max}
-                </span>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-6 w-6" 
-                  onClick={() => handleUseSlot(level)}
-                  disabled={(slot.max - slot.used) <= 0}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+          .map(([level, slot]) => {
+            const available = slot.available !== undefined ? slot.available : (slot.max - slot.used);
+            return (
+              <div 
+                key={level}
+                className="flex flex-col items-center p-2 border rounded-md"
+              >
+                <span className="text-xs font-medium">Ур. {level}</span>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    onClick={() => handleRestoreSlot(level)}
+                    disabled={slot.used <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  
+                  <span className="text-sm font-medium">
+                    {available}/{slot.max}
+                  </span>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    onClick={() => handleUseSlot(level)}
+                    disabled={available <= 0}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
     </div>
   );

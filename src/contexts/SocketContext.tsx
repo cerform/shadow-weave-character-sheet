@@ -3,8 +3,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { socketService, useSocket as useSocketStore } from '@/services/socket';
 import { TokenData } from '@/types/session.types';
 
-interface SocketContextType {
+export interface SocketContextType {
+  socket: any;
   isConnected: boolean;
+  lastUpdate: Date | null;
   connect: (sessionCode: string, playerName?: string, characterId?: string) => void;
   disconnect: () => void;
   sendChatMessage: (message: { message: string, roomCode: string, nickname: string }) => void;
@@ -14,21 +16,12 @@ interface SocketContextType {
   sessionData: { code: string; name?: string } | null;
 }
 
-const defaultContextValue: SocketContextType = {
-  isConnected: false,
-  connect: () => {},
-  disconnect: () => {},
-  sendChatMessage: () => {},
-  sendRoll: () => {},
-  sendUpdate: () => {},
-  updateToken: () => {},
-  sessionData: null
-};
-
-const SocketContext = createContext<SocketContextType>(defaultContextValue);
+// Create and export the SocketContext - this must be exported
+export const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sessionData, setSessionData] = useState<{ code: string; name?: string } | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   
   // Используем новое zustand-хранилище
   const { isConnected, connect: connectSocket, disconnect: disconnectSocket, sendChatMessage, sendRoll, updateToken } = useSocketStore();
@@ -50,11 +43,13 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         code: data.sessionCode,
         name: data.sessionName
       });
+      setLastUpdate(new Date());
     };
     
     const handleDisconnect = () => {
       console.log('Socket disconnected');
       setSessionData(null);
+      setLastUpdate(new Date());
     };
     
     socketService.on('connected', handleConnect);
@@ -70,6 +65,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const connect = (sessionCode: string, playerName: string = 'Игрок', characterId?: string) => {
     console.log(`Connecting to session: ${sessionCode} as ${playerName}`);
     connectSocket(sessionCode, playerName, characterId);
+    setLastUpdate(new Date());
   };
 
   // Отключение от сессии
@@ -77,6 +73,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     console.log('Disconnecting from session');
     disconnectSocket();
     setSessionData(null);
+    setLastUpdate(new Date());
   };
 
   // Отправка обновления персонажа
@@ -87,12 +84,15 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
     
     console.log('Sending update:', payload);
+    setLastUpdate(new Date());
   };
 
   return (
     <SocketContext.Provider
       value={{
+        socket: socketService, // Add the actual socket object
         isConnected,
+        lastUpdate,
         connect,
         disconnect,
         sendChatMessage,
@@ -107,4 +107,13 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
-export const useSocket = () => useContext(SocketContext);
+// Export a hook that uses the context - this is how components will use it
+export const useSocket = () => {
+  const context = useContext(SocketContext);
+  
+  if (context === undefined) {
+    throw new Error('useSocket must be used within a SocketProvider');
+  }
+  
+  return context;
+};

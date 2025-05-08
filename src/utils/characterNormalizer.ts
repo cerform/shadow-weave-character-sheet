@@ -9,6 +9,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
     name: character.name || 'Новый персонаж',
     race: character.race || 'Человек',
     class: character.class || 'Воин',
+    className: character.className || character.class || 'Воин', // Add className for backward compatibility
     level: character.level || 1,
     background: character.background || '',
     alignment: character.alignment || 'Нейтральный',
@@ -39,6 +40,11 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       type: character.hitDice?.type || 'd8',
       dieType: character.hitDice?.dieType || character.hitDice?.type || 'd8',
     },
+    hitPoints: {
+      maximum: character.maxHp || character.hitPoints?.maximum || 10,
+      current: character.currentHp || character.hitPoints?.current || 10,
+      temporary: character.temporaryHp || character.tempHp || character.hitPoints?.temporary || 0
+    },
     deathSaves: character.deathSaves || { successes: 0, failures: 0 },
     inspiration: character.inspiration === undefined ? false : character.inspiration,
     conditions: Array.isArray(character.conditions) ? character.conditions : [],
@@ -53,6 +59,7 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
     skillProficiencies: character.skillProficiencies || [],
     expertise: character.expertise || [],
     skillBonuses: character.skillBonuses || {},
+    skills: character.skills || {},
     spellcasting: {
       ability: character.spellcasting?.ability || 'intelligence',
       saveDC: character.spellcasting?.saveDC || 0,
@@ -66,7 +73,10 @@ export const normalizeCharacter = (character: Partial<Character>): Character => 
       total: character.lastDiceRoll?.total || 0,
     },
     languages: Array.isArray(character.languages) ? character.languages : [],
-    subrace: character.subrace || ''
+    subrace: character.subrace || '',
+    gender: character.gender || '',
+    subclass: character.subclass || '',
+    abilityPointsUsed: character.abilityPointsUsed || 0
   } as Character;
 
   return normalizedCharacter;

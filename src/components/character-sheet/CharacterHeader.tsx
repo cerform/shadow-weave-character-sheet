@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,3 +98,5 @@ export const CharacterHeader = ({ character, onUpdate }: CharacterHeaderProps) =
     </Card>
   );
 };
+
+export default CharacterHeader;

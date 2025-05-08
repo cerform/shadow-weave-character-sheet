@@ -3,7 +3,7 @@ import React from 'react';
 import { useSocket } from '@/hooks/useSocket';
 
 const PlayerSessionPage: React.FC = () => {
-  // Используем правильные имена свойств из обновленного интерфейса
+  // Using the correct properties from our updated SocketContextType
   const { isConnected, lastUpdate } = useSocket();
   
   return (

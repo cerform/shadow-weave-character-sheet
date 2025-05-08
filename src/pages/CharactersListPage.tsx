@@ -53,7 +53,7 @@ const CharactersListPage: React.FC = () => {
     }
   };
 
-  // Исправленная функция с аргументом по умолчанию
+  // Fixed function with a required argument and default value
   const handleSomeFunction = (arg: any = {}) => {
     console.log(arg);
   };
