@@ -1,12 +1,12 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
  */
 export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+  return spells.map(spell => convertCharacterSpellToSpellDataHelper(spell));
 };
 
 /**

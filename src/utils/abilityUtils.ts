@@ -1,4 +1,6 @@
 
+import { Character } from '@/types/character';
+
 /**
  * Рассчитывает модификатор характеристики
  * @param score Значение характеристики

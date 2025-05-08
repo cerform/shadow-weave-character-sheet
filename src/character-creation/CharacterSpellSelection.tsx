@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useSpellbook } from '@/hooks/spellbook'; // Fixed import path
+import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +11,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
-import NavigationButtons from './NavigationButtons';
+import NavigationButtons from '@/components/character-creation/NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -164,7 +163,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
-    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. контекст
+    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. конт��кст
     if (propAvailableSpells && propAvailableSpells.length > 0) {
       return propAvailableSpells;
     } 
@@ -281,7 +280,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         components: spell.components,
         duration: spell.duration,
         description: spell.description,
-        classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes || ''],
+        // Convert classes to array if it's a string
+        classes: typeof spell.classes === 'string' ? [spell.classes] : spell.classes || [],
         prepared: true // По умолчанию заклинания подготовлены
       });
       
@@ -415,7 +415,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea style={{ flex: '1' }}>
+      <ScrollArea className="flex-1">
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -440,7 +440,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                     <div style={{color: currentTheme.textColor}}>
                       <div className="font-medium">{spell.name}</div>
                       <div className="text-xs">
-                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} урове��ь`}
                       </div>
                     </div>
                     <Button
