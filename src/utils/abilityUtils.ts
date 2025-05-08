@@ -1,80 +1,49 @@
 
 /**
- * Получает модификатор характеристики персонажа
- * @param character Персонаж
- * @param ability Название характеристики (strength, dexterity, etc.)
+ * Рассчитывает модификатор характеристики
+ * @param score Значение характеристики
  * @returns Модификатор характеристики
  */
-import { Character } from '../types/character';
-
-export function getAbilityModifier(character: Character, ability: string): number {
-  if (!character) return 0;
-  
-  let abilityScore = 10; // По умолчанию 10 (модификатор 0)
-  
-  // Проверяем, есть ли характеристика напрямую в объекте персонажа
-  const abilityMap: Record<string, keyof Character> = {
-    'strength': 'strength',
-    'dexterity': 'dexterity',
-    'constitution': 'constitution',
-    'intelligence': 'intelligence',
-    'wisdom': 'wisdom',
-    'charisma': 'charisma'
-  };
-  
-  const characterKey = abilityMap[ability.toLowerCase()];
-  if (characterKey && typeof character[characterKey] === 'number') {
-    abilityScore = character[characterKey] as number;
-  }
-  
-  // Если есть объект abilities, проверяем там
-  else if (character.abilities) {
-    const abilitiesKey = ability.toLowerCase() as keyof typeof character.abilities;
-    if (character.abilities[abilitiesKey] && typeof character.abilities[abilitiesKey] === 'number') {
-      abilityScore = character.abilities[abilitiesKey] as number;
-    }
-  }
-  
-  // Если есть объект stats, проверяем там
-  else if (character.stats) {
-    const statsKey = ability.toLowerCase() as keyof typeof character.stats;
-    if (character.stats[statsKey] && typeof character.stats[statsKey] === 'number') {
-      abilityScore = character.stats[statsKey] as number;
-    }
-  }
-  
-  // Вычисляем и возвращаем модификатор
-  return Math.floor((abilityScore - 10) / 2);
-}
+export const getAbilityModifier = (score?: number): number => {
+  if (!score) return 0;
+  return Math.floor((score - 10) / 2);
+};
 
 /**
- * Вычисляет сложность спасброска для заклинаний персонажа
+ * Рассчитывает модификатор характеристики персонажа
  * @param character Персонаж
- * @returns Сложность спасброска
+ * @param ability Название характеристики
+ * @returns Модификатор характеристики
  */
-export function calculateSpellSaveDC(character: Character): number {
-  if (!character) return 10;
+export const getCharacterAbilityModifier = (character: any, ability: string): number => {
+  if (!character || !ability) return 0;
   
-  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level || 1) / 4);
-  const spellcastingAbility = character.spellcastingAbility || 'intelligence';
-  const abilityModifier = getAbilityModifier(character, spellcastingAbility);
+  // Проверяем наличие значения в разных местах
+  const score = character.abilities?.[ability] || 
+               character.stats?.[ability] || 
+               character[ability] || 
+               10;
   
-  // Стандартная формула сложности: 8 + бонус мастерства + модификатор характеристики
-  return 8 + proficiencyBonus + abilityModifier;
-}
+  return getAbilityModifier(score);
+};
 
 /**
- * Вычисляет бонус к атаке заклинаниями персонажа
- * @param character Персонаж
- * @returns Бонус к атаке заклинаниями
+ * Возвращает строковое представление модификатора характеристики
+ * @param score Значение характеристики
+ * @returns Строка с модификатором (например, "+3" или "-1")
  */
-export function calculateSpellAttackBonus(character: Character): number {
-  if (!character) return 0;
+export const getAbilityModifierString = (score?: number): string => {
+  if (!score) return "+0";
   
-  const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level || 1) / 4);
-  const spellcastingAbility = character.spellcastingAbility || 'intelligence';
-  const abilityModifier = getAbilityModifier(character, spellcastingAbility);
-  
-  // Стандартная формула бонуса: бонус мастерства + модификатор характеристики
-  return proficiencyBonus + abilityModifier;
-}
+  const modifier = getAbilityModifier(score);
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+};
+
+/**
+ * Рассчитывает бонус мастерства на основе уровня персонажа
+ * @param level Уровень персонажа
+ * @returns Бонус мастерства
+ */
+export const getProficiencyBonus = (level: number = 1): number => {
+  return Math.floor((level - 1) / 4) + 2;
+};

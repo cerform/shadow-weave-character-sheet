@@ -1,5 +1,4 @@
 
-// Интерфейс для данных заклинаний
 export interface SpellData {
   id: string | number;
   name: string;
@@ -9,79 +8,29 @@ export interface SpellData {
   range: string;
   components: string;
   duration: string;
-  description: string[] | string;
-  classes?: string[] | string;
+  description: string | string[];
   prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
-  // Добавляем отсутствующие поля
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  materials?: string;
-  higherLevel?: string;
-  higherLevels?: string;
+  classes?: string[] | string;
   source?: string;
 }
 
-// Функция для конвертации CharacterSpell в SpellData
-export const convertCharacterSpellToSpellData = (spell: any): SpellData => {
-  return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level || 0,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
-    classes: spell.classes || [],
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    materials: spell.materials || '',
-    higherLevel: spell.higherLevel || '',
-    higherLevels: spell.higherLevels || '',
-    source: spell.source || 'Книга игрока'
-  };
-};
+export interface SpellFilter {
+  level?: number | null;
+  school?: string | null;
+  class?: string | null;
+  name?: string | null;
+  prepared?: boolean | null;
+  ritual?: boolean | null;
+  concentration?: boolean | null;
+}
 
-// Функция для конвертации SpellData в CharacterSpell
-export const convertSpellDataToCharacterSpell = (spell: SpellData): any => {
-  return {
-    id: typeof spell.id === 'number' ? spell.id.toString() : spell.id,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school,
-    castingTime: spell.castingTime,
-    range: spell.range,
-    components: spell.components,
-    duration: spell.duration,
-    description: spell.description,
-    classes: spell.classes,
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    materials: spell.materials || '',
-    higherLevel: spell.higherLevel || '',
-    higherLevels: spell.higherLevels || '',
-    source: spell.source || 'Книга игрока'
-  };
-};
-
-// Функция для конвертации массива заклинаний
-export const convertSpellArray = <T extends SpellData | any>(
-  spells: T[],
-  converter: (spell: T) => any
-): any[] => {
-  return spells.map(spell => converter(spell));
-};
-
-import { CharacterSpell } from './character';
+export interface SpellsState {
+  allSpells: SpellData[];
+  filteredSpells: SpellData[];
+  selectedSpell: SpellData | null;
+  filters: SpellFilter;
+  loading: boolean;
+  error: string | null;
+}

@@ -66,3 +66,47 @@ export const getSafeLevel = (character: any): number => {
   }
   return Number(character.level);
 };
+
+/**
+ * Безопасно получает значение по пути в объекте
+ * @param obj Объект
+ * @param path Путь к свойству
+ * @param defaultValue Значение по умолчанию
+ * @returns Значение свойства или значение по умолчанию
+ */
+export const safeGet = (obj: any, path: string, defaultValue: any = undefined): any => {
+  try {
+    const parts = path.split('.');
+    let result = obj;
+    
+    for (const part of parts) {
+      if (result === null || result === undefined || typeof result !== 'object') {
+        return defaultValue;
+      }
+      result = result[part];
+    }
+    
+    return result === undefined ? defaultValue : result;
+  } catch (e) {
+    return defaultValue;
+  }
+};
+
+/**
+ * Проверяет, пуста ли экипировка
+ * @param equipment Экипировка или массив предметов
+ * @returns true если экипировка пуста, иначе false
+ */
+export const isEquipmentEmpty = (equipment: any): boolean => {
+  if (!equipment) return true;
+  
+  if (Array.isArray(equipment)) {
+    return equipment.length === 0;
+  }
+  
+  if (typeof equipment === 'object') {
+    return Object.keys(equipment).length === 0;
+  }
+  
+  return true;
+};
