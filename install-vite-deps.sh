@@ -3,39 +3,37 @@
 
 echo "Installing Vite and project dependencies..."
 
-# Установка Vite и необходимых пакетов
-npm install -g vite
+# Install Vite and necessary packages
 npm install vite @vitejs/plugin-react-swc lovable-tagger
 
-# Установка основных зависимостей React
+# Install core React dependencies
 npm install react react-dom @types/react @types/react-dom
 
-# Установка компонентов shadcn
+# Install shadcn components
 npm install @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group @radix-ui/react-switch @radix-ui/react-scroll-area class-variance-authority clsx tailwind-merge lucide-react
 
-# Создание vite.config.js, если его нет
+# Check for vite.config.js or vite.config.ts
 if [ ! -f vite.config.js ] && [ ! -f vite.config.ts ]; then
   echo 'import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": "/src",
+      "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: "::",
+    port: 8080,
+  }
 });' > vite.config.js
   echo "Created vite.config.js"
 fi
 
-# Проверка и добавление скрипта в package.json
-if ! grep -q '"dev": "vite"' package.json; then
-  sed -i 's/"scripts": {/"scripts": {\n    "dev": "vite",/g' package.json || \
-  sed -i '' 's/"scripts": {/"scripts": {\n    "dev": "vite",/g' package.json
-fi
-
-# Проверка наличия индексного HTML-файла
+# Ensure index.html exists
 if [ ! -f index.html ]; then
   echo '<!DOCTYPE html>
 <html lang="en">
@@ -53,7 +51,13 @@ if [ ! -f index.html ]; then
   echo "Created index.html"
 fi
 
-# Делаем скрипт исполняемым
+# Make our scripts executable
 chmod +x install-vite-deps.sh
+if [ -f src/scripts/run-vite.sh ]; then
+  chmod +x src/scripts/run-vite.sh
+fi
 
-echo "Installation complete. Run 'npm run dev' to start the development server."
+# Install local version of Vite in node_modules
+npm install --save-dev vite
+
+echo "Installation complete! Run 'npm run dev' to start the development server."

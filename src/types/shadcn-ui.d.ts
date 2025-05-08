@@ -61,6 +61,7 @@ declare module "@/components/ui/dropdown-menu" {
   export interface DropdownMenuItemProps extends React.HTMLAttributes<HTMLDivElement> {
     inset?: boolean;
     children?: React.ReactNode;
+    onClick?: () => void;
   }
 }
 
@@ -68,6 +69,7 @@ declare module "@/components/ui/label" {
   export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
     children?: React.ReactNode;
     htmlFor?: string;
+    className?: string;
   }
 }
 
@@ -76,6 +78,7 @@ declare module "@/components/ui/switch" {
     checked?: boolean;
     onCheckedChange?: (checked: boolean) => void;
     id?: string;
+    className?: string;
   }
 }
 
