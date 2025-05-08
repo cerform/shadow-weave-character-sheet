@@ -218,6 +218,9 @@ export interface Character {
   };
 }
 
+// Экспортируем CharacterSpell для использования в других компонентах
+export { CharacterSpell, DiceResult };
+
 // Добавляем константы для лимитов характеристик
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,        // Базовый максимум для характеристик

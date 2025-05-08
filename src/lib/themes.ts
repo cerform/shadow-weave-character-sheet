@@ -172,7 +172,11 @@ const themes: Record<string, Theme> = {
   }
 };
 
+// Экспортируем сам объект themes
+export { themes };
+
 // Экспортируем массив тем для обратной совместимости
 export const themesArray = Object.values(themes);
 
+// Экспортируем по умолчанию для обеспечения совместимости
 export default themes;
