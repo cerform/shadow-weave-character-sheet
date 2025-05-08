@@ -3,249 +3,188 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { SendHorizontal, Dice6 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ChatMessage } from '@/types/session.types';
-import { socketService } from '@/services/socket';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSocket } from '@/contexts/SocketContext';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface SessionChatProps {
-  messages: ChatMessage[];
-  onSendMessage: (message: string) => void;
+// Определяем интерфейс сообщения
+interface Message {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: string;
+}
+
+// Определяем интерфейс props
+export interface SessionChatProps {
+  messages: Message[];
+  onSendMessage: (text: string) => void;
   sessionCode: string;
   playerName: string;
-  roomCode: string;
+  roomCode?: string; // Делаем roomCode опциональным
 }
 
 const SessionChat: React.FC<SessionChatProps> = ({
-  messages: initialMessages,
-  onSendMessage,
-  sessionCode,
-  playerName,
-  roomCode
+  messages = [], // Используем значение по умолчанию
+  onSendMessage = () => {}, // Используем функцию-заглушку по умолчанию
+  sessionCode = '',
+  playerName = '',
+  roomCode = '' // Значение по умолчанию для roomCode
 }) => {
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages || []);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  
-  // Добавление нового сообщения в чат
-  const addMessage = (message: ChatMessage) => {
-    setMessages(prevMessages => [...prevMessages, message]);
+  const [inputValue, setInputValue] = useState('');
+  const [chatMessages, setChatMessages] = useState<Message[]>(messages);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { user } = useAuth();
+  const { socket, isConnected } = useSocket();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Автоматически прокручиваем чат вниз при новых сообщениях
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  // Обработка ввода сообщения
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
   };
-  
-  // Обработчики событий WebSocket
-  useEffect(() => {
-    const handleNewMessage = (data: any) => {
-      const newMessage: ChatMessage = {
-        id: data.id || Date.now().toString(),
-        senderId: data.senderId || 'system',
-        sender: data.nickname || playerName,
-        senderName: data.nickname || playerName,
-        message: data.message,
-        content: data.message,
-        timestamp: data.timestamp || new Date().toISOString(),
-        type: 'message'
-      };
-      addMessage(newMessage);
-    };
-    
-    const handleRoll = (data: any) => {
-      const rollMessage: ChatMessage = {
-        id: data.id || Date.now().toString(),
-        senderId: data.senderId || 'system',
-        sender: data.playerName || 'Система',
-        senderName: data.playerName || 'Система',
-        message: `${data.reason ? data.reason + ': ' : ''}${data.formula}`,
-        content: `${data.reason ? data.reason + ': ' : ''}${data.formula}`,
-        timestamp: data.timestamp || new Date().toISOString(),
-        type: 'dice',
-        rollResult: {
-          formula: data.formula,
-          rolls: data.rolls || [],
-          total: data.total || 0,
-          reason: data.reason
-        }
-      };
-      addMessage(rollMessage);
-    };
-    
-    // Регистрируем обработчики событий
-    socketService.on('message', handleNewMessage);
-    socketService.on('roll', handleRoll);
-    
-    // Очистка при размонтировании
-    return () => {
-      socketService.off('message', handleNewMessage);
-      socketService.off('roll', handleRoll);
-    };
-  }, [playerName]);
-  
-  // Автопрокрутка чата при добавлении новых сообщений
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
-  // Отправка сообщения
+
+  // Обработка отправки сообщения с улучшенной обработкой ошибок
   const handleSendMessage = () => {
-    if (message.trim() === '') return;
-    
-    onSendMessage(message);
-    setMessage('');
+    if (inputValue.trim() === '') return;
+
+    // Используем переданную функцию onSendMessage, если есть
+    onSendMessage(inputValue);
+
+    // Создаем новое сообщение
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      sender: playerName || (user?.displayName || 'Гость'),
+      text: inputValue,
+      timestamp: new Date().toISOString()
+    };
+
+    // Добавляем в локальный массив
+    setChatMessages(prev => [...prev, newMessage]);
+
+    // Отправляем через сокет, если он есть и подключен
+    if (socket && isConnected) {
+      try {
+        socket.emit('message', {
+          room: roomCode || sessionCode,
+          message: newMessage
+        });
+      } catch (error) {
+        console.error('[CHAT] Ошибка при отправке сообщения:', error);
+      }
+    } else {
+      console.log('[CHAT] Сообщение сохранено локально (нет активного соединения)');
+    }
+
+    // Очищаем поле ввода
+    setInputValue('');
   };
-  
-  // Отправка броска кубиков
-  const handleDiceRoll = (formula: string) => {
-    socketService.sendRoll({ formula });
+
+  // Обработка нажатия Enter
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
   };
-  
-  // Форматирование времени сообщений
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('ru-RU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+
+  // Обновляем сообщения при получении новых пропсов
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      setChatMessages(messages);
+    }
+  }, [messages]);
+
+  // Подписываемся на события сокета с улучшенной обработкой ошибок
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncomingMessage = (data: { message: Message }) => {
+      if (data && data.message) {
+        setChatMessages(prev => [...prev, data.message]);
+      }
+    };
+
+    try {
+      socket.on('message', handleIncomingMessage);
+    } catch (error) {
+      console.error('[CHAT] Ошибка при подписке на сообщения:', error);
+    }
+
+    return () => {
+      try {
+        socket.off('message', handleIncomingMessage);
+      } catch (error) {
+        console.error('[CHAT] Ошибка при отписке от сообщений:', error);
+      }
+    };
+  }, [socket]);
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="py-2">
-        <CardTitle className="text-lg">Чат сессии</CardTitle>
+      <CardHeader className="py-3">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>Чат сессии</span>
+          <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
+        </CardTitle>
       </CardHeader>
-      
-      <CardContent className="flex-1 overflow-y-auto p-2">
-        <div className="space-y-2">
-          {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <p>В чате пока нет сообщений</p>
-              <p className="text-sm mt-2">Здесь будет отображаться история чата и бросков кубиков</p>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className="mb-2">
-                {msg.type === 'message' ? (
-                  <div className="bg-secondary/10 rounded-lg p-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{msg.senderName || msg.sender}</span>
-                      <span className="text-muted-foreground">{formatTime(msg.timestamp)}</span>
-                    </div>
-                    <p>{msg.content || msg.message}</p>
-                  </div>
-                ) : msg.type === 'dice' ? (
-                  <div className="bg-primary/5 rounded-lg p-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{msg.senderName || msg.sender} бросает кубики</span>
-                      <span className="text-muted-foreground">{formatTime(msg.timestamp)}</span>
-                    </div>
-                    <p className="text-sm">{msg.content || msg.message}</p>
-                    {msg.rollResult && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-bold text-primary">
-                          Результат: {msg.rollResult.total}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          (Броски: {msg.rollResult.rolls.join(', ')})
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="bg-muted/30 rounded-lg p-2">
-                    <div className="text-center text-muted-foreground text-sm">
-                      {msg.content || msg.message}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
+      <CardContent className="flex-grow p-0 px-4">
+        <ScrollArea className="h-[350px] pr-4" ref={scrollRef}>
+          {!isConnected && (
+            <Alert variant="warning" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Соединение с сервером не установлено. Сообщения сохраняются локально.
+              </AlertDescription>
+            </Alert>
           )}
-          <div ref={chatEndRef} />
-        </div>
-      </CardContent>
-      
-      <CardFooter className="p-2 mt-auto border-t">
-        <div className="flex w-full gap-2">
-          <Popover>
-            <PopoverTrigger>
-              <Button variant="outline" size="icon">
-                <Dice6 className="h-5 w-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-2">
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full" 
-                  onClick={() => handleDiceRoll('1d20')}
-                >
-                  d20
-                </Button>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d4')}
-                  >
-                    d4
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d6')}
-                  >
-                    d6
-                  </Button>
+          <div className="space-y-4 pt-2">
+            {chatMessages.length > 0 ? chatMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`p-3 rounded-lg ${
+                  msg.sender === (playerName || (user?.displayName || 'Гость'))
+                    ? 'bg-primary/10 ml-auto max-w-[80%]'
+                    : 'bg-muted max-w-[80%]'
+                }`}
+              >
+                <div className="font-semibold text-sm flex justify-between items-center mb-1">
+                  <span>{msg.sender}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d8')}
-                  >
-                    d8
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d10')}
-                  >
-                    d10
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d12')}
-                  >
-                    d12
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={() => handleDiceRoll('1d100')}
-                  >
-                    d100
-                  </Button>
-                </div>
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
               </div>
-            </PopoverContent>
-          </Popover>
-          
+            )) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Нет сообщений. Будьте первым, кто напишет!
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+      <CardFooter className="pt-1">
+        <div className="flex w-full gap-2">
           <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
             placeholder="Введите сообщение..."
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            className="flex-1"
           />
-          
-          <Button onClick={handleSendMessage} disabled={message.trim() === ''}>
-            <SendHorizontal className="h-5 w-5" />
+          <Button 
+            onClick={handleSendMessage}
+            disabled={isConnecting}
+          >
+            {isConnecting ? 'Подключение...' : 'Отправить'}
           </Button>
         </div>
       </CardFooter>

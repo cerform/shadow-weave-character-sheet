@@ -1,192 +1,126 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useSession } from '@/contexts/SessionContext';
-import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 import { Character } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
+import { useSocket } from '@/contexts/SocketContext';
+import { ArrowLeft } from 'lucide-react';
 
-const JoinSessionPage = () => {
+const JoinSessionPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { characters, getUserCharacters } = useCharacter();
-  const { joinSession, sessions } = useSession();
-  const [loading, setLoading] = useState(false);
   const [sessionCode, setSessionCode] = useState('');
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
-  const selectedCharacter = characters.find(c => c.id === selectedCharacterId);
+  const [playerName, setPlayerName] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { setCharacter } = useCharacter();
+  const { toast } = useToast();
+  const { connect, isConnected, sessionData } = useSocket();
   
-  // Используем characterId из location state, если он есть
   useEffect(() => {
-    if (location.state?.characterId) {
-      setSelectedCharacterId(location.state.characterId);
+    // Загружаем имя игрока из localStorage, если оно есть
+    const savedPlayerName = localStorage.getItem('player-name');
+    if (savedPlayerName) {
+      setPlayerName(savedPlayerName);
     }
-  }, [location.state]);
-  
-  // Загружаем персонажей при монтировании
-  useEffect(() => {
-    const loadCharacters = async () => {
-      try {
-        const chars = await getUserCharacters('current-user');
-        if (chars.length > 0 && !selectedCharacterId) {
-          setSelectedCharacterId(chars[0].id);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке персонажей:', error);
-        toast.error('Не удалось загрузить персонажей');
-      }
-    };
-    
-    loadCharacters();
   }, []);
   
-  // Обработчик присоединения к сессии
+  useEffect(() => {
+    if (isConnected && sessionData) {
+      setIsConnecting(false);
+      toast({
+        title: "Успешно!",
+        description: `Вы подключились к сессии ${sessionData.name}`,
+      });
+      navigate('/character-sheet');
+    }
+  }, [isConnected, sessionData, navigate, toast]);
+  
   const handleJoinSession = () => {
-    if (!sessionCode.trim()) {
-      toast.error('Введите код сессии');
+    if (!sessionCode || !playerName) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, введите код сессии и имя игрока.",
+        variant: "destructive",
+      });
       return;
     }
     
-    if (!selectedCharacterId) {
-      toast.error('Выберите персонажа');
-      return;
-    }
+    setIsConnecting(true);
     
-    const character = characters.find(c => c.id === selectedCharacterId);
-    if (!character) {
-      toast.error('Выбранный персонаж не найден');
-      return;
-    }
+    // Сохраняем имя игрока в localStorage
+    localStorage.setItem('player-name', playerName);
+    
+    // Retrieve character ID from localStorage
+    const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
     
     try {
-      setLoading(true);
+      // Используем обновленный метод connect с новой сигнатурой
+      connect(sessionCode, playerName, lastSelectedCharacterId);
       
-      // Используем контекст сессии для присоединения
-      const success = joinSession(sessionCode, {
-        name: character.name || 'Безымянный персонаж',
-        character
-      });
-      
-      if (success) {
-        toast.success('Вы успешно присоединились к сессии');
-        navigate('/game-session');
-      } else {
-        toast.error('Сессия с таким кодом не найдена');
-      }
+      // Store session info in localStorage
+      localStorage.setItem('active-session', JSON.stringify({
+        sessionCode,
+        playerName,
+        characterId: lastSelectedCharacterId
+      }));
     } catch (error) {
-      console.error('Ошибка при присоединении к сессии:', error);
-      toast.error('Не удалось присоединиться к сессии');
-    } finally {
-      setLoading(false);
+      console.error("Ошибка при подключении:", error);
+      setIsConnecting(false);
+      toast({
+        title: "Ошибка подключения",
+        description: "Не удалось подключиться к сессии. Проверьте код сессии и попробуйте снова.",
+        variant: "destructive",
+      });
     }
   };
   
+  const handleGoBack = () => {
+    navigate('/');
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="gap-2"
-        >
-          <ArrowLeft size={16} />
-          На главную
-        </Button>
-      </div>
-      
-      <h1 className="text-3xl font-bold mb-8 text-center">Присоединение к игровой сессии</h1>
-      
-      <Card className="border-primary/20 bg-card/80 backdrop-blur-sm">
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Присоединиться к сессии</CardTitle>
-          <CardDescription>
-            Введите код сессии и выберите персонажа
-          </CardDescription>
+          <CardDescription>Введите код сессии и имя игрока, чтобы присоединиться к игре.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Код сессии */}
-            <div className="space-y-2">
-              <Label htmlFor="sessionCode">Код сессии</Label>
-              <Input
-                id="sessionCode"
-                placeholder="Введите код сессии"
-                value={sessionCode}
-                onChange={(e) => setSessionCode(e.target.value)}
-                className="uppercase"
-                maxLength={6}
-              />
-            </div>
-            
-            {/* Выбор персонажа */}
-            <div className="space-y-2">
-              <Label htmlFor="character">Выберите персонажа</Label>
-              {characters.length === 0 ? (
-                <div className="text-center p-4 border rounded-md bg-accent/10">
-                  <p className="text-muted-foreground mb-4">У вас пока нет персонажей</p>
-                  <Button onClick={() => navigate('/character-creation')}>
-                    Создать персонажа
-                  </Button>
-                </div>
-              ) : (
-                <Select 
-                  value={selectedCharacterId}
-                  onValueChange={setSelectedCharacterId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите персонажа" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {characters.map((character: Character) => (
-                      <SelectItem key={character.id} value={character.id}>
-                        {character.name || 'Безымянный персонаж'} ({character.race} {character.class || character.className}, ур. {character.level || 1})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            
-            {/* Информация о выбранном персонаже */}
-            {selectedCharacter && (
-              <div className="p-4 border rounded-md bg-primary/5">
-                <h3 className="font-medium mb-2">Выбранный персонаж</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Имя:</span> {selectedCharacter.name}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Уровень:</span> {selectedCharacter.level || 1}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Раса:</span> {selectedCharacter.race}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Класс:</span> {selectedCharacter.class || selectedCharacter.className}
-                  </div>
-                </div>
-              </div>
-            )}
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="sessionCode">Код сессии</Label>
+            <Input
+              type="text"
+              id="sessionCode"
+              placeholder="XXXXXX"
+              value={sessionCode}
+              onChange={(e) => setSessionCode(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="playerName">Имя игрока</Label>
+            <Input
+              type="text"
+              id="playerName"
+              placeholder="Ваше имя"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+            />
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/')}
-          >
-            Отмена
+          <Button variant="ghost" onClick={handleGoBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Назад
           </Button>
           <Button 
-            onClick={handleJoinSession}
-            disabled={loading || !sessionCode.trim() || !selectedCharacterId}
+            onClick={handleJoinSession} 
+            disabled={isConnecting}
           >
-            {loading ? 'Присоединение...' : 'Присоединиться к сессии'}
+            {isConnecting ? "Подключение..." : "Присоединиться"}
           </Button>
         </CardFooter>
       </Card>

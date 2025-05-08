@@ -1,191 +1,325 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Character } from '@/types/character';
-import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Heart } from "lucide-react";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Heart, Shield, Minus, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface HPBarProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
+  currentHp: number;
+  maxHp: number;
+  temporaryHp: number;
+  onUpdate: (updates: {
+    currentHp?: number;
+    temporaryHp?: number;
+  }) => void;
 }
 
-const HPBar: React.FC<HPBarProps> = ({ character, onUpdate }) => {
+export const HPBar: React.FC<HPBarProps> = ({
+  currentHp,
+  maxHp,
+  temporaryHp,
+  onUpdate
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [damageAmount, setDamageAmount] = useState<number>(0);
   const [healAmount, setHealAmount] = useState<number>(0);
   const [tempHPAmount, setTempHPAmount] = useState<number>(0);
+  const { toast } = useToast();
 
-  // Получаем текущие значения HP, с обратной совместимостью
-  const getCurrentHP = (): number => {
-    if (character.currentHp !== undefined) return character.currentHp;
-    if (character.hp !== undefined) return character.hp;
-    if (character.hitPoints?.current !== undefined) return character.hitPoints.current;
-    return 0;
-  };
-
-  const getMaxHP = (): number => {
-    if (character.maxHp !== undefined) return character.maxHp;
-    if (character.hitPoints?.maximum !== undefined) return character.hitPoints.maximum;
-    return 0;
-  };
-
-  const getTempHP = (): number => {
-    if (character.temporaryHp !== undefined) return character.temporaryHp;
-    if (character.hitPoints?.temporary !== undefined) return character.hitPoints.temporary;
-    return 0;
-  };
-
-  const currentHP = getCurrentHP();
-  const maxHP = getMaxHP();
-  const tempHP = getTempHP();
-  const totalHP = maxHP > 0 ? maxHP : 1; // предотвращаем деление на ноль
-
-  const healthPercentage = Math.max(0, Math.min(100, (currentHP / totalHP) * 100));
+  // Рассчитываем процент здоровья для отображения прогресс-бара
+  const healthPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
   
-  // Генерируем цвет индикатора в зависимости от уровня здоровья
-  const getHealthColor = (): string => {
-    if (healthPercentage <= 25) return "bg-red-600";
-    if (healthPercentage <= 50) return "bg-amber-500";
-    return "bg-emerald-500";
+  // Определяем цвет полосы здоровья в зависимости от процента
+  const getHealthColor = () => {
+    if (healthPercent > 60) return 'bg-green-500';
+    if (healthPercent > 30) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
-  const handleDamage = () => {
-    if (damageAmount <= 0) return;
-    
-    let updatedTempHP = tempHP;
-    let updatedCurrentHP = currentHP;
-    const damage = Math.max(0, damageAmount);
-    
-    // Сначала урон вычитается из временных хитов
-    if (updatedTempHP > 0) {
-      if (updatedTempHP >= damage) {
-        updatedTempHP -= damage;
-      } else {
-        // Если временных хитов недостаточно, оставшийся урон вычитается из обычных хитов
-        const remainingDamage = damage - updatedTempHP;
-        updatedTempHP = 0;
-        updatedCurrentHP = Math.max(0, updatedCurrentHP - remainingDamage);
-      }
-    } else {
-      // Если нет временных хитов, урон наносится напрямую
-      updatedCurrentHP = Math.max(0, updatedCurrentHP - damage);
+  // Обработчик получения урона
+  const handleTakeDamage = (amount: number) => {
+    if (amount <= 0) {
+      toast({
+        title: "Ошибка",
+        description: "Урон должен быть положительным числом",
+        variant: "destructive"
+      });
+      return;
     }
+
+    // Сначала урон идет по временным хитам
+    let remainingDamage = amount;
+    let newTempHP = temporaryHp;
     
-    // Обновляем персонажа
-    onUpdate({ 
-      hp: updatedCurrentHP,
-      currentHp: updatedCurrentHP,
-      temporaryHp: updatedTempHP
+    if (temporaryHp > 0) {
+      if (temporaryHp >= remainingDamage) {
+        newTempHP = temporaryHp - remainingDamage;
+        remainingDamage = 0;
+      } else {
+        remainingDamage = remainingDamage - temporaryHp;
+        newTempHP = 0;
+      }
+    }
+
+    // Оставшийся урон идет по основным хитам
+    const newCurrentHP = Math.max(0, currentHp - remainingDamage);
+
+    // Сохраняем изменения
+    onUpdate({
+      currentHp: newCurrentHP,
+      temporaryHp: newTempHP
     });
-    
+
+    // Уведомляем пользователя
+    toast({
+      title: "Урон получен",
+      description: `Получен урон: ${amount}. Осталось ХП: ${newCurrentHP}${newTempHP > 0 ? ` (+ ${newTempHP} врем.)` : ''}`,
+    });
+
+    // Закрываем диалог
+    setIsOpen(false);
     setDamageAmount(0);
   };
 
-  const handleHeal = () => {
-    if (healAmount <= 0) return;
-    
-    // Лечение не может превысить максимальное здоровье
-    const updatedCurrentHP = Math.min(maxHP, currentHP + Math.max(0, healAmount));
-    
-    // Обновляем персонажа
-    onUpdate({ 
-      hp: updatedCurrentHP,
-      currentHp: updatedCurrentHP
+  // Обработчик лечения
+  const handleHeal = (amount: number) => {
+    if (amount <= 0) {
+      toast({
+        title: "Ошибка",
+        description: "Лечение должно быть положительным числом",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Лечение не может превысить максимальные хиты
+    const newCurrentHP = Math.min(maxHp, currentHp + amount);
+
+    // Сохраняем изменения
+    onUpdate({ currentHp: newCurrentHP });
+
+    // Уведомляем пользователя
+    toast({
+      title: "Лечение получено",
+      description: `Восстановлено ХП: ${amount}. Текущие ХП: ${newCurrentHP}${temporaryHp > 0 ? ` (+ ${temporaryHp} врем.)` : ''}`,
     });
-    
+
+    // Закрываем диалог
+    setIsOpen(false);
     setHealAmount(0);
   };
 
-  const handleTempHP = () => {
-    if (tempHPAmount <= 0) return;
-    
-    // Временные хиты не суммируются, а заменяются большим значением
-    const updatedTempHP = Math.max(tempHP, tempHPAmount);
-    
-    // Обновляем персонажа
-    onUpdate({ 
-      temporaryHp: updatedTempHP 
+  // Обработчик добавления временных хитов
+  const handleAddTempHP = (amount: number) => {
+    if (amount <= 0) {
+      toast({
+        title: "Ошибка",
+        description: "Временные хиты должны быть положительным числом",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Временные хиты не складываются, берем наибольшее значение
+    const newTempHP = Math.max(temporaryHp, amount);
+
+    // Сохраняем изменения
+    onUpdate({ temporaryHp: newTempHP });
+
+    // Уведомляем пользователя
+    toast({
+      title: "Получены временные хиты",
+      description: `Временные хиты: ${newTempHP}`,
     });
-    
+
+    // Закрываем диалог
+    setIsOpen(false);
     setTempHPAmount(0);
   };
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex justify-between items-center">
-        <div className="text-sm font-medium">
-          HP: {currentHP} / {maxHP} {tempHP > 0 && `+ ${tempHP} temp`}
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {healthPercentage.toFixed(0)}%
-        </div>
-      </div>
-      <Progress value={healthPercentage} className={getHealthColor()} />
-      
-      <div className="grid grid-cols-3 gap-2 mt-3">
-        <div className="space-y-1">
-          <div className="flex items-center">
-            <Input 
-              type="number"
-              value={damageAmount}
-              onChange={(e) => setDamageAmount(Number(e.target.value))}
-              className="h-8"
-              min="0"
-            />
-            <Button 
-              className="h-8 ml-1 bg-red-600 hover:bg-red-700" 
-              onClick={handleDamage}
-              size="sm"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
+    <Card className="relative">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center space-x-1">
+            <Heart className="h-5 w-5 text-red-500" />
+            <span className="font-medium">Здоровье</span>
           </div>
-          <label className="text-xs text-muted-foreground">Урон</label>
+          <div className="text-right">
+            <span className="font-bold">{currentHp}/{maxHp}</span>
+            {temporaryHp > 0 && (
+              <span className="ml-1 text-cyan-400">+{temporaryHp}</span>
+            )}
+          </div>
+        </div>
+        
+        {/* Полоса здоровья */}
+        <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden mt-1 mb-3">
+          <div 
+            className={`h-full ${getHealthColor()} transition-all duration-300`}
+            style={{ width: `${healthPercent}%` }}
+          />
         </div>
 
-        <div className="space-y-1">
-          <div className="flex items-center">
-            <Input 
-              type="number"
-              value={healAmount}
-              onChange={(e) => setHealAmount(Number(e.target.value))}
-              className="h-8"
-              min="0"
-            />
-            <Button 
-              className="h-8 ml-1 bg-green-600 hover:bg-green-700" 
-              onClick={handleHeal}
-              size="sm"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+        {/* Кнопки управления хитами */}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <div className="grid grid-cols-3 gap-2">
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center"
+                onClick={() => setIsOpen(true)}
+              >
+                <Minus className="h-4 w-4 mr-1 text-red-500" />
+                Урон
+              </Button>
+            </DialogTrigger>
+            
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center"
+                onClick={() => setIsOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-1 text-green-500" />
+                Лечение
+              </Button>
+            </DialogTrigger>
+            
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center"
+                onClick={() => setIsOpen(true)}
+              >
+                <Shield className="h-4 w-4 mr-1 text-cyan-400" />
+                Врем. ХП
+              </Button>
+            </DialogTrigger>
           </div>
-          <label className="text-xs text-muted-foreground">Лечение</label>
-        </div>
-
-        <div className="space-y-1">
-          <div className="flex items-center">
-            <Input 
-              type="number"
-              value={tempHPAmount}
-              onChange={(e) => setTempHPAmount(Number(e.target.value))}
-              className="h-8"
-              min="0"
-            />
-            <Button 
-              className="h-8 ml-1 bg-blue-600 hover:bg-blue-700" 
-              onClick={handleTempHP}
-              size="sm"
-            >
-              <Heart className="h-4 w-4" />
-            </Button>
-          </div>
-          <label className="text-xs text-muted-foreground">Временные HP</label>
-        </div>
-      </div>
-    </div>
+          
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Изменение хитов</DialogTitle>
+            </DialogHeader>
+            
+            <Tabs defaultValue="damage">
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="damage">Урон</TabsTrigger>
+                <TabsTrigger value="heal">Лечение</TabsTrigger>
+                <TabsTrigger value="temp">Временные ХП</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="damage" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="damage-amount">Количество урона</Label>
+                  <Input
+                    id="damage-amount"
+                    type="number"
+                    min="0"
+                    value={damageAmount}
+                    onChange={(e) => setDamageAmount(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Slider
+                  value={[damageAmount]}
+                  min={0}
+                  max={maxHp}
+                  step={1}
+                  onValueChange={(value) => setDamageAmount(value[0])}
+                />
+                <div className="text-sm text-muted-foreground">
+                  Текущие ХП: {currentHp}/{maxHp} {temporaryHp > 0 ? `(+${temporaryHp} врем.)` : ''}
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => handleTakeDamage(damageAmount)}
+                    variant="destructive"
+                  >
+                    Получить урон
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+              
+              <TabsContent value="heal" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="heal-amount">Количество лечения</Label>
+                  <Input
+                    id="heal-amount"
+                    type="number"
+                    min="0"
+                    value={healAmount}
+                    onChange={(e) => setHealAmount(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Slider
+                  value={[healAmount]}
+                  min={0}
+                  max={maxHp - currentHp}
+                  step={1}
+                  onValueChange={(value) => setHealAmount(value[0])}
+                />
+                <div className="text-sm text-muted-foreground">
+                  Текущие ХП: {currentHp}/{maxHp}
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => handleHeal(healAmount)}
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Получить лечение
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+              
+              <TabsContent value="temp" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="temp-amount">Временные хиты</Label>
+                  <Input
+                    id="temp-amount"
+                    type="number"
+                    min="0"
+                    value={tempHPAmount}
+                    onChange={(e) => setTempHPAmount(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Slider
+                  value={[tempHPAmount]}
+                  min={0}
+                  max={Math.max(20, temporaryHp * 2)}
+                  step={1}
+                  onValueChange={(value) => setTempHPAmount(value[0])}
+                />
+                <div className="text-sm text-muted-foreground">
+                  Текущие временные ХП: {temporaryHp}
+                </div>
+                <div className="text-sm text-cyan-400/80">
+                  Временные хиты не складываются. Используется наибольшее значение.
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => handleAddTempHP(tempHPAmount)}
+                    variant="default"
+                    className="bg-cyan-600 hover:bg-cyan-700"
+                  >
+                    Получить временные ХП
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 };
-
-export default HPBar;

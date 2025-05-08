@@ -1,50 +1,73 @@
+# Welcome to your Lovable project
 
-# D&D Character Sheet Application
+## Project info
 
-Приложение для создания и управления персонажами D&D 5e.
+**URL**: https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667
 
-## Запуск приложения
+## How can I edit this code?
 
-### Windows
+There are several ways of editing your application.
 
-Запустите файл `run-vite.cmd` или выполните в командной строке:
+**Use Lovable**
 
-```bash
-npm install --legacy-peer-deps
-npx vite
+Simply visit the [Lovable Project](https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-### Linux/MacOS
+**Edit a file directly in GitHub**
 
-Выполните в терминале:
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-```bash
-chmod +x run-vite.sh
-./run-vite.sh
-```
+**Use GitHub Codespaces**
 
-Или выполните команды:
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-```bash
-npm install --legacy-peer-deps
-npx vite
-```
+## What technologies are used for this project?
 
-## Структура проекта
+This project is built with:
 
-- `src/` - исходный код приложения
-  - `components/` - React компоненты
-  - `data/` - данные D&D (расы, классы, заклинания и т.д.)
-  - `contexts/` - React контексты для управления состоянием
-  - `hooks/` - пользовательские React хуки
-  - `lib/` - библиотеки и утилиты
-  - `pages/` - страницы приложения
-  - `types/` - TypeScript типы и интерфейсы
-  - `utils/` - вспомогательные функции
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## Функциональность
+## How can I deploy this project?
 
-- Создание персонажей D&D 5e
-- Управление характеристиками, навыками и заклинаниями
-- Справочник по расам, классам и предысториям
-- Поддержка различных тем оформления
+Simply open [Lovable](https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

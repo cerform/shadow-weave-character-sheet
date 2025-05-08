@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -120,13 +119,10 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
       used: slotInfo.used 
     };
     
-    // Используем as unknown для обхода проблемы с типами
-    const updates = { 
+    onUpdate({ 
       spellSlots: newSpellSlots,
       sorceryPoints: newSorceryPoints
-    } as unknown as Partial<Character>;
-    
-    onUpdate(updates);
+    });
     
     toast({
       title: "Слот создан",
@@ -178,13 +174,10 @@ export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
       used: slotInfo.used + 1 
     };
     
-    // Используем as unknown для обхода проблемы с типами
-    const updates = { 
+    onUpdate({ 
       spellSlots: newSpellSlots,
       sorceryPoints: newSorceryPoints
-    } as unknown as Partial<Character>;
-    
-    onUpdate(updates);
+    });
     
     toast({
       title: "Слот конвертирован",

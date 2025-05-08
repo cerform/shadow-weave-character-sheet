@@ -1,124 +1,30 @@
 
-import { Character } from '@/types/character';
-
 /**
- * Рассчитывает модификатор характеристики из значения
+ * Вычисляет модификатор характеристики на основе значения
+ * @param score Значение характеристики
+ * @returns модификатор характеристики
  */
-export const getAbilityModifier = (score: number): number => {
+export function getAbilityModifierValue(score: number | undefined): number {
+  if (score === undefined) return 0;
   return Math.floor((score - 10) / 2);
-};
+}
 
 /**
- * Возвращает строковое представление модификатора характеристики (с плюсом или минусом)
+ * Возвращает строковое представление модификатора с плюсом или минусом
+ * @param score Значение характеристики
+ * @returns Строка вида "+2" или "-1"
  */
-export const getAbilityModifierString = (score: number): string => {
-  const modifier = getAbilityModifier(score);
+export function getAbilityModifierString(score: number | undefined): string {
+  if (score === undefined) return "+0";
+  const modifier = getAbilityModifierValue(score);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-};
+}
 
 /**
- * Проверяет, является ли навык с экспертизой
+ * Вычисляет бонус мастерства на основе уровня
+ * @param level Уровень персонажа
+ * @returns бонус мастерства
  */
-export const isExpertiseSkill = (character: Character, skillName: string): boolean => {
-  return character.expertise ? character.expertise.includes(skillName) : false;
-};
-
-/**
- * Получает бонус навыка для персонажа
- */
-export const getSkillBonus = (character: Character, skillName: string): number => {
-  // Базовый модификатор характеристики
-  const abilityType = getAbilityForSkill(skillName);
-  const abilityScore = character.abilities?.[abilityType] || 10;
-  const abilityMod = getAbilityModifier(abilityScore);
-  
-  // Проверяем владение
-  const isProficient = character.skills?.[skillName] === true;
-  
-  // Проверяем экспертизу
-  const isExpertise = isExpertiseSkill(character, skillName);
-  
-  // Дополнительные бонусы
-  const additionalBonus = character.skillBonuses?.[skillName] || 0;
-  
-  // Расчет итогового бонуса
-  let totalBonus = abilityMod + additionalBonus;
-  
-  if (isProficient) {
-    totalBonus += character.proficiencyBonus || 2;
-  }
-  
-  if (isExpertise) {
-    totalBonus += character.proficiencyBonus || 2;
-  }
-  
-  return totalBonus;
-};
-
-/**
- * Определяет, какая характеристика связана с навыком
- */
-export const getAbilityForSkill = (skillName: string): string => {
-  const skillMap: Record<string, string> = {
-    // Сила
-    'athletics': 'strength',
-    'атлетика': 'strength',
-    
-    // Ловкость
-    'acrobatics': 'dexterity',
-    'sleight_of_hand': 'dexterity',
-    'stealth': 'dexterity',
-    'акробатика': 'dexterity',
-    'ловкость_рук': 'dexterity',
-    'скрытность': 'dexterity',
-    
-    // Интеллект
-    'arcana': 'intelligence',
-    'history': 'intelligence',
-    'investigation': 'intelligence',
-    'nature': 'intelligence',
-    'religion': 'intelligence',
-    'магия': 'intelligence',
-    'история': 'intelligence',
-    'расследование': 'intelligence',
-    'природа': 'intelligence',
-    'религия': 'intelligence',
-    
-    // Мудрость
-    'animal_handling': 'wisdom',
-    'insight': 'wisdom',
-    'medicine': 'wisdom',
-    'perception': 'wisdom',
-    'survival': 'wisdom',
-    'уход_за_животными': 'wisdom',
-    'проницательность': 'wisdom',
-    'медицина': 'wisdom',
-    'внимательность': 'wisdom',
-    'выживание': 'wisdom',
-    
-    // Харизма
-    'deception': 'charisma',
-    'intimidation': 'charisma',
-    'performance': 'charisma',
-    'persuasion': 'charisma',
-    'обман': 'charisma',
-    'запугивание': 'charisma',
-    'выступление': 'charisma',
-    'убеждение': 'charisma'
-  };
-  
-  return skillMap[skillName] || 'dexterity';
-};
-
-/**
- * Получает список всех навыков сгруппированных по характеристикам
- */
-export const getSkillsByAbility = (): Record<string, string[]> => {
-  return {
-    strength: ['athletics'],
-    dexterity: ['acrobatics', 'sleight_of_hand', 'stealth'],
-    intelligence: ['arcana', 'history', 'investigation', 'nature', 'religion'],
-    wisdom: ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
-    charisma: ['deception', 'intimidation', 'performance', 'persuasion']
-  };
-};
+export function getProficiencyBonus(level: number): number {
+  return Math.floor((level - 1) / 4) + 2;
+}

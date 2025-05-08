@@ -1,33 +1,12 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
 /**
  * Конвертирует массив CharacterSpell в массив SpellData
  */
 export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellDataHelper(spell));
-};
-
-/**
- * Преобразует CharacterSpell к SpellData
- */
-export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
-  return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level || 0,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
-    classes: spell.classes || [],
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false
-  };
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };
 
 /**
@@ -78,6 +57,27 @@ export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
 export const getSpellLevel = (spell: CharacterSpell | string): number => {
   if (typeof spell === 'string') return 0; // По умолчанию заговор
   return spell.level;
+};
+
+/**
+ * Преобразует CharacterSpell к SpellData
+ */
+export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
+  };
 };
 
 /**

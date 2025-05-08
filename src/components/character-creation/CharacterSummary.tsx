@@ -10,7 +10,7 @@ interface CharacterSummaryProps {
 
 const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   // Функция форматирования списков для отображения
-  const formatList = (list: string[] | undefined): string => {
+  const formatList = (list: string[] | undefined | null): string => {
     if (!list || list.length === 0) return 'Нет';
     return list.join(', ');
   };
@@ -103,7 +103,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
             <h4 className="font-medium mb-1">Владения и навыки:</h4>
             <p className="text-sm">
               {character.proficiencies && typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && 
-                'skills' in character.proficiencies && Array.isArray(character.proficiencies.skills) ? 
+                'skills' in character.proficiencies && character.proficiencies.skills ? 
                 formatList(character.proficiencies.skills) : 
                 'Нет навыков'}
             </p>

@@ -1,10 +1,9 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Character, CharacterSpell } from '@/types/character';
-import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils'; // Обновленный импорт
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Book, CheckCircle, Circle } from 'lucide-react';
@@ -30,6 +29,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
 
   // Нормализуем заклинания персонажа
   const spells = useMemo(() => {
+    if (!character.spells || !Array.isArray(character.spells)) return [];
     return normalizeSpells(character);
   }, [character.spells]);
 
@@ -124,54 +124,58 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
             <TabsContent value="all" className="space-y-4">
               {Object.entries(spellsByLevel)
                 .sort(([a], [b]) => Number(a) - Number(b))
-                .map(([level, spellList]) => (
-                  <div key={`level-group-${level}`} className="space-y-2">
-                    <h3 className="text-lg font-medium" style={{ color: currentTheme.textColor }}>
-                      {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {spellList.map((spell: CharacterSpell) => (
-                        <div 
-                          key={`all-${spell.name}`} 
-                          className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
-                          style={{ borderColor: spell.prepared ? getSpellLevelColor(spell.level || 0) : 'inherit' }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
-                              className="text-white"
-                            >
-                              {spell.level === 0 ? 'Заговор' : spell.level}
-                            </Badge>
-                            <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button 
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSpellClick(spell)}
-                            >
-                              <Book className="h-4 w-4" />
-                            </Button>
-                            {onUpdate && spell.level > 0 && (
+                .map(([level, spellList]) => {
+                  // Проверяем, является ли spellList массивом перед вызовом map
+                  const spells = Array.isArray(spellList) ? spellList : [];
+                  return (
+                    <div key={`level-group-${level}`} className="space-y-2">
+                      <h3 className="text-lg font-medium" style={{ color: currentTheme.textColor }}>
+                        {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {spells.map((spell: CharacterSpell) => (
+                          <div 
+                            key={`all-${spell.name}`} 
+                            className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                            style={{ borderColor: spell.prepared ? getSpellLevelColor(spell.level || 0) : 'inherit' }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
+                                className="text-white"
+                              >
+                                {spell.level === 0 ? 'Заговор' : spell.level}
+                              </Badge>
+                              <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
                               <Button 
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleTogglePrepared(spell.name)}
+                                onClick={() => handleSpellClick(spell)}
                               >
-                                {spell.prepared ? (
-                                  <CheckCircle className="h-4 w-4 text-primary" />
-                                ) : (
-                                  <Circle className="h-4 w-4" />
-                                )}
+                                <Book className="h-4 w-4" />
                               </Button>
-                            )}
+                              {onUpdate && spell.level > 0 && (
+                                <Button 
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTogglePrepared(spell.name)}
+                                >
+                                  {spell.prepared ? (
+                                    <CheckCircle className="h-4 w-4 text-primary" />
+                                  ) : (
+                                    <Circle className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </TabsContent>
 
             {/* Вкладка "Подготовленные заклинания" */}
@@ -213,43 +217,47 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
             {/* Вкладки для каждого уровня заклинаний */}
             {Object.entries(spellsByLevel)
               .sort(([a], [b]) => Number(a) - Number(b))
-              .map(([level, spellList]) => (
-                <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {spellList.map((spell: CharacterSpell) => (
-                      <div 
-                        key={`level-spell-${spell.name}`} 
-                        className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
-                        style={{ borderColor: spell.prepared ? getSpellLevelColor(Number(level)) : 'inherit' }}
-                      >
-                        <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
-                        <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSpellClick(spell)}
-                          >
-                            <Book className="h-4 w-4" />
-                          </Button>
-                          {onUpdate && Number(level) > 0 && (
+              .map(([level, spellList]) => {
+                // Проверяем, является ли spellList массивом перед вызовом map
+                const spells = Array.isArray(spellList) ? spellList : [];
+                return (
+                  <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {spells.map((spell: CharacterSpell) => (
+                        <div 
+                          key={`level-spell-${spell.name}`} 
+                          className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                          style={{ borderColor: spell.prepared ? getSpellLevelColor(Number(level)) : 'inherit' }}
+                        >
+                          <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
+                          <div className="flex items-center gap-1">
                             <Button 
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleTogglePrepared(spell.name)}
+                              onClick={() => handleSpellClick(spell)}
                             >
-                              {spell.prepared ? (
-                                <CheckCircle className="h-4 w-4 text-primary" />
-                              ) : (
-                                <Circle className="h-4 w-4" />
-                              )}
+                              <Book className="h-4 w-4" />
                             </Button>
-                          )}
+                            {onUpdate && Number(level) > 0 && (
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleTogglePrepared(spell.name)}
+                              >
+                                {spell.prepared ? (
+                                  <CheckCircle className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Circle className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-              ))}
+                      ))}
+                    </div>
+                  </TabsContent>
+                );
+              })}
           </ScrollArea>
         </Tabs>
       </CardContent>

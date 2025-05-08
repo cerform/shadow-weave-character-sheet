@@ -29,11 +29,7 @@ const CharacterHitPointsCalculator: React.FC<CharacterHitPointsCalculatorProps> 
 
   // Обработчик завершения броска HP
   const handleHitPointsRolled = (hp: number) => {
-    // Обновляем maxHp и hp
-    updateCharacter({ 
-      maxHp: hp,
-      hp: hp // Используем hp вместо currentHp, т.к. это поле определено в Character
-    });
+    updateCharacter({ maxHp: hp, currentHp: hp });
     setIsReady(true);
   };
 

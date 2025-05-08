@@ -144,49 +144,30 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
       }
       
       // Add features
-      // Исправляем проблему с features, проверяя тип перед доступом к length
-      if (character.features) {
-        let featuresArray: string[] = [];
-        
-        if (Array.isArray(character.features)) {
-          if (typeof character.features[0] === 'string') {
-            featuresArray = character.features as string[];
-          } else {
-            // Если это массив объектов с полем name
-            featuresArray = (character.features as any[]).map(f => f.name || f.toString());
-          }
-        } else {
-          // Если это объект с категориями
-          const featObj = character.features as { race: string[], class: string[], background: string[] };
-          if (featObj.race) featuresArray = featuresArray.concat(featObj.race);
-          if (featObj.class) featuresArray = featuresArray.concat(featObj.class);
-          if (featObj.background) featuresArray = featuresArray.concat(featObj.background);
-        }
-        
-        if (featuresArray.length > 0) {
-          autoTable(doc, {
-            startY: yPosition,
-            head: [['Особенности и черты']],
-            body: featuresArray.map(feature => [feature]),
-          });
+      if (character.features && character.features.length > 0) {
+        const featuresArray = Array.isArray(character.features) 
+          ? (typeof character.features[0] === 'string' 
+              ? character.features 
+              : (character.features as any[]).map(f => f.name || f.toString()))
+          : [];
           
-          // Update position after table
-          yPosition = (doc as any).lastAutoTable.finalY + 10;
-        }
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Особенности и черты']],
+          body: featuresArray.map(feature => [feature]),
+        });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
       }
       
       // Add spells
       if (character.spells && character.spells.length > 0) {
-        const spellsArray: string[] = [];
-        
-        character.spells.forEach(spell => {
-          if (typeof spell === 'string') {
-            spellsArray.push(spell);
-          } else {
-            // Конвертируем CharacterSpell в string
-            spellsArray.push(spell.name);
-          }
-        });
+        const spellsArray = Array.isArray(character.spells)
+          ? (typeof character.spells[0] === 'string'
+              ? character.spells as string[]
+              : (character.spells as CharacterSpell[]).map(s => s.name))
+          : [];
             
         autoTable(doc, {
           startY: yPosition,

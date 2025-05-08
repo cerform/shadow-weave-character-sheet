@@ -15,15 +15,13 @@ import SpellSlotManager from './SpellSlotManager';
 
 interface CharacterSheetSpellsProps {
   character?: Character;
-  onUpdate?: (updates: Partial<Character>) => void;
 }
 
-const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: propCharacter, onUpdate: propOnUpdate }) => {
+const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: propCharacter }) => {
   const { character: contextCharacter, updateCharacter } = useCharacter();
   const { theme } = useTheme();
   
   const character = propCharacter || contextCharacter;
-  const onUpdate = propOnUpdate || updateCharacter;
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
@@ -39,15 +37,8 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         if (typeof spell === 'string') {
           // Если заклинание представлено строкой, создаем минимальный объект
           const basicSpell: CharacterSpell = {
-            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
             name: spell,
             level: 0, // По умолчанию считаем заговором
-            school: 'Универсальная',
-            castingTime: '1 действие',
-            range: 'На себя',
-            components: '',
-            duration: 'Мгновенная',
-            description: 'Нет описания',
             prepared: true
           };
           
@@ -100,8 +91,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         return s;
       });
       
-      const updatedCharacter = { ...character, spells: updatedSpells };
-      onUpdate(updatedCharacter);
+      updateCharacter({ spells: updatedSpells });
     }
   };
   
@@ -138,13 +128,10 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   return (
     <div className="space-y-4">
       {/* Панель использования заклинаний */}
-      <SpellCastingPanel character={character} onUpdate={onUpdate} />
+      <SpellCastingPanel character={character} />
       
       {/* Панель ячеек заклинаний */}
-      <SpellSlotManager 
-        character={character} 
-        onUpdate={onUpdate}
-      />
+      <SpellSlotManager character={character} />
       
       {/* Информация о подготовке заклинаний */}
       {needsPreparation() && (

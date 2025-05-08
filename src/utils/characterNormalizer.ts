@@ -2,128 +2,80 @@
 import { Character } from '@/types/character';
 
 /**
- * Нормализует объект персонажа, обеспечивая правильное форматирование данных и заполнение обязательных полей
+ * Нормализует данные персонажа, исправляя распространенные проблемы
  * @param character Исходный объект персонажа
- * @returns Нормализованный объект персонажа
+ * @returns Нормализованные данные персонажа
  */
-export function normalizeCharacter(character: Partial<Character>): Character {
-  // Создаем базовую структуру персонажа
-  const normalizedCharacter: Character = {
-    id: character.id || generateRandomId(),
-    name: character.name || 'Безымянный герой',
-    race: character.race || '',
-    class: character.class || '',
-    className: character.className || character.class || '',
-    level: character.level || 1,
-    background: character.background || '',
-    alignment: character.alignment || '',
-    experience: character.experience || 0,
-    
-    // Характеристики
-    abilities: character.abilities || {
-      strength: character.strength || 10,
-      dexterity: character.dexterity || 10,
-      constitution: character.constitution || 10,
-      intelligence: character.intelligence || 10,
-      wisdom: character.wisdom || 10,
-      charisma: character.charisma || 10,
-      STR: character.strength || 10,
-      DEX: character.dexterity || 10,
-      CON: character.constitution || 10,
-      INT: character.intelligence || 10,
-      WIS: character.wisdom || 10,
-      CHA: character.charisma || 10,
-    },
-    
-    // Здоровье
-    maxHp: character.maxHp || character.hitPoints?.maximum || 10,
-    hp: character.hp || character.currentHp || character.hitPoints?.current || 10,
-    currentHp: character.currentHp || character.hp || character.hitPoints?.current || 10,
-    temporaryHp: character.temporaryHp || character.hitPoints?.temporary || 0,
-    
-    hitDice: character.hitDice || {
-      total: character.level || 1,
-      used: 0,
-      type: 'd8'
-    },
-    
-    armorClass: character.armorClass || 10,
-    
-    // Инициатива и скорость
-    initiative: character.initiative || 0,
-    speed: character.speed || 30,
-    
-    // Профессии и навыки
-    proficiencyBonus: character.proficiencyBonus || 2,
-    proficiencies: character.proficiencies || {
-      weapons: [],
-      tools: [],
-      languages: [],
-      skills: []
-    },
-    
-    // Снаряжение
-    inventory: character.inventory || [],
-    equipment: character.equipment || {
-      weapons: [],
-      tools: [],
-      languages: [],
-      items: []
-    },
-    
-    // Особенности
-    features: character.features || {
-      race: [],
-      class: [],
-      background: []
-    },
-    
-    // Заклинания
-    spells: character.spells || [],
-    
-    // Прочее
-    notes: character.notes || '',
-  };
+export function normalizeCharacterData(character: Character): Character {
+  if (!character) return character;
   
-  // Обеспечиваем совместимость с разными форматами данных
-  if (!normalizedCharacter.hitPoints) {
-    normalizedCharacter.hitPoints = {
-      maximum: normalizedCharacter.maxHp,
-      current: normalizedCharacter.currentHp,
-      temporary: normalizedCharacter.temporaryHp
-    };
+  // Создаем копию объекта для модификации
+  const normalized: Character = { ...character };
+  
+  // Убедимся, что обязательные поля существуют
+  normalized.name = normalized.name || 'Безымянный персонаж';
+  normalized.level = normalized.level ?? 1;
+  normalized.experience = normalized.experience ?? 0;
+  
+  // Разрешаем несоответствия между полями класса
+  if (normalized.class && !normalized.className) {
+    normalized.className = normalized.class;
+  } else if (!normalized.class && normalized.className) {
+    normalized.class = normalized.className;
   }
   
-  // Копируем stats, если они есть
-  if (character.stats) {
-    normalizedCharacter.stats = { ...character.stats };
-  } else {
-    // Если stats нет, создаем их из abilities
-    normalizedCharacter.stats = {
-      strength: normalizedCharacter.abilities.strength,
-      dexterity: normalizedCharacter.abilities.dexterity,
-      constitution: normalizedCharacter.abilities.constitution,
-      intelligence: normalizedCharacter.abilities.intelligence,
-      wisdom: normalizedCharacter.abilities.wisdom,
-      charisma: normalizedCharacter.abilities.charisma
-    };
+  // Нормализация данных о характеристиках
+  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+  
+  // Проверяем существование объекта stats
+  if (!normalized.stats) {
+    normalized.stats = {};
   }
   
-  // Обеспечиваем прямой доступ к характеристикам
-  normalizedCharacter.strength = normalizedCharacter.stats.strength;
-  normalizedCharacter.dexterity = normalizedCharacter.stats.dexterity;
-  normalizedCharacter.constitution = normalizedCharacter.stats.constitution;
-  normalizedCharacter.intelligence = normalizedCharacter.stats.intelligence;
-  normalizedCharacter.wisdom = normalizedCharacter.stats.wisdom;
-  normalizedCharacter.charisma = normalizedCharacter.stats.charisma;
+  // Проходим по всем характеристикам
+  abilities.forEach(ability => {
+    // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
+    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
+      normalized.stats[ability] = normalized[ability];
+    } 
+    // Если значение в stats установлено, но отсутствует в корне объекта
+    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
+      normalized[ability] = normalized.stats[ability];
+    }
+    
+    // Если значения различаются, приоритет у поля stats
+    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
+      normalized[ability] = normalized.stats[ability];
+    }
+  });
   
-  return normalizedCharacter;
+  // Убедимся, что массивы инициализированы
+  if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
+  if (!Array.isArray(normalized.features)) normalized.features = [];
+  if (!Array.isArray(normalized.spells)) normalized.spells = [];
+  if (!Array.isArray(normalized.languages)) normalized.languages = [];
+  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
+  
+  // Проверяем наличие userId
+  if (!normalized.userId) {
+    console.warn(`Персонаж '${normalized.name}' не имеет userId`);
+  }
+  
+  return normalized;
 }
 
 /**
- * Генерирует случайный идентификатор для персонажа
+ * Нормализует массив персонажей
+ * @param characters Массив персонажей
+ * @returns Нормализованный массив персонажей
  */
-function generateRandomId(): string {
-  return `char_${Math.random().toString(36).substring(2, 9)}`;
+export function normalizeCharacters(characters: Character[]): Character[] {
+  if (!Array.isArray(characters)) {
+    console.error('normalizeCharacters: не массив', characters);
+    return [];
+  }
+  
+  return characters
+    .filter(char => char !== null && char !== undefined)
+    .map(normalizeCharacterData);
 }
-

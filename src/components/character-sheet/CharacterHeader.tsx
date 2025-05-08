@@ -1,10 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { Card } from "@/components/ui/card";
 import { Character } from '@/types/character';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { normalizeCharacter } from '@/utils/characterNormalizer';
+import { normalizeCharacterData } from '@/utils/characterNormalizer';
 
 interface CharacterHeaderProps {
   character: Character;
@@ -66,37 +64,24 @@ export const CharacterHeader = ({ character, onUpdate }: CharacterHeaderProps) =
   if (!character) {
     return (
       <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle>Загрузка персонажа...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CardDescription>
-            <h1 className="text-2xl font-bold text-center mb-2 animate-pulse">
-              Загрузка персонажа...
-            </h1>
-          </CardDescription>
-        </CardContent>
+        <h1 className="text-2xl font-bold text-center mb-2 animate-pulse">
+          Загрузка персонажа...
+        </h1>
       </Card>
     );
   }
 
   return (
     <Card className="p-4 bg-card/30 backdrop-blur-sm border-primary/20">
-      <CardHeader>
-        <CardTitle>{character.name || 'Безымянный герой'}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription>
-          <div className="flex justify-center items-center gap-2">
-            <span className="text-muted-foreground">{getCharacterClass()}</span>
-            {character.level !== undefined && (
-              <span className="text-muted-foreground">Уровень {character.level}</span>
-            )}
-          </div>
-        </CardDescription>
-      </CardContent>
+      <h1 className="text-2xl font-bold text-center mb-2">
+        {character.name || 'Безымянный герой'}
+      </h1>
+      <div className="flex justify-center items-center gap-2">
+        <span className="text-muted-foreground">{getCharacterClass()}</span>
+        {character.level !== undefined && (
+          <span className="text-muted-foreground">Уровень {character.level}</span>
+        )}
+      </div>
     </Card>
   );
 };
-
-export default CharacterHeader;

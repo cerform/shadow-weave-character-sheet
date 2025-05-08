@@ -1,65 +1,84 @@
-// Import modules
-import { useState } from 'react';
-import { Character } from '@/types/character';
-import { calculateAbilityModifier } from '@/utils/characterUtils';
 
-export const useLevelUp = (character: Character, onUpdate: (updates: Partial<Character>) => void) => {
-  const [leveling, setLeveling] = useState(false);
-  const [newLevel, setNewLevel] = useState(character.level || 1);
-  
-  const startLeveling = () => {
-    setLeveling(true);
-    setNewLevel(character.level || 1);
+import { useState, useCallback } from 'react';
+import { useCharacter } from '@/contexts/CharacterContext';
+import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { Character } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
+
+const useLevelUp = () => {
+  const { character, setCharacter, updateCharacter, saveCurrentCharacter } = useCharacter();
+  const [isLevelingUp, setIsLevelingUp] = useState(false);
+  const { toast } = useToast();
+
+  const handleLevelUp = async () => {
+    setIsLevelingUp(true);
+    if (!character) {
+      setIsLevelingUp(false);
+      return;
+    }
+
+    const newLevel = character.level + 1;
+
+    // Проверяем, не превышает ли новый уровень максимальный уровень (20)
+    if (newLevel > 20) {
+      setIsLevelingUp(false);
+      toast({
+        title: "Максимальный уровень",
+        description: "Вы достигли максимального уровня!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Обновляем данные о заклинаниях для магических классов
+      if (character.class) {
+        const spellsInfo = calculateAvailableSpellsByClassAndLevel(character.class, newLevel);
+        console.log('Новые данные о заклинаниях:', spellsInfo);
+        
+        // Обновляем персонажа с новыми данными о заклинаниях и уровнем
+        updateCharacter({
+          level: newLevel,
+          // Используем правильные названия полей для Character
+          spellcasting: {
+            // Обновляем информацию о заклинаниях
+            preparedSpellsLimit: spellsInfo.knownSpells
+          },
+          // Если нужно, добавляем другие поля для заклинаний
+          // Этих полей нет в типе Character, поэтому мы не можем их обновить напрямую
+          // maxSpellLevel: spellsInfo.maxLevel
+        });
+        
+        // Сохраняем обновленного персонажа
+        await saveCurrentCharacter();
+        
+        toast({
+          title: "Уровень повышен!",
+          description: `Персонаж достиг ${newLevel} уровня.`,
+        });
+      } else {
+        // Для не-магических классов просто обновляем уровень
+        updateCharacter({ level: newLevel });
+        await saveCurrentCharacter();
+        
+        toast({
+          title: "Уровень повышен!",
+          description: `Персонаж достиг ${newLevel} уровня.`,
+        });
+      }
+    } catch (error) {
+      console.error("Ошибка при повышении уровня:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось повысить уровень персонажа.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLevelingUp(false);
+    }
   };
-  
-  const cancelLeveling = () => {
-    setLeveling(false);
-    setNewLevel(character.level || 1);
-  };
-  
-  const confirmLevelUp = () => {
-    if (newLevel <= 0) return;
-    
-    // Update character level
-    onUpdate({
-      level: newLevel
-    });
-    
-    updateSpellcasting(newLevel);
-    
-    setLeveling(false);
-  };
-  
-  const updateSpellcasting = (newLevel: number) => {
-    if (!character.spellcasting) return;
-    
-    // Calculate new spell values
-    const ability = character.spellcasting.ability || 'intelligence';
-    const abilityScore = character.abilities?.[ability.toLowerCase() as keyof typeof character.abilities] || 10;
-    const abilityMod = calculateAbilityModifier(abilityScore);
-    const profBonus = 1 + Math.ceil(newLevel / 4);
-    
-    const updatedSpellcasting = {
-      ...character.spellcasting,
-      level: newLevel,
-      saveDC: 8 + profBonus + abilityMod,
-      attackBonus: profBonus + abilityMod,
-      preparedSpellsLimit: newLevel + abilityMod
-    };
-    
-    onUpdate({
-      spellcasting: updatedSpellcasting
-    });
-  };
-  
-  return {
-    leveling,
-    newLevel,
-    setNewLevel,
-    startLeveling,
-    cancelLeveling,
-    confirmLevelUp
-  };
+
+  return { handleLevelUp, isLevelingUp };
 };
 
 export default useLevelUp;

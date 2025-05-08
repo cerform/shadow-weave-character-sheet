@@ -1,160 +1,208 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CharactersTable } from '@/components/characters/CharactersTable';
-import { Character } from '@/types/character';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronRight, ChevronDown, Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from "@/components/ui/button";
+import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
+import { useAuth } from '@/hooks/use-auth';
 import { useCharacter } from '@/contexts/CharacterContext';
+import CharactersTable from "@/components/characters/CharactersTable";
+import OBSLayout from '@/components/OBSLayout';
+import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
+import CharactersPageDebugger from '@/components/debug/CharactersPageDebugger';
+import ConsoleErrorCatcher from '@/components/debug/ConsoleErrorCatcher';
+import ErrorDisplay from '@/components/characters/ErrorDisplay';
+import LoadingState from '@/components/characters/LoadingState';
+import { toast } from 'sonner';
+import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
 const CharactersListPage: React.FC = () => {
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(true);
-  const { toast } = useToast();
-  const { getUserCharacters } = useCharacter();
   const navigate = useNavigate();
-
+  const { isAuthenticated, user } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { characters, loading, error, deleteCharacter, getUserCharacters } = useCharacter();
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+  const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
+  
+  // При монтировании компонента обновляем список персонажей
   useEffect(() => {
-    const fetchCharacters = async () => {
-      try {
-        setLoading(true);
-        const userCharacters = await getUserCharacters('current-user');
-        setCharacters(userCharacters || []);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching characters:', err);
-        setError('Не удалось загрузить персонажей');
-        toast({
-          title: 'Ошибка',
-          description: 'Не удалось загрузить персонажей',
-          variant: 'destructive'
-        });
-      } finally {
-        setLoading(false);
-      }
+    if (isAuthenticated) {
+      refreshCharacters();
+    }
+  }, [isAuthenticated]);
+  
+  // Отладочная информация
+  useEffect(() => {
+    console.log('CharactersListPage: Монтирование компонента');
+    console.log('CharactersListPage: isAuthenticated =', isAuthenticated);
+    console.log('CharactersListPage: Количество персонажей =', characters?.length || 0);
+    console.log('CharactersListPage: userId =', user?.uid);
+    
+    return () => {
+      console.log('CharactersListPage: Размонтирование компонента');
     };
-
-    fetchCharacters();
-  }, [getUserCharacters, toast]);
-
-  const handleCreateCharacter = () => {
-    navigate('/character-creation');
-  };
-
-  const handleViewCharacter = (id: string) => {
-    navigate(`/character/${id}`);
-  };
-
-  const handleEditCharacter = (id: string) => {
-    navigate(`/character/${id}/edit`);
-  };
-
-  const handleDeleteCharacter = async (id: string) => {
+  }, []);
+  
+  // При изменении списка персонажей выводим отладочную информацию
+  useEffect(() => {
+    console.log('CharactersListPage: Обновление списка персонажей, количество:', characters?.length || 0);
+    if (error) {
+      console.error('CharactersListPage: Ошибка:', error);
+    }
+  }, [characters, error]);
+  
+  // Запускаем диагностику при возникновении ошибки
+  useEffect(() => {
+    if (error) {
+      runDiagnostics();
+    }
+  }, [error]);
+  
+  const runDiagnostics = async () => {
     try {
-      const updatedCharacters = characters.filter(char => char.id !== id);
-      setCharacters(updatedCharacters);
-      toast({
-        title: 'Успешно',
-        description: 'Персонаж удален',
-      });
-    } catch (err) {
-      console.error('Error deleting character:', err);
-      setError('Не удалось удалить персонажа');
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить персонажа',
-        variant: 'destructive'
-      });
+      console.log('CharactersListPage: Запуск диагностики');
+      const results = await diagnoseCharacterLoading();
+      console.log('CharactersListPage: Результаты диагностики:', results);
+      setDiagnosticResults(results);
+      
+      if (!results.success) {
+        toast.error('Диагностика выявила проблемы с загрузкой данных');
+      }
+    } catch (e) {
+      console.error('CharactersListPage: Ошибка диагностики:', e);
+    }
+  };
+  
+  const refreshCharacters = async () => {
+    try {
+      setIsRefreshing(true);
+      console.log('CharactersListPage: Начинаем обновление списка персонажей');
+      await getUserCharacters();
+      console.log('CharactersListPage: Список персонажей обновлен успешно');
+    } catch (error) {
+      console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
-  return (
-    <div className="container mx-auto p-4">
-      {/* Добавляем компонент навигации */}
-      <CharacterNavigation />
-      
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full border rounded-lg shadow-sm bg-card mb-6 transition-all duration-200"
-      >
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </Button>
-            </CollapsibleTrigger>
-            <h2 className="text-2xl font-semibold">Мои персонажи</h2>
-          </div>
-          <Button onClick={handleCreateCharacter} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Создать персонажа
-          </Button>
-        </div>
-        
-        <CollapsibleContent>
-          <div className="p-4">
-            <CharactersTable 
-              characters={characters}
-              loading={loading}
-              error={error}
-              onView={handleViewCharacter}
-              onEdit={handleEditCharacter}
-              onDelete={handleDeleteCharacter}
-            />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-      
-      {!isOpen && (
-        <div className="mb-4">
+  // Если пользователь не авторизован, предлагаем авторизоваться
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80">
+        <div className="max-w-md text-center p-6">
+          <h1 className="text-3xl font-bold mb-6">Требуется авторизация</h1>
+          <p className="mb-8">Для доступа к персонажам необходимо войти в систему</p>
           <Button 
-            onClick={handleCreateCharacter}
-            variant="outline"
-            className="w-full flex justify-between items-center py-2"
+            onClick={() => navigate('/auth', { state: { returnPath: '/characters' } })}
+            className="w-full"
           >
-            <span>Создать нового персонажа</span>
-            <Plus className="h-4 w-4" />
+            Войти
           </Button>
-        </div>
-      )}
-      
-      <div className={`space-y-4 transition-opacity ${isOpen ? 'opacity-0 hidden' : 'opacity-100'}`}>
-        <h2 className="text-xl font-semibold">Возможности игры</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Создание персонажа</h3>
-              <p className="text-sm text-muted-foreground">
-                Создавайте персонажей с разными классами, расами и характеристиками
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Присоединение к сессии</h3>
-              <p className="text-sm text-muted-foreground">
-                Присоединяйтесь к игровым сессиям с другими игроками
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Справочник правил</h3>
-              <p className="text-sm text-muted-foreground">
-                Доступ к базовым правилам D&D 5e
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
-    </div>
+    );
+  }
+  
+  return (
+    <ErrorBoundary>
+      <OBSLayout
+        topPanelContent={
+          <div className="flex justify-between items-center p-3">
+            <h1 className="text-xl font-bold" style={{ color: currentTheme.textColor }}>
+              Персонажи
+            </h1>
+            <IconOnlyNavigation includeThemeSelector />
+          </div>
+        }
+      >
+        <div className="container mx-auto p-6 max-w-5xl">
+          {/* Добавляем компоненты отладки */}
+          <ConsoleErrorCatcher />
+          <CharactersPageDebugger />
+          
+          {/* Навигация по страницам персонажей */}
+          <CharacterNavigation />
+          
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: currentTheme.accent }}>
+              Список персонажей
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshCharacters}
+                disabled={isRefreshing || loading}
+              >
+                <RefreshCw size={16} className={`mr-2 ${isRefreshing || loading ? 'animate-spin' : ''}`} />
+                Обновить
+              </Button>
+              <Button
+                onClick={() => navigate('/character-creation')}
+              >
+                <Plus size={16} className="mr-2" />
+                Создать персонажа
+              </Button>
+            </div>
+          </div>
+          
+          {/* Обработка состояния загрузки */}
+          {loading && <LoadingState />}
+          
+          {/* Обработка ошибок */}
+          {error && !loading && (
+            <ErrorDisplay 
+              errorMessage={error} 
+              onRetry={refreshCharacters} 
+              technicalDetails={diagnosticResults}
+            />
+          )}
+          
+          {/* Отображение данных после загрузки */}
+          {!loading && !error && (
+            <>
+              {/* Если есть результаты диагностики и они содержат ошибки */}
+              {diagnosticResults && !diagnosticResults.success && (
+                <Card className="mb-6 bg-amber-900/20 border-amber-500/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-amber-400">
+                      <AlertTriangle size={18} />
+                      Проблемы с загрузкой данных
+                    </CardTitle>
+                    <CardDescription>
+                      Обнаружены потенциальные проблемы с доступом к данным
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-amber-200 mb-2">{diagnosticResults.error}</p>
+                    <pre className="whitespace-pre-wrap text-xs bg-black/40 p-3 rounded max-h-40 overflow-auto">
+                      {JSON.stringify(diagnosticResults.debug, null, 2)}
+                    </pre>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" onClick={runDiagnostics}>
+                      Повторить диагностику
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+              
+              <CharactersTable
+                characters={characters || []}
+                onDelete={deleteCharacter}
+              />
+            </>
+          )}
+        </div>
+      </OBSLayout>
+    </ErrorBoundary>
   );
 };
 

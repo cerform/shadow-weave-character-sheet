@@ -33,10 +33,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Здоровье:</span>
               <div className="flex items-center">
-                <span style={{ color: currentTheme.textColor }}>
-                  {character.currentHp !== undefined ? character.currentHp : (character.hitPoints?.current || 0)}/
-                  {character.maxHp || character.hitPoints?.maximum || 0}
-                </span>
+                <span style={{ color: currentTheme.textColor }}>{character.currentHp || 0}/{character.maxHp || 0}</span>
               </div>
             </div>
             
@@ -71,31 +68,20 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => {
-              // Определяем значение для отображения
-              let displayValue: React.ReactNode = '';
-              
-              if (skillValue === null) {
-                displayValue = '+0';
-              } else if (typeof skillValue === 'number') {
-                displayValue = skillValue >= 0 ? `+${skillValue}` : `${skillValue}`;
-              } else if (typeof skillValue === 'object' && skillValue !== null) {
-                if ('bonus' in skillValue && skillValue.bonus !== undefined) {
-                  const bonus = skillValue.bonus;
-                  displayValue = typeof bonus === 'number' && bonus >= 0 ? `+${bonus}` : `${bonus}`;
-                } else if ('value' in skillValue && skillValue.value !== undefined) {
-                  const val = skillValue.value;
-                  displayValue = typeof val === 'number' && val >= 0 ? `+${val}` : `${val}`;
-                }
-              }
-              
-              return (
-                <div key={`skill-${skillName}`} className="flex justify-between items-center">
-                  <span style={{ color: currentTheme.textColor }}>{skillName}</span>
-                  <span style={{ color: currentTheme.textColor }}>{displayValue}</span>
-                </div>
-              );
-            })}
+            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => (
+              <div key={`skill-${skillName}`} className="flex justify-between items-center">
+                <span style={{ color: currentTheme.textColor }}>{skillName}</span>
+                <span style={{ color: currentTheme.textColor }}>
+                  {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
+                  {typeof skillValue === 'object' && 'value' in skillValue ? 
+                    (skillValue.value !== undefined && Number(skillValue.value) >= 0 ? 
+                      `+${skillValue.value}` : skillValue.value) : ''}
+                  {typeof skillValue === 'object' && 'bonus' in skillValue ? 
+                    (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
+                      `+${skillValue.bonus}` : skillValue.bonus) : ''}
+                </span>
+              </div>
+            ))}
             {(!character.skills || Object.keys(character.skills).length === 0) && (
               <div className="text-center text-muted-foreground">
                 Нет доступных навыков

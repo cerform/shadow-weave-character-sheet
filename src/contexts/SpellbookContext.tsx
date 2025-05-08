@@ -1,150 +1,314 @@
 
-import React, { createContext, useState, ReactNode } from 'react';
-import { Character, CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
+import { useCharacter } from './CharacterContext';
+import { useToast } from '@/hooks/use-toast';
+import { getAllSpells } from '@/data/spells';
+import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
 
-export interface SpellbookContextType {
-  selectedSpells: CharacterSpell[];
+interface SpellbookContextType {
+  selectedSpells: SpellData[];
   availableSpells: SpellData[];
-  filteredSpells?: SpellData[];
-  searchTerm?: string;
-  setSearchTerm?: (term: string) => void;
-  activeLevel?: number[];
-  activeSchool?: string[];
-  activeClass?: string[];
-  allLevels?: number[];
-  allSchools?: string[];
-  allClasses?: string[];
-  selectedSpell?: SpellData | null;
-  isModalOpen?: boolean;
-  toggleLevel?: (level: number) => void;
-  toggleSchool?: (school: string) => void;
-  toggleClass?: (className: string) => void;
-  clearFilters?: () => void;
-  handleOpenSpell?: (spell: SpellData) => void;
-  handleClose?: () => void;
-  getBadgeColor?: (level: number) => string;
-  getSchoolBadgeColor?: (school: string) => string;
-  formatClasses?: (classes: string[] | string | undefined) => string;
-  addSpell: (spell: SpellData | CharacterSpell) => void;
+  setSelectedSpells: (spells: SpellData[]) => void;
+  addSpell: (spell: SpellData) => void;
   removeSpell: (spellId: string) => void;
-  getSpellLimits: (characterClass: string, level: number) => { maxKnown: number; maxPrepared: number };
-  getSelectedSpellCount: () => number;
-  saveCharacterSpells: (character?: Character) => void;
-  loadSpellsForCharacter: (character: Character | string, level?: number) => void;
+  canAddSpell: (spell: SpellData) => boolean;
+  getSpellLimits: () => { cantrips: number; spells: number };
+  getSelectedSpellCount: () => { cantrips: number; spells: number };
+  saveCharacterSpells: () => void;
+  isSpellAvailableForClass: (spell: SpellData) => boolean;
+  loadSpellsForCharacter: (characterClass: string, level: number) => void;
 }
 
 export const SpellbookContext = createContext<SpellbookContextType>({
   selectedSpells: [],
   availableSpells: [],
+  setSelectedSpells: () => {},
   addSpell: () => {},
   removeSpell: () => {},
-  getSpellLimits: () => ({ maxKnown: 0, maxPrepared: 0 }),
-  getSelectedSpellCount: () => 0,
+  canAddSpell: () => false,
+  getSpellLimits: () => ({ cantrips: 0, spells: 0 }),
+  getSelectedSpellCount: () => ({ cantrips: 0, spells: 0 }),
   saveCharacterSpells: () => {},
+  isSpellAvailableForClass: () => false,
   loadSpellsForCharacter: () => {},
 });
 
-interface SpellbookProviderProps {
-  children: ReactNode;
-}
-
-export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }) => {
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
+export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
-  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeLevel, setActiveLevel] = useState<number[]>([]);
-  const [activeSchool, setActiveSchool] = useState<string[]>([]);
-  const [activeClass, setActiveClass] = useState<string[]>([]);
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { character, updateCharacter } = useCharacter();
+  const { toast } = useToast();
 
-  // Расчет всех возможных значений для фильтров
-  const allLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const allSchools = [
-    'Воплощение', 'Некромантия', 'Преобразование', 'Прорицание',
-    'Призыв', 'Очарование', 'Иллюзия', 'Ограждение', 'Универсальная'
-  ];
-  const allClasses = [
-    'Бард', 'Жрец', 'Друид', 'Волшебник',
-    'Колдун', 'Чародей', 'Паладин', 'Следопыт'
-  ];
+  // Загружаем доступные заклинания для класса персонажа
+  useEffect(() => {
+    if (character && character.class) {
+      loadSpellsForCharacter(character.class, character.level || 1);
+    }
+  }, [character?.class, character?.level]);
 
-  // Методы для управления фильтрами
-  const toggleLevel = (level: number) => {
-    setActiveLevel(prev => 
-      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
-    );
-  };
-
-  const toggleSchool = (school: string) => {
-    setActiveSchool(prev => 
-      prev.includes(school) ? prev.filter(s => s !== school) : [...prev, school]
-    );
-  };
-
-  const toggleClass = (className: string) => {
-    setActiveClass(prev => 
-      prev.includes(className) ? prev.filter(c => c !== className) : [...prev, className]
-    );
-  };
-
-  const clearFilters = () => {
-    setActiveLevel([]);
-    setActiveSchool([]);
-    setActiveClass([]);
-    setSearchTerm('');
-  };
-
-  // Методы для модального окна
-  const handleOpenSpell = (spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsModalOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsModalOpen(false);
-  };
-
-  // Методы для отображения
-  const getBadgeColor = (level: number): string => {
-    const colors = [
-      'bg-gray-200', 'bg-red-200', 'bg-orange-200', 'bg-amber-200',
-      'bg-yellow-200', 'bg-green-200', 'bg-emerald-200', 'bg-teal-200',
-      'bg-sky-200', 'bg-indigo-200'
-    ];
-    return level >= 0 && level <= 9 ? colors[level] : 'bg-purple-200';
-  };
-
-  const getSchoolBadgeColor = (school: string): string => {
-    const schoolColors: Record<string, string> = {
-      'Воплощение': 'bg-red-200',
-      'Некромантия': 'bg-green-200',
-      'Преобразование': 'bg-blue-200',
-      'Прорицание': 'bg-purple-200',
-      'Призыв': 'bg-yellow-200',
-      'Очарование': 'bg-pink-200',
-      'Иллюзия': 'bg-indigo-200',
-      'Ограждение': 'bg-orange-200',
-      'Универсальная': 'bg-gray-200'
-    };
-    return schoolColors[school] || 'bg-gray-200';
-  };
-
-  const formatClasses = (classes: string[] | string | undefined): string => {
-    if (!classes) return '';
+  // Функция для загрузки заклинаний, которую можно вызывать извне
+  const loadSpellsForCharacter = (characterClass: string, level: number) => {
+    console.log("Loading spells for class:", characterClass, "level:", level);
     
-    if (Array.isArray(classes)) {
-      return classes.join(', ');
+    const allSpells = getAllSpells();
+    console.log("Total spells found:", allSpells.length);
+    
+    // Получаем максимальный уровень заклинаний
+    const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(
+      characterClass, 
+      level || 1,
+      getModifierForClass(character)
+    );
+    
+    console.log("Max spell level calculated:", maxSpellLevel);
+    
+    // Фильтруем заклинания для класса персонажа и уровня
+    const classSpells = allSpells.filter(spell => {
+      if (!spell.classes) return false;
+      
+      // Преобразуем classes к массиву, если строка
+      const spellClasses = typeof spell.classes === 'string' 
+        ? [spell.classes.toLowerCase()] 
+        : (spell.classes || []).map((cls: string) => cls.toLowerCase());
+        
+      // Проверяем соответствие класса персонажа
+      const isForClass = spellClasses.some(cls => {
+        const characterClassLower = characterClass.toLowerCase();
+        
+        // Проверяем как русские, так и английские названия классов
+        return cls === characterClassLower || 
+          (characterClassLower === 'жрец' && cls === 'cleric') ||
+          (characterClassLower === 'волшебник' && cls === 'wizard') ||
+          (characterClassLower === 'друид' && cls === 'druid') ||
+          (characterClassLower === 'бард' && cls === 'bard') ||
+          (characterClassLower === 'колдун' && cls === 'warlock') ||
+          (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+          (characterClassLower === 'паладин' && cls === 'paladin');
+      });
+      
+      // Проверяем соответствие уровня заклинания
+      const isLevelAvailable = spell.level <= maxSpellLevel;
+      
+      return isForClass && isLevelAvailable;
+    });
+    
+    console.log(`Found ${classSpells.length} spells for ${characterClass}`);
+    
+    // Преобразуем заклинания в формат SpellData
+    const spellDataArray = classSpells.map(spell => {
+      return {
+        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+        name: spell.name,
+        level: spell.level,
+        school: spell.school || 'Универсальная',
+        castingTime: spell.castingTime || '1 действие',
+        range: spell.range || 'Касание',
+        components: spell.components || '',
+        duration: spell.duration || 'Мгновенная',
+        description: spell.description || '',
+        classes: spell.classes || [],
+        ritual: spell.ritual || false,
+        concentration: spell.concentration || false
+      } as SpellData;
+    });
+    
+    setAvailableSpells(spellDataArray);
+    
+    // Если у персонажа уже есть заклинания, загружаем их
+    if (character && character.spells && character.spells.length > 0) {
+      // Преобразуем CharacterSpell[] в SpellData[]
+      const characterSpellData = Array.isArray(character.spells) 
+        ? character.spells.map(spell => {
+            if (typeof spell === 'string') {
+              // Если заклинание представлено строкой, ищем полные данные
+              const foundSpell = allSpells.find(s => s.name === spell);
+              if (foundSpell) {
+                return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
+              } else {
+                // Создаем минимальный объект заклинания
+                return {
+                  id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+                  name: spell,
+                  level: 0,
+                  school: 'Универсальная',
+                  castingTime: '1 действие',
+                  range: 'Касание',
+                  components: '',
+                  duration: 'Мгновенная',
+                  description: [''],
+                  classes: characterClass,
+                  ritual: false,
+                  concentration: false
+                } as SpellData;
+              }
+            } else {
+              // Если это уже объект заклинания
+              return convertCharacterSpellToSpellData(spell);
+            }
+          })
+        : [];
+      
+      setSelectedSpells(characterSpellData);
+    }
+  };
+
+  // Получаем модификатор характеристики для класса
+  const getModifierForClass = (character: any): number => {
+    if (!character || !character.abilities) return 3; // По умолчанию +3
+    
+    const classLower = character?.class?.toLowerCase() || '';
+    
+    if (['жрец', 'друид'].includes(classLower)) {
+      // Мудрость
+      return Math.floor((character.abilities?.wisdom || character.wisdom || 10) - 10) / 2;
+    } else if (['волшебник', 'маг'].includes(classLower)) {
+      // Интеллект
+      return Math.floor((character.abilities?.intelligence || character.intelligence || 10) - 10) / 2;
+    } else {
+      // Харизма (бард, колдун, чародей, паладин)
+      return Math.floor((character.abilities?.charisma || character.charisma || 10) - 10) / 2;
+    }
+  };
+
+  // Добавление заклинания
+  const addSpell = (spell: SpellData) => {
+    if (!canAddSpell(spell)) {
+      toast({
+        title: "Лимит заклинаний",
+        description: spell.level === 0 
+          ? "Вы достигли максимального количества заговоров." 
+          : "Вы достигли максимального количества заклинаний.",
+        variant: "destructive"
+      });
+      return;
     }
     
-    return classes;
+    // Добавляем заклинание в контекст только если его еще нет
+    if (!selectedSpells.some(s => s.id === spell.id || s.name === spell.name)) {
+      const updatedSelectedSpells = [...selectedSpells, spell];
+      setSelectedSpells(updatedSelectedSpells);
+      
+      // Также добавляем заклинание в персонажа, если есть доступ к updateCharacter
+      if (character && updateCharacter) {
+        // Преобразуем SpellData в CharacterSpell
+        const characterSpell: CharacterSpell = {
+          id: spell.id.toString(),
+          name: spell.name,
+          level: spell.level,
+          school: spell.school,
+          castingTime: spell.castingTime,
+          range: spell.range,
+          components: spell.components,
+          duration: spell.duration,
+          description: spell.description,
+          classes: spell.classes,
+          prepared: true // По умолчанию заклинания подготовлены
+        };
+        
+        // Добавляем заклинание к списку заклинаний персонажа
+        const updatedSpells = [...(character.spells || []), characterSpell];
+        updateCharacter({ spells: updatedSpells });
+        
+        toast({
+          title: "Заклинание добавлено",
+          description: `Заклинание "${spell.name}" добавлено в список известных заклинаний`,
+        });
+      }
+    }
   };
 
-  const addSpell = (spell: SpellData | CharacterSpell) => {
-    const characterSpell: CharacterSpell = {
-      id: spell.id?.toString(),
+  // Удаление заклинания
+  const removeSpell = (spellId: string) => {
+    // Удаляем из контекста
+    setSelectedSpells(selectedSpells.filter(spell => spell.id !== spellId && spell.id !== `spell-${spellId}`));
+    
+    // Также удаляем из персонажа, если есть доступ к updateCharacter
+    if (character && character.spells && updateCharacter) {
+      const spellName = selectedSpells.find(s => s.id === spellId || s.id === `spell-${spellId}`)?.name;
+      
+      if (spellName) {
+        const updatedSpells = character.spells.filter(spell => {
+          if (typeof spell === 'string') {
+            return spell !== spellName;
+          }
+          return spell.id !== spellId && spell.name !== spellName;
+        });
+        
+        updateCharacter({ spells: updatedSpells });
+        
+        toast({
+          title: "Заклинание удалено",
+          description: `Заклинание "${spellName}" удалено из списка известных заклинаний`,
+        });
+      }
+    }
+  };
+  
+  // Проверка доступности заклинания для класса
+  const isSpellAvailableForClass = (spell: SpellData): boolean => {
+    if (!character || !character.class) return false;
+    
+    const characterClassLower = character.class.toLowerCase();
+    
+    // Преобразуем classes к массиву
+    const spellClasses = typeof spell.classes === 'string' 
+      ? [spell.classes.toLowerCase()]
+      : (spell.classes || []).map(cls => typeof cls === 'string' ? cls.toLowerCase() : '');
+    
+    // Проверяем соответствие класса
+    return spellClasses.some(cls => 
+      cls === characterClassLower ||
+      (characterClassLower === 'жрец' && cls === 'cleric') ||
+      (characterClassLower === 'волшебник' && cls === 'wizard') ||
+      (characterClassLower === 'друид' && cls === 'druid') ||
+      (characterClassLower === 'бард' && cls === 'bard') ||
+      (characterClassLower === 'колдун' && cls === 'warlock') ||
+      (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+      (characterClassLower === 'паладин' && cls === 'paladin')
+    );
+  };
+  
+  // Получение лимитов заклинаний для текущего уровня и класса
+  const getSpellLimits = () => {
+    if (!character || !character.class) return { cantrips: 0, spells: 0 };
+    
+    const { cantripsCount, knownSpells } = calculateAvailableSpellsByClassAndLevel(
+      character.class, 
+      character.level || 1,
+      getModifierForClass(character)
+    );
+    
+    return { cantrips: cantripsCount, spells: knownSpells };
+  };
+  
+  // Получение текущего количества выбранных заклинаний по типам
+  const getSelectedSpellCount = () => {
+    const cantrips = selectedSpells.filter(spell => spell.level === 0).length;
+    const spells = selectedSpells.filter(spell => spell.level > 0).length;
+    
+    return { cantrips, spells };
+  };
+  
+  // Проверка возможности добавления заклинания
+  const canAddSpell = (spell: SpellData): boolean => {
+    const limits = getSpellLimits();
+    const counts = getSelectedSpellCount();
+    
+    if (spell.level === 0) {
+      return counts.cantrips < limits.cantrips;
+    } else {
+      return counts.spells < limits.spells;
+    }
+  };
+  
+  // Сохранение выбранных заклинаний в персонажа
+  const saveCharacterSpells = () => {
+    if (!character) return;
+    
+    const characterSpells: CharacterSpell[] = selectedSpells.map(spell => ({
+      id: spell.id.toString(),
       name: spell.name,
       level: spell.level,
       school: spell.school,
@@ -153,81 +317,37 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
       components: spell.components,
       duration: spell.duration,
       description: spell.description,
-      prepared: true
-    };
+      classes: spell.classes,
+      prepared: true, // По умолчанию заклинания подготовлены
+    }));
     
-    setSelectedSpells([...selectedSpells, characterSpell]);
-  };
-
-  const removeSpell = (spellId: string) => {
-    setSelectedSpells(selectedSpells.filter(spell => 
-      spell.id !== spellId && spell.name !== spellId
-    ));
-  };
-
-  const getSpellLimits = (characterClass: string, level: number) => {
-    // Примерные значения, можно настроить под D&D правила
-    return { maxKnown: level * 2, maxPrepared: level + 2 };
-  };
-
-  const getSelectedSpellCount = () => {
-    return selectedSpells.length;
-  };
-
-  const saveCharacterSpells = (character?: Character) => {
-    // В реальности здесь должно быть сохранение в базу данных или локальное хранилище
-    console.log("Сохранение заклинаний для персонажа:", character?.name || "текущий персонаж");
-    // Функция может работать без параметра для обратной совместимости
-  };
-
-  const loadSpellsForCharacter = (character: Character | string, level?: number) => {
-    const characterName = typeof character === 'string' ? character : character.name;
-    console.log(`Загрузка заклинаний для ${characterName}${level ? `, уровень ${level}` : ''}`);
+    updateCharacter({ spells: characterSpells });
     
-    // Преобразовать тип character к Character если это строка
-    if (typeof character === 'object' && character.spells && character.spells.length > 0) {
-      setSelectedSpells(character.spells);
-    } else {
-      setSelectedSpells([]);
-    }
-  };
-
-  const value = {
-    selectedSpells,
-    availableSpells,
-    filteredSpells,
-    searchTerm,
-    setSearchTerm,
-    activeLevel,
-    activeSchool,
-    activeClass,
-    allLevels,
-    allSchools,
-    allClasses,
-    selectedSpell,
-    isModalOpen,
-    toggleLevel,
-    toggleSchool,
-    toggleClass,
-    clearFilters,
-    handleOpenSpell,
-    handleClose,
-    getBadgeColor,
-    getSchoolBadgeColor,
-    formatClasses,
-    addSpell,
-    removeSpell,
-    getSpellLimits,
-    getSelectedSpellCount,
-    saveCharacterSpells,
-    loadSpellsForCharacter
+    toast({
+      title: "Заклинания сохранены",
+      description: `${characterSpells.length} заклинаний сохранено для вашего персонажа.`
+    });
   };
 
   return (
-    <SpellbookContext.Provider value={value}>
+    <SpellbookContext.Provider
+      value={{
+        selectedSpells,
+        availableSpells,
+        setSelectedSpells,
+        addSpell,
+        removeSpell,
+        canAddSpell,
+        getSpellLimits,
+        getSelectedSpellCount,
+        saveCharacterSpells,
+        isSpellAvailableForClass,
+        loadSpellsForCharacter,
+      }}
+    >
       {children}
     </SpellbookContext.Provider>
   );
 };
 
-// Убираем импорт, который вызывал циклическую зависимость
+export const useSpellbook = () => useContext(SpellbookContext);

@@ -1,119 +1,91 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { socketService, useSocket as useSocketStore } from '@/services/socket';
-import { TokenData } from '@/types/session.types';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
-export interface SocketContextType {
-  socket: any;
+interface SocketContextProps {
+  sendUpdate: ((data: any) => void) | null;
   isConnected: boolean;
-  lastUpdate: Date | null;
-  connect: (sessionCode: string, playerName?: string, characterId?: string) => void;
-  disconnect: () => void;
-  sendChatMessage: (message: { message: string, roomCode: string, nickname: string }) => void;
-  sendRoll: (rollRequest: { formula: string, reason?: string }) => void;
-  sendUpdate: (data: any) => void;
-  updateToken: (token: TokenData) => void;
-  sessionData: { code: string; name?: string } | null;
+  connectionError: string | null;
+  socket: any | null;
+  connect: (sessionId: string, playerName?: string, characterId?: string) => void; // Обновляем сигнатуру с опциональными параметрами
+  sessionData: any | null;
+  connected: boolean;
+  lastUpdate: { character?: any; timestamp?: Date } | null; // Меняем тип lastUpdate, чтобы включить данные о персонаже
 }
 
-// Create and export the SocketContext - this must be exported
-export const SocketContext = createContext<SocketContextType | undefined>(undefined);
+const defaultSocketContext: SocketContextProps = {
+  sendUpdate: null,
+  isConnected: false,
+  connectionError: null,
+  socket: null,
+  connect: () => {}, // Заглушка функции
+  sessionData: null,
+  connected: false,
+  lastUpdate: null
+};
 
-export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [sessionData, setSessionData] = useState<{ code: string; name?: string } | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  
-  // Используем новое zustand-хранилище
-  const { isConnected, connect: connectSocket, disconnect: disconnectSocket, sendChatMessage, sendRoll, updateToken } = useSocketStore();
+const SocketContext = createContext<SocketContextProps>(defaultSocketContext);
 
+export const useSocket = () => useContext(SocketContext);
+
+interface SocketProviderProps {
+  children: ReactNode;
+}
+
+export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [socket, setSocket] = useState<any | null>(null);
+  const [sessionData, setSessionData] = useState<any | null>(null);
+  const [connected, setConnected] = useState<boolean>(false);
+  const [lastUpdate, setLastUpdate] = useState<{ character?: any; timestamp?: Date } | null>(null);
+
+  // Функция-заглушка для отправки данных
+  const sendUpdate = (data: any) => {
+    console.log('Отправка данных через сокет:', data);
+    // В реальном приложении здесь будет реализована настоящая отправка через сокет
+    setLastUpdate({ character: data, timestamp: new Date() });
+  };
+
+  // Функция подключения к сессии с дополнительными параметрами
+  const connect = (sessionId: string, playerName?: string, characterId?: string) => {
+    console.log(`Подключение к сессии: ${sessionId}, игрок: ${playerName || 'не указан'}, персонаж: ${characterId || 'не указан'}`);
+    // Здесь будет код реального подключения к сессии
+    setConnected(true);
+    setIsConnected(true);
+    setSessionData({ 
+      id: sessionId, 
+      name: `Сессия ${sessionId}`,
+      playerName,
+      characterId
+    });
+  };
+
+  // Эффект для инициализации соединения при монтировании компонента
   useEffect(() => {
-    // Попытка восстановления соединения при монтировании компонента
-    const connectionInfo = socketService.getConnectionInfo();
+    console.log('SocketProvider: Инициализация');
     
-    if (connectionInfo.sessionCode) {
-      setSessionData({
-        code: connectionInfo.sessionCode
-      });
-    }
-    
-    // Регистрируем обработчики
-    const handleConnect = (data: any) => {
-      console.log('Socket connected:', data);
-      setSessionData({
-        code: data.sessionCode,
-        name: data.sessionName
-      });
-      setLastUpdate(new Date());
-    };
-    
-    const handleDisconnect = () => {
-      console.log('Socket disconnected');
-      setSessionData(null);
-      setLastUpdate(new Date());
-    };
-    
-    socketService.on('connected', handleConnect);
-    socketService.on('disconnected', handleDisconnect);
+    // Здесь будет код для инициализации WebSocket соединения
     
     return () => {
-      socketService.off('connected', handleConnect);
-      socketService.off('disconnected', handleDisconnect);
+      console.log('SocketProvider: Отключение');
+      // Закрытие соединения при размонтировании компонента
     };
   }, []);
 
-  // Подключение к сессии
-  const connect = (sessionCode: string, playerName: string = 'Игрок', characterId?: string) => {
-    console.log(`Connecting to session: ${sessionCode} as ${playerName}`);
-    connectSocket(sessionCode, playerName, characterId);
-    setLastUpdate(new Date());
-  };
-
-  // Отключение от сессии
-  const disconnect = () => {
-    console.log('Disconnecting from session');
-    disconnectSocket();
-    setSessionData(null);
-    setLastUpdate(new Date());
-  };
-
-  // Отправка обновления персонажа
-  const sendUpdate = (data: any) => {
-    const payload = {
-      type: 'update',
-      data
-    };
-    
-    console.log('Sending update:', payload);
-    setLastUpdate(new Date());
-  };
-
   return (
-    <SocketContext.Provider
-      value={{
-        socket: socketService, // Add the actual socket object
-        isConnected,
-        lastUpdate,
-        connect,
-        disconnect,
-        sendChatMessage,
-        sendRoll,
-        sendUpdate,
-        updateToken,
-        sessionData
+    <SocketContext.Provider 
+      value={{ 
+        sendUpdate, 
+        isConnected, 
+        connectionError, 
+        socket, 
+        connect, 
+        sessionData, 
+        connected, 
+        lastUpdate 
       }}
     >
       {children}
     </SocketContext.Provider>
   );
-};
-
-// Export a hook that uses the context - this is how components will use it
-export const useSocket = () => {
-  const context = useContext(SocketContext);
-  
-  if (context === undefined) {
-    throw new Error('useSocket must be used within a SocketProvider');
-  }
-  
-  return context;
 };

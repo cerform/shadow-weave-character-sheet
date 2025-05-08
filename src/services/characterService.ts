@@ -1,3 +1,4 @@
+
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase'; // Используем центральный экземпляр db
 import { Character } from '@/types/character';
@@ -25,14 +26,6 @@ export const getAllCharacters = async (): Promise<Character[]> => {
     console.error('Ошибка при получении всех персонажей:', error);
     throw error;
   }
-};
-
-/**
- * Получение персонажей конкретного пользователя
- * Алиас для getCharactersByUserId для совместимости
- */
-export const getCharacters = async (userId: string): Promise<Character[]> => {
-  return getCharactersByUserId(userId);
 };
 
 /**

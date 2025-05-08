@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character, Item } from '@/types/character';
+import { Character } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,21 +29,21 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       if (Array.isArray(character.equipment)) {
         // Если это массив Item объектов, преобразуем в строки
         const weaponItems = character.equipment
-          .filter(item => typeof item === 'object' && item && item.type === 'weapon')
-          .map(item => typeof item === 'object' && item ? item.name : String(item));
+          .filter(item => item.type === 'weapon')
+          .map(item => item.name);
         setWeapons(weaponItems);
         
         const armorItem = character.equipment
-          .find(item => typeof item === 'object' && item && item.type === 'armor');
-        setArmor(armorItem && typeof armorItem === 'object' ? armorItem.name : '');
+          .find(item => item.type === 'armor');
+        setArmor(armorItem?.name || '');
         
         const otherItems = character.equipment
-          .filter(item => typeof item !== 'object' || (item && item.type !== 'weapon' && item.type !== 'armor'))
-          .map(item => typeof item === 'object' && item ? item.name : String(item));
+          .filter(item => item.type !== 'weapon' && item.type !== 'armor')
+          .map(item => item.name);
         setItems(otherItems);
       } else {
         // Если это объект с weapons, armor, items
-        const equip = character.equipment as unknown as { weapons?: string[], armor?: string, items?: string[] };
+        const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
         setWeapons(equip.weapons || []);
         setArmor(equip.armor || '');
         setItems(equip.items || []);
@@ -68,12 +68,12 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
   
   // Сохранение экипировки
   const saveEquipment = () => {
-    // Создаем новый объект экипировки в формате совместимом с типом
-    const updatedEquipment: Item[] = [
-      ...weapons.map(name => ({ name, quantity: 1, type: 'weapon' })),
-      ...(armor ? [{ name: armor, quantity: 1, type: 'armor' }] : []),
-      ...items.map(name => ({ name, quantity: 1 }))
-    ];
+    // Создаем новый объект экипировки
+    const updatedEquipment = {
+      weapons: weapons,
+      armor: armor,
+      items: items
+    };
     
     // Обновляем персонажа
     onUpdate({ 

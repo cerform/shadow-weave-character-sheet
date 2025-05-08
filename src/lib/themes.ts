@@ -1,182 +1,177 @@
 
+// Типы и интерфейсы для системы тем
 export interface Theme {
-  id: string;
-  name: string;
-  primary: string;
-  secondary: string;
   background: string;
-  accent: string;
-  text: string;
-  cardBg: string;
-  // Добавляем необходимые поля, на которые ссылаются компоненты
-  textColor: string;
-  buttonText: string;
-  cardBackground: string;
-  mutedTextColor: string;
   foreground: string;
-  className?: string;
+  primary: string;
+  accent: string;
+  textColor: string;
+  cardBackground: string;
+  buttonText?: string;
+  borderColor?: string;
+  // Добавляем новые свойства, которые используются в компонентах
+  mutedTextColor?: string;
+  backgroundBrightness?: number;
+  backgroundGradient?: string;
+  decorativeCorners?: boolean;
+  spellLevels?: Record<number, string>;
 }
 
-// Создаем темы с новыми свойствами
-const themes: Record<string, Theme> = {
+// Определения тем для приложения
+export const themes: Record<string, Theme> = {
   default: {
-    id: 'classic',
-    name: 'Classic D&D',
-    primary: '#8B0000',
-    secondary: '#FFD700',
-    background: '#F5F5DC',
-    accent: '#8B4513',
-    text: '#000000',
-    cardBg: '#FFFFFF',
-    textColor: '#000000',
+    background: '#121212',
+    foreground: '#1a1a1a',
+    primary: '#8B5A2B',
+    accent: '#8B5A2B',
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(0, 0, 0, 0.85)',
     buttonText: '#FFFFFF',
-    cardBackground: '#FFFFFF',
-    mutedTextColor: '#666666',
-    foreground: '#000000'
+    borderColor: '#8B5A2B',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.7,
+    decorativeCorners: false,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#3b82f6', // blue-500
+      2: '#8b5cf6', // violet-500
+      3: '#ec4899', // pink-500
+      4: '#f97316', // orange-500
+      5: '#ef4444', // red-500
+      6: '#14b8a6', // teal-500
+      7: '#6366f1', // indigo-500
+      8: '#ca8a04', // yellow-600
+      9: '#059669'  // emerald-600
+    }
   },
-  dark: {
-    id: 'dark',
-    name: 'Dark Dungeon',
-    primary: '#4B0082',
-    secondary: '#9932CC',
-    background: '#1A1A1A',
-    accent: '#8B008B',
-    text: '#E0E0E0',
-    cardBg: '#2D2D2D',
-    textColor: '#E0E0E0',
-    buttonText: '#FFFFFF',
-    cardBackground: '#2D2D2D',
-    mutedTextColor: '#AAAAAA',
-    foreground: '#E0E0E0'
-  },
-  forest: {
-    id: 'forest',
-    name: 'Forest',
-    primary: '#006400',
-    secondary: '#228B22',
-    background: '#F5F5DC',
-    accent: '#556B2F',
-    text: '#000000',
-    cardBg: '#FFFFFF',
-    textColor: '#000000',
-    buttonText: '#FFFFFF',
-    cardBackground: '#FFFFFF',
-    mutedTextColor: '#666666',
-    foreground: '#000000'
-  },
-  ocean: {
-    id: 'ocean',
-    name: 'Ocean',
-    primary: '#000080',
-    secondary: '#4169E1',
-    background: '#F0F8FF',
-    accent: '#1E90FF',
-    text: '#000000',
-    cardBg: '#FFFFFF',
-    textColor: '#000000',
-    buttonText: '#FFFFFF',
-    cardBackground: '#FFFFFF',
-    mutedTextColor: '#666666',
-    foreground: '#000000'
-  },
-  fire: {
-    id: 'fire',
-    name: 'Fire',
-    primary: '#FF4500',
-    secondary: '#FF8C00',
-    background: '#FFFFE0',
-    accent: '#B22222',
-    text: '#000000',
-    cardBg: '#FFFFFF',
-    textColor: '#000000',
-    buttonText: '#FFFFFF',
-    cardBackground: '#FFFFFF',
-    mutedTextColor: '#666666',
-    foreground: '#000000'
-  },
-  // Дополнительные темы из компонентов
   warlock: {
-    id: 'warlock',
-    name: 'Чернокнижник',
-    primary: '#7D26CD',
-    secondary: '#AB82FF',
-    background: '#180026',
-    accent: '#9932CC',
-    text: '#E6E6FA',
-    cardBg: '#2D1F3D',
-    textColor: '#E6E6FA',
+    background: '#1E1A2B',
+    foreground: '#2A1E40',
+    primary: '#9061F9',
+    accent: '#9061F9',
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(20, 15, 30, 0.9)',
     buttonText: '#FFFFFF',
-    cardBackground: '#2D1F3D',
-    mutedTextColor: '#B19CD9',
-    foreground: '#E6E6FA'
+    borderColor: '#9061F9',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.5,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(30, 26, 43, 0.8), rgba(20, 15, 30, 0.9))',
+    decorativeCorners: true,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#9061F9', // theme accent
+      2: '#a78bfa', // violet-400
+      3: '#c4b5fd', // violet-300
+      4: '#8b5cf6', // violet-500
+      5: '#7c3aed', // violet-600
+      6: '#6d28d9', // violet-700
+      7: '#5b21b6', // violet-800
+      8: '#4c1d95', // violet-900
+      9: '#2e1065'  // violet-950
+    }
   },
   wizard: {
-    id: 'wizard',
-    name: 'Волшебник',
-    primary: '#4169E1',
-    secondary: '#87CEFA',
-    background: '#00008B',
-    accent: '#1E90FF',
-    text: '#F0F8FF',
-    cardBg: '#27408B',
-    textColor: '#F0F8FF',
+    background: '#152238',
+    foreground: '#1E3054',
+    primary: '#3B82F6',
+    accent: '#3B82F6', 
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(15, 25, 40, 0.9)',
     buttonText: '#FFFFFF',
-    cardBackground: '#27408B',
-    mutedTextColor: '#ADD8E6',
-    foreground: '#F0F8FF'
+    borderColor: '#3B82F6',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.6,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(21, 34, 56, 0.8), rgba(15, 25, 40, 0.9))',
+    decorativeCorners: true,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#3B82F6', // theme accent
+      2: '#60a5fa', // blue-400
+      3: '#93c5fd', // blue-300
+      4: '#2563eb', // blue-600
+      5: '#1d4ed8', // blue-700
+      6: '#1e40af', // blue-800
+      7: '#1e3a8a', // blue-900
+      8: '#172554', // blue-950
+      9: '#0f172a'  // slate-950
+    }
   },
   druid: {
-    id: 'druid',
-    name: 'Друид',
-    primary: '#006400',
-    secondary: '#32CD32',
-    background: '#0B3B0B',
-    accent: '#2E8B57',
-    text: '#F0FFF0',
-    cardBg: '#2F4F2F',
-    textColor: '#F0FFF0',
+    background: '#1B2D25',
+    foreground: '#1E3A2B',
+    primary: '#10B981',
+    accent: '#10B981',
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(15, 30, 25, 0.9)',
     buttonText: '#FFFFFF',
-    cardBackground: '#2F4F2F',
-    mutedTextColor: '#98FB98',
-    foreground: '#F0FFF0'
+    borderColor: '#10B981',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.8,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(27, 45, 37, 0.8), rgba(15, 30, 25, 0.9))',
+    decorativeCorners: true,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#10B981', // theme accent
+      2: '#34d399', // emerald-400
+      3: '#6ee7b7', // emerald-300
+      4: '#059669', // emerald-600
+      5: '#047857', // emerald-700
+      6: '#065f46', // emerald-800
+      7: '#064e3b', // emerald-900
+      8: '#022c22', // emerald-950
+      9: '#064e3b'  // emerald-900
+    }
   },
   warrior: {
-    id: 'warrior',
-    name: 'Воин',
-    primary: '#8B0000',
-    secondary: '#CD5C5C',
-    background: '#3D0C0C',
-    accent: '#B22222',
-    text: '#FFE4E1',
-    cardBg: '#4A1010',
-    textColor: '#FFE4E1',
+    background: '#321E1E',
+    foreground: '#4A2A2A',
+    primary: '#F43F5E',
+    accent: '#F43F5E',
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(35, 20, 20, 0.9)',
     buttonText: '#FFFFFF',
-    cardBackground: '#4A1010',
-    mutedTextColor: '#FFA07A',
-    foreground: '#FFE4E1'
+    borderColor: '#F43F5E',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.6,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(50, 30, 30, 0.8), rgba(35, 20, 20, 0.9))',
+    decorativeCorners: false,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#F43F5E', // theme accent
+      2: '#fb7185', // rose-400
+      3: '#fda4af', // rose-300
+      4: '#e11d48', // rose-600
+      5: '#be123c', // rose-700
+      6: '#9f1239', // rose-800
+      7: '#881337', // rose-900
+      8: '#4c0519', // rose-950
+      9: '#881337'  // rose-900
+    }
   },
   bard: {
-    id: 'bard',
-    name: 'Бард',
-    primary: '#DAA520',
-    secondary: '#FFD700',
-    background: '#3D2B1F',
-    accent: '#FFA500',
-    text: '#FFF8DC',
-    cardBg: '#3D2B1F',
-    textColor: '#FFF8DC',
-    buttonText: '#000000',
-    cardBackground: '#4A3728',
-    mutedTextColor: '#F4A460',
-    foreground: '#FFF8DC'
+    background: '#322815',
+    foreground: '#403219',
+    primary: '#F59E0B',
+    accent: '#F59E0B',
+    textColor: '#FFFFFF',
+    cardBackground: 'rgba(35, 28, 15, 0.9)',
+    buttonText: '#FFFFFF',
+    borderColor: '#F59E0B',
+    mutedTextColor: '#9ca3af',
+    backgroundBrightness: 0.7,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(50, 40, 21, 0.8), rgba(35, 28, 15, 0.9))',
+    decorativeCorners: true,
+    spellLevels: {
+      0: '#6b7280', // gray-500
+      1: '#F59E0B', // theme accent
+      2: '#fbbf24', // amber-400
+      3: '#fcd34d', // amber-300
+      4: '#d97706', // amber-600
+      5: '#b45309', // amber-700
+      6: '#92400e', // amber-800
+      7: '#78350f', // amber-900
+      8: '#451a03', // amber-950
+      9: '#78350f'  // amber-900
+    }
   }
 };
-
-// Экспортируем сам объект themes
-export { themes };
-
-// Экспортируем массив тем для обратной совместимости
-export const themesArray = Object.values(themes);
-
-// Экспортируем по умолчанию для обеспечения совместимости
-export default themes;

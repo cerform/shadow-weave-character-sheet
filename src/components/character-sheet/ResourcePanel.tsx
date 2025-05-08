@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,8 +146,6 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
     setTemporaryHp(0);
   };
   
-  const hitDiceDisplay = character.hitDice ? `${character.hitDice.total - character.hitDice.used}/${character.hitDice.total}${character.hitDice.type || 'd6'}` : '0/0';
-  
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -157,7 +156,8 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ character, onUpdate }) =>
         {character.hitDice && (
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="font-medium">Кости хитов ({hitDiceDisplay}):</span>
+              <span className="font-medium">Кости хитов ({character.hitDice.dieType}):</span>
+              <span>{character.hitDice.total - character.hitDice.used}/{character.hitDice.total}</span>
             </div>
             
             <div className="flex space-x-2">

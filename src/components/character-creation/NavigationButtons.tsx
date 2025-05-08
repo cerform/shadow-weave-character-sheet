@@ -3,54 +3,62 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
-interface NavigationButtonsProps {
+export interface NavigationButtonsProps {
   onPrev?: () => void;
   onNext?: () => void;
+  prevStep?: () => void;
+  nextStep?: () => void;
   prevLabel?: string;
   nextLabel?: string;
-  allowPrev?: boolean;
+  disablePrev?: boolean;
+  disableNext?: boolean;
   allowNext?: boolean;
-  // Add these properties for compatibility with existing components
-  nextStep?: () => void;
-  prevStep?: () => void;
   isFirstStep?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   onPrev,
   onNext,
-  prevLabel = "Назад",
-  nextLabel = "Далее",
-  allowPrev = true,
-  allowNext = true,
-  // Use the passed props or fallback to onPrev/onNext
-  nextStep,
   prevStep,
-  isFirstStep,
+  nextStep,
+  prevLabel = 'Назад',
+  nextLabel = 'Далее',
+  disablePrev = false,
+  disableNext = false,
+  allowNext = true
 }) => {
-  // Use either the direct handlers or the step handlers
-  const handlePrev = prevStep || onPrev;
-  const handleNext = nextStep || onNext;
+  // Используем onPrev или prevStep, в зависимости от того, что передано
+  const handlePrev = onPrev || prevStep;
+  // Используем onNext или nextStep, в зависимости от того, что передано
+  const handleNext = onNext || nextStep;
+  
+  // Определяем отключение кнопки "Далее" на основе disableNext или !allowNext
+  const isNextDisabled = disableNext || !allowNext;
 
   return (
-    <div className="flex justify-between mt-4">
-      <Button 
-        variant="outline"
-        onClick={handlePrev}
-        disabled={!handlePrev || !allowPrev || isFirstStep}
-        className="flex items-center"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {prevLabel}
-      </Button>
-      <Button 
-        onClick={handleNext}
-        disabled={!handleNext || !allowNext}
-        className="flex items-center"
-      >
-        {nextLabel}
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
+    <div className="flex justify-between gap-4">
+      {handlePrev && (
+        <Button
+          variant="outline"
+          onClick={handlePrev}
+          disabled={disablePrev}
+          className="flex items-center"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          {prevLabel}
+        </Button>
+      )}
+      
+      {handleNext && (
+        <Button
+          onClick={handleNext}
+          disabled={isNextDisabled}
+          className="flex items-center ml-auto"
+        >
+          {nextLabel}
+          <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      )}
     </div>
   );
 };

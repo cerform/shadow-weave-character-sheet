@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, safelyConvertSpellDescription, safelyConvertSpellClasses } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useSpellbook } from '@/hooks/spellbook';
+import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -15,7 +16,6 @@ import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -56,16 +56,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [spellsKnown, setSpellsKnown] = useState(0);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [loadedSuccessfully, setLoadedSuccessfully] = useState(false);
-  const [themeStyles, setThemeStyles] = useState(currentTheme);
-  
-  // Fix the string | string[] issue - ensure we handle both cases
-  const convertClassesToArray = (classes: string | string[] | undefined): string[] => {
-    if (!classes) return [];
-    if (typeof classes === 'string') return [classes];
-    return classes;
-  };
 
-  // Load spells directly from data on mount or when class/level changes
+  // Загружаем заклинания напрямую из данных при монтировании или изменении класса/уровня
   useEffect(() => {
     if (effectiveClass && !loadedSuccessfully && loadAttempts < 3) {
       setLoading(true);
@@ -74,12 +66,15 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       try {
         console.log(`Loading spells for ${effectiveClass} (level ${effectiveLevel})`);
         
-        // Prune spells to only those that are available for the class and level
+        // Принудительно загружаем заклинания из контекста
+        loadSpellsForCharacter(effectiveClass, effectiveLevel);
+        
+        // Резервная загрузка заклинаний напрямую из данных
         const classSpells = getSpellsByClass(effectiveClass);
         console.log(`Direct loading found ${classSpells.length} spells for ${effectiveClass}`);
         
         if (classSpells.length > 0) {
-          // Convert spells to SpellData and set the maximum level
+          // Преобразуем заклинания к типу SpellData и устанавливаем максимальный уровень
           const maxSpellLevel = Math.ceil(effectiveLevel / 2);
           const filteredSpells = classSpells
             .filter(spell => spell.level <= maxSpellLevel)
@@ -93,7 +88,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               components: spell.components || '',
               duration: spell.duration || 'Мгновенная',
               description: spell.description || ['Нет описания'],
-              classes: convertClassesToArray(spell.classes) || [],
+              classes: spell.classes || [],
               ritual: spell.ritual || false,
               concentration: spell.concentration || false
             } as SpellData));
@@ -107,7 +102,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       } catch (error) {
         console.error("Error loading spells:", error);
       } finally {
-        // Give time for loading
+        // Даем время на загрузку
         setTimeout(() => {
           setLoading(false);
         }, 500);
@@ -115,7 +110,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
   }, [effectiveClass, effectiveLevel, loadSpellsForCharacter, loadedSuccessfully, loadAttempts]);
 
-  // Recalculate known spells count on spells list changes
+  // Пересчитываем количество известных заклинаний при каждом изменении списка заклинаний
   useEffect(() => {
     if (character.spells) {
       const cantripsCount = character.spells.filter(spell => {
@@ -136,25 +131,25 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
   }, [character.spells]);
 
-  // Get modifier for class
+  // Получаем модификатор характеристики
   const getModifierForClass = useCallback(() => {
-    if (!character || !character.abilities) return 3; // By default +3
+    if (!character || !character.abilities) return 3; // По умолчанию +3
     
     const classLower = character.class ? character.class.toLowerCase() : "";
     
     if (['жрец', 'друид'].includes(classLower)) {
-      // Wisdom
+      // Мудрость
       return Math.floor((character.abilities.wisdom || character.wisdom || 10) - 10) / 2;
     } else if (['волшебник', 'маг', 'изобретатель'].includes(classLower)) {
-      // Intelligence
+      // Интеллект
       return Math.floor((character.abilities.intelligence || character.intelligence || 10) - 10) / 2;
     } else {
-      // Charisma (bard, sorcerer, cleric, paladin)
+      // Харизма (бард, колдун, чародей, паладин)
       return Math.floor((character.abilities.charisma || character.charisma || 10) - 10) / 2;
     }
   }, [character]);
 
-  // Calculate available spells based on class modifier
+  // Вычисляем доступные заклинания с учетом модификатора характеристики
   const spellLimits = useCallback(() => {
     return calculateAvailableSpellsByClassAndLevel(
       effectiveClass, 
@@ -163,12 +158,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     );
   }, [effectiveClass, effectiveLevel, getModifierForClass]);
 
-  // Display limit info
+  // Отображаем информацию о лимитах
   const { maxSpellLevel, cantripsCount, knownSpells } = spellLimits();
 
-  // Determine spells list for display - use all available sources
+  // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
-    // Priority: 1. props, 2. loaded directly, 3. context
+    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. контекст
     if (propAvailableSpells && propAvailableSpells.length > 0) {
       return propAvailableSpells;
     } 
@@ -184,7 +179,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     return [];
   }, [propAvailableSpells, contextAvailableSpells, internalAvailableSpells]);
 
-  // Filter by search term and active tab
+  // Фильтрация по поисковому запросу и активной вкладке
   useEffect(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) {
       setFilteredSpells([]);
@@ -193,19 +188,19 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
     let filtered = spellsToFilter;
     
-    // Filter by search term, if it exists
+    // Фильтрация по поисковому запросу, если он есть
     if (searchTerm) {
       const searchTermLower = searchTerm.toLowerCase();
       filtered = spellsToFilter.filter(spell => {
         const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
         
-        // Safe handling of school property with type checking
+        // Безопасная обработка свойства school с проверкой типа
         let schoolMatch = false;
         if (spell.school && typeof spell.school === 'string') {
           schoolMatch = spell.school.toLowerCase().includes(searchTermLower);
         }
         
-        // Safe handling of description type
+        // Безопасная проверка типа description
         let descMatch = false;
         if (spell.description) {
           if (Array.isArray(spell.description)) {
@@ -219,7 +214,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       });
     }
     
-    // Filter by selected level (tab)
+    // Фильтрация по выбранному уровню (вкладке)
     if (activeTab !== 'all') {
       const level = activeTab === 'cantrips' ? 0 : Number(activeTab);
       filtered = filtered.filter(spell => spell.level === level);
@@ -228,12 +223,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     setFilteredSpells(filtered);
   }, [spellsToFilter, searchTerm, activeTab]);
 
-  // Search term change handler
+  // Обработчик изменения поискового запроса
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Check if spell is already known
+  // Проверяем, изучено ли заклинание
   const isSpellKnown = useCallback((spell: SpellData) => {
     if (!character.spells || !Array.isArray(character.spells)) return false;
     
@@ -243,7 +238,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     });
   }, [character.spells]);
 
-  // Add/remove spell handler
+  // Обработчик добавления/удаления заклинания
   const handleSpellChange = (spell: SpellData, adding: boolean) => {
     if (propOnSpellChange) {
       propOnSpellChange(spell, adding);
@@ -251,7 +246,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
     
     if (adding) {
-      // Check spell limits
+      // Проверяем лимиты заклинаний
       if (spell.level === 0 && cantripsKnown >= cantripsCount) {
         toast({
           title: "Лимит заговоров",
@@ -270,10 +265,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      // Add spell to context
+      // Добавляем заклинание в контекст
       addSpell(spell);
       
-      // Also add spell directly to character
+      // Также добавляем заклинание прямо в персонажа
       const updatedSpells = [...(character.spells || [])];
       updatedSpells.push({
         id: spell.id,
@@ -284,25 +279,24 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         range: spell.range,
         components: spell.components,
         duration: spell.duration,
-        // Fix: convert description and classes using safe functions
-        description: safelyConvertSpellDescription(spell.description),
-        classes: safelyConvertSpellClasses(spell.classes),
-        prepared: true // By default spells are prepared
+        description: spell.description,
+        classes: spell.classes,
+        prepared: true // По умолчанию заклинания подготовлены
       });
       
       updateCharacter({ spells: updatedSpells });
       
-      // Update counters
+      // Обновляем счетчики
       if (spell.level === 0) {
         setCantripsKnown(prev => prev + 1);
       } else {
         setSpellsKnown(prev => prev + 1);
       }
     } else {
-      // Remove spell from context
+      // Удаляем заклинание из контекста
       removeSpell(spell.id.toString());
       
-      // Also remove spell from character
+      // Также удаляем заклинание из персонажа
       if (character.spells) {
         const updatedSpells = character.spells.filter(s => {
           if (typeof s === 'string') return s !== spell.name;
@@ -311,7 +305,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         
         updateCharacter({ spells: updatedSpells });
         
-        // Update counters
+        // Обновляем счетчики
         if (spell.level === 0) {
           setCantripsKnown(prev => Math.max(0, prev - 1));
         } else {
@@ -321,19 +315,19 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }
   };
 
-  // Save spells and go to next step
+  // Обработчик сохранения и перехода к следующему шагу
   const handleSaveAndContinue = () => {
     saveCharacterSpells();
     if (nextStep) nextStep();
   };
 
-  // Get unique spell levels for tabs
+  // Получаем уникальные уровни заклинаний для создания вкладок
   const spellLevels = useMemo(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) return [];
     return [...new Set(spellsToFilter.map(spell => spell.level))].sort((a, b) => a - b);
   }, [spellsToFilter]);
 
-  // Group spells by level for tab labels
+  // Группировка заклинаний по уровням для меток на вкладках
   const spellCountsByLevel = useMemo(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) return {};
     
@@ -344,15 +338,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     }, {});
   }, [spellsToFilter]);
 
-  // Get page background
-  useEffect(() => {
-    setThemeStyles(currentTheme);
-  }, [currentTheme]);
-
-  // Page background
-  const pageBackground = useMemo(() => `linear-gradient(to bottom, ${themeStyles.accent || '#333333'}20, ${themeStyles.cardBackground || 'rgba(0, 0, 0, 0.85)'})`, [themeStyles]);
-
-  // If failed to load spells after several attempts
+  // Если не удалось загрузить заклинания после нескольких попыток
   if (loadAttempts >= 3 && !loadedSuccessfully && !loading) {
     return (
       <div className="flex flex-col h-full">
@@ -376,8 +362,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               onPrev={prevStep} 
               onNext={nextStep}
               nextLabel="Пропустить выбор заклинаний"
-              nextStep={nextStep}
-              prevStep={prevStep}
             />
           </div>
         )}
@@ -400,9 +384,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        
-        <Separator />
-        
+        <Separator className="my-2 bg-accent/30" />
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -415,8 +397,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           }}
         />
 
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full mb-4 flex flex-wrap">
             <TabsTrigger value="all">
               Все ({spellsToFilter.length})
             </TabsTrigger>
@@ -447,9 +429,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           ) : (
             filteredSpells.map((spell) => {
               const isAdded = isSpellKnown(spell);
-              const canAdd = (spell.level === 0) 
-                ? (cantripsKnown < cantripsCount) 
-                : (spellsKnown < knownSpells);
+              const canAdd = spell.level === 0 
+                ? cantripsKnown < cantripsCount 
+                : spellsKnown < knownSpells;
               
               return (
                 <Card key={spell.id || spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
@@ -486,8 +468,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             onNext={handleSaveAndContinue}
             nextLabel="Сохранить и продолжить"
             allowNext={!loading}
-            nextStep={nextStep}
-            prevStep={prevStep}
           />
         </div>
       )}

@@ -19,10 +19,9 @@ import DebugPage from './pages/DebugPage';
 import DndSpellsPage from './pages/DndSpellsPage';
 import CharactersListPage from './pages/CharactersListPage';
 
-// Новые страницы для игровых сессий
-import DMSessionPage from './pages/DMSessionPage';
-import GameSessionPage from './pages/GameSessionPage';
-import JoinSessionPage from './pages/JoinSessionPage';
+// Ленивая загрузка страниц, зависящих от WebSocket
+const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
+const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
 
 // Импорт хука для защиты маршрутов
 import { useProtectedRoute } from './hooks/use-auth';
@@ -93,7 +92,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
-      {/* Маршруты D&D */}
+      {/* Добавляем страницу заклинаний D&D */}
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
       
       {/* Маршруты DM с защитой */}
@@ -102,9 +101,11 @@ const AppRoutes: React.FC = () => {
           <DMDashboardPage />
         </ProtectedDMRoute>
       } />
-      <Route path="/dm-session/:sessionId" element={
+      <Route path="/dm-session/:id" element={
         <ProtectedDMRoute>
-          <DMSessionPage />
+          <React.Suspense fallback={<LazyLoading />}>
+            <GameRoomPage />
+          </React.Suspense>
         </ProtectedDMRoute>
       } />
       <Route path="/battle/:sessionId" element={
@@ -121,12 +122,9 @@ const AppRoutes: React.FC = () => {
       } />
       <Route path="/join-session" element={
         <ProtectedPlayerRoute>
-          <JoinSessionPage />
-        </ProtectedPlayerRoute>
-      } />
-      <Route path="/game-session/:sessionId" element={
-        <ProtectedPlayerRoute>
-          <GameSessionPage />
+          <React.Suspense fallback={<LazyLoading />}>
+            <JoinSessionPage />
+          </React.Suspense>
         </ProtectedPlayerRoute>
       } />
       

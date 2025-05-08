@@ -1,6 +1,6 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Initiative, TokenData } from '@/types/session.types';
 
 export interface Player {
   id: string;
@@ -18,16 +18,6 @@ export interface DMSession {
   description?: string;
   dmId?: string;
   isActive?: boolean;
-  // Add missing properties needed for DMSessionPage
-  battleActive?: boolean;
-  initiative?: Initiative[];
-  tokens?: TokenData[];
-  map?: {
-    background: string;
-    width: number;
-    height: number;
-  };
-  messages?: any[];
 }
 
 interface SessionContextType {

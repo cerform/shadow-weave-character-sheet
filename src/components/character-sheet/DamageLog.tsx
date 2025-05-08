@@ -1,94 +1,127 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HitPointEvent } from '@/types/character';
+import { formatDistance } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { Heart, Shield, Skull } from 'lucide-react';
 
 interface DamageLogProps {
   events: HitPointEvent[];
-  maxItems?: number;
+  maxEvents?: number;
 }
 
-const DamageLog: React.FC<DamageLogProps> = ({ events = [], maxItems = 10 }) => {
-  const recentEvents = maxItems ? events.slice(-maxItems) : events;
-
-  // Функция для получения стиля на основе типа события
-  const getEventStyle = (type: string) => {
-    switch (type) {
-      case 'damage':
-        return {
-          badge: 'bg-red-500 text-white',
-          text: 'text-red-500',
-          label: 'Урон'
-        };
-      case 'healing':
-      case 'heal':
-        return {
-          badge: 'bg-green-500 text-white',
-          text: 'text-green-500',
-          label: 'Лечение'
-        };
-      case 'temp':
-      case 'tempHP':
-        return {
-          badge: 'bg-blue-500 text-white',
-          text: 'text-blue-500',
-          label: 'Временные ХП'
-        };
-      case 'death-save':
-        return {
-          badge: 'bg-purple-500 text-white',
-          text: 'text-purple-500',
-          label: 'Спасбросок от смерти'
-        };
-      default:
-        return {
-          badge: 'bg-gray-500 text-white',
-          text: 'text-gray-500',
-          label: 'Прочее'
-        };
+const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
+  const [displayEvents, setDisplayEvents] = useState<HitPointEvent[]>([]);
+  
+  // Обновляем отображаемые события при изменении списка
+  useEffect(() => {
+    // Сортируем события по времени (самые новые сверху)
+    const sortedEvents = [...events].sort((a, b) => {
+      const timeA = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp as Date).getTime();
+      const timeB = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp as Date).getTime();
+      return timeB - timeA;
+    });
+    
+    // Ограничиваем количество отображаемых событий
+    const limited = sortedEvents.slice(0, maxEvents);
+    setDisplayEvents(limited);
+  }, [events, maxEvents]);
+  
+  // Если нет событий, не отображаем блок
+  if (displayEvents.length === 0) {
+    return null;
+  }
+  
+  // Форматирование числа с плюсом или минусом
+  const formatAmount = (type: HitPointEvent['type'], amount: number): string => {
+    if (type === 'damage') {
+      return `-${amount}`;
+    } else if (type === 'healing' || type === 'heal') {
+      return `+${amount}`;
+    } else if (type === 'tempHP' || type === 'temp') {
+      return `+${amount} (врем)`;
+    } else {
+      return `${amount}`;
     }
   };
-
-  // Форматирование даты
-  const formatDate = (timestamp: number | Date): string => {
-    const date = new Date(timestamp);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  
+  // Получение класса для типа события
+  const getEventClass = (type: HitPointEvent['type']): string => {
+    switch (type) {
+      case 'damage':
+        return 'text-red-500';
+      case 'healing':
+      case 'heal':
+        return 'text-emerald-500';
+      case 'tempHP':
+      case 'temp':
+        return 'text-blue-400';
+      case 'death-save':
+        return 'text-purple-500';
+      default:
+        return 'text-gray-400';
+    }
   };
-
+  
+  // Получение иконки для типа события
+  const getEventIcon = (type: HitPointEvent['type']) => {
+    switch (type) {
+      case 'damage':
+        return <Skull className="h-4 w-4 text-red-500" />;
+      case 'healing':
+      case 'heal':
+        return <Heart className="h-4 w-4 text-emerald-500" />;
+      case 'tempHP':
+      case 'temp':
+        return <Shield className="h-4 w-4 text-blue-400" />;
+      case 'death-save':
+        return <Skull className="h-4 w-4 text-purple-500" />;
+      default:
+        return null;
+    }
+  };
+  
+  // Форматирование временных меток (например, "5 минут назад")
+  const formatTimestamp = (timestamp: number | Date): string => {
+    try {
+      const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
+      return formatDistance(date, new Date(), { 
+        addSuffix: true,
+        locale: ru 
+      });
+    } catch (error) {
+      return 'неизвестно когда';
+    }
+  };
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>История изменений ХП</CardTitle>
+    <Card className="border-t-4 border-t-primary/50 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">История урона и исцеления</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[200px] w-full">
-          {recentEvents.length === 0 ? (
-            <div className="text-center p-4 text-muted-foreground">
-              Нет записей об изменениях хитов
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {recentEvents.map((event, index) => {
-                const style = getEventStyle(event.type);
-                return (
-                  <li key={event.id || index} className="flex items-center justify-between p-2 border-b last:border-0">
-                    <div className="flex items-center gap-2">
-                      <Badge className={style.badge}>{style.label}</Badge>
-                      <span className={style.text}>
-                        {event.type === 'damage' ? `-${event.value}` : `+${event.value}`}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {event.source && <span className="mr-2">{event.source}</span>}
-                      {formatDate(event.timestamp)}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+      <CardContent className="p-0">
+        <ScrollArea className="h-[200px] pr-4">
+          <div className="px-4 pb-4 space-y-3">
+            {displayEvents.map((event, index) => (
+              <div key={event.id || index} className="flex items-start gap-3 py-2">
+                <div className="mt-1">
+                  {getEventIcon(event.type)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{event.source}</span>
+                    <span className={`font-semibold ${getEventClass(event.type)}`}>
+                      {formatAmount(event.type, event.amount)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatTimestamp(event.timestamp)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </ScrollArea>
       </CardContent>
     </Card>

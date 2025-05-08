@@ -1,102 +1,156 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import { Character } from '@/types/character';
-import { getAbilityModifierValue, hasSavingThrowProficiency } from '@/utils/abilityUtils';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { getAbilityModifierValue } from '@/utils/abilityUtils';
 
 interface SkillsPanelProps {
-  character: any;
-  onUpdate?: (updates: Partial<any>) => void;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
 const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const { toast } = useToast();
 
-  const skillsData = {
-    athletics: { ability: 'strength', label: 'Атлетика' },
-    acrobatics: { ability: 'dexterity', label: 'Акробатика' },
-    sleightOfHand: { ability: 'dexterity', label: 'Ловкость рук' },
-    stealth: { ability: 'dexterity', label: 'Скрытность' },
-    arcana: { ability: 'intelligence', label: 'Магия' },
-    history: { ability: 'intelligence', label: 'История' },
-    investigation: { ability: 'intelligence', label: 'Анализ' },
-    nature: { ability: 'intelligence', label: 'Природа' },
-    religion: { ability: 'intelligence', label: 'Религия' },
-    animalHandling: { ability: 'wisdom', label: 'Уход за животными' },
-    insight: { ability: 'wisdom', label: 'Проницательность' },
-    medicine: { ability: 'wisdom', label: 'Медицина' },
-    perception: { ability: 'wisdom', label: 'Внимательность' },
-    survival: { ability: 'wisdom', label: 'Выживание' },
-    deception: { ability: 'charisma', label: 'Обман' },
-    intimidation: { ability: 'charisma', label: 'Запугивание' },
-    performance: { ability: 'charisma', label: 'Выступление' },
-    persuasion: { ability: 'charisma', label: 'Убеждение' },
+  // Группировка навыков по характеристикам
+  const skillsByAbility = {
+    strength: ['athletics'],
+    dexterity: ['acrobatics', 'sleight_of_hand', 'stealth'],
+    intelligence: ['arcana', 'history', 'investigation', 'nature', 'religion'],
+    wisdom: ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
+    charisma: ['deception', 'intimidation', 'performance', 'persuasion']
   };
 
-  const getSkillModifier = (skillKey: string) => {
-    const skill = skillsData[skillKey];
-    if (!skill) return 'N/A';
-
-    const abilityKey = skill.ability;
-    if (!character || !character.abilities || !character.skills) return 'N/A';
-
-    const abilityMod = getAbilityModifierValue(
-      typeof character.abilities[abilityKey] === 'number' 
-        ? character.abilities[abilityKey] as number 
-        : 10 // Default value if not a number
-    );
-    
-    const proficiency = character.skills[skillKey] === true;
-    const proficiencyBonus = character.proficiencyBonus || 2;
-    
-    if (proficiency) {
-      return abilityMod + proficiencyBonus;
-    } else {
-      return abilityMod;
-    }
-  };
-
-  const toggleSkillProficiency = (skillKey: string) => {
-    if (!character || !character.skills || !onUpdate) return;
-
-    const currentProficiency = character.skills[skillKey] === true;
-    const updatedSkills = {
-      ...character.skills,
-      [skillKey]: !currentProficiency,
+  // Преобразование навыков из snake_case в читаемый формат
+  const getSkillDisplayName = (skillKey: string): string => {
+    const nameMap: Record<string, string> = {
+      athletics: 'Атлетика',
+      acrobatics: 'Акробатика',
+      sleight_of_hand: 'Ловкость рук',
+      stealth: 'Скрытность',
+      arcana: 'Магия',
+      history: 'История',
+      investigation: 'Расследование',
+      nature: 'Природа',
+      religion: 'Религия',
+      animal_handling: 'Уход за животными',
+      insight: 'Проницательность',
+      medicine: 'Медицина',
+      perception: 'Восприятие',
+      survival: 'Выживание',
+      deception: 'Обман',
+      intimidation: 'Запугивание',
+      performance: 'Выступление',
+      persuasion: 'Убеждение'
     };
+    return nameMap[skillKey] || skillKey;
+  };
 
-    onUpdate({ skills: updatedSkills });
+  const toggleProficiency = (skillKey: string) => {
+    // Получаем текущее значение навыка
+    const currentSkills = character.skills || {};
+    const currentSkill = currentSkills[skillKey] || { proficient: false };
+    
+    // Определяем, к какой характеристике относится навык
+    const ability = Object.entries(skillsByAbility)
+      .find(([_, skills]) => skills.includes(skillKey))?.[0] || 'dexterity';
+    
+    // Получаем модификатор характеристики
+    const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 10;
+    const abilityMod = getAbilityModifierValue(abilityScore);
+    
+    // Вычисляем значение навыка
+    const profBonus = character.proficiencyBonus || 2;
+    let skillValue = abilityMod;
+    
+    if (!currentSkill.proficient) {
+      skillValue += profBonus;
+    }
+    
+    // Обновляем состояние навыка
+    const updatedSkills = {
+      ...currentSkills,
+      [skillKey]: {
+        ...currentSkill,
+        proficient: !currentSkill.proficient,
+        value: !currentSkill.proficient ? abilityMod + profBonus : abilityMod,
+        bonus: !currentSkill.proficient ? abilityMod + profBonus : abilityMod
+      }
+    };
+    
+    // Обновляем персонажа
+    let updatedProficiencies = { 
+      ...character.proficiencies
+    };
+    
+    // Проверяем тип proficiencies и обновляем соответственно
+    if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
+      // Создаем массив навыков, если его нет
+      const skillsList = updatedProficiencies.skills || [];
+      
+      if (!currentSkill.proficient) {
+        // Добавляем навык в список владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: [...skillsList, skillKey]
+        };
+      } else {
+        // Удаляем навык из списка владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: skillsList.filter(skill => skill !== skillKey)
+        };
+      }
+    }
+    
+    onUpdate({
+      skills: updatedSkills,
+      proficiencies: updatedProficiencies
+    });
+    
+    // Показываем уведомление
+    toast({
+      title: `Навык ${getSkillDisplayName(skillKey)}`,
+      description: !currentSkill.proficient 
+        ? "Добавлен в список владений" 
+        : "Удален из списка владений",
+    });
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle style={{ color: currentTheme.textColor }}>Навыки</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        {Object.entries(skillsData).map(([skillKey, skill]) => (
-          <div key={skillKey} className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span style={{ color: currentTheme.textColor }}>{skill.label}</span>
-              <Badge className="ml-2">{getSkillModifier(skillKey)}</Badge>
-            </div>
-            {onUpdate && (
-              <button onClick={() => toggleSkillProficiency(skillKey)}>
-                {character.skills && character.skills[skillKey] === true ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Circle className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            )}
+    <Card className="p-4">
+      <h3 className="text-lg font-semibold mb-4">Навыки</h3>
+      
+      <div className="space-y-6">
+        {Object.entries(skillsByAbility).map(([ability, skills]) => (
+          <div key={ability} className="space-y-2">
+            <h4 className="text-md font-medium capitalize">{ability === 'strength' ? 'Сила' 
+              : ability === 'dexterity' ? 'Ловкость'
+              : ability === 'constitution' ? 'Телосложение'
+              : ability === 'intelligence' ? 'Интеллект'
+              : ability === 'wisdom' ? 'Мудрость'
+              : 'Харизма'}</h4>
+            
+            {skills.map(skillKey => {
+              const skillInfo = character.skills?.[skillKey] || { proficient: false };
+              return (
+                <div key={skillKey} className="flex items-center justify-between">
+                  <span>{getSkillDisplayName(skillKey)}</span>
+                  <div className="flex items-center gap-4">
+                    <span>{skillInfo.proficient ? '+' : ''}</span>
+                    <Switch
+                      checked={skillInfo.proficient}
+                      onCheckedChange={() => toggleProficiency(skillKey)}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
-      </CardContent>
+      </div>
     </Card>
   );
 };
