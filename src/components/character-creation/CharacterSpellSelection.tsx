@@ -16,6 +16,7 @@ import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -280,7 +281,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         components: spell.components,
         duration: spell.duration,
         description: spell.description,
-        classes: spell.classes,
+        classes: spell.classes || [],
         prepared: true // По умолчанию заклинания подготовлены
       });
       
@@ -384,7 +385,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
         </p>
-        <Separator className="my-2 bg-accent/30" />
+        <Separator className={cn("my-2 bg-accent/30")} />
         <input
           type="text"
           placeholder="Поиск заклинаний..."
@@ -414,7 +415,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className={cn("flex-1")}>
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-4 text-muted-foreground">
