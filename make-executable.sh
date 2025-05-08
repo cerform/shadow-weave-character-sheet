@@ -1,14 +1,10 @@
 
 #!/bin/bash
 
-# Делаем все скрипты исполняемыми
-chmod +x install-dependencies.sh
-chmod +x run-vite.sh
-chmod +x start-vite.sh
-chmod +x install-vite-deps.sh
-chmod +x src/scripts/run-vite.sh
-chmod +x src/scripts/start-vite.js
-chmod +x src/install-vite.sh
-chmod +x install-vite.sh
+# Make all shell scripts executable
+find . -name "*.sh" -type f -exec chmod +x {} \;
 
-echo "Все скрипты теперь исполняемые!"
+echo "Made all shell scripts executable!"
+echo "Next steps:"
+echo "1. Run 'bash install-dependencies.sh' to install required packages"
+echo "2. Run 'bash run-vite.sh' to start the development server"

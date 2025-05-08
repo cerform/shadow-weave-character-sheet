@@ -8,11 +8,38 @@ export interface HitPointEvent {
   timestamp: number;
 }
 
+// Добавляем константы для лимитов характеристик
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,        // Базовый максимум для характеристик
+  EPIC_CAP: 22,        // Максимум для персонажей 10-15 уровня
+  LEGENDARY_CAP: 24,   // Максимум для персонажей 16+ уровня
+  ABSOLUTE_CAP: 30,    // Абсолютный максимум (только для особых случаев)
+};
+
+export interface Item {
+  id?: string;
+  name: string;
+  type?: string;
+  quantity?: number;
+  weight?: number;
+  description?: string;
+  cost?: number;
+  equipped?: boolean;
+  properties?: string[];
+  damage?: string;
+  armorClass?: number;
+  strengthRequired?: number;
+  stealthDisadvantage?: boolean;
+}
+
 export interface Character {
   id: string;
   name: string;
   race: string;
+  subrace?: string;
   class: string;
+  className?: string;
+  subclass?: string;
   level: number;
   background: string;
   alignment: string;
@@ -28,14 +55,22 @@ export interface Character {
   temporaryHp: number;
   hitDice: { total: number; used: number; type: string; dieType?: string; };
   proficiencyBonus: number;
-  proficiencies: string[];
+  proficiencies: string[] | {
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
   skills: Record<string, boolean>;
   savingThrows: Record<string, boolean>;
   armorClass: number;
   initiative: number;
   speed: number;
   equipment: any[];
-  features: string[];
+  features: string[] | {
+    race: string[];
+    class: string[];
+    background: string[];
+  };
   description: string;
   personalityTraits: string;
   ideals: string;
@@ -50,7 +85,15 @@ export interface Character {
     intelligence: number; 
     wisdom: number;
     charisma: number;
+    // Добавляем короткие названия для совместимости
+    STR?: number;
+    DEX?: number;
+    CON?: number;
+    INT?: number;
+    WIS?: number;
+    CHA?: number;
   };
+  // Добавляем недостающие поля
   raceFeatures?: (string | { name: string; description: string; level: number; })[];
   classFeatures?: (string | { name: string; description: string; level: number; })[];
   backgroundFeatures?: (string | { name: string; description: string; level: number; })[];
@@ -65,4 +108,17 @@ export interface Character {
     pp?: number;
     ep?: number;
   };
+  gold?: number;
+  gender?: string;
+  userId?: string;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  abilityPointsUsed?: number;
+  spellcastingAbility?: string;
 }

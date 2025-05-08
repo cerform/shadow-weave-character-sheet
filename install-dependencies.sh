@@ -1,22 +1,41 @@
 
 #!/bin/bash
 
-echo "Установка зависимостей проекта..."
+echo "Installing D&D Character Sheet Application dependencies..."
 
-# Установка основных зависимостей
-npm install --save react react-dom @types/react @types/react-dom
+# Install core dependencies
+npm install --save react react-dom @types/react @types/react-dom react-router-dom
 
-# Установка необходимых dev-зависимостей
-npm install --save-dev vite @vitejs/plugin-react-swc typescript
+# Install development dependencies
+npm install --save-dev typescript @vitejs/plugin-react-swc vite
 
-# Установка UI компонентов
+# Install UI component libraries
 npm install --save @radix-ui/react-tabs @radix-ui/react-separator @radix-ui/react-dropdown-menu 
 npm install --save @radix-ui/react-popover @radix-ui/react-label @radix-ui/react-radio-group 
 npm install --save @radix-ui/react-switch @radix-ui/react-scroll-area
 npm install --save class-variance-authority clsx tailwind-merge lucide-react
 
-# Делаем скрипты исполняемыми
-chmod +x install-dependencies.sh
-chmod +x run-vite.sh
+# Дополнительные пакеты для создания D&D приложения
+npm install --save @tanstack/react-query uuid date-fns
 
-echo "Зависимости установлены! Для запуска приложения выполните 'bash run-vite.sh'"
+# Make scripts executable
+chmod +x run-vite.sh
+chmod +x install-dependencies.sh
+chmod +x make-executable.sh
+if [ -f install-vite.sh ]; then
+  chmod +x install-vite.sh
+fi
+if [ -f start-vite.sh ]; then
+  chmod +x start-vite.sh
+fi
+if [ -f src/install-vite.sh ]; then
+  chmod +x src/install-vite.sh
+fi
+if [ -f src/scripts/run-vite.sh ]; then
+  chmod +x src/scripts/run-vite.sh
+fi
+if [ -f src/scripts/start-vite.js ]; then
+  chmod +x src/scripts/start-vite.js
+fi
+
+echo "Dependencies installed successfully! Run 'bash run-vite.sh' to start the application."
