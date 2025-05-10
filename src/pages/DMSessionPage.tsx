@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { socketService } from '@/services/socket';
 import DiceRoller from '@/components/session/DiceRoller';
 import SessionChat from '@/components/session/SessionChat';
+import SessionEventLog from '@/components/session/SessionEventLog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import useSessionStore from '@/stores/sessionStore';
 import { Session } from '@/types/session';
 import { useAuth } from '@/hooks/use-auth';
+import { v4 as uuidv4 } from 'uuid';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,13 +43,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   Send,
   Clock,
-  UserPlus
+  UserPlus,
+  Download,
+  Copy,
+  MessageSquare,
+  Book,
+  Dice,
+  PlusCircle,
+  Sword,
+  Wand
 } from "lucide-react";
+import { EventLogEntry } from '@/components/session/SessionEventLog';
 
 // Define the Player type since it doesn't exist in session.ts
 interface Player {
@@ -68,8 +82,12 @@ const DMSessionPage = () => {
   const [isEndingSession, setIsEndingSession] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
+  const [eventLog, setEventLog] = useState<EventLogEntry[]>([]);
+  const [diceRollResult, setDiceRollResult] = useState<{formula: string, result: number} | null>(null);
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const [notes, setNotes] = useState('');
+  const [activeTab, setActiveTab] = useState('chat');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -91,6 +109,15 @@ const DMSessionPage = () => {
       
       if (session) {
         setCurrentSession(session);
+        // Инициализация журнала событий с системным сообщением о начале сессии
+        setEventLog([
+          {
+            id: uuidv4(),
+            type: 'system',
+            message: `Сессия "${session.name}" запущена.`,
+            timestamp: new Date().toISOString()
+          }
+        ]);
       } else {
         // Session not found, navigate back
         navigate('/dm');
@@ -102,8 +129,36 @@ const DMSessionPage = () => {
     }
   }, [sessions, sessionId, navigate, toast]);
 
+  // Добавляем запись в журнал событий при броске кубика
+  useEffect(() => {
+    if (diceRollResult) {
+      addEventLogEntry({
+        type: 'dice',
+        message: `Мастер бросил ${diceRollResult.formula}: ${diceRollResult.result}`,
+      });
+    }
+  }, [diceRollResult]);
+
+  // Метод для добавления записи в журнал событий
+  const addEventLogEntry = (entry: Omit<EventLogEntry, 'id' | 'timestamp'>) => {
+    const newEntry: EventLogEntry = {
+      id: uuidv4(),
+      ...entry,
+      timestamp: new Date().toISOString()
+    };
+    
+    setEventLog(prev => [...prev, newEntry]);
+    return newEntry;
+  };
+
   const handleEndSession = () => {
     if (sessionId && endSession) {
+      // Добавляем запись в журнал о завершении сессии
+      addEventLogEntry({
+        type: 'system',
+        message: "Сессия завершена мастером.",
+      });
+      
       endSession(sessionId);
       navigate('/dm');
       toast({
@@ -123,6 +178,12 @@ const DMSessionPage = () => {
     }
     
     // Add player logic would go here
+    
+    // Добавляем запись о подключении игрока
+    addEventLogEntry({
+      type: 'player',
+      message: `Игрок ${newPlayerName} присоединился к сессии.`,
+    });
     
     setNewPlayerName('');
     setIsAddingPlayer(false);
@@ -144,9 +205,118 @@ const DMSessionPage = () => {
     };
     
     setMessages(prev => [...prev, newMessage]);
+    
+    // Добавляем запись в журнал событий о сообщении от мастера
+    addEventLogEntry({
+      type: 'dm',
+      message: `${currentUser?.displayName || 'Мастер'}: "${message}"`,
+    });
+    
     setMessage('');
     
     // In a real app, you'd send this via socket
+  };
+
+  const handleDiceRoll = (formula: string) => {
+    // Простая имитация броска кубика
+    const match = formula.match(/(\d+)d(\d+)([+-]\d+)?/);
+    if (!match) return;
+    
+    const numDice = parseInt(match[1], 10);
+    const sides = parseInt(match[2], 10);
+    const modifier = match[3] ? parseInt(match[3], 10) : 0;
+    
+    let total = 0;
+    for (let i = 0; i < numDice; i++) {
+      total += Math.floor(Math.random() * sides) + 1;
+    }
+    total += modifier;
+    
+    setDiceRollResult({ formula, result: total });
+    
+    return total;
+  };
+
+  const handleClearLog = () => {
+    if (confirm("Вы уверены, что хотите очистить журнал событий?")) {
+      setEventLog([{
+        id: uuidv4(),
+        type: 'system',
+        message: "Журнал событий очищен.",
+        timestamp: new Date().toISOString()
+      }]);
+    }
+  };
+
+  const handleExportLog = () => {
+    // Создаем текст для экспорта журнала
+    const logText = eventLog.map(entry => {
+      const date = new Date(entry.timestamp);
+      return `[${date.toLocaleTimeString()}] [${entry.type.toUpperCase()}] ${entry.message}`;
+    }).join('\n');
+    
+    // Создаем и скачиваем файл
+    const blob = new Blob([logText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `session-log-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Журнал экспортирован",
+      description: "Файл журнала событий сохранен на ваш компьютер"
+    });
+  };
+
+  const copySessionCode = () => {
+    if (currentSession?.code) {
+      navigator.clipboard.writeText(currentSession.code);
+      toast({
+        title: "Код скопирован",
+        description: "Код сессии скопирован в буфер обмена"
+      });
+    }
+  };
+
+  const handleQuickEvent = () => {
+    const events = [
+      "Внезапно начинается сильный дождь.",
+      "Вдалеке слышен странный шум.",
+      "Из тени выходит загадочная фигура.",
+      "На небе появляется странное свечение.",
+      "Земля слегка дрожит под ногами.",
+      "В воздухе ощущается запах дыма.",
+      "Слышится отдаленный рев какого-то существа.",
+      "Налетает внезапный порыв сильного ветра."
+    ];
+    
+    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    
+    // Добавляем событие в журнал
+    addEventLogEntry({
+      type: 'dm',
+      message: `Событие: ${randomEvent}`,
+    });
+    
+    // Добавляем сообщение в чат от мастера
+    const newMessage = {
+      id: Date.now().toString(),
+      sender: currentUser?.displayName || 'Мастер',
+      content: randomEvent,
+      timestamp: new Date().toISOString(),
+      isDM: true
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    
+    toast({
+      title: "Случайное событие",
+      description: randomEvent
+    });
   };
 
   if (!currentSession) {
@@ -167,8 +337,13 @@ const DMSessionPage = () => {
             Назад
           </Button>
           <h1 className="text-3xl font-bold">{currentSession.name}</h1>
-          <div className="px-2 py-1 rounded bg-green-100 text-green-800 text-sm">
+          <div 
+            className="px-2 py-1 rounded bg-green-100 text-green-800 text-sm flex items-center cursor-pointer hover:bg-green-200" 
+            onClick={copySessionCode}
+            title="Нажмите, чтобы скопировать"
+          >
             Код: {currentSession.code}
+            <Copy className="ml-1 h-3 w-3" />
           </div>
         </div>
         
@@ -258,68 +433,161 @@ const DMSessionPage = () => {
           
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Панель управления игрой</CardTitle>
-              <CardDescription>Инструменты Мастера Подземелий</CardDescription>
+              <CardTitle>Инструменты Мастера</CardTitle>
+              <CardDescription>Полезные инструменты для проведения сессии</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate(`/battle/${sessionId}`)}>Карта боя</Button>
-              <Button>Генератор событий</Button>
-              <Button>Бestiарий</Button>
-              <Button>Таблицы лута</Button>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <Card className="h-[500px] flex flex-col">
-            <CardHeader>
-              <CardTitle>Чат сессии</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow overflow-y-auto min-h-[300px] p-4">
-              {messages.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  Здесь будут отображаться сообщения
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map(msg => (
-                    <div key={msg.id} className={`p-2 rounded-lg ${msg.isDM ? 'bg-amber-100 ml-6' : 'bg-blue-100 mr-6'}`}>
-                      <div className="font-bold flex justify-between">
-                        <span>{msg.sender}</span>
-                        <span className="text-xs text-gray-500">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Date(msg.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div>{msg.content}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-            <div className="p-4 border-t flex">
-              <Input 
-                placeholder="Введите сообщение..." 
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-grow"
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <Button onClick={handleSendMessage} className="ml-2">
-                <Send className="h-4 w-4" />
+              <Button onClick={() => navigate(`/battle/${sessionId}`)} className="flex items-center">
+                <Sword className="mr-2 h-4 w-4" />
+                Карта боя
               </Button>
-            </div>
+              
+              <Button onClick={handleQuickEvent} className="flex items-center">
+                <Wand className="mr-2 h-4 w-4" />
+                Случайное событие
+              </Button>
+              
+              <Button className="flex items-center">
+                <Dice className="mr-2 h-4 w-4" />
+                Генератор имен
+              </Button>
+              
+              <Button className="flex items-center">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Бросок для всех
+              </Button>
+            </CardContent>
           </Card>
           
-          <Card className="mt-6">
+          <div className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Заметки сессии</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  className="min-h-[150px]"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Записи для Мастера..."
+                />
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => {
+                  localStorage.setItem(`session_notes_${sessionId}`, notes);
+                  toast({
+                    title: "Заметки сохранены",
+                    description: "Ваши заметки были сохранены локально"
+                  });
+                }}>
+                  Сохранить заметки
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-2">
+                  <TabsTrigger value="chat" className="flex items-center">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Чат
+                  </TabsTrigger>
+                  <TabsTrigger value="log" className="flex items-center">
+                    <Book className="h-4 w-4 mr-2" />
+                    Журнал
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent className="p-0">
+              <TabsContent value="chat" className="m-0">
+                <div className="h-[400px]">
+                  <SessionChat 
+                    messages={messages.map(m => ({ 
+                      sender: m.sender,
+                      text: m.content,
+                      timestamp: m.timestamp 
+                    }))}
+                    onSendMessage={handleSendMessage}
+                    sessionCode={currentSession.code}
+                    playerName={currentUser?.displayName || 'DM'}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="log" className="m-0">
+                <div className="h-[400px]">
+                  <SessionEventLog 
+                    entries={eventLog}
+                    onClearLog={handleClearLog}
+                    onExportLog={handleExportLog}
+                  />
+                </div>
+              </TabsContent>
+            </CardContent>
+          </Card>
+          
+          <Card>
             <CardHeader>
-              <CardTitle>Заметки</CardTitle>
+              <CardTitle className="flex items-center">
+                <Dice className="h-4 w-4 mr-2" />
+                Бросок кубиков
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <textarea 
-                className="w-full h-40 p-2 border rounded"
-                placeholder="Записи для Мастера..."
-              ></textarea>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => handleDiceRoll('1d20')}>
+                  D20
+                </Button>
+                <Button variant="outline" onClick={() => handleDiceRoll('1d12')}>
+                  D12
+                </Button>
+                <Button variant="outline" onClick={() => handleDiceRoll('1d10')}>
+                  D10
+                </Button>
+                <Button variant="outline" onClick={() => handleDiceRoll('1d8')}>
+                  D8
+                </Button>
+                <Button variant="outline" onClick={() => handleDiceRoll('1d6')}>
+                  D6
+                </Button>
+                <Button variant="outline" onClick={() => handleDiceRoll('1d4')}>
+                  D4
+                </Button>
+              </div>
+              
+              {diceRollResult && (
+                <div className="mt-4 p-3 bg-muted rounded-md text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Результат броска {diceRollResult.formula}</div>
+                  <div className="text-2xl font-bold">{diceRollResult.result}</div>
+                </div>
+              )}
+              
+              <div className="mt-4">
+                <Label htmlFor="custom-roll">Произвольный бросок</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input 
+                    id="custom-roll" 
+                    placeholder="2d6+3" 
+                    className="flex-grow"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = (e.target as HTMLInputElement).value;
+                        handleDiceRoll(input);
+                      }
+                    }}
+                  />
+                  <Button onClick={() => {
+                    const input = (document.getElementById('custom-roll') as HTMLInputElement).value;
+                    handleDiceRoll(input);
+                  }}>
+                    Бросить
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -350,6 +618,14 @@ const DMSessionPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Загружаем сохраненные заметки при монтировании компонента */}
+      {useEffect(() => {
+        const savedNotes = localStorage.getItem(`session_notes_${sessionId}`);
+        if (savedNotes) {
+          setNotes(savedNotes);
+        }
+      }, [sessionId])}
     </div>
   );
 };

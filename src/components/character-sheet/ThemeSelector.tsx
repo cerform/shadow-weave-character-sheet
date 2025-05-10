@@ -2,8 +2,7 @@
 import React from 'react';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/use-theme';
-import { ThemeType } from '@/types/theme';
+import { useTheme, ThemeType } from '@/hooks/use-theme';
 
 import {
   DropdownMenu,
