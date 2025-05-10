@@ -3,9 +3,9 @@ export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;  // Добавляем поле subrace
+  subrace?: string;
   class?: string;
-  className?: string; // Добавляем альтернативное поле className
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -18,7 +18,6 @@ export interface Character {
     INT: number;
     WIS: number;
     CHA: number;
-    // Добавляем алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -26,7 +25,6 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  // Добавляем поле stats для обратной совместимости
   stats?: {
     strength: number;
     dexterity: number;
@@ -41,12 +39,17 @@ export interface Character {
     value?: number;
     bonus?: number;
   }>;
+  // Добавляем недостающие свойства
+  skillProficiencies?: string[];
+  skillBonuses?: Record<string, number>;
+  savingThrowProficiencies?: string[];
+  expertise?: string[];
+  
   hitPoints?: {
     current: number;
     maximum: number;
     temporary: number;
   };
-  // Добавляем алиасы для hitPoints
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
@@ -54,7 +57,9 @@ export interface Character {
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
+  initiative?: number;
   savingThrows?: Record<string, boolean>;
+  
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -62,9 +67,16 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  equipment?: Item[];
+  
+  equipment?: Item[] | string[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+    gold?: number;
+  };
+  
   features?: string[] | Feature[];
-  spells?: CharacterSpell[];
+  spells?: CharacterSpell[] | string[];
   spellSlots?: Record<string | number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -73,7 +85,6 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Добавляем поля для gold
   gold?: number;
   deathSaves?: {
     successes: number;
@@ -86,7 +97,6 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
   raceFeatures?: {
     name: string;
     description: string;
@@ -114,16 +124,12 @@ export interface Character {
     gp?: number;
     pp?: number;
   };
-  // Added properties for timestamps
   updatedAt?: string;
   createdAt?: string;
-  // Added property for character image
   image?: string;
-  // Пользовательские поля
   gender?: string;
   userId?: string;
   abilityPointsUsed?: number;
-  // Поля для обратной совместимости
   strength?: number;
   dexterity?: number;
   constitution?: number;
@@ -131,8 +137,6 @@ export interface Character {
   wisdom?: number;
   charisma?: number;
   
-  // Добавляем недостающие поля, используемые в компонентах
-  initiative?: number;
   notes?: string;
   hitDice?: {
     total: number;
@@ -150,6 +154,8 @@ export interface Character {
     current?: number;
     used?: number;
   };
+  
+  // Исправляем тип lastDiceRoll для соответствия коду в DicePanel.tsx
   lastDiceRoll?: {
     type: string;
     result: number | number[];
@@ -158,6 +164,11 @@ export interface Character {
     advantage?: boolean;
     disadvantage?: boolean;
     timestamp: number;
+    // Добавляем дополнительные свойства, используемые в компонентах
+    diceType?: string;
+    count?: number;
+    rolls?: number[];
+    label?: string;
   };
 }
 
@@ -169,7 +180,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
@@ -206,14 +217,12 @@ export interface PlayerCharacter extends Character {
   userId: string;
 }
 
-// Export ability score caps
 export const ABILITY_SCORE_CAPS = {
   BASE_CAP: 20,
   EPIC_CAP: 22,
   LEGENDARY_CAP: 24
 };
 
-// Add HitPointEvent for DamageLog
 export interface HitPointEvent {
   id: string;
   type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
@@ -224,7 +233,6 @@ export interface HitPointEvent {
   newHP?: number;
 }
 
-// Add LevelFeature interface for useLevelFeatures hook
 export interface LevelFeature {
   id: string;
   level: number;

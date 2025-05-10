@@ -109,7 +109,7 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         if (Array.isArray(character.equipment)) {
           if (character.equipment.length > 0) {
             if (typeof character.equipment[0] === 'string') {
-              processedEquipment.push(...(character.equipment as unknown as string[]));
+              processedEquipment.push(...(character.equipment as string[]));
             } else {
               // Если это массив объектов Item
               processedEquipment.push(...(character.equipment as Item[]).map(item => 
@@ -161,9 +161,10 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
         yPosition = (doc as any).lastAutoTable.finalY + 10;
       }
       
-      // Add spells
+      // Add spells - исправляем тип для избежания TypeScript ошибки
       if (character.spells && character.spells.length > 0) {
-        const spellsArray = Array.isArray(character.spells)
+        // Создаем массив строк из массива заклинаний или используем существующий массив строк
+        const spellsArray: string[] = Array.isArray(character.spells) 
           ? (typeof character.spells[0] === 'string'
               ? character.spells as string[]
               : (character.spells as CharacterSpell[]).map(s => s.name))

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Character } from '@/types/character';
 import { Input } from '@/components/ui/input';
 import { getModifierFromAbilityScore } from '@/utils/characterUtils';
-import { Token } from '@/stores/battleStore';
+import { Token } from '@/types/battle';
 
 interface DicePanelProps {
   character: Character;
@@ -42,20 +42,21 @@ const DicePanel: React.FC<DicePanelProps> = ({
       const rolls = Array(count).fill(0).map(() => Math.floor(Math.random() * sides) + 1);
       const total = rolls.reduce((sum, roll) => sum + roll, 0) + mod;
       
-      const newRoll = {
-        diceType: `d${sides}`,
-        count: count,
-        modifier: mod,
-        rolls: rolls,
-        total: total,
-        label: label || `${count}d${sides}${mod >= 0 ? '+' + mod : mod}`,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Обновить интерфейс Character, чтобы включить lastDiceRoll
+      // Формируем объект lastDiceRoll в формате, соответствующем типу в Character
       onUpdate({ 
-        lastDiceRoll: newRoll 
-      } as Partial<Character>);
+        lastDiceRoll: {
+          type: `${count}d${sides}`,
+          result: rolls,
+          modifier: mod,
+          total: total,
+          timestamp: Date.now(),
+          // Добавляем дополнительные поля для обратной совместимости
+          diceType: `d${sides}`,
+          count: count,
+          rolls: rolls,
+          label: label || `${count}d${sides}${mod >= 0 ? '+' + mod : mod}`
+        }
+      });
       
       setIsRolling(false);
     }, 600);
@@ -91,7 +92,15 @@ const DicePanel: React.FC<DicePanelProps> = ({
   const formatRollResult = () => {
     if (!character.lastDiceRoll) return null;
     
-    const { diceType, count, modifier, rolls, total, label } = character.lastDiceRoll;
+    // Используем соответствующие поля в соответствии с типом lastDiceRoll
+    const diceType = character.lastDiceRoll.diceType || character.lastDiceRoll.type;
+    const rolls = character.lastDiceRoll.rolls || 
+                 (Array.isArray(character.lastDiceRoll.result) ? character.lastDiceRoll.result : [character.lastDiceRoll.result]);
+    const count = character.lastDiceRoll.count || rolls.length;
+    const modifier = character.lastDiceRoll.modifier;
+    const total = character.lastDiceRoll.total;
+    const label = character.lastDiceRoll.label || character.lastDiceRoll.type;
+    
     const modifierStr = modifier >= 0 ? `+${modifier}` : `${modifier}`;
     
     return (
@@ -102,7 +111,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
             <span
               key={i}
               className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                roll === parseInt(diceType.slice(1)) ? 'bg-success text-success-foreground' :
+                roll === parseInt(diceType?.slice(1)) ? 'bg-success text-success-foreground' :
                 roll === 1 ? 'bg-destructive text-destructive-foreground' :
                 'bg-secondary text-secondary-foreground'
               }`}

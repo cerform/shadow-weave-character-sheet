@@ -1,111 +1,72 @@
 
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { themes } from '@/lib/themes';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/hooks/use-theme';
+import { ThemeType } from '@/types/theme';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Paintbrush, Check } from "lucide-react";
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { PaintBucket } from 'lucide-react';
 
-export const ThemeSelector = () => {
-  const { setUserTheme, activeTheme } = useUserTheme();
-  const { theme, setTheme, themeStyles } = useTheme();
+const ThemeSelector: React.FC = () => {
+  const { setUserTheme, activeTheme } = useTheme();
   
-  // Получаем список тем в формате массива объектов
-  const themesList = useMemo(() => [
-    { name: "default", label: "По умолчанию" },
-    { name: "warlock", label: "Чернокнижник" },
-    { name: "wizard", label: "Волшебник" },
-    { name: "druid", label: "Друид" },
-    { name: "warrior", label: "Воин" },
-    { name: "bard", label: "Бард" },
-  ], []);
-
-  // Получаем текущую тему из контекстов - мемоизируем для предотвращения мерцания
-  const currentThemeId = useMemo(() => activeTheme || theme || 'default', [activeTheme, theme]);
-  const currentTheme = useMemo(() => themeStyles || themes[currentThemeId as keyof typeof themes] || themes.default, [themeStyles, currentThemeId]);
+  const handleThemeChange = (theme: ThemeType) => {
+    setUserTheme(theme);
+  };
   
-  // Кешируем стили для предотвращения мерцания
-  const accentColor = useMemo(() => currentTheme.accent, [currentTheme]);
-  
-  // Синхронизируем темы между контекстами при инициализации - только один раз
-  useEffect(() => {
-    if (activeTheme && theme !== activeTheme) {
-      setTheme(activeTheme);
+  const getThemeName = (themeKey: string): string => {
+    switch(themeKey) {
+      case 'default': return 'Стандартная';
+      case 'dark': return 'Тёмная';
+      case 'light': return 'Светлая';
+      case 'red': return 'Красная';
+      case 'green': return 'Зелёная';
+      case 'blue': return 'Синяя';
+      case 'purple': return 'Фиолетовая';
+      case 'orange': return 'Оранжевая';
+      case 'yellow': return 'Жёлтая';
+      case 'pink': return 'Розовая';
+      case 'gray': return 'Серая';
+      case 'system': return 'Системная';
+      default: return themeKey;
     }
-  }, []); // Запускаем только при монтировании
-
-  // Обработчик переключения тем - мемоизируем для стабильности
-  const handleThemeChange = useCallback((themeName: string) => {
-    // Чтобы избежать лишних ререндеров, проверяем, нужно ли обновлять тему
-    if (themeName === currentThemeId) return;
-    
-    // Обновляем темы в обоих контекстах только если они изменились
-    setUserTheme(themeName);
-    setTheme(themeName);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('theme', themeName);
-    localStorage.setItem('userTheme', themeName);
-    localStorage.setItem('dnd-theme', themeName);
-    
-    console.log('Switching theme to:', themeName);
-  }, [currentThemeId, setUserTheme, setTheme]);
-
+  };
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="relative"
-          style={{ borderColor: accentColor }}
-        >
-          <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-          <span className="sr-only">Изменить тему</span>
-          <div 
-            className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-            style={{ backgroundColor: accentColor }}
-          />
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <PaintBucket className="h-4 w-4" />
+          <span className="sr-only">Сменить тему</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end"
-        style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderColor: accentColor 
-        }}
-      >
-        {themesList.map((themeItem) => {
-          // Получаем цвета для каждой темы - кешируем для избежания мерцания
-          const themeColor = themes[themeItem.name as keyof typeof themes]?.accent || themes.default.accent;
-          const isActive = currentThemeId === themeItem.name;
-          
-          return (
-            <DropdownMenuItem
-              key={themeItem.name}
-              onClick={() => handleThemeChange(themeItem.name)}
-              className={isActive ? "bg-primary/20" : ""}
-              style={{ 
-                borderLeft: isActive ? `3px solid ${themeColor}` : '',
-                paddingLeft: isActive ? '13px' : ''
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div 
-                  className="h-3 w-3 rounded-full" 
-                  style={{ backgroundColor: themeColor }}
-                />
-                {themeItem.label} {isActive && <Check className="ml-2 h-3 w-3" />}
-              </div>
-            </DropdownMenuItem>
-          );
-        })}
+      <DropdownMenuContent align="end">
+        {Object.keys(themes).map((theme) => (
+          <DropdownMenuItem
+            key={theme}
+            onClick={() => handleThemeChange(theme as ThemeType)}
+            className="cursor-pointer"
+            style={{
+              backgroundColor: activeTheme === theme ? '#f4f4f5' : 'transparent',
+            }}
+          >
+            <div className="flex items-center">
+              <div
+                className="h-4 w-4 rounded-full mr-2"
+                style={{
+                  backgroundColor: themes[theme as keyof typeof themes].primaryColor,
+                }}
+              />
+              {getThemeName(theme)}
+            </div>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

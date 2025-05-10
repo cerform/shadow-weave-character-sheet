@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,17 +106,19 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
   const addItem = () => {
     if (!newItem.trim()) return;
     
-    let updatedEquipment: string[] = [];
+    let updatedEquipment: Array<string | Item> = [];
     
-    // Обрабатываем существующее снаряжение
+    // Обрабатываем существующее снаряжение с учетом разных возможных типов
     if (Array.isArray(character.equipment)) {
       updatedEquipment = [...character.equipment, newItem];
-    } else if (typeof character.equipment === 'object' && character.equipment) {
-      // Конвертируем объект в массив для упрощения
+    } else if (character.equipment && typeof character.equipment === 'object') {
+      // Конвертируем объект в массив строк для упрощения
       const existingItems: string[] = [];
-      if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
-      if (character.equipment.armor) existingItems.push(character.equipment.armor);
-      if (character.equipment.items) existingItems.push(...character.equipment.items);
+      const equipment = character.equipment as any; // используем any для обхода проверки типов
+      
+      if (equipment.weapons) existingItems.push(...equipment.weapons);
+      if (equipment.armor) existingItems.push(equipment.armor);
+      if (equipment.items) existingItems.push(...equipment.items);
       
       updatedEquipment = [...existingItems, newItem];
     } else {
@@ -132,17 +133,19 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
   const addAvailableItem = (item: string) => {
     if (!item) return;
     
-    let updatedEquipment: string[] = [];
+    let updatedEquipment: Array<string | Item> = [];
     
-    // Обрабатываем существующее снаряжение
+    // Обрабатываем существующее снаряжение с учетом разных возможных типов
     if (Array.isArray(character.equipment)) {
       updatedEquipment = [...character.equipment, item];
-    } else if (typeof character.equipment === 'object' && character.equipment) {
-      // Конвертируем объект в массив для упрощения
+    } else if (character.equipment && typeof character.equipment === 'object') {
+      // Конвертируем объект в массив строк для упрощения
       const existingItems: string[] = [];
-      if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
-      if (character.equipment.armor) existingItems.push(character.equipment.armor);
-      if (character.equipment.items) existingItems.push(...character.equipment.items);
+      const equipment = character.equipment as any; // используем any для обхода проверки типов
+      
+      if (equipment.weapons) existingItems.push(...equipment.weapons);
+      if (equipment.armor) existingItems.push(equipment.armor);
+      if (equipment.items) existingItems.push(...equipment.items);
       
       updatedEquipment = [...existingItems, item];
     } else {
@@ -154,14 +157,16 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
   
   // Удаление предмета
   const removeItem = (index: number) => {
-    let currentEquipment: string[] = [];
+    let currentEquipment: Array<string | Item> = [];
     
     if (Array.isArray(character.equipment)) {
       currentEquipment = [...character.equipment];
-    } else if (typeof character.equipment === 'object' && character.equipment) {
-      if (character.equipment.weapons) currentEquipment.push(...character.equipment.weapons);
-      if (character.equipment.armor) currentEquipment.push(character.equipment.armor);
-      if (character.equipment.items) currentEquipment.push(...character.equipment.items);
+    } else if (character.equipment && typeof character.equipment === 'object') {
+      const equipment = character.equipment as any; // используем any для обхода проверки типов
+      
+      if (equipment.weapons) currentEquipment.push(...equipment.weapons);
+      if (equipment.armor) currentEquipment.push(equipment.armor);
+      if (equipment.items) currentEquipment.push(...equipment.items);
     } else {
       return; // Нет снаряжения для удаления
     }
@@ -173,7 +178,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
   };
   
   // Получаем список предметов для отображения
-  const getEquipmentList = (): string[] => {
+  const getEquipmentList = (): Array<string | Item> => {
     if (equipment && equipment.length > 0) {
       return equipment;
     }
@@ -182,11 +187,14 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
       return character.equipment;
     }
     
-    if (typeof character.equipment === 'object' && character.equipment) {
-      const items: string[] = [];
-      if (character.equipment.weapons) items.push(...character.equipment.weapons);
-      if (character.equipment.armor) items.push(character.equipment.armor);
-      if (character.equipment.items) items.push(...character.equipment.items);
+    if (character.equipment && typeof character.equipment === 'object') {
+      const items: Array<string | Item> = [];
+      const equipment = character.equipment as any; // используем any для обхода проверки типов
+      
+      if (equipment.weapons) items.push(...equipment.weapons);
+      if (equipment.armor) items.push(equipment.armor);
+      if (equipment.items) items.push(...equipment.items);
+      
       return items;
     }
     
@@ -235,7 +243,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
                       key={index}
                       className="flex justify-between items-center p-2 bg-muted rounded-md"
                     >
-                      <span>{item}</span>
+                      <span>{typeof item === 'string' ? item : item.name}</span>
                       <Button
                         variant="ghost"
                         size="icon"

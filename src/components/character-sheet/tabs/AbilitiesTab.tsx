@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,21 +117,23 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Обработчик переключения владения спасброском
   const toggleSavingThrowProficiency = (ability: string) => {
+    // Используем безопасный доступ к свойству
     const currentProficiencies = character.savingThrowProficiencies || [];
     
     if (currentProficiencies.includes(ability)) {
       onUpdate({
         savingThrowProficiencies: currentProficiencies.filter(a => a !== ability)
-      });
+      } as Partial<Character>);
     } else {
       onUpdate({
         savingThrowProficiencies: [...currentProficiencies, ability]
-      });
+      } as Partial<Character>);
     }
   };
 
   // Обработчик переключения владения навыком
   const toggleSkillProficiency = (skill: string) => {
+    // Используем безопасный доступ к свойству
     const currentProficiencies = character.skillProficiencies || [];
     const currentExpertise = character.expertise || [];
     
@@ -139,24 +142,25 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       onUpdate({
         skillProficiencies: currentProficiencies.filter(s => s !== skill),
         expertise: currentExpertise.filter(s => s !== skill)
-      });
+      } as Partial<Character>);
     }
     // Если есть владение, но нет экспертизы, добавляем экспертизу
     else if (currentProficiencies.includes(skill)) {
       onUpdate({
         expertise: [...currentExpertise, skill]
-      });
+      } as Partial<Character>);
     }
     // Если нет ни владения, ни экспертизы, добавляем владение
     else {
       onUpdate({
         skillProficiencies: [...currentProficiencies, skill]
-      });
+      } as Partial<Character>);
     }
   };
 
   // Обработчик добавления бонуса к навыку
   const addSkillBonus = (skill: string, bonus: number) => {
+    // Используем безопасный доступ к свойству
     const currentBonuses = character.skillBonuses || {};
     
     onUpdate({
@@ -164,7 +168,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
         ...currentBonuses,
         [skill]: bonus
       }
-    });
+    } as Partial<Character>);
     
     setEditingSkill(null);
     
