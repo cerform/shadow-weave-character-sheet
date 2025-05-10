@@ -43,8 +43,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           character={character}
           onUpdate={updateCharacter}
           races={races}
-          nextStep={nextStep}
-          prevStep={prevStep}
         />
       );
     case 2:
@@ -62,8 +60,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         <CharacterLevelSelection
           character={character}
           onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
           onLevelChange={handleLevelChange}
         />
       );

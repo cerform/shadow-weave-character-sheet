@@ -19,8 +19,8 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   useEffect(() => {
     // Сортируем события по времени (самые новые сверху)
     const sortedEvents = [...events].sort((a, b) => {
-      const timeA = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp as string).getTime();
-      const timeB = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp as string).getTime();
+      const timeA = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
+      const timeB = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
       return timeB - timeA;
     });
     

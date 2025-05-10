@@ -82,7 +82,9 @@ export interface Character {
   hp: number;
   maxHp: number;
   temporaryHp: number; 
+  tempHp?: number; // alias for temporaryHp
   ac: number;
+  armorClass?: number; // alias for ac
   proficiencyBonus: number;
   speed: number;
   initiative: number; 
@@ -137,7 +139,12 @@ export interface Character {
     advantage?: boolean;
     disadvantage?: boolean;
     timestamp: number;
+    diceType?: string;
+    count?: number;
+    rolls?: number[];
+    label?: string;
   };
+  
   // Additional properties
   currentHp?: number;
   gender?: string;
@@ -165,6 +172,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
+  experience?: number; // Alias for xp
   raceFeatures?: Feature[];
   classFeatures?: Feature[];
   backgroundFeatures?: Feature[];
@@ -173,7 +181,11 @@ export interface Character {
     current: number;
     max: number;
     temporary: number;
+    maximum?: number;
   };
+  userId?: string; // For database reference
+  additionalClasses?: Array<{class: string, level: number, subclass?: string}>;
+  abilityPointsUsed?: number;
 }
 
 // Export Character as both default and named export for compatibility
