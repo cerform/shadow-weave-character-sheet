@@ -23,3 +23,6 @@ export interface LightSource {
   intensity: number;
   attachedToTokenId?: number;
 }
+
+// Реэкспортируем типы из .d.ts файла для полной совместимости
+export type { Token, InitiativeItem } from '@/types/battle.d';

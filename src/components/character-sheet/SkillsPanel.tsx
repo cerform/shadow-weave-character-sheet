@@ -92,16 +92,27 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
       
       if (!currentSkill.proficient) {
         // Добавляем навык в список владений
-        updatedProficiencies = {
-          ...updatedProficiencies,
-          skills: [...skillsList, skillKey]
-        };
+        if (updatedProficiencies.skills) {
+          // Если поле skills существует, добавляем в него новый навык
+          updatedProficiencies = {
+            ...updatedProficiencies,
+            skills: [...skillsList, skillKey]
+          };
+        } else {
+          // Если поля skills нет, создаем его с новым навыком
+          updatedProficiencies = {
+            ...updatedProficiencies,
+            skills: [skillKey]
+          };
+        }
       } else {
         // Удаляем навык из списка владений
-        updatedProficiencies = {
-          ...updatedProficiencies,
-          skills: skillsList.filter(skill => skill !== skillKey)
-        };
+        if (updatedProficiencies.skills) {
+          updatedProficiencies = {
+            ...updatedProficiencies,
+            skills: skillsList.filter(skill => skill !== skillKey)
+          };
+        }
       }
     }
     

@@ -68,20 +68,20 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => (
-              <div key={`skill-${skillName}`} className="flex justify-between items-center">
-                <span style={{ color: currentTheme.textColor }}>{skillName}</span>
-                <span style={{ color: currentTheme.textColor }}>
-                  {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : skillValue) : ''}
-                  {typeof skillValue === 'object' && 'value' in skillValue ? 
-                    (skillValue.value !== undefined && Number(skillValue.value) >= 0 ? 
-                      `+${skillValue.value}` : skillValue.value) : ''}
-                  {typeof skillValue === 'object' && 'bonus' in skillValue ? 
-                    (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
-                      `+${skillValue.bonus}` : skillValue.bonus) : ''}
-                </span>
-              </div>
-            ))}
+            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => {
+              const skillText = typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : `${skillValue}`) : 
+                               (typeof skillValue === 'object' && 'value' in skillValue && skillValue.value !== undefined) ? 
+                                  (Number(skillValue.value) >= 0 ? `+${skillValue.value}` : `${skillValue.value}`) : 
+                               (typeof skillValue === 'object' && 'bonus' in skillValue && skillValue.bonus !== undefined) ? 
+                                  (Number(skillValue.bonus) >= 0 ? `+${skillValue.bonus}` : `${skillValue.bonus}`) : '';
+              
+              return (
+                <div key={`skill-${skillName}`} className="flex justify-between items-center">
+                  <span style={{ color: currentTheme.textColor }}>{skillName}</span>
+                  <span style={{ color: currentTheme.textColor }}>{skillText}</span>
+                </div>
+              );
+            })}
             {(!character.skills || Object.keys(character.skills).length === 0) && (
               <div className="text-center text-muted-foreground">
                 Нет доступных навыков
