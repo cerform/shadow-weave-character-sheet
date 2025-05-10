@@ -88,6 +88,10 @@ export function useCharacterCreation() {
       },
       features: [],
       notes: '',
+      savingThrowProficiencies: [],
+      skillProficiencies: [],
+      expertise: [],
+      skillBonuses: {},
     };
   });
 

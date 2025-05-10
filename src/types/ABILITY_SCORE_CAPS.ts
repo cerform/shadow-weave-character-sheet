@@ -7,3 +7,5 @@ export const ABILITY_SCORE_CAPS = {
   EPIC_CAP: 22,         // Epic level maximum (level 10+)
   LEGENDARY_CAP: 24     // Legendary maximum (level 16+)
 };
+
+export default ABILITY_SCORE_CAPS;

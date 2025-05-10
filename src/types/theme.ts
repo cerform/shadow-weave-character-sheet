@@ -15,13 +15,13 @@ export interface Theme {
   accent: string;
   foreground: string;
   cardBackground: string;
-  buttonText?: string;
+  buttonText: string;       // Added buttonText property
   success?: string;
   warning?: string;
   danger?: string;
   info?: string;
   
-  // Add missing theme properties
+  // Theme properties
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;

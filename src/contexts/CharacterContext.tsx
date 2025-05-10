@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/types/character';
+import { getCurrentUid } from "@/utils/authHelpers";
+import { saveCharacterToFirestore } from "@/services/characterService";
 
 // Create the context
 interface CharacterContextProps {
@@ -9,6 +11,12 @@ interface CharacterContextProps {
   updateCharacter: (updates: Partial<Character>) => void;
   resetCharacter: () => void;
   initializeNewCharacter: (characterData?: Partial<Character>) => void;
+  setCharacter: (character: Character) => void;  // Added missing method
+  saveCurrentCharacter: () => Promise<void>;     // Added missing method
+  characters?: Character[];                      // Added for compatibility
+  loading?: boolean;                             // Added for compatibility
+  error?: Error | null;                          // Added for compatibility
+  getUserCharacters?: () => Promise<void>;       // Added for compatibility
 }
 
 const defaultContext: CharacterContextProps = {
@@ -16,6 +24,8 @@ const defaultContext: CharacterContextProps = {
   updateCharacter: () => {},
   resetCharacter: () => {},
   initializeNewCharacter: () => {},
+  setCharacter: () => {},             // Added missing method
+  saveCurrentCharacter: async () => {} // Added missing method
 };
 
 const CharacterContext = createContext<CharacterContextProps>(defaultContext);
@@ -89,6 +99,7 @@ const createDefaultCharacter = (): Character => {
       ability: 'intelligence',
       dc: 10,
       attack: 0,
+      preparedSpellsLimit: 0, // Added this property
     },
     spellSlots: {},
     spells: [],
@@ -103,9 +114,14 @@ const createDefaultCharacter = (): Character => {
       tools: [],
       weapons: [],
       armor: [],
+      skills: [],  // Added skills array for compatibility
     },
     features: [],
     notes: '',
+    savingThrowProficiencies: [], // Added for compatibility
+    skillProficiencies: [],       // Added for compatibility 
+    expertise: [],                // Added for compatibility
+    skillBonuses: {},             // Added for compatibility
   };
 
   return defaultCharacter;
@@ -114,6 +130,9 @@ const createDefaultCharacter = (): Character => {
 export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
   // State for the current character
   const [character, setCharacter] = useState<Character | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Load character from localStorage or initialize new character
   useEffect(() => {
@@ -160,6 +179,43 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     setCharacter(newCharacter);
   };
 
+  // Function to save current character to Firestore
+  const saveCurrentCharacter = async () => {
+    if (!character) return;
+    
+    try {
+      const userId = getCurrentUid();
+      if (!userId) throw new Error("User not authenticated");
+      
+      const characterToSave = {
+        ...character,
+        userId,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await saveCharacterToFirestore(characterToSave);
+      console.log("Character saved to Firestore successfully");
+    } catch (err) {
+      console.error("Error saving character to Firestore:", err);
+      throw err;
+    }
+  };
+
+  // Function to get user characters from Firestore (placeholder)
+  const getUserCharacters = async () => {
+    setLoading(true);
+    try {
+      // This would actually fetch from Firestore in a real implementation
+      setCharacters([]);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching characters:", err);
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <CharacterContext.Provider
       value={{
@@ -167,6 +223,12 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
         updateCharacter,
         resetCharacter,
         initializeNewCharacter,
+        setCharacter,             // Added missing method
+        saveCurrentCharacter,     // Added missing method
+        characters,               // Added for compatibility
+        loading,                  // Added for compatibility
+        error,                    // Added for compatibility
+        getUserCharacters         // Added for compatibility
       }}
     >
       {children}

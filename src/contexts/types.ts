@@ -13,10 +13,10 @@ export interface Theme {
   textColor: string;
   mutedTextColor: string;
   primaryColor?: string; // Added for backward compatibility
+  buttonText: string;    // Added buttonText property
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;
-  buttonText?: string;
 }
 
 // Re-export Character for use across the project
