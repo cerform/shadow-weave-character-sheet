@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
@@ -265,7 +264,7 @@ export const useCharacterCreation = () => {
     }
     
     if (level + additionalLevels > 20) {
-      toast.error(`Общий уровень персонажа не может прев��шать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
+      toast.error(`Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
       return;
     }
     

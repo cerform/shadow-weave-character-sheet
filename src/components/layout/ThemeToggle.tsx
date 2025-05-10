@@ -3,6 +3,7 @@ import React from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { useUserTheme } from '@/hooks/use-user-theme';
 import { themes } from '@/lib/themes';
+import { ThemeType } from '@/types/theme';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,18 +19,18 @@ const ThemeToggle: React.FC = () => {
   const { setUserTheme } = useUserTheme();
   
   const themeOptions = [
-    { name: 'default', label: 'По умолчанию' },
-    { name: 'warlock', label: 'Колдун' },
-    { name: 'wizard', label: 'Волшебник' },
-    { name: 'druid', label: 'Друид' },
-    { name: 'warrior', label: 'Воин' },
-    { name: 'bard', label: 'Бард' },
-    { name: 'monk', label: 'Монах' },
-    { name: 'ranger', label: 'Следопыт' },
-    { name: 'sorcerer', label: 'Чародей' },
+    { name: 'default' as ThemeType, label: 'По умолчанию' },
+    { name: 'warlock' as ThemeType, label: 'Колдун' },
+    { name: 'wizard' as ThemeType, label: 'Волшебник' },
+    { name: 'druid' as ThemeType, label: 'Друид' },
+    { name: 'warrior' as ThemeType, label: 'Воин' },
+    { name: 'bard' as ThemeType, label: 'Бард' },
+    { name: 'monk' as ThemeType, label: 'Монах' },
+    { name: 'ranger' as ThemeType, label: 'Следопыт' },
+    { name: 'sorcerer' as ThemeType, label: 'Чародей' },
   ];
   
-  const handleThemeChange = (themeName: string) => {
+  const handleThemeChange = (themeName: ThemeType) => {
     setTheme(themeName);
     setUserTheme(themeName);
     

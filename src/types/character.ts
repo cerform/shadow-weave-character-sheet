@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -170,6 +169,36 @@ export interface Character {
     rolls?: number[];
     label?: string;
   };
+
+  // Adding missing properties from errors
+  additionalClasses?: string[];
+  spellcasting?: {
+    ability?: string;
+    dc?: number;
+    attack?: number;
+    preparedSpellsLimit?: number;
+  };
+  
+  // Make sure these properties exist as mentioned in errors
+  notes?: string;
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: Record<string, number>;
+  
+  // Ensure spell property is flexible enough
+  spells?: (CharacterSpell | string)[] | CharacterSpell[] | string[];
+  
+  // Ensure equipment property is flexible enough
+  equipment?: Item[] | string[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+    gold?: number;
+  };
+  
+  // Ensure features property is flexible enough
+  features?: string[] | Feature[] | (string | Feature)[];
 }
 
 export interface CharacterSpell {

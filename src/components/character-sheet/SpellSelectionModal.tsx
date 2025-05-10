@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -188,7 +187,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Копируем массив заклинаний персонажа или создаем новый
-    const updatedSpells = [...(character.spells || [])];
+    const updatedSpells = [...(character.spells || [])] as (CharacterSpell | string)[];
     
     // Добавляем заклинание
     updatedSpells.push(spell);
@@ -210,7 +209,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         return spell !== spellName;
       }
       return spell.name !== spellName;
-    });
+    }) as (CharacterSpell | string)[];
     
     onUpdate({ spells: updatedSpells });
     

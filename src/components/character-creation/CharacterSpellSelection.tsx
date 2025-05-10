@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -269,7 +268,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       addSpell(spell);
       
       // Также добавляем заклинание прямо в персонажа
-      const updatedSpells = [...(character.spells || [])];
+      const updatedSpells = [...(character.spells || [])] as (CharacterSpell | string)[];
       updatedSpells.push({
         id: spell.id,
         name: spell.name,
@@ -301,7 +300,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         const updatedSpells = character.spells.filter(s => {
           if (typeof s === 'string') return s !== spell.name;
           return s.id !== spell.id && s.name !== spell.name;
-        });
+        }) as (CharacterSpell | string)[];
         
         updateCharacter({ spells: updatedSpells });
         

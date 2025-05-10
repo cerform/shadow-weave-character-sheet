@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UserType } from "@/types/auth";
 import { Input } from "@/components/ui/input";
@@ -25,6 +24,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   
   const themeKey = (user?.isDM ? 'warlock' : 'default') as keyof typeof import('@/lib/themes').themes;
   const theme = import('@/lib/themes').then(m => m.themes[themeKey] || m.themes.default);
+  
+  // When creating a Theme object, make sure to include all required properties:
+  const cardTheme = {
+    name: 'Custom',
+    primary: currentTheme.primary,
+    secondary: currentTheme.primary, // Provide a valid fallback
+    accent: currentTheme.accent,
+    background: currentTheme.background,
+    foreground: currentTheme.foreground,
+    textColor: currentTheme.textColor,
+    mutedTextColor: currentTheme.textColor, // Provide a valid fallback
+    cardBackground: currentTheme.cardBackground
+  };
   
   return (
     <div 

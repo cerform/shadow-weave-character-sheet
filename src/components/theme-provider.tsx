@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -22,7 +21,7 @@ export const ThemeProviderContext = React.createContext<ThemeContextType>({
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const { activeTheme, setUserTheme } = useUserTheme();
-  const [theme, setTheme] = React.useState<string>(activeTheme || 'default');
+  const [theme, setTheme] = React.useState<ThemeType>(activeTheme || 'default');
 
   // Синхронизируем с UserTheme при изменении activeTheme
   React.useEffect(() => {
@@ -48,7 +47,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   }, [theme]);
 
   // Обработчик для установки темы с синхронизацией между контекстами
-  const handleSetTheme = (newTheme: string) => {
+  const handleSetTheme = (newTheme: ThemeType) => {
     setTheme(newTheme);
     setUserTheme(newTheme);
     

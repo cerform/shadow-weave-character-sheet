@@ -14,10 +14,10 @@ import {
 import { PaintBucket } from 'lucide-react';
 
 const ThemeSelector: React.FC = () => {
-  const { setUserTheme, activeTheme } = useTheme();
+  const { currentTheme, setTheme, theme } = useTheme();
   
-  const handleThemeChange = (theme: ThemeType) => {
-    setUserTheme(theme);
+  const handleThemeChange = (themeKey: ThemeType) => {
+    setTheme(themeKey);
   };
   
   const getThemeName = (themeKey: string): string => {
@@ -47,23 +47,23 @@ const ThemeSelector: React.FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {Object.keys(themes).map((theme) => (
+        {Object.keys(themes).map((themeKey) => (
           <DropdownMenuItem
-            key={theme}
-            onClick={() => handleThemeChange(theme as ThemeType)}
+            key={themeKey}
+            onClick={() => handleThemeChange(themeKey as ThemeType)}
             className="cursor-pointer"
             style={{
-              backgroundColor: activeTheme === theme ? '#f4f4f5' : 'transparent',
+              backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',
             }}
           >
             <div className="flex items-center">
               <div
                 className="h-4 w-4 rounded-full mr-2"
                 style={{
-                  backgroundColor: themes[theme as keyof typeof themes].primaryColor,
+                  backgroundColor: themes[themeKey as keyof typeof themes].primary,
                 }}
               />
-              {getThemeName(theme)}
+              {getThemeName(themeKey)}
             </div>
           </DropdownMenuItem>
         ))}
