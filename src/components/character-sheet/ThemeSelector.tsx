@@ -1,79 +1,38 @@
 
 import React from 'react';
-import { themes } from '@/lib/themes';
-import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemeType } from '@/types/theme';
+import { Button } from '@/components/ui/button';
+import { Moon, Sun, Palette, Wand } from 'lucide-react';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PaintBucket } from 'lucide-react';
-
-const ThemeSelector: React.FC = () => {
-  // Используем правильные имена из хука
+const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
-  
-  const handleThemeChange = (themeKey: string) => {
-    // Convert the string to ThemeType before passing to setTheme
-    setTheme(themeKey as ThemeType);
-  };
-  
-  const getThemeName = (themeKey: string): string => {
-    switch(themeKey) {
-      case 'default': return 'Стандартная';
-      case 'dark': return 'Тёмная';
-      case 'light': return 'Светлая';
-      case 'red': return 'Красная';
-      case 'green': return 'Зелёная';
-      case 'blue': return 'Синяя';
-      case 'purple': return 'Фиолетовая';
-      case 'orange': return 'Оранжевая';
-      case 'yellow': return 'Жёлтая';
-      case 'pink': return 'Розовая';
-      case 'gray': return 'Серая';
-      case 'system': return 'Системная';
-      default: return themeKey;
-    }
-  };
-  
+
+  const themes: { id: ThemeType; name: string; icon: React.ReactNode }[] = [
+    { id: 'light', name: 'Светлая', icon: <Sun className="h-4 w-4" /> },
+    { id: 'dark', name: 'Тёмная', icon: <Moon className="h-4 w-4" /> },
+    { id: 'wizard', name: 'Волшебник', icon: <Wand className="h-4 w-4" /> },
+    { id: 'warlock', name: 'Колдун', icon: <Palette className="h-4 w-4" /> },
+  ];
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <PaintBucket className="h-4 w-4" />
-          <span className="sr-only">Сменить тему</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {Object.keys(themes).map((themeKey) => {
-          const currentTheme = themes[themeKey as keyof typeof themes];
-          return (
-            <DropdownMenuItem
-              key={themeKey}
-              onClick={() => handleThemeChange(themeKey)}
-              className="cursor-pointer"
-              style={{
-                backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',
-              }}
-            >
-              <div className="flex items-center">
-                <div
-                  className="h-4 w-4 rounded-full mr-2"
-                  style={{
-                    backgroundColor: currentTheme.primary || currentTheme.accent || '#000000',
-                  }}
-                />
-                {getThemeName(themeKey)}
-              </div>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">Тема оформления</h3>
+      <div className="flex flex-wrap gap-2">
+        {themes.map((t) => (
+          <Button
+            key={t.id}
+            size="sm"
+            variant={theme === t.id ? 'default' : 'outline'}
+            className="flex items-center gap-1"
+            onClick={() => setTheme(t.id)}
+          >
+            {t.icon}
+            <span>{t.name}</span>
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -1,7 +1,5 @@
 
-/**
- * Преобразует компоненты заклинания в строковое представление
- */
+// Конвертирует компоненты заклинания в строку
 export function componentsToString({
   verbal = false,
   somatic = false,
@@ -21,89 +19,53 @@ export function componentsToString({
   if (somatic) components.push('С');
   if (material) components.push('М');
   
-  let result = components.length > 0 ? `(${components.join(', ')})` : '';
+  let result = components.join(', ');
   
-  if (ritual) {
-    result += ' (ритуал)';
-  }
-  
-  if (concentration) {
-    result += ' (концентрация)';
-  }
-  
-  return result.trim();
-}
-
-/**
- * Преобразует строковое представление компонентов в объект
- */
-export function stringToComponents(componentsString: string): {
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-  materials?: string;
-} {
-  const result = {
-    verbal: false,
-    somatic: false,
-    material: false,
-    ritual: false,
-    concentration: false,
-    materials: undefined as string | undefined
-  };
-  
-  if (!componentsString) return result;
-  
-  // Проверяем наличие компонентов В, С, М
-  result.verbal = /В/i.test(componentsString);
-  result.somatic = /С/i.test(componentsString);
-  result.material = /М/i.test(componentsString);
-  
-  // Проверяем ритуал и концентрацию
-  result.ritual = /ритуал/i.test(componentsString);
-  result.concentration = /концентрация/i.test(componentsString);
-  
-  // Извлекаем материальные компоненты, если они указаны
-  const materialsMatch = componentsString.match(/М\s*\((.*?)\)/i);
-  if (materialsMatch && materialsMatch[1]) {
-    result.materials = materialsMatch[1].trim();
-  }
+  if (ritual) result += ' (ритуал)';
+  if (concentration) result += ' (концентрация)';
   
   return result;
 }
 
-/**
- * Возвращает описание школы магии по ее названию
- */
-export function getSchoolDescription(school: string): string {
-  switch (school.toLowerCase()) {
-    case 'воплощение':
-    case 'evocation':
-      return 'Заклинания воплощения манипулируют магической энергией для создания желаемого эффекта.';
-    case 'преобразование':
-    case 'transmutation':
-      return 'Заклинания преобразования изменяют свойства существа, объекта или окружающей среды.';
-    case 'прорицание':
-    case 'divination':
-      return 'Заклинания прорицания раскрывают информацию в форме тайн, забытых знаний, предсказаний будущего или нахождения скрытых вещей.';
-    case 'некромантия':
-    case 'necromancy':
-      return 'Заклинания некромантии манипулируют энергиями жизни и смерти.';
-    case 'ограждение':
-    case 'abjuration':
-      return 'Заклинания ограждения являются защитными по своей природе, защищая заклинателя или цели от эффектов.';
-    case 'очарование':
-    case 'enchantment':
-      return 'Заклинания очарования воздействуют на разум других, влияя или контролируя их поведение.';
-    case 'иллюзия':
-    case 'illusion':
-      return 'Заклинания иллюзии обманывают чувства или разум других существ.';
-    case 'вызов':
-    case 'conjuration':
-      return 'Заклинания вызова включают транспортировку объектов и существ из одного места в другое.';
-    default:
-      return 'Универсальная школа магии.';
+// Получает имя заклинания на выбранном языке
+export function getSpellName(spell: any, language = 'ru'): string {
+  if (!spell) return '';
+  
+  if (language === 'en' && spell.name_en) {
+    return spell.name_en;
   }
+  
+  return spell.name;
+}
+
+// Форматирует школу магии для отображения
+export function formatSchool(school: string): string {
+  const schoolMap: Record<string, string> = {
+    'abjuration': 'Ограждение',
+    'conjuration': 'Вызов',
+    'divination': 'Прорицание',
+    'enchantment': 'Очарование',
+    'evocation': 'Воплощение',
+    'illusion': 'Иллюзия',
+    'necromancy': 'Некромантия',
+    'transmutation': 'Преобразование',
+    'universal': 'Универсальная'
+  };
+  
+  return schoolMap[school.toLowerCase()] || school;
+}
+
+// Форматирует уровень заклинания
+export function formatSpellLevel(level: number): string {
+  if (level === 0) return 'Заговор';
+  return `${level} уровень`;
+}
+
+// Форматирует компоненты заклинания
+export function formatComponents(components: string): string {
+  if (!components) return '';
+  
+  return components.replace(/В/g, 'Вербальный')
+                 .replace(/С/g, 'Соматический')
+                 .replace(/М/g, 'Материальный');
 }

@@ -18,8 +18,7 @@ const CharactersList = () => {
     }
   }, [characters]);
 
-  // Placeholder functions for refreshing and deleting characters
-  // These should be implemented properly in your CharacterContext
+  // Функция для обновления списка персонажей
   const refreshCharacters = async () => {
     // This should be implemented in your CharacterContext
     console.log("Character refresh requested");
@@ -29,6 +28,7 @@ const CharactersList = () => {
     }
   };
   
+  // Функция для удаления персонажа
   const deleteCharacter = async (id: string) => {
     // This should be implemented in your CharacterContext
     console.log(`Delete character requested for id: ${id}`);

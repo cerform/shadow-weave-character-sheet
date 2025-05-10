@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Character, AbilityScores } from '@/types/character';
 import { Input } from '@/components/ui/input';
@@ -33,7 +34,12 @@ const toggleSkillProficiency = (skill: string, character: Character, onUpdate: (
   
   const currentSkill = skills[skill];
   if (typeof currentSkill === 'number') {
-    skills[skill] = currentSkill > 0 ? 0 : 1;
+    // Convert number format to object format
+    skills[skill] = {
+      proficient: currentSkill > 0,
+      expertise: false,
+      value: currentSkill
+    };
   } else if (currentSkill && typeof currentSkill === 'object') {
     skills[skill] = {
       ...currentSkill,
