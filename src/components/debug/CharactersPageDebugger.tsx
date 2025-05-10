@@ -1,248 +1,308 @@
-
-import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { AlertCircle, Bug } from 'lucide-react';
+import React, { useState } from 'react';
+import { Character } from '@/types/character';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { getCharacterById, getAllCharacters, saveCharacterToFirestore, deleteCharacterById } from '@/services/characterService';
 import { getCurrentUid } from '@/utils/authHelpers';
-import { validateCharacters } from '@/utils/debugUtils';
-import { normalizeCharacterData } from '@/utils/characterNormalizer';
-import DebugPanel from './DebugPanel';
+import { createDefaultCharacter } from '@/utils/characterUtils';
 
 interface CharactersPageDebuggerProps {
-  title?: string;
+  onCharacterLoad?: (character: Character) => void;
+  onCharacterCreate?: (character: Character) => void;
 }
 
-// Определяем тип для отладочных данных
-interface DebugInfo {
-  page: {
-    route: string;
-    timestamp: string;
-  };
-  characters: {
-    total: string | number;
-    isArray: boolean;
-    firstCharacterId: string;
-    emptyOrInvalid: boolean;
-  };
-  firebaseAuth: {
-    currentUid: string | null;
-    isAuthenticated: boolean;
-  };
-  context: {
-    loading: boolean;
-    error: string | null;
-    charactersCount: number;
-  };
-  // Добавляем поле firstCharacter как опциональное
-  firstCharacter?: {
-    id: string;
-    name: string;
-    userId: string;
-    userIdMatches: boolean;
-    hasMissingFields: boolean;
-    normalized: {
-      hadChanges: boolean;
-      nameNormalized: boolean;
-      userIdNormalized: boolean;
-    };
-  };
-}
-
-const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
-  title = 'Диагностика страницы персонажей'
+const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({ 
+  onCharacterLoad,
+  onCharacterCreate
 }) => {
-  const [validationReport, setValidationReport] = useState<any>(null);
-  const [debugData, setDebugData] = useState<DebugInfo | null>(null);
-  const [consoleErrors, setConsoleErrors] = useState<string[]>([]);
+  const [characterId, setCharacterId] = useState<string>('');
+  const [characterJson, setCharacterJson] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
+  const { character, updateCharacter } = useCharacter();
   
-  // Получаем данные из контекста персонажей
-  const { characters, loading, error, getUserCharacters } = useCharacter();
-  
-  // Собираем информацию для отладки
-  useEffect(() => {
-    // Получаем текущий userId
-    const currentUid = getCurrentUid();
+  // Загрузка персонажа по ID
+  const handleLoadCharacter = async () => {
+    if (!characterId) {
+      setErrorMessage('Введите ID персонажа');
+      return;
+    }
     
-    // Анализируем данные персонажей
-    if (characters) {
-      const validation = validateCharacters(characters);
-      setValidationReport(validation);
-      
-      // Создаем более детальные данные для отладки
-      const debugInfo: DebugInfo = {
-        page: {
-          route: '/characters',
-          timestamp: new Date().toISOString(),
-        },
-        characters: {
-          total: Array.isArray(characters) ? characters.length : 'не массив',
-          isArray: Array.isArray(characters),
-          firstCharacterId: Array.isArray(characters) && characters.length > 0 ? characters[0]?.id : 'нет',
-          emptyOrInvalid: !Array.isArray(characters) || characters.length === 0
-        },
-        firebaseAuth: {
-          currentUid,
-          isAuthenticated: !!currentUid
-        },
-        context: {
-          loading,
-          error: error || 'нет ошибок',
-          charactersCount: Array.isArray(characters) ? characters.length : 0
+    setIsLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const loadedCharacter = await getCharacterById(characterId);
+      if (loadedCharacter) {
+        setCharacterJson(JSON.stringify(loadedCharacter, null, 2));
+        toast({
+          title: 'Персонаж загружен',
+          description: `Загружен персонаж: ${loadedCharacter.name}`
+        });
+        
+        if (onCharacterLoad) {
+          onCharacterLoad(loadedCharacter);
         }
-      };
+      } else {
+        setErrorMessage('Персонаж не найден');
+      }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Загрузка всех персонажей пользователя
+  const handleLoadAllCharacters = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const userCharacters = await getAllCharacters();
+      setCharacters(userCharacters);
+      toast({
+        title: 'Персонажи загружены',
+        description: `Загружено ${userCharacters.length} персонажей`
+      });
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Создание нового персонажа
+  const handleCreateCharacter = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const newCharacter = createDefaultCharacter();
+      newCharacter.userId = getCurrentUid();
       
-      // Если есть персонажи, добавляем информацию о первом
-      if (Array.isArray(characters) && characters.length > 0 && characters[0]) {
-        const firstChar = characters[0];
-        
-        // Применяем нормализацию к первому персонажу для анализа
-        const normalizedChar = normalizeCharacterData(firstChar);
-        
-        // Добавляем данные для отладки
-        debugInfo.firstCharacter = {
-          id: firstChar.id || 'отсутствует',
-          name: firstChar.name || 'без имени',
-          userId: firstChar.userId || 'отсутствует',
-          userIdMatches: firstChar.userId === currentUid,
-          hasMissingFields: !firstChar.id || !firstChar.userId || !firstChar.name,
-          normalized: {
-            hadChanges: JSON.stringify(normalizedChar) !== JSON.stringify(firstChar),
-            nameNormalized: normalizedChar.name !== firstChar.name,
-            userIdNormalized: normalizedChar.userId !== firstChar.userId
-          }
-        };
+      await saveCharacterToFirestore(newCharacter);
+      
+      toast({
+        title: 'Персонаж создан',
+        description: `Создан новый персонаж с ID: ${newCharacter.id}`
+      });
+      
+      setCharacterId(newCharacter.id);
+      setCharacterJson(JSON.stringify(newCharacter, null, 2));
+      
+      if (onCharacterCreate) {
+        onCharacterCreate(newCharacter);
+      }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Сохранение изменений в персонаже
+  const handleSaveCharacter = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    
+    try {
+      let characterToSave: Character;
+      
+      try {
+        characterToSave = JSON.parse(characterJson);
+      } catch (e) {
+        setErrorMessage('Ошибка парсинга JSON');
+        setIsLoading(false);
+        return;
       }
       
-      setDebugData(debugInfo);
+      await saveCharacterToFirestore(characterToSave);
+      
+      toast({
+        title: 'Персонаж сохранен',
+        description: `Персонаж ${characterToSave.name} успешно сохранен`
+      });
+      
+      // Обновляем текущего персонажа, если он загружен
+      if (character && character.id === characterToSave.id) {
+        updateCharacter(characterToSave);
+      }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [characters, loading, error]);
+  };
   
-  // Собираем ошибки консоли
-  useEffect(() => {
-    const originalConsoleError = console.error;
-    const errors: string[] = [];
+  // Удаление персонажа
+  const handleDeleteCharacter = async (id: string) => {
+    if (!confirm(`Вы уверены, что хотите удалить персонажа с ID ${id}?`)) {
+      return;
+    }
     
-    console.error = (...args) => {
-      // Вызываем оригинальный метод
-      originalConsoleError.apply(console, args);
-      
-      // Добавляем ошибку в массив
-      const errorMessage = args.map(arg => 
-        typeof arg === 'string' ? arg : 
-        arg instanceof Error ? arg.message : 
-        JSON.stringify(arg)
-      ).join(' ');
-      
-      errors.push(errorMessage);
-      setConsoleErrors([...errors]);
-    };
+    setIsLoading(true);
+    setErrorMessage('');
     
-    // Восстанавливаем оригинальный метод при размонтировании
-    return () => {
-      console.error = originalConsoleError;
-    };
-  }, []);
+    try {
+      await deleteCharacterById(id);
+      
+      toast({
+        title: 'Персонаж удален',
+        description: `Персонаж с ID ${id} успешно удален`
+      });
+      
+      // Обновляем список персонажей
+      const updatedCharacters = characters.filter(c => c.id !== id);
+      setCharacters(updatedCharacters);
+      
+      // Очищаем поля, если удаляемый персонаж был выбран
+      if (characterId === id) {
+        setCharacterId('');
+        setCharacterJson('');
+      }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
-  // Если нет никаких проблем, не отображаем компонент
-  if (!error && !validationReport?.issues?.length && consoleErrors.length === 0) {
-    return null;
-  }
+  // Обработка ошибок
+  const handleError = (error: string | Error): void => {
+    if (error instanceof Error) {
+      setErrorMessage(error.message);
+    } else {
+      setErrorMessage(error);
+    }
+    
+    toast({
+      title: 'Ошибка',
+      description: typeof error === 'string' ? error : error.message,
+      variant: 'destructive'
+    });
+  };
+  
+  // Загрузка текущего персонажа из контекста
+  const handleLoadCurrentCharacter = () => {
+    if (!character) {
+      setErrorMessage('Нет загруженного персонажа в контексте');
+      return;
+    }
+    
+    setCharacterId(character.id);
+    setCharacterJson(JSON.stringify(character, null, 2));
+    
+    toast({
+      title: 'Персонаж загружен из контекста',
+      description: `Загружен персонаж: ${character.name}`
+    });
+  };
   
   return (
-    <Card className="bg-black/30 backdrop-blur-sm border-yellow-500/30 mb-4">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-yellow-400 flex items-center text-lg gap-2">
-          <Bug size={18} />
-          {title}
-        </CardTitle>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Отладка персонажей</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 pt-0">
-        {/* Информация о странице */}
-        <DebugPanel 
-          title="1. Данные страницы /characters" 
-          data={debugData?.page || { route: '/characters' }}
-          showByDefault={true}
-          variant="info"
-        />
-        
-        {/* Состояние контекста */}
-        <DebugPanel 
-          title="2. Состояние контекста персонажей" 
-          data={debugData?.context || { loading }}
-          variant={error ? 'error' : loading ? 'warning' : 'info'}
-          showByDefault={!!error}
-        />
-        
-        {/* Данные авторизации */}
-        <DebugPanel 
-          title="3. Firebase авторизация" 
-          data={debugData?.firebaseAuth || {}}
-          showByDefault={false}
-          variant={debugData?.firebaseAuth?.isAuthenticated ? 'info' : 'warning'}
-        />
-        
-        {/* Проблемы с персонажами */}
-        {validationReport && !validationReport.valid && (
-          <DebugPanel 
-            title={`4. Проблемы данных (${validationReport.issues?.length || 0})`}
-            data={validationReport}
-            showByDefault={true}
-            variant="error"
-          />
-        )}
-        
-        {/* Ошибки консоли */}
-        {consoleErrors.length > 0 && (
-          <div className="bg-red-900/20 border border-red-600/50 rounded-md p-3 overflow-auto">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle size={16} className="text-red-400" />
-              <h4 className="font-medium text-red-300">
-                Перехвачено {consoleErrors.length} ошибок консоли
-              </h4>
+      <CardContent>
+        <Tabs defaultValue="load">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="load">Загрузка</TabsTrigger>
+            <TabsTrigger value="edit">Редактирование</TabsTrigger>
+            <TabsTrigger value="list">Список</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="load" className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="ID персонажа"
+                value={characterId}
+                onChange={(e) => setCharacterId(e.target.value)}
+              />
+              <Button onClick={handleLoadCharacter} disabled={isLoading}>
+                Загрузить
+              </Button>
             </div>
-            <ul className="space-y-1">
-              {consoleErrors.map((err, idx) => (
-                <li key={idx} className="text-xs bg-red-950/50 p-2 rounded">
-                  {err}
-                </li>
+            
+            <div className="flex space-x-2">
+              <Button onClick={handleCreateCharacter} disabled={isLoading} variant="outline">
+                Создать нового
+              </Button>
+              <Button onClick={handleLoadCurrentCharacter} disabled={isLoading || !character} variant="outline">
+                Загрузить текущего
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="edit" className="space-y-4">
+            <Textarea
+              placeholder="JSON персонажа"
+              value={characterJson}
+              onChange={(e) => setCharacterJson(e.target.value)}
+              className="min-h-[300px] font-mono text-sm"
+            />
+            
+            <div className="flex justify-end">
+              <Button onClick={handleSaveCharacter} disabled={isLoading}>
+                Сохранить изменения
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="list" className="space-y-4">
+            <div className="flex justify-between">
+              <Button onClick={handleLoadAllCharacters} disabled={isLoading}>
+                Загрузить всех персонажей
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {characters.length > 0 ? `Найдено: ${characters.length}` : 'Нет загруженных персонажей'}
+              </span>
+            </div>
+            
+            <div className="space-y-2">
+              {characters.map((char) => (
+                <div key={char.id} className="flex items-center justify-between p-2 border rounded">
+                  <div>
+                    <div className="font-medium">{char.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {char.race} {char.class}, Уровень {char.level}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setCharacterId(char.id);
+                        setCharacterJson(JSON.stringify(char, null, 2));
+                      }}
+                    >
+                      Выбрать
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDeleteCharacter(char.id)}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
-        )}
+            </div>
+          </TabsContent>
+        </Tabs>
         
-        {/* Данные о персонажах */}
-        <DebugPanel 
-          title="5. Данные о персонажах" 
-          data={debugData?.characters || {}}
-          showByDefault={!!debugData?.characters?.emptyOrInvalid}
-          variant={
-            !debugData?.characters?.isArray ? 'error' : 
-            debugData?.characters?.total === 0 ? 'warning' : 'info'
-          }
-        />
-        
-        {/* Данные первого персонажа */}
-        {debugData?.firstCharacter && (
-          <DebugPanel 
-            title="6. Первый персонаж" 
-            data={debugData.firstCharacter}
-            showByDefault={debugData.firstCharacter.hasMissingFields || !debugData.firstCharacter.userIdMatches}
-            variant={
-              debugData.firstCharacter.hasMissingFields ? 'error' :
-              !debugData.firstCharacter.userIdMatches ? 'warning' : 'info'
-            }
-          />
-        )}
-        
-        {/* Кнопка обновить персонажей */}
-        {getUserCharacters && (
-          <div className="pt-2">
-            <button
-              onClick={() => getUserCharacters()}
-              className="px-3 py-1 bg-yellow-800/50 hover:bg-yellow-700/50 text-yellow-300 text-xs rounded-md transition-colors"
-            >
-              Обновить данные персонажей
-            </button>
+        {errorMessage && (
+          <div className="mt-4 p-2 bg-destructive/10 text-destructive rounded">
+            {errorMessage}
           </div>
         )}
       </CardContent>

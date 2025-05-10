@@ -15,8 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Paintbrush, Check } from "lucide-react";
 
 const ThemeToggle: React.FC = () => {
-  const { theme, setTheme, currentTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { setUserTheme } = useUserTheme();
+  const currentThemeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[currentThemeKey] || themes.default;
   
   const themeOptions = [
     { name: 'default' as ThemeType, label: 'По умолчанию' },
@@ -35,19 +37,16 @@ const ThemeToggle: React.FC = () => {
     setUserTheme(themeName);
     
     // Сохраняем тему в localStorage
-    localStorage.setItem('theme', themeName);
-    localStorage.setItem('userTheme', themeName);
-    localStorage.setItem('dnd-theme', themeName);
+    localStorage.setItem('theme', themeName.toString());
+    localStorage.setItem('userTheme', themeName.toString());
+    localStorage.setItem('dnd-theme', themeName.toString());
   };
-  
-  const themeStyles = currentTheme || themes.default;
-  const currentAccent = themeStyles?.accent || themes.default.accent;
   
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Paintbrush className="h-5 w-5" style={{ color: currentAccent }} />
+          <Paintbrush className="h-5 w-5" style={{ color: currentTheme.accent }} />
           <span className="sr-only">Выбрать тему</span>
         </Button>
       </DropdownMenuTrigger>

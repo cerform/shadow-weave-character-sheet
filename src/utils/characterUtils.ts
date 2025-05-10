@@ -93,6 +93,11 @@ export const calculateAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };
 
+// Добавляем функцию getModifierFromAbilityScore
+export const getModifierFromAbilityScore = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
 // Получение числового модификатора из значения характеристики
 export const getNumericModifier = (value: number): number => {
   return Math.floor((value - 10) / 2);
