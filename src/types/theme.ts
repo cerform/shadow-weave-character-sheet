@@ -4,20 +4,20 @@ export type ThemeType = 'default' | 'dark' | 'light' | 'system' | 'red' | 'green
 
 export interface Theme {
   name: string;
-  primaryColor?: string;  // Альтернатива для primary
+  primaryColor?: string;  // Keep primaryColor as alternative for primary
   primary: string;
   secondary: string;
   textColor: string;
   mutedTextColor: string;
-  backgroundColor?: string;  // Альтернатива для background
+  backgroundColor?: string;  // Alternative for background
   background: string;
-  accentColor?: string;     // Альтернатива для accent
+  accentColor?: string;     // Alternative for accent
   accent: string;
   foreground: string;
   cardBackground: string;
   buttonText?: string;
   
-  // Дополнительные свойства темы
+  // Add missing theme properties
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;

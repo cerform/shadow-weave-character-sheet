@@ -5,7 +5,7 @@ import AbilitiesTab from './tabs/AbilitiesTab';
 import { CombatTab } from './tabs/CombatTab';
 import { EquipmentTab } from './tabs/EquipmentTab';
 import { FeaturesTab } from './tabs/FeaturesTab';
-import { FeatsTab } from './tabs/FeatsTab';
+import FeatsTab from './tabs/FeatsTab';
 import { HandbookTab } from './tabs/HandbookTab';
 import NotesTab from './tabs/NotesTab';
 import BackgroundTab from './tabs/BackgroundTab';

@@ -347,3 +347,76 @@ export const useCharacter = () => useContext(CharacterContext);
 
 // Экспортируем сам контекст для совместимости
 export default CharacterContext;
+
+// Create a default character
+const createDefaultCharacter = (): Character => {
+  const timestamp = new Date().toISOString();
+  
+  return {
+    id: crypto.randomUUID(),
+    name: 'Новый персонаж',
+    race: '',
+    class: '',
+    level: 1,
+    xp: 0,
+    abilities: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    savingThrows: {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0
+    },
+    hp: 10,
+    maxHp: 10,
+    temporaryHp: 0,
+    ac: 10,
+    proficiencyBonus: 2,
+    speed: 30,
+    initiative: 0,
+    inspiration: false,
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: 'd8'
+    },
+    resources: {},
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
+    spellcasting: {
+      ability: 'intelligence',
+      dc: 10,
+      attack: 0
+    },
+    spellSlots: {},
+    spells: [],
+    equipment: {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
+    },
+    proficiencies: {
+      languages: [],
+      tools: []
+    },
+    features: [],
+    notes: '',
+    skills: {},
+    background: '',
+    alignment: 'Нейтральный',
+    createdAt: timestamp, // Add createdAt
+    updatedAt: timestamp, // Add updatedAt
+    backstory: ''
+  };
+};

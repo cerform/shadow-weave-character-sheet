@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -229,14 +228,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   };
 
   // Проверяем, изучено ли заклинание
-  const isSpellKnown = useCallback((spell: SpellData) => {
-    if (!character.spells || !Array.isArray(character.spells)) return false;
-    
-    return character.spells.some(s => {
+  const isSpellKnown = (spell: SpellData) => {
+    return character.spells && character.spells.some(s => {
       if (typeof s === 'string') return s === spell.name;
-      return s.id === spell.id || s.name === spell.name;
+      return String(s.id) === String(spell.id) || s.name === spell.name;
     });
-  }, [character.spells]);
+  };
 
   // Обработчик добавления/удаления заклинания
   const handleSpellChange = (spell: SpellData, adding: boolean) => {

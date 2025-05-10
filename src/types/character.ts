@@ -1,4 +1,3 @@
-
 // Define Character interface
 export interface Character {
   id: string;
@@ -220,4 +219,13 @@ export interface Item {
   cost?: number;
   equipped?: boolean;
   quantity?: number;
+}
+
+// Define HitPointEvent interface for damage logs
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'heal' | 'tempHP' | 'temp' | 'death-save';
+  amount: number;
+  source: string;
+  timestamp: number | Date;
 }

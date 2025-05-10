@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserType } from "@/types/auth";
 import { Input } from "@/components/ui/input";
 import { Theme } from "@/lib/themes";
 import { AvatarSelector } from "./AvatarSelector";
 import { Shield, Mail } from "lucide-react";
+import { themes } from '@/lib/themes';
 
 interface ProfileCardProps {
   user: UserType;
@@ -22,20 +23,20 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   
-  const themeKey = (user?.isDM ? 'warlock' : 'default') as keyof typeof import('@/lib/themes').themes;
-  const theme = import('@/lib/themes').then(m => m.themes[themeKey] || m.themes.default);
+  const themeKey = (user?.isDM ? 'warlock' : 'default');
+  const defaultTheme = themes.default;
   
-  // When creating a Theme object, make sure to include all required properties:
-  const cardTheme = {
+  // Create a proper theme object with all required properties
+  const cardTheme: Theme = {
     name: 'Custom',
-    primary: currentTheme.primary,
-    secondary: currentTheme.primary, // Provide a valid fallback
-    accent: currentTheme.accent,
-    background: currentTheme.background,
-    foreground: currentTheme.foreground,
-    textColor: currentTheme.textColor,
-    mutedTextColor: currentTheme.textColor, // Provide a valid fallback
-    cardBackground: currentTheme.cardBackground
+    primary: '#8B5A2B',
+    secondary: '#8B5A2B',
+    accent: '#8B5A2B',
+    background: '#000000',
+    foreground: '#FFFFFF',
+    textColor: '#FFFFFF',
+    mutedTextColor: '#CCCCCC',
+    cardBackground: 'rgba(0, 0, 0, 0.7)'
   };
   
   return (
@@ -57,14 +58,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             avatarUrl={avatarUrl} 
             setAvatarUrl={setAvatarUrl} 
             username={username}
-            theme={{
-              accent: '#8B5A2B',
-              textColor: '#FFFFFF',
-              background: '#000000',
-              foreground: '#FFFFFF',
-              primary: '#8B5A2B',
-              cardBackground: 'rgba(0, 0, 0, 0.7)'
-            }} 
+            theme={cardTheme}
           />
           
           <div className="w-full space-y-4">

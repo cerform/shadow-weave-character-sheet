@@ -45,10 +45,65 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
     setAvailableSpells(allSpells);
   }, []);
 
+  // Convert CharacterSpell to SpellData
+  const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+    return {
+      id: spell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school || 'Evocation',
+      castingTime: spell.castingTime || '1 action',
+      range: spell.range || 'Self',
+      components: spell.components || '',
+      duration: spell.duration || 'Instantaneous',
+      description: spell.description || '',
+      classes: spell.classes || [],
+      ritual: spell.ritual || false,
+      concentration: spell.concentration || false,
+      verbal: spell.verbal || false,
+      somatic: spell.somatic || false,
+      material: spell.material || false,
+      materials: spell.materials || '',
+      prepared: spell.prepared || false
+    };
+  };
+
+  // Update character spells
+  useEffect(() => {
+    if (character?.spells) {
+      const characterSpells = character.spells
+        .filter((spell): spell is CharacterSpell => typeof spell !== 'string')
+        .map(convertCharacterSpellToSpellData);
+      
+      setSelectedSpells(characterSpells);
+    }
+  }, [character]);
+
   // Function to add a spell to the selected spells
   const addSpell = (spell: SpellData) => {
+    // Create a CharacterSpell from SpellData
+    const characterSpell: CharacterSpell = {
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      classes: spell.classes,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      materials: spell.materials,
+      prepared: spell.prepared
+    };
+    
     setSelectedSpells(prevSpells => {
-      const updatedSpells = [...prevSpells, spell];
+      const updatedSpells = [...prevSpells, characterSpell];
       return updatedSpells;
     });
   };

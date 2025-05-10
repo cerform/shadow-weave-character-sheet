@@ -1,265 +1,153 @@
+// Import dependencies
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import NavigationButtons from './NavigationButtons';
-import SectionHeader from '@/components/ui/section-header';
-import { SelectionCard, SelectionCardGrid } from '@/components/ui/selection-card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
-import { isEquipmentEmpty } from '@/utils/safetyUtils';
+import { backgrounds } from '@/data/backgrounds';
 
-// Интерфейс для предыстории
-interface Background {
-  id: string;
-  name: string;
-  description: string;
-  proficiencies: {
-    skills: string[];
-    tools: string[];
-    languages: string[];
-    equipment: string;
-  };
-  feature: {
-    name: string;
-    description: string;
-  };
-  personalityTraits: string[];
-  ideals: string[];
-  bonds: string[];
-  flaws: string[];
-}
-
-// Интерфейс для props компонента
+// Define props interface
 export interface CharacterBackgroundProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+  backgrounds?: any[];
   nextStep: () => void;
   prevStep: () => void;
-  backgrounds: Background[]; // Добавляем backgrounds в интерфейс
 }
 
+// Component implementation
 const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   character,
   onUpdate,
   nextStep,
   prevStep,
-  backgrounds
+  backgrounds: propBackgrounds
 }) => {
-  const [selectedBackgroundId, setSelectedBackgroundId] = useState<string>(character.background || '');
-  const [activeTab, setActiveTab] = useState<string>('description');
-
-  // Проверяем, есть ли предыстории
+  // Use provided backgrounds or default ones
+  const backgroundOptions = propBackgrounds || backgrounds;
+  
+  // Local state for background details
+  const [selectedBackground, setSelectedBackground] = useState(character.background || '');
+  const [personalityTraits, setPersonalityTraits] = useState(character.personalityTraits || '');
+  const [ideals, setIdeals] = useState(character.ideals || '');
+  const [bonds, setBonds] = useState(character.bonds || '');
+  const [flaws, setFlaws] = useState(character.flaws || '');
+  
+  // Effect to update character when background changes
   useEffect(() => {
-    if (!backgrounds || backgrounds.length === 0) {
-      toast({
-        title: "Ошибка загрузки предысторий",
-        description: "Не удалось загрузить список предысторий. Пожалуйста, попробуйте позже.",
-        variant: "destructive"
-      });
-    }
-  }, [backgrounds]);
-
-  // Найдем выбранную предысторию
-  const currentBackground = backgrounds.find(bg => bg.id === selectedBackgroundId);
-
-  // Обработчик выбора предыстории
-  const handleBackgroundSelect = (backgroundId: string) => {
-    const selectedBackground = backgrounds.find(bg => bg.id === backgroundId);
     if (selectedBackground) {
-      // Корректное создание proficiencies с languages и tools
-      const proficiencies = {
-        languages: selectedBackground.proficiencies.languages || [],
-        tools: selectedBackground.proficiencies.tools || []
-      };
-      
-      onUpdate({
-        background: selectedBackground.name,
-        proficiencies: proficiencies,
-        // ... другие свойства
-      });
-    }
-    setSelectedBackgroundId(backgroundId);
-    onUpdate({ background: backgroundId });
-  };
-
-  // Обработчик перехода к следующему шагу
-  const handleNext = () => {
-    if (selectedBackgroundId) {
-      // Определим, какие параметры нужно обновить при переходе
-      const updates: Partial<Character> = {
-        background: selectedBackgroundId,
-      };
-
-      // Добавим владение навыками из предыстории
-      if (currentBackground && currentBackground.proficiencies.skills.length > 0) {
-        // Создаем массив навыков, если его нет
-        let proficiencyUpdates: string[] = [];
+      const background = backgroundOptions.find(bg => bg.name === selectedBackground);
+      if (background) {
+        // When applying a background, initialize a proper proficiencies object
+        const updatedProficiencies = {
+          languages: background.languages || [],
+          tools: background.tools || [],
+          skills: background.skills || []
+        };
         
-        // Если proficiencies уже существует и это массив, используем его
-        if (Array.isArray(character.proficiencies)) {
-          proficiencyUpdates = [...character.proficiencies];
-        } 
-        // Иначе, если это объект, создаем новый массив
-        else if (character.proficiencies) {
-          // Конвертируем объект в массив для обновления
-          const existingProficiencies = character.proficiencies;
-          if (existingProficiencies.weapons) proficiencyUpdates.push(...existingProficiencies.weapons);
-          if (existingProficiencies.tools) proficiencyUpdates.push(...existingProficiencies.tools);
-          if (existingProficiencies.languages) proficiencyUpdates.push(...existingProficiencies.languages);
-        }
-        
-        // Добавляем навыки из предыстории, если их ещё нет
-        currentBackground.proficiencies.skills.forEach(skill => {
-          if (!proficiencyUpdates.includes(skill)) {
-            proficiencyUpdates.push(skill);
-          }
+        onUpdate({ 
+          background: selectedBackground,
+          proficiencies: updatedProficiencies
         });
-        
-        updates.proficiencies = proficiencyUpdates;
       }
-
-      // Обновляем данные персонажа
-      onUpdate(updates);
-      nextStep();
     }
+  }, [selectedBackground, backgroundOptions, onUpdate]);
+  
+  // Handle save and continue
+  const handleSaveAndContinue = () => {
+    onUpdate({
+      personalityTraits,
+      ideals,
+      bonds,
+      flaws
+    });
+    nextStep();
   };
 
   return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Выбор предыстории"
-        description="Предыстория отражает происхождение персонажа, его место в мире и первоначальные навыки."
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Выбор предыстории */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Доступные предыстории</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SelectionCardGrid>
-                {backgrounds.map((bg) => (
-                  <SelectionCard
-                    key={bg.id}
-                    title={bg.name}
-                    selected={selectedBackgroundId === bg.id}
-                    onClick={() => handleBackgroundSelect(bg.id)}
-                  />
-                ))}
-              </SelectionCardGrid>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Детали предыстории */}
-        <div className="md:col-span-2">
-          {currentBackground ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{currentBackground.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="description">Описание</TabsTrigger>
-                    <TabsTrigger value="proficiencies">Владения</TabsTrigger>
-                    <TabsTrigger value="feature">Умения</TabsTrigger>
-                    <TabsTrigger value="characteristics">Характеристики</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="description">
-                    <p>{currentBackground.description}</p>
-                  </TabsContent>
-
-                  <TabsContent value="proficiencies">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold">Навыки:</h3>
-                        <p>{currentBackground.proficiencies.skills.join(', ')}</p>
-                      </div>
-                      {currentBackground.proficiencies.tools.length > 0 && (
-                        <div>
-                          <h3 className="font-semibold">Инструменты:</h3>
-                          <p>{currentBackground.proficiencies.tools.join(', ')}</p>
-                        </div>
-                      )}
-                      {currentBackground.proficiencies.languages.length > 0 && (
-                        <div>
-                          <h3 className="font-semibold">Языки:</h3>
-                          <p>{currentBackground.proficiencies.languages.join(', ')}</p>
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-semibold">Снаряжение:</h3>
-                        <p>{currentBackground.proficiencies.equipment}</p>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="feature">
-                    <div>
-                      <h3 className="font-semibold">{currentBackground.feature.name}</h3>
-                      <p className="mt-2">{currentBackground.feature.description}</p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="characteristics">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold">Черты характера:</h3>
-                        <ul className="list-disc pl-5 mt-2 space-y-1">
-                          {currentBackground.personalityTraits.map((trait, index) => (
-                            <li key={index}>{trait}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Идеалы:</h3>
-                        <ul className="list-disc pl-5 mt-2 space-y-1">
-                          {currentBackground.ideals.map((ideal, index) => (
-                            <li key={index}>{ideal}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Привязанности:</h3>
-                        <ul className="list-disc pl-5 mt-2 space-y-1">
-                          {currentBackground.bonds.map((bond, index) => (
-                            <li key={index}>{bond}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Слабости:</h3>
-                        <ul className="list-disc pl-5 mt-2 space-y-1">
-                          {currentBackground.flaws.map((flaw, index) => (
-                            <li key={index}>{flaw}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center text-muted-foreground">
-                Выберите предысторию, чтобы увидеть подробную информацию
-              </CardContent>
-            </Card>
-          )}
-        </div>
+    <div className="flex flex-col h-full">
+      <div className="mb-4">
+        <h4 className="text-lg font-semibold">Выберите предысторию</h4>
+        <p className="text-sm text-muted-foreground">
+          Выберите предысторию для вашего персонажа.
+        </p>
       </div>
-
-      <NavigationButtons
-        allowNext={!!selectedBackgroundId}
-        nextStep={handleNext}
-        prevStep={prevStep}
-        isFirstStep={false}
-      />
+      
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Предыстория
+        </label>
+        <select
+          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          value={selectedBackground}
+          onChange={(e) => setSelectedBackground(e.target.value)}
+        >
+          <option value="">Выберите предысторию</option>
+          {backgroundOptions.map((background) => (
+            <option key={background.name} value={background.name}>
+              {background.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Личные качества
+        </label>
+        <textarea
+          className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          value={personalityTraits}
+          onChange={(e) => setPersonalityTraits(e.target.value)}
+        />
+      </div>
+      
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Идеалы
+        </label>
+        <textarea
+          className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          value={ideals}
+          onChange={(e) => setIdeals(e.target.value)}
+        />
+      </div>
+      
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Привязанности
+        </label>
+        <textarea
+          className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          value={bonds}
+          onChange={(e) => setBonds(e.target.value)}
+        />
+      </div>
+      
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Слабости
+        </label>
+        <textarea
+          className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          value={flaws}
+          onChange={(e) => setFlaws(e.target.value)}
+        />
+      </div>
+      
+      <div className="mt-6 flex justify-between">
+        <button
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          type="button"
+          onClick={prevStep}
+        >
+          Назад
+        </button>
+        <button
+          className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          type="button"
+          onClick={handleSaveAndContinue}
+        >
+          Сохранить и продолжить
+        </button>
+      </div>
     </div>
   );
 };

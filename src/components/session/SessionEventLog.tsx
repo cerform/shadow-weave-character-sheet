@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Book, Dice, Clock, Download } from 'lucide-react';
+import { Book, Dice1, Clock, Download } from 'lucide-react';
 import { format } from 'date-fns';
 
 export interface EventLogEntry {
@@ -59,7 +58,7 @@ const SessionEventLog: React.FC<SessionEventLogProps> = ({
   
   const getEventIcon = (type: string) => {
     switch (type) {
-      case 'dice': return <Dice className="h-3 w-3 mr-1" />;
+      case 'dice': return <Dice1 className="h-3 w-3 mr-1" />;
       case 'spell': return <span className="mr-1">✨</span>;
       case 'combat': return <span className="mr-1">⚔️</span>;
       case 'player': return <span className="mr-1">👤</span>;

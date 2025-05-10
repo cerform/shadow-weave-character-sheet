@@ -3,6 +3,7 @@ import { Character, Feature } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, Book, ListChecks } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -99,8 +100,7 @@ export const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate })
               onChange={handleInputChange}
             />
           </div>
-          <Input
-            as="textarea"
+          <Textarea
             name="description"
             placeholder="Описание особенности"
             value={newFeature.description}
