@@ -218,27 +218,19 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
                             {spell.concentration && ', Концентрация'}
                           </div>
                         </div>
-                        <div className="flex space-x-2">
-                          {/* Кнопка для переключения подготовки заклинания */}
-                          {needsPreparation() && level > 0 && (
-                            <Button
-                              variant={spell.prepared ? "default" : "outline"}
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleSpellPreparation(spell);
-                              }}
-                              disabled={!spell.prepared && preparedCount >= preparedLimit}
-                              style={{
-                                backgroundColor: spell.prepared ? currentTheme.accent : 'transparent',
-                                borderColor: currentTheme.accent,
-                                color: spell.prepared ? 'white' : currentTheme.accent
-                              }}
-                            >
-                              <Star className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
+                        {needsPreparation() && level > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSpellPreparation(spell);
+                            }}
+                            className={`p-1 ${spell.prepared ? 'bg-primary/20' : ''}`}
+                          >
+                            <Star className={`h-4 w-4 ${spell.prepared ? 'fill-primary' : ''}`} />
+                          </Button>
+                        )}
                       </div>
                     </React.Fragment>
                   ))}

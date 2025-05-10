@@ -1,12 +1,12 @@
-
-import React, { useState } from 'react';
-import { Character } from '@/types/character';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from '@/components/ui/label';
+import { Character, AbilityScores } from '@/types/character';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { calculateAbilityModifier, getModifierString, hasValue } from '@/utils/characterUtils';
+import { calculateAbilityModifier, getModifierString, hasValue, defaultAbilityScores } from '@/utils/characterUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -15,229 +15,370 @@ export interface AbilitiesTabProps {
   onUpdate: (updates: Partial<Character>) => void;
 }
 
+type SkillType = {
+  proficient: boolean;
+  expertise: boolean;
+  value: number;
+};
+
 // Ability scores component
-const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
-  const [tempAbilities, setTempAbilities] = useState(character.abilities || {});
+export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-
-  // Handle ability score change
-  const handleAbilityChange = (ability: string, value: number) => {
-    const newAbilities = { ...tempAbilities };
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+  
+  // Use default ability scores if none exist
+  const abilities = character.abilities || defaultAbilityScores;
+  
+  // State for abilities values
+  const [abilityValues, setAbilityValues] = useState<AbilityScores>({
+    STR: abilities.STR || abilities.strength || 10,
+    DEX: abilities.DEX || abilities.dexterity || 10,
+    CON: abilities.CON || abilities.constitution || 10,
+    INT: abilities.INT || abilities.intelligence || 10,
+    WIS: abilities.WIS || abilities.wisdom || 10,
+    CHA: abilities.CHA || abilities.charisma || 10,
+    strength: abilities.STR || abilities.strength || 10,
+    dexterity: abilities.DEX || abilities.dexterity || 10,
+    constitution: abilities.CON || abilities.constitution || 10,
+    intelligence: abilities.INT || abilities.intelligence || 10,
+    wisdom: abilities.WIS || abilities.wisdom || 10,
+    charisma: abilities.CHA || abilities.charisma || 10
+  });
+  
+  // State for skills
+  const [skills, setSkills] = useState<Record<string, SkillType>>(
+    character.skills as Record<string, SkillType> || {}
+  );
+  
+  // State for saving throws
+  const [savingThrows, setSavingThrows] = useState(character.savingThrows || {});
+  
+  // Languages, tools, and other proficiencies
+  const [languages, setLanguages] = useState(character.proficiencies?.languages || []);
+  const [tools, setTools] = useState(character.proficiencies?.tools || []);
+  const [weapons, setWeapons] = useState(character.proficiencies?.weapons || []);
+  const [armor, setArmor] = useState(character.proficiencies?.armor || []);
+  const [proficiencyText, setProficiencyText] = useState('');
+  
+  // Handler for ability score changes
+  const handleAbilityChange = (key: keyof AbilityScores, value: number) => {
+    // Update both abbreviated and full name values
+    let updates: Partial<AbilityScores> = {};
     
-    // Update both formats of the ability score for compatibility
-    switch(ability.toLowerCase()) {
+    switch(key) {
+      case 'STR':
       case 'strength':
-      case 'str':
-        newAbilities.STR = newAbilities.strength = value;
+        updates.STR = value;
+        updates.strength = value;
         break;
+      case 'DEX':
       case 'dexterity':
-      case 'dex':
-        newAbilities.DEX = newAbilities.dexterity = value;
+        updates.DEX = value;
+        updates.dexterity = value;
         break;
+      case 'CON':
       case 'constitution':
-      case 'con':
-        newAbilities.CON = newAbilities.constitution = value;
+        updates.CON = value;
+        updates.constitution = value;
         break;
+      case 'INT':
       case 'intelligence':
-      case 'int':
-        newAbilities.INT = newAbilities.intelligence = value;
+        updates.INT = value;
+        updates.intelligence = value;
         break;
+      case 'WIS':
       case 'wisdom':
-      case 'wis':
-        newAbilities.WIS = newAbilities.wisdom = value;
+        updates.WIS = value;
+        updates.wisdom = value;
         break;
+      case 'CHA':
       case 'charisma':
-      case 'cha':
-        newAbilities.CHA = newAbilities.charisma = value;
+        updates.CHA = value;
+        updates.charisma = value;
         break;
     }
     
-    setTempAbilities(newAbilities);
+    setAbilityValues(prev => ({ ...prev, ...updates }));
+    onUpdate({ abilities: { ...abilityValues, ...updates } });
   };
   
-  // Save ability scores
-  const saveAbilities = () => {
-    onUpdate({ abilities: tempAbilities });
-  };
-  
-  // Handle saving throw proficiency toggle
-  const toggleSavingThrow = (ability: string) => {
-    const newSavingThrows = { ...(character.savingThrows || {}) };
+  // Handler for skill proficiency changes
+  const handleSkillChange = (skillKey: string, field: 'proficient' | 'expertise', value: boolean) => {
+    const updatedSkills = { ...skills };
     
-    // Get current proficiency
-    const isProficient = !!newSavingThrows[ability];
-    
-    // Set proficiency for both formats of the ability
-    switch(ability.toLowerCase()) {
-      case 'strength':
-      case 'str':
-        newSavingThrows.STR = newSavingThrows.strength = isProficient ? 0 : 1;
-        break;
-      case 'dexterity':
-      case 'dex':
-        newSavingThrows.DEX = newSavingThrows.dexterity = isProficient ? 0 : 1;
-        break;
-      case 'constitution':
-      case 'con':
-        newSavingThrows.CON = newSavingThrows.constitution = isProficient ? 0 : 1;
-        break;
-      case 'intelligence':
-      case 'int':
-        newSavingThrows.INT = newSavingThrows.intelligence = isProficient ? 0 : 1;
-        break;
-      case 'wisdom':
-      case 'wis':
-        newSavingThrows.WIS = newSavingThrows.wisdom = isProficient ? 0 : 1;
-        break;
-      case 'charisma':
-      case 'cha':
-        newSavingThrows.CHA = newSavingThrows.charisma = isProficient ? 0 : 1;
-        break;
+    // Initialize the skill object if it doesn't exist
+    if (!updatedSkills[skillKey]) {
+      updatedSkills[skillKey] = {
+        proficient: false,
+        expertise: false,
+        value: 0
+      };
     }
     
-    onUpdate({ savingThrows: newSavingThrows });
+    // Update the specific field
+    updatedSkills[skillKey] = {
+      ...updatedSkills[skillKey],
+      [field]: value
+    };
+    
+    // Calculate skill value
+    let abilityMod = 0;
+    let profBonus = character.proficiencyBonus || 2;
+    
+    // Map skill to ability
+    switch(skillKey) {
+      case 'athletics':
+        abilityMod = calculateAbilityModifier(abilityValues.STR);
+        break;
+      case 'acrobatics':
+      case 'sleightOfHand':
+      case 'stealth':
+        abilityMod = calculateAbilityModifier(abilityValues.DEX);
+        break;
+      case 'arcana':
+      case 'history':
+      case 'investigation':
+      case 'nature':
+      case 'religion':
+        abilityMod = calculateAbilityModifier(abilityValues.INT);
+        break;
+      case 'animalHandling':
+      case 'insight':
+      case 'medicine':
+      case 'perception':
+      case 'survival':
+        abilityMod = calculateAbilityModifier(abilityValues.WIS);
+        break;
+      case 'deception':
+      case 'intimidation':
+      case 'performance':
+      case 'persuasion':
+        abilityMod = calculateAbilityModifier(abilityValues.CHA);
+        break;
+      default:
+        abilityMod = 0;
+    }
+    
+    // Calculate skill value
+    let skillValue = abilityMod;
+    if (updatedSkills[skillKey].proficient) {
+      skillValue += profBonus;
+    }
+    if (updatedSkills[skillKey].expertise) {
+      skillValue += profBonus;
+    }
+    
+    updatedSkills[skillKey].value = skillValue;
+    
+    setSkills(updatedSkills);
+    onUpdate({ skills: updatedSkills });
   };
   
-  // Handle skill proficiency toggle
-  const toggleSkillProficiency = (skill: string) => {
-    const newSkills = { ...(character.skills || {}) };
+  // Handler for saving throw proficiency changes
+  const handleSavingThrowChange = (ability: string, value: boolean) => {
+    const updatedSavingThrows = { ...savingThrows };
     
-    // Get current proficiency (0 = not proficient, 1 = proficient, 2 = expertise)
-    let currentProficiency = newSkills[skill] || 0;
-    
-    // Cycle through proficiency levels: 0 -> 1 -> 2 -> 0
-    currentProficiency = (currentProficiency + 1) % 3;
-    
-    // Update skill proficiency
-    newSkills[skill] = currentProficiency;
-    
-    onUpdate({ skills: newSkills });
-  };
-  
-  // Calculate saving throw bonus
-  const calculateSavingThrow = (ability: string) => {
-    const abilityScore = tempAbilities[ability] || 10;
-    const modifier = calculateAbilityModifier(abilityScore);
     const profBonus = character.proficiencyBonus || 2;
-    const isProficient = character.savingThrows && character.savingThrows[ability];
+    const abilityMod = calculateAbilityModifier(abilityValues[ability as keyof AbilityScores] || 10);
     
-    return modifier + (isProficient ? profBonus : 0);
+    updatedSavingThrows[ability] = value ? abilityMod + profBonus : abilityMod;
+    
+    setSavingThrows(updatedSavingThrows);
+    onUpdate({ savingThrows: updatedSavingThrows });
   };
   
-  // Calculate skill bonus
-  const calculateSkillBonus = (skill: string, ability: string) => {
-    const abilityScore = tempAbilities[ability] || 10;
-    const modifier = calculateAbilityModifier(abilityScore);
-    const profBonus = character.proficiencyBonus || 2;
-    const skillValue = character.skills && character.skills[skill];
+  // Update proficiency text
+  const handleProficiencyTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setProficiencyText(e.target.value);
     
-    if (skillValue === 2) {
-      // Expertise
-      return modifier + (profBonus * 2);
-    } else if (skillValue === 1) {
-      // Proficient
-      return modifier + profBonus;
-    }
+    // Parse text to extract proficiencies
+    const text = e.target.value.toLowerCase();
+    const newLanguages: string[] = [];
+    const newTools: string[] = [];
+    const newWeapons: string[] = [];
+    const newArmor: string[] = [];
     
-    // Not proficient
-    return modifier;
-  };
-
-  // This is just a small fix for the "always truthy" expression
-  const hasSkillProficiency = (skill: string): boolean => {
-    if (!character.skills) return false;
-    return hasValue(character.skills[skill]);
+    // Simple parsing logic - could be improved
+    if (text.includes('common') || text.includes('общий')) newLanguages.push('Общий');
+    if (text.includes('dwarvish') || text.includes('гномий')) newLanguages.push('Гномий');
+    if (text.includes('elvish') || text.includes('эльфий')) newLanguages.push('Эльфийский');
+    
+    if (text.includes('thieves') || text.includes('воров')) newTools.push('Воровские инструменты');
+    if (text.includes('smith') || text.includes('кузнечные')) newTools.push('Кузнечные инструменты');
+    
+    if (text.includes('simple') || text.includes('простое')) newWeapons.push('Простое оружие');
+    if (text.includes('martial') || text.includes('воинское')) newWeapons.push('Воинское оружие');
+    
+    if (text.includes('light') || text.includes('легкий')) newArmor.push('Легкий доспех');
+    if (text.includes('medium') || text.includes('средний')) newArmor.push('Средний доспех');
+    if (text.includes('heavy') || text.includes('тяжелый')) newArmor.push('Тяжелый доспех');
+    
+    setLanguages(newLanguages.length > 0 ? newLanguages : character.proficiencies?.languages || []);
+    setTools(newTools.length > 0 ? newTools : character.proficiencies?.tools || []);
+    setWeapons(newWeapons.length > 0 ? newWeapons : character.proficiencies?.weapons || []);
+    setArmor(newArmor.length > 0 ? newArmor : character.proficiencies?.armor || []);
+    
+    onUpdate({
+      proficiencies: {
+        languages: newLanguages.length > 0 ? newLanguages : character.proficiencies?.languages || [],
+        tools: newTools.length > 0 ? newTools : character.proficiencies?.tools || [],
+        weapons: newWeapons.length > 0 ? newWeapons : character.proficiencies?.weapons || [],
+        armor: newArmor.length > 0 ? newArmor : character.proficiencies?.armor || [],
+        skills: character.proficiencies?.skills || []
+      }
+    });
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Abilities Column */}
-      <div className="space-y-4">
-        <Card style={{ backgroundColor: currentTheme.cardBackground }}>
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-bold mb-4" style={{ color: currentTheme.textColor }}>
-              Характеристики
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { key: 'STR', name: 'Сила', fullName: 'strength' },
-                { key: 'DEX', name: 'Ловкость', fullName: 'dexterity' },
-                { key: 'CON', name: 'Телосложение', fullName: 'constitution' },
-                { key: 'INT', name: 'Интеллект', fullName: 'intelligence' },
-                { key: 'WIS', name: 'Мудрость', fullName: 'wisdom' },
-                { key: 'CHA', name: 'Харизма', fullName: 'charisma' },
-              ].map((ability) => (
-                <div key={ability.key} className="flex flex-col items-center">
-                  <span className="text-sm" style={{ color: currentTheme.textColor }}>{ability.name}</span>
-                  <Input
-                    type="number"
-                    value={tempAbilities[ability.key] || 10}
-                    onChange={(e) => handleAbilityChange(ability.key, parseInt(e.target.value) || 0)}
-                    className="w-16 text-center"
-                    min={1}
-                    max={30}
-                  />
-                  <span className="text-lg font-bold" style={{ color: currentTheme.accent }}>
-                    {getModifierString(tempAbilities[ability.key] || 10)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <Button 
-              onClick={saveAbilities} 
-              className="w-full mt-4"
-              style={{ 
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              Сохранить характеристики
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Saving Throws */}
-        <Card style={{ backgroundColor: currentTheme.cardBackground }}>
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
-              Спасброски
-            </h3>
-            <div className="space-y-2">
-              {[
-                { key: 'STR', name: 'Сила' },
-                { key: 'DEX', name: 'Ловкость' },
-                { key: 'CON', name: 'Телосложение' },
-                { key: 'INT', name: 'Интеллект' },
-                { key: 'WIS', name: 'Мудрость' },
-                { key: 'CHA', name: 'Харизма' },
-              ].map((ability) => (
-                <div key={`save-${ability.key}`} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={!!(character.savingThrows && character.savingThrows[ability.key])}
-                      onCheckedChange={() => toggleSavingThrow(ability.key)}
-                    />
-                    <span style={{ color: currentTheme.textColor }}>{ability.name}</span>
-                  </div>
-                  <span 
-                    className="font-medium"
-                    style={{ 
-                      color: character.savingThrows && character.savingThrows[ability.key] ? 
-                        currentTheme.accent : currentTheme.textColor 
-                    }}
-                  >
-                    {calculateSavingThrow(ability.key) >= 0 ? '+' : ''}
-                    {calculateSavingThrow(ability.key)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-4">
+      {/* Ability Scores */}
+      <Card style={{ backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent + '30' }}>
+        <CardHeader className="pb-2">
+          <CardTitle style={{ color: currentTheme.textColor }}>
+            Характеристики
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          {/* STR */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>СИЛ</span>
+            <Input 
+              type="number" 
+              value={abilityValues.STR}
+              onChange={(e) => handleAbilityChange('STR', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.STR)}
+            </span>
+          </div>
+          
+          {/* DEX */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ЛОВ</span>
+            <Input 
+              type="number" 
+              value={abilityValues.DEX}
+              onChange={(e) => handleAbilityChange('DEX', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.DEX)}
+            </span>
+          </div>
+          
+          {/* CON */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ТЕЛ</span>
+            <Input 
+              type="number" 
+              value={abilityValues.CON}
+              onChange={(e) => handleAbilityChange('CON', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.CON)}
+            </span>
+          </div>
+          
+          {/* INT */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ИНТ</span>
+            <Input 
+              type="number" 
+              value={abilityValues.INT}
+              onChange={(e) => handleAbilityChange('INT', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.INT)}
+            </span>
+          </div>
+          
+          {/* WIS */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>МДР</span>
+            <Input 
+              type="number" 
+              value={abilityValues.WIS}
+              onChange={(e) => handleAbilityChange('WIS', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.WIS)}
+            </span>
+          </div>
+          
+          {/* CHA */}
+          <div className="flex flex-col items-center border p-2 rounded-md" 
+               style={{ borderColor: currentTheme.accent + '50' }}>
+            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ХАР</span>
+            <Input 
+              type="number" 
+              value={abilityValues.CHA}
+              onChange={(e) => handleAbilityChange('CHA', parseInt(e.target.value) || 10)}
+              className="w-12 text-center mb-1"
+              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+            />
+            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
+              {getModifierString(abilityValues.CHA)}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
       
-      {/* Skills Column */}
+      {/* Saving Throws */}
+      <Card style={{ backgroundColor: currentTheme.cardBackground }}>
+        <CardContent className="pt-4">
+          <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
+            Сп��сброски
+          </h3>
+          <Separator className="my-2" />
+          <div className="space-y-2">
+            {[
+              { key: 'STR', name: 'Сила' },
+              { key: 'DEX', name: 'Ловкость' },
+              { key: 'CON', name: 'Телосложение' },
+              { key: 'INT', name: 'Интеллект' },
+              { key: 'WIS', name: 'Мудрость' },
+              { key: 'CHA', name: 'Харизма' },
+            ].map((ability) => (
+              <div key={`save-${ability.key}`} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={!!(character.savingThrows && character.savingThrows[ability.key])}
+                    onCheckedChange={() => toggleSavingThrow(ability.key)}
+                  />
+                  <span style={{ color: currentTheme.textColor }}>{ability.name}</span>
+                </div>
+                <span 
+                  className="font-medium"
+                  style={{ 
+                    color: character.savingThrows && character.savingThrows[ability.key] ? 
+                      currentTheme.accent : currentTheme.textColor 
+                  }}
+                >
+                  {calculateSavingThrow(ability.key) >= 0 ? '+' : ''}
+                  {calculateSavingThrow(ability.key)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Skills */}
       <Card style={{ backgroundColor: currentTheme.cardBackground }}>
         <CardContent className="pt-4">
           <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
@@ -486,6 +627,72 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                 </span>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Proficiencies */}
+      <Card style={{ backgroundColor: currentTheme.cardBackground }}>
+        <CardContent className="pt-4">
+          <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
+            Профили
+          </h3>
+          <Separator className="my-2" />
+          <div className="space-y-1">
+            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
+              Языки
+            </div>
+            <div className="flex items-center gap-2">
+              <Input 
+                type="text" 
+                value={proficiencyText}
+                onChange={handleProficiencyTextChange}
+                className="w-full"
+                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
+              />
+            </div>
+            
+            <Separator className="my-1" />
+            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
+              Инструменты
+            </div>
+            <div className="flex items-center gap-2">
+              <Input 
+                type="text" 
+                value={proficiencyText}
+                onChange={handleProficiencyTextChange}
+                className="w-full"
+                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
+              />
+            </div>
+            
+            <Separator className="my-1" />
+            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
+              Оружие
+            </div>
+            <div className="flex items-center gap-2">
+              <Input 
+                type="text" 
+                value={proficiencyText}
+                onChange={handleProficiencyTextChange}
+                className="w-full"
+                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
+              />
+            </div>
+            
+            <Separator className="my-1" />
+            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
+              Доспех
+            </div>
+            <div className="flex items-center gap-2">
+              <Input 
+                type="text" 
+                value={proficiencyText}
+                onChange={handleProficiencyTextChange}
+                className="w-full"
+                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalFooter, ModalBody } from '@/components/ui/modal';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
-import { Select } from '@/components/ui/select';
 import { themes } from '@/lib/themes';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { canPrepareMoreSpells, convertSpellsForState } from '@/utils/spellUtils';
@@ -32,26 +31,54 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const { allSpells, loadSpellsByClass } = useSpellbook();
+  const { availableSpells: contextSpells, loadSpellsForCharacter } = useSpellbook();
   
   // Prepare spells for the character
   useEffect(() => {
     if (character.class) {
-      loadSpellsByClass(character.class);
+      loadSpellsForCharacter(character.class, character.level || 1);
       
       // Convert character spells to SpellData for state management
       if (character.spells && character.spells.length > 0) {
-        setAvailableSpells(convertSpellsForState(character.spells));
+        const convertedSpells = character.spells.map(spell => {
+          if (typeof spell === 'string') {
+            return {
+              id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
+              name: spell,
+              level: 0,
+              school: 'Универсальная',
+              castingTime: '1 действие',
+              range: 'На себя',
+              components: '',
+              duration: 'Мгновенная',
+              description: ''
+            } as SpellData;
+          }
+          return {
+            id: spell.id || `spell-${safeToString(spell.name).toLowerCase().replace(/\s+/g, '-')}`,
+            name: spell.name,
+            level: spell.level || 0,
+            school: spell.school || 'Универсальная',
+            castingTime: spell.castingTime || '1 действие',
+            range: spell.range || 'На себя',
+            components: spell.components || '',
+            duration: spell.duration || 'Мгновенная',
+            description: spell.description || '',
+            classes: spell.classes || []
+          } as SpellData;
+        });
+        
+        setAvailableSpells(convertedSpells);
       }
     }
-  }, [character.class, loadSpellsByClass]);
+  }, [character.class, character.level, character.spells, loadSpellsForCharacter]);
 
   // Filter spells based on search term, level, and school
-  const filteredSpells = allSpells.filter(spell => {
-    const matchesSearch = spell.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredSpells = contextSpells.filter(spell => {
+    const matchesSearch = safeToString(spell.name).toLowerCase().includes(safeToString(searchTerm).toLowerCase());
     const matchesLevel = selectedLevel === null || spell.level === selectedLevel;
     const matchesSchool = selectedSchool === null || 
-                          spell.school.toLowerCase() === selectedSchool.toLowerCase();
+                          safeToString(spell.school).toLowerCase() === safeToString(selectedSchool).toLowerCase();
     
     // Check if the spell is for the character's class
     const isForClass = Array.isArray(spell.classes) 
@@ -64,7 +91,12 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
 
   // Check if a spell is already added to the character
   const isSpellAdded = (spellId: string): boolean => {
-    return (character.spells || []).some(spell => spell.id === spellId);
+    return (character.spells || []).some(spell => {
+      if (typeof spell === 'string') {
+        return `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}` === spellId;
+      }
+      return String(spell.id) === String(spellId) || safeToString(spell.name) === spellId;
+    });
   };
 
   // Add spell to character
@@ -76,18 +108,18 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       name: spell.name,
       level: spell.level,
       school: spell.school,
-      castingTime: spell.castingTime,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: spell.description,
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'На себя',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная',
+      description: spell.description || '',
       prepared: false,
       ritual: spell.ritual || false,
       concentration: spell.concentration || false,
       verbal: spell.verbal || false,
       somatic: spell.somatic || false,
       material: spell.material || false,
-      materials: spell.materials,
+      materials: spell.materials || '',
       classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes || '']
     };
     
@@ -97,21 +129,28 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
 
   // Remove spell from character
   const removeSpell = (spellId: string) => {
-    const updatedSpells = (character.spells || []).filter(spell => spell.id !== spellId);
+    const updatedSpells = (character.spells || []).filter(spell => {
+      if (typeof spell === 'string') {
+        return `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}` !== spellId;
+      }
+      return safeToString(spell.id) !== spellId;
+    });
     onUpdate({ spells: updatedSpells });
   };
 
   // Get unique spell schools for filtering
-  const spellSchools = Array.from(new Set(allSpells.map(spell => spell.school)));
+  const spellSchools = Array.from(new Set(contextSpells.map(spell => spell.school)));
   
   // Get unique spell levels for filtering
-  const spellLevels = Array.from(new Set(allSpells.map(spell => spell.level))).sort((a, b) => a - b);
+  const spellLevels = Array.from(new Set(contextSpells.map(spell => spell.level))).sort((a, b) => a - b);
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <ModalHeader>Выбор заклинаний</ModalHeader>
-        <ModalBody className="flex-1 overflow-hidden">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Выбор заклинаний</DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-hidden">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex flex-wrap gap-2 mb-4">
               <Input
@@ -129,7 +168,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
               >
                 <option value="">Все уровни</option>
                 {spellLevels.map((level) => (
-                  <option key={level} value={level}>{level === 0 ? 'Заговор' : `Уровень ${level}`}</option>
+                  <option key={level} value={level.toString()}>{level === 0 ? 'Заговор' : `Уровень ${level}`}</option>
                 ))}
               </select>
               
@@ -141,7 +180,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
               >
                 <option value="">Все школы</option>
                 {spellSchools.map((school) => (
-                  <option key={school} value={school}>{school}</option>
+                  <option key={safeToString(school)} value={safeToString(school)}>{safeToString(school)}</option>
                 ))}
               </select>
             </div>
@@ -153,14 +192,14 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                   {filteredSpells.length > 0 ? (
                     filteredSpells.map((spell) => (
                       <div 
-                        key={spell.id} 
+                        key={safeToString(spell.id)} 
                         className="flex items-center justify-between p-2 border rounded"
                         style={{ borderColor: currentTheme.accent + '50' }}
                       >
                         <div>
-                          <div className="font-medium">{spell.name}</div>
+                          <div className="font-medium">{safeToString(spell.name)}</div>
                           <div className="text-xs">
-                            {spell.level === 0 ? 'Заговор' : `Уровень ${spell.level}`} • {spell.school}
+                            {spell.level === 0 ? 'Заговор' : `Уровень ${spell.level}`} • {safeToString(spell.school)}
                           </div>
                         </div>
                         <Button 
@@ -185,33 +224,43 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                 </h3>
                 <div className="space-y-2">
                   {character.spells && character.spells.length > 0 ? (
-                    character.spells.map((spell) => (
-                      <div 
-                        key={spell.id} 
-                        className="flex items-center justify-between p-2 border rounded"
-                        style={{ borderColor: currentTheme.accent + '50' }}
-                      >
-                        <div>
-                          <div className="font-medium">{spell.name}</div>
-                          <div className="text-xs flex items-center gap-1">
-                            <Badge variant="outline" className="h-5">
-                              {spell.level === 0 ? 'Заговор' : `Ур.${spell.level}`}
-                            </Badge>
-                            <Badge variant="outline" className="h-5">{spell.school}</Badge>
-                            {spell.prepared && (
-                              <Badge variant="outline" className="h-5 bg-green-500/20">Подг.</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => removeSpell(spell.id)}
+                    character.spells.map((spell) => {
+                      const spellName = typeof spell === 'string' ? spell : spell.name;
+                      const spellId = typeof spell === 'string' 
+                        ? `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`
+                        : spell.id;
+                      const spellLevel = typeof spell === 'string' ? 0 : (spell.level || 0);
+                      const spellSchool = typeof spell === 'string' ? 'Универсальная' : (spell.school || 'Универсальная');
+                      const isPrepared = typeof spell === 'string' ? false : !!spell.prepared;
+                      
+                      return (
+                        <div 
+                          key={safeToString(spellId)} 
+                          className="flex items-center justify-between p-2 border rounded"
+                          style={{ borderColor: currentTheme.accent + '50' }}
                         >
-                          Удалить
-                        </Button>
-                      </div>
-                    ))
+                          <div>
+                            <div className="font-medium">{safeToString(spellName)}</div>
+                            <div className="text-xs flex items-center gap-1">
+                              <Badge variant="outline" className="h-5">
+                                {spellLevel === 0 ? 'Заговор' : `Ур.${spellLevel}`}
+                              </Badge>
+                              <Badge variant="outline" className="h-5">{safeToString(spellSchool)}</Badge>
+                              {isPrepared && (
+                                <Badge variant="outline" className="h-5 bg-green-500/20">Подг.</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => removeSpell(safeToString(spellId))}
+                          >
+                            Удалить
+                          </Button>
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="text-center p-4">Нет выбранных заклинаний</div>
                   )}
@@ -219,8 +268,8 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
               </div>
             </div>
           </div>
-        </ModalBody>
-        <ModalFooter>
+        </div>
+        <DialogFooter>
           <div className="text-sm mr-auto">
             {canPrepareMoreSpells(character) ? (
               <span style={{ color: currentTheme.success }}>
@@ -233,9 +282,9 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
             )}
           </div>
           <Button onClick={() => onOpenChange(false)}>Закрыть</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
