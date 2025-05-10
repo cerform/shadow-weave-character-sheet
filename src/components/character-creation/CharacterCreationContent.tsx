@@ -9,40 +9,61 @@ import CharacterEquipment from './CharacterEquipment';
 import CharacterSpells from './CharacterSpells';
 import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
-import { backgrounds } from '@/data/backgrounds'; // Import backgrounds data
-import { classes } from '@/data/classes'; // Import classes data
-import { races } from '@/data/races'; // Import races data
+import { backgrounds } from '@/data/backgrounds';
+import { classes } from '@/data/classes';
+import { races } from '@/data/races';
 
 interface CharacterCreationContentProps {
-  step: number;
-  character: Character;
+  currentStep: number;
+  character: Partial<Character>;
   updateCharacter: (updates: Partial<Character>) => void;
   nextStep: () => void;
   prevStep: () => void;
-  saveCharacter: () => void;
+  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
+  setAbilitiesMethod: React.Dispatch<React.SetStateAction<"pointbuy" | "standard" | "roll" | "manual">>;
+  diceResults: number[][];
+  getModifier: (abilityScore: number) => string;
+  rollAllAbilities: () => void;
+  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
+  abilityScorePoints: number;
+  isMagicClass: boolean;
+  rollsHistory: { ability: string; rolls: number[]; total: number }[];
+  onLevelChange: (level: number) => void;
+  maxAbilityScore: number;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
-  step,
+  currentStep,
   character,
   updateCharacter,
   nextStep,
   prevStep,
-  saveCharacter
+  abilitiesMethod,
+  setAbilitiesMethod,
+  diceResults,
+  getModifier,
+  rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints,
+  isMagicClass,
+  rollsHistory,
+  onLevelChange,
+  maxAbilityScore,
+  setCurrentStep
 }) => {
   // Handle level change
   const handleLevelChange = (level: number) => {
-    updateCharacter({ level });
+    onLevelChange(level);
   };
 
   // Modified to use correct props
-  switch (step) {
-    case 1:
+  switch (currentStep) {
+    case 0:
       return (
         <CharacterRace
           character={character}
           onUpdate={updateCharacter}
-          races={races}
           nextStep={nextStep}
           prevStep={prevStep}
         />
@@ -52,7 +73,6 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         <CharacterClass
           character={character}
           onUpdate={updateCharacter}
-          classes={classes}
           nextStep={nextStep}
           prevStep={prevStep}
         />
@@ -74,6 +94,15 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
+          method={abilitiesMethod}
+          setMethod={setAbilitiesMethod}
+          diceResults={diceResults}
+          getModifier={getModifier}
+          rollAllAbilities={rollAllAbilities}
+          rollSingleAbility={rollSingleAbility}
+          pointsRemaining={abilityScorePoints}
+          rollsHistory={rollsHistory}
+          maxScore={maxAbilityScore}
         />
       );
     case 5:
@@ -83,12 +112,51 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
-          backgrounds={backgrounds}
         />
       );
-
+    case 9:
+      return (
+        <CharacterSpells
+          character={character}
+          onUpdate={updateCharacter}
+          nextStep={nextStep}
+          prevStep={prevStep}
+        />
+      );
+    case 10:
+      return (
+        <CharacterReview
+          character={character}
+          onUpdate={updateCharacter}
+          nextStep={nextStep}
+          prevStep={prevStep}
+        />
+      );
+    // Add more cases for other steps
     default:
-      return null;
+      // For now, show a placeholder for other steps
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-semibold">Шаг {currentStep + 1}</h2>
+          <p className="text-muted-foreground">
+            Этот раздел находится в разработке.
+          </p>
+          <div className="flex justify-between mt-8">
+            <button 
+              className="px-4 py-2 bg-gray-700 rounded"
+              onClick={prevStep}
+            >
+              Назад
+            </button>
+            <button 
+              className="px-4 py-2 bg-blue-600 rounded"
+              onClick={nextStep}
+            >
+              Далее
+            </button>
+          </div>
+        </div>
+      );
   }
 };
 
