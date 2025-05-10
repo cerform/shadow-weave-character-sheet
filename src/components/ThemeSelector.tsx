@@ -33,17 +33,19 @@ export const ThemeSelector = () => {
   // Синхронизируем темы между контекстами при инициализации
   useEffect(() => {
     if (activeTheme && theme !== activeTheme) {
-      setTheme(activeTheme as ThemeType);
+      if (setTheme) {
+        setTheme(activeTheme);
+      }
       // Явно применяем CSS-переменные
       applyThemeToDom(activeTheme);
     }
   }, []);
   
   // Функция для применения темы к DOM
-  const applyThemeToDom = useCallback((themeName: string) => {
+  const applyThemeToDom = useCallback((themeName: string | ThemeType) => {
     const selectedTheme = themes[themeName as keyof typeof themes] || themes.default;
     
-    document.documentElement.setAttribute('data-theme', themeName);
+    document.documentElement.setAttribute('data-theme', themeName.toString());
     document.body.className = '';
     document.body.classList.add(`theme-${themeName}`);
     
@@ -62,16 +64,21 @@ export const ThemeSelector = () => {
   const handleThemeChange = useCallback((themeName: ThemeType) => {
     if (themeName === currentThemeId) return;
     
-    setUserTheme(themeName);
-    setTheme(themeName);
+    if (setUserTheme) {
+      setUserTheme(themeName);
+    }
+    
+    if (setTheme) {
+      setTheme(themeName);
+    }
     
     // Применяем тему к DOM
     applyThemeToDom(themeName);
     
     // Сохраняем в localStorage
-    localStorage.setItem('theme', themeName);
-    localStorage.setItem('userTheme', themeName);
-    localStorage.setItem('dnd-theme', themeName);
+    localStorage.setItem('theme', themeName.toString());
+    localStorage.setItem('userTheme', themeName.toString());
+    localStorage.setItem('dnd-theme', themeName.toString());
     
     console.log('Тема изменена на:', themeName);
   }, [currentThemeId, setUserTheme, setTheme, applyThemeToDom]);

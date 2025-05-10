@@ -13,8 +13,6 @@ interface SpellsTabProps {
   onSpellClick?: (spell: SpellData) => void;
 }
 
-// Fix for line 53 - converting string spells to CharacterSpell objects
-
 // Add this utility function
 const ensureCharacterSpellTypes = (spells: (string | CharacterSpell)[] | undefined): CharacterSpell[] => {
   if (!spells || !Array.isArray(spells)) return [];
@@ -24,12 +22,14 @@ const ensureCharacterSpellTypes = (spells: (string | CharacterSpell)[] | undefin
       return { 
         id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
         name: spell, 
-        level: 0 
+        level: 0,
+        school: 'Универсальная'
       };
     }
     return {
       ...spell,
-      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
+      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+      school: spell.school || 'Универсальная'
     };
   });
 };

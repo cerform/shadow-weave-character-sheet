@@ -255,7 +255,17 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     // Create a new array of CharacterSpell objects
     const currentSpells = character.spells || [];
     const updatedSpells: CharacterSpell[] = [...(Array.isArray(currentSpells) ? 
-      currentSpells.map(s => typeof s === 'string' ? { name: s, level: 0 } : s) : 
+      currentSpells.map(s => {
+        if (typeof s === 'string') {
+          return { 
+            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`, 
+            name: s, 
+            level: 0,
+            school: 'Универсальная'
+          };
+        }
+        return s;
+      }) : 
       [])];
       
     // Add the new spell
@@ -275,7 +285,17 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         const name = typeof s === 'string' ? s : s.name;
         return name !== spellName;
       })
-      .map(s => typeof s === 'string' ? { name: s, level: 0 } : s);
+      .map(s => {
+        if (typeof s === 'string') {
+          return { 
+            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`, 
+            name: s, 
+            level: 0,
+            school: 'Универсальная'
+          };
+        }
+        return s;
+      });
       
     // Update character with properly typed spells array
     updateCharacter({ spells: updatedSpells });

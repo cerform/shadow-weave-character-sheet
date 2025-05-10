@@ -1,14 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { themes } from '@/lib/themes';
-import { ThemeType, ThemeContextType } from '@/types/theme';
+import { ThemeType, ThemeContextType, Theme } from '@/types/theme';
 
 // Create context with proper types
 const UserThemeContext = createContext<ThemeContextType>({
   activeTheme: 'default',
   setUserTheme: () => {},
   currentTheme: themes.default,
-  themeStyles: themes.default // Add themeStyles for components that need it
+  themeStyles: themes.default, // Add themeStyles for components that need it
+  theme: 'default',
+  setTheme: () => {}
 });
 
 // Hook for using the theme context
@@ -30,7 +32,12 @@ export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({
   // Function for setting the theme
   const setUserTheme = (theme: ThemeType) => {
     setActiveTheme(theme);
-    localStorage.setItem('user-theme', theme);
+    localStorage.setItem('user-theme', theme.toString());
+  };
+
+  // Alias for compatibility with other components
+  const setTheme = (theme: string | ThemeType) => {
+    setUserTheme(theme as ThemeType);
   };
   
   // Effect for loading saved theme on initialization
@@ -57,7 +64,9 @@ export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({
       activeTheme, 
       setUserTheme, 
       currentTheme,
-      themeStyles: currentTheme // Add themeStyles for components that need it
+      themeStyles: currentTheme, // Add themeStyles for components that need it
+      theme: activeTheme,
+      setTheme
     }}>
       {children}
     </UserThemeContext.Provider>

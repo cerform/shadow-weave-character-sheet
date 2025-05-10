@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -97,6 +96,39 @@ export const getSpellcastingAbilityScore = (characterClass: string): string => {
   }
 };
 
+// NEW: Function to get default casting ability based on character class
+export const getDefaultCastingAbility = (characterClass: string): string => {
+  const classLower = characterClass.toLowerCase();
+  
+  if (['жрец', 'друид', 'следопыт', 'cleric', 'druid', 'ranger'].includes(classLower)) {
+    return "wisdom";
+  } else if (['волшебник', 'artificer', 'wizard'].includes(classLower)) {
+    return "intelligence";
+  } else {
+    return "charisma"; // бард, колдун, чародей, паладин, etc.
+  }
+};
+
+// NEW: Calculate spell save DC
+export const calculateSpellcastingDC = (character: Character): number => {
+  if (!character || !character.spellcasting) return 10;
+  
+  const abilityModifier = getSpellcastingAbilityModifier(character);
+  const proficiencyBonus = character.proficiencyBonus || 2;
+  
+  return 8 + abilityModifier + proficiencyBonus;
+};
+
+// NEW: Calculate spell attack bonus
+export const calculateSpellAttackBonus = (character: Character): number => {
+  if (!character || !character.spellcasting) return 0;
+  
+  const abilityModifier = getSpellcastingAbilityModifier(character);
+  const proficiencyBonus = character.proficiencyBonus || 2;
+  
+  return abilityModifier + proficiencyBonus;
+};
+
 // Function to filter spells by class and level
 export const filterSpellsByClassAndLevel = (
   spells: SpellData[],
@@ -154,8 +186,13 @@ export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => 
 };
 
 // Function to normalize spells (ensure they have all required properties)
-export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
-  return spells.map(spell => {
+export const normalizeSpells = (spells: Character | (CharacterSpell | string)[]): CharacterSpell[] => {
+  if (!spells) return [];
+  
+  // If spells is a Character object, extract its spells array
+  const spellsArray = Array.isArray(spells) ? spells : (spells.spells || []);
+  
+  return spellsArray.map(spell => {
     if (typeof spell === 'string') {
       return {
         id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
@@ -172,7 +209,7 @@ export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterS
     
     return {
       ...spell,
-      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+      id: spell.id || `spell-${(spell.name || '').toString().toLowerCase().replace(/\s+/g, '-')}`,
       school: spell.school || 'Универсальная',
       castingTime: spell.castingTime || '1 действие',
       range: spell.range || 'На себя',
