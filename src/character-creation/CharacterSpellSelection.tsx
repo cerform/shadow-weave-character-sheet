@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -47,7 +48,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (!availableSpells) return;
 
     // Фильтруем по классу и уровню
-    let classFiltered = filterSpellsByClassAndLevel(availableSpells, characterClass, level);
+    let classFiltered = filterSpellsByClassAndLevel(availableSpells, characterClass, maxSpellLevel);
     
     // Дополнительно фильтруем по поисковому запросу
     if (searchTerm) {
@@ -55,16 +56,16 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       classFiltered = classFiltered.filter(spell => {
         return (
           spell.name.toLowerCase().includes(searchLower) ||
-          spell.school.toLowerCase().includes(searchLower) ||
+          (spell.school || '').toLowerCase().includes(searchLower) ||
           (Array.isArray(spell.description) ? 
             spell.description.join(' ').toLowerCase().includes(searchLower) : 
-            String(spell.description).toLowerCase().includes(searchLower))
+            String(spell.description || '').toLowerCase().includes(searchLower))
         );
       });
     }
     
     setFilteredSpells(classFiltered);
-  }, [availableSpells, characterClass, level, searchTerm]);
+  }, [availableSpells, characterClass, maxSpellLevel, searchTerm]);
 
   useEffect(() => {
     filterSpells();

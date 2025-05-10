@@ -1,52 +1,50 @@
 
 /**
- * Safely converts any value to a string, handling null, undefined and other types.
- * 
- * @param value - Value to convert to string
- * @returns String representation of the value
+ * Safely converts any value to string, handling undefined and null
+ * @param value Any value to convert to string
+ * @returns String representation or empty string if null/undefined
  */
 export const safeToString = (value: any): string => {
   if (value === null || value === undefined) {
     return '';
   }
-  
-  if (typeof value === 'string') {
-    return value;
-  }
-  
-  // Handle array and object types
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return Object.prototype.toString.call(value);
-    }
-  }
-  
-  // Convert other primitive types
   return String(value);
 };
 
 /**
- * Capitalizes the first letter of a string
- * 
- * @param str - String to capitalize
- * @returns Capitalized string
+ * Safely parses JSON string, returning default value if parsing fails
+ * @param jsonString JSON string to parse
+ * @param defaultValue Default value to return if parsing fails
+ * @returns Parsed object or default value
  */
-export const capitalize = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
+export const safeParseJSON = <T>(jsonString: string, defaultValue: T): T => {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    return defaultValue;
+  }
 };
 
 /**
- * Truncates a string to a specified length and adds an ellipsis
- * 
- * @param str - String to truncate
- * @param length - Maximum length of the string
- * @returns Truncated string with ellipsis if needed
+ * Safely creates an ID from a string, removing spaces and special characters
+ * @param text Text to convert to ID
+ * @returns Safe ID string
  */
-export const truncate = (str: string, length: number): string => {
+export const createSafeId = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '-');
+};
+
+/**
+ * Safely truncates a string to a maximum length with ellipsis
+ * @param str String to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated string
+ */
+export const truncateString = (str: string, maxLength: number): string => {
   if (!str) return '';
-  if (str.length <= length) return str;
-  return str.slice(0, length) + '...';
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength) + '...';
 };

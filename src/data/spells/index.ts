@@ -14,30 +14,38 @@ import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 
+// Add IDs to cantrips and all spell files before processing
+const addIdsToSpells = (spells: any[]): CharacterSpell[] => {
+  return spells.map(spell => ({
+    id: `spell-${(spell.name || '').toLowerCase().replace(/\s+/g, '-')}`,
+    ...spell
+  }));
+};
+
 // Объединяем все заклинания в единый массив
 export const spells: CharacterSpell[] = [
-  ...cantrips,
-  ...level0,
-  ...level1,
-  ...level2,
-  ...level3,
-  ...level4,
-  ...level4Part2,
-  ...level4Part3,
-  ...level5,
-  ...level6,
-  ...level7,
-  ...level8,
-  ...level9
+  ...addIdsToSpells(cantrips),
+  ...addIdsToSpells(level0),
+  ...addIdsToSpells(level1),
+  ...addIdsToSpells(level2),
+  ...addIdsToSpells(level3),
+  ...addIdsToSpells(level4),
+  ...addIdsToSpells(level4Part2),
+  ...addIdsToSpells(level4Part3),
+  ...addIdsToSpells(level5),
+  ...addIdsToSpells(level6),
+  ...addIdsToSpells(level7),
+  ...addIdsToSpells(level8),
+  ...addIdsToSpells(level9)
 ];
 
 // Функция для получения заклинаний по классу
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter(spell => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.includes(className);
+      return spell.classes.some(cls => cls.toLowerCase() === className.toLowerCase());
     } else if (typeof spell.classes === 'string') {
-      return spell.classes === className;
+      return spell.classes.toLowerCase() === className.toLowerCase();
     }
     return false;
   });
@@ -63,7 +71,7 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
 // Функция для получения заклинаний по школе магии
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(spell => 
-    spell.school.toLowerCase() === school.toLowerCase()
+    spell.school?.toLowerCase() === school.toLowerCase()
   );
 };
 
@@ -88,7 +96,7 @@ export const filterSpells = (options: {
     }
     
     // Фильтр по школе
-    if (options.school && options.school.length > 0 && !options.school.includes(spell.school)) {
+    if (options.school && options.school.length > 0 && !options.school.includes(spell.school || '')) {
       return false;
     }
     

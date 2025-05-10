@@ -1,0 +1,17 @@
+
+import { themes, Theme } from "@/lib/themes";
+
+// Define allowed theme types based on the keys in the themes object
+export type ThemeType = keyof typeof themes;
+
+// Define the context interface to match how it's being used
+export interface ThemeContextType {
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
+  activeTheme?: ThemeType;
+  setUserTheme?: (theme: ThemeType) => void;
+  currentTheme?: Theme;
+  themeStyles?: Theme;
+}
+
+export type { Theme };
