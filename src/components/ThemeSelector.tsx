@@ -35,7 +35,7 @@ export const ThemeSelector = () => {
   useEffect(() => {
     if (activeTheme && theme !== activeTheme) {
       if (setTheme) {
-        setTheme(activeTheme);
+        setTheme(activeTheme as ThemeType);
       }
       // Явно применяем CSS-переменные
       applyThemeToDom(activeTheme);

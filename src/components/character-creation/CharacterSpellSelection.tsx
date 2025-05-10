@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
+import { safeToString } from '@/utils/stringUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -258,7 +259,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       currentSpells.map(s => {
         if (typeof s === 'string') {
           return { 
-            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`, 
+            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`, 
             name: s, 
             level: 0,
             school: 'Универсальная'
@@ -288,7 +289,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       .map(s => {
         if (typeof s === 'string') {
           return { 
-            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`, 
+            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`, 
             name: s, 
             level: 0,
             school: 'Универсальная'

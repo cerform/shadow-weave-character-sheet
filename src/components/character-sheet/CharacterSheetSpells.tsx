@@ -12,6 +12,7 @@ import { themes } from '@/lib/themes';
 import { ChevronDown, ChevronUp, BookOpen, Star } from 'lucide-react';
 import SpellCastingPanel from './SpellCastingPanel';
 import SpellSlotManager from './SpellSlotManager';
+import { safeToString } from '@/utils/stringUtils';
 
 interface CharacterSheetSpellsProps {
   character?: Character;
@@ -37,7 +38,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         if (typeof spell === 'string') {
           // Если заклинание представлено строкой, создаем минимальный объект
           const basicSpell: CharacterSpell = {
-            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+            id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
             name: spell,
             level: 0,
             school: 'Универсальная',
@@ -87,14 +88,15 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
       const updatedSpells = character.spells.map(s => {
         if (typeof s === 'string') {
           return {
-            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`,
+            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`,
             name: s,
             level: 0,
-            school: 'Универсальная'
+            school: 'Универсальная',
+            prepared: false
           };
         }
         
-        if (s.name === spell.name) {
+        if (s.id === spell.id) {
           return { ...s, prepared: !s.prepared };
         }
         return s;
@@ -109,7 +111,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     if (!character || !character.class) return false;
     
     const preparingClasses = ['жрец', 'друид', 'волшебник', 'cleric', 'druid', 'wizard', 'паладин', 'paladin', 'следопыт', 'ranger', 'изобретатель', 'artificer'];
-    return preparingClasses.includes(character.class.toLowerCase());
+    return preparingClasses.includes(safeToString(character.class).toLowerCase());
   };
   
   // Проверяем, является ли класс магическим
@@ -118,7 +120,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     
     const magicClasses = ['жрец', 'волшебник', 'бард', 'друид', 'колдун', 'чародей', 'паладин', 'следопыт', 'изобретатель',
                         'cleric', 'wizard', 'bard', 'druid', 'warlock', 'sorcerer', 'paladin', 'ranger', 'artificer'];
-    return magicClasses.includes(character.class.toLowerCase());
+    return magicClasses.includes(safeToString(character.class).toLowerCase());
   };
   
   // Если у персонажа нет заклинаний или он не заклинатель, не отображаем компонент

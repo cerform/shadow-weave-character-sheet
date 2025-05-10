@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import AbilitiesTab from './tabs/AbilitiesTab';
+import { AbilitiesTab } from './tabs/AbilitiesTab'; // Use named import instead of default
 import { CombatTab } from './tabs/CombatTab';
 import { EquipmentTab } from './tabs/EquipmentTab';
 import { FeaturesTab } from './tabs/FeaturesTab';

@@ -1,75 +1,42 @@
 
-import React from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { themes } from '@/lib/themes';
-import { ThemeType } from '@/types/theme';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import React, { useEffect } from "react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Check } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { ThemeType } from "@/types/theme";
 
-const ThemeToggle: React.FC = () => {
+const ThemeToggle = () => {
+  // Получаем тему и функцию для ее изменения из контекста
   const { theme, setTheme } = useTheme();
-  const { setUserTheme } = useUserTheme();
-  const currentThemeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[currentThemeKey] || themes.default;
   
-  const themeOptions = [
-    { name: 'default' as ThemeType, label: 'По умолчанию' },
-    { name: 'warlock' as ThemeType, label: 'Колдун' },
-    { name: 'wizard' as ThemeType, label: 'Волшебник' },
-    { name: 'druid' as ThemeType, label: 'Друид' },
-    { name: 'warrior' as ThemeType, label: 'Воин' },
-    { name: 'bard' as ThemeType, label: 'Бард' },
-    { name: 'monk' as ThemeType, label: 'Монах' },
-    { name: 'ranger' as ThemeType, label: 'Следопыт' },
-    { name: 'sorcerer' as ThemeType, label: 'Чародей' },
-  ];
+  // Определяем, какая тема активна сейчас
+  const isDarkTheme = theme === 'dark' || theme === 'warlock' || theme === 'wizard';
   
-  const handleThemeChange = (themeName: ThemeType) => {
-    setTheme(themeName);
-    setUserTheme(themeName);
-    
-    // Сохраняем тему в localStorage
-    localStorage.setItem('theme', themeName.toString());
-    localStorage.setItem('userTheme', themeName.toString());
-    localStorage.setItem('dnd-theme', themeName.toString());
+  // На основе текущей темы определяем, на какую переключаться
+  const toggleTheme = () => {
+    if (isDarkTheme) {
+      // Если тема темная, переключаемся на светлую
+      setTheme('light' as ThemeType);
+    } else {
+      // Если тема светлая, переключаемся на темную
+      setTheme('dark' as ThemeType);
+    }
   };
   
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Paintbrush className="h-5 w-5" style={{ color: currentTheme.accent }} />
-          <span className="sr-only">Выбрать тему</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Выберите тему</DropdownMenuLabel>
-        {themeOptions.map((option) => {
-          const themeColor = themes[option.name as keyof typeof themes]?.accent || themes.default.accent;
-          const isActive = theme === option.name;
-          
-          return (
-            <DropdownMenuItem
-              key={option.name}
-              onClick={() => handleThemeChange(option.name)}
-              className="flex items-center gap-2"
-            >
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: themeColor }} />
-              <span>{option.label}</span>
-              {isActive && <Check className="ml-auto h-4 w-4" />}
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      aria-label="Toggle theme"
+      onClick={toggleTheme}
+      className="rounded-full"
+    >
+      {isDarkTheme ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
+    </Button>
   );
 };
 

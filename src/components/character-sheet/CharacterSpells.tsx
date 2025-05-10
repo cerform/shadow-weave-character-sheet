@@ -4,6 +4,7 @@ import { useCharacter } from '@/contexts/CharacterContext';
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
+import { safeToString } from '@/utils/stringUtils';
 
 interface SpellsProps {
   className?: string;
@@ -50,7 +51,7 @@ export function CharacterSpells({ className }: SpellsProps) {
     const updatedSpells = character.spells.map(spell => {
       if (typeof spell === 'string') {
         return {
-          id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+          id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
           name: spell,
           level: 0,
           school: 'Универсальная',
