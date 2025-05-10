@@ -4,27 +4,34 @@ export type ThemeType = 'default' | 'dark' | 'light' | 'system' | 'red' | 'green
 
 export interface Theme {
   name: string;
-  primaryColor?: string;
+  primaryColor?: string;  // Альтернатива для primary
   primary: string;
   secondary: string;
   textColor: string;
   mutedTextColor: string;
-  backgroundColor?: string;
+  backgroundColor?: string;  // Альтернатива для background
   background: string;
-  accentColor?: string;
+  accentColor?: string;     // Альтернатива для accent
   accent: string;
   foreground: string;
   cardBackground: string;
   buttonText?: string;
   
-  // Additional theme properties
+  // Дополнительные свойства темы
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;
 }
 
 export interface ThemeContextType {
-  activeTheme: ThemeType;
-  setUserTheme: (theme: ThemeType) => void;
-  currentTheme: Theme;
+  activeTheme?: ThemeType;
+  setUserTheme?: (theme: ThemeType) => void;
+  currentTheme?: Theme;
+}
+
+export interface ThemeStore {
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
+  themeStyles?: Theme;
+  effectiveTheme?: string;
 }

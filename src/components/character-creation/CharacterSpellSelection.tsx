@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -10,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';

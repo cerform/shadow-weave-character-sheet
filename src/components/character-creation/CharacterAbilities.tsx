@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Character } from '@/types/character';
@@ -6,7 +5,7 @@ import NavigationButtons from './NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { MinusIcon, PlusIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ABILITY_SCORE_CAPS } from '@/types/character';
+import { ABILITY_SCORE_CAPS } from '@/types/constants';
 
 interface CharacterAbilitiesProps {
   character: Character;

@@ -1,64 +1,107 @@
-
-import React, { useState } from 'react';
-import type { Character } from "@/types/character";
-import { getAllBackgrounds } from '@/data/backgrounds';
-import NavigationButtons from "./NavigationButtons";
-import SectionHeader from "@/components/ui/section-header";
+import React, { useState, useEffect } from 'react';
+import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import NavigationButtons from './NavigationButtons';
+import SectionHeader from '@/components/ui/section-header';
+import { SelectionCard, SelectionCardGrid } from '@/components/ui/selection-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTheme } from '@/hooks/use-theme';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/hooks/use-toast';
+import { isEquipmentEmpty } from '@/utils/safetyUtils';
 
-interface CharacterBackgroundProps {
+// Интерфейс для предыстории
+interface Background {
+  id: string;
+  name: string;
+  description: string;
+  proficiencies: {
+    skills: string[];
+    tools: string[];
+    languages: string[];
+    equipment: string;
+  };
+  feature: {
+    name: string;
+    description: string;
+  };
+  personalityTraits: string[];
+  ideals: string[];
+  bonds: string[];
+  flaws: string[];
+}
+
+// Интерфейс для props компонента
+export interface CharacterBackgroundProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
   nextStep: () => void;
   prevStep: () => void;
+  backgrounds: Background[]; // Добавляем backgrounds в интерфейс
 }
 
 const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   character,
   onUpdate,
   nextStep,
-  prevStep
+  prevStep,
+  backgrounds
 }) => {
-  const [selectedBackground, setSelectedBackground] = useState<string>(character.background || '');
+  const [selectedBackgroundId, setSelectedBackgroundId] = useState<string>(character.background || '');
   const [activeTab, setActiveTab] = useState<string>('description');
-  const { themeStyles } = useTheme();
-  
-  // Получаем все предыстории
-  const backgrounds = getAllBackgrounds();
-  
-  // Находим выбранную предысторию
-  const currentBackground = backgrounds.find(bg => bg.name === selectedBackground);
 
-  // Функция выбора предыстории
-  const handleSelectBackground = (name: string) => {
-    setSelectedBackground(name);
-    // Задержка для предотвращения мерцания
-    setTimeout(() => {
-      onUpdate({ background: name });
-    }, 0);
+  // Проверяем, есть ли предыстории
+  useEffect(() => {
+    if (!backgrounds || backgrounds.length === 0) {
+      toast({
+        title: "Ошибка загрузки предысторий",
+        description: "Не удалось загрузить список предысторий. Пожалуйста, попробуйте позже.",
+        variant: "destructive"
+      });
+    }
+  }, [backgrounds]);
+
+  // Найдем выбранную предысторию
+  const currentBackground = backgrounds.find(bg => bg.id === selectedBackgroundId);
+
+  // Обработчик выбора предыстории
+  const handleBackgroundSelect = (backgroundId: string) => {
+    const selectedBackground = backgrounds.find(bg => bg.id === backgroundId);
+    if (selectedBackground) {
+      // Корректное создание proficiencies с languages и tools
+      const proficiencies = {
+        languages: selectedBackground.proficiencies.languages || [],
+        tools: selectedBackground.proficiencies.tools || []
+      };
+      
+      onUpdate({
+        background: selectedBackground.name,
+        proficiencies: proficiencies,
+        // ... другие свойства
+      });
+    }
+    setSelectedBackgroundId(backgroundId);
+    onUpdate({ background: backgroundId });
   };
 
-  // Переход к следующему шагу
+  // Обработчик перехода к следующему шагу
   const handleNext = () => {
-    if (selectedBackground) {
+    if (selectedBackgroundId) {
       // Определим, какие параметры нужно обновить при переходе
       const updates: Partial<Character> = {
-        background: selectedBackground,
+        background: selectedBackgroundId,
       };
 
       // Добавим владение навыками из предыстории
       if (currentBackground && currentBackground.proficiencies.skills.length > 0) {
-        const proficiencyUpdates: string[] = [];
+        // Создаем массив навыков, если его нет
+        let proficiencyUpdates: string[] = [];
         
         // Если proficiencies уже существует и это массив, используем его
         if (Array.isArray(character.proficiencies)) {
-          proficiencyUpdates.push(...character.proficiencies);
+          proficiencyUpdates = [...character.proficiencies];
         } 
         // Иначе, если это объект, создаем новый массив
         else if (character.proficiencies) {
+          // Конвертируем объект в массив для обновления
           const existingProficiencies = character.proficiencies;
           if (existingProficiencies.weapons) proficiencyUpdates.push(...existingProficiencies.weapons);
           if (existingProficiencies.tools) proficiencyUpdates.push(...existingProficiencies.tools);
@@ -75,24 +118,10 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
         updates.proficiencies = proficiencyUpdates;
       }
 
-      // Обновляем с задержкой для предотвращения мерцания
-      setTimeout(() => {
-        onUpdate(updates);
-        nextStep();
-      }, 0);
+      // Обновляем данные персонажа
+      onUpdate(updates);
+      nextStep();
     }
-  };
-
-  // Вспомогательная функция для безопасного рендеринга массивов или строк
-  const renderSafelyAsArray = (value: any): string => {
-    if (Array.isArray(value)) {
-      return value.join(', ');
-    } else if (typeof value === 'string') {
-      return value;
-    } else if (!value) {
-      return '';
-    }
-    return String(value);
   };
 
   return (
@@ -105,43 +134,21 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Выбор предыстории */}
         <div className="md:col-span-1">
-          <Card style={{ 
-            background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
-            color: themeStyles?.textColor,
-            borderColor: `${themeStyles?.accent}30`
-          }}>
+          <Card>
             <CardHeader>
-              <CardTitle style={{ color: themeStyles?.accent }}>Доступные предыстории</CardTitle>
+              <CardTitle>Доступные предыстории</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="space-y-2">
-                  {backgrounds.map((bg) => (
-                    <Card 
-                      key={bg.name}
-                      className={`cursor-pointer transition-all duration-300 ${
-                        selectedBackground === bg.name ? 'ring-2' : 'hover:bg-accent/10'
-                      }`}
-                      style={{ 
-                        background: selectedBackground === bg.name
-                          ? `${themeStyles?.accent}20`
-                          : 'rgba(0, 0, 0, 0.6)',
-                        color: themeStyles?.textColor,
-                        borderColor: selectedBackground === bg.name
-                          ? themeStyles?.accent
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                      onClick={() => handleSelectBackground(bg.name)}
-                    >
-                      <CardContent className="p-3 text-center">
-                        <span style={{ color: selectedBackground === bg.name ? themeStyles?.accent : themeStyles?.textColor }}>
-                          {bg.name}
-                        </span>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </ScrollArea>
+              <SelectionCardGrid>
+                {backgrounds.map((bg) => (
+                  <SelectionCard
+                    key={bg.id}
+                    title={bg.name}
+                    selected={selectedBackgroundId === bg.id}
+                    onClick={() => handleBackgroundSelect(bg.id)}
+                  />
+                ))}
+              </SelectionCardGrid>
             </CardContent>
           </Card>
         </div>
@@ -149,13 +156,9 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
         {/* Детали предыстории */}
         <div className="md:col-span-2">
           {currentBackground ? (
-            <Card style={{ 
-              background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
-              color: themeStyles?.textColor,
-              borderColor: `${themeStyles?.accent}30` 
-            }}>
+            <Card>
               <CardHeader>
-                <CardTitle style={{ color: themeStyles?.accent }}>{currentBackground.name}</CardTitle>
+                <CardTitle>{currentBackground.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -166,91 +169,83 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
                     <TabsTrigger value="characteristics">Характеристики</TabsTrigger>
                   </TabsList>
 
-                  <ScrollArea className="h-[400px] pr-4">
-                    <TabsContent value="description" className="mt-0">
-                      <p>{currentBackground.description}</p>
-                    </TabsContent>
+                  <TabsContent value="description">
+                    <p>{currentBackground.description}</p>
+                  </TabsContent>
 
-                    <TabsContent value="proficiencies" className="mt-0">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Навыки:</h3>
-                          <p>{renderSafelyAsArray(currentBackground.proficiencies.skills)}</p>
-                        </div>
-                        {currentBackground.proficiencies.tools && (
-                          <div>
-                            <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Инструменты:</h3>
-                            <p>{renderSafelyAsArray(currentBackground.proficiencies.tools)}</p>
-                          </div>
-                        )}
-                        {currentBackground.proficiencies.languages && currentBackground.proficiencies.languages.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Языки:</h3>
-                            <p>{renderSafelyAsArray(currentBackground.proficiencies.languages)}</p>
-                          </div>
-                        )}
-                        {currentBackground.proficiencies.equipment && (
-                          <div>
-                            <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Снаряжение:</h3>
-                            <p>{currentBackground.proficiencies.equipment}</p>
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="feature" className="mt-0">
+                  <TabsContent value="proficiencies">
+                    <div className="space-y-4">
                       <div>
-                        <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>{currentBackground.feature.name}</h3>
-                        <p className="mt-2">{currentBackground.feature.description}</p>
+                        <h3 className="font-semibold">Навыки:</h3>
+                        <p>{currentBackground.proficiencies.skills.join(', ')}</p>
                       </div>
-                    </TabsContent>
+                      {currentBackground.proficiencies.tools.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold">Инструменты:</h3>
+                          <p>{currentBackground.proficiencies.tools.join(', ')}</p>
+                        </div>
+                      )}
+                      {currentBackground.proficiencies.languages.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold">Языки:</h3>
+                          <p>{currentBackground.proficiencies.languages.join(', ')}</p>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-semibold">Снаряжение:</h3>
+                        <p>{currentBackground.proficiencies.equipment}</p>
+                      </div>
+                    </div>
+                  </TabsContent>
 
-                    <TabsContent value="characteristics" className="mt-0">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Черты характера:</h3>
-                          <ul className="list-disc pl-5 mt-2 space-y-1">
-                            {currentBackground.personalityTraits.map((trait, index) => (
-                              <li key={index}>{trait}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Идеалы:</h3>
-                          <ul className="list-disc pl-5 mt-2 space-y-1">
-                            {currentBackground.ideals.map((ideal, index) => (
-                              <li key={index}>{ideal}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Привязанности:</h3>
-                          <ul className="list-disc pl-5 mt-2 space-y-1">
-                            {currentBackground.bonds.map((bond, index) => (
-                              <li key={index}>{bond}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold" style={{ color: themeStyles?.accent }}>Слабости:</h3>
-                          <ul className="list-disc pl-5 mt-2 space-y-1">
-                            {currentBackground.flaws.map((flaw, index) => (
-                              <li key={index}>{flaw}</li>
-                            ))}
-                          </ul>
-                        </div>
+                  <TabsContent value="feature">
+                    <div>
+                      <h3 className="font-semibold">{currentBackground.feature.name}</h3>
+                      <p className="mt-2">{currentBackground.feature.description}</p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="characteristics">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold">Черты характера:</h3>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          {currentBackground.personalityTraits.map((trait, index) => (
+                            <li key={index}>{trait}</li>
+                          ))}
+                        </ul>
                       </div>
-                    </TabsContent>
-                  </ScrollArea>
+                      <div>
+                        <h3 className="font-semibold">Идеалы:</h3>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          {currentBackground.ideals.map((ideal, index) => (
+                            <li key={index}>{ideal}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Привязанности:</h3>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          {currentBackground.bonds.map((bond, index) => (
+                            <li key={index}>{bond}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Слабости:</h3>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          {currentBackground.flaws.map((flaw, index) => (
+                            <li key={index}>{flaw}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
           ) : (
-            <Card style={{ 
-              background: `${themeStyles?.cardBackground || 'rgba(0, 0, 0, 0.8)'}`,
-              color: themeStyles?.textColor,
-              borderColor: `${themeStyles?.accent}30`
-            }}>
+            <Card>
               <CardContent className="p-6 text-center text-muted-foreground">
                 Выберите предысторию, чтобы увидеть подробную информацию
               </CardContent>
@@ -260,7 +255,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
       </div>
 
       <NavigationButtons
-        allowNext={!!selectedBackground}
+        allowNext={!!selectedBackgroundId}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}

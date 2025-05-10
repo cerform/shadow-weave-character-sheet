@@ -14,7 +14,7 @@ import {
 import { PaintBucket } from 'lucide-react';
 
 const ThemeSelector: React.FC = () => {
-  // Change from currentTheme to theme to match the hook's return value
+  // Используем правильные имена из хука
   const { theme, setTheme } = useTheme();
   
   const handleThemeChange = (themeKey: ThemeType) => {
@@ -48,26 +48,29 @@ const ThemeSelector: React.FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {Object.keys(themes).map((themeKey) => (
-          <DropdownMenuItem
-            key={themeKey}
-            onClick={() => handleThemeChange(themeKey as ThemeType)}
-            className="cursor-pointer"
-            style={{
-              backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',
-            }}
-          >
-            <div className="flex items-center">
-              <div
-                className="h-4 w-4 rounded-full mr-2"
-                style={{
-                  backgroundColor: themes[themeKey as keyof typeof themes].primary,
-                }}
-              />
-              {getThemeName(themeKey)}
-            </div>
-          </DropdownMenuItem>
-        ))}
+        {Object.keys(themes).map((themeKey) => {
+          const currentTheme = themes[themeKey as keyof typeof themes];
+          return (
+            <DropdownMenuItem
+              key={themeKey}
+              onClick={() => handleThemeChange(themeKey as ThemeType)}
+              className="cursor-pointer"
+              style={{
+                backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',
+              }}
+            >
+              <div className="flex items-center">
+                <div
+                  className="h-4 w-4 rounded-full mr-2"
+                  style={{
+                    backgroundColor: currentTheme.primary || currentTheme.primaryColor || '#000000',
+                  }}
+                />
+                {getThemeName(themeKey)}
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

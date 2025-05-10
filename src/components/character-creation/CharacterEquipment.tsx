@@ -119,6 +119,20 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
     });
   };
 
+  const handleAddEquipment = (items: Item[]) => {
+    // Создаем правильную структуру equipment
+    const equipment = {
+      weapons: items.filter(item => item.type === 'weapon').map(item => item.name),
+      armor: items.find(item => item.type === 'armor')?.name || '',
+      items: items.filter(item => item.type !== 'weapon' && item.type !== 'armor').map(item => item.name),
+      gold: character.equipment && typeof character.equipment === 'object' && 'gold' in character.equipment 
+        ? character.equipment.gold 
+        : 0
+    };
+
+    onUpdate({ equipment });
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="space-y-4">

@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ABILITY_SCORE_CAPS } from '@/types/character';
+import { ABILITY_SCORE_CAPS } from '@/types/constants';
 
 interface ManualInputPanelProps {
   abilityScores: { [key: string]: number };
