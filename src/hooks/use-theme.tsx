@@ -3,14 +3,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { themes } from '@/lib/themes';
 import { ThemeType, ThemeContextType } from '@/types/theme';
 
-// Создаем контекст с типами
+// Create context with proper types
 const UserThemeContext = createContext<ThemeContextType>({
   activeTheme: 'default',
   setUserTheme: () => {},
-  currentTheme: themes.default
+  currentTheme: themes.default,
+  themeStyles: themes.default // Add themeStyles for components that need it
 });
 
-// Хук для использования контекста темы
+// Hook for using the theme context
 export const useTheme = () => useContext(UserThemeContext);
 
 interface UserThemeProviderProps {
@@ -18,7 +19,7 @@ interface UserThemeProviderProps {
   defaultTheme?: ThemeType;
 }
 
-// Компонент-провайдер для темы
+// Theme provider component
 export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({ 
   children, 
   defaultTheme = 'default' 
@@ -26,32 +27,38 @@ export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({
   const [activeTheme, setActiveTheme] = useState<ThemeType>(defaultTheme);
   const [currentTheme, setCurrentTheme] = useState(themes[defaultTheme as keyof typeof themes] || themes.default);
   
-  // Функция для установки темы
+  // Function for setting the theme
   const setUserTheme = (theme: ThemeType) => {
     setActiveTheme(theme);
     localStorage.setItem('user-theme', theme);
   };
   
-  // Эффект для загрузки сохраненной темы при инициализации
+  // Effect for loading saved theme on initialization
   useEffect(() => {
     const savedTheme = localStorage.getItem('user-theme') as ThemeType;
-    if (savedTheme && themes[savedTheme]) {
+    if (savedTheme && themes[savedTheme as keyof typeof themes]) {
       setActiveTheme(savedTheme);
     }
   }, []);
   
-  // Эффект для обновления текущей темы при изменении активной темы
+  // Effect for updating current theme when active theme changes
   useEffect(() => {
-    setCurrentTheme(themes[activeTheme] || themes.default);
+    const themeObj = themes[activeTheme as keyof typeof themes] || themes.default;
+    setCurrentTheme(themeObj);
     
-    // Обновляем CSS переменные для глобальной темы
-    document.documentElement.style.setProperty('--primary-color', currentTheme.primaryColor);
-    document.documentElement.style.setProperty('--secondary-color', currentTheme.secondaryColor);
-    document.documentElement.style.setProperty('--background-color', currentTheme.backgroundColor);
-  }, [activeTheme, currentTheme]);
+    // Update CSS variables for global theme
+    document.documentElement.style.setProperty('--primary-color', themeObj.primary);
+    document.documentElement.style.setProperty('--secondary-color', themeObj.secondary);
+    document.documentElement.style.setProperty('--background-color', themeObj.background);
+  }, [activeTheme]);
 
   return (
-    <UserThemeContext.Provider value={{ activeTheme, setUserTheme, currentTheme }}>
+    <UserThemeContext.Provider value={{ 
+      activeTheme, 
+      setUserTheme, 
+      currentTheme,
+      themeStyles: currentTheme // Add themeStyles for components that need it
+    }}>
       {children}
     </UserThemeContext.Provider>
   );

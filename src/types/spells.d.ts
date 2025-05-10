@@ -2,7 +2,7 @@
 import { CharacterSpell } from './character';
 
 export interface SpellData {
-  id: string | number;  // id обязателен для SpellData
+  id: string;  // id required for SpellData
   name: string;
   name_en?: string;
   level: number;
@@ -27,7 +27,7 @@ export interface SpellData {
 
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`, // Гарантируем id, даже если его нет
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`, // Ensure id is present
     name: spell.name,
     level: spell.level,
     school: spell.school || 'Универсальная', // Provide default values for required fields
@@ -42,11 +42,16 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
 
 export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
   return {
-    ...spell,
-    // Make sure all required CharacterSpell properties are set
+    id: spell.id, // Ensure id is passed from SpellData to CharacterSpell
     name: spell.name,
     level: spell.level,
-    id: spell.id // Передаем id из SpellData в CharacterSpell
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    classes: spell.classes,
   };
 };
 

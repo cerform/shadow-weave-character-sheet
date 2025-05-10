@@ -10,10 +10,11 @@ export interface Theme {
   textColor: string;
   mutedTextColor: string;
   cardBackground: string;
-  success: string;
-  warning: string;
-  danger: string;
-  info: string;
+  buttonText: string; // Make sure this is included in all theme objects
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
   // Add these new properties
   backgroundBrightness?: number;
   backgroundGradient?: string;
@@ -31,7 +32,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#2e2b8a',
     textColor: '#e2e8f0',
     mutedTextColor: '#94a3b8',
-    cardBackground: 'rgba(30, 27, 75, 0.8)'
+    cardBackground: 'rgba(30, 27, 75, 0.8)',
+    buttonText: '#ffffff',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6'
   },
   dark: {
     name: 'Dark',
@@ -42,7 +48,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#1e293b',
     textColor: '#f1f5f9',
     mutedTextColor: '#94a3b8',
-    cardBackground: 'rgba(15, 23, 42, 0.8)'
+    cardBackground: 'rgba(15, 23, 42, 0.8)',
+    buttonText: '#ffffff',
+    success: '#059669',
+    warning: '#d97706',
+    danger: '#dc2626',
+    info: '#2563eb'
   },
   light: {
     name: 'Light',
@@ -53,7 +64,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#f1f5f9',
     textColor: '#0f172a',
     mutedTextColor: '#64748b',
-    cardBackground: 'rgba(248, 250, 252, 0.8)'
+    cardBackground: 'rgba(248, 250, 252, 0.8)',
+    buttonText: '#ffffff',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6'
   },
   fantasy: {
     name: 'Fantasy',
@@ -64,7 +80,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#713f12',
     textColor: '#fef3c7',
     mutedTextColor: '#d97706',
-    cardBackground: 'rgba(66, 32, 6, 0.8)'
+    cardBackground: 'rgba(66, 32, 6, 0.8)',
+    buttonText: '#ffffff',
+    success: '#14532d',
+    warning: '#ca8a04',
+    danger: '#991b1b',
+    info: '#1e40af'
   },
   warlock: {
     name: 'Warlock',
@@ -75,7 +96,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#4c1d95',
     textColor: '#ede9fe',
     mutedTextColor: '#c4b5fd',
-    cardBackground: 'rgba(46, 16, 101, 0.8)'
+    cardBackground: 'rgba(46, 16, 101, 0.8)',
+    buttonText: '#ffffff',
+    success: '#059669',
+    warning: '#d97706',
+    danger: '#dc2626',
+    info: '#2563eb'
   },
   wizard: {
     name: 'Wizard',
@@ -86,7 +112,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#1e3a8a',
     textColor: '#dbeafe',
     mutedTextColor: '#60a5fa',
-    cardBackground: 'rgba(23, 37, 84, 0.8)'
+    cardBackground: 'rgba(23, 37, 84, 0.8)',
+    buttonText: '#ffffff',
+    success: '#059669',
+    warning: '#d97706',
+    danger: '#dc2626',
+    info: '#2563eb'
   },
   druid: {
     name: 'Druid',
@@ -97,7 +128,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#166534',
     textColor: '#dcfce7',
     mutedTextColor: '#4ade80',
-    cardBackground: 'rgba(5, 46, 22, 0.8)'
+    cardBackground: 'rgba(5, 46, 22, 0.8)',
+    buttonText: '#ffffff',
+    success: '#15803d',
+    warning: '#ca8a04',
+    danger: '#b91c1c',
+    info: '#0369a1'
   },
   warrior: {
     name: 'Warrior',
@@ -108,7 +144,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#881337',
     textColor: '#fee2e2',
     mutedTextColor: '#f87171',
-    cardBackground: 'rgba(76, 5, 25, 0.8)'
+    cardBackground: 'rgba(76, 5, 25, 0.8)',
+    buttonText: '#ffffff',
+    success: '#15803d',
+    warning: '#ca8a04',
+    danger: '#b91c1c',
+    info: '#0369a1'
   },
   bard: {
     name: 'Bard',
@@ -119,7 +160,12 @@ export const themes: Record<string, Theme> = {
     foreground: '#713f12',
     textColor: '#fef3c7',
     mutedTextColor: '#fbbf24',
-    cardBackground: 'rgba(66, 32, 6, 0.8)'
+    cardBackground: 'rgba(66, 32, 6, 0.8)',
+    buttonText: '#ffffff',
+    success: '#15803d',
+    warning: '#ca8a04',
+    danger: '#b91c1c',
+    info: '#0369a1'
   },
   cyberpunk: {
     name: 'Cyberpunk',
@@ -131,6 +177,10 @@ export const themes: Record<string, Theme> = {
     textColor: '#f0f9ff',
     mutedTextColor: '#67e8f9',
     cardBackground: 'rgba(2, 6, 23, 0.8)',
-    buttonText: '#ecfeff'
+    buttonText: '#ecfeff',
+    success: '#059669',
+    warning: '#d97706',
+    danger: '#dc2626',
+    info: '#2563eb'
   }
 };

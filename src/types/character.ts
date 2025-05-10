@@ -37,7 +37,7 @@ export interface CharacterSpell {
   id: string; // Make id required to match SpellData
   name: string;
   level: number;
-  school?: string;
+  school?: string; // Ensure school is defined (even if optional)
   castingTime?: string;
   range?: string;
   components?: string;

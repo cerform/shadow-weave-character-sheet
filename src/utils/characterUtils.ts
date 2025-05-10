@@ -47,8 +47,6 @@ export const getSkillCheckBonus = (abilityScore: number, proficiency: boolean, e
   return bonus;
 };
 
-// Added missing utility functions
-
 // Calculate numeric modifier (alias for getModifierFromAbilityScore)
 export const getNumericModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
