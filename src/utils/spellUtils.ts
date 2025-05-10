@@ -2,28 +2,6 @@
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
-export interface SpellData {
-  id: string;
-  name: string;
-  level: number;
-  school: string;
-  castingTime: string;
-  range: string;
-  components: string;
-  duration: string;
-  description: string | string[];
-  higherLevel?: string;
-  higherLevels?: string;
-  classes?: string[] | string;
-  material?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  prepared?: boolean;
-  source?: string;
-}
-
 /**
  * Calculate available spells by class and level
  * @param characterClass The class name

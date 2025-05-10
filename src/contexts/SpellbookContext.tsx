@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
-import { CharacterSpell } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
+import { convertSpellDataToCharacterSpell } from '@/types/spells';
 
 interface SpellbookContextProps {
   availableSpells: SpellData[];
@@ -16,7 +18,7 @@ interface SpellbookContextProps {
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
 }
 
-const SpellbookContext = createContext<SpellbookContextProps>({
+export const SpellbookContext = createContext<SpellbookContextProps>({
   availableSpells: [],
   selectedSpells: [],
   addSpell: () => {},
@@ -73,7 +75,7 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
     if (character?.spells) {
       const characterSpells = character.spells
         .filter((spell): spell is CharacterSpell => typeof spell !== 'string')
-        .map(convertCharacterSpellToSpellData);
+        .map(spell => convertCharacterSpellToSpellData(spell));
       
       setSelectedSpells(characterSpells);
     }
@@ -81,29 +83,8 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
 
   // Function to add a spell to the selected spells
   const addSpell = (spell: SpellData) => {
-    // Create a CharacterSpell from SpellData
-    const characterSpell: CharacterSpell = {
-      id: spell.id,
-      name: spell.name,
-      level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: spell.description,
-      classes: spell.classes,
-      ritual: spell.ritual,
-      concentration: spell.concentration,
-      verbal: spell.verbal,
-      somatic: spell.somatic,
-      material: spell.material,
-      materials: spell.materials,
-      prepared: spell.prepared
-    };
-    
     setSelectedSpells(prevSpells => {
-      const updatedSpells = [...prevSpells, characterSpell];
+      const updatedSpells = [...prevSpells, spell];
       return updatedSpells;
     });
   };
@@ -132,19 +113,9 @@ export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }
     if (!character) return;
     
     // Convert SpellData[] to CharacterSpell[]
-    const characterSpells: CharacterSpell[] = selectedSpells.map(spell => ({
-      id: spell.id,
-      name: spell.name,
-      level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: spell.description,
-      classes: spell.classes,
-      prepared: true // Set default value for prepared
-    }));
+    const characterSpells: CharacterSpell[] = selectedSpells.map(spell => 
+      convertSpellDataToCharacterSpell(spell)
+    );
     
     // Update character state with the new spells
     updateCharacter({ spells: characterSpells });

@@ -1,5 +1,5 @@
 
-import Character from '@/types/character';
+import type Character from '@/types/character';
 
 // Define the Theme interface with all required properties
 export interface Theme {
@@ -16,7 +16,8 @@ export interface Theme {
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;
+  buttonText?: string;
 }
 
 // Re-export Character for use across the project
-export { Character };
+export type { Character };

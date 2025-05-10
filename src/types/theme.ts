@@ -16,6 +16,10 @@ export interface Theme {
   foreground: string;
   cardBackground: string;
   buttonText?: string;
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
   
   // Add missing theme properties
   backgroundBrightness?: number;

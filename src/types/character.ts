@@ -1,4 +1,3 @@
-
 // Define essential types
 export interface AbilityScores {
   STR: number;
@@ -207,7 +206,7 @@ export interface Character {
   expertise?: string[];
 }
 
-// Export default constants
+// Export ABILITY_SCORE_CAPS constant for use in other files
 export const ABILITY_SCORE_CAPS = {
   MIN: 1,               // Minimum ability score
   MAX: 30,              // Theoretical maximum (gods/artifacts)
