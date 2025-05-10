@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from '@/components/ui/label';
@@ -6,9 +7,10 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { calculateAbilityModifier, getModifierString, hasValue, defaultAbilityScores } from '@/utils/characterUtils';
+import { calculateAbilityModifier, getModifierString, defaultAbilityScores } from '@/utils/characterUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Separator } from '@/components/ui/separator';
 
 export interface AbilitiesTabProps {
   character: Character;
@@ -22,7 +24,7 @@ type SkillType = {
 };
 
 // Ability scores component
-export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
+const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -175,6 +177,32 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
     onUpdate({ skills: updatedSkills });
   };
   
+  // Function to check if a skill has proficiency
+  const hasSkillProficiency = (skillKey: string): boolean => {
+    return !!(skills[skillKey] && skills[skillKey].proficient);
+  };
+  
+  // Function to toggle skill proficiency
+  const toggleSkillProficiency = (skillKey: string) => {
+    if (!skills[skillKey]) {
+      handleSkillChange(skillKey, 'proficient', true);
+    } else {
+      handleSkillChange(skillKey, 'proficient', !skills[skillKey].proficient);
+    }
+  };
+  
+  // Function to calculate skill bonus
+  const calculateSkillBonus = (skillKey: string, ability: keyof AbilityScores): number => {
+    const abilityMod = calculateAbilityModifier(abilityValues[ability]);
+    const profBonus = character.proficiencyBonus || 2;
+    
+    if (skills[skillKey] && skills[skillKey].proficient) {
+      return abilityMod + profBonus + (skills[skillKey].expertise ? profBonus : 0);
+    }
+    
+    return abilityMod;
+  };
+  
   // Handler for saving throw proficiency changes
   const handleSavingThrowChange = (ability: string, value: boolean) => {
     const updatedSavingThrows = { ...savingThrows };
@@ -186,6 +214,29 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
     
     setSavingThrows(updatedSavingThrows);
     onUpdate({ savingThrows: updatedSavingThrows });
+  };
+  
+  // Function to toggle saving throw proficiency
+  const toggleSavingThrow = (ability: string) => {
+    const currentValue = !!(character.savingThrows && character.savingThrows[ability]);
+    handleSavingThrowChange(ability, !currentValue);
+  };
+  
+  // Function to calculate saving throw value
+  const calculateSavingThrow = (ability: string): number => {
+    const abilityMod = calculateAbilityModifier(abilityValues[ability as keyof AbilityScores] || 10);
+    const profBonus = character.proficiencyBonus || 2;
+    
+    if (character.savingThrows && character.savingThrows[ability]) {
+      return abilityMod + profBonus;
+    }
+    
+    return abilityMod;
+  };
+  
+  // Function to check if a value exists
+  const hasValue = (value: any): boolean => {
+    return value !== undefined && value !== null;
   };
   
   // Update proficiency text
@@ -342,7 +393,7 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
       <Card style={{ backgroundColor: currentTheme.cardBackground }}>
         <CardContent className="pt-4">
           <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
-            Сп��сброски
+            Спасброски
           </h3>
           <Separator className="my-2" />
           <div className="space-y-2">
@@ -405,14 +456,14 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
                     style={{ 
                       borderColor: currentTheme.accent,
                       backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (character.skills[skill.key] === 2 ? currentTheme.accent : 'transparent') : 'transparent'
+                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
                     }}
                   >
                     {hasSkillProficiency(skill.key) && (
                       <div 
                         className={`w-2 h-2 rounded-full`}
                         style={{ 
-                          backgroundColor: character.skills[skill.key] === 2 ? 
+                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
                             currentTheme.cardBackground : currentTheme.accent
                         }}
                       />
@@ -451,14 +502,14 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
                     style={{ 
                       borderColor: currentTheme.accent,
                       backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (character.skills[skill.key] === 2 ? currentTheme.accent : 'transparent') : 'transparent'
+                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
                     }}
                   >
                     {hasSkillProficiency(skill.key) && (
                       <div 
                         className={`w-2 h-2 rounded-full`}
                         style={{ 
-                          backgroundColor: character.skills[skill.key] === 2 ? 
+                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
                             currentTheme.cardBackground : currentTheme.accent 
                         }}
                       />
@@ -501,14 +552,14 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
                     style={{ 
                       borderColor: currentTheme.accent,
                       backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (character.skills[skill.key] === 2 ? currentTheme.accent : 'transparent') : 'transparent'
+                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
                     }}
                   >
                     {hasSkillProficiency(skill.key) && (
                       <div 
                         className={`w-2 h-2 rounded-full`}
                         style={{ 
-                          backgroundColor: character.skills[skill.key] === 2 ? 
+                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
                             currentTheme.cardBackground : currentTheme.accent
                         }}
                       />
@@ -551,14 +602,14 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
                     style={{ 
                       borderColor: currentTheme.accent,
                       backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (character.skills[skill.key] === 2 ? currentTheme.accent : 'transparent') : 'transparent'
+                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
                     }}
                   >
                     {hasSkillProficiency(skill.key) && (
                       <div 
                         className={`w-2 h-2 rounded-full`}
                         style={{ 
-                          backgroundColor: character.skills[skill.key] === 2 ? 
+                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
                             currentTheme.cardBackground : currentTheme.accent
                         }}
                       />
@@ -600,14 +651,14 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
                     style={{ 
                       borderColor: currentTheme.accent,
                       backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (character.skills[skill.key] === 2 ? currentTheme.accent : 'transparent') : 'transparent'
+                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
                     }}
                   >
                     {hasSkillProficiency(skill.key) && (
                       <div 
                         className={`w-2 h-2 rounded-full`}
                         style={{ 
-                          backgroundColor: character.skills[skill.key] === 2 ? 
+                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
                             currentTheme.cardBackground : currentTheme.accent
                         }}
                       />
@@ -700,6 +751,5 @@ export const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate 
   );
 };
 
-// Export both named and default export
-export { AbilitiesTab };
+// Export single default export
 export default AbilitiesTab;
